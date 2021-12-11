@@ -45,3 +45,42 @@ add_task(function check_startup_pinned_telemetry() {
       break;
   }
 });
+
+// Check that telemetry reports whether Firefox is the default PDF handler.
+// This is safe without any explicit coordination because idle tasks are
+// guaranteed to have been invokedbefore the test harness invokes the test.  See
+// https://searchfox.org/mozilla-central/rev/1674b86019a96f076e0f98f1d0f5f3ab9d4e9020/browser/components/BrowserGlue.jsm#2320-2324
+// and
+// https://searchfox.org/mozilla-central/rev/1674b86019a96f076e0f98f1d0f5f3ab9d4e9020/browser/base/content/browser.js#2364.
+add_task(function check_is_default_handler_telemetry() {
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
+
+  // Check the appropriate telemetry is set or not reported by platform.
+  switch (AppConstants.platform) {
+    case "win":
+      // We should always set whether we're the default PDF handler.
+      Assert.ok("os.environment.is_default_handler" in scalars);
+      Assert.deepEqual(
+        [".pdf"],
+        Object.keys(scalars["os.environment.is_default_handler"])
+      );
+
+      if (Cu.isInAutomation) {
+        // But only in automation can we assume we're not the default handler.
+        TelemetryTestUtils.assertKeyedScalar(
+          scalars,
+          "os.environment.is_default_handler",
+          ".pdf",
+          false,
+          "Not default PDF handler on Windows"
+        );
+      }
+      break;
+    default:
+      TelemetryTestUtils.assertScalarUnset(
+        scalars,
+        "os.environment.is_default_handler"
+      );
+      break;
+  }
+});
