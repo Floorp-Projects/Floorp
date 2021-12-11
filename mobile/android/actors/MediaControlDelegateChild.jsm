@@ -49,4 +49,6 @@ class MediaControlDelegateChild extends GeckoViewActorChild {
   }
 }
 
-const { debug } = MediaControlDelegateChild.initLogging("MediaControlDelegateChild");
+const { debug } = MediaControlDelegateChild.initLogging(
+  "MediaControlDelegateChild"
+);
