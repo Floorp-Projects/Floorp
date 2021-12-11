@@ -10,6 +10,10 @@ devtools.jar:
 # PausedDebuggerOverlay (which is in devtools/server).
     content/shared/images/resume.svg (images/resume.svg)
     content/shared/images/stepOver.svg (images/stepOver.svg)
+# These images are in devtools/shared (and not in devtools/client/themes/images/) because
+# they're also used in the RemoteNodePickerNotice (which is in devtools/server).
+    content/shared/images/command-pick.svg (images/command-pick.svg)
+    content/shared/images/command-pick-remote-touch.svg (images/command-pick-remote-touch.svg)
 %   resource devtools %modules/devtools/
 %   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
 %   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes

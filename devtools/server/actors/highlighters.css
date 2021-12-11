@@ -754,6 +754,95 @@
   font-size: var(--highlighter-font-size);
 }
 
+
+/* Remote Node Picker Notice Highlighter */
+
+:-moz-native-anonymous #node-picker-notice-root {
+  position: fixed;
+  max-width: 100vw;
+  /* Position at the bottom of the screen so it doesn't get into the user's way */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  zoom: 1;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  /* We don't have access to DevTools themes here, but some of these colors come from the
+     themes. Theme variable names are given in comments. */
+  --text-color: #585959; /* --theme-body-color-alt */
+  --toolbar-background: #fcfcfc; /* --theme-toolbar-background */
+  --toolbar-border: #dde1e4; /* --theme-splitter-color */
+  --toolbar-button-hover-background: rgba(12, 12, 13, 0.15); /* --theme-toolbarbutton-hover-background */
+  --toolbar-box-shadow: 0 2px 2px 0 rgba(155, 155, 155, 0.26); /* --rdm-box-shadow */
+}
+
+:-moz-native-anonymous #node-picker-notice-root[overlay] {
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous #node-picker-notice-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 16px;
+  font-size: 24px;
+
+  color: var(--text-color);
+  box-shadow: var(--toolbar-box-shadow);
+  background-color: var(--toolbar-background);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 2px;
+
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+
+  user-select: none;
+}
+
+:-moz-native-anonymous #node-picker-notice-info {
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
+  text-align: center;
+}
+
+:-moz-native-anonymous #node-picker-notice-icon {
+  width: 16px;
+  height: 16px;
+
+  background-image: url(chrome://devtools/content/shared/images/command-pick.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+:-moz-native-anonymous #node-picker-notice-icon.touch {
+  background-image: url(chrome://devtools/content/shared/images/command-pick-remote-touch.svg);
+}
+
+
+:-moz-native-anonymous #node-picker-notice-hide-button {
+  border: 0px;
+  border-radius: 2px;
+  appearance: none;
+  background-color: var(--toolbar-border);
+  color: currentColor;
+  font-size: 1em;
+  padding-inline: 4px;
+}
+
+/* We can't use :hover as it wouldn't work if the page is paused, so we add a specific class for this */
+:-moz-native-anonymous #node-picker-notice-hide-button.hover {
+  background-color: var(--toolbar-button-hover-background);
+}
+
 /* Shapes highlighter */
 
 :-moz-native-anonymous .shapes-root {

@@ -418,7 +418,11 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     }
 
     this._isPicking = true;
-    return super.pick(doFocus);
+
+    return super.pick(
+      doFocus,
+      this.targetFront.commands.descriptorFront.isLocalTab
+    );
   }
 
   /**
