@@ -918,6 +918,11 @@ void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
   vpinsrq(lane, rhs.reg, lhsDest, lhsDest);
 }
 
+void MacroAssembler::replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
+                                        Register64 rhs, FloatRegister dest) {
+  vpinsrq(lane, rhs.reg, lhs, dest);
+}
+
 // Splat
 
 void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {

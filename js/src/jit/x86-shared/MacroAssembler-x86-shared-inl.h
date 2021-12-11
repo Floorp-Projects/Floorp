@@ -1605,6 +1605,11 @@ void MacroAssembler::addInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpaddd(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::addInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpaddd(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::addInt32x4(const SimdConstant& rhs,
                                 FloatRegister lhsDest) {
   binarySimd128(rhs, lhsDest, &MacroAssembler::vpaddd,
@@ -1647,6 +1652,11 @@ void MacroAssembler::subInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpsubd(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::subInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpsubd(Operand(rhs), lhs, dest);
+}
+
 void MacroAssembler::subInt32x4(const SimdConstant& rhs,
                                 FloatRegister lhsDest) {
   binarySimd128(rhs, lhsDest, &MacroAssembler::vpsubd,
@@ -1677,6 +1687,11 @@ void MacroAssembler::mulInt16x8(const SimdConstant& rhs,
 
 void MacroAssembler::mulInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpmulld(Operand(rhs), lhsDest, lhsDest);
+}
+
+void MacroAssembler::mulInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpmulld(Operand(rhs), lhs, dest);
 }
 
 void MacroAssembler::mulInt32x4(const SimdConstant& rhs,

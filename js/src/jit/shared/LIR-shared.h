@@ -3765,6 +3765,7 @@ class LWasmReplaceInt64LaneSimd128
   const LAllocation* lhs() { return getOperand(Lhs); }
   const LAllocation* lhsDest() { return getOperand(LhsDest); }
   const LInt64Allocation rhs() { return getInt64Operand(Rhs); }
+  const LDefinition* output() { return this->getDef(0); }
   uint32_t laneIndex() const {
     return mir_->toWasmReplaceLaneSimd128()->laneIndex();
   }

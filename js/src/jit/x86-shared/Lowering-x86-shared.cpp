@@ -977,20 +977,39 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
       break;
   }
 
-  // For binary ops, the Masm API always is usually (rhs, lhsDest) and requires
-  // AtStart+ReuseInput for the lhs.
+  // For binary ops, without AVX support, the Masm API always is usually
+  // (rhs, lhsDest) and requires  AtStart+ReuseInput for the lhs.
   //
   // For a few ops, the API is actually (rhsDest, lhs) and the rules are the
   // same but the reversed.  We swapped operands above; they will be swapped
   // again in the code generator to emit the right code.
+  //
+  // If AVX support is enabled, some binary ops can use output as destination,
+  // useRegisterAtStart is applied for both operands and no need for ReuseInput.
 
-  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-  LAllocation rhsAlloc = willHaveDifferentLIRNodes(lhs, rhs)
-                             ? useRegister(rhs)
-                             : useRegisterAtStart(rhs);
-  auto* lir = new (alloc())
-      LWasmBinarySimd128(op, lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
-  defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I32x4Add:
+    case wasm::SimdOp::I32x4Sub:
+    case wasm::SimdOp::I32x4Mul:
+      if (isThreeOpAllowed()) {
+        auto* lir = new (alloc())
+            LWasmBinarySimd128(op, useRegisterAtStart(lhs),
+                               useRegisterAtStart(rhs), tempReg0, tempReg1);
+        define(lir, ins);
+        break;
+      }
+      [[fallthrough]];
+    default: {
+      LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+      LAllocation rhsAlloc = willHaveDifferentLIRNodes(lhs, rhs)
+                                 ? useRegister(rhs)
+                                 : useRegisterAtStart(rhs);
+      auto* lir = new (alloc())
+          LWasmBinarySimd128(op, lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
+      defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);
+      break;
+    }
+  }
 #else
   MOZ_CRASH("No SIMD");
 #endif
@@ -1319,14 +1338,22 @@ void LIRGenerator::visitWasmReplaceLaneSimd128(MWasmReplaceLaneSimd128* ins) {
   MOZ_ASSERT(ins->lhs()->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
-  // The Masm API is (rhs, lhsDest) and requires AtStart+ReuseInput for the lhs.
-  // For type reasons, the rhs will never be the same as the lhs and is
-  // therefore a plain Use.
+  // If AVX support is disabled, the Masm API is (rhs, lhsDest) and requires
+  // AtStart+ReuseInput for the lhs. For type reasons, the rhs will never be
+  // the same as the lhs and is therefore a plain Use.
+  //
+  // If AVX support is enabled, useRegisterAtStart is preferred.
 
   if (ins->rhs()->type() == MIRType::Int64) {
-    auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
-        useRegisterAtStart(ins->lhs()), useInt64Register(ins->rhs()));
-    defineReuseInput(lir, ins, LWasmReplaceInt64LaneSimd128::LhsDest);
+    if (isThreeOpAllowed()) {
+      auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
+          useRegisterAtStart(ins->lhs()), useInt64RegisterAtStart(ins->rhs()));
+      define(lir, ins);
+    } else {
+      auto* lir = new (alloc()) LWasmReplaceInt64LaneSimd128(
+          useRegisterAtStart(ins->lhs()), useInt64Register(ins->rhs()));
+      defineReuseInput(lir, ins, LWasmReplaceInt64LaneSimd128::LhsDest);
+    }
   } else {
     auto* lir = new (alloc()) LWasmReplaceLaneSimd128(
         useRegisterAtStart(ins->lhs()), useRegister(ins->rhs()));

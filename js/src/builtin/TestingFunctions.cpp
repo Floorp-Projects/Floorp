@@ -4031,6 +4031,14 @@ static bool DisplayName(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+static bool IsAvxPresent(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(jit::Assembler::HasAVX());
+  return true;
+}
+#endif
+
 class ShellAllocationMetadataBuilder : public AllocationMetadataBuilder {
  public:
   ShellAllocationMetadataBuilder() : AllocationMetadataBuilder() {}
@@ -8219,6 +8227,12 @@ gc::ZealModeHelpText),
 "isAsmJSFunction(fn)",
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
+
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+    JS_FN_HELP("isAvxPresent", IsAvxPresent, 0, 0,
+"isAvxPresent(fn)",
+"  Returns whether AVX is present and enabled."),
+#endif
 
     JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
 "wasmIsSupported()",
