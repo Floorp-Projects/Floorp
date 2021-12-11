@@ -3572,6 +3572,13 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
 }
 
+// Internal version of profiler_stream_json_for_this_process, which allows being
+// called from a non-main thread of the parent process, at the risk of getting
+// an incomplete profile.
+bool do_profiler_stream_json_for_this_process(
+    SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
+    ProfilerCodeAddressService* aService);
+
 TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 {
   // Same as the previous test, but calling some things on background threads.
@@ -3595,7 +3602,10 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
             w.Start();
-            ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
+            ASSERT_TRUE(::do_profiler_stream_json_for_this_process(
+                w, /* double aSinceTime */ 0.0,
+                /* bool aIsShuttingDown */ false,
+                /* ProfilerCodeAddressService* aService */ nullptr));
             w.End();
           }),
       NS_DISPATCH_SYNC);
@@ -3611,7 +3621,10 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
             profiler_stop();
-            ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
+            ASSERT_TRUE(!::do_profiler_stream_json_for_this_process(
+                w, /* double aSinceTime */ 0.0,
+                /* bool aIsShuttingDown */ false,
+                /* ProfilerCodeAddressService* aService */ nullptr));
           }),
       NS_DISPATCH_SYNC);
   thread->Shutdown();
