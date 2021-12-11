@@ -82,6 +82,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
@@ -2461,6 +2462,19 @@ BrowserGlue.prototype = {
           Services.telemetry.scalarSet(
             "os.environment.launch_method",
             classification
+          );
+        },
+      },
+
+      // Report whether Firefox is the default handler for various files types,
+      // in particular, ".pdf".
+      {
+        condition: AppConstants.platform == "win",
+        task: () => {
+          Services.telemetry.keyedScalarSet(
+            "os.environment.is_default_handler",
+            ".pdf",
+            ShellService.isDefaultHandlerFor(".pdf")
           );
         },
       },
