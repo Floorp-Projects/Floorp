@@ -79,7 +79,7 @@ sudo ap install mercurial  && sudo apt install git && sudo apt install python3 &
 ```
  「hg version」 で存在を確認できる。
 
-以下のコマンドで  Firefox のソースコードをダウンロード出来る。
+以下のコマンドで  FLoorp のソースコードをダウンロード出来る。
 
 ```
 mkdir floorp
