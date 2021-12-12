@@ -1460,3 +1460,33 @@ void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor) {
     sGtkStyleContextSetScalePtr(style, aScaleFactor);
   }
 }
+
+gint GetBorderRadius(GtkStyleContext* aStyle) {
+  GValue value = G_VALUE_INIT;
+  // NOTE(emilio): In an ideal world, we'd query the two longhands
+  // (border-top-left-radius and border-top-right-radius) separately. However,
+  // that doesn't work (GTK rejects the query with:
+  //
+  //   Style property "border-top-left-radius" is not gettable
+  //
+  // However! Getting border-radius does work, and it does return the
+  // border-top-left-radius as a gint:
+  //
+  //   https://docs.gtk.org/gtk3/const.STYLE_PROPERTY_BORDER_RADIUS.html
+  //   https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-20/gtk/gtkcssshorthandpropertyimpl.c#L961-977
+  //
+  // So we abuse this fact, and make the assumption here that the
+  // border-top-{left,right}-radius are the same, and roll with it.
+  gtk_style_context_get_property(aStyle, "border-radius", GTK_STATE_FLAG_NORMAL,
+                                 &value);
+  gint result = 0;
+  auto type = G_VALUE_TYPE(&value);
+  if (type == G_TYPE_INT) {
+    result = g_value_get_int(&value);
+  } else {
+    NS_WARNING(nsPrintfCString("Unknown value type %lu for border-radius", type)
+                   .get());
+  }
+  g_value_unset(&value);
+  return result;
+}

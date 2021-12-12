@@ -56,4 +56,6 @@ bool IsSolidCSDStyleUsed();
 
 void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor);
 
+gint GetBorderRadius(GtkStyleContext* aStyle);
+
 #endif  // WidgetStyleCache_h
