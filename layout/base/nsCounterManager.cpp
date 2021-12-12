@@ -142,12 +142,16 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
   // frame tree, so we walk up parent scopes until we find something
   // appropriate.
 
-  if (aNode == First()) {
+  auto setNullScopeFor = [](nsCounterNode* aNode) {
     aNode->mScopeStart = nullptr;
     aNode->mScopePrev = nullptr;
     if (aNode->IsUnitializedIncrementNode()) {
       aNode->ChangeNode()->mChangeValue = 1;
     }
+  };
+
+  if (aNode == First()) {
+    setNullScopeFor(aNode);
     return;
   }
 
@@ -238,8 +242,7 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
     }
   }
 
-  aNode->mScopeStart = nullptr;
-  aNode->mScopePrev = nullptr;
+  setNullScopeFor(aNode);
 }
 
 void nsCounterList::RecalcAll() {
