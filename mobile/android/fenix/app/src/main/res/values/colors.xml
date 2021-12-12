@@ -91,6 +91,43 @@
     <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
     <color name="fx_mobile_border_color_divider" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
 
+    <!-- Private theme color variables -->
+
+    <!-- Layers -->
+    <!-- Default Background, Search Background, Menu Background, App Bar Top, App Bar Bottom, Dialogs -->
+    <color name="fx_mobile_private_layer_color_1" tools:ignore="UnusedResources">@color/photonInk50</color>
+
+    <!-- Action -->
+    <!-- Primary Button -->
+    <color name="fx_mobile_private_action_color_primary" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <!-- Snackbar -->
+    <color name="fx_mobile_private_action_color_secondary" tools:ignore="UnusedResources">@color/photonInk50</color>
+    <!-- Controls ON -->
+    <color name="fx_mobile_private_action_color_tertiary" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <!-- Switch Background OFF -->
+    <color name="fx_mobile_private_action_color_control" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <!-- Switch Background ON -->
+    <color name="fx_mobile_private_action_color_control_accent" tools:ignore="UnusedResources">@color/photonViolet40A30</color>
+
+    <!-- Text -->
+    <color name="fx_mobile_private_text_color_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_private_text_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_private_text_color_tertiary" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_private_text_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
+    <color name="fx_mobile_private_text_color_action" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_private_text_color_warning_light" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_private_text_color_warning_dark" tools:ignore="UnusedResources">@color/photonRed40</color>
+
+    <!-- Icon -->
+    <color name="fx_mobile_private_icon_color_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_private_icon_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_private_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
+    <color name="fx_mobile_private_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <color name="fx_mobile_private_icon_color_notice" tools:ignore="UnusedResources">@color/photonBlue30</color>
+
+    <!-- Border -->
+    <color name="fx_mobile_private_border_color_divider" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
     <color name="contrast_text_light_theme">@color/photonLightGrey05</color>
