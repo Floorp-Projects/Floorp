@@ -52,7 +52,6 @@
         <item name="tabRing">@color/tab_ring_normal_theme</item>
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
-        <item name="shadow">@color/shadow_normal_theme</item>
         <item name="destructive">@color/destructive_normal_theme</item>
         <item name="disabled">@color/disabled_normal_theme</item>
         <item name="scrimStart">@color/scrimStart_normal_theme</item>
@@ -237,7 +236,6 @@
         <item name="tabRing">@color/tab_ring_private_theme</item>
         <item name="neutral">@color/neutral_private_theme</item>
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
-        <item name="shadow">@color/shadow_private_theme</item>
         <item name="destructive">@color/destructive_private_theme</item>
         <item name="disabled">@color/disabled_private_theme</item>
         <item name="scrimStart">@color/scrimStart_private_theme</item>

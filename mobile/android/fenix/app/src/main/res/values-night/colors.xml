@@ -105,7 +105,6 @@
     <color name="tab_ring_normal_theme">@color/accent_normal_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
-    <color name="shadow_normal_theme">#050505</color>
     <color name="destructive_normal_theme">@color/photonRed40</color>
     <color name="disabled_normal_theme">#66FBFBFE</color>
     <color name="scrimStart_normal_theme">#F520123A</color>

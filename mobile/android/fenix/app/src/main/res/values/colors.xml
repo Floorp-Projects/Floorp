@@ -137,7 +137,6 @@
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
-    <color name="shadow_private_theme">#2B1067</color>
     <color name="destructive_private_theme">@color/photonRed40</color>
     <color name="disabled_private_theme">#66FBFBFE</color>
     <color name="scrimStart_private_theme">#F520123A</color>
@@ -183,7 +182,6 @@
     <color name="tab_ring_normal_theme">@color/accent_light_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey30</color>
     <color name="neutral_faded_normal_theme">@color/photonGrey20</color>
-    <color name="shadow_normal_theme">#1F000000</color>
     <color name="destructive_normal_theme">@color/photonRed70</color>
     <color name="disabled_normal_theme">#6620123A</color>
     <color name="scrimStart_normal_theme">#F515141A</color>
