@@ -112,14 +112,7 @@ cd c:/floorp/mozilla-beta/     //ソースコードのディレクトリに入�
 `
 //ソースコードのディレクトリに入る//
 ./mach run                                //Floorp を実行//
-```
-日本語化した Floorp のインストーラーの作成
-```
-cd c:/mozilla-source/mozilla-unified/     //ソースコードのディレクトリに入る//
-./mach build langpack-ja
-./mach package
-./mach build installers-ja
-```
+`
 
 Windows であれば、セットアップ用の exe が `"C:\mozilla-source\mozilla-unified\obj-x86_64-pc-mingw32\dist\install\sea\firefox-95.0a1.ja.win64.installer.exe"` に
 
@@ -129,7 +122,7 @@ Linux であれば、tar .bz ファイルが `..\mozilla-unified\obj-x86_64-pc-g
 
 ## ビルド時に上手く行かなかったら
 
-お餅などにご連絡ください。
+issue は建ててもいいですが、開発者は対応しないかもしれません（忙しいため）
 
 その前に試してほしいことは以下の通りです。
 
