@@ -109,14 +109,16 @@ cd c:/floorp/mozilla-beta/     //ソースコードのディレクトリに入�
 ./mach build   　　　　　　　　　　　　　　// ビルドには約100分かかります。//
 ```
 ビルド完了後 Floorp を実行する
-`
+```
 //ソースコードのディレクトリに入る//
 ./mach run                                //Floorp を実行//
-`
-`
+
+
+```
+```
 //インストーラー化//
 ./mach package
-`
+```
 
 Windows であれば、セットアップ用の exe が `"C:\mozilla-source\mozilla-unified\obj-x86_64-pc-mingw32\dist\install\sea\firefox-95.0a1.en-us.win64.installer.exe"` に
 
