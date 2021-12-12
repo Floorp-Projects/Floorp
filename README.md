@@ -118,9 +118,17 @@ cd c:/floorp/mozilla-beta/     //ソースコードのディレクトリに入�
 ./mach package
 ```
 
-Windows であれば、セットアップ用の exe が `"C:\mozilla-source\mozilla-unified\obj-x86_64-pc-mingw32\dist\install\sea\firefox-95.0a1.en-us.win64.installer.exe"` に
+Windows であれば、セットアップ用の exe が 
 
-Linux であれば、tar .bz ファイルが `..\mozilla-unified\obj-x86_64-pc-gnu-linux\dist\install\sea\firefox-95.0a1.en-us.win64.tar.bz`に生成される。
+`"C:\mozilla-source\mozilla-unified\obj-x86_64-pc-mingw32\dist\install\sea\firefox-95.0a1.en-us.win64.installer.exe"`
+
+ に
+
+Linux であれば、tar .bz ファイルが
+
+ `..\mozilla-unified\obj-x86_64-pc-gnu-linux\dist\install\sea\firefox-95.0a1.en-us.win64.tar.bz`
+
+に生成される。
 
 ----
 
