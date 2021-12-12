@@ -108,4 +108,11 @@ interface nsIWindowsShellService : nsISupports
    */
   bool checkAllProgIDsExist();
   bool checkBrowserUserChoiceHashes();
+
+  /*
+   * Determines whether or not Firefox is the "Default Handler", i.e.,
+   * is registered to handle, the given file extension (like ".pdf")
+   * or protocol (like "https").
+   */
+  boolean isDefaultHandlerFor(in AString aFileExtensionOrProtocol);
 };
