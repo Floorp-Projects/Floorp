@@ -22,7 +22,7 @@
     <string name="no_private_tabs_description">Zure fitxa pribatuak hemen erakutsiko dira.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">Irekitako fitxa bat. Sakatu fitxaz aldatzeko.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">Irekitako fitxa bat. Sakatu fitxaz aldatzeko.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Irekitako %1$s fitxa. Sakatu fitxaz aldatzeko.</string>
 
@@ -39,22 +39,18 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Gorde hautatutako fitxak bilduman</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">%1$s hautatuta</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">%1$s hautatuta</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s desautatuta</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">%1$s desautatuta</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Hautapen anitzeko modutik irtenda</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Hautapen anitzeko modutik irtenda</string>
 
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Hautapen anitzeko moduan sartuta, hautatu fitxak bilduman gordetzeko</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Hautapen anitzeko moduan sartuta, hautatu fitxak bilduman gordetzeko</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Hautatuta</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Gordetako azkenak</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Azken laster-markak</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Azken laster-markak</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -69,7 +65,7 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Saio pribatuan zaude</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Saio pribatuan zaude</string>
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
@@ -78,7 +74,7 @@
        Nabigatze pribatuari buruzko ohiko mitoak
     </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Ezabatu saioa</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Ezabatu saioa</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -159,10 +155,6 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Iraganeko esplorazioak</string>
-
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Bisitatutako azkenak</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -175,7 +167,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Irekitako fitxak</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Irekitako fitxak</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Atzera</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -187,11 +179,11 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Egin laster-marka</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Editatu laster-marka</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Editatu laster-marka</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Gehigarriak</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Hedapenak</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Hedapenak</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Gehigarririk ez hemen</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -215,14 +207,14 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Bilatu orrian</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Fitxa pribatua</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Fitxa pribatua</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gorde bilduman</string>
 
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partekatu</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Partekatu honekin…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Partekatu honekin…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Ireki %1$s nabigatzailean</string>
@@ -241,7 +233,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Ireki aplikazioan</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Itxura</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Itxura</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Pertsonalizatu irakurtzeko ikuspegia</string>
@@ -260,13 +252,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Ezin da konektatu. URL eskema ezagutezina.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Ezin da konektatu. URL eskema ezagutezina.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Hautatutako hizkuntza</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Bilatu</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Bilatu</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Erabili gailuaren hizkuntza</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -280,7 +272,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Bilaketa-motorren ezarpenak</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Oraingoan, bilatu honekin:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Oraingoan, bilatu honekin:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Osatu lotura arbeletik</string>
 
@@ -336,7 +328,7 @@
     <!-- Title for the settings page-->
     <string name="settings">Ezarpenak</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Oinarrizkoak</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Oinarrizkoak</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Orokorra</string>
     <!-- Preference category for all links about Fenix -->
@@ -348,26 +340,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Helbide-barra</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Laguntza</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Laguntza</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Puntuatu Google Play-n</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Eman iritzia</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Eman iritzia</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s(r)i buruz</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Zure eskubideak</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Zure eskubideak</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Pasahitzak</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Pasahitzak</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kreditu txartelak eta helbideak</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Kreditu txartelak eta helbideak</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Ezarri nabigatzaile lehenetsi gisa</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Aurreratua</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Pribatutasuna</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Pribatutasuna</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Pribatutasuna eta segurtasuna</string>
     <!-- Preference for advanced site permissions -->
@@ -393,13 +385,11 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Kontua</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Hasi saioa</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Hasi saioa</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Tresna-barra</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Itxura</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Hasierako pantaila</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Hasiera-orria</string>
     <!-- Preference for gestures based actions -->
@@ -419,9 +409,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Datu-bilketa</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Pribatutasun-oharra</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Pribatutasun-oharra</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Garatzaile-tresnak</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Garatzaile-tresnak</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB bidezko urruneko arazketa</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -473,10 +463,6 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Itzuli zeudenera</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Gordetako azkenak</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Azken laster-markak</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Azken laster-markak</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -543,23 +529,23 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Fitxa jasota</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Fitxak jasota</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Fitxak jasota</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">%s gailuko fitxa</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Jarraipenaren babesa</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Jarraipenaren babesa</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Jarraipenaren babesa</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Jarraipenaren babesa</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Blokeatu online zure jarraipena egiten duten eduki eta script-ak</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Blokeatu online zure jarraipena egiten duten eduki eta script-ak</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Salbuespenak</string>
 
 
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Jarraipenaren babesa desgaituta dago gune hauetarako</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Jarraipenaren babesa desgaituta dago gune hauetarako</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Gaitu gune guztietarako</string>
 
@@ -569,7 +555,7 @@
     <string name="exceptions_empty_message_learn_more_link">Argibide gehiago</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetry</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Erabilera eta datu teknikoak</string>
     <!-- Preference description for usage and technical data collection -->
@@ -577,7 +563,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketing datuak</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">%1$s(r)en erabiltzen dituzun eginbideei buruzko datuak partekatzen ditu Leanplum-ekin, mugikorrerako gure marketing hornitzailearekin.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">%1$s(r)en erabiltzen dituzun eginbideei buruzko datuak partekatzen ditu Leanplum-ekin, mugikorrerako gure marketing hornitzailearekin.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Oinarrizko erabilpen-datuak partekatzen ditu Adjust-ekin, mugikorretarako gure marketing hornitzailearekin</string>
     <!-- Title for studies preferences -->
@@ -585,16 +571,16 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Mozillari esperimentuak instalatu eta exekutatzea baimentzen du</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Esperimentuak</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Esperimentuak</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Baimendu Mozillari datuak instalatu eta jasotzea eginbide esperimentalak garatzeko</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Baimendu Mozillari datuak instalatu eta jasotzea eginbide esperimentalak garatzeko</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Hutsegiteen berriemailea</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Hutsegiteen berriemailea</string>
 
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla kokapen-zerbitzua</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Mozilla kokapen-zerbitzua</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s osasun-txostena</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">%s osasun-txostena</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -602,7 +588,7 @@
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Eskaneatu parekatzeko kodea mahaigaineko Firefoxen</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Hasi saioa</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Hasi saioa</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Hasi saioa birkonektatzeko</string>
     <!-- Preference for removing FxA account -->
@@ -612,9 +598,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Eskaneatu <b>firefox.com/pair</b> helbideko QR kodea]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Ireki kamera</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Ireki kamera</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Utzi</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Utzi</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -646,9 +632,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Saioak</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Saioak</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Pantaila-argazkiak</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Pantaila-argazkiak</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Deskargak</string>
     <!-- Option in library to open Bookmarks page -->
@@ -666,15 +652,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Fitxa berria</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Bilatu orrian</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Bilatu orrian</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Irakurketa-zerrenda</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Irakurketa-zerrenda</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Bilatu</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Bilatu</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Ezarpenak</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Historia-elementuaren menua</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Historia-elementuaren menua</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Itxi</string>
 
@@ -726,20 +712,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Automatikoki itxi irekitako fitxak</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Hasi hasierako pantailan</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Irekitze-pantaila</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Lau ordu ondoren</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Hasiera-orria</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Beti</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Azken fitxa</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Inoiz ez</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Hasiera-orria, lau orduz inaktibo egon ondoren</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -779,7 +757,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Irekitako fitxak</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Saio pribatua</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Saio pribatua</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Fitxa pribatuak</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -793,9 +771,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sinkronizatu</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Irekitako fitxak</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Irekitako fitxak</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Gorde bilduman</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Gorde bilduman</string>
     <!-- Text shown in the menu for the collection selector -->
     <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Hautatu</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -811,11 +789,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Itxi fitxa guztiak</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Fitxa berria</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Fitxa berria</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Joan hasierara</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Joan hasierara</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Txandakatu fitxen modua</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Txandakatu fitxen modua</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Egin laster-marka</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -835,25 +813,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Ireki fitxen menua</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Itxi fitxa guztiak</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Itxi fitxa guztiak</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Partekatu fitxak</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Partekatu fitxak</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Gorde fitxak bilduman</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tabulazio-menua</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Partekatu fitxa</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Partekatu fitxa</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Ezabatu</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Ezabatu</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Gorde</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Gorde</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Partekatu</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Partekatu</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Uneko saioaren irudia</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Uneko saioaren irudia</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Gorde bilduman</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Gorde bilduman</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Ezabatu bilduma</string>
     <!-- Text for the menu button to rename a collection -->
@@ -875,10 +853,8 @@
     <string name="pwa_site_controls_title_private">%1$s (modu pribatua)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Gorde</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Gorde</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Bestelakoak</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Beste fitxak</string>
 
@@ -886,21 +862,13 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ezabatu historia</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Ziur zaude zure historia garbitu nahi duzula?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Ziur zaude zure historia garbitu nahi duzula?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Historia ezabatuta</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s ezabatuta</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Garbitu</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Kopiatu</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Partekatu</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Ireki fitxa berrian</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Ireki fitxa pribatuan</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Garbitu</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Ezabatu</string>
     <!-- History multi select title in app bar
@@ -908,13 +876,13 @@
     <string name="history_multi_select_title">%1$d hautatuta</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Ezabatu %1$d elementu</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Ezabatu %1$d elementu</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Gaur</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Atzo</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Azken 24 orduak</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">Azken 24 orduak</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Azken 7 egunak</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -937,7 +905,7 @@
 
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Ireki</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Ireki</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -948,7 +916,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Sentitzen dugu. %1$s(e)k ezin du orri hori kargatu.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Fitxa hau berreskuratzen edo ixten saia zaitezke azpian.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Fitxa hau berreskuratzen edo ixten saia zaitezke azpian.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Bidali hutsegite-txostena Mozillara</string>
     <!-- Close tab button text on the tab crash page -->
@@ -957,24 +925,24 @@
     <string name="tab_crash_restore">Berreskuratu fitxa</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Saioaren aukerak</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Saioaren aukerak</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Partekatu saioa</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Partekatu saioa</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Laster-marken menua</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Laster-marken menua</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Editatu laster-marka</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Hautatu karpeta</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Hautatu karpeta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ziur zaude karpeta hau ezabatu nahi duzula?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s(e)k hautatutako elementuak ezabatuko ditu</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s ezabatuta</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">%1$s ezabatuta</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Gehitu karpeta</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -984,7 +952,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Editatu</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Hautatu</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Hautatu</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopiatu</string>
     <!-- Bookmark overflow menu share button -->
@@ -1034,7 +1002,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Baimenak</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Baimenak</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Joan ezarpenetara</string>
 
@@ -1045,7 +1013,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Gomendatua</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Kudeatu gunearen baimenak</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Kudeatu gunearen baimenak</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Garbitu baimenak</string>
     <!-- Button label for clearing a site permission-->
@@ -1154,14 +1122,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Bidali eta partekatu</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Bidali eta partekatu</string>
     <!-- Share screen header -->
     <string name="share_header_2">Partekatu</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Partekatu</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Partekatu lotura</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Partekatu lotura</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Bidali gailura</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1198,17 +1166,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Nabigatze pribatuko saioa</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Nabigatze pribatuko saioa</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Ezabatu fitxa pribatuak</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Ezabatu fitxa pribatuak</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Itxi fitxa pribatuak</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Ireki</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Ireki</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Ezabatu eta ireki</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Ezabatu eta ireki</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Hornitzailea</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Hornitzailea</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketina</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1224,19 +1192,19 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Bilduma berrizendatuta</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Fitxa ezabatuta</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Fitxa ezabatuta</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Fitxak ezabatuta</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Fitxak ezabatuta</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Fitxa itxita</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Fitxak itxita</string>
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Fitxak itxita!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Fitxak itxita!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Laster-markak gordeta!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Ikusi</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Ikusi</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Gune nagusietara gehituta!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1244,15 +1212,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Fitxa pribatuak itxita</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Fitxa pribatuak ezabatuta</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Fitxa pribatuak ezabatuta</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DESEGIN</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Gunea kenduta</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Gunea kenduta</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Desegin</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Desegin</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Berretsi</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Berretsi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Baimendu %1$s aplikazioari %2$s irekitzea</string>
@@ -1272,8 +1240,6 @@
     <string name="delete_tab_and_collection_dialog_title">%1$s ezabatu?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Ezabatu</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Utzi</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Pantaila osoko moduan sartzen</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1303,10 +1269,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d helbide</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Historia</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Historia</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d orri</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d orri</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookieak</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1325,7 +1291,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Ezabatu nabigatze-datuak irteterakoan</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Nabigatze-datuak automatikoki ezabatzen ditu menu nagusian &quot;Irten&quot; hautatzerakoan</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Nabigatze-datuak automatikoki ezabatzen ditu menu nagusian &quot;Irten&quot; hautatzerakoan</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Nabigatze-datuak automatikoki ezabatzen ditu menu nagusian \&quot;Irten\&quot; hautatzerakoan</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1376,14 +1342,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ongi etorri %s(e)ra!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Dagoeneko baduzu kontu bat?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Ikusi nobedadeak</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Birdiseinatutako %s(r)i buruzko galderak dituzu? Zer aldatu den jakin nahi duzu?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Eskuratu erantzunak hemen</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Dagoeneko baduzu kontu bat?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sinkronizatu Firefox gailuen artean</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1400,7 +1359,7 @@
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Eman izena</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Mantendu saiotik kanpo</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Mantendu saiotik kanpo</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinkronizazioa aktibo dago</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1414,7 +1373,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Pribatutasunerako eta errendimendurako orekatua. Orriak ohi bezala kargatuko dira.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Zorrotza (gomendatua)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Zorrotza (gomendatua)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Zorrotza</string>
     <!-- text for strict blocking option button description -->
@@ -1423,15 +1382,6 @@
     <string name="onboarding_toolbar_placement_header_1">Hautatu tresna-barraren kokapena</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Izan tresna-barra esku-eskura. Manten ezazu behean edo eraman ezazu gora.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Nabigatu modu pribatuan</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Ireki fitxa pribatua behin: sakatu %s ikonoa.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Ireki fitxa pribatuak aldiro: eguneratu zure nabigatze pribatuko ezarpenak.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Ireki ezarpenak</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Zure pribatutasuna</string>
     <!-- text for the privacy notice onboarding card description
@@ -1439,9 +1389,6 @@
     <string name="onboarding_privacy_notice_description2">Online partekatzen duzunaren eta gurekin partekatzen duzunaren inguruko kontrola emateko diseinatu dugu %s.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Irakurri gure pribatutasun-oharra</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Itxi</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Hasi nabigatzen</string>
@@ -1481,7 +1428,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Ez daukazu konturik? <u>Sortu kontua</u> Firefox gailuen artean sinkronizatzeko.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefoxek zure kontuarekin sinkronizatzeari utziko dio baina ez du gailu honetako zure nabigatze-daturik ezabatuko.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefoxek zure kontuarekin sinkronizatzeari utziko dio baina ez du gailu honetako zure nabigatze-daturik ezabatuko.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s(e)k zure kontuarekin sinkronizatzeari utziko dio baina ez du gailu honetako zure nabigatze-daturik ezabatuko.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1538,7 +1485,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Fitxa pribatuetan soilik</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Fitxa pertsonalizatuetan soilik</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Fitxa pertsonalizatuetan soilik</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptomeatzariak</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1569,8 +1516,6 @@
     <string name="etp_tracking_content_title">Edukiaren jarraipena</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Jarraipenerako kodea izan lezaketen kanpoko iragarkiak, bideoak eta bestelako edukia kargatzea eragozten du. Zenbait webguneren eginbideetan eragina izan lezake.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Babesaren ikonoa morea denean, %s(e)k jarraipen-elementuak blokeatu ditu gune batean. Sakatu informazio gehiagorako.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Babesak aktibo daude gune honetarako</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1581,9 +1526,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Nabigatu atzera</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Zure eskubideak</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Zure eskubideak</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Erabiltzen ditugun kode irekiko liburutegiak</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Erabiltzen ditugun kode irekiko liburutegiak</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s(r)en nobedadeak</string>
     <!-- Open source licenses page title
@@ -1621,9 +1566,9 @@
     <string name="about_debug_menu_toast_done">Arazketa-menua gaituta</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">Fitxa bat</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">Fitxa bat</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d fitxa</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d fitxa</string>
   
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1658,8 +1603,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Galdetu gorde aurretik</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ez gorde inoiz</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Betetze automatikoa</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Automatikoki bete %1$s aplikazioan</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -1677,9 +1620,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sinkronizatu saio-hasierak gailuen artean</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Birkonektatu</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Birkonektatu</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Hasi saioa Sync-en</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Hasi saioa Sync-en</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Gordetako saio-hasierak</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1697,9 +1640,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Bilatu saio-hasierak</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Ordena alfabetikoan</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Ordena alfabetikoan</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Erabilitako azkenak</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Erabilitako azkenak</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Gunea</string>
     <!-- The header for the username for a login -->
@@ -1707,25 +1650,25 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Pasahitza</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Sartu berriro zure PINa</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Sartu berriro zure PINa</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Desblokeatu gordetako saio-hasierak ikusteko</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Desblokeatu gordetako saio-hasierak ikusteko</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Konexioa ez da segurua. Sartutako saio-hasierak arriskuan egon litezke.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Konexioa ez da segurua. Sartutako saio-hasierak arriskuan egon litezke.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Argibide gehiago</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Argibide gehiago</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">%s(e)k saio-hasiera hau gordetzea nahi duzu?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">%s(e)k saio-hasiera hau gordetzea nahi duzu?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Gorde</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Gorde</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Ez gorde</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Ez gorde</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Pasahitza arbelean kopiatu da</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Erabiltzaile-izena arbelean kopiatu da</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Gunea arbelean kopiatu da</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Gunea arbelean kopiatu da</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiatu pasahitza</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1737,7 +1680,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Garbitu ostalaria</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Kopiatu gunea</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Kopiatu gunea</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Ireki gunea nabigatzailean</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1800,7 +1743,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Txarteleko izena</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Txartelaren ezizena</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Txartelaren ezizena</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Ezabatu txartela</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1856,17 +1799,17 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Ordezkatu galdera-katea &quot;%s&quot; testuarekin. Adibidez:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Argibide gehiago</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Argibide gehiago</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Bilaketa-motor pertsonalizatuaren xehetasunak</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Argibide gehiagorako lotura</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Argibide gehiagorako lotura</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Idatzi bilaketa-motorraren izena</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">&quot;%s&quot; izeneko bilaketa-motorra badago lehendik ere.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">&quot;%s&quot; izeneko bilaketa-motorra badago lehendik ere.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Idatzi bilaketa-katea</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1907,10 +1850,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Konexioa segurua da</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Konexioa ez da segurua</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Konexio segurua</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Konexio ez-segurua</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Garbitu cookieak eta gunearen datuak</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Ziur zaude <b>%s</b> guneko cookie eta datu guztiak garbitu nahi dituzula?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ziur zaude gune guztietako baimen guztiak garbitu nahi dituzula?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1920,7 +1863,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Salbuespenik ez gune honetarako</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Artikulu nagusiak</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Artikulu nagusiak</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ziur zaude laster-marka hau ezabatu nahi duzula?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1947,7 +1890,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Gorde saio-hasieraren aldaketak.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Baztertu aldaketak</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Baztertu aldaketak</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Editatu</string>
     <!--  The page title for adding new login. -->
@@ -1968,8 +1911,6 @@
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.adibidea.eus</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Web helbideak &quot;https://&quot; edo &quot;http://&quot; izan behar du</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Web helbideak &quot;https://&quot; edo &quot;http://&quot; izan behar du</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -2003,10 +1944,6 @@
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Gehien bisitatutako guneak</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Erakutsi gehien bisitatutako guneak</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Erakutsi gehien bisitatutako guneak</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Izena</string>
@@ -2081,8 +2018,6 @@
     <string name="privacy_content_close_button_content_description">Itxi</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Hausnartzeko moduko istorioak</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Hausnartzeko moduko istorioak</string>
     <!-- Header text for a section on the home screen. -->

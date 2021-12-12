@@ -21,7 +21,7 @@
     <string name="no_private_tabs_description">הלשוניות הפרטיות שלך יופיעו כאן.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">לשונית אחת פתוחה. יש להקיש כדי להחליף לשוניות.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">לשונית אחת פתוחה. יש להקיש כדי להחליף לשוניות.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s לשוניות פתוחות. יש להקיש כדי להחליף לשוניות.</string>
 
@@ -39,22 +39,18 @@
     <string name="tab_tray_collection_button_multiselect_content_description">שמירת הלשוניות שנבחרו לאוסף</string>
 
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">נבחר %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">נבחר %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">בוטלה הבחירה של %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">בוטלה הבחירה של %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">בוצעה יציאה ממצב בחירה מרובה</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">בוצעה יציאה ממצב בחירה מרובה</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">בוצעה כניסה למצב בחירה מרובה, יש לבחור בלשוניות כדי לשמור לאוסף</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">בוצעה כניסה למצב בחירה מרובה, יש לבחור בלשוניות כדי לשמור לאוסף</string>
 
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">נבחר</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">נשמרו לאחרונה</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">סימניות שנוספו לאחרונה</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">סימניות אחרונות</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -69,7 +65,7 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">הפעלה זו היא הפעלה פרטית</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">הפעלה זו היא הפעלה פרטית</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s מנקה את היסטוריית החיפוש והגלישה שלך מלשוניות פרטיות בעת סגירתן או כשהיישומון נסגר. פעולה זו אמנם לא הופכת אותך לאלמוני כלפי אתרים או ספק האינטרנט שלך, אבל כן מקלה עליך בשמירה על הפעולות המקוונות שלך מפני כל מי שמשתמש במכשיר זה.</string>
@@ -78,7 +74,7 @@
     </string>
 
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">מחיקת הפעלה</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">מחיקת הפעלה</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -156,6 +152,7 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d אתרים</string>
 
+    <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">נצפו לאחרונה</string>
@@ -168,7 +165,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">לשוניות פתוחות</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">לשוניות פתוחות</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">חזרה</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -180,11 +177,11 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">הוספה לסימניות</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">עריכת סימנייה</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">עריכת סימנייה</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">תוספות</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">הרחבות</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">הרחבות</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">אין תוספות כאן</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -208,13 +205,13 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">חיפוש בדף</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">לשונית פרטית</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">לשונית פרטית</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">שמירה לאוסף</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">שיתוף</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">שיתוף עם…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">שיתוף עם…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">פתיחה ב־%1$s</string>
@@ -231,7 +228,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">פתיחה ביישומון</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">תצוגה</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">תצוגה</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">התאמה אישית של תצוגת קריאה</string>
@@ -250,13 +247,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">לא ניתן להתחבר. מבנה הכתובת אינו ברור.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">לא ניתן להתחבר. מבנה הכתובת אינו ברור.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">שפה נבחרת</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">חיפוש</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">חיפוש</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">שימוש בשפת המכשיר</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -270,7 +267,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">הגדרות מנוע חיפוש</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">הפעם, לחפש באמצעות:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">הפעם, לחפש באמצעות:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">מילוי קישור מהלוח</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -323,7 +320,7 @@
     <!-- Title for the settings page-->
     <string name="settings">הגדרות</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">הגדרות בסיסיות</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">הגדרות בסיסיות</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">כללי</string>
     <!-- Preference category for all links about Fenix -->
@@ -335,26 +332,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">שורת כתובת</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">עזרה</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">עזרה</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">דירוג ב־Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">שליחת משוב</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">שליחת משוב</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">על אודות %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">הזכויות שלך</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">הזכויות שלך</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">ססמאות</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">ססמאות</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">כרטיסי אשראי וכתובות</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">כרטיסי אשראי וכתובות</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">הגדרה כדפדפן ברירת המחדל</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">מתקדם</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">פרטיות</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">פרטיות</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">פרטיות ואבטחה</string>
     <!-- Preference for advanced site permissions -->
@@ -380,13 +377,11 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">חשבון</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">כניסה</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">כניסה</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">סרגל כלים</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ערכת נושא</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">בית</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">מסך הבית</string>
     <!-- Preference for gestures based actions -->
@@ -406,9 +401,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">איסוף נתונים</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">הצהרת פרטיות</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">הצהרת פרטיות</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">כלי פיתוח</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">כלי פיתוח</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ניפוי שגיאות מרחוק דרך USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -461,11 +456,7 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">המשך גלישה</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">נשמרו לאחרונה</string>
 
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">סימניות שנוספו לאחרונה</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">סימניות אחרונות</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -531,21 +522,21 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">התקבלה לשונית</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">התקבלו לשוניות</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">התקבלו לשוניות</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">לשונית מהמכשיר %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">הגנת מעקב</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">הגנת מעקב</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">הגנת מעקב</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">הגנת מעקב</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">חסימת תוכן ותסריטים שעוקבים אחריך ברשת</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">חסימת תוכן ותסריטים שעוקבים אחריך ברשת</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">חריגות</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">הגנת מעקב כבויה עבור האתרים האלו</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">הגנת מעקב כבויה עבור האתרים האלו</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">הפעלה עבור כל האתרים</string>
     <!-- Text displayed when there are no exceptions -->
@@ -554,7 +545,7 @@
     <string name="exceptions_empty_message_learn_more_link">מידע נוסף</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetry</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">נתוני שימוש וטכניים</string>
     <!-- Preference description for usage and technical data collection -->
@@ -563,7 +554,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">נתוני שיווק</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">שיתוף מידע על התכונות שהכי משמשות אותך ב־%1$s עם Leanplum, ספק השיווק שלנו למכשירים ניידים.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">שיתוף מידע על התכונות שהכי משמשות אותך ב־%1$s עם Leanplum, ספק השיווק שלנו למכשירים ניידים.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">משתף נתוני שימוש בסיסיים עם Adjust, ספק השיווק שלנו בסלולר</string>
     <!-- Title for studies preferences -->
@@ -571,15 +562,15 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">מאפשר ל־Mozilla להתקין ולהריץ מחקרים</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">ניסויים</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">ניסויים</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">מאפשר ל־Mozilla להתקין ולאסוף נתונים עבור תכונות ניסיוניות</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">מאפשר ל־Mozilla להתקין ולאסוף נתונים עבור תכונות ניסיוניות</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">מדווח הקריסות</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">מדווח הקריסות</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">שירות המיקום של Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">שירות המיקום של Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">דוח הבריאות של %s</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">דוח הבריאות של %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -587,7 +578,7 @@
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">סריקת קוד צימוד ב־Firefox לשולחן העבודה</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">כניסה</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">כניסה</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">יש להיכנס כדי להתחבר מחדש</string>
     <!-- Preference for removing FxA account -->
@@ -597,9 +588,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[יש לסרוק את קוד ה־QR המוצג ב־<b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">פתיחת מצלמה</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">פתיחת מצלמה</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">ביטול</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">ביטול</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -629,9 +620,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">הפעלות</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">הפעלות</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">צילומי מסך</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">צילומי מסך</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">הורדות</string>
     <!-- Option in library to open Bookmarks page -->
@@ -649,15 +640,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">לשונית חדשה</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">חיפוש בדף</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">חיפוש בדף</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">רשימת קריאה</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">רשימת קריאה</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">חיפוש</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">חיפוש</string>
     <!-- Settings Page Title -->
     <string name="settings_title">הגדרות</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">תפריט של פריט ההיסטוריה</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">תפריט של פריט ההיסטוריה</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">סגירה</string>
 
@@ -708,20 +699,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">סגירה אוטומטית של לשוניות פתוחות</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">להתחיל ממסך הבית</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">מסך הפתיחה</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">לאחר 4 שעות</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">דף הבית</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">תמיד</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">הלשונית האחרונה</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">לעולם לא</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">מסך הבית לאחר 4 שעות של חוסר פעילות</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -764,7 +747,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">לשוניות פתוחות</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">הפעלה פרטית</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">הפעלה פרטית</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">לשוניות פרטיות</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -778,9 +761,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">סנכרון</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">לשוניות פתוחות</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">לשוניות פתוחות</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">שמירה לאוסף</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">שמירה לאוסף</string>
     <!-- Text shown in the menu for the collection selector -->
     <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">בחירה</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -796,11 +779,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">סגירת כל הלשוניות</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">לשונית חדשה</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">לשונית חדשה</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">הביתה</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">הביתה</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">החלפת מצב לשונית</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">החלפת מצב לשונית</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">הוספה לסימניות</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -820,25 +803,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">תפריט לשוניות פתוחות</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">סגירת כל הלשוניות</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">סגירת כל הלשוניות</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">שיתוף לשוניות</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">שיתוף לשוניות</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">שמירת לשוניות לאוסף</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">תפריט לשוניות</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">שיתוף לשונית</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">שיתוף לשונית</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">מחיקה</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">מחיקה</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">שמירה</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">שמירה</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">שיתוף</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">שיתוף</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">תמונת הפעלה נוכחית</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">תמונת הפעלה נוכחית</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">שמירה לאוסף</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">שמירה לאוסף</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">מחיקת אוסף</string>
     <!-- Text for the menu button to rename a collection -->
@@ -859,10 +842,7 @@
     <string name="pwa_site_controls_title_private">‏%1$s (מצב פרטי)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">שמירה</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">אחר</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">שמירה</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">לשוניות אחרות</string>
@@ -871,21 +851,13 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">מחיקת היסטוריה</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">האם ברצונך לנקות את ההיסטוריה שלך?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">האם ברצונך לנקות את ההיסטוריה שלך?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">ההיסטוריה נמחקה</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">נמחק %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">ניקוי</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">העתקה</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">שיתוף</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">פתיחה בלשונית חדשה</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">פתיחה בלשונית פרטית</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">ניקוי</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">מחיקה</string>
     <!-- History multi select title in app bar
@@ -893,13 +865,13 @@
     <string name="history_multi_select_title">%1$d נבחרו</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">מחיקת %1$d פריטים</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">מחיקת %1$d פריטים</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">היום</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">אתמול</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">24 השעות האחרונות</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">24 השעות האחרונות</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 הימים האחרונים</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -921,7 +893,7 @@
     <string name="download_multi_select_title">%1$d נבחרו</string>
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">פתיחה</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">פתיחה</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -932,7 +904,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">ל־%1$s אין אפשרות לטעון דף זה, עמך הסליחה.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">באפשרותך לנסות לשחזר או לסגור את הלשונית הזאת למטה.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">באפשרותך לנסות לשחזר או לסגור את הלשונית הזאת למטה.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">שליחת דיווח קריסה אל Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -941,24 +913,24 @@
     <string name="tab_crash_restore">שחזור לשונית</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">אפשרויות הפעלה</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">אפשרויות הפעלה</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">שיתוף הפעלה</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">שיתוף הפעלה</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">תפריט סימניות</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">תפריט סימניות</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">עריכת סימנייה</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">בחירת תיקייה</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">בחירת תיקייה</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">האם ברצונך למחוק תיקייה זו?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">‏%s ימחק את הפריטים שנבחרו.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">נמחק %1$s</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">נמחק %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">הוספת תיקייה</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -968,7 +940,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">עריכה</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">בחירה</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">בחירה</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">העתקה</string>
     <!-- Bookmark overflow menu share button -->
@@ -1019,7 +991,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">הרשאות</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">הרשאות</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">מעבר להגדרות</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1029,7 +1001,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">מומלץ</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">ניהול הרשאות אתר</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">ניהול הרשאות אתר</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">ניקוי הרשאות</string>
     <!-- Button label for clearing a site permission-->
@@ -1138,14 +1110,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">שליחה ושיתוף</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">שליחה ושיתוף</string>
     <!-- Share screen header -->
     <string name="share_header_2">שיתוף</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">שיתוף</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">שיתוף קישור</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">שיתוף קישור</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">שליחה למכשיר</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1181,17 +1153,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">הפעלה בגלישה פרטית</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">הפעלה בגלישה פרטית</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">מחיקת לשוניות פרטיות</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">מחיקת לשוניות פרטיות</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">סגירת לשוניות פרטיות</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">פתיחה</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">פתיחה</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">מחיקה ופתיחה</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">מחיקה ופתיחה</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">מופעל באמצעות</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">מופעל באמצעות</string>
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">שיווק</string>
@@ -1208,20 +1180,20 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">שם האוסף שונה</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">הלשונית נמחקה</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">הלשונית נמחקה</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">הלשוניות נמחקו</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">הלשוניות נמחקו</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">הלשונית נסגרה</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">הלשוניות נסגרו</string>
 
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">הלשוניות נסגרו!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">הלשוניות נסגרו!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">הסימניות נשמרו!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">הצגה</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">הצגה</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">נוסף לאתרים המובילים!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1229,15 +1201,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">הלשוניות הפרטיות נסגרו</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">הלשוניות הפרטיות נמחקו</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">הלשוניות הפרטיות נמחקו</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ביטול</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">האתר הוסר</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">האתר הוסר</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">ביטול</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">ביטול</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">אישור</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">אישור</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">לאפשר ל־%1$s לפתוח את %2$s</string>
@@ -1257,8 +1229,6 @@
     <string name="delete_tab_and_collection_dialog_title">למחוק את %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">מחיקה</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">ביטול</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">עברת למצב מסך מלא</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1288,10 +1258,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d כתובות</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">היסטוריה</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">היסטוריה</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d דפים</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d דפים</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">עוגיות</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1309,7 +1279,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">מחיקת נתוני גלישה ביציאה</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">הנתונים יימחקו אוטומטית בעת בחירה ב„יציאה” בתפריט הראשי</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">הנתונים יימחקו אוטומטית בעת בחירה ב„יציאה” בתפריט הראשי</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">הנתונים יימחקו אוטומטית בעת בחירה ב„יציאה” בתפריט הראשי</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1360,14 +1330,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">ברוכים הבאים אל %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">כבר יש לך חשבון?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">מה חדש</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">יש לך שאלות על העיצוב החדש של %s? רוצה לדעת מה השתנה?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">התשובות כאן</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">כבר יש לך חשבון?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">סנכרון Firefox בין מכשירים</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1383,7 +1346,7 @@
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">הרשמה</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">להישאר מנותק</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">להישאר מנותק</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">הסנכרון פעיל</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1397,7 +1360,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">מאוזן בין פרטיות לביצועים. דפים ייטענו כרגיל.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">מחמיר (מומלץ)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">מחמיר (מומלץ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">מחמיר</string>
     <!-- text for strict blocking option button description -->
@@ -1406,15 +1369,6 @@
     <string name="onboarding_toolbar_placement_header_1">בחירת מיקום סרגל הכלים שלך</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">לשים את סרגל הכלים בהישג יד. ניתן להשאיר אותו בתחתית, או להעביר אותו למעלה.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">גלישה בפרטיות</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">לפתיחת לשונית פרטית פעם אחת, יש להקיש על הסמל %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">לפתיחת לשוניות פרטיות כל הזמן, יש לעדכן את הגדרות הגלישה הפרטית.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">פתיחת הגדרות</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">הפרטיות שלך</string>
 
@@ -1423,9 +1377,6 @@
     <string name="onboarding_privacy_notice_description2">עיצבנו את %s כדי להעניק לך שליטה במה שמעניין אותך לשתף ברשת ומה שמעניין אותך לשתף איתנו.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">קריאת הצהרת הפרטיות שלנו</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">סגירה</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">התחלת גלישה</string>
@@ -1465,7 +1416,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[אין לך חשבון? <u>באפשרותך ליצור אחד</u> כדי לסנכרן את Firefox בין מכשירים.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">‏Firefox יפסיק להסתנכרן עם החשבון שלך, אבל לא ימחק את נתוני הגלישה שלך ממכשיר זה.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">‏Firefox יפסיק להסתנכרן עם החשבון שלך, אבל לא ימחק את נתוני הגלישה שלך ממכשיר זה.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">‏‏%s יפסיק להסתנכרן עם החשבון שלך, אבל לא ימחק את נתוני הגלישה שלך ממכשיר זה.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1522,7 +1473,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">בלשוניות פרטיות בלבד</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">בלשוניות מותאמות אישית בלבד</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">בלשוניות מותאמות אישית בלבד</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">כורי מטבעות דיגיטליים</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1553,8 +1504,6 @@
     <string name="etp_tracking_content_title">תוכן מעקב</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">עוצר טעינה של פרסומות, סרטונים וכל תוכן חיצוני אחר שמכיל קוד מעקב. עשוי להשפיע על אופן פעילות האתר.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">בכל פעם שהמגן בצבע סגול, %s חסם רכיבי מעקב באתר. יש להקיש למידע נוסף.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ההגנות פעילות עבור אתר זה</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1565,9 +1514,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">ניווט אחורה</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">הזכויות שלך</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">הזכויות שלך</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">ספריות קוד פתוח בהן אנו משתמשים</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">ספריות קוד פתוח בהן אנו משתמשים</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">מה חדש ב־%s</string>
 
@@ -1603,9 +1552,9 @@
     <string name="about_debug_menu_toast_done">תפריט ניפוי שגיאות מופעל</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">לשונית אחת</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">לשונית אחת</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d לשוניות</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d לשוניות</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1639,8 +1588,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">לבקש לשמור</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">לעולם לא לשמור</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">מילוי אוטומטי</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">מילוי אוטומטי ב־%1$s</string>
@@ -1660,9 +1607,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">סנכרון כניסות בין מכשירים</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">חיבור מחדש</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">חיבור מחדש</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">התחברות אל Sync</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">התחברות אל Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">כניסות שמורות</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1680,9 +1627,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">חיפוש כניסות</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">לפי סדר אלפביתי</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">לפי סדר אלפביתי</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">בשימוש לאחרונה</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">בשימוש לאחרונה</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">אתר</string>
     <!-- The header for the username for a login -->
@@ -1690,25 +1637,25 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">ססמה</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">להכניס את הקוד שלך מחדש</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">להכניס את הקוד שלך מחדש</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">חיבור זה אינו מאובטח. פרטי התחברות שיוכנסו כאן עלולים להיות בסכנה.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">חיבור זה אינו מאובטח. פרטי התחברות שיוכנסו כאן עלולים להיות בסכנה.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">מידע נוסף</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">מידע נוסף</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">האם ברצונך ש־%s ישמור כניסה זו?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">האם ברצונך ש־%s ישמור כניסה זו?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">לשמור</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">לשמור</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">לא לשמור</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">לא לשמור</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">הססמה הועתקה ללוח</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">שם המשתמש הועתק ללוח</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">האתר הועתק ללוח</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">האתר הועתק ללוח</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">העתקת ססמה</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1720,7 +1667,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">ניקוי שם מארח</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">העתקת אתר</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">העתקת אתר</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">פתיחת אתר בדפדפן</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1783,7 +1730,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">שם שעל הכרטיס</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">כינוי עבור הכרטיס</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">כינוי עבור הכרטיס</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">מחיקת כרטיס</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1841,17 +1788,17 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">יש להחליף את השאילתה עם ״%s״. לדוגמה:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">מידע נוסף</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">מידע נוסף</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">פרטי מנוע חיפוש מותאם אישית</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">קישור למידע נוסף</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">קישור למידע נוסף</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">נא להקליד שם למנוע החיפוש</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">מנוע חיפוש עם השם ״%s״ כבר קיים.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">מנוע חיפוש עם השם ״%s״ כבר קיים.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">נא להקליד מחרוזת חיפוש</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1893,10 +1840,10 @@
     <string name="quick_settings_sheet_secure_connection_2">החיבור מאובטח</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">החיבור אינו מאובטח</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">חיבור מאובטח</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">חיבור לא מאובטח</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">ניקוי עוגיות ונתוני אתרים</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[האם ברצונך לנקות את כל העוגיות והנתונים עבור האתר <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">האם ברצונך לנקות את כל ההרשאות עבור כל האתרים?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1906,7 +1853,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">אין חריגות לאתרים</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">מאמרים מובילים</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">מאמרים מובילים</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">האם ברצונך למחוק סימנייה זו?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1933,7 +1880,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">שמירת השינויים של הכניסה.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">ביטול שינויים</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">ביטול שינויים</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">עריכה</string>
     <!--  The page title for adding new login. -->
@@ -1954,8 +1901,6 @@
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">כתובת האתר חייבת להכיל \“https://\“ או \“http://\“</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">כתובת האתר חייבת להכיל &quot;https://‎&quot; או &quot;http://‎&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -1987,10 +1932,6 @@
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">האתרים הנצפים ביותר</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">הצגת האתרים הנצפים ביותר</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">הצגת האתרים הנצפים ביותר</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">שם</string>
@@ -2066,8 +2007,6 @@
     <string name="privacy_content_close_button_content_description">סגירה</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">סיפורים מעוררי מחשבה</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">סיפורים מעוררי מחשבה</string>
     <!-- Header text for a section on the home screen. -->
