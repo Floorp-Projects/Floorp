@@ -19,8 +19,8 @@
 ----
 ### Windows でのセットアップ
 
-・Visual Studio 2019 or Visual Studio 2022 ビルドツール
-##### 要求されるコンポーネント Visual Studio 2019
+・Visual Studio 2019 または Visual Studio 2022 ビルドツール
+##### 要求されるコンポーネント Visual Studio 2019 の場合
  ` C ++を使用したデスクトップ開発。`
 
  ` C ++によるゲーム開発。`
@@ -29,7 +29,7 @@
 
 `v142ビルドツール（x86およびx64）用のC ++ ATL`
 
-##### 要求されるコンポーネント Visual Studio 2022 ビルドツール
+##### 要求されるコンポーネント Visual Studio 2022 ビルドツールの場合
 
 ` C ++を使用したデスクトップ開発`
 
