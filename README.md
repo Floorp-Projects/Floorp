@@ -112,7 +112,8 @@ cd c:/floorp/mozilla-beta/     //ソースコードのディレクトリに入�
 `
 //ソースコードのディレクトリに入る//
 ./mach run                                //Floorp を実行//
-
+`
+`
 //インストーラー化//
 ./mach package
 `
