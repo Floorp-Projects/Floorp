@@ -55,16 +55,12 @@ if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
   // We're on a Windows 10 test machine.
 
   add_task(async function remoteEnableWithPDF() {
-    await ExperimentFakes.remoteDefaultsHelper({
-      feature: NimbusFeatures.shellService,
-      configuration: {
-        slug: "shellService_remoteEnableWithPDF",
-        variables: {
-          setDefaultBrowserUserChoice: true,
-          setDefaultPDFHandler: true,
-          enabled: true,
-        },
-        targeting: "true",
+    let doCleanup = await ExperimentFakes.enrollWithRollout({
+      featureId: NimbusFeatures.shellService.featureId,
+      value: {
+        setDefaultBrowserUserChoice: true,
+        setDefaultPDFHandler: true,
+        enabled: true,
       },
     });
 
@@ -85,19 +81,17 @@ if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     Assert.deepEqual(_callExternalDefaultBrowserAgentStub.firstCall.args, [
       { arguments: ["set-default-browser-user-choice", aumi, ".pdf"] },
     ]);
+
+    await doCleanup();
   });
 
   add_task(async function remoteEnableWithoutPDF() {
-    await ExperimentFakes.remoteDefaultsHelper({
-      feature: NimbusFeatures.shellService,
-      configuration: {
-        slug: "shellService_remoteEnableWithoutPDF",
-        variables: {
-          setDefaultBrowserUserChoice: true,
-          setDefaultPDFHandler: false,
-          enabled: true,
-        },
-        targeting: "true",
+    let doCleanup = await ExperimentFakes.enrollWithRollout({
+      featureId: NimbusFeatures.shellService.featureId,
+      value: {
+        setDefaultBrowserUserChoice: true,
+        setDefaultPDFHandler: false,
+        enabled: true,
       },
     });
 
@@ -118,19 +112,17 @@ if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     Assert.deepEqual(_callExternalDefaultBrowserAgentStub.firstCall.args, [
       { arguments: ["set-default-browser-user-choice", aumi] },
     ]);
+
+    await doCleanup();
   });
 
   add_task(async function remoteDisable() {
-    await ExperimentFakes.remoteDefaultsHelper({
-      feature: NimbusFeatures.shellService,
-      configuration: {
-        slug: "shellService_remoteDisable",
-        variables: {
-          setDefaultBrowserUserChoice: false,
-          setDefaultPDFHandler: true,
-          enabled: false,
-        },
-        targeting: "true",
+    let doCleanup = await ExperimentFakes.enrollWithRollout({
+      featureId: NimbusFeatures.shellService.featureId,
+      value: {
+        setDefaultBrowserUserChoice: false,
+        setDefaultPDFHandler: true,
+        enabled: false,
       },
     });
 
@@ -148,5 +140,7 @@ if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
 
     Assert.ok(_callExternalDefaultBrowserAgentStub.notCalled);
     Assert.ok(setDefaultStub.called);
+
+    await doCleanup();
   });
 }
