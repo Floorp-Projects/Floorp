@@ -88,6 +88,15 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Бәйләнеш ташланды</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Тоташкан вакытта челтәр аша бәйләнеш өзелеп китте. Зинһар янәдән тырышып карагыз.</p>
+      <ul>
+        <li>Сайт я вакытлыча эшләми, я бик мәшгуль. Берәздән янәдән ачып карагыз.</li>
+        <li>Әгәр һичбер сайт та ачылмаса, җиһазыгызның мобиль интернет яки Wi-Fi бәйләнешен тикшерегез.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Куркыныч файл төре</string>
 
@@ -177,4 +186,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ялган сайт</string>
-    </resources>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Хәвефсез сайт юк</string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP сайтка үтү</string>
+</resources>

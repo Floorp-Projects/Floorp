@@ -24,6 +24,8 @@
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Башка %1$d домендагы мәгълүматыгызга ирешү</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Браузер табларына ирешү</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Навигация вакытында браузер гамәлләренә ирешү</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Кыстыргычларны уку һәм үзгәртү</string>
     <!-- Description for browser_setting permission. -->
@@ -46,6 +48,8 @@
     <string name="mozac_feature_addons_permissions_history_description">Гизү тарихына ирешү</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Киңәйтүләр кулланышын контрольдә тоту һәм темалар белән идарә итү</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Бу кушымтадан тыш башка кушымталар белән хәбәрләр алмашу</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Сезгә искәртүләр күрсәтү</string>
     <!-- Description for pkcs11 permission. -->
@@ -58,6 +62,8 @@
     <string name="mozac_feature_addons_permissions_tab_hide_description">Браузер табларын яшерү һәм күрсәтү</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Гизү тарихына ирешү</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Ачык таблардагы мәгълүматыгызга ирешү өчен җитештерүче коралларын киңәйтү</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Версия</string>
     <!-- The authors of an add-on. -->
