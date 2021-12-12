@@ -17,8 +17,8 @@
     <!-- Selected tab -->
     <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet90A20</color>
     <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
-    <color name="fx_mobile_layer_color_scrim_start" tools:ignore="UnusedResources">@color/photonDarkGrey90A96</color>
-    <color name="fx_mobile_layer_color_scrim_end" tools:ignore="UnusedResources">@color/photonDarkGrey30A96</color>
+    <color name="fx_mobile_layer_color_scrim_start">@color/photonDarkGrey90A96</color>
+    <color name="fx_mobile_layer_color_scrim_end">@color/photonDarkGrey30A96</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet70</color>
     <!-- Tooltip -->
@@ -184,8 +184,6 @@
     <color name="neutral_faded_normal_theme">@color/photonGrey20</color>
     <color name="destructive_normal_theme">@color/photonRed70</color>
     <color name="disabled_normal_theme">#6620123A</color>
-    <color name="scrimStart_normal_theme">#F515141A</color>
-    <color name="scrimEnd_normal_theme">#F542414D</color>
     <color name="snackbar_normal_theme">@color/accent_light_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_bright_light_theme</color>
     <color name="toolbar_start_gradient_normal_theme">@color/foundation_light_theme</color>

@@ -54,8 +54,8 @@
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/destructive_normal_theme</item>
         <item name="disabled">@color/disabled_normal_theme</item>
-        <item name="scrimStart">@color/scrimStart_normal_theme</item>
-        <item name="scrimEnd">@color/scrimEnd_normal_theme</item>
+        <item name="scrimStart">@color/fx_mobile_layer_color_scrim_start</item>
+        <item name="scrimEnd">@color/fx_mobile_layer_color_scrim_end</item>
         <item name="snackbar">@color/snackbar_normal_theme</item>
         <item name="accentUsedOnDarkBackground">@color/accent_on_dark_background_normal_theme</item>
         <item name="toolbarStartGradient">@color/toolbar_start_gradient_normal_theme</item>
