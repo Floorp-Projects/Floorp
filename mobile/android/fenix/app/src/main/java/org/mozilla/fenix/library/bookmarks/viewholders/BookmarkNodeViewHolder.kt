@@ -4,12 +4,10 @@
 
 package org.mozilla.fenix.library.bookmarks.viewholders
 
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.hideAndDisable
@@ -101,12 +99,7 @@ class BookmarkNodeViewHolder(
         when {
             // Item is a folder
             item.type == BookmarkNodeType.FOLDER ->
-                iconView.setImageDrawable(
-                    context.getDrawableWithTint(
-                        R.drawable.ic_folder_icon,
-                        ContextCompat.getColor(context, R.color.primary_text_light_theme)
-                    )
-                )
+                iconView.setImageResource(R.drawable.ic_folder_icon)
             // Item has a http/https URL
             url != null && url.startsWith("http") ->
                 context.components.core.icons.loadIntoView(iconView, url)
