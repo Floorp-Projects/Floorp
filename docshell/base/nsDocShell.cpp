@@ -9309,13 +9309,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
         do_GetInterface(mTreeOwner);
     if (delegate) {
       bool shouldNavigate = false;
-      nsCOMPtr<nsIURI> referrer;
       nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
-      if (referrerInfo) {
-        referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
-      }
       rv = delegate->ShouldNavigate(
-          this, aLoadState->URI(), aLoadState->LoadType(), referrer,
+          this, aLoadState->URI(), aLoadState->LoadType(), referrerInfo,
           !!aLoadState->PostDataStream(), aLoadState->TriggeringPrincipal(),
           aLoadState->Csp(), &shouldNavigate);
       if (NS_SUCCEEDED(rv) && !shouldNavigate) {
