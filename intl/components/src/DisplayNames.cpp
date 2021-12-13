@@ -121,7 +121,8 @@ static bool IsStandaloneMonth(UDateFormatSymbolType symbolType) {
 #endif
 
 Result<Ok, DisplayNamesError> DisplayNames::ComputeDateTimeDisplayNames(
-    UDateFormatSymbolType symbolType, mozilla::Span<const int32_t> indices) {
+    UDateFormatSymbolType symbolType, mozilla::Span<const int32_t> indices,
+    Span<const char> aCalendar) {
   if (!mDateTimeDisplayNames.empty()) {
     // No need to re-compute the display names.
     return Ok();
@@ -135,13 +136,13 @@ Result<Ok, DisplayNamesError> DisplayNames::ComputeDateTimeDisplayNames(
     return Err(DisplayNamesError::InvalidLanguageTag);
   }
 
-  if (!mOptions.calendar.empty()) {
+  if (!aCalendar.empty()) {
     // Add the calendar extension to the locale. This is only available via
     // the MozExtension.
     Vector<char, 32> extension;
     Span<const char> prefix = MakeStringSpan("u-ca-");
     if (!extension.append(prefix.data(), prefix.size()) ||
-        !extension.append(mOptions.calendar.data(), mOptions.calendar.size())) {
+        !extension.append(aCalendar.data(), aCalendar.size())) {
       return Err(DisplayNamesError::OutOfMemory);
     }
     // This overwrites any other Unicode extensions, but should be okay to do

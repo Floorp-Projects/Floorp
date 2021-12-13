@@ -174,7 +174,6 @@ class DisplayNames final {
   struct Options {
     Style style = Style::Long;
     LanguageDisplay languageDisplay = LanguageDisplay::Standard;
-    Span<const char> calendar = nullptr;  // MozExtension, not part of ECMA-402.
   };
 
   DisplayNames(ULocaleDisplayNames* aDisplayNames, Span<const char> aLocale,
@@ -262,7 +261,8 @@ class DisplayNames final {
    * DateTime options.
    */
   Result<Ok, DisplayNamesError> ComputeDateTimeDisplayNames(
-      UDateFormatSymbolType symbolType, mozilla::Span<const int32_t> indices);
+      UDateFormatSymbolType symbolType, mozilla::Span<const int32_t> indices,
+      Span<const char> aCalendar);
 
   // The following are the stack-allocated sizes for various strings using the
   // mozilla::Vector. The numbers should be large enough to fit the common
@@ -701,7 +701,8 @@ class DisplayNames final {
    */
   template <typename B>
   Result<Ok, DisplayNamesError> GetWeekday(
-      B& aBuffer, Weekday aWeekday, Fallback aFallback = Fallback::None) {
+      B& aBuffer, Weekday aWeekday, Span<const char> aCalendar,
+      Fallback aFallback = Fallback::None) {
     // SpiderMonkey static casts the enum, so ensure it is correctly in range.
     MOZ_ASSERT(aWeekday >= Weekday::Monday && aWeekday <= Weekday::Sunday);
 
@@ -730,8 +731,8 @@ class DisplayNames final {
         UCAL_MONDAY, UCAL_TUESDAY,  UCAL_WEDNESDAY, UCAL_THURSDAY,
         UCAL_FRIDAY, UCAL_SATURDAY, UCAL_SUNDAY};
 
-    if (auto result =
-            ComputeDateTimeDisplayNames(symbolType, mozilla::Span(indices));
+    if (auto result = ComputeDateTimeDisplayNames(
+            symbolType, mozilla::Span(indices), aCalendar);
         result.isErr()) {
       return result.propagateErr();
     }
@@ -754,6 +755,7 @@ class DisplayNames final {
    */
   template <typename B>
   Result<Ok, DisplayNamesError> GetMonth(B& aBuffer, Month aMonth,
+                                         Span<const char> aCalendar,
                                          Fallback aFallback = Fallback::None) {
     // SpiderMonkey static casts the enum, so ensure it is correctly in range.
     MOZ_ASSERT(aMonth >= Month::January && aMonth <= Month::Undecimber);
@@ -780,8 +782,8 @@ class DisplayNames final {
         UCAL_SEPTEMBER, UCAL_OCTOBER,  UCAL_NOVEMBER, UCAL_DECEMBER,
         UCAL_UNDECIMBER};
 
-    if (auto result =
-            ComputeDateTimeDisplayNames(symbolType, mozilla::Span(indices));
+    if (auto result = ComputeDateTimeDisplayNames(
+            symbolType, mozilla::Span(indices), aCalendar);
         result.isErr()) {
       return result.propagateErr();
     }
@@ -801,7 +803,8 @@ class DisplayNames final {
    */
   template <typename B>
   Result<Ok, DisplayNamesError> GetQuarter(
-      B& aBuffer, Quarter aQuarter, Fallback aFallback = Fallback::None) {
+      B& aBuffer, Quarter aQuarter, Span<const char> aCalendar,
+      Fallback aFallback = Fallback::None) {
     // SpiderMonkey static casts the enum, so ensure it is correctly in range.
     MOZ_ASSERT(aQuarter >= Quarter::Q1 && aQuarter <= Quarter::Q4);
 
@@ -828,8 +831,8 @@ class DisplayNames final {
     // ICU doesn't provide an enum for quarters.
     static constexpr int32_t indices[] = {0, 1, 2, 3};
 
-    if (auto result =
-            ComputeDateTimeDisplayNames(symbolType, mozilla::Span(indices));
+    if (auto result = ComputeDateTimeDisplayNames(
+            symbolType, mozilla::Span(indices), aCalendar);
         result.isErr()) {
       return result.propagateErr();
     }
@@ -852,13 +855,14 @@ class DisplayNames final {
    */
   template <typename B>
   Result<Ok, DisplayNamesError> GetDayPeriod(
-      B& aBuffer, DayPeriod aDayPeriod, Fallback aFallback = Fallback::None) {
+      B& aBuffer, DayPeriod aDayPeriod, Span<const char> aCalendar,
+      Fallback aFallback = Fallback::None) {
     UDateFormatSymbolType symbolType = UDAT_AM_PMS;
 
     static constexpr int32_t indices[] = {UCAL_AM, UCAL_PM};
 
-    if (auto result =
-            ComputeDateTimeDisplayNames(symbolType, mozilla::Span(indices));
+    if (auto result = ComputeDateTimeDisplayNames(
+            symbolType, mozilla::Span(indices), aCalendar);
         result.isErr()) {
       return result.propagateErr();
     }
