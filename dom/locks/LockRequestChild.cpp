@@ -16,8 +16,7 @@ using IPCResult = mozilla::ipc::IPCResult;
 
 NS_IMPL_ISUPPORTS(LockRequestChild, nsISupports)
 
-// XXX: should be MOZ_CAN_RUN_SCRIPT, but not sure how to call it from closures
-MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunCallbackAndSettlePromise(
+MOZ_CAN_RUN_SCRIPT static void RunCallbackAndSettlePromise(
     LockGrantedCallback& aCallback, mozilla::dom::Lock* lock,
     Promise& aPromise) {
   ErrorResult rv;
@@ -85,7 +84,9 @@ IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
     promise = mRequest.mPromise;
   }
 
-  RunCallbackAndSettlePromise(*mRequest.mCallback, lock, *promise);
+  // XXX(krosylight): MOZ_KnownLive shouldn't be needed here, mRequest is const
+  RunCallbackAndSettlePromise(MOZ_KnownLive(*mRequest.mCallback), lock,
+                              *promise);
   return IPC_OK();
 }
 
