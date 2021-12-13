@@ -86,7 +86,6 @@ function \type\()_8bpc_neon, export=1
         sub             x7,  x7,  w4, uxtw
         br              x7
 40:
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 4:
@@ -115,7 +114,6 @@ function \type\()_8bpc_neon, export=1
         st1             {v5.s}[3],  [x7], x1
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 8:
@@ -129,7 +127,6 @@ function \type\()_8bpc_neon, export=1
         \type           v4,  v0,  v1,  v2,  v3
         b               8b
 16:
-        AARCH64_VALID_JUMP_TARGET
         \type           v5,  v0,  v1,  v2,  v3
         st1             {v4.16b}, [x0], x1
         \type           v6,  v0,  v1,  v2,  v3
@@ -142,7 +139,6 @@ function \type\()_8bpc_neon, export=1
         \type           v4,  v0,  v1,  v2,  v3
         b               16b
 320:
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 32:
@@ -156,7 +152,6 @@ function \type\()_8bpc_neon, export=1
         \type           v4,  v0,  v1,  v2,  v3
         b               32b
 640:
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 64:
@@ -174,7 +169,6 @@ function \type\()_8bpc_neon, export=1
         \type           v4, v0,  v1,  v2,  v3
         b               64b
 1280:
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x0,  #64
 128:
         \type           v5,  v0,  v1,  v2,  v3
@@ -231,7 +225,6 @@ function w_mask_\type\()_8bpc_neon, export=1
         lsl             x1,   x1,  #1
         br              x9
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v4.8h,   v5.8h},   [x2],  #32  // tmp1 (four rows at once)
         ld1             {v6.8h,   v7.8h},   [x3],  #32  // tmp2 (four rows at once)
         subs            w5,  w5,  #4
@@ -252,7 +245,8 @@ function w_mask_\type\()_8bpc_neon, export=1
         sqrshrun        v22.8b,  v20.8h,  #4
         sqrshrun        v23.8b,  v21.8h,  #4
 .if \type == 444
-        uzp1            v18.16b,  v18.16b, v19.16b      // Same as xtn, xtn2
+        xtn             v18.8b,   v18.8h
+        xtn2            v18.16b,  v19.8h
         sub             v18.16b,  v1.16b,  v18.16b
         st1             {v18.16b}, [x6],  #16
 .elseif \type == 422
@@ -276,7 +270,6 @@ function w_mask_\type\()_8bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v4.8h,   v5.8h},   [x2],  #32
         ld1             {v6.8h,   v7.8h},   [x3],  #32
         subs            w5,  w5,  #2
@@ -297,7 +290,8 @@ function w_mask_\type\()_8bpc_neon, export=1
         sqrshrun        v22.8b,  v20.8h,  #4
         sqrshrun        v23.8b,  v21.8h,  #4
 .if \type == 444
-        uzp1            v18.16b, v18.16b, v19.16b       // Same as xtn, xtn2
+        xtn             v18.8b,  v18.8h
+        xtn2            v18.16b, v19.8h
         sub             v18.16b, v1.16b,  v18.16b
         st1             {v18.16b}, [x6],  #16
 .elseif \type == 422
@@ -320,7 +314,6 @@ function w_mask_\type\()_8bpc_neon, export=1
 640:
 320:
 160:
-        AARCH64_VALID_JUMP_TARGET
         mov             w11, w4
         sub             x1,  x1,  w4,  uxtw
 .if \type == 444
@@ -371,8 +364,10 @@ function w_mask_\type\()_8bpc_neon, export=1
         sqrshrun        v26.8b,  v26.8h,  #4
         sqrshrun        v27.8b,  v27.8h,  #4
 .if \type == 444
-        uzp1            v20.16b, v20.16b, v21.16b       // Same as xtn, xtn2
-        uzp1            v21.16b, v22.16b, v23.16b       // Ditto
+        xtn             v20.8b,  v20.8h
+        xtn2            v20.16b, v21.8h
+        xtn             v21.8b,  v22.8h
+        xtn2            v21.16b, v23.8h
         sub             v20.16b, v1.16b,  v20.16b
         sub             v21.16b, v1.16b,  v21.16b
         st1             {v20.16b}, [x6],  #16
@@ -439,7 +434,6 @@ function blend_8bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x6
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8b},     [x5],  #8
         ld1             {v1.d}[0],   [x2],  #8
         ld1             {v0.s}[0],   [x0]
@@ -454,7 +448,6 @@ function blend_8bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.16b},  [x5],  #16
         ld1             {v1.16b},  [x2],  #16
         ld1             {v0.d}[0],   [x0]
@@ -472,7 +465,6 @@ function blend_8bpc_neon, export=1
         b.gt            8b
         ret
 16:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.16b,  v2.16b},  [x5],  #32
         ld1             {v5.16b,  v6.16b},  [x2],  #32
         ld1             {v0.16b},  [x0]
@@ -497,7 +489,6 @@ function blend_8bpc_neon, export=1
         b.gt            16b
         ret
 32:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.16b,  v1.16b,  v2.16b,  v3.16b},  [x5],  #64
         ld1             {v16.16b, v17.16b, v18.16b, v19.16b}, [x2],  #64
         ld1             {v20.16b, v21.16b}, [x0]
@@ -556,7 +547,6 @@ function blend_h_8bpc_neon, export=1
         sub             x6,  x6,  w7, uxtw
         br              x6
 2:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.h}[0],   [x5],  #2
         ld1             {v1.s}[0],   [x2],  #4
         subs            w4,  w4,  #2
@@ -572,7 +562,6 @@ function blend_h_8bpc_neon, export=1
         b.gt            2b
         ret
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld2r            {v0.8b,   v1.8b},   [x5],  #2
         ld1             {v2.8b},   [x2],  #8
         subs            w4,  w4,  #2
@@ -588,7 +577,6 @@ function blend_h_8bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld2r            {v0.16b,  v1.16b},  [x5],  #2
         ld1             {v2.16b},  [x2],  #16
         ld1             {v3.d}[0],   [x0]
@@ -607,7 +595,6 @@ function blend_h_8bpc_neon, export=1
         b.gt            8b
         ret
 16:
-        AARCH64_VALID_JUMP_TARGET
         ld2r            {v0.16b,  v1.16b},  [x5],  #2
         ld1             {v2.16b,  v3.16b},  [x2],  #32
         ld1             {v5.16b},  [x0]
@@ -634,7 +621,6 @@ function blend_h_8bpc_neon, export=1
 1280:
 640:
 320:
-        AARCH64_VALID_JUMP_TARGET
         sub             x1,  x1,  w3,  uxtw
         add             x7,  x2,  w3,  uxtw
 321:
@@ -705,7 +691,6 @@ function blend_v_8bpc_neon, export=1
         sub             x6,  x6,  w3,  uxtw
         br              x6
 20:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v0.8b},   [x5]
         sub             v1.8b,   v4.8b,   v0.8b
 2:
@@ -723,7 +708,6 @@ function blend_v_8bpc_neon, export=1
         b.gt            2b
         ret
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v0.2s},   [x5]
         sub             x1,  x1,  #2
         sub             v1.8b,   v4.8b,   v0.8b
@@ -742,7 +726,6 @@ function blend_v_8bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v0.2d},   [x5]
         sub             x1,  x1,  #4
         sub             v1.16b,  v4.16b,  v0.16b
@@ -764,7 +747,6 @@ function blend_v_8bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.16b},  [x5]
         sub             x1,  x1,  #8
         sub             v2.16b,  v4.16b,  v0.16b
@@ -792,7 +774,6 @@ function blend_v_8bpc_neon, export=1
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.16b,  v1.16b},  [x5]
         sub             x1,  x1,  #16
         sub             v2.16b,  v4.16b,  v0.16b
@@ -844,7 +825,6 @@ function put_neon
         br              x9
 
 2:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.h}[0], [x2], x3
         ld1             {v1.h}[0], [x2], x3
         subs            w5,  w5,  #2
@@ -853,7 +833,6 @@ function put_neon
         b.gt            2b
         ret
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.s}[0], [x2], x3
         ld1             {v1.s}[0], [x2], x3
         subs            w5,  w5,  #2
@@ -862,7 +841,6 @@ function put_neon
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b}, [x2], x3
         ld1             {v1.8b}, [x2], x3
         subs            w5,  w5,  #2
@@ -871,7 +849,6 @@ function put_neon
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         add             x8,  x0,  x1
         lsl             x1,  x1,  #1
         add             x9,  x2,  x3
@@ -885,7 +862,6 @@ function put_neon
         b.gt            16b
         ret
 32:
-        AARCH64_VALID_JUMP_TARGET
         ldp             x6,  x7,  [x2]
         ldp             x8,  x9,  [x2, #16]
         stp             x6,  x7,  [x0]
@@ -896,7 +872,6 @@ function put_neon
         b.gt            32b
         ret
 64:
-        AARCH64_VALID_JUMP_TARGET
         ldp             x6,  x7,  [x2]
         ldp             x8,  x9,  [x2, #16]
         stp             x6,  x7,  [x0]
@@ -911,7 +886,6 @@ function put_neon
         b.gt            64b
         ret
 128:
-        AARCH64_VALID_JUMP_TARGET
         ldp             q0,  q1,  [x2]
         ldp             q2,  q3,  [x2, #32]
         stp             q0,  q1,  [x0]
@@ -946,7 +920,6 @@ function prep_neon
         br              x9
 
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.s}[0], [x1], x2
         ld1             {v1.s}[0], [x1], x2
         subs            w4,  w4,  #2
@@ -956,7 +929,6 @@ function prep_neon
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b}, [x1], x2
         ld1             {v1.8b}, [x1], x2
         subs            w4,  w4,  #2
@@ -966,7 +938,6 @@ function prep_neon
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         add             x9,  x1,  x2
         lsl             x2,  x2,  #1
 16:
@@ -981,7 +952,6 @@ function prep_neon
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         add             x8,  x0,  w3, uxtw
 32:
         ld1             {v0.16b, v1.16b},  [x1], x2
@@ -1002,7 +972,6 @@ function prep_neon
         b.gt            32b
         ret
 640:
-        AARCH64_VALID_JUMP_TARGET
         add             x8,  x0,  #32
         mov             x6,  #64
 64:
@@ -1025,7 +994,6 @@ function prep_neon
         b.gt            64b
         ret
 1280:
-        AARCH64_VALID_JUMP_TARGET
         add             x8,  x0,  #64
         mov             x6,  #128
 128:
@@ -1374,7 +1342,6 @@ L(\type\()_8tap_h):
         br              x9
 
 20:     // 2xN h
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         add             \xmx,  \xmx,  #2
         ld1             {v0.s}[0], [\xmx]
@@ -1409,7 +1376,6 @@ L(\type\()_8tap_h):
 .endif
 
 40:     // 4xN h
-        AARCH64_VALID_JUMP_TARGET
         add             \xmx,  \xmx,  #2
         ld1             {v0.s}[0], [\xmx]
         sub             \src,  \src,  #1
@@ -1453,7 +1419,6 @@ L(\type\()_8tap_h):
         ret
 
 80:     // 8xN h
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b}, [\xmx]
         sub             \src,  \src,  #3
         add             \ds2,  \dst,  \d_strd
@@ -1495,7 +1460,6 @@ L(\type\()_8tap_h):
 320:
 640:
 1280:   // 16xN, 32xN, ... h
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b}, [\xmx]
         sub             \src,  \src,  #3
         add             \ds2,  \dst,  \d_strd
@@ -1599,7 +1563,6 @@ L(\type\()_8tap_v):
         br              x9
 
 20:     // 2xN v
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         b.gt            28f
 
@@ -1675,7 +1638,6 @@ L(\type\()_8tap_v):
 .endif
 
 40:
-        AARCH64_VALID_JUMP_TARGET
         b.gt            480f
 
         // 4x2, 4x4 v
@@ -1744,7 +1706,6 @@ L(\type\()_8tap_v):
         ret
 
 80:
-        AARCH64_VALID_JUMP_TARGET
         b.gt            880f
 
         // 8x2, 8x4 v
@@ -1777,7 +1738,6 @@ L(\type\()_8tap_v):
 320:    // 32x8, 32x16, ...
 640:
 1280:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b}, [\xmy]
         sub             \src, \src, \s_strd
         sub             \src, \src, \s_strd, lsl #1
@@ -1844,7 +1804,6 @@ L(\type\()_8tap_v):
         ret
 
 160:
-        AARCH64_VALID_JUMP_TARGET
         b.gt            1680b
 
         // 16x2, 16x4 v
@@ -1913,7 +1872,6 @@ L(\type\()_8tap_hv):
         br              x9
 
 20:
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         add             \xmx,  \xmx,  #2
         ld1             {v0.s}[0],  [\xmx]
@@ -2021,7 +1979,7 @@ L(\type\()_8tap_hv):
         b               28b
 
 0:
-        ret             x15
+        br              x15
 
 L(\type\()_8tap_filter_2):
         ld1             {v28.8b},  [\sr2], \s_strd
@@ -2043,7 +2001,6 @@ L(\type\()_8tap_filter_2):
 .endif
 
 40:
-        AARCH64_VALID_JUMP_TARGET
         add             \xmx, \xmx, #2
         ld1             {v0.s}[0],  [\xmx]
         b.gt            480f
@@ -2178,7 +2135,7 @@ L(\type\()_8tap_filter_2):
         mov             v22.8b,  v29.8b
         b               48b
 0:
-        ret             x15
+        br              x15
 
 L(\type\()_8tap_filter_4):
         ld1             {v26.8b}, [\sr2], \s_strd
@@ -2206,7 +2163,6 @@ L(\type\()_8tap_filter_4):
 80:
 160:
 320:
-        AARCH64_VALID_JUMP_TARGET
         b.gt            880f
         add             \xmy,  \xmy,  #2
         ld1             {v0.8b},  [\xmx]
@@ -2286,7 +2242,6 @@ L(\type\()_8tap_filter_4):
 880:    // 8x8, 8x16, ..., 16x8, ..., 32x8, ... hv
 640:
 1280:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8b},  [\xmx]
         ld1             {v1.8b},  [\xmy]
         sub             \src,  \src,  #3
@@ -2388,7 +2343,7 @@ L(\type\()_8tap_filter_4):
 .endif
         b               168b
 0:
-        ret             x15
+        br              x15
 
 L(\type\()_8tap_filter_8_first):
         ld1             {v28.8b, v29.8b},  [\src], \s_strd
@@ -2471,7 +2426,6 @@ L(\type\()_bilin_h):
         br              x9
 
 20:     // 2xN h
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -2495,7 +2449,6 @@ L(\type\()_bilin_h):
 .endif
 
 40:     // 4xN h
-        AARCH64_VALID_JUMP_TARGET
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
         lsl             \d_strd,  \d_strd,  #1
@@ -2522,7 +2475,6 @@ L(\type\()_bilin_h):
         ret
 
 80:     // 8xN h
-        AARCH64_VALID_JUMP_TARGET
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
         lsl             \d_strd,  \d_strd,  #1
@@ -2552,7 +2504,6 @@ L(\type\()_bilin_h):
 320:
 640:
 1280:   // 16xN, 32xN, ... h
-        AARCH64_VALID_JUMP_TARGET
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
         lsl             \s_strd,  \s_strd,  #1
@@ -2630,7 +2581,6 @@ L(\type\()_bilin_v):
         br              x9
 
 20:     // 2xN v
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         cmp             \h,  #2
         add             \ds2,  \dst,  \d_strd
@@ -2678,7 +2628,6 @@ L(\type\()_bilin_v):
 .endif
 
 40:     // 4xN v
-        AARCH64_VALID_JUMP_TARGET
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
         lsl             \s_strd,  \s_strd,  #1
@@ -2707,7 +2656,6 @@ L(\type\()_bilin_v):
         ret
 
 80:     // 8xN v
-        AARCH64_VALID_JUMP_TARGET
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
         lsl             \s_strd,  \s_strd,  #1
@@ -2740,7 +2688,6 @@ L(\type\()_bilin_v):
 320:
 640:
 1280:
-        AARCH64_VALID_JUMP_TARGET
         mov             \my,  \h
 1:
         add             \ds2, \dst, \d_strd
@@ -2813,7 +2760,6 @@ L(\type\()_bilin_hv):
         br              x9
 
 20:     // 2xN hv
-        AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
         add             \sr2, \src, \s_strd
         add             \ds2, \dst, \d_strd
@@ -2851,7 +2797,6 @@ L(\type\()_bilin_hv):
 .endif
 
 40:     // 4xN hv
-        AARCH64_VALID_JUMP_TARGET
         add             \sr2, \src, \s_strd
         add             \ds2, \dst, \d_strd
         lsl             \s_strd, \s_strd, #1
@@ -2897,7 +2842,6 @@ L(\type\()_bilin_hv):
 320:
 640:
 1280:
-        AARCH64_VALID_JUMP_TARGET
         mov             \my,  \h
 
 1:
@@ -3128,7 +3072,7 @@ function warp_affine_8x8\t\()_8bpc_neon, export=1
         add             w6,  w6,  w4
         b.gt            1b
 
-        ret             x15
+        br              x15
 endfunc
 .endm
 

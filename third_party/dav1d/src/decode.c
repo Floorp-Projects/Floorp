@@ -2304,7 +2304,6 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
                      const EdgeNode *const node)
 {
     const Dav1dFrameContext *const f = t->f;
-    Dav1dTileState *const ts = t->ts;
     const int hsz = 16 >> bl;
     const int have_h_split = f->bw > t->bx + hsz;
     const int have_v_split = f->bh > t->by + hsz;
@@ -2320,11 +2319,11 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
     if (t->frame_thread.pass != 2) {
         if (0 && bl == BL_64X64)
             printf("poc=%d,y=%d,x=%d,bl=%d,r=%d\n",
-                   f->frame_hdr->frame_offset, t->by, t->bx, bl, ts->msac.rng);
+                   f->frame_hdr->frame_offset, t->by, t->bx, bl, t->ts->msac.rng);
         bx8 = (t->bx & 31) >> 1;
         by8 = (t->by & 31) >> 1;
         ctx = get_partition_ctx(t->a, &t->l, bl, by8, bx8);
-        pc = ts->cdf.m.partition[bl][ctx];
+        pc = t->ts->cdf.m.partition[bl][ctx];
     }
 
     if (have_h_split && have_v_split) {
@@ -2332,7 +2331,7 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
             const Av1Block *const b = &f->frame_thread.b[t->by * f->b4_stride + t->bx];
             bp = b->bl == bl ? b->bp : PARTITION_SPLIT;
         } else {
-            bp = dav1d_msac_decode_symbol_adapt16(&ts->msac, pc,
+            bp = dav1d_msac_decode_symbol_adapt16(&t->ts->msac, pc,
                                                   dav1d_partition_type_count[bl]);
             if (f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I422 &&
                 (bp == PARTITION_V || bp == PARTITION_V4 ||
@@ -2343,7 +2342,7 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
             if (DEBUG_BLOCK_INFO)
                 printf("poc=%d,y=%d,x=%d,bl=%d,ctx=%d,bp=%d: r=%d\n",
                        f->frame_hdr->frame_offset, t->by, t->bx, bl, ctx, bp,
-                       ts->msac.rng);
+                       t->ts->msac.rng);
         }
         const uint8_t *const b = dav1d_block_sizes[bl][bp];
 
@@ -2388,16 +2387,6 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
                     return -1;
                 t->bx--;
                 t->by--;
-#if ARCH_X86_64
-                if (t->frame_thread.pass) {
-                    /* In 8-bit mode with 2-pass decoding the coefficient buffer
-                     * can end up misaligned due to skips here. Work around
-                     * the issue by explicitly realigning the buffer. */
-                    const int p = t->frame_thread.pass & 1;
-                    ts->frame_thread[p].cf =
-                        (void*)(((uintptr_t)ts->frame_thread[p].cf + 63) & ~63);
-                }
-#endif
             } else {
                 const EdgeBranch *const branch = (const EdgeBranch *) node;
                 if (decode_sb(t, bl + 1, branch->split[0]))
@@ -2514,12 +2503,12 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
             const Av1Block *const b = &f->frame_thread.b[t->by * f->b4_stride + t->bx];
             is_split = b->bl != bl;
         } else {
-            is_split = dav1d_msac_decode_bool(&ts->msac,
+            is_split = dav1d_msac_decode_bool(&t->ts->msac,
                            gather_top_partition_prob(pc, bl));
             if (DEBUG_BLOCK_INFO)
                 printf("poc=%d,y=%d,x=%d,bl=%d,ctx=%d,bp=%d: r=%d\n",
                        f->frame_hdr->frame_offset, t->by, t->bx, bl, ctx,
-                       is_split ? PARTITION_SPLIT : PARTITION_H, ts->msac.rng);
+                       is_split ? PARTITION_SPLIT : PARTITION_H, t->ts->msac.rng);
         }
 
         assert(bl < BL_8X8);
@@ -2543,14 +2532,14 @@ static int decode_sb(Dav1dTaskContext *const t, const enum BlockLevel bl,
             const Av1Block *const b = &f->frame_thread.b[t->by * f->b4_stride + t->bx];
             is_split = b->bl != bl;
         } else {
-            is_split = dav1d_msac_decode_bool(&ts->msac,
+            is_split = dav1d_msac_decode_bool(&t->ts->msac,
                            gather_left_partition_prob(pc, bl));
             if (f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I422 && !is_split)
                 return 1;
             if (DEBUG_BLOCK_INFO)
                 printf("poc=%d,y=%d,x=%d,bl=%d,ctx=%d,bp=%d: r=%d\n",
                        f->frame_hdr->frame_offset, t->by, t->bx, bl, ctx,
-                       is_split ? PARTITION_SPLIT : PARTITION_V, ts->msac.rng);
+                       is_split ? PARTITION_SPLIT : PARTITION_V, t->ts->msac.rng);
         }
 
         assert(bl < BL_8X8);
@@ -3013,7 +3002,7 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
         if (cf_sz != f->frame_thread.cf_sz) {
             dav1d_freep_aligned(&f->frame_thread.cf);
             f->frame_thread.cf =
-                dav1d_alloc_aligned((size_t)cf_sz * 128 * 128 / 2, 64);
+                dav1d_alloc_aligned((size_t)cf_sz * 128 * 128 / 2, 32);
             if (!f->frame_thread.cf) {
                 f->frame_thread.cf_sz = 0;
                 goto error;
@@ -3027,7 +3016,7 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
                 dav1d_freep_aligned(&f->frame_thread.pal);
                 f->frame_thread.pal =
                     dav1d_alloc_aligned(sizeof(*f->frame_thread.pal) *
-                                        num_sb128 * 16 * 16, 64);
+                                        num_sb128 * 16 * 16, 32);
                 if (!f->frame_thread.pal) {
                     f->frame_thread.pal_sz = 0;
                     goto error;
@@ -3040,7 +3029,7 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
                 dav1d_freep_aligned(&f->frame_thread.pal_idx);
                 f->frame_thread.pal_idx =
                     dav1d_alloc_aligned(sizeof(*f->frame_thread.pal_idx) *
-                                        pal_idx_sz * 128 * 128 / 4, 64);
+                                        pal_idx_sz * 128 * 128 / 4, 32);
                 if (!f->frame_thread.pal_idx) {
                     f->frame_thread.pal_idx_sz = 0;
                     goto error;
@@ -3055,38 +3044,33 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
     }
 
     // update allocation of block contexts for above
-    ptrdiff_t y_stride = f->cur.stride[0], uv_stride = f->cur.stride[1];
-    const int has_resize = f->frame_hdr->width[0] != f->frame_hdr->width[1];
-    const int need_cdef_lpf_copy = c->n_tc > 1 && has_resize;
-    if (y_stride * f->sbh * 4 != f->lf.cdef_buf_plane_sz[0] ||
-        uv_stride * f->sbh * 8 != f->lf.cdef_buf_plane_sz[1] ||
-        need_cdef_lpf_copy != f->lf.need_cdef_lpf_copy ||
-        f->sbh != f->lf.cdef_buf_sbh)
-    {
+    const ptrdiff_t y_stride = f->cur.stride[0], uv_stride = f->cur.stride[1];
+    if (y_stride != f->lf.cdef_line_sz[0] || uv_stride != f->lf.cdef_line_sz[1]) {
         dav1d_free_aligned(f->lf.cdef_line_buf);
         size_t alloc_sz = 64;
-        alloc_sz += (size_t)llabs(y_stride) * 4 * f->sbh << need_cdef_lpf_copy;
-        alloc_sz += (size_t)llabs(uv_stride) * 8 * f->sbh << need_cdef_lpf_copy;
+        alloc_sz += (y_stride  < 0 ? -y_stride  : y_stride ) * 4;
+        alloc_sz += (uv_stride < 0 ? -uv_stride : uv_stride) * 8;
         uint8_t *ptr = f->lf.cdef_line_buf = dav1d_alloc_aligned(alloc_sz, 32);
         if (!ptr) {
-            f->lf.cdef_buf_plane_sz[0] = f->lf.cdef_buf_plane_sz[1] = 0;
+            f->lf.cdef_line_sz[0] = f->lf.cdef_line_sz[1] = 0;
             goto error;
         }
 
         ptr += 32;
         if (y_stride < 0) {
-            f->lf.cdef_line[0][0] = ptr - y_stride * (f->sbh * 4 - 1);
-            f->lf.cdef_line[1][0] = ptr - y_stride * (f->sbh * 4 - 3);
+            f->lf.cdef_line[0][0] = ptr - y_stride * 1;
+            f->lf.cdef_line[1][0] = ptr - y_stride * 3;
+            ptr -= y_stride * 4;
         } else {
             f->lf.cdef_line[0][0] = ptr + y_stride * 0;
             f->lf.cdef_line[1][0] = ptr + y_stride * 2;
+            ptr += y_stride * 4;
         }
-        ptr += llabs(y_stride) * f->sbh * 4;
         if (uv_stride < 0) {
-            f->lf.cdef_line[0][1] = ptr - uv_stride * (f->sbh * 8 - 1);
-            f->lf.cdef_line[0][2] = ptr - uv_stride * (f->sbh * 8 - 3);
-            f->lf.cdef_line[1][1] = ptr - uv_stride * (f->sbh * 8 - 5);
-            f->lf.cdef_line[1][2] = ptr - uv_stride * (f->sbh * 8 - 7);
+            f->lf.cdef_line[0][1] = ptr - uv_stride * 1;
+            f->lf.cdef_line[0][2] = ptr - uv_stride * 3;
+            f->lf.cdef_line[1][1] = ptr - uv_stride * 5;
+            f->lf.cdef_line[1][2] = ptr - uv_stride * 7;
         } else {
             f->lf.cdef_line[0][1] = ptr + uv_stride * 0;
             f->lf.cdef_line[0][2] = ptr + uv_stride * 2;
@@ -3094,61 +3078,28 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
             f->lf.cdef_line[1][2] = ptr + uv_stride * 6;
         }
 
-        if (need_cdef_lpf_copy) {
-            ptr += llabs(uv_stride) * f->sbh * 8;
-            if (y_stride < 0)
-                f->lf.cdef_lpf_line[0] = ptr - y_stride * (f->sbh * 4 - 1);
-            else
-                f->lf.cdef_lpf_line[0] = ptr;
-            ptr += llabs(y_stride) * f->sbh * 4;
-            if (uv_stride < 0) {
-                f->lf.cdef_lpf_line[1] = ptr - uv_stride * (f->sbh * 4 - 1);
-                f->lf.cdef_lpf_line[2] = ptr - uv_stride * (f->sbh * 8 - 1);
-            } else {
-                f->lf.cdef_lpf_line[1] = ptr;
-                f->lf.cdef_lpf_line[2] = ptr + uv_stride * f->sbh * 4;
-            }
-        }
-
-        f->lf.cdef_buf_plane_sz[0] = (int) y_stride * f->sbh * 4;
-        f->lf.cdef_buf_plane_sz[1] = (int) uv_stride * f->sbh * 8;
-        f->lf.need_cdef_lpf_copy = need_cdef_lpf_copy;
-        f->lf.cdef_buf_sbh = f->sbh;
+        f->lf.cdef_line_sz[0] = (int) y_stride;
+        f->lf.cdef_line_sz[1] = (int) uv_stride;
     }
 
-    const int sb128 = f->seq_hdr->sb128;
-    const int num_lines = c->n_tc > 1 ? f->sbh * 4 << sb128 : 12;
-    y_stride = f->sr_cur.p.stride[0], uv_stride = f->sr_cur.p.stride[1];
-    if (y_stride * num_lines != f->lf.lr_buf_plane_sz[0] ||
-        uv_stride * num_lines * 2 != f->lf.lr_buf_plane_sz[1])
-    {
-        dav1d_free_aligned(f->lf.lr_line_buf);
+    const int num_lines = c->n_tc > 1 ? f->sbh * (4 << f->seq_hdr->sb128) : 12;
+    const int lr_line_sz = ((f->sr_cur.p.p.w + 31) & ~31) << hbd;
+    const size_t lr_plane_sz = num_lines * lr_line_sz;
+    if (lr_plane_sz != f->lf.lr_plane_sz) {
+        dav1d_freep_aligned(&f->lf.lr_lpf_line[0]);
         // lr simd may overread the input, so slightly over-allocate the lpf buffer
-        size_t alloc_sz = 128;
-        alloc_sz += (size_t)llabs(y_stride) * num_lines;
-        alloc_sz += (size_t)llabs(uv_stride) * num_lines * 2;
-        uint8_t *ptr = f->lf.lr_line_buf = dav1d_alloc_aligned(alloc_sz, 64);
-        if (!ptr) {
-            f->lf.lr_buf_plane_sz[0] = f->lf.lr_buf_plane_sz[1] = 0;
+        uint8_t *lr_ptr = dav1d_alloc_aligned(lr_plane_sz * 3 + 64, 32);
+        if (!lr_ptr) {
+            f->lf.lr_plane_sz = 0;
             goto error;
         }
 
-        ptr += 64;
-        if (y_stride < 0)
-            f->lf.lr_lpf_line[0] = ptr - y_stride * (num_lines - 1);
-        else
-            f->lf.lr_lpf_line[0] = ptr;
-        ptr += llabs(y_stride) * num_lines;
-        if (uv_stride < 0) {
-            f->lf.lr_lpf_line[1] = ptr - uv_stride * (num_lines * 1 - 1);
-            f->lf.lr_lpf_line[2] = ptr - uv_stride * (num_lines * 2 - 1);
-        } else {
-            f->lf.lr_lpf_line[1] = ptr;
-            f->lf.lr_lpf_line[2] = ptr + uv_stride * num_lines;
+        for (int pl = 0; pl <= 2; pl++) {
+            f->lf.lr_lpf_line[pl] = lr_ptr;
+            lr_ptr += lr_plane_sz;
         }
 
-        f->lf.lr_buf_plane_sz[0] = (int) y_stride * num_lines;
-        f->lf.lr_buf_plane_sz[1] = (int) uv_stride * num_lines * 2;
+        f->lf.lr_plane_sz = lr_plane_sz;
     }
 
     // update allocation for loopfilter masks
@@ -3204,7 +3155,7 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
     if (ipred_edge_sz != f->ipred_edge_sz) {
         dav1d_freep_aligned(&f->ipred_edge[0]);
         uint8_t *ptr = f->ipred_edge[0] =
-            dav1d_alloc_aligned(ipred_edge_sz * 128 * 3, 64);
+            dav1d_alloc_aligned(ipred_edge_sz * 128 * 3, 32);
         if (!ptr) {
             f->ipred_edge_sz = 0;
             goto error;
@@ -3426,7 +3377,6 @@ void dav1d_decode_frame_exit(Dav1dFrameContext *const f, const int retval) {
 
     for (int i = 0; i < f->n_tile_data; i++)
         dav1d_data_unref_internal(&f->tile[i].data);
-    f->task_thread.retval = retval;
 }
 
 int dav1d_decode_frame(Dav1dFrameContext *const f) {
@@ -3450,7 +3400,6 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                 }
             }
             pthread_mutex_unlock(&f->task_thread.ttd->lock);
-            res = f->task_thread.retval;
         } else {
             res = dav1d_decode_frame_main(f);
             if (!res && f->frame_hdr->refresh_context && f->task_thread.update_set) {
