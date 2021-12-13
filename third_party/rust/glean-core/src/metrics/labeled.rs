@@ -182,8 +182,7 @@ pub fn combine_base_identifier_and_label(base_identifer: &str, label: &str) -> S
 
 /// Strips the label off of a complete identifier
 pub fn strip_label(identifier: &str) -> &str {
-    // safe unwrap, first field of a split always valid
-    identifier.splitn(2, '/').next().unwrap()
+    identifier.split_once('/').map_or(identifier, |s| s.0)
 }
 
 /// Validates a dynamic label, changing it to `OTHER_LABEL` if it's invalid.
