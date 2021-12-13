@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -761,7 +761,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">當然，我們有全新設計！\n了解更多 %1$s 的新鮮事。</string>
+    <string name="tip_fresh_look">當然，我們有全新設計！\n 了解更多 %1$s 的新鮮事。</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
@@ -778,11 +778,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">開啟鏈結後，立即切換到該分頁</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">安全瀏覽</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">安全瀏覽</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">封鎖可能危險或詐騙的網站</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">封鎖已被回報為詐騙、有攻擊性、惡意軟體以及有害軟體的網站。</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">純 HTTPS 模式</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS 讓 %1$s 與要造訪的網站間能夠有安全而加密過的連線。大部分的網站都支援 HTTPS，開啟純 HTTPS 模式後，%1$s 就會將所有的連線都升級為 HTTPS 連線。</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外網站</string>

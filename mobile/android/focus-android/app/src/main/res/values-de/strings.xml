@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -771,11 +771,16 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <string name="preference_open_new_tab">Sofort zum Link im neuen Tab wechseln</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">SafeBrowsing</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">SafeBrowsing</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Potenziell gefährliche und betrügerische Websites blockieren</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Blockieren Sie gemeldete betrügerische Websites und solche, die Sie angreifen, Schadsoftware oder unerwünschte Software verteilen.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Nur-HTTPS-Modus</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS bietet eine sichere, verschlüsselte Verbindung zwischen %1$s und den von Ihnen besuchten Websites. Die meisten Websites unterstützen HTTPS und wenn der Nur-HTTPS-Modus aktiviert ist, wird %1$s alle Verbindungen zu HTTPS aufrüsten.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Ausnahmen</string>

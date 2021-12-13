@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -771,11 +771,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">Ned k wótkazoju w nowem rejtarku pśejś</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Wěste pśeglědowanje</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Wěste pśeglědowanje</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Ptencielnje tšašne a wobšudnikojske sedła blokěrowaś</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Blokěrujśo wuzjawjone wobšudnikojske a napadowe sedła, škódne sedła a sedła z njewitaneju softwaru.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Modus Jano-HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS wěsty, skoděrowany zwisk mjazy %1$s a websedłami bitujo, ku kótarymž se woglědujośo. Nejwěcej websedłow HTTPS pódpěra, a jolic modus Jano-HTTPS jo zmóžnjony, %1$s buźo wše zwiski na HTTPS aktualizěrowaś.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Wuwześa</string>
