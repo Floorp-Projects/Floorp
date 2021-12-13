@@ -616,7 +616,7 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
                              !aIndexOfKeypress);
     MOZ_DIAGNOSTIC_ASSERT_IF(
         aMessage == eKeyPress,
-        aIndexOfKeypress < std::max(keyEvent.mKeyValue.Length(), 1u));
+        aIndexOfKeypress < std::max<size_t>(keyEvent.mKeyValue.Length(), 1));
     char16_t ch =
         keyEvent.mKeyValue.IsEmpty() ? 0 : keyEvent.mKeyValue[aIndexOfKeypress];
     keyEvent.SetCharCode(static_cast<uint32_t>(ch));

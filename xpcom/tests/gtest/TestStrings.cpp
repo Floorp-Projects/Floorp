@@ -22,6 +22,7 @@
 #include "gtest/MozGTestBench.h"  // For MOZ_GTEST_BENCH
 #include "gtest/BlackBox.h"
 #include "nsBidiUtils.h"
+#include "js/String.h"
 
 #define CONVERSION_ITERATIONS 50000
 
@@ -1440,93 +1441,92 @@ TEST_F(Strings, bulk_write_fail) {
 }
 
 TEST_F(Strings, huge_capacity) {
-  nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;
-  nsCString n1;
+  nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n, o;
+  nsCString n1, o1;
 
   // Ignore the result if the address space is less than 64-bit because
   // some of the allocations above will exhaust the address space.
   if (sizeof(void*) >= 8) {
     EXPECT_TRUE(a.SetCapacity(1, fallible));
-    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1) / 2, fallible));
+    EXPECT_FALSE(a.SetCapacity(uint32_t(-1) / 2, fallible));
     a.Truncate();  // free the allocated memory
 
     EXPECT_TRUE(b.SetCapacity(1, fallible));
-    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1) / 2 - 1, fallible));
+    EXPECT_FALSE(b.SetCapacity(uint32_t(-1) / 2 - 1, fallible));
     b.Truncate();
 
     EXPECT_TRUE(c.SetCapacity(1, fallible));
-    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1) / 2, fallible));
+    EXPECT_FALSE(c.SetCapacity(uint32_t(-1) / 2, fallible));
     c.Truncate();
 
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1) / 2 - 1, fallible));
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1) / 2, fallible));
+    EXPECT_FALSE(d.SetCapacity(uint32_t(-1) / 2 - 1, fallible));
+    EXPECT_FALSE(d.SetCapacity(uint32_t(-1) / 2, fallible));
     d.Truncate();
 
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1) / 4, fallible));
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
+    EXPECT_FALSE(e.SetCapacity(uint32_t(-1) / 4, fallible));
+    EXPECT_FALSE(e.SetCapacity(uint32_t(-1) / 4 + 1, fallible));
     e.Truncate();
 
-    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1) / 2, fallible));
+    EXPECT_FALSE(f.SetCapacity(uint32_t(-1) / 2, fallible));
     f.Truncate();
 
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1) / 4 + 1000, fallible));
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1) / 4 + 1001, fallible));
+    EXPECT_FALSE(g.SetCapacity(uint32_t(-1) / 4 + 1000, fallible));
+    EXPECT_FALSE(g.SetCapacity(uint32_t(-1) / 4 + 1001, fallible));
     g.Truncate();
 
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1) / 2, fallible));
+    EXPECT_FALSE(h.SetCapacity(uint32_t(-1) / 4 + 1, fallible));
+    EXPECT_FALSE(h.SetCapacity(uint32_t(-1) / 2, fallible));
     h.Truncate();
 
     EXPECT_TRUE(i.SetCapacity(1, fallible));
-    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1) / 4 - 1000, fallible));
-    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
+    EXPECT_TRUE(i.SetCapacity(uint32_t(-1) / 4 - 1000, fallible));
+    EXPECT_FALSE(i.SetCapacity(uint32_t(-1) / 4 + 1, fallible));
     i.Truncate();
 
-    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1) / 4 - 1000, fallible));
-    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1) / 4 + 1, fallible));
+    EXPECT_TRUE(j.SetCapacity(uint32_t(-1) / 4 - 1000, fallible));
+    EXPECT_FALSE(j.SetCapacity(uint32_t(-1) / 4 + 1, fallible));
     j.Truncate();
 
 // Disabled due to intermittent failures.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1493458
 #if 0
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible));
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible));
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible));
-    EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(k.SetCapacity(uint32_t(-1)/8 - 1000, fallible));
+    EXPECT_TRUE(k.SetCapacity(uint32_t(-1)/4 - 1001, fallible));
+    EXPECT_TRUE(k.SetCapacity(uint32_t(-1)/4 - 998, fallible));
+    EXPECT_FALSE(k.SetCapacity(uint32_t(-1)/4 + 1, fallible));
     k.Truncate();
 #endif
 
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8, fallible));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8 + 1, fallible));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1) / 8 + 2, fallible));
+    EXPECT_TRUE(l.SetCapacity(uint32_t(-1) / 8, fallible));
+    EXPECT_TRUE(l.SetCapacity(uint32_t(-1) / 8 + 1, fallible));
+    EXPECT_TRUE(l.SetCapacity(uint32_t(-1) / 8 + 2, fallible));
     l.Truncate();
 
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1) / 8 + 1000, fallible));
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1) / 8 + 1001, fallible));
+    EXPECT_TRUE(m.SetCapacity(uint32_t(-1) / 8 + 1000, fallible));
+    EXPECT_TRUE(m.SetCapacity(uint32_t(-1) / 8 + 1001, fallible));
     m.Truncate();
 
-    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1) / 8 + 1, fallible));
-    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1) / 4, fallible));
+    EXPECT_TRUE(n.SetCapacity(uint32_t(-1) / 8 + 1, fallible));
+    EXPECT_FALSE(n.SetCapacity(uint32_t(-1) / 4, fallible));
     n.Truncate();
 
     n.Truncate();
-    EXPECT_TRUE(n.SetCapacity(
-        (nsString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 2 - 2,
-        fallible));
+    EXPECT_TRUE(n.SetCapacity((uint32_t(-1) / 2) / 2 - 1, fallible));
     n.Truncate();
-    EXPECT_FALSE(n.SetCapacity(
-        (nsString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 2 - 1,
-        fallible));
+    EXPECT_FALSE(n.SetCapacity((uint32_t(-1) / 2) / 2, fallible));
     n.Truncate();
     n1.Truncate();
-    EXPECT_TRUE(n1.SetCapacity(
-        (nsCString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 1 - 2,
-        fallible));
+    EXPECT_TRUE(n1.SetCapacity((uint32_t(-1) / 2) / 1 - 1, fallible));
     n1.Truncate();
-    EXPECT_FALSE(n1.SetCapacity(
-        (nsCString::size_type(-1) / 2 - sizeof(nsStringBuffer)) / 1 - 1,
-        fallible));
+    EXPECT_FALSE(n1.SetCapacity((uint32_t(-1) / 2) / 1, fallible));
     n1.Truncate();
+
+    // The longest possible JS string should fit within both a `nsString` and
+    // nsCString.
+    EXPECT_TRUE(o.SetCapacity(JS::MaxStringLength, fallible));
+    o.Truncate();
+    EXPECT_TRUE(o1.SetCapacity(JS::MaxStringLength, fallible));
+    o1.Truncate();
   }
 }
 

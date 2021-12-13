@@ -170,7 +170,7 @@ class nsTString : public nsTSubstring<T> {
    */
 
   char_type CharAt(index_type aIndex) const {
-    NS_ASSERTION(aIndex <= this->mLength, "index exceeds allowable range");
+    MOZ_ASSERT(aIndex <= this->Length(), "index exceeds allowable range");
     return this->mData[aIndex];
   }
 
@@ -334,7 +334,7 @@ class nsTString : public nsTSubstring<T> {
   }
 
   size_type Right(self_type& aResult, size_type aCount) const {
-    aCount = XPCOM_MIN(this->mLength, aCount);
+    aCount = XPCOM_MIN(this->Length(), aCount);
     return Mid(aResult, this->mLength - aCount, aCount);
   }
 
@@ -346,7 +346,7 @@ class nsTString : public nsTSubstring<T> {
    * @return TRUE if successful
    */
 
-  bool SetCharAt(char16_t aChar, uint32_t aIndex);
+  bool SetCharAt(char16_t aChar, index_type aIndex);
 
   /**
    *  These methods are used to remove all occurrences of the
@@ -430,8 +430,6 @@ class nsTString : public nsTSubstring<T> {
    */
   void AssertValidDependentString() {
     MOZ_ASSERT(this->mData, "nsTDependentString must wrap a non-NULL buffer");
-    MOZ_ASSERT(this->mLength != size_type(-1),
-               "nsTDependentString has bogus length");
     MOZ_DIAGNOSTIC_ASSERT(this->mData[substring_type::mLength] == 0,
                           "nsTDependentString must wrap only null-terminated "
                           "strings.  You are probably looking for "
@@ -502,6 +500,7 @@ class MOZ_NON_MEMMOVABLE nsTAutoStringN : public nsTString<T> {
   // These are only for internal use within the string classes:
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
+  typedef typename base_string_type::LengthStorage LengthStorage;
 
  public:
   /**
@@ -593,7 +592,7 @@ class MOZ_NON_MEMMOVABLE nsTAutoStringN : public nsTString<T> {
  protected:
   friend class nsTSubstring<T>;
 
-  const size_type mInlineCapacity;
+  const LengthStorage mInlineCapacity;
 
  private:
   char_type mStorage[N];

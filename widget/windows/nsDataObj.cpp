@@ -1119,7 +1119,7 @@ static bool CreateFilenameFromTextA(nsString& aText, const char* aExtension,
   // will be a valid MBCS filename of the correct length.
   int maxUsableFilenameLen =
       aFilenameLen - strlen(aExtension) - 1;  // space for ext + null byte
-  int currLen, textLen = (int)std::min(aText.Length(), aFilenameLen);
+  int currLen, textLen = (int)std::min<uint32_t>(aText.Length(), aFilenameLen);
   char defaultChar = '_';
   do {
     currLen = WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,

@@ -111,7 +111,7 @@ struct comparatorTraits {};
 template <>
 struct comparatorTraits<char, false> {
   static int caseInsensitiveCompare(const char* aLhs, const char* aRhs,
-                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+                                    size_t aLhsLength, size_t aRhsLength) {
     return nsCaseInsensitiveCStringComparator(aLhs, aRhs, aLhsLength,
                                               aRhsLength);
   };
@@ -120,7 +120,7 @@ struct comparatorTraits<char, false> {
 template <>
 struct comparatorTraits<char, true> {
   static int caseInsensitiveCompare(const char* aLhs, const char* aRhs,
-                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+                                    size_t aLhsLength, size_t aRhsLength) {
     return nsCaseInsensitiveUTF8StringComparator(aLhs, aRhs, aLhsLength,
                                                  aRhsLength);
   };
@@ -129,7 +129,7 @@ struct comparatorTraits<char, true> {
 template <>
 struct comparatorTraits<char16_t, true> {
   static int caseInsensitiveCompare(const char16_t* aLhs, const char16_t* aRhs,
-                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+                                    size_t aLhsLength, size_t aRhsLength) {
     return nsCaseInsensitiveStringComparator(aLhs, aRhs, aLhsLength,
                                              aRhsLength);
   };

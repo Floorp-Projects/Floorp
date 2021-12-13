@@ -416,7 +416,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
                           unicodeDataLength);
       free((void*)unicodeData);
 
-      LOGCLIP("    got unicode data, length %d\n", ucs2string.Length());
+      LOGCLIP("    got unicode data, length %zd\n", ucs2string.Length());
 
       mContext->ReleaseClipboardData(clipboardData);
       return NS_OK;
@@ -704,7 +704,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     wideString->GetData(ucs2string);
     NS_ConvertUTF16toUTF8 utf8string(ucs2string);
 
-    LOGCLIP("  sent %d bytes of utf-8 data\n", utf8string.Length());
+    LOGCLIP("  sent %zd bytes of utf-8 data\n", utf8string.Length());
     if (selectionTarget == gdk_atom_intern("text/plain;charset=utf-8", FALSE)) {
       LOGCLIP(
           "  using gtk_selection_data_set for 'text/plain;charset=utf-8'\n");
@@ -785,7 +785,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     html.AppendLiteral(kHTMLMarkupPrefix);
     AppendUTF16toUTF8(ucs2string, html);
 
-    LOGCLIP("  Setting %d bytest of %s data\n", html.Length(),
+    LOGCLIP("  Setting %zd bytest of %s data\n", html.Length(),
             gdk_atom_name(selectionTarget));
     gtk_selection_data_set(aSelectionData, selectionTarget, 8,
                            (const guchar*)html.get(), html.Length());

@@ -99,7 +99,7 @@ char32_t ToUpperCaseASCII(char32_t aChar) {
 
 void ToLowerCase(const nsAString& aSource, nsAString& aDest) {
   const char16_t* in = aSource.BeginReading();
-  uint32_t len = aSource.Length();
+  size_t len = aSource.Length();
 
   aDest.SetLength(len);
   char16_t* out = aDest.BeginWriting();
@@ -109,7 +109,7 @@ void ToLowerCase(const nsAString& aSource, nsAString& aDest) {
 
 void ToLowerCaseASCII(const nsAString& aSource, nsAString& aDest) {
   const char16_t* in = aSource.BeginReading();
-  uint32_t len = aSource.Length();
+  size_t len = aSource.Length();
 
   aDest.SetLength(len);
   char16_t* out = aDest.BeginWriting();
@@ -128,7 +128,7 @@ void ToUpperCase(nsAString& aString) {
 
 void ToUpperCase(const nsAString& aSource, nsAString& aDest) {
   const char16_t* in = aSource.BeginReading();
-  uint32_t len = aSource.Length();
+  size_t len = aSource.Length();
 
   aDest.SetLength(len);
   char16_t* out = aDest.BeginWriting();
@@ -148,7 +148,7 @@ void ToFoldedCase(nsAString& aString) {
   ToFoldedCase(buf, buf, aString.Length());
 }
 
-void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
+void ToFoldedCase(const char16_t* aIn, char16_t* aOut, size_t aLen) {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
     if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
@@ -194,23 +194,21 @@ void ToNaked(nsAString& aString) {
 }
 
 int32_t nsCaseInsensitiveStringComparator(const char16_t* lhs,
-                                          const char16_t* rhs, uint32_t lLength,
-                                          uint32_t rLength) {
+                                          const char16_t* rhs, size_t lLength,
+                                          size_t rLength) {
   return (lLength == rLength)  ? CaseInsensitiveCompare(lhs, rhs, lLength)
          : (lLength > rLength) ? 1
                                : -1;
 }
 
 int32_t nsCaseInsensitiveUTF8StringComparator(const char* lhs, const char* rhs,
-                                              uint32_t lLength,
-                                              uint32_t rLength) {
+                                              size_t lLength, size_t rLength) {
   return CaseInsensitiveCompare(lhs, rhs, lLength, rLength);
 }
 
 int32_t nsASCIICaseInsensitiveStringComparator(const char16_t* lhs,
                                                const char16_t* rhs,
-                                               uint32_t lLength,
-                                               uint32_t rLength) {
+                                               size_t lLength, size_t rLength) {
   if (lLength != rLength) {
     if (lLength > rLength) return 1;
     return -1;
@@ -240,8 +238,8 @@ int32_t nsASCIICaseInsensitiveStringComparator(const char16_t* lhs,
 
 uint32_t ToLowerCase(uint32_t aChar) { return ToLowerCase_inline(aChar); }
 
-void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
-  for (uint32_t i = 0; i < aLen; i++) {
+void ToLowerCase(const char16_t* aIn, char16_t* aOut, size_t aLen) {
+  for (size_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
     if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
       ch = mozilla::intl::UnicodeProperties::ToLower(
@@ -255,8 +253,8 @@ void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   }
 }
 
-void ToLowerCaseASCII(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
-  for (uint32_t i = 0; i < aLen; i++) {
+void ToLowerCaseASCII(const char16_t* aIn, char16_t* aOut, size_t aLen) {
+  for (size_t i = 0; i < aLen; i++) {
     char16_t ch = aIn[i];
     aOut[i] = IS_ASCII_UPPER(ch) ? (ch + 0x20) : ch;
   }
@@ -273,8 +271,8 @@ uint32_t ToUpperCase(uint32_t aChar) {
   return mozilla::intl::UnicodeProperties::ToUpper(aChar);
 }
 
-void ToUpperCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
-  for (uint32_t i = 0; i < aLen; i++) {
+void ToUpperCase(const char16_t* aIn, char16_t* aOut, size_t aLen) {
+  for (size_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
     if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
       ch = mozilla::intl::UnicodeProperties::ToUpper(
@@ -297,7 +295,7 @@ uint32_t ToTitleCase(uint32_t aChar) {
 }
 
 int32_t CaseInsensitiveCompare(const char16_t* a, const char16_t* b,
-                               uint32_t len) {
+                               size_t len) {
   NS_ASSERTION(a && b, "Do not pass in invalid pointers!");
 
   if (len) {
@@ -410,7 +408,7 @@ uint32_t GetLowerUTF8Codepoint(const char* aStr, const char* aEnd,
 }
 
 int32_t CaseInsensitiveCompare(const char* aLeft, const char* aRight,
-                               uint32_t aLeftBytes, uint32_t aRightBytes) {
+                               size_t aLeftBytes, size_t aRightBytes) {
   const char* leftEnd = aLeft + aLeftBytes;
   const char* rightEnd = aRight + aRightBytes;
 
@@ -492,7 +490,7 @@ bool CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
 
 namespace mozilla {
 
-uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr) {
+uint32_t HashUTF8AsUTF16(const char* aUTF8, size_t aLength, bool* aErr) {
   uint32_t hash = 0;
   const char* s = aUTF8;
   const char* end = aUTF8 + aLength;

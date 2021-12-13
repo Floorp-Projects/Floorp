@@ -43,7 +43,8 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
     int64_t length;
     nsresult rv = channel->GetContentLength(&length);
     if (NS_SUCCEEDED(rv) && length > 0) {
-      if (length > std::numeric_limits<nsACString::size_type>::max()) {
+      if (uint64_t(length) >
+          std::numeric_limits<nsACString::size_type>::max()) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
       if (!mBytes.SetCapacity(length, fallible)) {
@@ -171,7 +172,7 @@ nsresult StreamLoader::WriteSegmentFun(nsIInputStream*, void* aClosure,
 
   // If we haven't done BOM detection yet, divert bytes into the special buffer.
   if (self->mEncodingFromBOM.isNothing()) {
-    size_t bytesToCopy = std::min(3 - self->mBOMBytes.Length(), aCount);
+    size_t bytesToCopy = std::min<size_t>(3 - self->mBOMBytes.Length(), aCount);
     self->mBOMBytes.Append(aSegment, bytesToCopy);
     aSegment += bytesToCopy;
     *aWriteCount += bytesToCopy;

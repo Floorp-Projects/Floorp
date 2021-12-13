@@ -834,8 +834,8 @@ TransactionObserver::OnDataAvailable(nsIRequest* aRequest,
             aStream->Read(handle.Elements() + oldLen, aCount, &amtRead))) {
       MOZ_ASSERT(oldLen + amtRead <= newLen);
       handle.Finish(oldLen + amtRead, false);
-      LOG(("TransactionObserver onDataAvailable %p read %d of .wk [%d]\n", this,
-           amtRead, mWKResponse.Length()));
+      LOG(("TransactionObserver onDataAvailable %p read %d of .wk [%zd]\n",
+           this, amtRead, mWKResponse.Length()));
     } else {
       LOG(("TransactionObserver onDataAvailable %p read error\n", this));
     }

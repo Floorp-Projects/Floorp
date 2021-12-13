@@ -7,14 +7,15 @@
 template <typename T>
 nsTDependentString<T>::nsTDependentString(const char_type* aStart,
                                           const char_type* aEnd)
-    : string_type(const_cast<char_type*>(aStart), uint32_t(aEnd - aStart),
+    : string_type(const_cast<char_type*>(aStart), aEnd - aStart,
                   DataFlags::TERMINATED, ClassFlags(0)) {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
   this->AssertValidDependentString();
 }
 
 template <typename T>
-void nsTDependentString<T>::Rebind(const string_type& str, uint32_t startPos) {
+void nsTDependentString<T>::Rebind(const string_type& str,
+                                   index_type startPos) {
   MOZ_ASSERT(str.GetDataFlags() & DataFlags::TERMINATED,
              "Unterminated flat string");
 
@@ -40,5 +41,5 @@ template <typename T>
 void nsTDependentString<T>::Rebind(const char_type* aStart,
                                    const char_type* aEnd) {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
-  this->Rebind(aStart, uint32_t(aEnd - aStart));
+  this->Rebind(aStart, aEnd - aStart);
 }

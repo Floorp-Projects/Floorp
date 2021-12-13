@@ -11,6 +11,8 @@
 #include "nsStringBuffer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
+#include "js/String.h"
+#include "nsTStringRepr.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,6 +32,7 @@ struct FakeString {
   using DataFlags = typename string_type::DataFlags;
   using ClassFlags = typename string_type::ClassFlags;
   using AString = nsTSubstring<CharT>;
+  using LengthStorage = mozilla::detail::nsTStringLengthStorage<CharT>;
 
   static const size_t kInlineCapacity = 64;
   using AutoString = nsTAutoStringN<CharT, kInlineCapacity>;
@@ -186,11 +189,11 @@ struct FakeString {
   // mData is left uninitialized for optimization purposes.
   MOZ_INIT_OUTSIDE_CTOR char_type* mData;
   // mLength is left uninitialized for optimization purposes.
-  MOZ_INIT_OUTSIDE_CTOR size_type mLength;
+  MOZ_INIT_OUTSIDE_CTOR uint32_t mLength;
   DataFlags mDataFlags;
   const ClassFlags mClassFlags;
 
-  const size_type mInlineCapacity;
+  const uint32_t mInlineCapacity;
   char_type mStorage[kInlineCapacity];
 #ifdef DEBUG
   bool mDataInitialized = false;
@@ -200,10 +203,11 @@ struct FakeString {
   void operator=(const FakeString& other) = delete;
 
   void InitData(const char_type* aData, size_type aLength) {
+    MOZ_ASSERT(aLength <= LengthStorage::kMax, "string is too large");
     MOZ_ASSERT(mDataFlags == DataFlags::TERMINATED);
     MOZ_ASSERT(!mDataInitialized);
     mData = const_cast<char_type*>(aData);
-    mLength = aLength;
+    mLength = uint32_t(aLength);
 #ifdef DEBUG
     mDataInitialized = true;
 #endif  // DEBUG
@@ -248,6 +252,8 @@ struct FakeString {
       static_assert(
           offsetof(FakeString, mStorage) == offsetof(StringAsserter, mStorage),
           "Offset of mStorage should match");
+      static_assert(JS::MaxStringLength <= LengthStorage::kMax,
+                    "JS::MaxStringLength fits in a nsTString");
     }
   };
 };

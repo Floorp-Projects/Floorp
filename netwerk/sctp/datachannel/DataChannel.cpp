@@ -1737,7 +1737,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
   }
   if (!(bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_COMPLETE)) {
     DC_DEBUG(
-        ("DataChannel: Partial %s message of length %u (total %u) on channel "
+        ("DataChannel: Partial %s message of length %u (total %zu) on channel "
          "id %u",
          is_binary ? "binary" : "string", data_length,
          channel->mRecvBuffer.Length(), channel->mStream));
@@ -2124,7 +2124,7 @@ void DataChannelConnection::HandlePartialDeliveryEvent(
   // Find channel and reset buffer
   DataChannel* channel = FindChannelByStream((uint16_t)spde->pdapi_stream);
   if (channel) {
-    DC_WARN(("Abort partially delivered message of %u bytes\n",
+    DC_WARN(("Abort partially delivered message of %zu bytes\n",
              channel->mRecvBuffer.Length()));
     channel->mRecvBuffer.Truncate(0);
   }

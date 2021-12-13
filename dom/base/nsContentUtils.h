@@ -3310,7 +3310,7 @@ class nsContentUtils {
    *
    * Returns an empty string if aURL is null.
    */
-  static nsCString TruncatedURLForDisplay(nsIURI* aURL, uint32_t aMaxLen = 128);
+  static nsCString TruncatedURLForDisplay(nsIURI* aURL, size_t aMaxLen = 128);
 
  private:
   static bool InitializeEventTable();

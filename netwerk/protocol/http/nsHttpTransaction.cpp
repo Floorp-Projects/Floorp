@@ -1872,7 +1872,8 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
   // mLineBuf can contain partial match from previous search
   if (!mLineBuf.IsEmpty()) {
     MOZ_ASSERT(mLineBuf.Length() < HTTPHeaderLen);
-    int32_t checkChars = std::min(len, HTTPHeaderLen - mLineBuf.Length());
+    int32_t checkChars =
+        std::min<uint32_t>(len, HTTPHeaderLen - mLineBuf.Length());
     if (nsCRT::strncasecmp(buf, HTTPHeader + mLineBuf.Length(), checkChars) ==
         0) {
       mLineBuf.Append(buf, checkChars);

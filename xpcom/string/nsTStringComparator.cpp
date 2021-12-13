@@ -50,14 +50,14 @@ Compare<char16_t>(mozilla::detail::nsTStringRepr<char16_t> const&,
                   nsTStringComparator<char16_t>);
 
 template <typename T>
-int nsTDefaultStringComparator(const T* aLhs, const T* aRhs, uint32_t aLLength,
-                               uint32_t aRLength) {
+int nsTDefaultStringComparator(const T* aLhs, const T* aRhs, size_t aLLength,
+                               size_t aRLength) {
   return aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength)
          : (aLLength > aRLength) ? 1
                                  : -1;
 }
 
-template int nsTDefaultStringComparator(const char*, const char*, uint32_t,
-                                        uint32_t);
+template int nsTDefaultStringComparator(const char*, const char*, size_t,
+                                        size_t);
 template int nsTDefaultStringComparator(const char16_t*, const char16_t*,
-                                        uint32_t, uint32_t);
+                                        size_t, size_t);

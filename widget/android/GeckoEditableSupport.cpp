@@ -1146,7 +1146,7 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
     string = composition->String();
   }
 
-  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%zu",
+  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%zu, range=%zu",
           NS_ConvertUTF16toUTF8(string).get(), string.Length(),
           mIMERanges->Length());
 
