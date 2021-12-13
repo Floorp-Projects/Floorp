@@ -1400,19 +1400,16 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   visibility: hidden;
 }
 
-.previewStack[rendering=true] > .previewRendering {
-  visibility: visible;
-}
-
 .printPreviewBrowser {
   visibility: collapse;
   opacity: 1;
 }
 
+.previewStack[rendering=true] > .previewRendering,
 .previewStack[previewtype="source"] > .printPreviewBrowser[previewtype="source"],
 .previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"],
 .previewStack[previewtype="simplified"] > .printPreviewBrowser[previewtype="simplified"] {
-  visibility: visible;
+  visibility: inherit;
 }
 
 .previewStack[rendering=true] > .printPreviewBrowser {
