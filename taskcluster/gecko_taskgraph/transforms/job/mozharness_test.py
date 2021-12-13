@@ -7,7 +7,7 @@ import json
 import os
 import re
 
-from voluptuous import Required, Optional
+from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.util.taskcluster import get_artifact_url
 from gecko_taskgraph.transforms.job import (
@@ -43,7 +43,16 @@ def get_variant(test_platform):
 mozharness_test_run_schema = Schema(
     {
         Required("using"): "mozharness-test",
-        Required("test"): test_description_schema,
+        Required("test"): {
+            Required("test-platform"): str,
+            Required("mozharness"): test_description_schema["mozharness"],
+            Required("docker-image"): test_description_schema["docker-image"],
+            Required("loopback-video"): test_description_schema["loopback-video"],
+            Required("loopback-audio"): test_description_schema["loopback-audio"],
+            Required("max-run-time"): test_description_schema["max-run-time"],
+            Optional("retry-exit-status"): test_description_schema["retry-exit-status"],
+            Extra: object,
+        },
         # Base work directory used to set up the task.
         Optional("workdir"): str,
     }
