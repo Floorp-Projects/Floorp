@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "42.1.0"
+version = "42.3.0"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/examples", "/tests", "/Cargo.toml"]
 description = "A modern Telemetry library"
@@ -21,7 +21,7 @@ keywords = ["telemetry"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
 [package.metadata.glean]
-glean-parser = "4.2.0"
+glean-parser = "4.3.1"
 [dependencies.bincode]
 version = "1.2.1"
 

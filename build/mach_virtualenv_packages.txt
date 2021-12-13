@@ -1,7 +1,7 @@
 packages.txt:build/common_virtualenv_packages.txt
 # glean-sdk may not be installable if a wheel isn't available
 # and it has to be built from source.
-pypi-optional:glean-sdk==40.0.0:telemetry will not be collected
+pypi-optional:glean-sdk==42.3.0:telemetry will not be collected
 # Mach gracefully handles the case where `psutil` is unavailable.
 # We aren't (yet) able to pin packages in automation, so we have to
 # support down to the oldest locally-installed version (5.4.2).
