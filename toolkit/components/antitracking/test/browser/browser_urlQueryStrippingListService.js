@@ -97,6 +97,7 @@ add_task(async function testPrefSettings() {
       ["privacy.query_stripping.enabled", true],
       ["privacy.query_stripping.strip_list", ""],
       ["privacy.query_stripping.allow_list", ""],
+      ["privacy.query_stripping.testing", true],
     ],
   });
 
@@ -165,6 +166,7 @@ add_task(async function testRemoteSettings() {
       ["privacy.query_stripping.enabled", true],
       ["privacy.query_stripping.strip_list", ""],
       ["privacy.query_stripping.allow_list", ""],
+      ["privacy.query_stripping.testing", true],
     ],
   });
 

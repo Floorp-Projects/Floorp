@@ -18,6 +18,7 @@ const SHARED_DATA_KEY = "URLQueryStripping";
 
 const PREF_STRIP_LIST_NAME = "privacy.query_stripping.strip_list";
 const PREF_ALLOW_LIST_NAME = "privacy.query_stripping.allow_list";
+const PREF_TESTING_ENABLED = "privacy.query_stripping.testing";
 
 class URLQueryStrippingListService {
   constructor() {
@@ -112,6 +113,10 @@ class URLQueryStrippingListService {
         stripList: this.remoteStripList,
         allowList: this.remoteAllowList,
       });
+
+      if (Services.prefs.getBoolPref(PREF_TESTING_ENABLED, false)) {
+        Services.ppmm.sharedData.flush();
+      }
     }
 
     this._notifyObservers();
