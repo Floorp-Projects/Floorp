@@ -912,6 +912,11 @@ image.update-throbber {
   margin-inline-end: 8px;
 }
 
+.main-content {
+  /* the 32px min-height, plus 20+30px margin below, plus some leeway: */
+  scroll-padding-top: 90px;
+}
+
 #policies-container,
 #searchInput {
   min-height: 32px;
