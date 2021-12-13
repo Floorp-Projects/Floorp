@@ -242,6 +242,8 @@ class JUnitTestRunner(MochitestDesktop):
             env["MOZ_WEBRENDER"] = "1"
         else:
             env["MOZ_WEBRENDER"] = "0"
+        # FIXME: When android switches to using Fission by default,
+        # MOZ_FORCE_DISABLE_FISSION will need to be configured correctly.
         if self.options.enable_fission:
             env["MOZ_FORCE_ENABLE_FISSION"] = "1"
         # Add additional env variables
