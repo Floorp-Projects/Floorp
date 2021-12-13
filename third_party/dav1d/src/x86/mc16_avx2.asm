@@ -28,18 +28,19 @@
 
 %if ARCH_X86_64
 
-SECTION_RODATA 32
+SECTION_RODATA 64
 
 ; dav1d_obmc_masks[] * -512
-obmc_masks: dw      0,      0,  -9728,      0, -12800,  -7168,  -2560,      0
+const obmc_masks_avx2
+            dw      0,      0,  -9728,      0, -12800,  -7168,  -2560,      0
             dw -14336, -11264,  -8192,  -5632,  -3584,  -1536,      0,      0
             dw -15360, -13824, -12288, -10752,  -9216,  -7680,  -6144,  -5120
             dw  -4096,  -3072,  -2048,  -1536,      0,      0,      0,      0
             dw -15872, -14848, -14336, -13312, -12288, -11776, -10752, -10240
             dw  -9728,  -8704,  -8192,  -7168,  -6656,  -6144,  -5632,  -4608
             dw  -4096,  -3584,  -3072,  -2560,  -2048,  -2048,  -1536,  -1024
+            dw      0,      0,      0,      0,      0,      0,      0,      0
 
-blend_shuf:     db 0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  2,  3,  2,  3,  2,  3
 deint_shuf:     dd 0,  4,  1,  5,  2,  6,  3,  7
 subpel_h_shufA: db 0,  1,  2,  3,  2,  3,  4,  5,  4,  5,  6,  7,  6,  7,  8,  9
 subpel_h_shufB: db 4,  5,  6,  7,  6,  7,  8,  9,  8,  9, 10, 11, 10, 11, 12, 13
@@ -50,6 +51,7 @@ rescale_mul:    dd 0,  1,  2,  3,  4,  5,  6,  7
 rescale_mul2:   dd 0,  1,  4,  5,  2,  3,  6,  7
 resize_shuf:    db 0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  4,  5,  6,  7
                 db 8,  9, 10, 11, 12, 13, 14, 15, 14, 15, 14, 15, 14, 15, 14, 15
+blend_shuf:     db 0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  2,  3,  2,  3,  2,  3
 wswap:          db 2,  3,  0,  1,  6,  7,  4,  5, 10, 11,  8,  9, 14, 15, 12, 13
 bdct_lb_q: times 8 db 0
            times 8 db 4
@@ -5366,7 +5368,7 @@ cglobal blend_v_16bpc, 3, 6, 6, dst, ds, tmp, w, h
     add                  wq, r5
     jmp                  wq
 .w2:
-    vpbroadcastd         m2, [base+obmc_masks+2*2]
+    vpbroadcastd         m2, [base+obmc_masks_avx2+2*2]
 .w2_loop:
     movd                 m0, [dstq+dsq*0]
     pinsrd               m0, [dstq+dsq*1], 1
@@ -5382,7 +5384,7 @@ cglobal blend_v_16bpc, 3, 6, 6, dst, ds, tmp, w, h
     jg .w2_loop
     RET
 .w4:
-    vpbroadcastq         m2, [base+obmc_masks+4*2]
+    vpbroadcastq         m2, [base+obmc_masks_avx2+4*2]
 .w4_loop:
     movq                 m0, [dstq+dsq*0]
     movhps               m0, [dstq+dsq*1]
@@ -5398,7 +5400,7 @@ cglobal blend_v_16bpc, 3, 6, 6, dst, ds, tmp, w, h
     RET
 INIT_YMM avx2
 .w8:
-    vbroadcasti128       m2, [base+obmc_masks+8*2]
+    vbroadcasti128       m2, [base+obmc_masks_avx2+8*2]
 .w8_loop:
     mova                xm0, [dstq+dsq*0]
     vinserti128          m0, [dstq+dsq*1], 1
@@ -5413,7 +5415,7 @@ INIT_YMM avx2
     jg .w8_loop
     RET
 .w16:
-    mova                 m4, [base+obmc_masks+16*2]
+    mova                 m4, [base+obmc_masks_avx2+16*2]
 .w16_loop:
     mova                 m0,     [dstq+dsq*0]
     psubw                m2, m0, [tmpq+ 32*0]
@@ -5435,8 +5437,8 @@ INIT_YMM avx2
     movaps         [rsp+ 8], xmm6
     movaps         [rsp+24], xmm7
 %endif
-    mova                 m6, [base+obmc_masks+32*2]
-    vbroadcasti128       m7, [base+obmc_masks+32*3]
+    mova                 m6, [base+obmc_masks_avx2+32*2]
+    vbroadcasti128       m7, [base+obmc_masks_avx2+32*3]
 .w32_loop:
     mova                 m0,     [dstq+dsq*0+32*0]
     psubw                m3, m0, [tmpq      +32*0]
@@ -5491,7 +5493,7 @@ cglobal blend_h_16bpc, 3, 6, 6, dst, ds, tmp, w, h, mask
     mov                  hd, hm
     movsxd               wq, [r5+wq*4]
     add                  wq, r5
-    lea               maskq, [base+obmc_masks+hq*2]
+    lea               maskq, [base+obmc_masks_avx2+hq*2]
     lea                  hd, [hq*3]
     shr                  hd, 2 ; h * 3/4
     lea               maskq, [maskq+hq*2]

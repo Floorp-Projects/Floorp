@@ -80,7 +80,7 @@ COLD void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
 
-#if HAVE_AVX512ICL && BITDEPTH == 8
+#if BITDEPTH == 8
     c->fb[0] = BF(dav1d_cdef_filter_8x8, avx512icl);
     c->fb[1] = BF(dav1d_cdef_filter_4x8, avx512icl);
     c->fb[2] = BF(dav1d_cdef_filter_4x4, avx512icl);
