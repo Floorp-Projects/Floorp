@@ -1994,9 +1994,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "42.1.0"
+version = "42.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af977f3ee276d391cbf940639a5b95378c2b0031d5624c019142d286be4a1a21"
+checksum = "34d40d192d10509d941937248fe4594d47617abf34496686c809cfdb31ae8506"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2014,9 +2014,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "42.1.0"
+version = "42.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f50f24e5e7c2abef542a9cb67f7367538db56f54fcae0fae8d3a1e0ac63470a3"
+checksum = "349ebbb162d58911547b48e5fbf90d45854e3e1ba03332f41b80a6611867c013"
 dependencies = [
  "bincode",
  "chrono",
@@ -2034,9 +2034,9 @@ dependencies = [
 
 [[package]]
 name = "glean-ffi"
-version = "42.1.0"
+version = "42.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26738a3a19d212595c76a765b3e29fc9a0e1c5e7d15a8352ac94ec8536b65cd5"
+checksum = "9e29c3f0b9dbde127254f375499df382d5fa9c3c2b33bfcb393485876fe79fb2"
 dependencies = [
  "android_logger",
  "env_logger",
