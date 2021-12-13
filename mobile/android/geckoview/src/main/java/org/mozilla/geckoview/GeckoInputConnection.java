@@ -50,7 +50,7 @@ import org.mozilla.gecko.util.ThreadUtils;
   private static Handler sBackgroundHandler;
 
   // Managed only by notifyIMEContext; see comments in notifyIMEContext
-  private int mIMEState;
+  @IMEState private int mIMEState;
   private String mIMEActionHint = "";
   private int mLastSelectionStart;
   private int mLastSelectionEnd;
@@ -718,7 +718,7 @@ import org.mozilla.gecko.util.ThreadUtils;
   }
 
   @Override // SessionTextInput.EditableListener
-  public void notifyIME(final int type) {
+  public void notifyIME(final @IMENotificationType int type) {
     switch (type) {
       case NOTIFY_IME_OF_FOCUS:
         // Showing/hiding vkb is done in notifyIMEContext
@@ -731,6 +731,11 @@ import org.mozilla.gecko.util.ThreadUtils;
       case NOTIFY_IME_OF_BLUR:
         break;
 
+      case NOTIFY_IME_OF_TOKEN:
+      case NOTIFY_IME_OPEN_VKB:
+      case NOTIFY_IME_REPLY_EVENT:
+      case NOTIFY_IME_TO_CANCEL_COMPOSITION:
+      case NOTIFY_IME_TO_COMMIT_COMPOSITION:
       default:
         if (DEBUG) {
           throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
@@ -741,11 +746,11 @@ import org.mozilla.gecko.util.ThreadUtils;
 
   @Override // SessionTextInput.EditableListener
   public synchronized void notifyIMEContext(
-      final int state,
+      @IMEState final int state,
       final String typeHint,
       final String modeHint,
       final String actionHint,
-      final int flags) {
+      @IMEContextFlags final int flags) {
     // mIMEState and the mIME*Hint fields should only be changed by notifyIMEContext,
     // and not reset anywhere else. Usually, notifyIMEContext is called right after a
     // focus or blur, so resetting mIMEState during the focus or blur seems harmless.
