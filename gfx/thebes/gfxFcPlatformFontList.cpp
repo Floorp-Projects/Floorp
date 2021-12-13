@@ -1519,16 +1519,20 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
   }
 #endif
 
-  // iterate over available fonts
-  FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
-  AddFontSetFamilies(systemFonts, policy.get(), /* aAppFonts = */ false);
-
 #ifdef MOZ_BUNDLED_FONTS
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1745715:
+  // It's important to do this *before* processing the standard system fonts,
+  // so that if a family is present in both font sets, we'll treat it as app-
+  // bundled and therefore always visible.
   if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
     FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
     AddFontSetFamilies(appFonts, policy.get(), /* aAppFonts = */ true);
   }
 #endif
+
+  // iterate over available fonts
+  FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
+  AddFontSetFamilies(systemFonts, policy.get(), /* aAppFonts = */ false);
 
   return NS_OK;
 }
