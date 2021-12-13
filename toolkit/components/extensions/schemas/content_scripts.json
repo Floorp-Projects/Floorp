@@ -51,6 +51,20 @@
             "$ref": "extensionTypes.RunAt",
             "optional": true,
             "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          },
+          "cookieStoreId": {
+            "choices": [ 
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              },
+              {
+                "type": "string"
+              }          
+            ],
+            "optional": true,
+            "description": "limit the set of matched tabs to those that belong to the given cookie store id"
           }
         }
       },
