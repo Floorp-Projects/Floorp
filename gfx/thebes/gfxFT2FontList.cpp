@@ -734,7 +734,7 @@ class FontNameCache {
       buf.Append(kFileSep);
     }
 
-    LOG(("putting FontNameCache to " CACHE_KEY ", length %u",
+    LOG(("putting FontNameCache to " CACHE_KEY ", length %zu",
          buf.Length() + 1));
     mCache->PutBuffer(CACHE_KEY, UniquePtr<char[]>(ToNewCString(buf)),
                       buf.Length() + 1);

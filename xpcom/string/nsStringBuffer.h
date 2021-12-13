@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include "mozilla/MemoryReporting.h"
+#include "nsStringFwd.h"
 
 template <class T>
 struct already_AddRefed;

@@ -1056,7 +1056,7 @@ nsresult nsExpatDriver::HandleError() {
             mozilla::Telemetry::EventExtraEntry{
                 "last_line"_ns, NS_ConvertUTF16toUTF8(mLastLine)},
             mozilla::Telemetry::EventExtraEntry{
-                "last_line_len"_ns, nsPrintfCString("%u", mLastLine.Length())},
+                "last_line_len"_ns, nsPrintfCString("%zu", mLastLine.Length())},
             mozilla::Telemetry::EventExtraEntry{
                 "hidden"_ns, doc->Hidden() ? "true"_ns : "false"_ns},
             mozilla::Telemetry::EventExtraEntry{"destroyed"_ns,

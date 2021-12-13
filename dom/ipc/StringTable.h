@@ -74,14 +74,15 @@ class StringTableBuilder {
   StringTableEntry Add(const StringType& aKey) {
     return mEntries.WithEntryHandle(aKey,
                                     [&](auto&& entry) -> StringTableEntry {
+                                      auto length = uint32_t(aKey.Length());
                                       entry.OrInsertWith([&]() {
                                         Entry newEntry{mSize, aKey};
-                                        mSize += aKey.Length() + 1;
+                                        mSize += length + 1;
 
                                         return newEntry;
                                       });
 
-                                      return {entry->mOffset, aKey.Length()};
+                                      return {entry->mOffset, length};
                                     });
   }
 

@@ -1648,7 +1648,7 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
     nsAutoCString serializedStr(serialized.c_str(), serialized.length());
     serializedStr.ReplaceSubstring("\0"_ns, "\\0"_ns);
 
-    LOG(("Serialized protocol buffer [this = %p]: (length=%d) %s", this,
+    LOG(("Serialized protocol buffer [this = %p]: (length=%zd) %s", this,
          serializedStr.Length(), serializedStr.get()));
   }
 

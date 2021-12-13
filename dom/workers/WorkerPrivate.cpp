@@ -4603,7 +4603,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                            mozilla::fallible)) {
       // Try again, with only a 1 KB string. Do this infallibly this time.
       // If the user doesn't have 1 KB to spare we're done anyways.
-      uint32_t index = std::min(uint32_t(1024), toStringResult.Length());
+      size_t index = std::min<size_t>(1024, toStringResult.Length());
 
       // Drop the last code point that may be cropped.
       index = RewindToPriorUTF8Codepoint(toStringResult.BeginReading(), index);

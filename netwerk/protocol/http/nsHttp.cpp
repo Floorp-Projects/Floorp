@@ -589,8 +589,8 @@ static bool IsTokenSymbol(signed char chr) {
 ParsedHeaderPair::ParsedHeaderPair(const char* name, int32_t nameLen,
                                    const char* val, int32_t valLen,
                                    bool isQuotedValue)
-    : mName(nsDependentCSubstring(nullptr, 0u)),
-      mValue(nsDependentCSubstring(nullptr, 0u)),
+    : mName(nsDependentCSubstring(nullptr, size_t(0))),
+      mValue(nsDependentCSubstring(nullptr, size_t(0))),
       mIsQuotedValue(isQuotedValue) {
   if (nameLen > 0) {
     mName.Rebind(name, name + nameLen);

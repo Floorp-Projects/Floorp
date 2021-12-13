@@ -149,8 +149,8 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
   // bug 333064 for more information. We break only at ASCII spaces.
   if (aWrapColumn >= prefixwidth) {
     // Search backward from the adjusted wrap column or from the text end.
-    goodSpace = static_cast<int32_t>(
-        std::min(aWrapColumn - prefixwidth, mContent.Length() - 1));
+    goodSpace =
+        std::min<int32_t>(aWrapColumn - prefixwidth, mContent.Length() - 1);
     while (goodSpace >= 0) {
       if (nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
         return goodSpace;
