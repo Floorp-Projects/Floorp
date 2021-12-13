@@ -1028,28 +1028,7 @@ bool WebGLProgram::ValidateAfterTentativeLink(
   const auto& linkInfo = mMostRecentLinkInfo;
   const auto& gl = mContext->gl;
 
-  // Check if the attrib name conflicting to uniform name
-  {
-    std::unordered_set<std::string> attribNames;
-    for (const auto& attrib : linkInfo->active.activeAttribs) {
-      attribNames.insert(attrib.name);
-    }
-    for (const auto& uniform : linkInfo->active.activeUniforms) {
-      auto name = uniform.name;
-      const auto maybe = webgl::ParseIndexed(name);
-      if (maybe) {
-        name = maybe->name;
-      }
-      if (attribNames.count(name)) {
-        *out_linkLog = nsPrintfCString(
-                           "Attrib name conflicts with uniform name:"
-                           " %s",
-                           name.c_str())
-                           .BeginReading();
-        return false;
-      }
-    }
-  }
+  // Check for overlapping attrib locations.
   {
     std::unordered_map<uint32_t, const std::string&> nameByLoc;
     for (const auto& attrib : linkInfo->active.activeAttribs) {
