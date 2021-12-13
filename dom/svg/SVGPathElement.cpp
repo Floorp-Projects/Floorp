@@ -66,9 +66,11 @@ uint32_t SVGPathElement::GetPathSegAtLength(float distance) {
     }
   };
 
-  if (StaticPrefs::layout_css_d_property_enabled() &&
-      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
-    return seg;
+  if (StaticPrefs::layout_css_d_property_enabled()) {
+    FlushStyleIfNeeded();
+    if (SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+      return seg;
+    }
   }
   return mD.GetAnimValue().GetPathSegAtLength(distance);
 }

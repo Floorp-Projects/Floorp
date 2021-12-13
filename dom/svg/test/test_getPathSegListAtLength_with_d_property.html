@@ -42,6 +42,12 @@ test(function() {
 
 test(function() {
   let target = document.getElementById('target1');
+  // Note: in order to make sure we flush style properly, we call
+  // getComputedStyle after setting an initial value first, so if
+  // getPathSegAtLength(5) doesn't flush style, it returns 0.
+  target.style.d = 'none';
+  assert_equals(getComputedStyle(target).d, "none");
+
   target.style.d = 'path("M2,2 h3 v5")';
   assert_equals(target.getPathSegAtLength(5), 2);
 }, "getPathSegAtLength works properly after updating d property");
