@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url("resources/bug1320197-testFont2.ttf");
+}
+div {
+  font: 600px/1 test;
+  width: 1em;
+  height: 1em;
+  border: 10px solid silver;
+  position: absolute;
+}
+</style>
+
+<p>There should be no purple visible at any of the edges of the black square.</p>
+
+<div>&#xe001;</div>
