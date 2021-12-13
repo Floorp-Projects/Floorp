@@ -93,7 +93,9 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
   static const std::string GEFORCE_480 = "GeForce GTX 480";
   static const std::string GEFORCE_980 = "GeForce GTX 980";
 
-  if (Contains(str, "GeForce") || Contains(str, "Quadro")) {
+  if (Contains(str, "NVIDIA") ||
+      Contains(str, "GeForce") ||
+      Contains(str, "Quadro")) {
     auto ret = std::invoke([&]() {
       static const std::regex kGeForce("GeForce.*?([0-9][0-9][0-9]+)");
       if (std::regex_search(str, m, kGeForce)) {
@@ -130,7 +132,42 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
               return GEFORCE_480;
           }
         }
+        return GEFORCE_8800;
       }
+
+      /* Similarities for Titans:
+       * 780
+       * * GeForce GTX TITAN
+       * * -
+       * * Black
+       * * Z
+       * 980
+       * * GeForce GTX TITAN X
+       * 1080
+       * * Nvidia TITAN X
+       * * Nvidia TITAN Xp
+       * * Nvidia TITAN V
+       * 2080
+       * * Nvidia TITAN RTX
+       */
+      static const std::regex kTitan("TITAN( [BZXVR])?");
+      if (std::regex_search(str, m, kTitan)) {
+        char letter = ' ';
+        const auto sub = m.str(1);
+        if (sub.length()) {
+          letter = sub[1];
+        }
+        switch (letter) {
+          case ' ':
+          case 'B':
+          case 'Z':
+            return GEFORCE_480;
+          default:
+            return GEFORCE_980;
+        }
+      }
+      // CI has str:"Tesla M60"
+      if (Contains(str, "Tesla")) return GEFORCE_8800;
 
       return GEFORCE_8800;  // Unknown, but NV.
     });
@@ -141,41 +178,6 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
     }
     return ret;
   }
-  /* Similarities for Titans:
-   * 780
-   * * GeForce GTX TITAN
-   * * -
-   * * Black
-   * * Z
-   * 980
-   * * GeForce GTX TITAN X
-   * 1080
-   * * Nvidia TITAN X
-   * * Nvidia TITAN Xp
-   * * Nvidia TITAN V
-   * 2080
-   * * Nvidia TITAN RTX
-   */
-  static const std::regex kTitan("TITAN( [BZXVR])?");
-  if (std::regex_search(str, m, kTitan)) {
-    char letter = ' ';
-    const auto sub = m.str(1);
-    if (sub.length()) {
-      letter = sub[1];
-    }
-    switch (letter) {
-      case ' ':
-      case 'B':
-      case 'Z':
-        return GEFORCE_480;
-      default:
-        return GEFORCE_980;
-    }
-  }
-  // CI has str:"Tesla M60"
-  if (Contains(str, "Tesla")) return GEFORCE_8800;
-
-  // -
 
   static const std::regex kNouveau("NV(1?[0-9A-F][0-9A-F])");
   if (std::regex_match(str, m, kNouveau)) {
