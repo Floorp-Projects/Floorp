@@ -391,6 +391,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIEarlyHintObserver)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
@@ -640,6 +641,10 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(this);
+
+    if (mIsDocumentLoad && loadingContext->IsTop()) {
+      httpChannelImpl->SetEarlyHintObserver(this);
+    }
   }
 
   nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
@@ -1070,7 +1075,10 @@ void DocumentLoadListener::Disconnect() {
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(nullptr);
+    httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
+
+  mEarlyHintsPreloader.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
     ctx->EndDocumentLoad(mDoingProcessSwitch);
@@ -2255,6 +2263,14 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
+  if (httpChannel) {
+    uint32_t responseStatus;
+    Unused << httpChannel->GetResponseStatus(&responseStatus);
+    mEarlyHintsPreloader.FinalResponse(responseStatus);
+  } else {
+    mEarlyHintsPreloader.Cancel();
+  }
+
   // If we're going to be delivering this channel to a remote content
   // process, then we want to install any required content conversions
   // in the content process.
@@ -2602,6 +2618,13 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
                                       message.get());
         }));
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
+  LOG(("DocumentLoadListener::EarlyHint.\n"));
+
+  mEarlyHintsPreloader.EarlyHint(linkHeader);
   return NS_OK;
 }
 
