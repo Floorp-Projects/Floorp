@@ -219,6 +219,16 @@ void RunTestsRDD(SandboxTestingChild* child) {
     int rv = getrusage(RUSAGE_SELF, &res);
     return rv;
   });
+
+  child->ErrnoValueTest("unlink"_ns, false, ENOENT, [&] {
+    int rv = unlink("");
+    return rv;
+  });
+
+  child->ErrnoValueTest("unlinkat"_ns, false, ENOENT, [&] {
+    int rv = unlinkat(AT_FDCWD, "", 0);
+    return rv;
+  });
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
