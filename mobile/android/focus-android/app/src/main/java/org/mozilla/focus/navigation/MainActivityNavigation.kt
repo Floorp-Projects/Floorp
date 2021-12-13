@@ -17,6 +17,7 @@ import org.mozilla.focus.fragment.AboutFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
+import org.mozilla.focus.locale.screen.LanguageFragment
 import org.mozilla.focus.settings.AdvancedSettingsFragment
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
@@ -184,6 +185,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.SearchAutocompleteAdd -> AutocompleteAddFragment()
             Screen.Settings.Page.SearchAutocompleteRemove -> AutocompleteRemoveFragment()
             Screen.Settings.Page.About -> AboutFragment()
+            Screen.Settings.Page.Locale -> LanguageFragment()
         }
 
         val tag = "settings_" + fragment::class.java.simpleName

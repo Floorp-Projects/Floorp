@@ -330,7 +330,7 @@ public class LocaleManager {
     /**
      * Returns a list of supported locale codes
      */
-    public static Collection<String> getPackagedLocaleTags(final Context context) {
+    public static Collection<String> getPackagedLocaleTags() {
         return LocaleList.BUNDLED_LOCALES;
     }
 

@@ -55,7 +55,9 @@ private fun darkColorPalette(): FocusColors = FocusColors(
     menuBackground = PhotonColors.Ink05,
     menuText = PhotonColors.White,
     aboutPageText = PhotonColors.White,
-    aboutPageLink = PhotonColors.Pink70
+    aboutPageLink = PhotonColors.Pink70,
+    radioButtonSelected = PhotonColors.Pink70,
+    toolbarColor = PhotonColors.White
 )
 
 private fun lightColorPalette(): FocusColors = FocusColors(
@@ -67,7 +69,9 @@ private fun lightColorPalette(): FocusColors = FocusColors(
     menuBackground = PhotonColors.White,
     menuText = PhotonColors.Black,
     aboutPageText = PhotonColors.Black,
-    aboutPageLink = PhotonColors.Pink70
+    aboutPageLink = PhotonColors.Pink70,
+    radioButtonSelected = PhotonColors.Pink70,
+    toolbarColor = PhotonColors.Black
 )
 
 /**

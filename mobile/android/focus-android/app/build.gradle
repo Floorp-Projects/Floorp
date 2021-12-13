@@ -195,6 +195,7 @@ dependencies {
     implementation Dependencies.androidx_palette
     implementation Dependencies.androidx_preferences
     implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.google_accompanist_insets_ui
 
     implementation Dependencies.google_material
 

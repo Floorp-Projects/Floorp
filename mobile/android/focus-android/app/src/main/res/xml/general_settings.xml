@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
@@ -29,12 +28,12 @@
     </androidx.preference.PreferenceCategory>
 
     <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
-    <!--suppress AndroidDomInspection -->
-    <org.mozilla.focus.widget.LocaleListPreference
+    <androidx.preference.Preference
         android:defaultValue=""
         android:key="@string/pref_key_locale"
-        android:layout="@layout/focus_preference_no_icon"
-        android:title="@string/preference_language" />
+        android:layout="@layout/focus_preference"
+        android:title="@string/preference_language"
+        app:iconSpaceReserved="false" />
 
     <org.mozilla.focus.widget.DefaultBrowserPreference
         android:key="@string/pref_key_default_browser"

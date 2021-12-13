@@ -192,6 +192,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
             page = Screen.Settings.Page.SearchAutocompleteList
         )
         Screen.Settings.Page.About -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
+        Screen.Settings.Page.Locale -> Screen.Settings(page = Screen.Settings.Page.General)
     }
 
     return state.copy(screen = screen)

@@ -22,6 +22,7 @@ object Versions {
 
     object Google {
         const val material = "1.2.1"
+        const val accompanist = "0.16.1"
     }
 
     object Kotlin {
@@ -61,7 +62,7 @@ object Dependencies {
     const val androidx_lifecycle_extensions = "androidx.lifecycle:lifecycle-extensions:${Versions.AndroidX.lifecycle}"
 
     const val google_material = "com.google.android.material:material:${Versions.Google.material}"
-
+    const val google_accompanist_insets_ui = "com.google.accompanist:accompanist-insets-ui:${Versions.Google.accompanist}"
     const val kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.Gradle.kotlin_plugin}"
     const val android_gradle_plugin = "com.android.tools.build:gradle:${Versions.Gradle.android_plugin}"
 

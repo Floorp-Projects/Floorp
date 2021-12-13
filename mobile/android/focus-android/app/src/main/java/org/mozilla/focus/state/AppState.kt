@@ -78,6 +78,7 @@ sealed class Screen {
             Advanced,
             Mozilla,
             About,
+            Locale,
 
             PrivacyExceptions,
             PrivacyExceptionsRemove,

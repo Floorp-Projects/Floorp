@@ -20,7 +20,9 @@ data class FocusColors(
     val menuBackground: Color,
     val menuText: Color,
     val aboutPageText: Color,
-    val aboutPageLink: Color
+    val aboutPageLink: Color,
+    val radioButtonSelected: Color,
+    val toolbarColor: Color
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant
