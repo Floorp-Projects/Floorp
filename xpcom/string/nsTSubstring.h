@@ -316,6 +316,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   // These are only for internal use within the string classes:
   typedef typename base_string_type::DataFlags DataFlags;
   typedef typename base_string_type::ClassFlags ClassFlags;
+  typedef typename base_string_type::LengthStorage LengthStorage;
 
   // this acts like a virtual destructor
   ~nsTSubstring() { Finalize(); }
@@ -433,13 +434,11 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
                                              const fallible_t&);
 
   void NS_FASTCALL AssignASCII(const char* aData) {
-    AssignASCII(aData, mozilla::AssertedCast<size_type, size_t>(strlen(aData)));
+    AssignASCII(aData, strlen(aData));
   }
   [[nodiscard]] bool NS_FASTCALL AssignASCII(const char* aData,
                                              const fallible_t& aFallible) {
-    return AssignASCII(aData,
-                       mozilla::AssertedCast<size_type, size_t>(strlen(aData)),
-                       aFallible);
+    return AssignASCII(aData, strlen(aData), aFallible);
   }
 
   // AssignLiteral must ONLY be called with an actual literal string, or
@@ -893,12 +892,12 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   size_type GetMutableData(char_type** aData,
                            size_type aNewLen = size_type(-1)) {
     if (!EnsureMutable(aNewLen)) {
-      AllocFailed(aNewLen == size_type(-1) ? base_string_type::mLength
+      AllocFailed(aNewLen == size_type(-1) ? base_string_type::Length()
                                            : aNewLen);
     }
 
     *aData = base_string_type::mData;
-    return base_string_type::mLength;
+    return base_string_type::Length();
   }
 
   size_type GetMutableData(char_type** aData, size_type aNewLen,
@@ -928,11 +927,11 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 
   mozilla::Span<char_type> GetMutableData(size_type aNewLen = size_type(-1)) {
     if (!EnsureMutable(aNewLen)) {
-      AllocFailed(aNewLen == size_type(-1) ? base_string_type::mLength
+      AllocFailed(aNewLen == size_type(-1) ? base_string_type::Length()
                                            : aNewLen);
     }
 
-    return mozilla::Span{base_string_type::mData, base_string_type::mLength};
+    return mozilla::Span{base_string_type::mData, base_string_type::Length()};
   }
 
   mozilla::Maybe<mozilla::Span<char_type>> GetMutableData(size_type aNewLen,
@@ -941,7 +940,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
       return mozilla::Nothing();
     }
     return Some(
-        mozilla::Span{base_string_type::mData, base_string_type::mLength});
+        mozilla::Span{base_string_type::mData, base_string_type::Length()});
   }
 
   /**
@@ -954,18 +953,12 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   }
 
   void Append(mozilla::Span<const char_type> aSpan) {
-    auto len = aSpan.Length();
-    MOZ_RELEASE_ASSERT(len <= std::numeric_limits<size_type>::max());
-    Append(aSpan.Elements(), len);
+    Append(aSpan.Elements(), aSpan.Length());
   }
 
   [[nodiscard]] bool Append(mozilla::Span<const char_type> aSpan,
                             const fallible_t& aFallible) {
-    auto len = aSpan.Length();
-    if (len > std::numeric_limits<size_type>::max()) {
-      return false;
-    }
-    return Append(aSpan.Elements(), len, aFallible);
+    return Append(aSpan.Elements(), aSpan.Length(), aFallible);
   }
 
   void NS_FASTCALL AssignASCII(mozilla::Span<const char> aData) {
@@ -989,20 +982,14 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   void Append(mozilla::Span<const uint8_t> aSpan) {
-    auto len = aSpan.Length();
-    MOZ_RELEASE_ASSERT(len <= std::numeric_limits<size_type>::max());
-    Append(reinterpret_cast<const char*>(aSpan.Elements()), len);
+    Append(reinterpret_cast<const char*>(aSpan.Elements()), aSpan.Length());
   }
 
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   [[nodiscard]] bool Append(mozilla::Span<const uint8_t> aSpan,
                             const fallible_t& aFallible) {
-    auto len = aSpan.Length();
-    if (len > std::numeric_limits<size_type>::max()) {
-      return false;
-    }
-    return Append(reinterpret_cast<const char*>(aSpan.Elements()), len,
-                  aFallible);
+    return Append(reinterpret_cast<const char*>(aSpan.Elements()),
+                  aSpan.Length(), aFallible);
   }
 
   /**
@@ -1153,7 +1140,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 #  undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
       : base_string_type(aData, aLength, aDataFlags, aClassFlags) {
     AssertValid();
-    MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
@@ -1164,7 +1150,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
     AssertValid();
   }
 
-  void SetData(char_type* aData, size_type aLength, DataFlags aDataFlags) {
+  void SetData(char_type* aData, LengthStorage aLength, DataFlags aDataFlags) {
     base_string_type::mData = aData;
     base_string_type::mLength = aLength;
     base_string_type::mDataFlags = aDataFlags;
@@ -1261,7 +1247,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    *                        move.
    *
    */
-  mozilla::Result<uint32_t, nsresult> NS_FASTCALL StartBulkWriteImpl(
+  mozilla::Result<size_type, nsresult> NS_FASTCALL StartBulkWriteImpl(
       size_type aCapacity, size_type aPrefixToPreserve = 0,
       bool aAllowShrinking = true, size_type aSuffixLength = 0,
       size_type aOldSuffixStart = 0, size_type aNewSuffixStart = 0);
@@ -1277,7 +1263,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    * SetCapacity().
    */
   MOZ_ALWAYS_INLINE void NS_FASTCALL
-  FinishBulkWriteImplImpl(size_type aLength) {
+  FinishBulkWriteImplImpl(LengthStorage aLength) {
     base_string_type::mData[aLength] = char_type(0);
     base_string_type::mLength = aLength;
 #ifdef DEBUG
@@ -1349,24 +1335,8 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   [[nodiscard]] bool NS_FASTCALL
   EnsureMutable(size_type aNewLen = size_type(-1));
 
-  /**
-   * Checks if the given capacity is valid for this string type.
-   */
-  [[nodiscard]] static bool CheckCapacity(size_type aCapacity) {
-    if (aCapacity > kMaxCapacity) {
-      // Also assert for |aCapacity| equal to |size_type(-1)|, since we used to
-      // use that value to flag immutability.
-      NS_ASSERTION(aCapacity != size_type(-1), "Bogus capacity");
-      return false;
-    }
-
-    return true;
-  }
-
   void NS_FASTCALL ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                                   const char_type* aData, size_type aLength);
-
-  static const size_type kMaxCapacity;
 
  public:
   // NOTE: this method is declared public _only_ for convenience for

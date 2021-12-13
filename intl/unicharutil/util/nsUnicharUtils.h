@@ -34,9 +34,9 @@ uint32_t ToLowerCase(uint32_t aChar);
 uint32_t ToUpperCase(uint32_t aChar);
 uint32_t ToTitleCase(uint32_t aChar);
 
-void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
-void ToLowerCaseASCII(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
-void ToUpperCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
+void ToLowerCase(const char16_t* aIn, char16_t* aOut, size_t aLen);
+void ToLowerCaseASCII(const char16_t* aIn, char16_t* aOut, size_t aLen);
+void ToUpperCase(const char16_t* aIn, char16_t* aOut, size_t aLen);
 
 char ToLowerCaseASCII(const char aChar);
 char16_t ToLowerCaseASCII(const char16_t aChar);
@@ -54,16 +54,16 @@ inline bool IsLowerCase(uint32_t c) { return ToUpperCase(c) != c; }
 
 uint32_t ToFoldedCase(uint32_t aChar);
 void ToFoldedCase(nsAString& aString);
-void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
+void ToFoldedCase(const char16_t* aIn, char16_t* aOut, size_t aLen);
 
 uint32_t ToNaked(uint32_t aChar);
 void ToNaked(nsAString& aString);
 
 int32_t nsCaseInsensitiveStringComparator(const char16_t*, const char16_t*,
-                                          uint32_t, uint32_t);
+                                          size_t, size_t);
 
-int32_t nsCaseInsensitiveUTF8StringComparator(const char*, const char*,
-                                              uint32_t, uint32_t);
+int32_t nsCaseInsensitiveUTF8StringComparator(const char*, const char*, size_t,
+                                              size_t);
 
 class nsCaseInsensitiveStringArrayComparator {
  public:
@@ -74,7 +74,7 @@ class nsCaseInsensitiveStringArrayComparator {
 };
 
 int32_t nsASCIICaseInsensitiveStringComparator(const char16_t*, const char16_t*,
-                                               uint32_t, uint32_t);
+                                               size_t, size_t);
 
 inline bool CaseInsensitiveFindInReadable(
     const nsAString& aPattern, nsAString::const_iterator& aSearchStart,
@@ -94,10 +94,10 @@ inline bool CaseInsensitiveFindInReadable(const nsAString& aPattern,
 #endif  // MOZILLA_INTERNAL_API
 
 int32_t CaseInsensitiveCompare(const char16_t* a, const char16_t* b,
-                               uint32_t len);
+                               size_t len);
 
 int32_t CaseInsensitiveCompare(const char* aLeft, const char* aRight,
-                               uint32_t aLeftBytes, uint32_t aRightBytes);
+                               size_t aLeftBytes, size_t aRightBytes);
 
 /**
  * Calculates the lower-case of the codepoint of the UTF8 sequence starting at
@@ -151,7 +151,7 @@ namespace mozilla {
  *
  * The given |length| is in bytes.
  */
-uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr);
+uint32_t HashUTF8AsUTF16(const char* aUTF8, size_t aLength, bool* aErr);
 
 bool IsSegmentBreakSkipChar(uint32_t u);
 

@@ -33,12 +33,6 @@ const uint32_t kNsStringBufferShrinkingThreshold = 384;
 
 using double_conversion::DoubleToStringConverter;
 
-template <typename T>
-const typename nsTSubstring<T>::size_type nsTSubstring<T>::kMaxCapacity =
-    (nsTSubstring<T>::size_type(-1) / 2 - sizeof(nsStringBuffer)) /
-        sizeof(nsTSubstring<T>::char_type) -
-    2;
-
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 template <typename T>
 nsTSubstring<T>::nsTSubstring(char_type* aData, size_type aLength,
@@ -46,7 +40,6 @@ nsTSubstring<T>::nsTSubstring(char_type* aData, size_type aLength,
     : ::mozilla::detail::nsTStringRepr<T>(aData, aLength, aDataFlags,
                                           aClassFlags) {
   AssertValid();
-  MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
 
   if (aDataFlags & DataFlags::OWNED) {
     STRING_STAT_INCREMENT(Adopt);
@@ -75,10 +68,13 @@ nsTSubstring<T>::BulkWrite(size_type aCapacity, size_type aPrefixToPreserve,
 }
 
 template <typename T>
-mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
-    size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking,
-    size_type aSuffixLength, size_type aOldSuffixStart,
-    size_type aNewSuffixStart) {
+auto nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
+                                         size_type aPrefixToPreserve,
+                                         bool aAllowShrinking,
+                                         size_type aSuffixLength,
+                                         size_type aOldSuffixStart,
+                                         size_type aNewSuffixStart)
+    -> mozilla::Result<size_type, nsresult> {
   // Note! Capacity does not include room for the terminating null char.
 
   MOZ_ASSERT(aPrefixToPreserve <= aCapacity,
@@ -113,19 +109,17 @@ mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
       char_traits::move(this->mData + aNewSuffixStart,
                         this->mData + aOldSuffixStart, aSuffixLength);
       if (aSuffixLength) {
-        char_traits::uninitialize(
-            this->mData + aPrefixToPreserve,
-            XPCOM_MIN(size_t(aNewSuffixStart - aPrefixToPreserve),
-                      kNsStringBufferMaxPoison));
+        char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                  XPCOM_MIN(aNewSuffixStart - aPrefixToPreserve,
+                                            kNsStringBufferMaxPoison));
         char_traits::uninitialize(
             this->mData + aNewSuffixStart + aSuffixLength,
-            XPCOM_MIN(size_t(curCapacity + 1 - aNewSuffixStart - aSuffixLength),
+            XPCOM_MIN(curCapacity + 1 - aNewSuffixStart - aSuffixLength,
                       kNsStringBufferMaxPoison));
       } else {
-        char_traits::uninitialize(
-            this->mData + aPrefixToPreserve,
-            XPCOM_MIN(size_t(curCapacity + 1 - aPrefixToPreserve),
-                      kNsStringBufferMaxPoison));
+        char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                  XPCOM_MIN(curCapacity + 1 - aPrefixToPreserve,
+                                            kNsStringBufferMaxPoison));
       }
       return curCapacity;
     }
@@ -151,7 +145,7 @@ mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
     // to be allocating 2GB+ strings anyway.
     static_assert((sizeof(nsStringBuffer) & 0x1) == 0,
                   "bad size for nsStringBuffer");
-    if (MOZ_UNLIKELY(!CheckCapacity(aCapacity))) {
+    if (MOZ_UNLIKELY(!this->CheckCapacity(aCapacity))) {
       return mozilla::Err(NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -183,7 +177,7 @@ mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
           mozilla::RoundUpPow2(aCapacity + neededExtraSpace) - neededExtraSpace;
     }
 
-    newCapacity = XPCOM_MIN(temp, kMaxCapacity);
+    newCapacity = XPCOM_MIN(temp, base_string_type::kMaxCapacity);
     MOZ_ASSERT(newCapacity >= aCapacity,
                "should have hit the early return at the top");
     // Avoid shrinking if the new buffer size is close to the old. Note that
@@ -226,19 +220,17 @@ mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
     char_traits::move(newData + aNewSuffixStart, oldData + aOldSuffixStart,
                       aSuffixLength);
     if (aSuffixLength) {
-      char_traits::uninitialize(
-          this->mData + aPrefixToPreserve,
-          XPCOM_MIN(size_t(aNewSuffixStart - aPrefixToPreserve),
-                    kNsStringBufferMaxPoison));
+      char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                XPCOM_MIN(aNewSuffixStart - aPrefixToPreserve,
+                                          kNsStringBufferMaxPoison));
       char_traits::uninitialize(
           this->mData + aNewSuffixStart + aSuffixLength,
-          XPCOM_MIN(size_t(newCapacity + 1 - aNewSuffixStart - aSuffixLength),
+          XPCOM_MIN(newCapacity + 1 - aNewSuffixStart - aSuffixLength,
                     kNsStringBufferMaxPoison));
     } else {
-      char_traits::uninitialize(
-          this->mData + aPrefixToPreserve,
-          XPCOM_MIN(size_t(newCapacity + 1 - aPrefixToPreserve),
-                    kNsStringBufferMaxPoison));
+      char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                XPCOM_MIN(newCapacity + 1 - aPrefixToPreserve,
+                                          kNsStringBufferMaxPoison));
     }
   } else {
     char_traits::copy(newData, oldData, aPrefixToPreserve);
@@ -252,7 +244,6 @@ mozilla::Result<uint32_t, nsresult> nsTSubstring<T>::StartBulkWriteImpl(
 
 template <typename T>
 void nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength) {
-  MOZ_ASSERT(aLength != UINT32_MAX, "OOM magic value passed as length.");
   if (aLength) {
     FinishBulkWriteImplImpl(aLength);
   } else {
@@ -274,7 +265,7 @@ bool nsTSubstring<T>::ReplacePrep(index_type aCutStart, size_type aCutLength,
                                   size_type aNewLength) {
   aCutLength = XPCOM_MIN(aCutLength, this->mLength - aCutStart);
 
-  mozilla::CheckedInt<size_type> newTotalLen = this->mLength;
+  mozilla::CheckedInt<size_type> newTotalLen = this->Length();
   newTotalLen += aNewLength;
   newTotalLen -= aCutLength;
   if (!newTotalLen.isValid()) {
@@ -300,7 +291,7 @@ bool nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart,
   size_type oldSuffixStart = aCutStart + aCutLen;
   size_type suffixLength = this->mLength - oldSuffixStart;
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(
+  mozilla::Result<size_type, nsresult> r = StartBulkWriteImpl(
       aNewLen, aCutStart, false, suffixLength, oldSuffixStart, newSuffixStart);
   if (r.isErr()) {
     return false;
@@ -320,7 +311,7 @@ typename nsTSubstring<T>::size_type nsTSubstring<T>::Capacity() const {
     if (hdr->IsReadonly()) {
       capacity = 0;
     } else {
-      capacity = (hdr->StorageSize() / sizeof(char_type)) - 1;
+      capacity = (size_t(hdr->StorageSize()) / sizeof(char_type)) - 1;
     }
   } else if (this->mDataFlags & DataFlags::INLINE) {
     MOZ_ASSERT(this->mClassFlags & ClassFlags::INLINE);
@@ -428,11 +419,11 @@ bool nsTSubstring<T>::AssignASCII(const char* aData, size_type aLength,
 
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
-#ifdef CharT_is_char
-  if (this->IsDependentOn(aData, aData + aLength)) {
-    return Assign(string_type(aData, aLength), aFallible);
+  if constexpr (std::is_same_v<T, char>) {
+    if (this->IsDependentOn(aData, aData + aLength)) {
+      return Assign(string_type(aData, aLength), aFallible);
+    }
   }
-#endif
 
   auto r = StartBulkWriteImpl(aLength, 0, true);
   if (MOZ_UNLIKELY(r.isErr())) {
@@ -508,15 +499,15 @@ void nsTSubstring<T>::Assign(self_type&& aStr) {
 
 template <typename T>
 void nsTSubstring<T>::AssignOwned(self_type&& aStr) {
-  NS_ASSERTION(aStr.mDataFlags & (DataFlags::REFCOUNTED | DataFlags::OWNED),
-               "neither shared nor owned");
+  MOZ_ASSERT(aStr.mDataFlags & (DataFlags::REFCOUNTED | DataFlags::OWNED),
+             "neither shared nor owned");
 
   // If they have a REFCOUNTED or OWNED buffer, we can avoid a copy - so steal
   // their buffer and reset them to the empty string.
 
   // |aStr| should be null-terminated
-  NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED,
-               "shared or owned, but not terminated");
+  MOZ_ASSERT(aStr.mDataFlags & DataFlags::TERMINATED,
+             "shared or owned, but not terminated");
 
   ::ReleaseData(this->mData, this->mDataFlags);
 
@@ -562,7 +553,7 @@ bool nsTSubstring<T>::AssignNonDependent(const substring_tuple_type& aTuple,
                                          const mozilla::fallible_t& aFallible) {
   NS_ASSERTION(aTuple.Length() == aTupleLength, "wrong length passed");
 
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(aTupleLength);
+  auto r = StartBulkWriteImpl(aTupleLength);
   if (r.isErr()) {
     return false;
   }
@@ -599,8 +590,6 @@ void nsTSubstring<T>::Adopt(char_type* aData, size_type aLength) {
     if (aLength == size_type(-1)) {
       aLength = char_traits::length(aData);
     }
-
-    MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "adopting a too-long string");
 
     SetData(aData, aLength, DataFlags::TERMINATED | DataFlags::OWNED);
 
@@ -803,12 +792,13 @@ bool nsTSubstring<T>::AppendASCII(const char* aData, size_type aLength,
     return true;
   }
 
-#ifdef CharT_is_char
-  // 16-bit string can't depend on an 8-bit buffer
-  if (MOZ_UNLIKELY(this->IsDependentOn(aData, aData + aLength))) {
-    return Append(string_type(aData, aLength), mozilla::fallible);
+  if constexpr (std::is_same_v<T, char>) {
+    // 16-bit string can't depend on an 8-bit buffer
+    if (MOZ_UNLIKELY(this->IsDependentOn(aData, aData + aLength))) {
+      return Append(string_type(aData, aLength), mozilla::fallible);
+    }
   }
-#endif
+
   size_type oldLen = this->mLength;
   mozilla::CheckedInt<size_type> newLen(oldLen);
   newLen += aLength;
@@ -894,8 +884,7 @@ bool nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&) {
   // logical length.
   size_type capacity = XPCOM_MAX(aCapacity, length);
 
-  mozilla::Result<uint32_t, nsresult> r =
-      StartBulkWriteImpl(capacity, length, true);
+  auto r = StartBulkWriteImpl(capacity, length, true);
   if (r.isErr()) {
     return false;
   }
@@ -931,9 +920,8 @@ void nsTSubstring<T>::SetLength(size_type aLength) {
 template <typename T>
 bool nsTSubstring<T>::SetLength(size_type aLength,
                                 const fallible_t& aFallible) {
-  size_type preserve = XPCOM_MIN(aLength, this->mLength);
-  mozilla::Result<uint32_t, nsresult> r =
-      StartBulkWriteImpl(aLength, preserve, true);
+  size_type preserve = XPCOM_MIN(aLength, this->Length());
+  auto r = StartBulkWriteImpl(aLength, preserve, true);
   if (r.isErr()) {
     return false;
   }

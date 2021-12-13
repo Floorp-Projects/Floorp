@@ -10461,7 +10461,7 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
 
     case eExpectingInMozBrowser: {
       if (aToken.Length() != 1) {
-        QM_WARNING("'%d' is not a valid length for the inMozBrowser flag!",
+        QM_WARNING("'%zu' is not a valid length for the inMozBrowser flag!",
                    aToken.Length());
 
         mError = true;

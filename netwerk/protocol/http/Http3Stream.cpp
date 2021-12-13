@@ -58,7 +58,7 @@ bool Http3Stream::GetHeadersString(const char* buf, uint32_t avail,
     // We don't have all the headers yet
     LOG3(
         ("Http3Stream::GetHeadersString %p "
-         "Need more header bytes. Len = %u",
+         "Need more header bytes. Len = %zu",
          this, mFlatHttpRequestHeaders.Length()));
     *countUsed = avail;
     return false;

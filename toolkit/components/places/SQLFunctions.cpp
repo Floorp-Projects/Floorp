@@ -234,7 +234,7 @@ getSharedUTF8String(mozIStorageValueArray* aValues, uint32_t aIndex) {
   uint32_t len;
   const char* str = aValues->AsSharedUTF8String(aIndex, &len);
   if (!str) {
-    return nsDependentCString("", (uint32_t)0);
+    return nsDependentCString("", (size_t)0);
   }
   return nsDependentCString(str, len);
 }

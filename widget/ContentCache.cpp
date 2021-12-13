@@ -227,9 +227,9 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
     return false;
   }
   mText = queryTextContentEvent.mReply->DataRef();
-  MOZ_LOG(
-      sContentCacheLog, LogLevel::Info,
-      ("0x%p CacheText(), Succeeded, mText.Length()=%u", this, mText.Length()));
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+          ("0x%p CacheText(), Succeeded, mText.Length()=%zu", this,
+           mText.Length()));
 
   // Forget last commit range if string in the range is different from the
   // last commit string.
@@ -464,7 +464,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p CacheTextRects(), Succeeded, "
-           "mText.Length()=%x, mTextRectArray=%s, mSelection=%s, "
+           "mText.Length()=%zx, mTextRectArray=%s, mSelection=%s, "
            "mFirstCharRect=%s, mLastCommitStringTextRectArray=%s",
            this, mText.Length(), ToString(mTextRectArray).c_str(),
            ToString(mSelection).c_str(), ToString(mFirstCharRect).c_str(),
@@ -478,7 +478,7 @@ void ContentCacheInChild::SetSelection(nsIWidget* aWidget,
                                        const WritingMode& aWritingMode) {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p SetSelection(aStartOffset=%u, "
-           "aLength=%u, aReversed=%s, aWritingMode=%s), mText.Length()=%u",
+           "aLength=%u, aReversed=%s, aWritingMode=%s), mText.Length()=%zu",
            this, aStartOffset, aLength, GetBoolName(aReversed),
            ToString(aWritingMode).c_str(), mText.Length()));
 
@@ -563,7 +563,7 @@ void ContentCacheInParent::AssignContent(const ContentCache& aOther,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p AssignContent(aNotification=%s), "
-           "Succeeded, mText.Length()=%u, mSelection=%s, mFirstCharRect=%s, "
+           "Succeeded, mText.Length()=%zu, mSelection=%s, mFirstCharRect=%s, "
            "mCaret=%s, mTextRectArray=%s, mWidgetHasComposition=%s, "
            "mPendingCompositionCount=%u, mCompositionStart=%s, "
            "mPendingCommitLength=%u, mEditorRect=%s, "
@@ -677,7 +677,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
           NS_WARN_IF(mSelection->EndOffset() > mText.Length())) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
                 ("0x%p HandleQueryContentEvent(), FAILED because "
-                 "mSelection->EndOffset()=%u is larger than mText.Length()=%u",
+                 "mSelection->EndOffset()=%u is larger than mText.Length()=%zu",
                  this, mSelection->EndOffset(), mText.Length()));
         return false;
       }
@@ -699,12 +699,12 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent("
                "aEvent={ mMessage=eQueryTextContent, mInput={ mOffset=%" PRId64
-               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
+               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%zu",
                this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
                mText.Length()));
       uint32_t inputOffset = aEvent.mInput.mOffset;
       uint32_t inputEndOffset =
-          std::min(aEvent.mInput.EndOffset(), mText.Length());
+          std::min<uint32_t>(aEvent.mInput.EndOffset(), mText.Length());
       if (NS_WARN_IF(inputEndOffset < inputOffset)) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
                 ("0x%p HandleQueryContentEvent(), FAILED because "
@@ -729,7 +729,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent("
                "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%" PRId64
-               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
+               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%zu",
                this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
                mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
@@ -771,7 +771,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       aEvent.mReply->mRect = textRect;
       aEvent.mReply->mOffsetAndData.emplace(
           aEvent.mInput.mOffset,
-          aEvent.mInput.mOffset < mText.Length()
+          aEvent.mInput.mOffset < int64_t(mText.Length())
               ? static_cast<const nsAString&>(
                     Substring(mText, aEvent.mInput.mOffset,
                               mText.Length() >= aEvent.mInput.EndOffset()
@@ -791,7 +791,8 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       MOZ_LOG(
           sContentCacheLog, LogLevel::Info,
           ("0x%p HandleQueryContentEvent(aEvent={ mMessage=eQueryCaretRect, "
-           "mInput={ mOffset=%" PRId64 " } }, aWidget=0x%p), mText.Length()=%u",
+           "mInput={ mOffset=%" PRId64
+           " } }, aWidget=0x%p), mText.Length()=%zu",
            this, aEvent.mInput.mOffset, aWidget, mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
@@ -1115,7 +1116,7 @@ bool ContentCacheInParent::OnCompositionEvent(
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p OnCompositionEvent(aEvent={ "
-       "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%zu }), "
+       "mMessage=%s, mData=\"%s\" (Length()=%zu), mRanges->Length()=%zu }), "
        "mPendingEventsNeedingAck=%u, mWidgetHasComposition=%s, "
        "mPendingCompositionCount=%" PRIu8 ", mPendingCommitCount=%" PRIu8 ", "
        "mIsChildIgnoringCompositionEvents=%s, mCommitStringByRequest=0x%p",

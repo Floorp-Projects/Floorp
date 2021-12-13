@@ -2486,7 +2486,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     GtkIMContext* aContext, const nsAString& aCompositionString) {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p CreateTextRangeArray(aContext=0x%p, "
-           "aCompositionString=\"%s\" (Length()=%u))",
+           "aCompositionString=\"%s\" (Length()=%zu))",
            this, aContext, NS_ConvertUTF16toUTF8(aCompositionString).get(),
            aCompositionString.Length()));
 
@@ -2991,7 +2991,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   MOZ_LOG(
       gIMELog, LogLevel::Debug,
       ("0x%p   GetCurrentParagraph(), succeeded, aText=%s, "
-       "aText.Length()=%u, aCursorPos=%u",
+       "aText.Length()=%zu, aCursorPos=%u",
        this, NS_ConvertUTF16toUTF8(aText).get(), aText.Length(), aCursorPos));
 
   return NS_OK;

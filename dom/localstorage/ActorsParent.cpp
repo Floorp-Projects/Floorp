@@ -4531,7 +4531,7 @@ void Datastore::GetSnapshotLoadInfo(const nsString& aKey,
   // Zero key length and value can be passed to do a quick initial estimation.
   // If computed load state is already AllOrderedItems then excluded key length
   // and value length can't make it any better.
-  auto GetLoadState = [&](auto aKeyLength, auto aValueLength) {
+  auto GetLoadState = [&](int64_t aKeyLength, int64_t aValueLength) {
     if (mSizeOfKeys - aKeyLength <= gSnapshotPrefill) {
       if (mSizeOfItems - aKeyLength - aValueLength <= gSnapshotPrefill) {
         return LSSnapshot::LoadState::AllOrderedItems;
