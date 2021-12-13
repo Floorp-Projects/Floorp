@@ -833,8 +833,10 @@ class UrlbarInput {
           ),
         };
 
+        // We cache the search string because switching tab may clear it.
+        let searchString = this._lastSearchString;
         this.controller.engagementEvent.record(event, {
-          searchString: this._lastSearchString,
+          searchString,
           selIndex,
           selType: "tabswitch",
           provider: result.providerName,
@@ -848,6 +850,15 @@ class UrlbarInput {
         if (switched && prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
         }
+
+        if (switched && !this.isPrivate && !result.heuristic) {
+          // We don't await for this, because a rejection should not interrupt
+          // the load. Just reportError it.
+          UrlbarUtils.addToInputHistory(url, searchString).catch(
+            Cu.reportError
+          );
+        }
+
         return;
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
@@ -1001,7 +1012,8 @@ class UrlbarInput {
     }
 
     if (!this.isPrivate && !result.heuristic) {
-      // This should not interrupt the load anyway.
+      // We don't await for this, because a rejection should not interrupt
+      // the load. Just reportError it.
       UrlbarUtils.addToInputHistory(url, this._lastSearchString).catch(
         Cu.reportError
       );
