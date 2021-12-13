@@ -29,7 +29,8 @@ var SESSION_KEYS = {
 };
 
 function do_register_cleanup() {
-  Services.prefs.resetUserPrefs();
+  Services.prefs.clearUserPref("intl.accept_languages");
+  Services.prefs.clearUserPref("services.common.log.logger.rest.request");
 
   // remove the pref change listener
   let hawk = new HAWKAuthenticatedRESTRequest("https://example.com");
@@ -150,7 +151,7 @@ add_task(async function test_hawk_authenticated_request() {
   Assert.equal(200, request.response.status);
   Assert.equal(request.response.body, "yay");
 
-  Services.prefs.resetUserPrefs();
+  Services.prefs.clearUserPref("intl.accept_languages");
   let pref = Services.prefs.getComplexValue(
     "intl.accept_languages",
     Ci.nsIPrefLocalizedString
@@ -206,7 +207,7 @@ add_task(async function test_hawk_language_pref_changed() {
   let response = await request.post({});
 
   Assert.equal(200, response.status);
-  Services.prefs.resetUserPrefs();
+  Services.prefs.clearUserPref("intl.accept_languages");
 
   await promiseStopServer(server);
 });

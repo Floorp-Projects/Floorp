@@ -23,6 +23,7 @@ from typing import (
 from . import metrics
 from . import parser
 from . import pings
+from . import tags
 from . import util
 
 
@@ -42,7 +43,7 @@ def _split_words(name: str) -> List[str]:
     """
     Helper function to split words on either `.` or `_`.
     """
-    return re.split("[._]", name)
+    return re.split("[._-]", name)
 
 
 def _english_list(items: List[str]) -> str:
@@ -234,6 +235,16 @@ def check_misspelled_pings(
                 yield f"Ping '{ping}' seems misspelled. Did you mean '{builtin}'?"
 
 
+def check_tags_required(
+    metric_or_ping: Union[metrics.Metric, pings.Ping], parser_config: Dict[str, Any]
+) -> LintGenerator:
+
+    if parser_config.get("require_tags", False) and not len(
+        metric_or_ping.metadata.get("tags", [])
+    ):
+        yield "Tags are required but no tags specified"
+
+
 def check_user_lifetime_expiration(
     metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
@@ -262,6 +273,28 @@ def check_expired_metric(
         yield ("Metric has expired. Please consider removing it.")
 
 
+def check_redundant_ping(
+    pings: pings.Ping, parser_config: Dict[str, Any]
+) -> LintGenerator:
+    """
+    Check if the pings contains 'ping' as the prefix or suffix, or 'ping' or 'custom'
+    """
+    ping_words = _split_words(pings.name)
+
+    if len(ping_words) != 0:
+        ping_first_word = ping_words[0]
+        ping_last_word = ping_words[-1]
+
+        if ping_first_word == "ping":
+            yield ("The prefix 'ping' is redundant.")
+        elif ping_last_word == "ping":
+            yield ("The suffix 'ping' is redundant.")
+        elif "ping" in ping_words:
+            yield ("The word 'ping' is redundant.")
+        elif "custom" in ping_words:
+            yield ("The word 'custom' is redundant.")
+
+
 # The checks that operate on an entire category of metrics:
 #    {NAME: (function, is_error)}
 CATEGORY_CHECKS: Dict[
@@ -281,6 +314,7 @@ METRIC_CHECKS: Dict[
     "BUG_NUMBER": (check_bug_number, CheckType.error),
     "BASELINE_PING": (check_valid_in_baseline, CheckType.error),
     "MISSPELLED_PING": (check_misspelled_pings, CheckType.error),
+    "TAGS_REQUIRED": (check_tags_required, CheckType.error),
     "EXPIRATION_DATE_TOO_FAR": (check_expired_date, CheckType.warning),
     "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
     "EXPIRED": (check_expired_metric, CheckType.warning),
@@ -293,6 +327,8 @@ PING_CHECKS: Dict[
     str, Tuple[Callable[[pings.Ping, dict], LintGenerator], CheckType]
 ] = {
     "BUG_NUMBER": (check_bug_number, CheckType.error),
+    "TAGS_REQUIRED": (check_tags_required, CheckType.error),
+    "REDUNDANT_PING": (check_redundant_ping, CheckType.error),
 }
 
 
@@ -310,10 +346,32 @@ class GlinterNit:
         )
 
 
+def _lint_item_tags(
+    item_name: str,
+    item_type: str,
+    item_tag_names: List[str],
+    valid_tag_names: List[str],
+) -> List[GlinterNit]:
+    invalid_tags = [tag for tag in item_tag_names if tag not in valid_tag_names]
+    return (
+        [
+            GlinterNit(
+                "INVALID_TAGS",
+                item_name,
+                f"Invalid tags specified in {item_type}: {', '.join(invalid_tags)}",
+                CheckType.error,
+            )
+        ]
+        if len(invalid_tags)
+        else []
+    )
+
+
 def _lint_pings(
-    category: Dict[str, Union[metrics.Metric, pings.Ping]],
+    category: Dict[str, Union[metrics.Metric, pings.Ping, tags.Tag]],
     parser_config: Dict[str, Any],
-):
+    valid_tag_names: List[str],
+) -> List[GlinterNit]:
     nits: List[GlinterNit] = []
 
     for (ping_name, ping) in sorted(list(category.items())):
@@ -331,7 +389,14 @@ def _lint_pings(
                         )
                         for msg in new_nits
                     )
-
+        nits.extend(
+            _lint_item_tags(
+                ping_name,
+                "ping",
+                ping.metadata.get("tags", []),
+                valid_tag_names,
+            )
+        )
     return nits
 
 
@@ -351,12 +416,17 @@ def lint_metrics(
         parser_config = {}
 
     nits: List[GlinterNit] = []
+    valid_tag_names = [tag for tag in objs.get("tags", [])]
     for (category_name, category) in sorted(list(objs.items())):
         if category_name == "pings":
-            nits.extend(_lint_pings(category, parser_config))
+            nits.extend(_lint_pings(category, parser_config, valid_tag_names))
             continue
 
-        # Make sure the category has only Metrics, not Pings
+        if category_name == "tags":
+            # currently we have no linting for tags
+            continue
+
+        # Make sure the category has only Metrics, not Pings or Tags
         category_metrics = dict(
             (name, metric)
             for (name, metric) in category.items()
@@ -387,6 +457,16 @@ def lint_metrics(
                             )
                             for msg in new_nits
                         )
+
+            # also check that tags for metric are valid
+            nits.extend(
+                _lint_item_tags(
+                    ".".join([metric.category, metric.name]),
+                    "metric",
+                    metric.metadata.get("tags", []),
+                    valid_tag_names,
+                )
+            )
 
     if len(nits):
         print("Sorry, Glean found some glinter nits:", file=file)

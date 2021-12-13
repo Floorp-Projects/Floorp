@@ -3722,8 +3722,7 @@ Preferences::ResetPrefs() {
   return InitInitialObjects(/* isStartup */ false);
 }
 
-NS_IMETHODIMP
-Preferences::ResetUserPrefs() {
+nsresult Preferences::ResetUserPrefs() {
   ENSURE_PARENT_PROCESS("Preferences::ResetUserPrefs", "all prefs");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   MOZ_ASSERT(NS_IsMainThread());

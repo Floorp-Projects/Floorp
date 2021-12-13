@@ -14,32 +14,49 @@
 // correct scheme. Requests that are meant to fail should explicitly not be
 // contained in the list of results.
 
+// The test loads all tabs and evaluates when all have finished loading
+// it may take quite a long time.
+// This requires more twice as much as the default 45 seconds per test:
+requestLongerTimeout(2);
+
 add_task(async function() {
   await setup();
+
+  // Using this variable to parallelize and collect tests
+  let testSet = [];
 
   /*
    * HTTPS-Only Mode disabled
    */
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_only_mode", false]],
+  });
 
   // Top-Level scheme: HTTP
-  await runTest({
-    queryString: "test1.1",
-    topLevelScheme: "http",
+  testSet.push(
+    runTest({
+      queryString: "test1.1",
+      topLevelScheme: "http",
 
-    expectedTopLevel: "http",
-    expectedSameOrigin: "http",
-    expectedCrossOrigin: "http",
-  });
+      expectedTopLevel: "http",
+      expectedSameOrigin: "http",
+      expectedCrossOrigin: "http",
+    })
+  );
   // Top-Level scheme: HTTPS
-  await runTest({
-    queryString: "test1.2",
-    topLevelScheme: "https",
+  testSet.push(
+    runTest({
+      queryString: "test1.2",
+      topLevelScheme: "https",
 
-    expectedTopLevel: "https",
-    expectedSameOrigin: "fail",
-    expectedCrossOrigin: "fail",
-  });
+      expectedTopLevel: "https",
+      expectedSameOrigin: "fail",
+      expectedCrossOrigin: "fail",
+    })
+  );
 
+  await Promise.all(testSet);
+  testSet = [];
   /*
    * HTTPS-Only Mode enabled, no exception
    */
@@ -48,26 +65,34 @@ add_task(async function() {
   });
 
   // Top-Level scheme: HTTP
-  await runTest({
-    queryString: "test2.1",
-    topLevelScheme: "http",
+  testSet.push(
+    runTest({
+      queryString: "test2.1",
+      topLevelScheme: "http",
 
-    expectedTopLevel: "https",
-    expectedSameOrigin: "https",
-    expectedCrossOrigin: "https",
-  });
+      expectedTopLevel: "https",
+      expectedSameOrigin: "https",
+      expectedCrossOrigin: "https",
+    })
+  );
   // Top-Level scheme: HTTPS
-  await runTest({
-    queryString: "test2.2",
-    topLevelScheme: "https",
+  testSet.push(
+    runTest({
+      queryString: "test2.2",
+      topLevelScheme: "https",
 
-    expectedTopLevel: "https",
-    expectedSameOrigin: "https",
-    expectedCrossOrigin: "https",
-  });
+      expectedTopLevel: "https",
+      expectedSameOrigin: "https",
+      expectedCrossOrigin: "https",
+    })
+  );
+
+  await Promise.all(testSet);
+  testSet = [];
 
   /*
-   * HTTPS-Only enabled, with exception
+   * HTTPS-Only enabled, with exceptions
+   * for http://example.org and http://example.com
    */
   // Exempting example.org (cross-site) should not affect anything
   await SpecialPowers.pushPermissions([

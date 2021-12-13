@@ -325,6 +325,15 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == auto-hyphenation-tr-1.html auto-hyphenation-tr-1-ref.html
 == auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
 
+== auto-hyphenation-bn-1.html auto-hyphenation-bn-1-ref.html
+== auto-hyphenation-gu-1.html auto-hyphenation-gu-1-ref.html
+== auto-hyphenation-hi-1.html auto-hyphenation-hi-1-ref.html
+== auto-hyphenation-kn-1.html auto-hyphenation-kn-1-ref.html
+== auto-hyphenation-ml-1.html auto-hyphenation-ml-1-ref.html
+== auto-hyphenation-pa-1.html auto-hyphenation-pa-1-ref.html
+== auto-hyphenation-ta-1.html auto-hyphenation-ta-1-ref.html
+== auto-hyphenation-te-1.html auto-hyphenation-te-1-ref.html
+
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
 
 == hyphenation-caps-1.html hyphenation-caps-1-ref.html
