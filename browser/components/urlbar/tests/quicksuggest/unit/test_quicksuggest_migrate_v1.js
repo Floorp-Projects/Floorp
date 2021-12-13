@@ -6,71 +6,36 @@
 
 "use strict";
 
-let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
-let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
+// Expected version 1 default-branch prefs
+const DEFAULT_PREFS = {
+  history: {
+    "quicksuggest.enabled": false,
+  },
+  offline: {
+    "quicksuggest.enabled": true,
+    "quicksuggest.dataCollection.enabled": false,
+    "quicksuggest.shouldShowOnboardingDialog": false,
+    "suggest.quicksuggest.nonsponsored": true,
+    "suggest.quicksuggest.sponsored": true,
+  },
+  online: {
+    "quicksuggest.enabled": true,
+    "quicksuggest.dataCollection.enabled": false,
+    "quicksuggest.shouldShowOnboardingDialog": true,
+    "suggest.quicksuggest.nonsponsored": false,
+    "suggest.quicksuggest.sponsored": false,
+  },
+};
+
+// Migration will use these values to migrate only up to version 1 instead of
+// the current version.
+const TEST_OVERRIDES = {
+  migrationVersion: 1,
+  defaultPrefs: DEFAULT_PREFS,
+};
 
 add_task(async function init() {
   await QuickSuggestTestUtils.initNimbusFeature();
-});
-
-// Migrating from:
-// * History (quick suggest feature disabled)
-//
-// Scenario when migration occurs:
-// * History
-//
-// Expected:
-// * All history prefs set on the default branch
-add_task(async function() {
-  await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
-    },
-    scenario: "history",
-    expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
-    },
-  });
-});
-
-// Migrating from:
-// * History (quick suggest feature disabled)
-//
-// Scenario when migration occurs:
-// * Offline
-//
-// Expected:
-// * All offline prefs set on the default branch
-add_task(async function() {
-  await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
-    },
-    scenario: "offline",
-    expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-    },
-  });
-});
-
-// Migrating from:
-// * History (quick suggest feature disabled)
-//
-// Scenario when migration occurs:
-// * Online
-//
-// Expected:
-// * All online prefs set on the default branch
-add_task(async function() {
-  await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
-    },
-    scenario: "online",
-    expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-    },
-  });
 });
 
 // The following tasks test OFFLINE TO OFFLINE
@@ -88,12 +53,10 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-    },
+    testOverrides: TEST_OVERRIDES,
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
     },
   });
 });
@@ -112,15 +75,13 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest.sponsored": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest.sponsored": false,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.sponsored": false,
       },
@@ -142,15 +103,13 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": false,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
@@ -173,16 +132,14 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": false,
-        "suggest.quicksuggest.sponsored": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": false,
+      "suggest.quicksuggest.sponsored": false,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
@@ -206,12 +163,10 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-    },
+    testOverrides: TEST_OVERRIDES,
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
     },
   });
 });
@@ -230,15 +185,13 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest.sponsored": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest.sponsored": false,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
       userBranch: {
         "suggest.quicksuggest.sponsored": false,
       },
@@ -260,15 +213,13 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": false,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": false,
       },
@@ -290,16 +241,14 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": false,
-        "suggest.quicksuggest.sponsored": false,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": false,
+      "suggest.quicksuggest.sponsored": false,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
@@ -323,12 +272,10 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-    },
+    testOverrides: TEST_OVERRIDES,
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
     },
   });
 });
@@ -360,15 +307,13 @@ add_task(async function() {
 // and not the default branch as we previously did.
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-      userBranch: {
-        "suggest.quicksuggest.sponsored": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest.sponsored": true,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.sponsored": true,
       },
@@ -390,15 +335,13 @@ add_task(async function() {
 // * Data collection: off (since scenario is offline)
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-      userBranch: {
-        "suggest.quicksuggest": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": true,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": true,
       },
@@ -420,16 +363,14 @@ add_task(async function() {
 // * Data collection: off (since scenario is offline)
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-      userBranch: {
-        "suggest.quicksuggest": true,
-        "suggest.quicksuggest.sponsored": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": true,
+      "suggest.quicksuggest.sponsored": true,
     },
     scenario: "offline",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
+      defaultBranch: DEFAULT_PREFS.offline,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
@@ -453,12 +394,10 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-    },
+    testOverrides: TEST_OVERRIDES,
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
     },
   });
 });
@@ -477,15 +416,13 @@ add_task(async function() {
 // * Data collection: off
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
-      userBranch: {
-        "suggest.quicksuggest.sponsored": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest.sponsored": true,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
     },
   });
 });
@@ -505,15 +442,13 @@ add_task(async function() {
 //   suggestions)
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": true,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": true,
         "quicksuggest.dataCollection.enabled": true,
@@ -537,16 +472,14 @@ add_task(async function() {
 //   suggestions)
 add_task(async function() {
   await doMigrateTest({
-    initialPrefsToSet: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
-      userBranch: {
-        "suggest.quicksuggest": true,
-        "suggest.quicksuggest.sponsored": true,
-      },
+    testOverrides: TEST_OVERRIDES,
+    initialUserBranch: {
+      "suggest.quicksuggest": true,
+      "suggest.quicksuggest.sponsored": true,
     },
     scenario: "online",
     expectedPrefs: {
-      defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
+      defaultBranch: DEFAULT_PREFS.online,
       userBranch: {
         "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
@@ -555,95 +488,3 @@ add_task(async function() {
     },
   });
 });
-
-async function doMigrateTest({ initialPrefsToSet, scenario, expectedPrefs }) {
-  info(
-    "Testing: " + JSON.stringify({ initialPrefsToSet, scenario, expectedPrefs })
-  );
-
-  // Set initial prefs.
-  UrlbarPrefs._updatingFirefoxSuggestScenario = true;
-  let {
-    defaultBranch: initialDefaultBranch,
-    userBranch: initialUserBranch,
-  } = initialPrefsToSet;
-  initialDefaultBranch = initialDefaultBranch || {};
-  initialUserBranch = initialUserBranch || {};
-  for (let name of Object.keys(initialDefaultBranch)) {
-    // Clear user-branch values on the default prefs so the defaults aren't
-    // masked.
-    gUserBranch.clearUserPref(name);
-  }
-  UrlbarPrefs.clear("quicksuggest.migrationVersion");
-  for (let [branch, prefs] of [
-    [gDefaultBranch, initialDefaultBranch],
-    [gUserBranch, initialUserBranch],
-  ]) {
-    for (let [name, value] of Object.entries(prefs)) {
-      branch.setBoolPref(name, value);
-    }
-  }
-  UrlbarPrefs._updatingFirefoxSuggestScenario = false;
-
-  // Update the scenario and check prefs twice. The first time the migration
-  // should happen, and the second time the migration should not happen and all
-  // the prefs should stay the same.
-  for (let i = 0; i < 2; i++) {
-    // Do the scenario update and pass true to simulate startup.
-    await UrlbarPrefs.updateFirefoxSuggestScenario(true, scenario);
-
-    // Check expected pref values. Store expected effective values as we go
-    // so we can check them afterward. For a given pref, the expected
-    // effective value is the user value, or if there's not a user value,
-    // the default value.
-    let expectedEffectivePrefs = {};
-    let {
-      defaultBranch: expectedDefaultBranch,
-      userBranch: expectedUserBranch,
-    } = expectedPrefs;
-    expectedDefaultBranch = expectedDefaultBranch || {};
-    expectedUserBranch = expectedUserBranch || {};
-    for (let [branch, prefs, branchType] of [
-      [gDefaultBranch, expectedDefaultBranch, "default"],
-      [gUserBranch, expectedUserBranch, "user"],
-    ]) {
-      for (let [name, value] of Object.entries(prefs)) {
-        expectedEffectivePrefs[name] = value;
-        if (branch == gUserBranch) {
-          Assert.ok(
-            gUserBranch.prefHasUserValue(name),
-            `Pref ${name} is on user branch`
-          );
-        }
-        Assert.equal(
-          branch.getBoolPref(name),
-          value,
-          `Pref ${name} on ${branchType} branch`
-        );
-      }
-    }
-    for (let name of Object.keys(initialDefaultBranch)) {
-      if (!expectedUserBranch.hasOwnProperty(name)) {
-        Assert.ok(
-          !gUserBranch.prefHasUserValue(name),
-          `Pref ${name} is not on user branch`
-        );
-      }
-    }
-    for (let [name, value] of Object.entries(expectedEffectivePrefs)) {
-      Assert.equal(
-        UrlbarPrefs.get(name),
-        value,
-        `Pref ${name} effective value`
-      );
-    }
-  }
-
-  // Clean up.
-  UrlbarPrefs._updatingFirefoxSuggestScenario = true;
-  UrlbarPrefs.clear("quicksuggest.migrationVersion");
-  for (let name of Object.keys(expectedPrefs.userBranch || {})) {
-    UrlbarPrefs.clear(name);
-  }
-  UrlbarPrefs._updatingFirefoxSuggestScenario = false;
-}
