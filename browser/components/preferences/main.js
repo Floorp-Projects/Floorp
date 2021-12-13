@@ -1765,6 +1765,7 @@ var gMainPane = {
     }
   },
 
+  _minUpdatePrefDisableTime: 1000,
   /**
    * Selects the correct item in the update radio group
    */
@@ -1796,14 +1797,20 @@ var gMainPane = {
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
       let updateAutoValue = radiogroup.value == "true";
+      let _disableTimeOverPromise = new Promise(r =>
+        setTimeout(r, this._minUpdatePrefDisableTime)
+      );
       radiogroup.disabled = true;
       try {
         await UpdateUtils.setAppUpdateAutoEnabled(updateAutoValue);
+        await _disableTimeOverPromise;
         radiogroup.disabled = false;
       } catch (error) {
         Cu.reportError(error);
-        await this.readUpdateAutoPref();
-        await this.reportUpdatePrefWriteError(error);
+        await Promise.all([
+          this.readUpdateAutoPref(),
+          this.reportUpdatePrefWriteError(error),
+        ]);
         return;
       }
 
@@ -1814,6 +1821,8 @@ var gMainPane = {
       if (!updateAutoValue) {
         await this.checkUpdateInProgress();
       }
+      // For tests:
+      radiogroup.dispatchEvent(new CustomEvent("ProcessedUpdatePrefChange"));
     }
   },
 
