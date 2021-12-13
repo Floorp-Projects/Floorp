@@ -63,12 +63,6 @@ interface nsIPrefService : nsISupports
   void resetPrefs();
 
   /**
-   * Called to reset all preferences with user set values back to the
-   * application default values.
-   */
-  void resetUserPrefs();
-
-  /**
    * Called to write current preferences state to a file.
    *
    * @param aFile The file to be written.
