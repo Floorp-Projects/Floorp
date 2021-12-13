@@ -4,7 +4,7 @@
 ---
 job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
-    e10s:
+    run-without-variant:
         by-test-platform:
             android.*: true
             default: false

@@ -128,7 +128,7 @@ mochitest-a11y:
     schedules-component: mochitest-a11y
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
-    e10s: false
+    run-without-variant: false
     variants:
         - 1proc
         - socketprocess_networking+1proc
@@ -338,7 +338,7 @@ mochitest-chrome:
     treeherder-symbol: M(c)
     schedules-component: mochitest-chrome
     loopback-video: true
-    e10s: false
+    run-without-variant: false
     variants:
         - 1proc
         - socketprocess_networking+1proc
@@ -789,9 +789,7 @@ mochitest-valgrind:
     loopback-video: true
     chunks: 40
     max-run-time: 14400
-    # We could re-enable e10s later.
-    # There's no intrinsic reason not to use it.
-    e10s: false
+    run-without-variant: false
     variants: ["1proc"]
     allow-software-gl-layers: false
     mozharness:

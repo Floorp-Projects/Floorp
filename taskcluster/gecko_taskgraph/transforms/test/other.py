@@ -263,7 +263,6 @@ def handle_keyed_by(config, tasks):
         "max-run-time",
         "chunks",
         "suite",
-        "e10s",
         "run-on-projects",
         "os-groups",
         "run-as-administrator",
@@ -760,10 +759,6 @@ def set_e10s_attributes(config, tasks):
             yield task
             continue
 
-        if not task["e10s"]:
-            continue
-
-        task["e10s"] = True
         task["attributes"]["e10s"] = True
         yield task
 

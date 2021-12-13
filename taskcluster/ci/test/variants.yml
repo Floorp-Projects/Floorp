@@ -4,8 +4,6 @@
     when:
         $eval: '!("android" in task["test-platform"])'
     suffix: "1proc"
-    replace:
-        e10s: false
     merge:
         attributes:
             e10s: false
@@ -28,7 +26,7 @@ aab:
     description: "{description} with aab test_runner"
     contact: agi
     when: &gv_e10s_filter
-        $eval: '"android" in task["test-platform"] && task.e10s in [true, "both"]'
+        $eval: '"android" in task["test-platform"]'
     suffix: "aab"
     # Need to add jdk but there isn't a good way to do that
     # so we just replace the toolchain list
@@ -67,8 +65,6 @@ geckoview-fission:
 fission:
     description: "{description} with fission enabled"
     contact: cpeterson
-    when: &fission_filter
-        $eval: task.e10s in [true, "both"]
     suffix: "fis"
     merge:
         mozharness:
@@ -78,8 +74,6 @@ fission:
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
     contact: cpeterson
-    when:
-        <<: *fission_filter
     suffix: "fis-xorig"
     replace:
         e10s: true
