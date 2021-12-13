@@ -2181,8 +2181,8 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
     auto containerType = widgetType == MOZ_GTK_HEADER_BAR
                              ? MOZ_GTK_HEADERBAR_FIXED
                              : MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED;
-    style = GetStyleContext(
-        containerType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
+    style = GetStyleContext(containerType, state->scale, GTK_TEXT_DIR_NONE,
+                            state_flags);
   }
 
 // Some themes (Adwaita for instance) draws bold dark line at
