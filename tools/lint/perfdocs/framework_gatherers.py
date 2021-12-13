@@ -11,8 +11,17 @@ from manifestparser import TestManifest
 from mozperftest.script import ScriptInfo
 from perfdocs.utils import read_yaml
 from perfdocs.logger import PerfDocLogger
+from perfdocs.doc_helpers import TableBuilder
+from gecko_taskgraph.util.attributes import match_run_on_projects
 
 logger = PerfDocLogger()
+
+BRANCHES = [
+    "mozilla-central",
+    "autoland",
+    "mozilla-release",
+    "mozilla-beta",
+]
 
 """
 This file is for framework specific gatherers since manifests
@@ -232,7 +241,7 @@ class RaptorGatherer(FrameworkGatherer):
                 "(obtained from config.yml): {}".format(title)
             )
 
-        result = f".. dropdown:: {title} ({test_description})\n"
+        result = f".. dropdown:: {title}\n"
         result += f"   :container: + anchor-id-{title}-{suite_name[0]}\n\n"
 
         for idx, description in enumerate(matcher):
@@ -263,30 +272,28 @@ class RaptorGatherer(FrameworkGatherer):
                     result += f"   * **{sub_title}**: {description[key]}\n"
 
             if self._task_list.get(title, []):
-                result += "   * **Test Task**:\n"
+                result += "   * **Test Task**:\n\n"
                 for platform in sorted(self._task_list[title]):
-                    if suite_name == "mobile" and "android" in platform:
-                        result += f"      * {platform}\n"
-                    elif suite_name != "mobile" and "android" not in platform:
-                        result += f"      * {platform}\n"
-
                     self._task_list[title][platform].sort(key=lambda x: x["test_name"])
-                    for task in self._task_list[title][platform]:
-                        run_on_project = ": " + (
-                            ", ".join(task["run_on_projects"])
-                            if task["run_on_projects"]
-                            else "None"
-                        )
-                        if suite_name == "mobile" and "android" in platform:
-                            result += (
-                                f"            * {task['test_name']}{run_on_project}\n"
-                            )
-                        elif suite_name != "mobile" and "android" not in platform:
-                            result += (
-                                f"            * {task['test_name']}{run_on_project}\n"
-                            )
 
-            result += "\n"
+                    table = TableBuilder(
+                        title=platform,
+                        widths=[30] + [15 for x in BRANCHES],
+                        header_rows=1,
+                        headers=[["Test Name"] + BRANCHES],
+                        indent=3,
+                    )
+
+                    for task in self._task_list[title][platform]:
+                        values = [task["test_name"]]
+                        values += [
+                            "\u2705"
+                            if match_run_on_projects(x, task["run_on_projects"])
+                            else "\u274C"
+                            for x in BRANCHES
+                        ]
+                        table.add_row(values)
+                    result += f"{table.finish_table()}\n"
 
         return [result]
 
