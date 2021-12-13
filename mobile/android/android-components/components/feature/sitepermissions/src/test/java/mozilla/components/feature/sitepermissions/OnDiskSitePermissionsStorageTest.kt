@@ -153,6 +153,7 @@ class OnDiskSitePermissionsStorageTest {
             SitePermissionsEntity(
                 origin = "mozilla.dev",
                 localStorage = ALLOWED,
+                crossOriginStorageAccess = ALLOWED,
                 location = BLOCKED,
                 notification = NO_DECISION,
                 microphone = ALLOWED,
@@ -166,6 +167,7 @@ class OnDiskSitePermissionsStorageTest {
             SitePermissionsEntity(
                 origin = "mozilla.dev",
                 localStorage = ALLOWED,
+                crossOriginStorageAccess = ALLOWED,
                 location = BLOCKED,
                 notification = NO_DECISION,
                 microphone = ALLOWED,

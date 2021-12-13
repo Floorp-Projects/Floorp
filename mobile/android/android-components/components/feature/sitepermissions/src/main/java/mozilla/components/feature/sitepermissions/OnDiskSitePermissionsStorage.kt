@@ -28,6 +28,7 @@ import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permi
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MEDIA_KEY_SYSTEM_ACCESS
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
+import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.STORAGE_ACCESS
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
 
@@ -118,6 +119,7 @@ class OnDiskSitePermissionsStorage(
                 map.putIfAllowed(AUTOPLAY_AUDIBLE, autoplayAudible.toStatus(), permission)
                 map.putIfAllowed(AUTOPLAY_INAUDIBLE, autoplayInaudible.toStatus(), permission)
                 map.putIfAllowed(MEDIA_KEY_SYSTEM_ACCESS, mediaKeySystemAccess, permission)
+                map.putIfAllowed(STORAGE_ACCESS, crossOriginStorageAccess, permission)
             }
         }
         return map

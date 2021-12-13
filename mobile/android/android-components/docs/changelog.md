@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* * **browser-engine**, **concept-engine*** **feature-sitepermissions**
+  * 🌟️️ **Add support for a new `storage_access` API prompt.
+
 * **concept-storage**:
   * ⚠️ **This is a breaking change**: `KeyProvider#key` has been renamed to `KeyProvider#getOrGenerateKey` and is now `suspend`.
   * ⚠️ **This is a breaking change**: `KeyRecoveryHandler` has been removed.

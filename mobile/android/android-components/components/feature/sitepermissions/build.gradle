@@ -56,6 +56,7 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':ui-icons')
     implementation project(':support-ktx')
+    implementation project(':feature-tabs')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

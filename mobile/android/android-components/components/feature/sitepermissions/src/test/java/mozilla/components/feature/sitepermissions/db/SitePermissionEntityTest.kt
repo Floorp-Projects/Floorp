@@ -19,6 +19,7 @@ class SitePermissionEntityTest {
         val dbEntity = SitePermissionsEntity(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = BLOCKED,
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
@@ -35,6 +36,7 @@ class SitePermissionEntityTest {
         with(dbEntity) {
             assertEquals(origin, domainClass.origin)
             assertEquals(localStorage, domainClass.localStorage)
+            assertEquals(crossOriginStorageAccess, domainClass.crossOriginStorageAccess)
             assertEquals(location, domainClass.location)
             assertEquals(notification, domainClass.notification)
             assertEquals(microphone, domainClass.microphone)
@@ -52,6 +54,7 @@ class SitePermissionEntityTest {
         val domainClass = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = BLOCKED,
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
@@ -68,6 +71,7 @@ class SitePermissionEntityTest {
         with(dbEntity) {
             assertEquals(origin, domainClass.origin)
             assertEquals(localStorage, domainClass.localStorage)
+            assertEquals(crossOriginStorageAccess, domainClass.crossOriginStorageAccess)
             assertEquals(location, domainClass.location)
             assertEquals(notification, domainClass.notification)
             assertEquals(microphone, domainClass.microphone)

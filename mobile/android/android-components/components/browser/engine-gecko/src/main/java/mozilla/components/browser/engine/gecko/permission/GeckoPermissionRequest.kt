@@ -27,6 +27,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS
 import java.util.UUID
 
 /**
@@ -66,7 +67,8 @@ sealed class GeckoPermissionRequest constructor(
                 PERMISSION_AUTOPLAY_AUDIBLE to Permission.ContentAutoPlayAudible(),
                 PERMISSION_AUTOPLAY_INAUDIBLE to Permission.ContentAutoPlayInaudible(),
                 PERMISSION_PERSISTENT_STORAGE to Permission.ContentPersistentStorage(),
-                PERMISSION_MEDIA_KEY_SYSTEM_ACCESS to Permission.ContentMediaKeySystemAccess()
+                PERMISSION_MEDIA_KEY_SYSTEM_ACCESS to Permission.ContentMediaKeySystemAccess(),
+                PERMISSION_STORAGE_ACCESS to Permission.ContentCrossOriginStorageAccess()
             )
         }
 

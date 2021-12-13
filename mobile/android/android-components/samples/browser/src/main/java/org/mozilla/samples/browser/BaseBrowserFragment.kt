@@ -194,7 +194,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     microphone = SitePermissionsRules.Action.ASK_TO_ALLOW,
                     persistentStorage = SitePermissionsRules.Action.ASK_TO_ALLOW,
-                    mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
+                    mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
+                    crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
                 ),
                 onNeedToRequestPermissions = { permissions ->
                     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/android-components/issues/10358

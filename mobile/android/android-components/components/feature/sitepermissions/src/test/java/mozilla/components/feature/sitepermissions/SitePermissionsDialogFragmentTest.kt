@@ -8,6 +8,7 @@ import android.view.Gravity.TOP
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -15,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.PromptsStyling
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -125,6 +127,107 @@ class SitePermissionsDialogFragmentTest {
 
         assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible)
         assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
+    }
+
+    @Test
+    fun `dialog with a default null message should not have a message section`() {
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = false
+            )
+        )
+
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val message = dialog.findViewById<TextView>(R.id.message)
+
+        assertFalse("Message shouldn't be displayed", message.isVisible)
+    }
+
+    @Test
+    fun `dialog with passed in message should display that message`() {
+        val expectedMessage = "This is just a test"
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = false,
+                message = expectedMessage
+            )
+        )
+
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val message = dialog.findViewById<TextView>(R.id.message)
+
+        assertTrue("Message should be displayed", message.isVisible)
+        assertEquals(expectedMessage, message.text)
+    }
+
+    @Test
+    fun `dialog with a default shouldShowLearnMoreLink being equal to false should not have a Learn more link`() {
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = mock(),
+                shouldShowDoNotAskAgainCheckBox = false
+            )
+        )
+
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val learnMoreLink = dialog.findViewById<TextView>(R.id.learn_more)
+
+        assertFalse("Learn more link shouldn't be displayed", learnMoreLink.isVisible)
+    }
+
+    @Test
+    fun `dialog with shouldShowLearnMoreLink equals true should show a properly configured Learn more link`() {
+        val feature: SitePermissionsFeature = mock()
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                permissionRequestId = permissionRequestId,
+                feature = feature,
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldShowLearnMoreLink = true
+            )
+        )
+        doNothing().`when`(fragment).dismiss()
+        doReturn(testContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val learnMoreLink = dialog.findViewById<TextView>(R.id.learn_more)
+
+        assertTrue("Learn more link shouldn't be displayed", learnMoreLink.isVisible)
+        assertFalse("Learn more link should not be long clickable", learnMoreLink.isLongClickable)
+        learnMoreLink.callOnClick()
+        verify(fragment).dismiss()
+        verify(feature).onLearnMorePress(permissionRequestId, "sessionId")
     }
 
     @Test

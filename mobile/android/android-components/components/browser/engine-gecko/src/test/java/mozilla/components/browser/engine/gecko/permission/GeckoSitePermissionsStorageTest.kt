@@ -41,6 +41,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.StorageController.ClearFlags
@@ -112,6 +113,23 @@ class GeckoSitePermissionsStorageTest {
         verify(onDiskStorage).save(permissionsCaptor.capture(), any())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.localStorage)
+        verify(storageController).setPermission(geckoPermissions, VALUE_DENY)
+    }
+
+    @Test
+    fun `GIVEN a crossOriginStorageAccess permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+        val sitePermissions = createNewSitePermission().copy(crossOriginStorageAccess = BLOCKED)
+        val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_STORAGE_ACCESS)
+        val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_STORAGE_ACCESS, geckoPermissions, mock())
+        val permissionsCaptor = argumentCaptor<SitePermissions>()
+
+        doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
+
+        geckoStorage.save(sitePermissions, geckoRequest)
+
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+
+        assertEquals(NO_DECISION, permissionsCaptor.value.crossOriginStorageAccess)
         verify(storageController).setPermission(geckoPermissions, VALUE_DENY)
     }
 
@@ -204,7 +222,8 @@ class GeckoSitePermissionsStorageTest {
     @Test
     fun `GIVEN multiple saved temporary permissions WHEN clearing all temporary permission THEN all permissions are cleared`() = runBlockingTest {
         val geckoAutoPlayPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE)
-        val geckoStoragePermissions = geckoContentPermission("mozilla.org", PERMISSION_PERSISTENT_STORAGE)
+        val geckoPersistentStoragePermissions = geckoContentPermission("mozilla.org", PERMISSION_PERSISTENT_STORAGE)
+        val geckoStorageAccessPermissions = geckoContentPermission("mozilla.org", PERMISSION_STORAGE_ACCESS)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE, geckoAutoPlayPermissions, mock())
 
         assertTrue(geckoStorage.geckoTemporaryPermissions.isEmpty())
@@ -213,14 +232,19 @@ class GeckoSitePermissionsStorageTest {
 
         assertEquals(1, geckoStorage.geckoTemporaryPermissions.size)
 
-        geckoStorage.saveTemporary(geckoRequest.copy(geckoPermission = geckoStoragePermissions))
+        geckoStorage.saveTemporary(geckoRequest.copy(geckoPermission = geckoPersistentStoragePermissions))
 
         assertEquals(2, geckoStorage.geckoTemporaryPermissions.size)
+
+        geckoStorage.saveTemporary(geckoRequest.copy(geckoPermission = geckoStorageAccessPermissions))
+
+        assertEquals(3, geckoStorage.geckoTemporaryPermissions.size)
 
         geckoStorage.clearTemporaryPermissions()
 
         verify(storageController).setPermission(geckoAutoPlayPermissions, VALUE_PROMPT)
-        verify(storageController).setPermission(geckoStoragePermissions, VALUE_PROMPT)
+        verify(storageController).setPermission(geckoPersistentStoragePermissions, VALUE_PROMPT)
+        verify(storageController).setPermission(geckoStorageAccessPermissions, VALUE_PROMPT)
 
         assertTrue(geckoStorage.geckoTemporaryPermissions.isEmpty())
     }
@@ -256,6 +280,7 @@ class GeckoSitePermissionsStorageTest {
         val sitePermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = ALLOWED,
             location = ALLOWED,
             notification = ALLOWED,
             microphone = ALLOWED,
@@ -272,7 +297,8 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
-            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE)
+            geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS)
         )
 
         doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy(anyString(), anyBoolean())
@@ -288,6 +314,7 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(NO_DECISION, permission.location)
         assertEquals(NO_DECISION, permission.notification)
         assertEquals(NO_DECISION, permission.localStorage)
+        assertEquals(NO_DECISION, permission.crossOriginStorageAccess)
         assertEquals(NO_DECISION, permission.mediaKeySystemAccess)
         assertEquals(ALLOWED, permission.camera)
         assertEquals(ALLOWED, permission.microphone)
@@ -300,6 +327,7 @@ class GeckoSitePermissionsStorageTest {
         val sitePermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = ALLOWED,
             location = ALLOWED,
             notification = ALLOWED,
             microphone = ALLOWED,
@@ -315,6 +343,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_ALLOW),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_ALLOW),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_ALLOW)
         )
@@ -327,6 +356,7 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(ALLOWED, foundPermissions.location)
         assertEquals(ALLOWED, foundPermissions.notification)
         assertEquals(ALLOWED, foundPermissions.localStorage)
+        assertEquals(ALLOWED, foundPermissions.crossOriginStorageAccess)
         assertEquals(ALLOWED, foundPermissions.mediaKeySystemAccess)
         assertEquals(ALLOWED, foundPermissions.camera)
         assertEquals(ALLOWED, foundPermissions.microphone)
@@ -339,6 +369,7 @@ class GeckoSitePermissionsStorageTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = ALLOWED,
             location = ALLOWED,
             notification = ALLOWED,
             microphone = ALLOWED,
@@ -354,6 +385,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_DENY),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY)
         ).groupByType()
@@ -363,6 +395,7 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(BLOCKED, mergedPermissions.location)
         assertEquals(BLOCKED, mergedPermissions.notification)
         assertEquals(BLOCKED, mergedPermissions.localStorage)
+        assertEquals(BLOCKED, mergedPermissions.crossOriginStorageAccess)
         assertEquals(BLOCKED, mergedPermissions.mediaKeySystemAccess)
         assertEquals(ALLOWED, mergedPermissions.camera)
         assertEquals(ALLOWED, mergedPermissions.microphone)
@@ -375,6 +408,7 @@ class GeckoSitePermissionsStorageTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = ALLOWED,
             location = ALLOWED,
             notification = ALLOWED,
             microphone = ALLOWED,
@@ -394,11 +428,46 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(BLOCKED, mergedPermissions.location)
         assertEquals(ALLOWED, mergedPermissions.notification)
         assertEquals(ALLOWED, mergedPermissions.localStorage)
+        assertEquals(ALLOWED, mergedPermissions.crossOriginStorageAccess)
         assertEquals(ALLOWED, mergedPermissions.mediaKeySystemAccess)
         assertEquals(ALLOWED, mergedPermissions.camera)
         assertEquals(ALLOWED, mergedPermissions.microphone)
         assertEquals(AutoplayStatus.ALLOWED, mergedPermissions.autoplayAudible)
         assertEquals(AutoplayStatus.ALLOWED, mergedPermissions.autoplayInaudible)
+    }
+
+    @Test
+    fun `GIVEN different cross_origin_storage_access permissions WHEN mergePermissions is called THEN they are filtered by origin url`() {
+        val onDiskPermissions = SitePermissions(
+            origin = "mozilla.dev",
+            localStorage = ALLOWED,
+            crossOriginStorageAccess = NO_DECISION,
+            location = ALLOWED,
+            notification = ALLOWED,
+            microphone = ALLOWED,
+            camera = ALLOWED,
+            bluetooth = ALLOWED,
+            mediaKeySystemAccess = ALLOWED,
+            autoplayAudible = AutoplayStatus.ALLOWED,
+            autoplayInaudible = AutoplayStatus.ALLOWED,
+            savedAt = 0
+        )
+        val geckoPermission1 = geckoContentPermission(
+            type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY, thirdPartyOrigin = "mozilla.com"
+        )
+        val geckoPermission2 = geckoContentPermission(
+            type = PERMISSION_STORAGE_ACCESS, value = VALUE_ALLOW, thirdPartyOrigin = "mozilla.dev"
+        )
+        val geckoPermission3 = geckoContentPermission(
+            type = PERMISSION_STORAGE_ACCESS, value = VALUE_PROMPT, thirdPartyOrigin = "mozilla.org"
+        )
+
+        val mergedPermissions = geckoStorage.mergePermissions(
+            onDiskPermissions,
+            mapOf(PERMISSION_STORAGE_ACCESS to listOf(geckoPermission1, geckoPermission2, geckoPermission3))
+        )
+
+        assertEquals(onDiskPermissions.copy(crossOriginStorageAccess = ALLOWED), mergedPermissions!!)
     }
 
     @Test
@@ -420,6 +489,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
             geckoContentPermission(type = PERMISSION_TRACKING)
@@ -449,6 +519,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
             geckoContentPermission(type = PERMISSION_TRACKING)
@@ -458,7 +529,7 @@ class GeckoSitePermissionsStorageTest {
 
         geckoStorage.geckoTemporaryPermissions.addAll(geckoPermissions)
 
-        assertEquals(9, geckoStorage.geckoTemporaryPermissions.size)
+        assertEquals(10, geckoStorage.geckoTemporaryPermissions.size)
 
         geckoPermissions.forEach {
             geckoStorage.removeTemporaryPermissionIfAny(it)
@@ -485,6 +556,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE),
             geckoContentPermission(type = PERMISSION_TRACKING)
@@ -506,6 +578,7 @@ class GeckoSitePermissionsStorageTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = ALLOWED,
             location = ALLOWED,
             notification = ALLOWED,
             microphone = ALLOWED,
@@ -521,6 +594,7 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE, value = VALUE_DENY),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE, value = VALUE_DENY),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_DENY)
         )
@@ -533,6 +607,7 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(BLOCKED, foundPermissions.location)
         assertEquals(BLOCKED, foundPermissions.notification)
         assertEquals(BLOCKED, foundPermissions.localStorage)
+        assertEquals(BLOCKED, foundPermissions.crossOriginStorageAccess)
         assertEquals(BLOCKED, foundPermissions.mediaKeySystemAccess)
         assertEquals(ALLOWED, foundPermissions.camera)
         assertEquals(ALLOWED, foundPermissions.microphone)
@@ -550,13 +625,14 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION),
             geckoContentPermission(type = PERMISSION_MEDIA_KEY_SYSTEM_ACCESS),
             geckoContentPermission(type = PERMISSION_PERSISTENT_STORAGE),
+            geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_AUDIBLE),
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE)
         )
 
         val filteredPermissions = geckoPermissions.filterNotTemporaryPermissions(temporary)!!
 
-        assertEquals(5, filteredPermissions.size)
+        assertEquals(6, filteredPermissions.size)
         assertFalse(filteredPermissions.any { it.permission == PERMISSION_GEOLOCATION })
     }
 
@@ -601,6 +677,7 @@ class GeckoSitePermissionsStorageTest {
         return SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
+            crossOriginStorageAccess = BLOCKED,
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
@@ -614,10 +691,12 @@ class GeckoSitePermissionsStorageTest {
 internal fun geckoContentPermission(
     uri: String = "mozilla.dev",
     type: Int,
-    value: Int = VALUE_PROMPT
+    value: Int = VALUE_PROMPT,
+    thirdPartyOrigin: String = "mozilla.dev"
 ): ContentPermission {
     val prompt: ContentPermission = mock()
     ReflectionUtils.setField(prompt, "uri", uri)
+    ReflectionUtils.setField(prompt, "thirdPartyOrigin", thirdPartyOrigin)
     ReflectionUtils.setField(prompt, "permission", type)
     ReflectionUtils.setField(prompt, "value", value)
     return prompt

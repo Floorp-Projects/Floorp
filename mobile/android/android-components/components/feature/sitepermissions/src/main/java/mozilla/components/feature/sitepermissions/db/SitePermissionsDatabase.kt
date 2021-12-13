@@ -17,7 +17,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 7)
+@Database(entities = [SitePermissionsEntity::class], version = 8)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -46,6 +46,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 Migrations.migration_5_6
             ).addMigrations(
                 Migrations.migration_6_7
+            ).addMigrations(
+                Migrations.migration_7_8
             ).build().also { instance = it }
         }
     }
@@ -167,6 +169,20 @@ internal object Migrations {
                 "UPDATE site_permissions SET autoplay_audible = -1, autoplay_inaudible= 1 " +
                     "WHERE autoplay_audible = -1 AND autoplay_inaudible = -1"
             )
+        }
+    }
+
+    @Suppress("MagicNumber")
+    val migration_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            val hasCrossOriginStorageAccessColumn = database.query("SELECT * FROM site_permissions").columnCount == 12
+            if (!hasCrossOriginStorageAccessColumn) {
+                database.execSQL(
+                    "ALTER TABLE site_permissions ADD COLUMN cross_origin_storage_access INTEGER NOT NULL DEFAULT 0"
+                )
+                // default is NO_DECISION
+                database.execSQL("UPDATE site_permissions SET cross_origin_storage_access = 0")
+            }
         }
     }
 }

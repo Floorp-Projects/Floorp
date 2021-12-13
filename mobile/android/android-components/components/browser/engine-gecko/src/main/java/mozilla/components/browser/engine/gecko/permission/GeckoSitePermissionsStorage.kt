@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOW
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
@@ -30,6 +31,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_PERSISTENT_STORAGE
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.StorageController.ClearFlags
@@ -154,6 +156,7 @@ class GeckoSitePermissionsStorage(
             val geckoLocation = geckoPermissionsByType[PERMISSION_GEOLOCATION]?.firstOrNull()
             val geckoMedia = geckoPermissionsByType[PERMISSION_MEDIA_KEY_SYSTEM_ACCESS]?.firstOrNull()
             val geckoLocalStorage = geckoPermissionsByType[PERMISSION_PERSISTENT_STORAGE]?.firstOrNull()
+            val geckoCrossOriginStorageAccess = geckoPermissionsByType[PERMISSION_STORAGE_ACCESS]?.firstOrNull()
             val geckoAudible = geckoPermissionsByType[PERMISSION_AUTOPLAY_AUDIBLE]?.firstOrNull()
             val geckoInAudible = geckoPermissionsByType[PERMISSION_AUTOPLAY_INAUDIBLE]?.firstOrNull()
 
@@ -199,6 +202,15 @@ class GeckoSitePermissionsStorage(
                 updatedPermission = updatedPermission.copy(localStorage = NO_DECISION)
             }
 
+            if (geckoCrossOriginStorageAccess != null) {
+                removeTemporaryPermissionIfAny(geckoCrossOriginStorageAccess)
+                geckoStorage.setPermission(
+                    geckoCrossOriginStorageAccess,
+                    userSitePermissions.crossOriginStorageAccess.toGeckoStatus()
+                )
+                updatedPermission = updatedPermission.copy(crossOriginStorageAccess = NO_DECISION)
+            }
+
             if (geckoAudible != null) {
                 removeTemporaryPermissionIfAny(geckoAudible)
                 geckoStorage.setPermission(
@@ -241,6 +253,12 @@ class GeckoSitePermissionsStorage(
             val geckoLocation = geckoPermissionByType[PERMISSION_GEOLOCATION]?.firstOrNull()
             val geckoMedia = geckoPermissionByType[PERMISSION_MEDIA_KEY_SYSTEM_ACCESS]?.firstOrNull()
             val geckoStorage = geckoPermissionByType[PERMISSION_PERSISTENT_STORAGE]?.firstOrNull()
+            // Currently we'll receive the "storage_access" permission for all iframes of the same parent
+            // so we need to ensure we are reporting the permission for the current iframe request.
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1746436 for more details.
+            val geckoCrossOriginStorageAccess = geckoPermissionByType[PERMISSION_STORAGE_ACCESS]?.firstOrNull {
+                it.thirdPartyOrigin == onDiskPermissions.origin.stripDefaultPort()
+            }
             val geckoAudible = geckoPermissionByType[PERMISSION_AUTOPLAY_AUDIBLE]?.firstOrNull()
             val geckoInAudible = geckoPermissionByType[PERMISSION_AUTOPLAY_INAUDIBLE]?.firstOrNull()
 
@@ -269,6 +287,12 @@ class GeckoSitePermissionsStorage(
             if (geckoStorage != null && geckoStorage.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions?.copy(
                     localStorage = geckoStorage.value.toStatus()
+                )
+            }
+
+            if (geckoCrossOriginStorageAccess != null && geckoCrossOriginStorageAccess.value != VALUE_PROMPT) {
+                combinedPermissions = combinedPermissions?.copy(
+                    crossOriginStorageAccess = geckoCrossOriginStorageAccess.value.toStatus()
                 )
             }
 

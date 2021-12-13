@@ -46,6 +46,9 @@ internal data class SitePermissionsEntity(
     @ColumnInfo(name = "media_key_system_access")
     var mediaKeySystemAccess: SitePermissions.Status,
 
+    @ColumnInfo(name = "cross_origin_storage_access")
+    var crossOriginStorageAccess: SitePermissions.Status,
+
     @ColumnInfo(name = "saved_at")
     var savedAt: Long
 ) {
@@ -62,6 +65,7 @@ internal data class SitePermissionsEntity(
             autoplayAudible,
             autoplayInaudible,
             mediaKeySystemAccess,
+            crossOriginStorageAccess,
             savedAt
         )
     }
@@ -79,6 +83,7 @@ internal fun SitePermissions.toSitePermissionsEntity(): SitePermissionsEntity {
         autoplayAudible,
         autoplayInaudible,
         mediaKeySystemAccess,
+        crossOriginStorageAccess,
         savedAt
     )
 }

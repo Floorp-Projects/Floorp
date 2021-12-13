@@ -82,6 +82,8 @@ sealed class Permission {
     data class ContentPersistentStorage(override val id: String? = "", override val desc: String? = "") : Permission()
     data class ContentMediaKeySystemAccess(override val id: String? = "", override val desc: String? = "") :
         Permission()
+    data class ContentCrossOriginStorageAccess(override val id: String? = "", override val desc: String? = "") :
+        Permission()
 
     data class AppCamera(override val id: String? = "", override val desc: String? = "") : Permission()
     data class AppAudio(override val id: String? = "", override val desc: String? = "") : Permission()

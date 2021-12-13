@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
@@ -64,6 +65,7 @@ class SitePermissionsRulesTest {
             autoplayAudible = AutoplayAction.BLOCKED,
             autoplayInaudible = AutoplayAction.ALLOWED,
             persistentStorage = BLOCKED,
+            crossOriginStorageAccess = ALLOWED,
             mediaKeySystemAccess = ASK_TO_ALLOW
         )
 
@@ -101,6 +103,10 @@ class SitePermissionsRulesTest {
         action = rules.getActionFrom(mockRequest)
         assertEquals(action, rules.persistentStorage)
 
+        doReturn(listOf(Permission.ContentCrossOriginStorageAccess())).`when`(mockRequest).permissions
+        action = rules.getActionFrom(mockRequest)
+        assertEquals(action, rules.crossOriginStorageAccess)
+
         doReturn(listOf(Permission.ContentMediaKeySystemAccess())).`when`(mockRequest).permissions
         action = rules.getActionFrom(mockRequest)
         assertEquals(action, rules.mediaKeySystemAccess)
@@ -111,6 +117,7 @@ class SitePermissionsRulesTest {
         var rules = SitePermissionsRules(
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
+            crossOriginStorageAccess = ALLOWED,
             persistentStorage = BLOCKED,
             notification = ASK_TO_ALLOW,
             microphone = BLOCKED,
@@ -128,6 +135,7 @@ class SitePermissionsRulesTest {
         rules = SitePermissionsRules(
             camera = ASK_TO_ALLOW,
             location = BLOCKED,
+            crossOriginStorageAccess = ALLOWED,
             notification = ASK_TO_ALLOW,
             microphone = ASK_TO_ALLOW,
             autoplayInaudible = AutoplayAction.ALLOWED,
@@ -147,6 +155,7 @@ class SitePermissionsRulesTest {
             camera = Status.NO_DECISION,
             location = Status.BLOCKED,
             localStorage = Status.BLOCKED,
+            crossOriginStorageAccess = Status.ALLOWED,
             notification = Status.NO_DECISION,
             microphone = Status.BLOCKED,
             autoplayInaudible = AutoplayStatus.ALLOWED,
@@ -163,6 +172,7 @@ class SitePermissionsRulesTest {
             autoplayInaudible = AutoplayAction.ALLOWED,
             autoplayAudible = AutoplayAction.BLOCKED,
             persistentStorage = BLOCKED,
+            crossOriginStorageAccess = ALLOWED,
             mediaKeySystemAccess = BLOCKED
         )
 
@@ -176,6 +186,7 @@ class SitePermissionsRulesTest {
         assertEquals(expectedSitePermission.autoplayInaudible, convertedSitePermissions.autoplayInaudible)
         assertEquals(expectedSitePermission.autoplayAudible, convertedSitePermissions.autoplayAudible)
         assertEquals(expectedSitePermission.localStorage, convertedSitePermissions.localStorage)
+        assertEquals(expectedSitePermission.crossOriginStorageAccess, convertedSitePermissions.crossOriginStorageAccess)
         assertEquals(expectedSitePermission.mediaKeySystemAccess, convertedSitePermissions.mediaKeySystemAccess)
         assertEquals(expectedSitePermission.savedAt, convertedSitePermissions.savedAt)
     }

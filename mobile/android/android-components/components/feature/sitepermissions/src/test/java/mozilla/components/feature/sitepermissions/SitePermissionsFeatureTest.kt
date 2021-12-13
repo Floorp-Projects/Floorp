@@ -31,6 +31,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHig
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -40,6 +41,7 @@ import mozilla.components.concept.engine.permission.Permission.ContentAudioCaptu
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
+import mozilla.components.concept.engine.permission.Permission.ContentCrossOriginStorageAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
@@ -54,6 +56,7 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOW
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
+import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -343,6 +346,36 @@ class SitePermissionsFeatureTest {
             .consumePermissionRequest(mockPermissionRequest, SESSION_ID)
         verify(sitePermissionFeature)
             .onContentPermissionDeny(mockPermissionRequest, false)
+    }
+
+    @Test
+    fun `GIVEN permissionRequest WHEN onLearnMorePress() THEN consumePermissionRequest, onContentPermissionDeny are called and SelectOrAddUseCase is used`() {
+        // given
+        val permission: ContentCrossOriginStorageAccess = mock()
+        val permissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(permission))
+        }
+        doNothing().`when`(sitePermissionFeature).consumePermissionRequest(any(), any())
+        doNothing().`when`(sitePermissionFeature)
+            .onContentPermissionDeny(mockPermissionRequest, true)
+        doReturn(permissionRequest).`when`(sitePermissionFeature).findRequestedPermission(
+            anyString()
+        )
+        doReturn(mock<SelectOrAddUseCase>()).`when`(sitePermissionFeature).selectOrAddUseCase
+
+        // when
+        sitePermissionFeature.onLearnMorePress(PERMISSION_ID, SESSION_ID)
+
+        // then
+        verify(sitePermissionFeature)
+            .consumePermissionRequest(permissionRequest, SESSION_ID)
+        verify(sitePermissionFeature)
+            .onContentPermissionDeny(permissionRequest, false)
+        verify(sitePermissionFeature.selectOrAddUseCase).invoke(
+            url = STORAGE_ACCESS_DOCUMENTATION_URL,
+            private = false,
+            source = SessionState.Source.Internal.TextSelection
+        )
     }
 
     @Test
@@ -929,6 +962,46 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `GIVEN a ContentStorageAccess request WHEN handlingSingleContentPermissions is called THEN create a specific prompt`() {
+        // given
+        val host = "https://mozilla.org"
+        val permission = ContentCrossOriginStorageAccess(id = "permission")
+        val permissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(permission))
+            whenever(id).thenReturn("id")
+        }
+
+        // when
+        sitePermissionFeature.handlingSingleContentPermissions(permissionRequest, permission, host)
+
+        // then
+        verify(sitePermissionFeature).createContentCrossOriginStorageAccessPermissionPrompt(
+            testContext, host, permissionRequest, false, true
+        )
+    }
+
+    @Test
+    fun `GIVEN a ContentStorageAccess request WHEN createContentStorageAccessPermissionPrompt is called THEN create a specific SitePermissionsDialogFragment`() {
+        // given
+        val host = "https://mozilla.org"
+        val permission = ContentCrossOriginStorageAccess(id = "permission")
+        val permissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(permission))
+            whenever(id).thenReturn("id")
+        }
+
+        // when
+        sitePermissionFeature.createContentCrossOriginStorageAccessPermissionPrompt(
+            testContext, host, permissionRequest, false, true
+        )
+
+        // then
+        verify(sitePermissionFeature).createContentCrossOriginStorageAccessPermissionPrompt(
+            testContext, host, permissionRequest, false, true
+        )
+    }
+
+    @Test
     fun `GIVEN permissionRequest and containsVideoAndAudioSources true WHEN createPrompt THEN createSinglePermissionPrompt is called`() {
         // given
         val permissionRequest: PermissionRequest = object : PermissionRequest {
@@ -1006,6 +1079,7 @@ class SitePermissionsFeatureTest {
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).camera
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).microphone
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).localStorage
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).crossOriginStorageAccess
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).mediaKeySystemAccess
             doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayAudible
             doReturn(AutoplayStatus.ALLOWED).`when`(sitePermissionFromStorage).autoplayInaudible
@@ -1024,6 +1098,7 @@ class SitePermissionsFeatureTest {
             ContentAudioMicrophone(),
             ContentVideoCamera(),
             ContentVideoCapture(),
+            ContentCrossOriginStorageAccess(),
             Generic(id = null)
         )
 
@@ -1038,6 +1113,7 @@ class SitePermissionsFeatureTest {
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).notification
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).camera
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).microphone
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).crossOriginStorageAccess
 
             try {
                 val isAllowed = sitePermissionFromStorage.isGranted(request)
@@ -1115,6 +1191,7 @@ class SitePermissionsFeatureTest {
             autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
             autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
             persistentStorage = SitePermissionsRules.Action.BLOCKED,
+            crossOriginStorageAccess = SitePermissionsRules.Action.ALLOWED,
             mediaKeySystemAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
         )
 
@@ -1130,6 +1207,7 @@ class SitePermissionsFeatureTest {
         assertEquals(BLOCKED, sitePermissions.autoplayAudible.toStatus())
         assertEquals(ALLOWED, sitePermissions.autoplayInaudible.toStatus())
         assertEquals(BLOCKED, sitePermissions.localStorage)
+        assertEquals(ALLOWED, sitePermissions.crossOriginStorageAccess)
         assertEquals(NO_DECISION, sitePermissions.mediaKeySystemAccess)
     }
 

@@ -34,6 +34,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHig
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.AppAudio
@@ -44,6 +45,7 @@ import mozilla.components.concept.engine.permission.Permission.ContentAudioCaptu
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayAudible
 import mozilla.components.concept.engine.permission.Permission.ContentAutoPlayInaudible
+import mozilla.components.concept.engine.permission.Permission.ContentCrossOriginStorageAccess
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentMediaKeySystemAccess
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
@@ -56,17 +58,22 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOW
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.DialogConfig
+import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.getOrigin
+import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
 
 internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
+@VisibleForTesting
+internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
+    "https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API"
 
 /**
  * This feature will collect [PermissionRequest] from [ContentState] and display
@@ -99,6 +106,10 @@ class SitePermissionsFeature(
     val onShouldShowRequestPermissionRationale: (permission: String) -> Boolean,
     private val store: BrowserStore
 ) : LifecycleAwareFeature, PermissionsFeature {
+    @VisibleForTesting
+    internal val selectOrAddUseCase by lazy {
+        SelectOrAddUseCase(store)
+    }
 
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
 
@@ -308,6 +319,27 @@ class SitePermissionsFeature(
         findRequestedPermission(permissionId)?.let { permissionRequest ->
             consumePermissionRequest(permissionRequest, sessionId)
             onContentPermissionDeny(permissionRequest, shouldStore)
+        }
+    }
+
+    internal fun onLearnMorePress(
+        permissionId: String,
+        sessionId: String,
+    ) {
+        findRequestedPermission(permissionId)?.let { permissionRequest ->
+            consumePermissionRequest(permissionRequest, sessionId)
+            onContentPermissionDeny(permissionRequest, false)
+
+            val permission = permissionRequest.permissions.first()
+            if (permission is ContentCrossOriginStorageAccess) {
+                store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.let {
+                    selectOrAddUseCase.invoke(
+                        url = STORAGE_ACCESS_DOCUMENTATION_URL,
+                        private = it.content.private,
+                        source = SessionState.Source.Internal.TextSelection
+                    )
+                }
+            }
         }
     }
 
@@ -559,6 +591,9 @@ class SitePermissionsFeature(
                 is ContentMediaKeySystemAccess -> {
                     permissionFromStore.mediaKeySystemAccess.doNotAskAgain()
                 }
+                is ContentCrossOriginStorageAccess -> {
+                    permissionFromStore.crossOriginStorageAccess.doNotAskAgain()
+                }
                 else -> false
             }
         }
@@ -655,6 +690,9 @@ class SitePermissionsFeature(
             }
             is ContentMediaKeySystemAccess -> {
                 sitePermissions.copy(mediaKeySystemAccess = status)
+            }
+            is ContentCrossOriginStorageAccess -> {
+                sitePermissions.copy(crossOriginStorageAccess = status)
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -761,6 +799,15 @@ class SitePermissionsFeature(
                     shouldSelectRememberChoice = true
                 )
             }
+            is ContentCrossOriginStorageAccess -> {
+                createContentCrossOriginStorageAccessPermissionPrompt(
+                    context = context,
+                    host = host,
+                    permissionRequest = permissionRequest,
+                    showDoNotAskAgainCheckBox = false,
+                    shouldSelectRememberChoice = true
+                )
+            }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
         }
@@ -792,6 +839,41 @@ class SitePermissionsFeature(
             showDoNotAskAgainCheckBox,
             isNotificationRequest = isNotificationRequest,
             shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice
+        )
+    }
+
+    @VisibleForTesting
+    internal fun createContentCrossOriginStorageAccessPermissionPrompt(
+        context: Context,
+        host: String,
+        permissionRequest: PermissionRequest,
+        showDoNotAskAgainCheckBox: Boolean,
+        shouldSelectRememberChoice: Boolean,
+    ): SitePermissionsDialogFragment {
+        val currentSession = store.state.findTabOrCustomTabOrSelectedTab(sessionId)
+            ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
+
+        val title = context.getString(
+            R.string.mozac_feature_sitepermissions_storage_access_title,
+            host.stripDefaultPort(),
+            currentSession.content.url.stripDefaultPort()
+        )
+        val message = context.getString(
+            R.string.mozac_feature_sitepermissions_storage_access_message,
+            host.stripDefaultPort()
+        )
+
+        return SitePermissionsDialogFragment.newInstance(
+            sessionId = currentSession.id,
+            title = title,
+            titleIcon = R.drawable.mozac_ic_cookies,
+            message = message,
+            permissionRequestId = permissionRequest.id,
+            feature = this,
+            shouldShowDoNotAskAgainCheckBox = showDoNotAskAgainCheckBox,
+            isNotificationRequest = false,
+            shouldSelectDoNotAskAgainCheckBox = shouldSelectRememberChoice,
+            shouldShowLearnMoreLink = true
         )
     }
 
@@ -896,6 +978,9 @@ internal fun isPermissionGranted(
         is ContentPersistentStorage -> {
             permissionFromStorage.localStorage.isAllowed()
         }
+        is ContentCrossOriginStorageAccess -> {
+            permissionFromStorage.crossOriginStorageAccess.isAllowed()
+        }
         is ContentMediaKeySystemAccess -> {
             permissionFromStorage.mediaKeySystemAccess.isAllowed()
         }
@@ -915,6 +1000,7 @@ private fun Permission.isSupported(): Boolean {
         is ContentGeoLocation,
         is ContentNotification,
         is ContentPersistentStorage,
+        is ContentCrossOriginStorageAccess,
         is ContentAudioCapture, is ContentAudioMicrophone,
         is ContentVideoCamera, is ContentVideoCapture,
         is ContentAutoPlayAudible, is ContentAutoPlayInaudible,

@@ -22,7 +22,8 @@ data class SitePermissionsRules constructor(
     val autoplayAudible: AutoplayAction,
     val autoplayInaudible: AutoplayAction,
     val persistentStorage: Action,
-    val mediaKeySystemAccess: Action
+    val mediaKeySystemAccess: Action,
+    val crossOriginStorageAccess: Action,
 ) {
 
     enum class Action {
@@ -88,6 +89,9 @@ data class SitePermissionsRules constructor(
             is Permission.ContentMediaKeySystemAccess -> {
                 mediaKeySystemAccess
             }
+            is Permission.ContentCrossOriginStorageAccess -> {
+                crossOriginStorageAccess
+            }
             else -> ASK_TO_ALLOW
         }
     }
@@ -114,6 +118,7 @@ data class SitePermissionsRules constructor(
             autoplayInaudible = autoplayInaudible.toAutoplayStatus(),
             localStorage = persistentStorage.toStatus(),
             mediaKeySystemAccess = mediaKeySystemAccess.toStatus(),
+            crossOriginStorageAccess = crossOriginStorageAccess.toStatus(),
             savedAt = savedAt
         )
     }
