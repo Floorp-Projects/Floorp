@@ -19,6 +19,7 @@ class Prefs:
 
 
 ENV_ENABLE_FISSION = "MOZ_FORCE_ENABLE_FISSION"
+ENV_DISABLE_FISSION = "MOZ_FORCE_DISABLE_FISSION"
 ENV_DISABLE_E10S = "MOZ_FORCE_DISABLE_E10S"
 
 
@@ -27,12 +28,13 @@ DECISION_STATUS = {
     "experimentTreatment": 2,
     "disabledByE10sEnv": 3,
     "enabledByEnv": 4,
-    "disabledBySafeMode": 5,
-    "enabledByDefault": 6,
-    "disabledByDefault": 7,
-    "enabledByUserPref": 8,
-    "disabledByUserPref": 9,
-    "disabledByE10sOther": 10,
+    "disabledByEnv": 5,
+    "disabledBySafeMode": 6,
+    "enabledByDefault": 7,
+    "disabledByDefault": 8,
+    "enabledByUserPref": 9,
+    "disabledByUserPref": 10,
+    "disabledByE10sOther": 11,
 }
 
 
