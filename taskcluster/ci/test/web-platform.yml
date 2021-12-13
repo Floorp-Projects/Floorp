@@ -69,7 +69,6 @@ web-platform-tests:
             macosx.*/debug: 10800
             android-em.*/.*: 10800
             default: 7200
-    e10s: true
     variants:
         - fission
         - webrender-sw
@@ -113,7 +112,6 @@ web-platform-tests-backlog:
             android.*/opt: 7200
             default: 3600
     variants: []
-    e10s: true
     run-on-projects: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2
@@ -143,7 +141,6 @@ web-platform-tests-reftest:
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
             default: 4
-    e10s: true
     variants:
         - fission
         - webrender-sw
@@ -192,7 +189,6 @@ web-platform-tests-reftest-backlog:
     virtualization: virtual
     chunks: 1
     variants: []
-    e10s: true
     run-on-projects: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2

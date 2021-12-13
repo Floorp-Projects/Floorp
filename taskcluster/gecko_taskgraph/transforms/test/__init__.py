@@ -445,9 +445,6 @@ def make_job_description(config, tasks):
 
         if task["e10s"]:
             label += "-e10s"
-        else:
-            label += "-1proc"
-            try_name += "-1proc"
 
         if task["chunks"] > 1:
             label += "-{}".format(task["this-chunk"])

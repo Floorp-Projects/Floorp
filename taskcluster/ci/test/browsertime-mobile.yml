@@ -33,7 +33,6 @@ job-defaults:
                         index: mobile.v2.reference-browser.raptor.latest.armeabi-v7a
                         name: target.armeabi-v7a.apk
             default: geckoview_example.apk
-    e10s: true
     virtualization: hardware
     raptor:
         activity:
