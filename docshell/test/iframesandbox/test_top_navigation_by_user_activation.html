@@ -45,7 +45,7 @@ function waitForMessage(aCallback) {
 
     let url = "file_top_navigation_by_user_activation.html";
     if (sameOrigin) {
-      url = "http://example.org/tests/docshell/test/iframesandbox/" + url;
+      url = `${location.origin}/tests/docshell/test/iframesandbox/${url}`;
     }
 
     let promise = waitForMessage((e) => {
