@@ -4252,7 +4252,7 @@ pref("plugins.rewrite_youtube_embeds", true);
 pref("media.default_volume", "1.0");
 
 // return the maximum number of cores that navigator.hardwareCurrency returns
-pref("dom.maxHardwareConcurrency", 128);
+pref("dom.maxHardwareConcurrency", 16);
 
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
