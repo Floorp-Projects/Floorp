@@ -172,7 +172,7 @@ static inline i16x8 iclip_u8_vec(i16x8 v) {
 } while (0)
 
 static inline void wiener_filter_v_vsx(uint8_t *p,
-                                       const ptrdiff_t p_stride,
+                                       const ptrdiff_t stride,
                                        const int32_t *hor,
                                        const int16_t filterv[8],
                                        const int w, const int h)
@@ -192,7 +192,7 @@ static inline void wiener_filter_v_vsx(uint8_t *p,
         for (int i = 0; i <(w-w%16); i += 16) {
             u8x16 sum_pixel;
             LOAD_AND_APPLY_FILTER_V(sum_pixel, hor);
-            vec_vsx_st(sum_pixel, 0, &p[j * PXSTRIDE(p_stride) + i]);
+            vec_vsx_st(sum_pixel, 0, &p[j * PXSTRIDE(stride) + i]);
         }
         // remaining loop
         if (w & 0xf){
@@ -204,16 +204,15 @@ static inline void wiener_filter_v_vsx(uint8_t *p,
             vec_vsx_st(sum_pixel, 0, tmp_out);
 
             for (int k=0; i<w; i++, k++) {
-                p[j * PXSTRIDE(p_stride) + i] = tmp_out[k];
+                p[j * PXSTRIDE(stride) + i] = tmp_out[k];
             }
         }
     }
 }
 
 static inline void padding(uint8_t *dst, const uint8_t *p,
-                           const ptrdiff_t p_stride, const uint8_t (*left)[4],
-                           const uint8_t *lpf, const ptrdiff_t lpf_stride,
-                           int unit_w, const int stripe_h,
+                           const ptrdiff_t stride, const uint8_t (*left)[4],
+                           const uint8_t *lpf, int unit_w, const int stripe_h,
                            const enum LrEdgeFlags edges)
 {
     const int have_left = !!(edges & LR_HAVE_LEFT);
@@ -228,7 +227,7 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
     if (edges & LR_HAVE_TOP) {
         // Copy previous loop filtered rows
         const uint8_t *const above_1 = lpf;
-        const uint8_t *const above_2 = above_1 + PXSTRIDE(lpf_stride);
+        const uint8_t *const above_2 = above_1 + PXSTRIDE(stride);
         pixel_copy(dst_l, above_1, unit_w);
         pixel_copy(dst_l + REST_UNIT_STRIDE, above_1, unit_w);
         pixel_copy(dst_l + 2 * REST_UNIT_STRIDE, above_2, unit_w);
@@ -247,14 +246,14 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
     uint8_t *dst_tl = dst_l + 3 * REST_UNIT_STRIDE;
     if (edges & LR_HAVE_BOTTOM) {
         // Copy next loop filtered rows
-        const uint8_t *const below_1 = lpf + 6 * PXSTRIDE(lpf_stride);
-        const uint8_t *const below_2 = below_1 + PXSTRIDE(lpf_stride);
+        const uint8_t *const below_1 = lpf + 6 * PXSTRIDE(stride);
+        const uint8_t *const below_2 = below_1 + PXSTRIDE(stride);
         pixel_copy(dst_tl + stripe_h * REST_UNIT_STRIDE, below_1, unit_w);
         pixel_copy(dst_tl + (stripe_h + 1) * REST_UNIT_STRIDE, below_2, unit_w);
         pixel_copy(dst_tl + (stripe_h + 2) * REST_UNIT_STRIDE, below_2, unit_w);
     } else {
         // Pad with last row
-        const uint8_t *const src = p + (stripe_h - 1) * PXSTRIDE(p_stride);
+        const uint8_t *const src = p + (stripe_h - 1) * PXSTRIDE(stride);
         pixel_copy(dst_tl + stripe_h * REST_UNIT_STRIDE, src, unit_w);
         pixel_copy(dst_tl + (stripe_h + 1) * REST_UNIT_STRIDE, src, unit_w);
         pixel_copy(dst_tl + (stripe_h + 2) * REST_UNIT_STRIDE, src, unit_w);
@@ -269,7 +268,7 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
     for (int j = 0; j < stripe_h; j++) {
         pixel_copy(dst_tl + 3 * have_left, p + 3 * have_left, unit_w - 3 * have_left);
         dst_tl += REST_UNIT_STRIDE;
-        p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(stride);
     }
 
     if (!have_right) {
@@ -303,10 +302,9 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
 // (since first and last tops are always 0 for chroma)
 // FIXME Could implement a version that requires less temporary memory
 // (should be possible to implement with only 6 rows of temp storage)
-static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
+static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t stride,
                               const uint8_t (*const left)[4],
                               const uint8_t *lpf,
-                              const ptrdiff_t lpf_stride,
                               const int w, const int h,
                               const LooprestorationParams *const params,
                               const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
@@ -316,11 +314,11 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t p_stride,
     // Wiener filtering is applied to a maximum stripe height of 64 + 3 pixels
     // of padding above and below
     ALIGN_STK_16(uint8_t, tmp, 70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE,);
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    padding(tmp, p, stride, left, lpf, w, h, edges);
     ALIGN_STK_16(int32_t, hor, 70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE + 64,);
 
     wiener_filter_h_vsx(hor, tmp, filter[0], w, h);
-    wiener_filter_v_vsx(p, p_stride, hor, filter[1], w, h);
+    wiener_filter_v_vsx(p, stride, hor, filter[1], w, h);
 }
 #endif
 

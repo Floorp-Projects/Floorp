@@ -35,8 +35,11 @@
 
 #include "src/internal.h"
 
-void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
-                               /*const*/ pixel *const src[3], int sby);
+enum LrRestorePlanes {
+    LR_RESTORE_Y = 1 << 0,
+    LR_RESTORE_U = 1 << 1,
+    LR_RESTORE_V = 1 << 2,
+};
 
 void bytefn(dav1d_lr_sbrow)(Dav1dFrameContext *const f, pixel *const dst[3],
                             int sby);

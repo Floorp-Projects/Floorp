@@ -30,6 +30,42 @@
 
 #include "config.h"
 
+#if ARCH_AARCH64
+#define x18 do_not_use_x18
+#define w18 do_not_use_w18
+
+/* Support macros for the Armv8.5-A Branch Target Identification feature which
+ * requires emitting a .note.gnu.property section with the appropriate
+ * architecture-dependent feature bits set.
+ * Read more: "ELF for the Arm® 64-bit Architecture"
+ */
+#if defined(__ARM_FEATURE_BTI_DEFAULT) && (__ARM_FEATURE_BTI_DEFAULT == 1)
+#define GNU_PROPERTY_AARCH64_BTI (1 << 0)   // Has Branch Target Identification
+#define AARCH64_VALID_JUMP_CALL_TARGET hint #38  // BTI 'jc'
+#define AARCH64_VALID_CALL_TARGET      hint #34  // BTI 'c'
+#define AARCH64_VALID_JUMP_TARGET      hint #36  // BTI 'j'
+#else
+#define GNU_PROPERTY_AARCH64_BTI 0          // No Branch Target Identification
+#define AARCH64_VALID_JUMP_CALL_TARGET
+#define AARCH64_VALID_CALL_TARGET
+#define AARCH64_VALID_JUMP_TARGET
+#endif
+
+#if (GNU_PROPERTY_AARCH64_BTI != 0)
+        .pushsection .note.gnu.property, "a"
+        .balign 8
+        .long 4
+        .long 0x10
+        .long 0x5
+        .asciz "GNU"
+        .long 0xc0000000 /* GNU_PROPERTY_AARCH64_FEATURE_1_AND */
+        .long 4
+        .long GNU_PROPERTY_AARCH64_BTI
+        .long 0
+        .popsection
+#endif
+#endif
+
 #if ARCH_ARM
         .syntax unified
 #ifdef __ELF__
@@ -110,6 +146,11 @@ EXTERN\name:
 #endif
     .endif
 \name:
+#if ARCH_AARCH64
+    .if \export
+         AARCH64_VALID_CALL_TARGET
+    .endif
+#endif
 .endm
 
 .macro  const   name, export=0, align=2
@@ -147,9 +188,5 @@ EXTERN\name:
 
 #define X(x) CONCAT(EXTERN, x)
 
-#if ARCH_AARCH64
-#define x18 do_not_use_x18
-#define w18 do_not_use_w18
-#endif
 
 #endif /* DAV1D_SRC_ARM_ASM_S */
