@@ -7,13 +7,6 @@
 <body>
 <script>
 
-async function asyncPushPrefEnv(env) {
-  return new Promise(res => {
-    SpecialPowers.pushPrefEnv(env, res);
-  });
-}
-
-
 let gl, ext;
 
 function getStrings() {
@@ -48,15 +41,59 @@ function expectJsonEqual(was, expected, when) {
   ok(matches, str);
 }
 
-SimpleTest.waitForExplicitFinish();
+async function testKnownCiStrings() {
+  gl = document.createElement('canvas').getContext('webgl');
+  if (!gl) return;
 
-(async function() {
+  await SpecialPowers.pushPrefEnv({'set': [
+    ['webgl.sanitize-unmasked-renderer', false],
+  ]});
+  ext = gl.getExtension('WEBGL_debug_renderer_info');
+  const was = getStrings();
+
+  const KNOWN_ON_CI = {
+    renderer: [
+      'Adreno (TM) 540', // Android
+      'llvmpipe', // Linux
+      'Intel(R) HD Graphics 400', // Mac
+      'Apple M1', // Mac
+      'ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0)', // Windows
+    ],
+    vendor: [
+      'Mozilla',
+    ],
+    unmasked_renderer: [
+      'Adreno (TM) 540', // Android
+      'llvmpipe (LLVM 10.0.0, 256 bits)', // Linux
+      'Intel(R) UHD Graphics 630', // Mac
+      'Apple M1', // Mac
+      'ANGLE (NVIDIA, NVIDIA Tesla M60 Direct3D11 vs_5_0 ps_5_0, D3D11-23.21.13.9181)', // Windows
+    ],
+    unmasked_vendor: [
+      'Qualcomm', // Android
+      'VMware, Inc.', // Linux
+      'Intel Inc.', // Mac
+      'Apple', // Mac
+      'Google Inc. (NVIDIA)', // Windows
+    ],
+  };
+  for (const k in was) {
+    const wasVal = was[k];
+    const knownList = KNOWN_ON_CI[k];
+    ok(knownList.includes(wasVal),
+       `[ignore if not on CI] getParameter(${k}) -> ${wasVal} must be in KNOWN_ON_CI`);
+  }
+  await SpecialPowers.popPrefEnv();
+}
+
+// -
+
+async function testPrefBehavior() {
   const canvas = document.createElement('canvas');
   gl = canvas.getContext('webgl');
+  ext = null;
   if (!gl) {
     todo(gl, 'Get WebGL working here first.');
-    ok(true, 'Test complete.');
-    SimpleTest.finish();
     return;
   }
 
@@ -189,8 +226,14 @@ SimpleTest.waitForExplicitFinish();
     const was = getStrings();
     expectJsonEqual(was, EXPECTED, 'v90 behavior');
   }
+}
 
-  // -
+// -
+
+SimpleTest.waitForExplicitFinish();
+(async function() {
+  await testKnownCiStrings();
+  await testPrefBehavior();
 
   ok(true, 'Test complete.');
   SimpleTest.finish();
