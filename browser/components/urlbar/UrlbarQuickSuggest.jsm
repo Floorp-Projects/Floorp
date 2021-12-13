@@ -188,7 +188,7 @@ class Suggestions {
     return longerPhrase || trimmedQuery;
   }
 
-  /*
+  /**
    * An onboarding dialog can be shown to the users who are enrolled into
    * the QuickSuggest experiments or rollouts. This behavior is controlled
    * by the pref `browser.urlbar.quicksuggest.shouldShowOnboardingDialog`
@@ -198,6 +198,9 @@ class Suggestions {
    * wait for a few restarts before showing the QuickSuggest dialog. This can
    * be remotely configured by Nimbus through
    * `quickSuggestShowOnboardingDialogAfterNRestarts`, the default is 0.
+   *
+   * @returns {boolean}
+   *   True if the dialog was shown and false if not.
    */
   async maybeShowOnboardingDialog() {
     // If quicksuggest is not available, the onboarding dialog is configured to
@@ -207,21 +210,19 @@ class Suggestions {
       !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
       !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-      UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+      UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
     ) {
-      return;
+      return false;
     }
 
-    // Wait a number of restarts after the user will have seen the mr1 onboarding dialog
-    // before showing the quicksuggest one.
+    // Wait a number of restarts before showing the dialog.
     let restartsSeen = UrlbarPrefs.get(RESTARTS_PREF);
     if (
       restartsSeen <
       UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
     ) {
       UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
-      return;
+      return false;
     }
 
     let win = BrowserWindowTracker.getTopWindow();
@@ -257,15 +258,10 @@ class Suggestions {
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
-    // Record the user's opt-in choice on the user prefs branch regardless of
-    // what it was. These prefs are sticky, so they'll retain their user-branch
-    // values regardless of what the particular defaults were at the time. See
-    // UrlbarPrefs for details.
-    //
-    // Opting in enables both kinds of results and data collection.
+    // Record the user's opt-in choice on the user branch. This pref is sticky,
+    // so it will retain its user-branch value regardless of what the particular
+    // default was at the time.
     let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT;
-    UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", optedIn);
-    UrlbarPrefs.set("suggest.quicksuggest.sponsored", optedIn);
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
     switch (params.choice) {
@@ -300,6 +296,8 @@ class Suggestions {
       "opt_in_dialog",
       params.choice
     );
+
+    return true;
   }
 
   /**
