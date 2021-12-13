@@ -52,6 +52,7 @@ impl PulseContext {
     fn _new(name: Option<CString>) -> Result<Box<Self>> {
         let libpulse = unsafe { open() };
         if libpulse.is_none() {
+            cubeb_log!("libpulse not found");
             return Err(Error::error());
         }
 
@@ -128,11 +129,13 @@ impl PulseContext {
 
         if ctx.mainloop.start().is_err() {
             ctx.destroy();
+            cubeb_log!("Error: couldn't start pulse's mainloop");
             return Err(Error::error());
         }
 
         if ctx.context_init().is_err() {
             ctx.destroy();
+            cubeb_log!("Error: couldn't init pulse's context");
             return Err(Error::error());
         }
 
@@ -220,7 +223,7 @@ impl PulseContext {
                 if let Some(ref context) = ctx.context {
                     if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data)
                     {
-                        cubeb_log!("get_server_info ignored failure: {}", e);
+                        cubeb_log!("Error: get_server_info ignored failure: {}", e);
                     }
                 }
             }
@@ -244,7 +247,7 @@ impl PulseContext {
                 self.operation_wait(None, &o);
             } else {
                 self.mainloop.unlock();
-                cubeb_log!("Context subscribe failed");
+                cubeb_log!("Error: context subscribe failed");
                 return Err(Error::error());
             }
 
@@ -268,7 +271,10 @@ impl ContextOps for PulseContext {
     fn max_channel_count(&mut self) -> Result<u32> {
         match self.default_sink_info {
             Some(ref info) => Ok(u32::from(info.channel_map.channels)),
-            None => Err(Error::error()),
+            None => {
+                cubeb_log!("Error: couldn't get the max channel count");
+                Err(Error::error())
+            }
         }
     }
 
@@ -280,7 +286,10 @@ impl ContextOps for PulseContext {
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         match self.default_sink_info {
             Some(ref info) => Ok(info.sample_spec.rate),
-            None => Err(Error::error()),
+            None => {
+                cubeb_log!("Error: Couldn't get the preferred sample rate");
+                Err(Error::error())
+            }
         }
     }
 
@@ -592,6 +601,7 @@ impl PulseContext {
 
         let context_ptr: *mut c_void = self as *mut _ as *mut _;
         if self.context.is_none() {
+            cubeb_log!("Error: couldn't create pulse's context");
             return Err(Error::error());
         }
 
@@ -608,6 +618,7 @@ impl PulseContext {
         if !connected || !self.wait_until_context_ready() {
             self.mainloop.unlock();
             self.context_destroy();
+            cubeb_log!("Error: error while waiting for pulse's context to be ready");
             return Err(Error::error());
         }
 
