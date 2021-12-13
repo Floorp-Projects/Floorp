@@ -283,6 +283,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
   static intptr_t UnlinkTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    if (path && path[0] == '\0') {
+      // If the path is empty, then just fail the call here
+      return -ENOENT;
+    }
     return broker->Unlink(path);
   }
 
@@ -472,6 +476,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     auto fd = static_cast<int>(aArgs.args[0]);
     auto path = reinterpret_cast<const char*>(aArgs.args[1]);
     auto flags = static_cast<int>(aArgs.args[2]);
+    if (path && path[0] == '\0') {
+      // If the path is empty, then just fail the call here
+      return -ENOENT;
+    }
     if (fd != AT_FDCWD && path[0] != '/') {
       SANDBOX_LOG_ERROR("unsupported fd-relative unlinkat(%d, \"%s\", 0x%x)",
                         fd, path, flags);
