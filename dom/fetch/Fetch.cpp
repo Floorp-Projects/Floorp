@@ -6,6 +6,7 @@
 
 #include "Fetch.h"
 
+#include "js/Value.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIGlobalObject.h"
@@ -81,12 +82,15 @@ void AbortStream(JSContext* aCx, JS::Handle<JSObject*> aStream,
 class AbortSignalMainThread final : public AbortSignalImpl {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(AbortSignalMainThread)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AbortSignalMainThread)
 
-  explicit AbortSignalMainThread(bool aAborted) : AbortSignalImpl(aAborted) {}
+  explicit AbortSignalMainThread(bool aAborted)
+      : AbortSignalImpl(aAborted, JS::UndefinedHandleValue) {
+    mozilla::HoldJSObjects(this);
+  }
 
  private:
-  ~AbortSignalMainThread() = default;
+  ~AbortSignalMainThread() { mozilla::DropJSObjects(this); };
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignalMainThread)
@@ -98,6 +102,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AbortSignalMainThread)
   AbortSignalImpl::Traverse(static_cast<AbortSignalImpl*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AbortSignalMainThread)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReason)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortSignalMainThread)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -212,7 +220,7 @@ NS_IMPL_ISUPPORTS0(AbortSignalProxy)
 NS_IMETHODIMP WorkerSignalFollower::AbortSignalProxyRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
   AbortSignalImpl* signalImpl = mProxy->GetOrCreateSignalImplForMainThread();
-  signalImpl->SignalAbort();
+  signalImpl->SignalAbort(JS::UndefinedHandleValue);
   return NS_OK;
 }
 

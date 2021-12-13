@@ -30,25 +30,29 @@ class AbortSignal final : public DOMEventTargetHelper,
                           public AbortFollower {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AbortSignal, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(AbortSignal,
+                                                         DOMEventTargetHelper)
 
-  AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted);
+  AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted,
+              JS::Handle<JS::Value> aReason);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   IMPL_EVENT_HANDLER(abort);
 
-  static already_AddRefed<AbortSignal> Abort(GlobalObject& aGlobal);
+  static already_AddRefed<AbortSignal> Abort(GlobalObject& aGlobal,
+                                             JS::Handle<JS::Value> aReason,
+                                             ErrorResult& aRv);
 
   // AbortSignalImpl
-  void SignalAbort() override;
+  void SignalAbort(JS::Handle<JS::Value> aReason) override;
 
   // AbortFollower
-  void RunAbortAlgorithm() override { SignalAbort(); }
+  void RunAbortAlgorithm() override;
 
  private:
-  ~AbortSignal() = default;
+  ~AbortSignal();
 };
 
 }  // namespace dom
