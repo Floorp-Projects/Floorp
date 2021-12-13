@@ -11,7 +11,7 @@ Outputter to generate Javascript code for metrics.
 import enum
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable  # noqa
+from typing import Any, Dict, Optional, Callable
 
 from . import metrics
 from . import util
@@ -44,7 +44,7 @@ def javascript_datatypes_filter(value: util.JSONType) -> str:
 def class_name_factory(platform: str) -> Callable[[str], str]:
     """
     Returns a function that receives an obj_type and
-    returns the correct class name for that time in the current platform.
+    returns the correct class name for that type in the current platform.
     """
 
     def class_name(obj_type: str) -> str:
@@ -61,6 +61,16 @@ def class_name_factory(platform: str) -> Callable[[str], str]:
         return class_name
 
     return class_name
+
+
+def extra_type_name(extra_type: str) -> str:
+    """
+    Returns the equivalent TypeScript type to an extra type.
+    """
+    if extra_type == "quantity":
+        return "number"
+
+    return extra_type
 
 
 def import_path(obj_type: str) -> str:
@@ -113,9 +123,10 @@ def output(
         options = {}
 
     platform = options.get("platform", "webext")
-    if platform not in ["qt", "webext"]:
+    accepted_platforms = ["qt", "webext", "node"]
+    if platform not in accepted_platforms:
         raise ValueError(
-            f"Unknown platform: {platform}. Accepted platforms are qt and webext."
+            f"Unknown platform: {platform}. Accepted platforms are: {accepted_platforms}."  # noqa
         )
     version = options.get("version")
     if platform == "qt" and version is None:
@@ -127,6 +138,7 @@ def output(
         "javascript.jinja2",
         filters=(
             ("class_name", class_name_factory(platform)),
+            ("extra_type_name", extra_type_name),
             ("import_path", import_path),
             ("js", javascript_datatypes_filter),
             ("args", args),

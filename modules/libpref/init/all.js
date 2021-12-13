@@ -1961,6 +1961,7 @@ pref("intl.hyphenation-alias.en-*", "en-us");
 
 pref("intl.hyphenation-alias.af-*", "af");
 pref("intl.hyphenation-alias.bg-*", "bg");
+pref("intl.hyphenation-alias.bn-*", "bn");
 pref("intl.hyphenation-alias.ca-*", "ca");
 pref("intl.hyphenation-alias.cy-*", "cy");
 pref("intl.hyphenation-alias.da-*", "da");
@@ -1970,6 +1971,8 @@ pref("intl.hyphenation-alias.et-*", "et");
 pref("intl.hyphenation-alias.fi-*", "fi");
 pref("intl.hyphenation-alias.fr-*", "fr");
 pref("intl.hyphenation-alias.gl-*", "gl");
+pref("intl.hyphenation-alias.gu-*", "gu");
+pref("intl.hyphenation-alias.hi-*", "hi");
 pref("intl.hyphenation-alias.hr-*", "hr");
 pref("intl.hyphenation-alias.hsb-*", "hsb");
 pref("intl.hyphenation-alias.hu-*", "hu");
@@ -1977,17 +1980,29 @@ pref("intl.hyphenation-alias.ia-*", "ia");
 pref("intl.hyphenation-alias.is-*", "is");
 pref("intl.hyphenation-alias.it-*", "it");
 pref("intl.hyphenation-alias.kmr-*", "kmr");
+pref("intl.hyphenation-alias.kn-*", "kn");
 pref("intl.hyphenation-alias.la-*", "la");
 pref("intl.hyphenation-alias.lt-*", "lt");
+pref("intl.hyphenation-alias.ml-*", "ml");
 pref("intl.hyphenation-alias.mn-*", "mn");
 pref("intl.hyphenation-alias.nl-*", "nl");
+pref("intl.hyphenation-alias.or-*", "or");
+pref("intl.hyphenation-alias.pa-*", "pa");
 pref("intl.hyphenation-alias.pl-*", "pl");
 pref("intl.hyphenation-alias.pt-*", "pt");
 pref("intl.hyphenation-alias.ru-*", "ru");
 pref("intl.hyphenation-alias.sl-*", "sl");
 pref("intl.hyphenation-alias.sv-*", "sv");
+pref("intl.hyphenation-alias.ta-*", "ta");
+pref("intl.hyphenation-alias.te-*", "te");
 pref("intl.hyphenation-alias.tr-*", "tr");
 pref("intl.hyphenation-alias.uk-*", "uk");
+
+// Assamese and Marathi use the same patterns as Bengali and Hindi respectively
+pref("intl.hyphenation-alias.as", "bn");
+pref("intl.hyphenation-alias.as-*", "bn");
+pref("intl.hyphenation-alias.mr", "hi");
+pref("intl.hyphenation-alias.mr-*", "hi");
 
 // use reformed (1996) German patterns by default unless specifically tagged as de-1901
 // (these prefs may soon be obsoleted by better BCP47-based tag matching, but for now...)

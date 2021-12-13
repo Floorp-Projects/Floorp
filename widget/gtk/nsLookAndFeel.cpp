@@ -1549,7 +1549,10 @@ void nsLookAndFeel::PerThemeData::Init() {
     g_object_unref(accelStyle);
   }
 
-  style = GetStyleContext(MOZ_GTK_HEADER_BAR);
+  const auto effectiveHeaderBarStyle =
+      HeaderBarShouldDrawContainer(MOZ_GTK_HEADER_BAR) ? MOZ_GTK_HEADERBAR_FIXED
+                                                       : MOZ_GTK_HEADER_BAR;
+  style = GetStyleContext(effectiveHeaderBarStyle);
   {
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     mTitlebarText = GDK_RGBA_TO_NS_RGBA(color);
@@ -1559,15 +1562,7 @@ void nsLookAndFeel::PerThemeData::Init() {
     mTitlebarInactiveText = GDK_RGBA_TO_NS_RGBA(color);
     mTitlebarInactiveBackground =
         GetBackgroundColor(style, mTitlebarText, GTK_STATE_FLAG_BACKDROP);
-    mTitlebarRadius = 0;
-    if (!IsSolidCSDStyleUsed()) {
-      mTitlebarRadius = GetBorderRadius(style);
-      if (!mTitlebarRadius) {
-        // Some themes like ElementaryOS set the radius on the headerbar parent.
-        style = GetStyleContext(MOZ_GTK_HEADERBAR_FIXED);
-        mTitlebarRadius = GetBorderRadius(style);
-      }
-    }
+    mTitlebarRadius = IsSolidCSDStyleUsed() ? 0 : GetBorderRadius(style);
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);

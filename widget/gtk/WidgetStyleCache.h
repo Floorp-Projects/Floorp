@@ -58,4 +58,6 @@ void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor);
 
 gint GetBorderRadius(GtkStyleContext* aStyle);
 
+bool HeaderBarShouldDrawContainer(WidgetNodeType);
+
 #endif  // WidgetStyleCache_h
