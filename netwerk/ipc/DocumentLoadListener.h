@@ -12,7 +12,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
-#include "EarlyHintsPreloader.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PDocumentChannelParent.h"
@@ -20,7 +19,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIBrowser.h"
 #include "nsIChannelEventSink.h"
-#include "nsIEarlyHintObserver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIParentChannel.h"
@@ -97,8 +95,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
                              public nsIMultiPartChannelListener,
-                             public nsIProgressEventSink,
-                             public nsIEarlyHintObserver {
+                             public nsIProgressEventSink {
  public:
   // See the comment on GetLoadingBrowsingContext for explanation of
   // aLoadingBrowsingContext.
@@ -213,7 +210,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSIPROGRESSEVENTSINK
-  NS_DECL_NSIEARLYHINTOBSERVER
 
   // We suspend the underlying channel when replacing ourselves with
   // the real listener channel.
@@ -593,8 +589,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   bool mOpenPromiseResolved = false;
 
   const bool mIsDocumentLoad;
-
-  EarlyHintsPreloader mEarlyHintsPreloader;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)

@@ -16923,40 +16923,5 @@
     "n_values": 3,
     "keyed": true,
     "description": "Users action on blocked download, keyed by verdict type (0=Number of blocked downloads, 1=Confirm block, 2=Confirm unblock)"
-  },
-  "EH_NUM_OF_HINTS_PER_PAGE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1743630],
-    "expires_in_version": "103",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 30,
-    "n_buckets": 20,
-    "description": "Number of 103 responses received for a top level load."
-  },
-  "EH_FINAL_RESPONSE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1743630],
-    "expires_in_version": "103",
-    "releaseChannelCollection": "opt-out",
-    "kind": "categorical",
-    "labels": ["R2xx", "R3xx", "R4xx", "Other", "Cancel"],
-    "description": "The final response status code after one or more 103 responses."
-  },
-  "EH_TIME_TO_FINAL_RESPONSE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1743630],
-    "expires_in_version": "103",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 100,
-    "description": "Collect the time elapsed between receiving a 103 response and the final response for a page load."
   }
 }
