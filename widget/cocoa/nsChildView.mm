@@ -4344,6 +4344,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
           nsCOMPtr<nsIDragService> dragService = mDragService;
           dragService->EndDragSession(false, nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
         }
+        break;
       }
       default:
         break;
