@@ -56,6 +56,7 @@ var gSearchResultsPane = {
       "preferences";
     let helpContainer = document.getElementById("need-help");
     helpContainer.querySelector("a").href = helpUrl;
+    ensureScrollPadding();
   },
 
   async handleEvent(event) {
