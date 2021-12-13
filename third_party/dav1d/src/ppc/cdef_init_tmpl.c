@@ -54,7 +54,7 @@ static inline i16x8 vconstrain(const i16x8 diff, const int16_t threshold,
 static inline void copy4xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
                            const uint8_t *src, const ptrdiff_t src_stride,
                            const uint8_t (*left)[2], const uint8_t *const top,
-                           const int w, const int h,
+                           const uint8_t *const bottom, const int w, const int h,
                            const enum CdefEdgeFlags edges)
 {
     const u16x8 fill = vec_splats((uint16_t)INT16_MAX);
@@ -82,8 +82,8 @@ static inline void copy4xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
         l1 = fill;
         y_end -= 2;
     } else {
-        l0 = u8h_to_u16(vec_vsx_ld(0, src - 2 + (h + 0) * src_stride));
-        l1 = u8h_to_u16(vec_vsx_ld(0, src - 2 + (h + 1) * src_stride));
+        l0 = u8h_to_u16(vec_vsx_ld(0, bottom + 0 * src_stride - 2));
+        l1 = u8h_to_u16(vec_vsx_ld(0, bottom + 1 * src_stride - 2));
     }
 
     vec_st(l0, 0, tmp + (h + 0) * 8);
@@ -116,7 +116,7 @@ static inline void copy4xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
 static inline void copy8xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
                            const uint8_t *src, const ptrdiff_t src_stride,
                            const uint8_t (*left)[2], const uint8_t *const top,
-                           const int w, const int h,
+                           const uint8_t *const bottom, const int w, const int h,
                            const enum CdefEdgeFlags edges)
 {
     const u16x8 fill = vec_splats((uint16_t)INT16_MAX);
@@ -154,8 +154,8 @@ static inline void copy8xN(uint16_t *tmp, const ptrdiff_t tmp_stride,
         l1l = fill;
         y_end -= 2;
     } else {
-        u8x16 l0 = vec_vsx_ld(0, src - 2 + (h + 0) * src_stride);
-        u8x16 l1 = vec_vsx_ld(0, src - 2 + (h + 1) * src_stride);
+        u8x16 l0 = vec_vsx_ld(0, bottom + 0 * src_stride - 2);
+        u8x16 l1 = vec_vsx_ld(0, bottom + 1 * src_stride - 2);
         l0h = u8h_to_u16(l0);
         l0l = u8l_to_u16(l0);
         l1h = u8h_to_u16(l1);
@@ -276,8 +276,8 @@ static inline i16x8 max_mask(i16x8 a, i16x8 b) {
 static inline void
 filter_4xN(pixel *dst, const ptrdiff_t dst_stride,
            const pixel (*left)[2], const pixel *const top,
-           const int w, const int h, const int pri_strength,
-           const int sec_strength, const int dir,
+           const pixel *const bottom, const int w, const int h,
+           const int pri_strength, const int sec_strength, const int dir,
            const int damping, const enum CdefEdgeFlags edges,
            const ptrdiff_t tmp_stride, uint16_t *tmp)
 {
@@ -302,8 +302,8 @@ filter_4xN(pixel *dst, const ptrdiff_t dst_stride,
     const int off2_1 = cdef_directions[(dir + 2) & 7][1];
     const int off3_1 = cdef_directions[(dir + 6) & 7][1];
 
+    copy4xN(tmp - 2, tmp_stride, dst, dst_stride, left, top, bottom, w, h, edges);
 
-    copy4xN(tmp - 2, tmp_stride, dst, dst_stride, left, top, w, h, edges);
     for (int y = 0; y < h / 2; y++) {
         LOAD_PIX4(tmp)
 
@@ -365,8 +365,8 @@ filter_4xN(pixel *dst, const ptrdiff_t dst_stride,
 static inline void
 filter_8xN(pixel *dst, const ptrdiff_t dst_stride,
            const pixel (*left)[2], const pixel *const top,
-           const int w, const int h, const int pri_strength,
-           const int sec_strength, const int dir,
+           const pixel *const bottom, const int w, const int h,
+           const int pri_strength, const int sec_strength, const int dir,
            const int damping, const enum CdefEdgeFlags edges,
            const ptrdiff_t tmp_stride, uint16_t *tmp)
 {
@@ -393,7 +393,7 @@ filter_8xN(pixel *dst, const ptrdiff_t dst_stride,
     const int off2_1 = cdef_directions[(dir + 2) & 7][1];
     const int off3_1 = cdef_directions[(dir + 6) & 7][1];
 
-    copy8xN(tmp - 2, tmp_stride, dst, dst_stride, left, top, w, h, edges);
+    copy8xN(tmp - 2, tmp_stride, dst, dst_stride, left, top, bottom, w, h, edges);
 
     for (int y = 0; y < h; y++) {
         LOAD_PIX(tmp)
@@ -457,6 +457,7 @@ static void cdef_filter_##w##x##h##_vsx(pixel *const dst, \
                                         const ptrdiff_t dst_stride, \
                                         const pixel (*left)[2], \
                                         const pixel *const top, \
+                                        const pixel *const bottom, \
                                         const int pri_strength, \
                                         const int sec_strength, \
                                         const int dir, \
@@ -465,8 +466,8 @@ static void cdef_filter_##w##x##h##_vsx(pixel *const dst, \
 { \
     ALIGN_STK_16(uint16_t, tmp_buf, 12 * tmp_stride,); \
     uint16_t *tmp = tmp_buf + 2 * tmp_stride + 2; \
-    filter_##w##xN(dst, dst_stride, left, top, w, h, pri_strength, sec_strength, \
-                   dir, damping, edges, tmp_stride, tmp); \
+    filter_##w##xN(dst, dst_stride, left, top, bottom, w, h, pri_strength, \
+                   sec_strength, dir, damping, edges, tmp_stride, tmp); \
 }
 
 cdef_fn(4, 4, 8);
