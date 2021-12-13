@@ -177,12 +177,6 @@ can be toggled in the following ways:
 - The user can toggle it in the preferences UI.
 - The user can toggle it in about:config.
 
-The event is also recorded when the user opts in to the online modal dialog,
-with one exception: If the user has at all toggled non-sponsored suggestions
-using the preferences UI or about:config and they are enabled at the time the
-user opts in to the modal, then the pref's user value is already true. Opting in
-doesn't change the user value, so no event is recorded.
-
 The event's objects are the following:
 
 :enabled:
@@ -200,8 +194,14 @@ Changelog
     ``browser.urlbar.suggest.quicksuggest.nonsponsored``, and this event now
     corresponds to the latter pref. [Bug 1735976_]
 
+  Firefox 96:
+    The event is no longer recorded when the user interacts with the online
+    modal dialog since the ``browser.urlbar.suggest.quicksuggest.nonsponsored``
+    pref is no longer set when the user opts in or out. [Bug 1740965_]
+
 .. _1693126: https://bugzilla.mozilla.org/show_bug.cgi?id=1693126
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
+.. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
 contextservices.quicksuggest.opt_in_dialog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,12 +250,6 @@ be toggled in the following ways:
 - The user can toggle it in the preferences UI.
 - The user can toggle it in about:config.
 
-The event is also recorded when the user opts in to the online modal dialog,
-with one exception: If the user has at all toggled sponsored suggestions using
-the preferences UI or about:config and they are enabled at the time the user
-opts in to the modal, then the pref's user value is already true. Opting in
-doesn't change the user value, so no event is recorded.
-
 The event's objects are the following:
 
 :enabled:
@@ -267,7 +261,13 @@ Changelog
   Firefox 92.0.1
     Introduced. [Bug 1728430_]
 
+  Firefox 96:
+    The event is no longer recorded when the user interacts with the online
+    modal dialog since the ``browser.urlbar.suggest.quicksuggest.sponsored``
+    pref is no longer set when the user opts in or out. [Bug 1740965_]
+
 .. _1728430: https://bugzilla.mozilla.org/show_bug.cgi?id=1728430
+.. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
 Environment
 -----------
@@ -343,31 +343,47 @@ Changelog
 browser.urlbar.suggest.quicksuggest.nonsponsored
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This boolean pref records whether non-sponsored suggestions are enabled. In the
-offline scenario, it is true by default. In the online scenario, it is false by
-default and set to true when the user opts in. The user can also toggle it in
-the preferences UI and about:config.
+This boolean pref records whether non-sponsored suggestions are enabled. In both
+the offline and online scenarios it is true by default. The user can also toggle
+it in the preferences UI and about:config.
 
 Changelog
   Firefox 94.0.2
     Introduced. It replaces ``browser.urlbar.suggest.quicksuggest``. [Bug
     1735976_]
 
+  Firefox 96:
+    The pref is now true by default in the online scenario. Previously it was
+    false by default in online. For users who were enrolled in the online
+    scenario in older versions and who did not opt in or otherwise enable
+    non-sponsored suggestions, the pref will remain false when upgrading. For
+    all other users, it will default to true when/if they are enrolled in
+    online. [Bug 1740965_]
+
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
+.. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
 browser.urlbar.suggest.quicksuggest.sponsored
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This boolean pref records whether sponsored suggestions are enabled. In the
-offline scenario, it is true by default. In the online scenario, it is false by
-default and set to true when the user opts in. The user can also toggle it in
-the preferences UI and about:config.
+This boolean pref records whether sponsored suggestions are enabled. In both the
+offline and online scenarios it is true by default. The user can also toggle it
+in the preferences UI and about:config.
 
 Changelog
   Firefox 92.0.1
     Introduced. [Bug 1730721_]
 
+  Firefox 96:
+    The pref is now true by default in the online scenario. Previously it was
+    false by default in online. For users who were enrolled in the online
+    scenario in older versions and who did not opt in or otherwise enable
+    sponsored suggestions, the pref will remain false when upgrading. For all
+    other users, it will default to true when/if they are enrolled in
+    online. [Bug 1740965_]
+
 .. _1730721: https://bugzilla.mozilla.org/show_bug.cgi?id=1730721
+.. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
 Contextual Services Pings
 -------------------------
