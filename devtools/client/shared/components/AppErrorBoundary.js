@@ -18,18 +18,27 @@ loader.lazyGetter(this, "L10N", function() {
   );
 });
 
-// File a bug for the Net Monitor specifically
+loader.lazyGetter(this, "FILE_BUG_BUTTON", function() {
+  return L10N.getStr("appErrorBoundary.fileBugButton");
+});
+
+loader.lazyGetter(this, "RELOAD_PAGE_INFO", function() {
+  return L10N.getStr("appErrorBoundary.reloadPanelInfo");
+});
+
+// File a bug for the selected component specifically
 const bugLink =
   "https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=";
 
 /**
- * Error boundary that wraps around the main App component.
+ * Error boundary that wraps around the a given component.
  */
 class AppErrorBoundary extends Component {
   static get propTypes() {
     return {
       children: PropTypes.any.isRequired,
       panel: PropTypes.any.isRequired,
+      componentName: PropTypes.string.isRequired,
     };
   }
 
@@ -109,17 +118,21 @@ class AppErrorBoundary extends Component {
     const compStack = this.getValidInfo(this.state.errorInfo).componentStack;
     const errorMsg = this.state.errorMsg;
     const msg = (errorMsg + compStack).replace(/\n/gi, "%0A");
-    return `${bugLink}${this.props.panel}&comment=${msg}`;
+    return `${bugLink}${this.props.componentName}&comment=${msg}`;
   }
 
   render() {
     if (this.state.errorInfo !== null) {
+      // "The (componentDesc) has crashed"
+      const errorDescription = L10N.getFormatStr(
+        "appErrorBoundary.description",
+        this.props.panel
+      );
       return div(
-        { className: "app-error-panel" },
-        h1(
-          { className: "error-panel-header" },
-          L10N.getFormatStr("appErrorBoundary.description", this.props.panel)
-        ),
+        {
+          className: `app-error-panel`,
+        },
+        h1({ className: "error-panel-header" }, errorDescription),
         a(
           {
             className: "error-panel-file-button",
@@ -128,15 +141,12 @@ class AppErrorBoundary extends Component {
               window.open(this.getBugLink(), "_blank");
             },
           },
-          L10N.getStr("appErrorBoundary.fileBugButton")
+          FILE_BUG_BUTTON
         ),
         h2({ className: "error-panel-error" }, this.state.errorMsg),
         div({}, this.renderErrorInfo(this.state.errorInfo)),
         div({}, this.renderStackTrace(this.state.errorStack)),
-        p(
-          { className: "error-panel-reload-info" },
-          L10N.getStr("appErrorBoundary.reloadPanelInfo")
-        )
+        p({ className: "error-panel-reload-info" }, RELOAD_PAGE_INFO)
       );
     }
     return this.props.children;

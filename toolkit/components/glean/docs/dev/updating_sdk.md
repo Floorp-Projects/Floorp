@@ -12,6 +12,7 @@ To update the dependency:
 2. Run `mach vendor rust`.
    This fetches all dependencies and adds them to `third_pary/rust`.
 3. Update the version of `gleanVersion` in `build.gradle` to the same version.
+4. Update the version of `glean-sdk` in `build/mach_virtualenv_packages.txt`.
 
 ## Version mismatches of Rust dependencies
 

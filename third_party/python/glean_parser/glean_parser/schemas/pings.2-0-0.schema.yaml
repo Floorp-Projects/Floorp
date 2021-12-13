@@ -62,6 +62,22 @@ additionalProperties:
         syntax](https://www.markdownguide.org/basic-syntax/).
       type: string
 
+    metadata:
+      title: Metadata
+      description: |
+        Additional metadata about this ping. Currently limited to a list of
+        tags.
+      type: object
+      properties:
+        tags:
+          title: Tags
+          description: Which tags are specified for this ping.
+          type: array
+          items:
+            type: string
+            maxLength: 80
+      default: {}
+
     include_client_id:
       title: Include client id
       description: |

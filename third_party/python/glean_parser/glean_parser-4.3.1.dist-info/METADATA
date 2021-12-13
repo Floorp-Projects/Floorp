@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 3.6.0
+Version: 4.3.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: Michael Droettboom
@@ -16,12 +16,13 @@ Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
 Description-Content-Type: text/markdown
 Requires-Dist: appdirs (>=1.4)
 Requires-Dist: Click (>=7)
 Requires-Dist: diskcache (>=4)
 Requires-Dist: Jinja2 (>=2.10.1)
-Requires-Dist: jsonschema (<4,>=3.0.2)
+Requires-Dist: jsonschema (>=3.0.2)
 Requires-Dist: PyYAML (>=5.3.1)
 Requires-Dist: yamllint (>=1.18.0)
 Requires-Dist: iso8601 (>=0.1.10) ; python_version <= "3.6"
@@ -84,6 +85,42 @@ $ glean_parser check < ping.json
 
 ## Unreleased
 
+## 4.3.1
+
+- BUGFIX: Skip tags for code generation ([#409](https://github.com/mozilla/glean_parser/pull/409))
+
+## 4.3.0
+
+- Support tags in glean parser ([bug 1734011](https://bugzilla.mozilla.org/show_bug.cgi?id=1734011))
+
+## 4.2.0
+
+- Improve the schema validation error messages. They will no longer include `OrderedDict(...)` on Python 3.7 and later ([bug 1733395](https://bugzilla.mozilla.org/show_bug.cgi?id=1733395))
+- Officially support Python 3.10
+
+## 4.1.1 (2021-09-28)
+
+- Update private import paths on Javascript / Typescript templates. ([bug 1702468](https://bugzilla.mozilla.org/show_bug.cgi?id=1702468))
+
+## 4.1.0 (2021-09-16)
+
+- Add support for Node.js platform on Javascript / Typescript templates. ([bug 1728982](https://bugzilla.mozilla.org/show_bug.cgi?id=1728982))
+
+## 4.0.0 (2021-08-20)
+
+- Add support for Text metric type ([#374](https://github.com/mozilla/glean_parser/pull/374))
+- Reserve the `default` ping name. It can't be used as a ping name, but it can be used in `send_in_pings` ([#376](https://github.com/mozilla/glean_parser/pull/376))
+
+## 3.8.0 (2021-08-18)
+
+- Expose ping reasons enum on JavaScript / TypeScript templates. ([bug 1719136](https://bugzilla.mozilla.org/show_bug.cgi?id=1719136))
+- Define an interface with the allowed extras for each event on the TypeScript template. ([bug 1693487](https://bugzilla.mozilla.org/show_bug.cgi?id=1693487))
+
+## 3.7.0 (2021-07-13)
+
+- New lint: Check for redundant words in ping names ([#355](https://github.com/mozilla/glean_parser/pull/355))
+- Add support for URL metric type ([#361](https://github.com/mozilla/glean_parser/pull/361))
+
 ## 3.6.0 (2021-06-11)
 
 - Add a command `data-review` to generate a skeleton Data Review Request for all metrics matching a supplied bug number. ([bug 1704541](https://bugzilla.mozilla.org/show_bug.cgi?id=1704541))
@@ -99,9 +136,9 @@ $ glean_parser check < ping.json
 
 ## 3.4.0 (2021-05-28)
 
-- Add missing import for Kotlin code ([#339](https://github.com/mozilla/glean_parser/pull/341))
-- Use a plain Kotlin type in the generated interface implementation ([#339](https://github.com/mozilla/glean_parser/pull/341))
-- Generate additional generics for event metrics ([#339](https://github.com/mozilla/glean_parser/pull/341))
+- Add missing import for Kotlin code ([#339](https://github.com/mozilla/glean_parser/pull/339))
+- Use a plain Kotlin type in the generated interface implementation ([#339](https://github.com/mozilla/glean_parser/pull/339))
+- Generate additional generics for event metrics ([#339](https://github.com/mozilla/glean_parser/pull/339))
 - For Kotlin skip generating `GleanBuildInfo.kt` when requested (with `with_buildinfo=false`) ([#341](https://github.com/mozilla/glean_parser/pull/341))
 
 ## 3.3.2 (2021-05-18)

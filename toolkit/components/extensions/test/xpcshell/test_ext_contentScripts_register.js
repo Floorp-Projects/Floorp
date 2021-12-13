@@ -380,6 +380,12 @@ add_task(async function test_contentscripts_register_js() {
         js: [{ code: `(${textScriptCodeIdle})()` }],
         runAt: "document_idle",
       },
+      {
+        matches: ["http://localhost/*/file_sample.html"],
+        js: [{ code: `(${textScriptCodeIdle})()` }],
+        runAt: "document_idle",
+        cookieStoreId: "firefox-container-1",
+      },
       // Extension URLs.
       {
         matches: ["http://localhost/*/file_sample.html"],
@@ -400,6 +406,12 @@ add_task(async function test_contentscripts_register_js() {
         matches: ["http://localhost/*/file_sample.html"],
         js: [{ file: "content_script.js" }],
         // "runAt" is not specified here to ensure that it defaults to document_idle when missing.
+      },
+      {
+        matches: ["http://localhost/*/file_sample.html"],
+        js: [{ file: "content_script_idle.js" }],
+        runAt: "document_idle",
+        cookieStoreId: "firefox-container-1",
       },
     ];
 
@@ -552,7 +564,14 @@ add_task(async function test_contentscripts_register_all_options() {
   );
 
   const script = policy.contentScripts[0];
-  let { allFrames, cssPaths, jsPaths, matchAboutBlank, runAt } = script;
+  let {
+    allFrames,
+    cssPaths,
+    jsPaths,
+    matchAboutBlank,
+    runAt,
+    originAttributesPatterns,
+  } = script;
 
   deepEqual(
     {
@@ -561,6 +580,7 @@ add_task(async function test_contentscripts_register_all_options() {
       jsPaths,
       matchAboutBlank,
       runAt,
+      originAttributesPatterns,
     },
     {
       allFrames: true,
@@ -568,6 +588,7 @@ add_task(async function test_contentscripts_register_all_options() {
       jsPaths: [`${baseExtURL}/content_script.js`],
       matchAboutBlank: true,
       runAt: "document_start",
+      originAttributesPatterns: null,
     },
     "Got the expected content script properties"
   );
@@ -586,6 +607,201 @@ add_task(async function test_contentscripts_register_all_options() {
     !script.matchesURI(Services.io.newURI("http://localhost/ok_exclude.html")),
     "exclude globs should not match"
   );
+
+  await extension.unload();
+});
+
+add_task(async function test_contentscripts_register_cookieStoreId() {
+  async function background() {
+    let cookieStoreIdCSSArray = [
+      { id: null, color: "rgb(123, 45, 67)" },
+      { id: "firefox-private", color: "rgb(255,255,0)" },
+      { id: "firefox-default", color: "red" },
+      { id: "firefox-container-1", color: "green" },
+      { id: "firefox-container-2", color: "blue" },
+      {
+        id: ["firefox-container-3", "firefox-container-4"],
+        color: "rgb(100,100,0)",
+      },
+    ];
+    const matches = ["http://localhost/*/file_sample_registered_styles.html"];
+
+    for (let { id, color } of cookieStoreIdCSSArray) {
+      await browser.contentScripts.register({
+        css: [
+          {
+            code: `#registered-extension-text-style {
+              background-color: ${color}}`,
+          },
+        ],
+        matches,
+        runAt: "document_start",
+        cookieStoreId: id,
+      });
+    }
+    await browser.test.assertRejects(
+      browser.contentScripts.register({
+        css: [{ code: `body {}` }],
+        matches,
+        cookieStoreId: "not_a_valid_cookieStoreId",
+      }),
+      /Invalid cookieStoreId/,
+      "contentScript.register with an invalid cookieStoreId"
+    );
+
+    if (!navigator.userAgent.includes("Android")) {
+      await browser.test.assertRejects(
+        browser.contentScripts.register({
+          css: [{ code: `body {}` }],
+          matches,
+          cookieStoreId: "firefox-container-999",
+        }),
+        /Invalid cookieStoreId/,
+        "contentScript.register with an invalid cookieStoreId"
+      );
+    } else {
+      // On Android, any firefox-container-... is treated as valid, so it doesn't
+      // result in an error.
+      // TODO bug 1743616: Fix implementation and remove this branch.
+      await browser.contentScripts.register({
+        css: [{ code: `body {}` }],
+        matches,
+        cookieStoreId: "firefox-container-999",
+      });
+    }
+
+    await browser.test.assertRejects(
+      browser.contentScripts.register({
+        css: [{ code: `body {}` }],
+        matches,
+        cookieStoreId: "",
+      }),
+      /Invalid cookieStoreId/,
+      "contentScript.register with an invalid cookieStoreId"
+    );
+
+    browser.test.sendMessage("background_ready");
+  }
+
+  const extensionData = {
+    manifest: {
+      permissions: [
+        "http://localhost/*/file_sample_registered_styles.html",
+        "<all_urls>",
+      ],
+      content_scripts: [
+        {
+          matches: ["http://localhost/*/file_sample_registered_styles.html"],
+          run_at: "document_idle",
+          js: ["check_applied_styles.js"],
+        },
+      ],
+    },
+    background,
+    files: {
+      "check_applied_styles.js": check_applied_styles,
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({
+    ...extensionData,
+    incognitoOverride: "spanning",
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background_ready");
+  //  Index 0 is the one from manifest.json.
+  let contentScriptMatchTests = [
+    {
+      contentPageOptions: { userContextId: 5 },
+      expectedStyles: "rgb(123, 45, 67)",
+      originAttributesPatternExpected: null,
+      contentScriptIndex: 1,
+    },
+    {
+      contentPageOptions: { privateBrowsing: true },
+      expectedStyles: "rgb(255, 255, 0)",
+      originAttributesPatternExpected: [
+        {
+          privateBrowsingId: 1,
+          userContextId: 0,
+        },
+      ],
+      contentScriptIndex: 2,
+    },
+    {
+      contentPageOptions: { userContextId: 0 },
+      expectedStyles: "rgb(255, 0, 0)",
+      originAttributesPatternExpected: [
+        {
+          privateBrowsingId: 0,
+          userContextId: 0,
+        },
+      ],
+      contentScriptIndex: 3,
+    },
+    {
+      contentPageOptions: { userContextId: 1 },
+      expectedStyles: "rgb(0, 128, 0)",
+      originAttributesPatternExpected: [{ userContextId: 1 }],
+      contentScriptIndex: 4,
+    },
+    {
+      contentPageOptions: { userContextId: 2 },
+      expectedStyles: "rgb(0, 0, 255)",
+      originAttributesPatternExpected: [{ userContextId: 2 }],
+      contentScriptIndex: 5,
+    },
+    {
+      contentPageOptions: { userContextId: 3 },
+      expectedStyles: "rgb(100, 100, 0)",
+      originAttributesPatternExpected: [
+        { userContextId: 3 },
+        { userContextId: 4 },
+      ],
+      contentScriptIndex: 6,
+    },
+    {
+      contentPageOptions: { userContextId: 4 },
+      expectedStyles: "rgb(100, 100, 0)",
+      originAttributesPatternExpected: [
+        { userContextId: 3 },
+        { userContextId: 4 },
+      ],
+      contentScriptIndex: 6,
+    },
+  ];
+
+  const policy = WebExtensionPolicy.getByID(extension.id);
+
+  for (const testCase of contentScriptMatchTests) {
+    const {
+      contentPageOptions,
+      expectedStyles,
+      originAttributesPatternExpected,
+      contentScriptIndex,
+    } = testCase;
+    const script = policy.contentScripts[contentScriptIndex];
+
+    deepEqual(script.originAttributesPatterns, originAttributesPatternExpected);
+    let contentPage = await ExtensionTestUtils.loadContentPage(
+      `about:blank`,
+      contentPageOptions
+    );
+    await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
+
+    let registeredStylesResults = await extension.awaitMessage(
+      "registered-styles-results"
+    );
+
+    equal(
+      registeredStylesResults.registeredExtensionBlobStyleBG,
+      expectedStyles,
+      `Expected styles applied on content page loaded with options 
+      ${JSON.stringify(contentPageOptions)}`
+    );
+    await contentPage.close();
+  }
 
   await extension.unload();
 });

@@ -16,7 +16,9 @@ from typing import Any, Dict, List, Optional, Union  # noqa
 
 from . import metrics
 from . import pings
+from . import tags
 from . import util
+from .util import DictWrapper
 
 
 def kotlin_datatypes_filter(value: util.JSONType) -> str:
@@ -176,9 +178,7 @@ def output_gecko_lookup(
     #   },
     #   "other-type": {}
     # }
-    gecko_metrics: OrderedDict[
-        str, OrderedDict[str, List[Dict[str, str]]]
-    ] = OrderedDict()
+    gecko_metrics: Dict[str, Dict[str, List[Dict[str, str]]]] = DictWrapper()
 
     # Define scalar-like types.
     SCALAR_LIKE_TYPES = ["boolean", "string", "quantity"]
@@ -188,8 +188,10 @@ def output_gecko_lookup(
         # Glean SDK and GeckoView. See bug 1566356 for more context.
         for metric in category_val.values():
             # This is not a Gecko metric, skip it.
-            if isinstance(metric, pings.Ping) or not getattr(
-                metric, "gecko_datapoint", False
+            if (
+                isinstance(metric, pings.Ping)
+                or isinstance(metric, tags.Tag)
+                or not getattr(metric, "gecko_datapoint", False)
             ):
                 continue
 

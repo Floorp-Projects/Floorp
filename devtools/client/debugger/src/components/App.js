@@ -278,7 +278,7 @@ class App extends Component {
     return (
       <div className={classnames("debugger")}>
         <AppErrorBoundary
-          className="app-error-boundary"
+          componentName="Debugger"
           panel={L10N.getStr("ToolboxDebugger.label")}
         >
           <A11yIntention>

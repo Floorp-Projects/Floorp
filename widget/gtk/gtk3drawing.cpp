@@ -2177,15 +2177,12 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
 
   // Some themes like Elementary's style the container of the headerbar rather
   // than the header bar itself.
-  if (!GetBorderRadius(style)) {
+  if (HeaderBarShouldDrawContainer(widgetType)) {
     auto containerType = widgetType == MOZ_GTK_HEADER_BAR
                              ? MOZ_GTK_HEADERBAR_FIXED
                              : MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED;
-    GtkStyleContext* containerStyle = GetStyleContext(
-        containerType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
-    if (GetBorderRadius(containerStyle)) {
-      style = containerStyle;
-    }
+    style = GetStyleContext(containerType, state->scale, GTK_TEXT_DIR_NONE,
+                            state_flags);
   }
 
 // Some themes (Adwaita for instance) draws bold dark line at
