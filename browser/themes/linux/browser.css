@@ -398,6 +398,11 @@ menuitem.bookmark-item {
     border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
   }
 
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) ::backdrop {
+    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
+  }
+
   /* On Wayland the compositor draws the titlebar border and shadow as well, so
    * trim it by setting the radius on an ancestor of the toolbox-background */
   @media (-moz-gtk-wayland) {
