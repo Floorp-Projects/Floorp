@@ -7,7 +7,7 @@ manifest: testing/raptor/raptor/raptor.ini
 static-only: False
 suites:
     desktop:
-        description: "Tests for page-load performance. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)"
+        description: "Tests for page-load performance. The links direct to the actual websites that are being tested."
         tests:
             amazon: "BT, FF, CH, CU"
             bing-search: "BT, FF, CH, CU"
@@ -43,7 +43,7 @@ suites:
             yahoo-mail: "BT, FF, CH, CU"
             youtube: "BT, FF, CH, CU"
     mobile:
-        description: "Page-load performance test suite on Android. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)"
+        description: "Page-load performance test suite on Android. The links direct to the actual websites that are being tested."
         tests:
             amazon: "BT, GV, FE, RB, CH-M"
             youtube: "BT, GV, FE, RB, CH-M"
@@ -73,7 +73,7 @@ suites:
             wikipedia: "BT, GV, FE, RB, CH-M"
             youtube-watch: "BT, GV, FE, RB, CH-M"
     live:
-        description: "A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)"
+        description: "A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms."
         tests:
             booking-sf: "GV, FE, RB, CH-M, FF, CH, CU"
             cnn: "GV, FE, RB, CH-M, FF, CH, CU"
@@ -92,7 +92,7 @@ suites:
             urbandictionary-define: "GV, FE, RB, CH-M, FF, CH, CU"
             wikia-marvel: "GV, FE, RB, CH-M, FF, CH, CU"
     benchmarks:
-        description: "Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. (FF: Firefox, CH: Chrome, CU: Chromium)"
+        description: "Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI."
         tests:
             ares6: "FF, CH, CU"
             assorted-dom: "FF, CH, CU"
@@ -136,7 +136,7 @@ suites:
             youtube-playback-widevine-hfr: "FF , GV, FE, RB, CH"
             youtube-playback-widevine-vp9-sfr: "FF , GV, FE, RB, CH"
     scenario:
-        description: "Tests that perform a specific action (a scenario), i.e. idle application, idle application in background, etc. (FE: Fenix, GV: Geckoview, RB: Refbrow)"
+        description: "Tests that perform a specific action (a scenario), i.e. idle application, idle application in background, etc."
         tests:
             idle: "FE, GV, RB"
             idle-bg: "FE, GV, RB"
