@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+svg {
+  width: 10%;
+  height: 10%;
+  background: #eee;
+}
+svg path {
+  fill: none;
+  stroke: #000;
+}
+
+</style>
+<script>
+  function run() {
+    const target = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const root = document.getElementById('svgroot');
+    root.appendChild(target);
+    target.style.d = 'path("M0,0 L2,2")';
+
+    var m = new MutationObserver(function () {
+      // This will destroy the oringal document.
+      document.write("<html><body></body></html>");
+      SpecialPowers.forceGC();
+      SpecialPowers.forceCC();
+
+      document.documentElement.classList.remove("reftest-wait");
+    });
+
+    m.observe(target, { attributes: true });
+    target.setAttribute("d", "none");
+
+    // Calling these APIs flushes the style, which may run the script in the
+    // callback function above that destroys the composed document.
+    target.getTotalLength();
+    target.getPointAtLength(1);
+    target.isPointInFill({x: 1, y: 1});
+    target.isPointInStroke({x: 1, y: 1});
+    target.getPathSegAtLength(0);
+  }
+</script>
+<body onload="run()">
+<svg viewBox="0 0 20 20" id="svgroot">
+</svg>

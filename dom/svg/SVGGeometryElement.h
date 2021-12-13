@@ -227,15 +227,19 @@ class SVGGeometryElement : public SVGGeometryElementBase {
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedNumber> PathLength();
-  bool IsPointInFill(const DOMPointInit& aPoint);
-  bool IsPointInStroke(const DOMPointInit& aPoint);
-  float GetTotalLength();
-  already_AddRefed<DOMSVGPoint> GetPointAtLength(float distance,
-                                                 ErrorResult& rv);
+  MOZ_CAN_RUN_SCRIPT bool IsPointInFill(const DOMPointInit& aPoint);
+  MOZ_CAN_RUN_SCRIPT bool IsPointInStroke(const DOMPointInit& aPoint);
+  MOZ_CAN_RUN_SCRIPT float GetTotalLengthForBinding();
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<DOMSVGPoint> GetPointAtLength(
+      float distance, ErrorResult& rv);
 
  protected:
   // SVGElement method
   virtual NumberAttributesInfo GetNumberInfo() override;
+
+  // d is a presentation attribute, so we would like to make sure style is
+  // up-to-date. This function flushes the style if the path attribute is d.
+  MOZ_CAN_RUN_SCRIPT void FlushStyleIfNeeded();
 
   SVGAnimatedNumber mPathLength;
   static NumberInfo sNumberInfo;
@@ -243,6 +247,8 @@ class SVGGeometryElement : public SVGGeometryElementBase {
 
  private:
   already_AddRefed<Path> GetOrBuildPathForHitTest();
+
+  float GetTotalLength();
 };
 
 }  // namespace dom
