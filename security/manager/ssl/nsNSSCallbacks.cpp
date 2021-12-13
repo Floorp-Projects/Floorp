@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/Telemetry.h"
