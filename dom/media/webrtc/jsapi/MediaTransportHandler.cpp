@@ -48,17 +48,6 @@
 #include <vector>
 #include <map>
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/ProfilerMarkers.h"
-
-#  define MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket)              \
-    PROFILER_MARKER_TEXT("WebRTC Packet Received", MEDIA_RT, {},        \
-                         ProfilerString8View::WrapNullTerminatedString( \
-                             PacketTypeToString(aPacket.type())));
-#else
-#  define MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket)
-#endif
-
 namespace mozilla {
 
 static const char* mthLogTag = "MediaTransportHandler";
@@ -1670,28 +1659,8 @@ void MediaTransportHandlerSTS::OnRtcpStateChange(TransportLayer* aLayer,
   MediaTransportHandler::OnRtcpStateChange(aLayer->flow_id(), aState);
 }
 
-constexpr static const char* PacketTypeToString(MediaPacket::Type type) {
-  switch (type) {
-    case MediaPacket::Type::UNCLASSIFIED:
-      return "UNCLASSIFIED";
-    case MediaPacket::Type::SRTP:
-      return "SRTP";
-    case MediaPacket::Type::SRTCP:
-      return "SRTCP";
-    case MediaPacket::Type::DTLS:
-      return "DTLS";
-    case MediaPacket::Type::RTP:
-      return "RTP";
-    case MediaPacket::Type::RTCP:
-      return "RTCP";
-    case MediaPacket::Type::SCTP:
-      return "SCTP";
-  }
-}
-
 void MediaTransportHandlerSTS::PacketReceived(TransportLayer* aLayer,
                                               MediaPacket& aPacket) {
-  MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket);
   OnPacketReceived(aLayer->flow_id(), aPacket);
 }
 
@@ -1701,5 +1670,3 @@ void MediaTransportHandlerSTS::EncryptedPacketSending(TransportLayer* aLayer,
 }
 
 }  // namespace mozilla
-
-#undef MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED
