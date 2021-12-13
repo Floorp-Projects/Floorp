@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Base styles (common to most error boundaries) */
+
+
 /* Container */
 .app-error-panel {
   color: var(--theme-text-color-strong);
@@ -12,6 +15,7 @@
   overflow-y: scroll;
   padding: 1rem 3rem;
   width: 100%;
+  height: 100%;
 }
 
 /* "Has crashed" header */
