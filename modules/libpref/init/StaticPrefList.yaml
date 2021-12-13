@@ -4380,7 +4380,7 @@
 # if fission is enabled by default.
 - name: fission.autostart
   type: bool
-  value: false
+  value: @IS_NOT_ANDROID@
   mirror: never
 
 # Prefs used by normandy to orchestrate the fission experiment. For more
