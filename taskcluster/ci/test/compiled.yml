@@ -3,8 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    e10s: false
     test-manifest-loader: null  # don't load tests in the taskgraph
+    e10s:
+        by-test-platform:
+            android.*: true
+            default: false
+    variants: ["1proc"]
     virtualization: virtual
     mozharness:
         script:

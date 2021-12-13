@@ -301,9 +301,6 @@ class DisperseGroups(OptimizationStrategy):
         if "unittest_variant" in task.attributes:
             key += "-" + task.attributes["unittest_variant"]
 
-        if not task.attributes["e10s"]:
-            key += "-1proc"
-
         important_manifests = set(test_manifests) & set(importance)
         for manifest in important_manifests:
             target_count = self.target_counts[importance[manifest]]

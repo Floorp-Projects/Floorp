@@ -12,7 +12,6 @@ geckoview-junit:
     variants: ["geckoview-e10s-single", "geckoview-fission"]
     treeherder-symbol: gv-junit
     loopback-video: true
-    e10s: true
     target: geckoview-androidTest.apk
     max-run-time: 3600
     run-on-projects:

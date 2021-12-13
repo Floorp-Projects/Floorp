@@ -47,7 +47,6 @@ crashtest:
             android-em-7.*: 1
             linux.*64-tsan-qr/opt: 32
             default: 1
-    e10s: true
     variants:
         - fission
         - wayland
@@ -102,7 +101,6 @@ crashtest-qr:
     schedules-component: crashtest
     treeherder-symbol: R(C)
     chunks: 1
-    e10s: true
     variants: ['fission']
     run-on-projects:
         by-variant:
@@ -166,7 +164,6 @@ reftest:
             windows10-64-2004-asan-qr/opt: 3
             windows10-64-2004-ccov-qr/opt: 9
             default: 8
-    e10s: true
     variants:
         - fission
         - wayland
@@ -233,7 +230,6 @@ reftest-qr:
     description: "Reftest webrender run"
     treeherder-symbol: R(R)
     chunks: 2
-    e10s: true
     variants:
         - webrender-sw
     run-on-projects:
