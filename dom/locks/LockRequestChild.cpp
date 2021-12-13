@@ -98,7 +98,18 @@ IPCResult LockRequestChild::Recv__delete__(bool aAborted) {
 }
 
 void LockRequestChild::RunAbortAlgorithm() {
-  Recv__delete__(true);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(
+          !jsapi.Init(static_cast<AbortSignal*>(Signal())->GetOwnerGlobal()))) {
+    mRequest.mPromise->MaybeRejectWithAbortError("The lock request is aborted");
+  } else {
+    JSContext* cx = jsapi.cx();
+    JS::RootedValue reason(cx);
+    Signal()->GetReason(cx, &reason);
+    mRequest.mPromise->MaybeReject(reason);
+  }
+
+  Unfollow();
   Send__delete__(this, true);
 }
 
