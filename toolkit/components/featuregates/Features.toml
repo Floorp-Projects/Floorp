@@ -145,17 +145,6 @@ bug-numbers = [1697865]
 is-public = true
 default-value = false
 
-[fission]
-title = "experimental-features-fission"
-description = "experimental-features-fission-description"
-description-links = {wiki = "https://wiki.mozilla.org/Project_Fission"}
-restart-required = true
-preference = "fission.autostart"
-type = "boolean"
-bug-numbers = [1652134]
-is-public = true
-default-value = false
-
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
 description = "experimental-features-ime-search-description"
