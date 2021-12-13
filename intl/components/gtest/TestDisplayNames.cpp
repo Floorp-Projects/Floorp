@@ -330,23 +330,31 @@ TEST(IntlDisplayNames, Weekday)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("en-US", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Monday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Monday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Monday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Tuesday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Tuesday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Tuesday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Wednesday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Wednesday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Wednesday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Thursday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Thursday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Thursday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Friday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Friday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Friday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Saturday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Saturday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Saturday"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Sunday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Sunday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Sunday"));
 }
 
@@ -355,23 +363,31 @@ TEST(IntlDisplayNames, WeekdaySpanish)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("es-ES", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Monday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Monday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"lunes"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Tuesday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Tuesday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"martes"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Wednesday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Wednesday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"miércoles"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Thursday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Thursday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"jueves"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Friday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Friday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"viernes"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Saturday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Saturday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"sábado"));
-  ASSERT_TRUE(displayNames->GetWeekday(buffer, Weekday::Sunday).isOk());
+  ASSERT_TRUE(
+      displayNames->GetWeekday(buffer, Weekday::Sunday, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"domingo"));
 }
 
@@ -380,35 +396,38 @@ TEST(IntlDisplayNames, Month)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("en-US", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"January"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::February).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::February, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"February"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::March).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::March, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"March"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::April).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::April, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"April"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::May).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::May, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"May"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::June).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::June, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"June"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::July).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::July, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"July"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::August).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::August, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"August"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::September).isOk());
+  ASSERT_TRUE(
+      displayNames->GetMonth(buffer, Month::September, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"September"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::October).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::October, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"October"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::November).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::November, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"November"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::December).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::December, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"December"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::Undecimber).isOk());
+  ASSERT_TRUE(
+      displayNames->GetMonth(buffer, Month::Undecimber, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u""));
 }
 
@@ -417,35 +436,38 @@ TEST(IntlDisplayNames, MonthHebrew)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("en-u-ca-hebrew", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Tishri"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::February).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::February, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Heshvan"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::March).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::March, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Kislev"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::April).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::April, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Tevet"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::May).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::May, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Shevat"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::June).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::June, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Adar I"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::July).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::July, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Adar"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::August).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::August, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Nisan"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::September).isOk());
+  ASSERT_TRUE(
+      displayNames->GetMonth(buffer, Month::September, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Iyar"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::October).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::October, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Sivan"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::November).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::November, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Tamuz"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::December).isOk());
+  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::December, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Av"));
-  ASSERT_TRUE(displayNames->GetMonth(buffer, Month::Undecimber).isOk());
+  ASSERT_TRUE(
+      displayNames->GetMonth(buffer, Month::Undecimber, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"Elul"));
 }
 
@@ -456,44 +478,49 @@ TEST(IntlDisplayNames, MonthCalendarOption)
   {
     // No calendar.
     DisplayNames::Options options{};
+    Span<const char> calendar{};
     auto result = DisplayNames::TryCreate("en", options);
     ASSERT_TRUE(result.isOk());
     auto displayNames = result.unwrap();
 
-    ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+    ASSERT_TRUE(
+        displayNames->GetMonth(buffer, Month::January, calendar).isOk());
     ASSERT_TRUE(buffer.verboseMatches(u"January"));
   }
   {
     // Switch to hebrew.
     DisplayNames::Options options{};
-    options.calendar = MakeStringSpan("hebrew");
+    Span<const char> calendar = MakeStringSpan("hebrew");
     auto result = DisplayNames::TryCreate("en", options);
     ASSERT_TRUE(result.isOk());
     auto displayNames = result.unwrap();
 
-    ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+    ASSERT_TRUE(
+        displayNames->GetMonth(buffer, Month::January, calendar).isOk());
     ASSERT_TRUE(buffer.verboseMatches(u"Tishri"));
   }
   {
     // Conflicting tags.
     DisplayNames::Options options{};
-    options.calendar = MakeStringSpan("hebrew");
+    Span<const char> calendar = MakeStringSpan("hebrew");
     auto result = DisplayNames::TryCreate("en-u-ca-gregory", options);
     ASSERT_TRUE(result.isOk());
     auto displayNames = result.unwrap();
 
-    ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+    ASSERT_TRUE(
+        displayNames->GetMonth(buffer, Month::January, calendar).isOk());
     ASSERT_TRUE(buffer.verboseMatches(u"Tishri"));
   }
   {
     // Conflicting tags.
     DisplayNames::Options options{};
-    options.calendar = MakeStringSpan("gregory");
+    Span<const char> calendar = MakeStringSpan("gregory");
     auto result = DisplayNames::TryCreate("en-u-ca-hebrew", options);
     ASSERT_TRUE(result.isOk());
     auto displayNames = result.unwrap();
 
-    ASSERT_TRUE(displayNames->GetMonth(buffer, Month::January).isOk());
+    ASSERT_TRUE(
+        displayNames->GetMonth(buffer, Month::January, calendar).isOk());
     ASSERT_TRUE(buffer.verboseMatches(u"January"));
   }
 }
@@ -503,17 +530,18 @@ TEST(IntlDisplayNames, Quarter)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("en-US", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q1).isOk());
+  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q1, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"1st quarter"));
-  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q2).isOk());
+  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q2, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"2nd quarter"));
-  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q3).isOk());
+  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q3, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"3rd quarter"));
-  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q4).isOk());
+  ASSERT_TRUE(displayNames->GetQuarter(buffer, Quarter::Q4, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"4th quarter"));
 }
 
@@ -522,28 +550,33 @@ TEST(IntlDisplayNames, DayPeriod_en_US)
   TestBuffer<char16_t> buffer;
 
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("en-US", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetDayPeriod(buffer, DayPeriod::AM).isOk());
+  ASSERT_TRUE(
+      displayNames->GetDayPeriod(buffer, DayPeriod::AM, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"AM"));
-  ASSERT_TRUE(displayNames->GetDayPeriod(buffer, DayPeriod::PM).isOk());
+  ASSERT_TRUE(
+      displayNames->GetDayPeriod(buffer, DayPeriod::PM, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"PM"));
 }
 
 TEST(IntlDisplayNames, DayPeriod_ar)
 {
   TestBuffer<char16_t> buffer;
-
   DisplayNames::Options options{};
+  Span<const char> calendar{};
   auto result = DisplayNames::TryCreate("ar", options);
   ASSERT_TRUE(result.isOk());
   auto displayNames = result.unwrap();
 
-  ASSERT_TRUE(displayNames->GetDayPeriod(buffer, DayPeriod::AM).isOk());
+  ASSERT_TRUE(
+      displayNames->GetDayPeriod(buffer, DayPeriod::AM, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"ص"));
-  ASSERT_TRUE(displayNames->GetDayPeriod(buffer, DayPeriod::PM).isOk());
+  ASSERT_TRUE(
+      displayNames->GetDayPeriod(buffer, DayPeriod::PM, calendar).isOk());
   ASSERT_TRUE(buffer.verboseMatches(u"م"));
 }
 

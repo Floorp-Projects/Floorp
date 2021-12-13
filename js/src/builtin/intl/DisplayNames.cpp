@@ -391,7 +391,6 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     if (!calendarChars) {
       return false;
     }
-    options.calendar = mozilla::MakeStringSpan(calendarChars.get());
   }
 
   mozilla::intl::DisplayNames* dn =
@@ -444,8 +443,9 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
       ReportInvalidOptionError(cx, "weekday", d);
       return false;
     }
-    result = dn->GetWeekday(buffer, static_cast<mozilla::intl::Weekday>(d),
-                            fallback);
+    result =
+        dn->GetWeekday(buffer, static_cast<mozilla::intl::Weekday>(d),
+                       mozilla::MakeStringSpan(calendarChars.get()), fallback);
   } else if (StringEqualsLiteral(type, "month")) {
     double d;
     if (!StringToNumber(cx, code, &d)) {
@@ -458,7 +458,8 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     result =
-        dn->GetMonth(buffer, static_cast<mozilla::intl::Month>(d), fallback);
+        dn->GetMonth(buffer, static_cast<mozilla::intl::Month>(d),
+                     mozilla::MakeStringSpan(calendarChars.get()), fallback);
 
   } else if (StringEqualsLiteral(type, "quarter")) {
     double d;
@@ -472,8 +473,9 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    result = dn->GetQuarter(buffer, static_cast<mozilla::intl::Quarter>(d),
-                            fallback);
+    result =
+        dn->GetQuarter(buffer, static_cast<mozilla::intl::Quarter>(d),
+                       mozilla::MakeStringSpan(calendarChars.get()), fallback);
 
   } else if (StringEqualsLiteral(type, "dayPeriod")) {
     mozilla::intl::DayPeriod dayPeriod;
@@ -485,7 +487,9 @@ bool js::intl_ComputeDisplayName(JSContext* cx, unsigned argc, Value* vp) {
       ReportInvalidOptionError(cx, "dayPeriod", code);
       return false;
     }
-    result = dn->GetDayPeriod(buffer, dayPeriod, fallback);
+    result = dn->GetDayPeriod(buffer, dayPeriod,
+                              mozilla::MakeStringSpan(calendarChars.get()),
+                              fallback);
 
   } else {
     MOZ_ASSERT(StringEqualsLiteral(type, "dateTimeField"));
