@@ -8,6 +8,7 @@
 // FFI.
 #include "FOGIPC.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsThreadUtils.h"
 
 using mozilla::RunOnShutdown;
 using mozilla::ShutdownPhase;
@@ -25,4 +26,16 @@ void FOG_RegisterContentChildShutdown() {
 }
 
 int FOG_GetProcessType() { return XRE_GetProcessType(); }
+
+/**
+ * Called from FOG IPC in Rust when the IPC Payload might be getting full.
+ * We should probably flush before we reach the max IPC message size.
+ */
+void FOG_IPCPayloadFull() {
+  // FOG IPC must happen on the main thread until bug 1641989.
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("FOG IPC Payload getting full", [] {
+        FlushFOGData([](ByteBuf&& aBuf) { SendFOGData(std::move(aBuf)); });
+      }));
+}
 }
