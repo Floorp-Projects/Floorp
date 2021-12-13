@@ -66,7 +66,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
@@ -2048,11 +2047,6 @@ NS_IMETHODIMP
 nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
                                  uint32_t proxyResolveFlags, nsIURI* proxyURI,
                                  nsILoadInfo* aLoadInfo, nsIChannel** result) {
-  // Avoid a late initialization
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
-
   HttpBaseChannel* httpChannel;
 
   LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n", givenProxyInfo));
