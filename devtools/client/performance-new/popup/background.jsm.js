@@ -203,7 +203,6 @@ const presets = {
       "RemVidChild",
       "RenderBackend",
       "Renderer",
-      "Socket Thread",
       "SwComposite",
       "VoiceProcessThread",
       "WebrtcWorker",
