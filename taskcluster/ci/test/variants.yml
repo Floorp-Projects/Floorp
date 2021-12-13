@@ -1,4 +1,18 @@
 ---
+1proc:
+    description: "{description} with e10s disabled"
+    when:
+        $eval: '!("android" in task["test-platform"])'
+    suffix: "1proc"
+    replace:
+        e10s: false
+    merge:
+        attributes:
+            e10s: false
+        mozharness:
+            extra-options:
+                - "--disable-e10s"
+
 a11y-checks:
     description: "{description} with accessibility checks enabled"
     contact: jteh
@@ -56,8 +70,6 @@ fission:
     when: &fission_filter
         $eval: task.e10s in [true, "both"]
     suffix: "fis"
-    replace:
-        e10s: true
     merge:
         mozharness:
             extra-options:

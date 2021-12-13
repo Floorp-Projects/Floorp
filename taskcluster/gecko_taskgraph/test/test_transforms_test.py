@@ -135,8 +135,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     (
         pytest.param(
             {
-                "attributes": {"unittest_variant": "webrender-sw+wayland"},
-                "e10s": False,
+                "attributes": {"unittest_variant": "webrender-sw+wayland+1proc"},
                 "test-platform": "linux1804-64-clang-trunk-qr/opt",
             },
             {
@@ -162,7 +161,6 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
         pytest.param(
             {
                 "attributes": {},
-                "e10s": True,
                 "test-platform": "android-hw-s7-8-0-android-aarch64-shippable-qr/opt",
             },
             {
@@ -185,7 +183,6 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
         pytest.param(
             {
                 "attributes": {},
-                "e10s": True,
                 "test-platform": "windows10-64-2004-ref-hw-2017-ccov/debug",
             },
             {

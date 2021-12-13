@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import copy
 import hashlib
 import json
 import re
@@ -23,7 +22,6 @@ from gecko_taskgraph.util.taskcluster import (
     get_artifact_path,
     get_index_url,
 )
-from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
 from gecko_taskgraph.util.platforms import platform_family
 from gecko_taskgraph.util.schema import (
     resolve_keyed_by,
@@ -264,8 +262,8 @@ def handle_keyed_by(config, tasks):
         "docker-image",
         "max-run-time",
         "chunks",
-        "e10s",
         "suite",
+        "e10s",
         "run-on-projects",
         "os-groups",
         "run-as-administrator",
@@ -483,16 +481,6 @@ def get_mobile_project(task):
                 return name
 
     return None
-
-
-@transforms.add
-def adjust_mobile_e10s(config, tasks):
-    for task in tasks:
-        project = get_mobile_project(task)
-        if project == "geckoview":
-            # Geckoview is always-e10s
-            task["e10s"] = True
-        yield task
 
 
 @transforms.add
@@ -760,25 +748,24 @@ def ensure_spi_disabled_on_all_but_spi(config, tasks):
 
 
 @transforms.add
-def split_e10s(config, tasks):
+def set_e10s_attributes(config, tasks):
+    """
+    This transform is only to keep backwards compatibility with the old way of
+    splitting e10s and should be removed once we're confident consumers aren't
+    relying on it for anything important.
+    """
     for task in tasks:
-        e10s = task["e10s"]
-
-        if e10s:
-            task_copy = copy.deepcopy(task)
-            task_copy["e10s"] = True
-            task_copy["attributes"]["e10s"] = True
-            yield task_copy
-
-        if not e10s or e10s == "both":
-            task["e10s"] = False
-            task["attributes"]["e10s"] = False
-            group, symbol = split_symbol(task["treeherder-symbol"])
-            if group != "?":
-                group += "-1proc"
-            task["treeherder-symbol"] = join_symbol(group, symbol)
-            task["mozharness"]["extra-options"].append("--disable-e10s")
+        variant = task["attributes"].get("unittest_variant")
+        if variant and "1proc" in variant:
             yield task
+            continue
+
+        if not task["e10s"]:
+            continue
+
+        task["e10s"] = True
+        task["attributes"]["e10s"] = True
+        yield task
 
 
 test_setting_description_schema = Schema(
@@ -935,10 +922,6 @@ def set_test_setting(config, tasks):
                 continue
 
             setting["build"][attr] = True
-
-        # set runtime configuration
-        if not task["e10s"]:
-            setting["runtime"]["1proc"] = True
 
         unittest_variant = task["attributes"].get("unittest_variant")
         if unittest_variant:
