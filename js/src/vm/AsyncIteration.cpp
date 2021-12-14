@@ -75,9 +75,6 @@ using namespace js;
 
 enum class ResumeNextKind { Enqueue, Reject, Resolve };
 
-[[nodiscard]] static bool AsyncGeneratorResumeNext(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator);
-
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator);
 
@@ -492,6 +489,10 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorDrainQueue(cx, asyncGenObj);
 }
 
+[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
+    CompletionKind completionKind, HandleValue resumptionValue);
+
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.3.7 AsyncGeneratorYield (partially)
 // Most steps are done in generator.
@@ -507,7 +508,21 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   if (!AsyncGeneratorCompleteStepNormal(cx, asyncGenObj, value, false)) {
     return false;
   }
-  return AsyncGeneratorResumeNext(cx, asyncGenObj);
+
+  if (asyncGenObj->isQueueEmpty()) {
+    return true;
+  }
+
+  Rooted<AsyncGeneratorRequest*> request(
+      cx, AsyncGeneratorObject::peekRequest(asyncGenObj));
+  if (!request) {
+    return false;
+  }
+
+  CompletionKind completionKind = request->completionKind();
+  RootedValue resumptionValue(cx, request->completionValue());
+  return AsyncGeneratorUnwrapYieldResumptionAndResume(
+      cx, asyncGenObj, completionKind, resumptionValue);
 }
 
 // 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
