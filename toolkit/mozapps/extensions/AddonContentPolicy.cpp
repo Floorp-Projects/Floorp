@@ -17,7 +17,6 @@
 #include "nsIContent.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/intl/Localization.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
@@ -27,7 +26,6 @@
 #include "nsNetUtil.h"
 
 using namespace mozilla;
-using namespace mozilla::intl;
 
 /* Enforces content policies for WebExtension scopes. Currently:
  *
@@ -191,7 +189,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
     // visitors will be called if the directive isn't present.
     mError.SetIsVoid(true);
     if (aDirectiveRequired) {
-      FormatError("csp-error-missing-directive"_ns);
+      FormatError("csp.error.missing-directive");
     }
   }
 
@@ -202,11 +200,11 @@ class CSPValidator final : public nsCSPSrcVisitor {
     src.getScheme(scheme);
 
     if (SchemeInList(scheme, allowedHostSchemes)) {
-      FormatError("csp-error-missing-host"_ns, "scheme"_ns, scheme);
+      FormatError("csp.error.missing-host", scheme);
       return false;
     }
     if (!SchemeInList(scheme, allowedSchemes)) {
-      FormatError("csp-error-illegal-protocol"_ns, "scheme"_ns, scheme);
+      FormatError("csp.error.illegal-protocol", scheme);
       return false;
     }
     return true;
@@ -224,7 +222,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
           HostIsLocal(host)) {
         return true;
       }
-      FormatError("csp-error-illegal-protocol"_ns, "scheme"_ns, scheme);
+      FormatError("csp.error.illegal-protocol", scheme);
       return false;
     }
     if (scheme.LowerCaseEqualsLiteral("https")) {
@@ -233,11 +231,11 @@ class CSPValidator final : public nsCSPSrcVisitor {
         return true;
       }
       if (!(mPermittedPolicy & nsIAddonContentPolicy::CSP_ALLOW_REMOTE)) {
-        FormatError("csp-error-illegal-protocol"_ns, "scheme"_ns, scheme);
+        FormatError("csp.error.illegal-protocol", scheme);
         return false;
       }
       if (!HostIsAllowed(host)) {
-        FormatError("csp-error-illegal-host-wildcard"_ns, "scheme"_ns, scheme);
+        FormatError("csp.error.illegal-host-wildcard", scheme);
         return false;
       }
     } else if (scheme.LowerCaseEqualsLiteral("moz-extension")) {
@@ -251,11 +249,11 @@ class CSPValidator final : public nsCSPSrcVisitor {
       }
 
       if (host.IsEmpty() || host.EqualsLiteral("*")) {
-        FormatError("csp-error-missing-host"_ns, "scheme"_ns, scheme);
+        FormatError("csp.error.missing-host", scheme);
         return false;
       }
     } else if (!SchemeInList(scheme, allowedSchemes)) {
-      FormatError("csp-error-illegal-protocol"_ns, "scheme"_ns, scheme);
+      FormatError("csp.error.illegal-protocol", scheme);
       return false;
     }
 
@@ -275,14 +273,14 @@ class CSPValidator final : public nsCSPSrcVisitor {
         [[fallthrough]];
       default:
         FormatError(
-            "csp-error-illegal-keyword"_ns, "keyword"_ns,
+            "csp.error.illegal-keyword",
             nsDependentString(CSP_EnumToUTF16Keyword(src.getKeyword())));
         return false;
     }
   };
 
   bool visitNonceSrc(const nsCSPNonceSrc& src) override {
-    FormatError("csp-error-illegal-keyword"_ns, "keyword"_ns, u"'nonce-*'"_ns);
+    FormatError("csp.error.illegal-keyword", u"'nonce-*'"_ns);
     return false;
   };
 
@@ -296,35 +294,11 @@ class CSPValidator final : public nsCSPSrcVisitor {
 
   // Formatters
 
-  inline void FormatError(const nsACString& l10nId,
-                          const nsACString& aKey = ""_ns,
-                          const nsAString& aValue = u""_ns) {
-    nsTArray<nsCString> resIds = {"toolkit/global/cspErrors.ftl"_ns};
-    RefPtr<intl::Localization> l10n = intl::Localization::Create(resIds, true);
-
-    auto l10nArgs = dom::Optional<intl::L10nArgs>();
-    l10nArgs.Construct();
-
-    auto dirArg = l10nArgs.Value().Entries().AppendElement();
-    dirArg->mKey = "directive";
-    dirArg->mValue.SetValue().SetAsUTF8String().Assign(
-        NS_ConvertUTF16toUTF8(mDirective));
-
-    if (!aKey.IsEmpty()) {
-      auto optArg = l10nArgs.Value().Entries().AppendElement();
-      optArg->mKey = aKey;
-      optArg->mValue.SetValue().SetAsUTF8String().Assign(
-          NS_ConvertUTF16toUTF8(aValue));
-    }
-
-    nsAutoCString translation;
-    IgnoredErrorResult rv;
-    l10n->FormatValueSync(l10nId, l10nArgs, translation, rv);
-    if (rv.Failed()) {
-      mError.AssignLiteral("An unexpected error occurred");
-    } else {
-      mError = NS_ConvertUTF8toUTF16(translation);
-    }
+  template <typename... T>
+  inline void FormatError(const char* aName, const T... aParams) {
+    AutoTArray<nsString, sizeof...(aParams) + 1> params = {mDirective,
+                                                           aParams...};
+    FormatErrorParams(aName, params);
   };
 
  private:
@@ -366,6 +340,34 @@ class CSPValidator final : public nsCSPSrcVisitor {
       }
     }
     return false;
+  };
+
+  // Formatters
+
+  already_AddRefed<nsIStringBundle> GetStringBundle() {
+    nsCOMPtr<nsIStringBundleService> sbs =
+        mozilla::components::StringBundle::Service();
+    NS_ENSURE_TRUE(sbs, nullptr);
+
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    sbs->CreateBundle("chrome://global/locale/extensions.properties",
+                      getter_AddRefs(stringBundle));
+
+    return stringBundle.forget();
+  };
+
+  void FormatErrorParams(const char* aName, const nsTArray<nsString>& aParams) {
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
+
+    if (stringBundle) {
+      rv = stringBundle->FormatStringFromName(aName, aParams, mError);
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mError.AssignLiteral("An unexpected error occurred");
+    }
   };
 
   // Data members
@@ -451,8 +453,7 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
     if (!policy->visitDirectiveSrcs(directive, &validator)) {
       aResult.Assign(validator.GetError());
     } else if (!validator.FoundSelf()) {
-      validator.FormatError("csp-error-missing-source"_ns, "source"_ns,
-                            u"'self'"_ns);
+      validator.FormatError("csp.error.missing-source", u"'self'"_ns);
       aResult.Assign(validator.GetError());
     }
     hasValidScriptSrc = true;
