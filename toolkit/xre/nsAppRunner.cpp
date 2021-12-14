@@ -4162,26 +4162,7 @@ bool IsWaylandEnabled() {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-enum struct ShouldNotProcessUpdatesReason {
-  DevToolsLaunching,
-  NotAnUpdatingTask,
-  OtherInstanceRunning,
-};
-
-const char* ShouldNotProcessUpdatesReasonAsString(
-    ShouldNotProcessUpdatesReason aReason) {
-  switch (aReason) {
-    case ShouldNotProcessUpdatesReason::DevToolsLaunching:
-      return "DevToolsLaunching";
-    case ShouldNotProcessUpdatesReason::NotAnUpdatingTask:
-      return "NotAnUpdatingTask";
-    case ShouldNotProcessUpdatesReason::OtherInstanceRunning:
-      return "OtherInstanceRunning";
-  }
-}
-
-Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
-    nsXREDirProvider& aDirProvider) {
+bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
   // Do not process updates if we're launching devtools, as evidenced by
   // "--chrome ..." with the browser toolbox chrome document URL.
 
@@ -4196,8 +4177,8 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
   const char* chromeParam = nullptr;
   if (ARG_FOUND == CheckArg("chrome", &chromeParam, CheckArgFlag::None)) {
     if (!chromeParam || !strcmp(BROWSER_TOOLBOX_WINDOW_URL, chromeParam)) {
-      NS_WARNING("ShouldNotProcessUpdates(): DevToolsLaunching");
-      return Some(ShouldNotProcessUpdatesReason::DevToolsLaunching);
+      NS_WARNING("!ShouldProcessUpdates(): launching devtools");
+      return false;
     }
   }
 
@@ -4205,25 +4186,7 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
   // Do not process updates if we're running a background task mode and another
   // instance is already running.  This avoids periodic maintenance updating
   // underneath a browsing session.
-  Maybe<nsCString> backgroundTasks = BackgroundTasks::GetBackgroundTasks();
-  if (backgroundTasks.isSome()) {
-    // Only process updates for specific tasks: at this time, the
-    // `backgroundupdate` task and the test-only `shouldprocessupdates` task.
-    //
-    // Background tasks can be sparked by Firefox instances that are shutting
-    // down, which can cause races between the task startup trying to update and
-    // Firefox trying to invoke the updater.  This happened when converting
-    // `pingsender` to a background task, since it is launched to send pings at
-    // shutdown: Bug 1736373.
-    //
-    // We'd prefer to have this be a property of the task definition sibling to
-    // `backgroundTaskTimeoutSec`, but when we reach this code we're well before
-    // we can load the task JSM.
-    if (!BackgroundTasks::IsUpdatingTaskName(backgroundTasks.ref())) {
-      NS_WARNING("ShouldNotProcessUpdates(): NotAnUpdatingTask");
-      return Some(ShouldNotProcessUpdatesReason::NotAnUpdatingTask);
-    }
-
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
     // At this point we have a dir provider but no XPCOM directory service.  We
     // launch the update sync manager using that information so that it doesn't
     // need to ask for (and fail to find) the directory service.
@@ -4233,7 +4196,7 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
                                        getter_AddRefs(anAppFile));
     if (NS_FAILED(rv) || !anAppFile) {
       // Strange, but not a reason to skip processing updates.
-      return Nothing();
+      return true;
     }
 
     auto updateSyncManager = new nsUpdateSyncManager(anAppFile);
@@ -4241,13 +4204,13 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
     bool otherInstance = false;
     updateSyncManager->IsOtherInstanceRunning(&otherInstance);
     if (otherInstance) {
-      NS_WARNING("ShouldNotProcessUpdates(): OtherInstanceRunning");
-      return Some(ShouldNotProcessUpdatesReason::OtherInstanceRunning);
+      NS_WARNING("!ShouldProcessUpdates(): other instance is running");
+      return false;
     }
   }
 #  endif
 
-  return Nothing();
+  return true;
 }
 #endif
 
@@ -4611,9 +4574,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-  Maybe<ShouldNotProcessUpdatesReason> shouldNotProcessUpdatesReason =
-      ShouldNotProcessUpdates(mDirProvider);
-  if (shouldNotProcessUpdatesReason.isNothing()) {
+  if (ShouldProcessUpdates(mDirProvider)) {
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
     bool persistent;
@@ -4671,12 +4632,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       // Support for testing *not* processing an update.  The launched process
       // can witness this environment variable and conclude that its runtime
       // environment resulted in not processing updates.
-
-      SaveToEnv(nsPrintfCString(
-                    "MOZ_TEST_PROCESS_UPDATES=ShouldNotProcessUpdates(): %s",
-                    ShouldNotProcessUpdatesReasonAsString(
-                        shouldNotProcessUpdatesReason.value()))
-                    .get());
+      SaveToEnv("MOZ_TEST_PROCESS_UPDATES=!ShouldProcessUpdates()");
     }
   }
 #endif
