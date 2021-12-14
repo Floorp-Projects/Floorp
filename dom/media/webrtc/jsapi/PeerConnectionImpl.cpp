@@ -977,7 +977,8 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
   PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   RefPtr<TransceiverImpl> transceiverImpl;
   aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack,
-                               ctx->GetSharedWebrtcState(), &transceiverImpl);
+                               ctx->GetSharedWebrtcState(), mIdGenerator,
+                               &transceiverImpl);
 
   return transceiverImpl.forget();
 }
