@@ -167,7 +167,7 @@ class Settings(
         )
 
     var isExperimentationEnabled: Boolean
-        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), false)
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), true)
         set(value) {
             preferences.edit()
                 .putBoolean(getPreferenceKey(R.string.pref_key_studies), value)
