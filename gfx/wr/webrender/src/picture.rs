@@ -4248,7 +4248,7 @@ impl PicturePrimitive {
         }
     }
 
-    fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
+    fn resolve_scene_properties(&mut self, properties: &SceneProperties) {
         match self.composite_mode {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
                 match *filter {
@@ -4257,20 +4257,35 @@ impl PicturePrimitive {
                     }
                     _ => {}
                 }
-
-                filter.is_visible()
             }
-            _ => true,
+            _ => {}
         }
     }
 
-    pub fn is_visible(&self) -> bool {
-        match self.composite_mode {
-            Some(PictureCompositeMode::Filter(ref filter)) => {
-                filter.is_visible()
+    pub fn is_visible(
+        &self,
+        spatial_tree: &SpatialTree,
+    ) -> bool {
+        if let Some(PictureCompositeMode::Filter(ref filter)) = self.composite_mode {
+            if !filter.is_visible() {
+                return false;
             }
-            _ => true,
         }
+
+        // For out-of-preserve-3d pictures, the backface visibility is determined by
+        // the local transform only.
+        // Note: we aren't taking the transform relativce to the parent picture,
+        // since picture tree can be more dense than the corresponding spatial tree.
+        if !self.is_backface_visible {
+            if let Picture3DContext::Out = self.context_3d {
+                match spatial_tree.get_local_visible_face(self.spatial_node_index) {
+                    VisibleFace::Front => {}
+                    VisibleFace::Back => return false,
+                }
+            }
+        }
+
+        true
     }
 
     // TODO(gw): We have the PictureOptions struct available. We
@@ -4321,7 +4336,7 @@ impl PicturePrimitive {
         self.primary_render_task_id = None;
         self.secondary_render_task_id = None;
 
-        if !self.is_visible() {
+        if !self.is_visible(frame_context.spatial_tree) {
             return None;
         }
 
@@ -5661,30 +5676,12 @@ impl PicturePrimitive {
 
     /// Do initial checks to determine whether this picture should be drawn as part of the
     /// frame build.
-    pub fn pre_update_visibility_check(
+    pub fn pre_update(
         &mut self,
         frame_context: &FrameBuildingContext,
-    ) -> bool {
-        // Resolve animation properties, and early out if the filter
-        // properties make this picture invisible.
-        if !self.resolve_scene_properties(frame_context.scene_properties) {
-            return false;
-        }
-
-        // For out-of-preserve-3d pictures, the backface visibility is determined by
-        // the local transform only.
-        // Note: we aren't taking the transform relativce to the parent picture,
-        // since picture tree can be more dense than the corresponding spatial tree.
-        if !self.is_backface_visible {
-            if let Picture3DContext::Out = self.context_3d {
-                match frame_context.spatial_tree.get_local_visible_face(self.spatial_node_index) {
-                    VisibleFace::Front => {}
-                    VisibleFace::Back => return false,
-                }
-            }
-        }
-
-        true
+    ) {
+        // Resolve animation properties
+        self.resolve_scene_properties(frame_context.scene_properties);
     }
 
     /// Called during initial picture traversal, before we know the

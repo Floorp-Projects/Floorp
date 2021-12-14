@@ -162,6 +162,9 @@ fn assign_update_pass(
 
     info.parent = parent_pic_index;
 
+    // Run pre-update to resolve animation properties etc
+    pic.pre_update(frame_context);
+
     let can_be_drawn = match info.update_pass {
         Some(update_pass) => {
             // No point in recursing into paths in the graph if this picture already
@@ -174,7 +177,7 @@ fn assign_update_pass(
         }
         None => {
             // Check if this picture can be dropped from the graph we're building this frame
-            pic.pre_update_visibility_check(frame_context)
+            pic.is_visible(frame_context.spatial_tree)
         }
     };
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <style>
+      * {
+          backface-visibility: hidden ! important;
+          filter: blur(63pc) ! important;
+          padding-block-end: 87%;
+          transform: matrix3d(-55, 29, 49313, 4, 80, 16, -127, 112, 8, 45, 127, -27757, 116, 134, 123, 79.00237606484764);
+          scroll-padding-block-end: 22142ch;
+      }
+  </style>
+  <script>
+    window.addEventListener("load", async () => {
+      await new Promise(r => setTimeout(r, 20))
+      const label = document.createElement("label")
+      document.documentElement.appendChild(label)
+      label.scrollIntoView({ "behavior": "smooth", "block": "end", "inline": "end" })
+
+      setTimeout('document.documentElement.className = ""', 300);
+    })
+  </script>
+</head>
+</html>
