@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateService"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 add_task(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
