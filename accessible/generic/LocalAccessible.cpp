@@ -3190,7 +3190,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
 
-    if (mBounds.isNothing() || !newBoundsRect.IsEqualEdges(mBounds.value())) {
+    // 1. Layout might notify us of a possible bounds change when the bounds
+    // haven't really changed. Therefore, we cache the last  bounds we sent
+    // and don't send an update if they haven't changed.
+    // 2. For an initial cache push, we ignore 1)  and always send the bounds.
+    // This handles the case where this LocalAccessible was moved (but not
+    // re-created). In that case, we will have cached bounds, but we currently
+    // do an initial cache push.
+    MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial || mBounds.isSome(),
+               "Incremental cache push but mBounds is not set!");
+    if (aUpdateType == CacheUpdateType::Initial ||
+        !newBoundsRect.IsEqualEdges(mBounds.value())) {
       mBounds = Some(newBoundsRect);
 
       nsTArray<int32_t> boundsArray(4);
