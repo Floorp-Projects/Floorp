@@ -90,8 +90,6 @@
         <item name="mozac_widget_favicon_border_color">@color/mozac_widget_favicon_border_normal_theme</item>
 
         <item name="tabTrayItemMediaBackground">@color/tab_tray_item_media_background_normal_theme</item>
-        <item name="tabTrayHeadingIcon">@color/tab_tray_heading_icon_normal_theme</item>
-        <item name="tabTrayHeadingIconInactive">@color/tab_tray_heading_icon_inactive_normal_theme</item>
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
 
@@ -272,8 +270,6 @@
 
         <!-- Tab Tray -->
         <item name="tabTrayItemMediaBackground">@color/tab_tray_item_media_background_private_theme</item>
-        <item name="tabTrayHeadingIcon">@color/tab_tray_heading_icon_dark_theme</item>
-        <item name="tabTrayHeadingIconInactive">@color/tab_tray_heading_icon_inactive_dark_theme</item>
         <item name="tabTrayThumbnailItemBackground">@color/tab_tray_item_thumbnail_background_normal_theme</item>
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
 
