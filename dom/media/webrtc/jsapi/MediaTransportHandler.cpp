@@ -136,12 +136,10 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void Destroy_s();
   void DestroyFinal();
   void Shutdown_s();
-  RefPtr<TransportFlow> CreateTransportFlow(const std::string& aTransportId,
-                                            bool aIsRtcp,
-                                            RefPtr<DtlsIdentity> aDtlsIdentity,
-                                            bool aDtlsClient,
-                                            const DtlsDigestList& aDigests,
-                                            bool aPrivacyRequested);
+  RefPtr<TransportFlow> CreateTransportFlow(
+      const std::string& aTransportId, bool aIsRtcp,
+      const RefPtr<DtlsIdentity>& aDtlsIdentity, bool aDtlsClient,
+      const DtlsDigestList& aDigests, bool aPrivacyRequested);
 
   struct Transport {
     RefPtr<TransportFlow> mFlow;
@@ -186,7 +184,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   std::set<std::string> mSignaledAddresses;
 
   // Init can only be done on main, but we want this to be usable on any thread
-  typedef MozPromise<bool, std::string, false> InitPromise;
+  using InitPromise = MozPromise<bool, std::string, false>;
   RefPtr<InitPromise> mInitPromise;
 };
 
@@ -257,7 +255,7 @@ class STSShutdownHandler : public nsISTSShutdownObserver {
   }
 
  private:
-  virtual ~STSShutdownHandler() {}
+  virtual ~STSShutdownHandler() = default;
 
   // Raw ptrs, registered on init, deregistered on destruction, all on main
   std::set<MediaTransportHandlerSTS*> mHandlers;
@@ -362,14 +360,16 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
     }
 
     rv = net_GetAuthURLParser()->ParseAuthority(
-        path.get(), path.Length(), nullptr, nullptr, nullptr, nullptr, &hostPos,
-        &hostLen, &port);
+        path.get(), static_cast<int>(path.Length()), nullptr, nullptr, nullptr,
+        nullptr, &hostPos, &hostLen, &port);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!hostLen) {
       return NS_ERROR_FAILURE;
     }
-    if (hostPos > 1) /* The username was removed */
+    if (hostPos > 1) {
+      /* The username was removed */
       return NS_ERROR_FAILURE;
+    }
     path.Mid(host, hostPos, hostLen);
     // Strip off brackets around IPv6 literals
     host.Trim("[]");
@@ -1495,7 +1495,7 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::GetTransportFlow(
 
 RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
     const std::string& aTransportId, bool aIsRtcp,
-    RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
+    const RefPtr<DtlsIdentity>& aDtlsIdentity, bool aDtlsClient,
     const DtlsDigestList& aDigests, bool aPrivacyRequested) {
   nsresult rv;
   RefPtr<TransportFlow> flow = new TransportFlow(aTransportId);
