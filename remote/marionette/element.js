@@ -1247,7 +1247,7 @@ element.isKeyboardInteractable = () => true;
  */
 element.scrollIntoView = function(el) {
   if (el.scrollIntoView) {
-    el.scrollIntoView({ block: "end", inline: "nearest", behavior: "instant" });
+    el.scrollIntoView({ block: "end", inline: "nearest" });
   }
 };
 
