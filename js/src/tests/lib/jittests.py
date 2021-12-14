@@ -465,10 +465,8 @@ def check_output(out, err, rc, timed_out, test, options):
             return True
 
     if timed_out:
-        if (
-            os.path.normpath(test.relpath_tests).replace(os.sep, "/")
-            in options.ignore_timeouts
-        ):
+        relpath = os.path.normpath(test.relpath_tests).replace(os.sep, "/")
+        if relpath in options.ignore_timeouts:
             return True
         return False
 
