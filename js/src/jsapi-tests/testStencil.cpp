@@ -780,7 +780,7 @@ static bool TestGetBuildId(JS::BuildIdCharVector* buildId) {
 END_TEST(testStencil_OffThreadDecodeBorrow)
 
 constexpr size_t PinnedBufferMax = 1024;
-uint8_t pinnedBuffer[PinnedBufferMax];
+alignas(4) uint8_t pinnedBuffer[PinnedBufferMax];
 size_t pinnedBufferSize = 0;
 
 BEGIN_TEST(testStencil_OffThreadDecodePinned) {
