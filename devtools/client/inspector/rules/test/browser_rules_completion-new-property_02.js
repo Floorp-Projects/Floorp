@@ -33,6 +33,7 @@ const testData = [
   ["r", {}, "rebeccapurple", OPEN, SELECTED, CHANGE],
   ["VK_DOWN", {}, "red", OPEN, SELECTED, CHANGE],
   ["VK_DOWN", {}, "revert", OPEN, SELECTED, CHANGE],
+  ["VK_DOWN", {}, "revert-layer", OPEN, SELECTED, CHANGE],
   ["VK_DOWN", {}, "rgb", OPEN, SELECTED, CHANGE],
   ["VK_DOWN", {}, "rgba", OPEN, SELECTED, CHANGE],
   ["VK_DOWN", {}, "rosybrown", OPEN, SELECTED, CHANGE],
