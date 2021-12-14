@@ -547,10 +547,6 @@ class AsyncFromSyncIteratorObject : public NativeObject {
   const Value& nextMethod() const { return getFixedSlot(Slot_NextMethod); }
 };
 
-[[nodiscard]] bool AsyncGeneratorResume(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    CompletionKind completionKind, HandleValue argument);
-
 class AsyncIteratorObject : public NativeObject {
  public:
   static const JSClass class_;
