@@ -3796,7 +3796,7 @@ NS_IMETHODIMP BrowserChild::OnProgressChange64(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP BrowserChild::OnRefreshAttempted(nsIWebProgress* aWebProgress,
                                                nsIURI* aRefreshURI,
-                                               uint32_t aMillis, bool aSameURI,
+                                               int32_t aMillis, bool aSameURI,
                                                bool* aOut) {
   NS_ENSURE_ARG_POINTER(aOut);
   *aOut = true;

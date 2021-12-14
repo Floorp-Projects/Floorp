@@ -288,28 +288,13 @@ class nsDocShell final : public nsDocLoader,
   // subframes. It then simulates the completion of the toplevel load.
   nsresult RestoreFromHistory();
 
-  /**
-   * Parses the passed in header string and sets up a refreshURI if a "refresh"
-   * header is found. If docshell is busy loading a page currently, the request
-   * will be queued and executed when the current page finishes loading.
-   *
-   * @param aBaseURI base URI to resolve refresh uri with.
-   * @param aPrincipal The triggeringPrincipal for the refresh load
-   *   May be null, in which case the principal of current document will be
-   *   applied.
-   * @param aInnerWindowID The window id to use for error reporting.
-   * @param aHeader  The meta refresh header string.
-   */
-  nsresult SetupRefreshURIFromHeader(nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
-                                     uint64_t aInnerWindowID,
-                                     const nsACString& aHeader);
-
   // Perform a URI load from a refresh timer. This is just like the
   // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
   // the timer involved out of mRefreshURIList if it's there.
   // aTimer must not be null.
   nsresult ForceRefreshURIFromTimer(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                    uint32_t aDelay, nsITimer* aTimer);
+                                    int32_t aDelay, bool aMetaRefresh,
+                                    nsITimer* aTimer);
 
   // We need dummy OnLocationChange in some cases to update the UI without
   // updating security info.
@@ -967,6 +952,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult Dispatch(mozilla::TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable);
 
+  void SetupReferrerInfoFromChannel(nsIChannel* aChannel);
+  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo);
   void ReattachEditorToWindow(nsISHEntry* aSHEntry);
   void ClearFrameHistory(nsISHEntry* aEntry);
   // Determine if this type of load should update history.
