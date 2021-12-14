@@ -753,8 +753,13 @@ void ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {
-    if (aRequest->mIsInline &&
-        aRequest->GetParserCreated() == NOT_FROM_PARSER) {
+    if (aRequest->IsDynamicImport()) {
+      MOZ_ASSERT(aRequest->isInList());
+      RefPtr<ScriptLoadRequest> req =
+          mModuleLoader->mDynamicImportRequests.Steal(aRequest);
+      RunScriptWhenSafe(aRequest);
+    } else if (aRequest->mIsInline &&
+               aRequest->GetParserCreated() == NOT_FROM_PARSER) {
       MOZ_ASSERT(!aRequest->isInList());
       RunScriptWhenSafe(aRequest);
     } else {

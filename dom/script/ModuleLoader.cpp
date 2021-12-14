@@ -640,14 +640,7 @@ ModuleLoader::~ModuleLoader() {
 
 void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
-
-  if (aRequest->IsDynamicImport()) {
-    MOZ_ASSERT(aRequest->isInList());
-    RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
-    mLoader->RunScriptWhenSafe(aRequest);
-  } else {
-    mLoader->ProcessLoadedModuleTree(aRequest);
-  }
+  mLoader->ProcessLoadedModuleTree(aRequest);
 }
 
 JS::Value ModuleLoader::FindFirstParseError(ModuleLoadRequest* aRequest) {
