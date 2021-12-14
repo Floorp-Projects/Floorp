@@ -6842,30 +6842,29 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       mOnlyNeedVScrollbarToScrollVVInsideLV;
 
   // place the scrollcorner
-  if (mScrollCornerBox || mResizerBox) {
-    MOZ_ASSERT(!mScrollCornerBox || mScrollCornerBox->IsXULBoxFrame(),
-               "Must be a box frame!");
+  if (mScrollCornerBox) {
+    MOZ_ASSERT(mScrollCornerBox->IsXULBoxFrame(), "Must be a box frame!");
 
     nsRect r(0, 0, 0, 0);
-    if (aInsideBorderArea.x != mScrollPort.x || scrollbarOnLeft) {
+    if (scrollbarOnLeft) {
       // scrollbar (if any) on left
+      r.width = showVScrollbar ? mScrollPort.x - aInsideBorderArea.x : 0;
       r.x = aInsideBorderArea.x;
-      r.width = mScrollPort.x - aInsideBorderArea.x;
-      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
     } else {
       // scrollbar (if any) on right
-      r.width = aInsideBorderArea.XMost() - mScrollPort.XMost();
+      r.width =
+          showVScrollbar ? aInsideBorderArea.XMost() - mScrollPort.XMost() : 0;
       r.x = aInsideBorderArea.XMost() - r.width;
-      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
     }
-    if (aInsideBorderArea.y != mScrollPort.y) {
-      NS_ERROR("top scrollbars not supported");
-    } else {
+    NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
+
+    if (showHScrollbar) {
       // scrollbar (if any) on bottom
+      // Note we don't support the horizontal scrollbar at the top side.
       r.height = aInsideBorderArea.YMost() - mScrollPort.YMost();
-      r.y = aInsideBorderArea.YMost() - r.height;
       NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
     }
+    r.y = aInsideBorderArea.YMost() - r.height;
 
     // If we have layout scrollbars and both scrollbars are present and both are
     // only needed to scroll the VV inside the LV then we need a scrollcorner
@@ -6877,38 +6876,34 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       r.y = mScrollPort.YMost() - r.height;
     }
 
-    if (mScrollCornerBox) {
-      nsBoxFrame::LayoutChildAt(aState, mScrollCornerBox, r);
-    }
+    nsBoxFrame::LayoutChildAt(aState, mScrollCornerBox, r);
+  }
 
-    if (mResizerBox) {
-      // If a resizer is present, get its size.
-      //
-      // TODO(emilio): Should this really account for scrollbar-width?
-      nsPresContext* pc = aState.PresContext();
-      auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
-                                ->StyleUIReset()
-                                ->mScrollbarWidth;
-      auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
-                                                  nsITheme::Overlay::No);
-      nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
+  if (mResizerBox) {
+    // If a resizer is present, get its size.
+    //
+    // TODO(emilio): Should this really account for scrollbar-width?
+    nsPresContext* pc = aState.PresContext();
+    auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
+                              ->StyleUIReset()
+                              ->mScrollbarWidth;
+    auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
+                                                nsITheme::Overlay::No);
+    nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
 
-      nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(sizes.mVertical);
-      r.width =
-          std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
-      if (aInsideBorderArea.x == mScrollPort.x && !scrollbarOnLeft) {
-        r.x = aInsideBorderArea.XMost() - r.width;
-      }
+    nsRect r;
+    nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(sizes.mVertical);
+    r.width =
+        std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
+    r.x = scrollbarOnLeft ? aInsideBorderArea.x
+                          : aInsideBorderArea.XMost() - r.width;
 
-      nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(sizes.mHorizontal);
-      r.height =
-          std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
-      if (aInsideBorderArea.y == mScrollPort.y) {
-        r.y = aInsideBorderArea.YMost() - r.height;
-      }
+    nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(sizes.mHorizontal);
+    r.height =
+        std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
+    r.y = aInsideBorderArea.YMost() - r.height;
 
-      nsBoxFrame::LayoutChildAt(aState, mResizerBox, r);
-    }
+    nsBoxFrame::LayoutChildAt(aState, mResizerBox, r);
   }
 
   // Note that AdjustScrollbarRectForResizer has to be called after the
