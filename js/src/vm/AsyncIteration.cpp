@@ -673,30 +673,39 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 }
 
+[[nodiscard]] static bool IsAsyncGeneratorValid(HandleValue asyncGenVal) {
+  return asyncGenVal.isObject() &&
+         asyncGenVal.toObject().canUnwrapAs<AsyncGeneratorObject>();
+}
+
+[[nodiscard]] static bool AsyncGeneratorValidateThrow(
+    JSContext* cx, MutableHandleValue result) {
+  Rooted<PromiseObject*> resultPromise(
+      cx, CreatePromiseObjectForAsyncGenerator(cx));
+  if (!resultPromise) {
+    return false;
+  }
+
+  RootedValue badGeneratorError(cx);
+  if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_GENERATOR, &badGeneratorError)) {
+    return false;
+  }
+
+  if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError)) {
+    return false;
+  }
+
+  result.setObject(*resultPromise);
+  return true;
+}
+
 [[nodiscard]] static bool AsyncGeneratorEnqueue(JSContext* cx,
                                                 HandleValue asyncGenVal,
                                                 CompletionKind completionKind,
                                                 HandleValue completionValue,
                                                 MutableHandleValue result) {
-  if (!asyncGenVal.isObject() ||
-      !asyncGenVal.toObject().canUnwrapAs<AsyncGeneratorObject>()) {
-    Rooted<PromiseObject*> resultPromise(
-        cx, CreatePromiseObjectForAsyncGenerator(cx));
-    if (!resultPromise) {
-      return false;
-    }
-
-    RootedValue badGeneratorError(cx);
-    if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_GENERATOR, &badGeneratorError)) {
-      return false;
-    }
-
-    if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError)) {
-      return false;
-    }
-
-    result.setObject(*resultPromise);
-    return true;
+  if (!IsAsyncGeneratorValid(asyncGenVal)) {
+    return AsyncGeneratorValidateThrow(cx, result);
   }
 
   Rooted<AsyncGeneratorObject*> asyncGenObj(
