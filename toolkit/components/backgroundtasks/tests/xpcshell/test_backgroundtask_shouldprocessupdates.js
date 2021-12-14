@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_backgroundtask_shouldprocessupdates() {
-  // The task returns 80 if !ShouldProcessUpdates(), 81 otherwise.  xpcshell
-  // itself counts as an instance, so the background task will see it and think
-  // another instance is running.  N.b.: this isn't as robust as it could be:
-  // running Firefox instances and parallel tests interact here (mostly
-  // harmlessly).
+  // The task returns 81 if !ShouldNotProcessUpdates(), <= 80 otherwise.
+  // xpcshell itself counts as an instance, so the background task will see it
+  // and think another instance is running.  N.b.: this isn't as robust as it
+  // could be: running Firefox instances and parallel tests interact here
+  // (mostly harmlessly).
   //
-  // Since the behaviour under test (ShouldProcessUpdates()) happens at startup,
+  // Since the behaviour under test (ShouldNotProcessUpdates()) happens at startup,
   // we can't easily change the lock location of the background task.
   let exitCode = await do_backgroundtask("shouldprocessupdates", {
     extraArgs: ["--test-process-updates"],
@@ -27,11 +27,10 @@ add_task(async function test_backgroundtask_shouldprocessupdates() {
   );
   syncManager.resetLock(file);
 
-  // The task returns 80 if !ShouldProcessUpdates(), 81 if
-  // ShouldProcessUpdates(). Since we've changed the xpcshell executable name,
-  // the background task won't see us and think another instance is running.
-  // N.b.: this generally races with other parallel tests and in the future it
-  // could be made more robust.
+  // The task returns 81 if !ShouldNotProcessUpdates(), <= 80 otherwise.  Since
+  // we've changed the xpcshell executable name, the background task won't see
+  // us and think another instance is running.  N.b.: this generally races with
+  // other parallel tests and in the future it could be made more robust.
   exitCode = await do_backgroundtask("shouldprocessupdates");
   Assert.equal(81, exitCode);
 });
