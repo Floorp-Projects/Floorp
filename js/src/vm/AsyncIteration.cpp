@@ -250,11 +250,9 @@ static bool AsyncFromSyncIteratorThrow(JSContext* cx, unsigned argc,
   return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Throw);
 }
 
-[[nodiscard]] static bool AsyncGeneratorEnqueue(JSContext* cx,
-                                                HandleValue asyncGenVal,
-                                                CompletionKind completionKind,
-                                                HandleValue completionValue,
-                                                MutableHandleValue result);
+[[nodiscard]] static bool AsyncGeneratorMethodCommon(
+    JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
+    HandleValue completionValue, MutableHandleValue result);
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.1.2 AsyncGenerator.prototype.next
@@ -262,8 +260,8 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-3.
-  return AsyncGeneratorEnqueue(cx, args.thisv(), CompletionKind::Normal,
-                               args.get(0), args.rval());
+  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Normal,
+                                    args.get(0), args.rval());
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
@@ -272,8 +270,8 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-3.
-  return AsyncGeneratorEnqueue(cx, args.thisv(), CompletionKind::Return,
-                               args.get(0), args.rval());
+  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Return,
+                                    args.get(0), args.rval());
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
@@ -282,8 +280,8 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-3.
-  return AsyncGeneratorEnqueue(cx, args.thisv(), CompletionKind::Throw,
-                               args.get(0), args.rval());
+  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Throw,
+                                    args.get(0), args.rval());
 }
 
 const JSClass AsyncGeneratorObject::class_ = {
@@ -720,11 +718,9 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return true;
 }
 
-[[nodiscard]] static bool AsyncGeneratorEnqueue(JSContext* cx,
-                                                HandleValue asyncGenVal,
-                                                CompletionKind completionKind,
-                                                HandleValue completionValue,
-                                                MutableHandleValue result) {
+[[nodiscard]] static bool AsyncGeneratorMethodCommon(
+    JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
+    HandleValue completionValue, MutableHandleValue result) {
   if (!IsAsyncGeneratorValid(asyncGenVal)) {
     return AsyncGeneratorValidateThrow(cx, result);
   }
