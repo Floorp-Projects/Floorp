@@ -17,6 +17,7 @@
         <!-- Card Number -->
         <TextView
             android:id="@+id/card_number_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="16dp"
             android:gravity="center_vertical"
@@ -25,9 +26,7 @@
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_card_number"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            android:labelFor="@id/card_number_input"
-            app:fontFamily="@font/metropolis_semibold" />
+            android:labelFor="@id/card_number_input" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/card_number_layout"
@@ -58,6 +57,7 @@
         <!-- Name on Card -->
         <TextView
             android:id="@+id/name_on_card_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -67,9 +67,7 @@
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_name_on_card"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            android:labelFor="@id/name_on_card_input"
-            app:fontFamily="@font/metropolis_semibold" />
+            android:labelFor="@id/name_on_card_input" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/name_on_card_layout"
@@ -98,6 +96,7 @@
         <!-- Expiration Date -->
         <TextView
             android:id="@+id/expiration_date_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -106,9 +105,7 @@
             android:paddingStart="3dp"
             android:paddingEnd="0dp"
             android:text="@string/credit_cards_expiration_date"
-            android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            app:fontFamily="@font/metropolis_semibold" />
+            android:textColor="?attr/textPrimary" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -184,7 +181,6 @@
                 android:textAllCaps="false"
                 android:textColor="@color/fx_mobile_text_color_warning"
                 android:visibility="gone"
-                app:fontFamily="@font/metropolis_semibold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
@@ -199,7 +195,6 @@
                 android:textAllCaps="false"
                 android:textColor="?attr/textPrimary"
                 android:textStyle="bold"
-                app:fontFamily="@font/metropolis_semibold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/save_button" />
 

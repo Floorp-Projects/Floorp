@@ -17,6 +17,7 @@
         <!-- First Name -->
         <TextView
             android:id="@+id/first_name_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="16dp"
             android:gravity="center_vertical"
@@ -26,8 +27,6 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_first_name"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -61,6 +60,7 @@
         <!-- Middle Name -->
         <TextView
             android:id="@+id/middle_name_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="16dp"
             android:gravity="center_vertical"
@@ -70,8 +70,6 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_middle_name"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/first_name_layout" />
 
@@ -105,6 +103,7 @@
         <!-- Last Name -->
         <TextView
             android:id="@+id/last_name_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="16dp"
             android:gravity="center_vertical"
@@ -114,8 +113,6 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_last_name"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/middle_name_layout" />
 
@@ -149,6 +146,7 @@
         <!-- Street Address -->
         <TextView
             android:id="@+id/street_address_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -158,9 +156,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_street_address"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
             android:labelFor="@id/street_address_input"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/last_name_layout" />
 
@@ -193,6 +189,7 @@
         <!-- City -->
         <TextView
             android:id="@+id/city_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -202,9 +199,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_city"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
             android:labelFor="@id/city_input"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/street_address_layout" />
 
@@ -248,13 +243,13 @@
 
             <TextView
                 android:id="@+id/subregion_title"
+                style="@style/CaptionTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:textColor="?attr/textPrimary"
-                android:textSize="12sp"
                 android:labelFor="@id/subregion_drop_down"
-                app:fontFamily="@font/metropolis_semibold"
+                android:letterSpacing="0.05"
                 android:text="@string/addresses_state" />
 
             <androidx.appcompat.widget.AppCompatSpinner
@@ -272,6 +267,7 @@
         <!-- Zip -->
         <TextView
             android:id="@+id/zip_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -281,9 +277,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_zip"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
             android:labelFor="@id/zip_input"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="@+id/zip_layout"
             app:layout_constraintTop_toBottomOf="@+id/subregion_layout" />
 
@@ -328,13 +322,13 @@
             app:layout_constraintBottom_toTopOf="@id/phone_title">
 
             <TextView
+                style="@style/CaptionTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:textColor="?attr/textPrimary"
-                android:textSize="12sp"
                 android:labelFor="@id/country_drop_down"
-                app:fontFamily="@font/metropolis_semibold"
+                android:letterSpacing="0.05"
                 android:text="@string/addresses_country" />
 
             <androidx.appcompat.widget.AppCompatSpinner
@@ -352,6 +346,7 @@
         <!-- Phone -->
         <TextView
             android:id="@+id/phone_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -361,9 +356,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_phone"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
             android:labelFor="@id/phone_input"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/country_layout" />
 
@@ -396,6 +389,7 @@
         <!-- Email -->
         <TextView
             android:id="@+id/email_title"
+            style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -405,9 +399,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_email"
             android:textColor="?attr/textPrimary"
-            android:textSize="12sp"
             android:labelFor="@id/city_input"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/phone_layout" />
 
@@ -449,7 +441,6 @@
             android:textAllCaps="false"
             android:textColor="@color/fx_mobile_text_color_warning"
             android:visibility="gone"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintTop_toBottomOf="@+id/email_layout"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -465,7 +456,6 @@
             android:textAllCaps="false"
             android:textColor="?attr/textPrimary"
             android:textStyle="bold"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintTop_toBottomOf="@+id/email_layout"
             app:layout_constraintEnd_toStartOf="@id/save_button" />
 

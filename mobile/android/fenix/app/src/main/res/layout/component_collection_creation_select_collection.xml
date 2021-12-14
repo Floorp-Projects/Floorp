@@ -140,7 +140,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:fontFamily="@font/metropolis"
             android:gravity="center_vertical"
             android:singleLine="true"
             android:text="@string/create_collection_add_new_collection"

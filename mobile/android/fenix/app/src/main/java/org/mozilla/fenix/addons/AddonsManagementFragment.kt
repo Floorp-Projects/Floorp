@@ -5,12 +5,14 @@
 package org.mozilla.fenix.addons
 
 import android.content.Context
+import android.graphics.Typeface
+import android.graphics.fonts.FontStyle.FONT_WEIGHT_MEDIUM
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -181,11 +183,17 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     }
 
     private fun createAddonStyle(context: Context): AddonsManagerAdapter.Style {
+        val sectionsTypeFace = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Typeface.create(Typeface.DEFAULT, FONT_WEIGHT_MEDIUM, false)
+        } else {
+            Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
+
         return AddonsManagerAdapter.Style(
             sectionsTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             addonNameTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             addonSummaryTextColor = ThemeManager.resolveAttribute(R.attr.textSecondary, context),
-            sectionsTypeFace = ResourcesCompat.getFont(context, R.font.metropolis_semibold),
+            sectionsTypeFace = sectionsTypeFace,
             addonAllowPrivateBrowsingLabelDrawableRes = R.drawable.ic_add_on_private_browsing_label
         )
     }

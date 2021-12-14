@@ -38,7 +38,6 @@
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
             android:textColor="?attr/textPrimary"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toEndOf="@+id/navigate_back"
             app:layout_constraintTop_toTopOf="parent"
             android:text="@string/enhanced_tracking_protection_details" />
@@ -219,14 +218,13 @@
 
         <TextView
             android:id="@+id/category_title"
+            style="@style/Header16TextStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="52dp"
             android:layout_marginTop="11dp"
             android:layout_marginEnd="19dp"
             android:textColor="?attr/textPrimary"
-            android:textSize="16sp"
-            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="@tools:sample/lorem" />
 

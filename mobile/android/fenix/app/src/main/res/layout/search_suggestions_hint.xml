@@ -89,7 +89,6 @@
             android:id="@+id/dismiss"
             android:layout_width="0dp"
             android:layout_height="48dp"
-            android:fontFamily="@font/metropolis_semibold"
             android:gravity="center_vertical"
             android:letterSpacing="0"
             android:paddingHorizontal="20dp"

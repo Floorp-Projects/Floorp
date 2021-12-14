@@ -39,7 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:fontFamily="@font/metropolis_bold"
+        android:textStyle="bold"
         android:gravity="start|center_vertical"
         android:paddingStart="8dp"
         android:paddingTop="16dp"
@@ -161,13 +161,12 @@
 
         <TextView
             android:id="@+id/bottom_bar_text"
+            style="@style/Header16TextStyle"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:fontFamily="@font/metropolis_semibold"
             android:gravity="center_vertical"
             android:text="@string/create_collection_save_to_collection_empty"
             android:textColor="?textActionPrimary"
-            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/save_button"
             app:layout_constraintStart_toEndOf="@id/bottom_bar_icon_button"
@@ -181,7 +180,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:text="@string/create_collection_save"
             android:textColor="?textActionPrimary"
-            app:fontFamily="@font/metropolis_medium"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

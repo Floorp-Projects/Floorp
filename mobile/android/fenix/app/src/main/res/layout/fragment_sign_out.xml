@@ -35,7 +35,6 @@
         android:textAllCaps="false"
         android:textColor="?attr/textPrimary"
         android:textStyle="bold"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/signOutDisconnect"
         app:layout_constraintTop_toBottomOf="@id/sign_out_message" />

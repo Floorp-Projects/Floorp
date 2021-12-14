@@ -82,7 +82,6 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/metropolis_semibold"
             android:letterSpacing="0"
             android:text="@string/add_to_homescreen_continue"
             android:textAllCaps="false"

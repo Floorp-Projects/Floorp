@@ -56,14 +56,13 @@
 
     <TextView
         android:id="@+id/multiselect_title"
+        style="Header20TextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:focusableInTouchMode="true"
         android:textColor="@color/fx_mobile_text_color_oncolor_primary"
-        android:textSize="20sp"
         android:importantForAccessibility="no"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toStartOf="@id/collect_multi_select"
         app:layout_constraintHorizontal_bias="0.0"

@@ -24,7 +24,6 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/section_header_height"
         android:gravity="start|center_vertical"
-        app:fontFamily="@font/metropolis_semibold"
         android:textColor="?preferenceSectionHeader"
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"

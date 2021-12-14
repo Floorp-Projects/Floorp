@@ -45,8 +45,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -134,10 +132,9 @@ private fun WallpaperSnackbar(
                 text = stringResource(R.string.wallpaper_updated_snackbar_message),
                 textAlign = TextAlign.Start,
                 color = FirefoxTheme.colors.textOnColorPrimary,
-                fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
-                fontSize = 18.sp,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 2
+                maxLines = 2,
+                style = FirefoxTheme.typography.headline7
             )
         },
         action = {

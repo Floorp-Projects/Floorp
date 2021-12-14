@@ -14,6 +14,7 @@
 
     <TextView
         android:id="@+id/webAddressHeader"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="24dp"
         android:gravity="center_vertical"
@@ -21,8 +22,6 @@
         android:paddingBottom="5dp"
         android:text="@string/preferences_passwords_saved_logins_site"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toTopOf="@id/webAddressText"
         app:layout_constraintEnd_toStartOf="@id/openWebAddress"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,6 +57,7 @@
 
     <TextView
         android:id="@+id/usernameHeader"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="24dp"
         android:layout_marginTop="16dp"
@@ -65,8 +65,6 @@
         android:letterSpacing="0.05"
         android:text="@string/preferences_passwords_saved_logins_username"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toTopOf="@id/usernameText"
         app:layout_constraintEnd_toStartOf="@id/copyUsername"
         app:layout_constraintStart_toStartOf="parent"
@@ -104,6 +102,7 @@
 
     <TextView
         android:id="@+id/passwordHeader"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="24dp"
         android:layout_marginTop="12dp"
@@ -111,8 +110,6 @@
         android:letterSpacing="0.05"
         android:text="@string/preferences_passwords_saved_logins_password"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toTopOf="@id/passwordText"
         app:layout_constraintEnd_toStartOf="@id/revealPasswordButton"
         app:layout_constraintStart_toStartOf="parent"

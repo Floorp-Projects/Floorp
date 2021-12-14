@@ -14,7 +14,7 @@
         <TextView
             android:id="@+id/details_blocking_header"
             style="@style/QuickSettingsText"
-            android:fontFamily="@font/metropolis_bold"
+            android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:layout_marginStart="@dimen/top_bar_alignment_margin_start"

@@ -18,6 +18,7 @@
 
     <TextView
         android:id="@+id/hostnameHeaderText"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingStart="3dp"
@@ -25,9 +26,7 @@
         android:gravity="center_vertical"
         android:text="@string/preferences_passwords_saved_logins_site"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
         android:letterSpacing="0.05"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -75,6 +74,7 @@
 
     <TextView
         android:id="@+id/usernameHeader"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="16dp"
         android:gravity="center_vertical"
@@ -83,9 +83,7 @@
         android:layout_marginTop="20dp"
         android:text="@string/preferences_passwords_saved_logins_username"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
         android:letterSpacing="0.05"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toTopOf="@id/inputLayoutUsername"
         app:layout_constraintEnd_toStartOf="@id/clearUsernameTextButton"
         app:layout_constraintStart_toStartOf="parent"
@@ -145,6 +143,7 @@
 
     <TextView
         android:id="@+id/passwordHeader"
+        style="@style/CaptionTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -152,10 +151,8 @@
         android:paddingEnd="0dp"
         android:text="@string/preferences_passwords_saved_logins_password"
         android:textColor="?attr/textPrimary"
-        android:textSize="12sp"
         android:layout_marginTop="10dp"
         android:letterSpacing="0.05"
-        app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toTopOf="@id/inputLayoutPassword"
         app:layout_constraintEnd_toStartOf="@id/revealPasswordButton"
         app:layout_constraintStart_toStartOf="parent"
