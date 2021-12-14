@@ -2847,12 +2847,7 @@ nsSize EventStateManager::GetScrollAmount(
   MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aEvent);
 
-  const bool isPage = aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PAGE;
-  if (!aScrollableFrame) {
-    // If there is no scrollable frame, we should use root, see below.
-    aScrollableFrame = aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
-  }
-
+  bool isPage = (aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PAGE);
   if (aScrollableFrame) {
     return isPage ? aScrollableFrame->GetPageScrollAmount()
                   : aScrollableFrame->GetLineScrollAmount();
@@ -2863,12 +2858,7 @@ nsSize EventStateManager::GetScrollAmount(
     return aPresContext->GetVisibleArea().Size();
   }
 
-  // Otherwise use root frame's font metrics.
-  //
-  // FIXME(emilio): Should this use the root element's style frame? The root
-  // frame will always have the initial font. Then again it should never matter
-  // for content, we should always have a root scrollable frame in html
-  // documents.
+  // If there is no scrollable frame, we should use root frame's information.
   nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
   if (!rootFrame) {
     return nsSize(0, 0);
@@ -6207,8 +6197,8 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   mIsNoLineOrPageDeltaDevice = aEvent->mIsNoLineOrPageDelta;
 
   {
-    nsIFrame* frame = aESM->ComputeScrollTarget(aTargetFrame, aEvent,
-                                                COMPUTE_DEFAULT_ACTION_TARGET);
+    nsIFrame* frame = aESM->ComputeScrollTarget(
+        aTargetFrame, aEvent, COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
     nsPresContext* pc =
         frame ? frame->PresContext() : aTargetFrame->PresContext();
     nsIScrollableFrame* scrollTarget = do_QueryFrame(frame);
