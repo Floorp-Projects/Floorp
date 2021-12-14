@@ -308,7 +308,9 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
         // terminated string.
         //
         // See Bug 1699569.
-        if (JS::UniqueTwoByteChars buffer =
+        if (mTokenOffset >= sourceLine.Length()) {
+          // Corrupt data, leave linebuf unset.
+        } else if (JS::UniqueTwoByteChars buffer =
                 ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
           err->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
                                 mTokenOffset);
