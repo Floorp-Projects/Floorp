@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.ActivityTestRule
 
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Rule
 
 import org.junit.Test
@@ -45,6 +46,7 @@ class OrientationDelegateTest : BaseSessionTest() {
         promise.value
     }
 
+    @Ignore("disable test for frequently failing Bug 1744372")
     @Test fun orientationLockedAlready() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
         goFullscreen()
