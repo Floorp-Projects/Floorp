@@ -88,7 +88,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void EnsureProvisionalTransport(const std::string& aTransportId,
                                   const std::string& aUfrag,
                                   const std::string& aPwd,
-                                  size_t aComponentCount) override;
+                                  int aComponentCount) override;
 
   void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
                                              uint16_t aTargetPort) override;
@@ -734,7 +734,7 @@ void MediaTransportHandlerSTS::SetProxyConfig(
 
 void MediaTransportHandlerSTS::EnsureProvisionalTransport(
     const std::string& aTransportId, const std::string& aUfrag,
-    const std::string& aPwd, size_t aComponentCount) {
+    const std::string& aPwd, int aComponentCount) {
   MOZ_RELEASE_ASSERT(mInitPromise);
 
   mInitPromise->Then(
@@ -746,9 +746,9 @@ void MediaTransportHandlerSTS::EnsureProvisionalTransport(
 
         RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
         if (!stream) {
-          CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%u",
+          CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%d",
                       mIceCtx->name().c_str(), aTransportId.c_str(),
-                      static_cast<unsigned>(aComponentCount));
+                      aComponentCount);
 
           std::ostringstream os;
           os << mIceCtx->name() << " transport-id=" << aTransportId;
