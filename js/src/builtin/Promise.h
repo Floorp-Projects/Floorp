@@ -27,6 +27,54 @@ class PromiseObject;
 
 enum class CompletionKind;
 
+enum class PromiseHandler : uint32_t {
+  Identity = 0,
+  Thrower,
+
+  // ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+  //
+  // Await in async function
+  // https://tc39.es/ecma262/#await
+  //
+  // Step 3. fulfilledClosure Abstract Closure.
+  // Step 5. rejectedClosure Abstract Closure.
+  AsyncFunctionAwaitedFulfilled,
+  AsyncFunctionAwaitedRejected,
+
+  // Await in async generator
+  // https://tc39.es/ecma262/#await
+  //
+  // Step 3. fulfilledClosure Abstract Closure.
+  // Step 5. rejectedClosure Abstract Closure.
+  AsyncGeneratorAwaitedFulfilled,
+  AsyncGeneratorAwaitedRejected,
+
+  // AsyncGeneratorAwaitReturn ( generator )
+  // https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn
+  //
+  // Step 7. fulfilledClosure Abstract Closure.
+  // Step 9. rejectedClosure Abstract Closure.
+  AsyncGeneratorResumeNextReturnFulfilled,
+  AsyncGeneratorResumeNextReturnRejected,
+
+  // AsyncGeneratorUnwrapYieldResumption
+  // https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+  //
+  // Steps 3-5 for awaited.[[Type]] handling.
+  AsyncGeneratorYieldReturnAwaitedFulfilled,
+  AsyncGeneratorYieldReturnAwaitedRejected,
+
+  // AsyncFromSyncIteratorContinuation ( result, promiseCapability )
+  // https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation
+  //
+  // Steps 7. unwrap Abstract Closure.
+  AsyncFromSyncIteratorValueUnwrapDone,
+  AsyncFromSyncIteratorValueUnwrapNotDone,
+
+  // One past the maximum allowed PromiseHandler value.
+  Limit
+};
+
 // Promise.prototype.then.
 extern bool Promise_then(JSContext* cx, unsigned argc, JS::Value* vp);
 
