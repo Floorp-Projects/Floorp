@@ -43,7 +43,7 @@ class DOMFullscreenChild extends JSWindowActorChild {
         break;
       }
       case "DOMFullscreen:CleanUp": {
-        let isNotTheRequestSource = !!aMessage.data.remoteFrameBC; 
+        let isNotTheRequestSource = !!aMessage.data.remoteFrameBC;
         // If we've exited fullscreen at this point, no need to record
         // transaction id or call exit fullscreen. This is especially
         // important for pre-e10s, since in that case, it is possible
