@@ -1863,6 +1863,10 @@
     <string name="quick_settings_sheet_secure_connection_2">La conexión es segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">La conexión no es segura</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Borrar cookies y datos del sitio</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[¿Estás seguro de querer borrar todas las cookies y datos del sitio <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">¿Estás seguro de que querés borrar todos los permisos de todos los sitios?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1989,7 +1993,7 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Ayudanos a mejorar</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Ayudá a mejorar Firefox</string>
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Ayudá a mejorar Firefox</string>
 
@@ -2000,11 +2004,11 @@
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Me gusta limpiar las pestañas viejas yo mismo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">El tiempo para pasarlas a inactivas es demasiado largo</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">El período de dos semanas es demasiado largo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">El período de dos semanas es demasiado largo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">El tiempo para pasarlas a inactivas es demasiado corto</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">El período de dos semanas es demasiado corto</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">El período de dos semanas es demasiado corto</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->

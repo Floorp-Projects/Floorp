@@ -22,7 +22,7 @@
     <string name="no_private_tabs_description">Tu bodo prikazani vaši zasebni zavihki.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 odprt zavihek. Tapnite za preklop zavihkov.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 odprt zavihek. Tapnite za preklop zavihkov.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Odprtih zavihkov: %1$s. Tapnite za preklop zavihkov.</string>
 
@@ -40,21 +40,17 @@
     <string name="tab_tray_collection_button_multiselect_content_description">Shrani izbrane zavihke v zbirko</string>
 
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Izbran %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">Izbran %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Neizbran %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">Neizbran %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Večizbirni način končan</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Večizbirni način končan</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Vstopili ste v večizbirni način, izberite zavihke, ki jih želite shraniti v zbirko</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Vstopili ste v večizbirni način, izberite zavihke, ki jih želite shraniti v zbirko</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Izbrano</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Nedavno shranjeno</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Nedavno dodano med zaznamke</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nedavni zaznamki</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -70,7 +66,7 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Ste v zasebni seji</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Ste v zasebni seji</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s izbriše zgodovino iskanja in brskanja zasebnih zavihkov, ko jih zaprete ali zaprete aplikacijo. Čeprav to ne pomeni, da ste za spletna mesta ali ponudnike internetnih storitev anonimni, vam omogoča uporabo spleta v zasebnosti, skrito pred očmi ostalih uporabnikov te naprave.</string>
@@ -78,7 +74,7 @@
        Pogoste zmote o zasebnem brskanju
     </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Izbriši sejo</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Izbriši sejo</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -160,10 +156,6 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Prejšnja odkritja</string>
-
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Nedavno obiskano</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -177,7 +169,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Odprti zavihki</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Odprti zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Nazaj</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -189,11 +181,11 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Dodaj med zaznamke</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Uredi zaznamek</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Uredi zaznamek</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Dodatki</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Razširitve</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Razširitve</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Tukaj ni dodatkov</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -217,13 +209,13 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najdi na strani</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Zasebni zavihek</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Zasebni zavihek</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Shrani v zbirko</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Deli</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Deli z …</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Deli z …</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Odpri v %1$s</string>
@@ -240,7 +232,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Odpri v aplikaciji</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Videz</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Videz</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Prilagodi bralni pogled</string>
@@ -259,13 +251,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Povezava ni mogoča. Neprepoznavna URL shema.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Povezava ni mogoča. Neprepoznavna URL shema.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Izbrani jezik</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Iskanje</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Iskanje</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Uporabi jezik naprave</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -279,7 +271,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavitve iskalnika</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Tokrat išči z iskalnikom:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Tokrat išči z iskalnikom:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Izpolni povezavo iz odložišča</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -323,7 +315,7 @@
     <string name="settings">Nastavitve</string>
 
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Osnove</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Osnove</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Splošno</string>
     <!-- Preference category for all links about Fenix -->
@@ -335,26 +327,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Naslovna vrstica</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Pomoč</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Pomoč</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Oceni v trgovini Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Sporočite nam svoje mnenje</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Sporočite nam svoje mnenje</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">O %1$su</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Vaše pravice</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Vaše pravice</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Gesla</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Gesla</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kreditne kartice in naslovi</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Kreditne kartice in naslovi</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Nastavi kot privzeti brskalnik</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Napredno</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Zasebnost</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Zasebnost</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Zasebnost in varnost</string>
     <!-- Preference for advanced site permissions -->
@@ -380,13 +372,11 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Prijava</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Prijava</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Orodna vrstica</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Domača stran</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Domača stran</string>
     <!-- Preference for gestures based actions -->
@@ -406,9 +396,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Zbiranje podatkov</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Obvestilo o zasebnosti</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Obvestilo o zasebnosti</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Razvojna orodja</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Razvojna orodja</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Oddaljeno razhroščevanje preko USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -461,10 +451,6 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Skoči nazaj</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Nedavno shranjeno</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Nedavno dodano med zaznamke</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Nedavni zaznamki</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -532,21 +518,21 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Zavihek prejet</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Zavihki prejeti</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Zavihki prejeti</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Zavihek iz naprave %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Zaščita pred sledenjem</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Zaščita pred sledenjem</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Zaščita pred sledenjem</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Zaščita pred sledenjem</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Zavrnite vsebine in skripte, ki vam sledijo na spletu</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Zavrnite vsebine in skripte, ki vam sledijo na spletu</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Izjeme</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Zaščita pred sledenjem je za te spletne strani izključena</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Zaščita pred sledenjem je za te spletne strani izključena</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Vklopi za vsa spletna mesta</string>
     <!-- Text displayed when there are no exceptions -->
@@ -555,7 +541,7 @@
     <string name="exceptions_empty_message_learn_more_link">Več o tem</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetrija</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Telemetrija</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Uporaba in tehnični podatki</string>
     <!-- Preference description for usage and technical data collection -->
@@ -563,7 +549,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Podatki za trženje</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Deli podatke o možnostih, ki jih uporabljate v %1$su z Leanplumom, našim ponudnikom mobilnega oglaševanja.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Deli podatke o možnostih, ki jih uporabljate v %1$su z Leanplumom, našim ponudnikom mobilnega oglaševanja.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Deli osnovne podatke o uporabi z Adjustom, našim ponudnikom mobilnega trženja</string>
     <!-- Title for studies preferences -->
@@ -571,16 +557,16 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Dovoli Mozilli namestitev in izvajanje raziskav</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Poskusi</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Poskusi</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Dovoli Mozilli namestitev in pridobivanje podatkov poskusnih zmogljivosti</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Dovoli Mozilli namestitev in pridobivanje podatkov poskusnih zmogljivosti</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Poročevalec o sesutju</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Poročevalec o sesutju</string>
 
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Lokacijska storitev Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Lokacijska storitev Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Zdravniško spričevalo za %s</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">Zdravniško spričevalo za %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -589,7 +575,7 @@
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Skenirajte kodo za seznanjanje v Firefoxu za namizja</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Prijava</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Prijava</string>
 
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Prijavite se, če se želite ponovno povezati</string>
@@ -600,9 +586,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Skenirajte QR-kodo na strani <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Odpri kamero</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Odpri kamero</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Prekliči</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Prekliči</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -635,9 +621,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Seje</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Seje</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Posnetki zaslona</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Posnetki zaslona</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Prenosi</string>
     <!-- Option in library to open Bookmarks page -->
@@ -655,15 +641,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Nov zavihek</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Najdi na strani</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Najdi na strani</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Bralni seznam</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Bralni seznam</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Iskanje</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Iskanje</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nastavitve</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Meni elementa zgodovine</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Meni elementa zgodovine</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zapri</string>
 
@@ -715,20 +701,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Samodejno zapiraj odprte zavihke</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Začni na domačem zaslonu</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Uvodni zaslon</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">po štirih urah</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Domača stran</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">vedno</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Zadnji zavihek</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">nikoli</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Domača stran po štirih urah nedejavnosti</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -771,7 +749,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Odprti zavihki</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Zasebna seja</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Zasebna seja</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -785,9 +763,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sinhroniziraj</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Odprti zavihki</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Odprti zavihki</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Shrani v zbirko</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Shrani v zbirko</string>
     <!-- Text shown in the menu for the collection selector -->
     <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Izberi</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -803,11 +781,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zapri vse zavihke</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Nov zavihek</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Nov zavihek</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Domov</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Domov</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Preklopi način zavihkov</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Preklopi način zavihkov</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Dodaj med zaznamke</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -827,25 +805,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Meni odprtih zavihkov</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Zapri vse zavihke</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Zapri vse zavihke</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Deli zavihke</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Deli zavihke</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Shrani zavihke v zbirko</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Meni zavihka</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Deli zavihek</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Deli zavihek</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Izbriši</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Izbriši</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Shrani</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Shrani</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Deli</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Deli</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Slika trenutne seje</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Slika trenutne seje</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Shrani v zbirko</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Shrani v zbirko</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Izbriši zbirko</string>
@@ -867,10 +845,7 @@
     <string name="pwa_site_controls_title_private">%1$s (zasebni način)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Shrani</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Drugo</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Shrani</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Ostali zavihki</string>
@@ -879,21 +854,13 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Izbriši zgodovino</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Ste prepričani, da želite počistiti vašo zgodovino?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Ste prepričani, da želite počistiti vašo zgodovino?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Zgodovina izbrisana</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Izbrisan %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Počisti</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Kopiraj</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Deli</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Odpri v novem zavihku</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Odpri v zasebnem zavihku</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Počisti</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
     <!-- History multi select title in app bar
@@ -901,13 +868,13 @@
     <string name="history_multi_select_title">%1$d izbranih</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Izbriši %1$d predmetov</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Izbriši %1$d predmetov</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Danes</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Včeraj</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Zadnjih 24 ur</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">Zadnjih 24 ur</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Zadnjih 7 dni</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -930,7 +897,7 @@
     <string name="download_multi_select_title">%1$d izbranih</string>
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Odpri</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Odpri</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -941,7 +908,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Oprostite. %1$s ne more naložiti te strani.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Spodaj lahko poskusite obnoviti ali zapreti ta zavihek.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Spodaj lahko poskusite obnoviti ali zapreti ta zavihek.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Pošlji poročilo o sesutju Mozilli</string>
     <!-- Close tab button text on the tab crash page -->
@@ -950,24 +917,24 @@
     <string name="tab_crash_restore">Obnovi zavihek</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Možnosti seje</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Možnosti seje</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Deli sejo</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Deli sejo</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Meni zaznamkov</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Meni zaznamkov</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Uredi zaznamek</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Izberi mapo</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Izberi mapo</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ali ste prepričani, da želite zbrisati to mapo?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s bo izbrisal izbrane predmete.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Mapa %1$s izbrisana</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">Mapa %1$s izbrisana</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Dodaj mapo</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -977,7 +944,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Uredi</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Izberi</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Izberi</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopiraj</string>
     <!-- Bookmark overflow menu share button -->
@@ -1028,7 +995,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Dovoljenja</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Dovoljenja</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Odpri nastavitve</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1038,7 +1005,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Priporočeno</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Upravljanje dovoljenj strani</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Upravljanje dovoljenj strani</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Počisti dovoljenja</string>
     <!-- Button label for clearing a site permission-->
@@ -1147,14 +1114,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Pošlji in deli</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Pošlji in deli</string>
     <!-- Share screen header -->
     <string name="share_header_2">Deli</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Deli</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Deli povezavo</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Deli povezavo</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Pošlji na napravo</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1190,17 +1157,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Seja zasebnega brskanja</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Seja zasebnega brskanja</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Izbriši zasebne zavihke</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Izbriši zasebne zavihke</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zapri zasebne zavihke</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Odpri</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Odpri</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Izbriši in odpri</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Izbriši in odpri</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Omogoča</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Omogoča</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Trženje</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1216,19 +1183,19 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Zbirka preimenovana</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Zavihek izbrisan</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Zavihek izbrisan</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Zavihki izbrisani</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Zavihki izbrisani</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Zavihek zaprt</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Zavihki zaprti</string>
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Zavihki zaprti!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Zavihki zaprti!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Zaznamki shranjeni!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Prikaži</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Prikaži</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Dodano med glavne strani!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1236,15 +1203,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Zasebni zavihki zaprti</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Zasebni zavihki izbrisani</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Zasebni zavihki izbrisani</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">RAZVELJAVI</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Spletno mesto odstranjeno</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Spletno mesto odstranjeno</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Razveljavi</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Razveljavi</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Potrdi</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Potrdi</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
@@ -1265,8 +1232,6 @@
     <string name="delete_tab_and_collection_dialog_title">Izbrišem %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Izbriši</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Prekliči</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Vstop v celozaslonski način</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1295,10 +1260,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Naslovov: %d</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Zgodovina</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Zgodovina</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Strani: %d</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">Strani: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Piškotki</string>
 
@@ -1317,7 +1282,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Ob izhodu izbriši podatke brskanja</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Samodejno izbriše podatke brskanja, ko v glavnem meniju izberete &quot;Izhod&quot;</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Samodejno izbriše podatke brskanja, ko v glavnem meniju izberete &quot;Izhod&quot;</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Samodejno izbriše podatke brskanja, ko v glavnem meniju izberete \&quot;Izhod\&quot;</string>
 
@@ -1369,14 +1334,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Dobrodošli v %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Že imate račun?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Kaj je novega</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Imate vprašanja o preoblikovanem %su? Želite izvedeti, kaj se je spremenilo?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Tukaj poiščite odgovore</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Že imate račun?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sinhronizirajte Firefox med napravami</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1392,7 +1350,7 @@
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Prijava</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Ostanite odjavljeni</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Ostanite odjavljeni</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync je vklopljen</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1406,7 +1364,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Uravnotežena zasebnost in učinkovitost delovanja. Strani bodo delovale običajno.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Strogo (priporočljivo)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strogo</string>
     <!-- text for strict blocking option button description -->
@@ -1415,15 +1373,6 @@
     <string name="onboarding_toolbar_placement_header_1">Izberite postavitev orodne vrstice</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Postavite si orodno vrstico na doseg roke. Naj bo na dnu ali pa jo premaknite na vrh.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Brskajte zasebno</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Odprite zasebni zavihek enkrat: Tapnite ikono %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Vsakič odpri zaseben zavihek: prilagodite nastavitve zasebnega brskanja.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Odpri nastavitve</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaša zasebnost</string>
 
@@ -1432,8 +1381,6 @@
     <string name="onboarding_privacy_notice_description2">%s smo zasnovali tako, da vam omogočimo nadzor nad tem, kaj delite na spletu in kaj delite z nami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Preberite naše obvestilo o zasebnosti</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Zapri</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Začnite brskati</string>
@@ -1473,7 +1420,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Nimate računa? <u>Ustvarite ga</u> za sinhronizacijo Firefoxa med napravami.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox se bo prenehal sinhronizirati z vašim računom, vendar ne bo izbrisal podatkov o brskanju na tej napravi.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox se bo prenehal sinhronizirati z vašim računom, vendar ne bo izbrisal podatkov o brskanju na tej napravi.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s se bo prenehal sinhronizirati z vašim računom, vendar ne bo izbrisal podatkov o brskanju na tej napravi.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1531,7 +1478,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Le v zasebnih zavihkih</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Le v zavihkih po meri</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Le v zavihkih po meri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptorudarje</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1562,8 +1509,6 @@
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih strani.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Vsakič, ko je ščit obarvan vijolično, %s zavrača sledilce na spletnem mestu. Tapnite za več informacij.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaščite za to spletno mesto so VKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1574,10 +1519,10 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Krmari nazaj</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Vaše pravice</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Vaše pravice</string>
 
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Odprtokodne knjižnice, ki jih uporabljamo</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Odprtokodne knjižnice, ki jih uporabljamo</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Kaj je novega v %su</string>
     <!-- Open source licenses page title
@@ -1615,10 +1560,10 @@
     <string name="about_debug_menu_toast_done">Meni za razhroščevanje je omogočen</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 zavihek</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 zavihek</string>
 
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">Zavihkov: %d</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">Zavihkov: %d</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1653,8 +1598,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Vprašaj pred shranjevanjem</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nikoli ne shranjuj</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Samodejno izpolnjevanje</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Samodejno izpolni v %1$su</string>
@@ -1674,9 +1617,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sinhroniziraj prijave med napravami</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Ponovno poveži</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Ponovno poveži</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Prijava v Sync</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Prijava v Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Shranjene prijave</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1694,9 +1637,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Iskanje prijav</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Po abecedi</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Po abecedi</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Nedavno uporabljene</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Nedavno uporabljene</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stran</string>
     <!-- The header for the username for a login -->
@@ -1704,25 +1647,25 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Geslo</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Ponovno vnesite PIN</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Ponovno vnesite PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Odklenite za ogled shranjenih prijav</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Odklenite za ogled shranjenih prijav</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Ta povezava ni varna. Prijave, ki jih vnesete, so lahko prestrežene.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Ta povezava ni varna. Prijave, ki jih vnesete, so lahko prestrežene.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Več o tem</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Več o tem</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Ali želite, da %s shrani to prijavo?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Ali želite, da %s shrani to prijavo?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Shrani</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Shrani</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Ne shrani</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Ne shrani</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Geslo kopirano v odložišče</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Uporabniško ime kopirano v odložišče</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Spletno mesto kopirano v odložišče</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Spletno mesto kopirano v odložišče</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiraj geslo</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1734,7 +1677,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Počisti domeno</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Kopiraj spletno mesto</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Kopiraj spletno mesto</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Odpri stran v brskalniku</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1799,7 +1742,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Ime na kartici</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Vzdevek kartice</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Vzdevek kartice</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Izbriši kartico</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1857,17 +1800,17 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Zamenjajte poizvedbo z &quot;%s&quot;. Primer: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Več o tem</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Več o tem</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Podrobnosti iskalnika po meri</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Povezava Več o tem</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Povezava Več o tem</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Vnesite ime iskalnika</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Iskalnik z imenom “%s” že obstaja.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Iskalnik z imenom “%s” že obstaja.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Vnesite iskalni niz</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1910,10 +1853,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Povezava je varna</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Povezava ni varna</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Varna povezava</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Nevarna povezava</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Počisti piškotke in podatke strani</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Ali ste prepričani, da želite počistiti vse piškotke in podatke spletnega mesta <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ali ste prepričani, da želite počistiti vsa dovoljenja na vseh straneh?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1923,7 +1866,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Ni izjem</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Top članki</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Top članki</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ali ste prepričani, da želite izbrisati ta zaznamek?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1950,7 +1893,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Shrani spremembe v prijavo.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Zavrzi spremembe</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Zavrzi spremembe</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Urejanje</string>
     <!--  The page title for adding new login. -->
@@ -1971,8 +1914,6 @@
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Spletni naslov mora vsebovati \“https://\“ ali \“http://\“</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Spletni naslov mora vsebovati &quot;https://&quot; ali &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -2006,10 +1947,6 @@
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Najbolj obiskana spletna mesta</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Prikaži najbolj obiskana spletna mesta</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Prikaži najbolj obiskana spletna mesta</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Ime</string>
