@@ -66,7 +66,6 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
@@ -2058,11 +2057,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
     // HACK: make sure PSM gets initialized on the main thread.
     net_EnsurePSMInit();
     httpChannel = new nsHttpChannel();
-  }
-
-  // Avoid a late initialization
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   return SetupChannelInternal(httpChannel, uri, givenProxyInfo,
