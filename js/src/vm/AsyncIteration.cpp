@@ -507,11 +507,11 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   MOZ_ASSERT(generator->isCompleted());
 
-  while (true) {
-    if (generator->isQueueEmpty()) {
-      return true;
-    }
+  if (generator->isQueueEmpty()) {
+    return true;
+  }
 
+  while (true) {
     Rooted<AsyncGeneratorRequest*> request(
         cx, AsyncGeneratorObject::peekRequest(generator));
     if (!request) {
@@ -534,12 +534,15 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
         return false;
       }
-      continue;
+    } else {
+      if (!AsyncGeneratorCompleteStepNormal(cx, generator, UndefinedHandleValue,
+                                            true)) {
+        return false;
+      }
     }
 
-    if (!AsyncGeneratorCompleteStepNormal(cx, generator, UndefinedHandleValue,
-                                          true)) {
-      return false;
+    if (generator->isQueueEmpty()) {
+      return true;
     }
   }
 }
