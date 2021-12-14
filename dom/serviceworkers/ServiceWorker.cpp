@@ -66,7 +66,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
-  KeepAliveIfHasListenersFor(u"statechange"_ns);
+  KeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
 
   // The error event handler is required by the spec currently, but is not used
   // anywhere.  Don't keep the object alive in that case.
@@ -143,7 +143,7 @@ void ServiceWorker::MaybeDispatchStateChangeEvent() {
   // more statechange events will occur.  We can allow the DOM
   // object to GC if script is not holding it alive.
   if (mLastNotifiedState == ServiceWorkerState::Redundant) {
-    IgnoreKeepAliveIfHasListenersFor(u"statechange"_ns);
+    IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
   }
 }
 
