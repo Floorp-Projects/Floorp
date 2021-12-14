@@ -32,50 +32,6 @@ using namespace js;
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument);
 
-// Resume the async generator when the `await` operand fulfills to `value`.
-[[nodiscard]] static bool AsyncGeneratorAwaitedFulfilled(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value) {
-  MOZ_ASSERT(asyncGenObj->isExecuting(),
-             "Await fulfilled when not in 'Executing' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Normal, value);
-}
-
-// Resume the async generator when the `await` operand rejects with `reason`.
-[[nodiscard]] static bool AsyncGeneratorAwaitedRejected(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue reason) {
-  MOZ_ASSERT(asyncGenObj->isExecuting(),
-             "Await rejected when not in 'Executing' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
-}
-
-// Resume the async generator after awaiting on the value passed to
-// AsyncGenerator#return, when the async generator was still executing.
-// Split into two functions depending on whether the awaited value was
-// fulfilled or rejected.
-[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value) {
-  MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
-             "YieldReturn-Await fulfilled when not in "
-             "'AwaitingYieldReturn' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
-}
-
-[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue reason) {
-  MOZ_ASSERT(
-      asyncGenObj->isAwaitingYieldReturn(),
-      "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
-}
-
 enum class ResumeNextKind { Enqueue, Reject, Resolve };
 
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
@@ -393,6 +349,26 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       cx, asyncGenObj, completionKind, resumptionValue);
 }
 
+// Resume the async generator when the `await` operand fulfills to `value`.
+[[nodiscard]] static bool AsyncGeneratorAwaitedFulfilled(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue value) {
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "Await fulfilled when not in 'Executing' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Normal, value);
+}
+
+// Resume the async generator when the `await` operand rejects with `reason`.
+[[nodiscard]] static bool AsyncGeneratorAwaitedRejected(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue reason) {
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "Await rejected when not in 'Executing' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
+}
+
 // 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
 // evaluating an `await` expression in an async generator.
 [[nodiscard]] static bool AsyncGeneratorAwait(
@@ -452,6 +428,26 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   return true;
+}
+
+[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue value) {
+  MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
+             "YieldReturn-Await fulfilled when not in "
+             "'AwaitingYieldReturn' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
+}
+
+[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue reason) {
+  MOZ_ASSERT(
+      asyncGenObj->isAwaitingYieldReturn(),
+      "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
 }
 
 [[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
