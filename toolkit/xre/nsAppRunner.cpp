@@ -4164,6 +4164,7 @@ bool IsWaylandEnabled() {
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
 enum struct ShouldNotProcessUpdatesReason {
   DevToolsLaunching,
+  NotAnUpdatingTask,
   OtherInstanceRunning,
 };
 
@@ -4172,6 +4173,8 @@ const char* ShouldNotProcessUpdatesReasonAsString(
   switch (aReason) {
     case ShouldNotProcessUpdatesReason::DevToolsLaunching:
       return "DevToolsLaunching";
+    case ShouldNotProcessUpdatesReason::NotAnUpdatingTask:
+      return "NotAnUpdatingTask";
     case ShouldNotProcessUpdatesReason::OtherInstanceRunning:
       return "OtherInstanceRunning";
   }
@@ -4202,7 +4205,25 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
   // Do not process updates if we're running a background task mode and another
   // instance is already running.  This avoids periodic maintenance updating
   // underneath a browsing session.
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
+  Maybe<nsCString> backgroundTasks = BackgroundTasks::GetBackgroundTasks();
+  if (backgroundTasks.isSome()) {
+    // Only process updates for specific tasks: at this time, the
+    // `backgroundupdate` task and the test-only `shouldprocessupdates` task.
+    //
+    // Background tasks can be sparked by Firefox instances that are shutting
+    // down, which can cause races between the task startup trying to update and
+    // Firefox trying to invoke the updater.  This happened when converting
+    // `pingsender` to a background task, since it is launched to send pings at
+    // shutdown: Bug 1736373.
+    //
+    // We'd prefer to have this be a property of the task definition sibling to
+    // `backgroundTaskTimeoutSec`, but when we reach this code we're well before
+    // we can load the task JSM.
+    if (!BackgroundTasks::IsUpdatingTaskName(backgroundTasks.ref())) {
+      NS_WARNING("ShouldNotProcessUpdates(): NotAnUpdatingTask");
+      return Some(ShouldNotProcessUpdatesReason::NotAnUpdatingTask);
+    }
+
     // At this point we have a dir provider but no XPCOM directory service.  We
     // launch the update sync manager using that information so that it doesn't
     // need to ask for (and fail to find) the directory service.
