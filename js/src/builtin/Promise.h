@@ -258,6 +258,11 @@ struct PromiseReactionRecordBuilder {
       JSContext* cx, JS::Handle<AsyncGeneratorObject*> unwrappedGenerator) = 0;
 };
 
+[[nodiscard]] bool InternalAsyncGeneratorAwait(
+    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
+    JS::Handle<JS::Value> value, PromiseHandler onFulfilled,
+    PromiseHandler onRejected);
+
 }  // namespace js
 
 #endif  // builtin_Promise_h

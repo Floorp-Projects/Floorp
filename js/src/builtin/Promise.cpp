@@ -5257,6 +5257,16 @@ template <typename T>
   return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
 
+[[nodiscard]] bool js::InternalAsyncGeneratorAwait(
+    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
+    JS::Handle<JS::Value> value, PromiseHandler onFulfilled,
+    PromiseHandler onRejected) {
+  auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
+    reaction->setIsAsyncGenerator(asyncGenObj);
+  };
+  return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
+}
+
 /**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
@@ -5282,12 +5292,9 @@ template <typename T>
 [[nodiscard]] bool js::AsyncGeneratorAwait(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
-  auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-    reaction->setIsAsyncGenerator(asyncGenObj);
-  };
-  return InternalAwait(cx, value, nullptr,
-                       PromiseHandler::AsyncGeneratorAwaitedFulfilled,
-                       PromiseHandler::AsyncGeneratorAwaitedRejected, extra);
+  return InternalAsyncGeneratorAwait(
+      cx, asyncGenObj, value, PromiseHandler::AsyncGeneratorAwaitedFulfilled,
+      PromiseHandler::AsyncGeneratorAwaitedRejected);
 }
 
 // https://tc39.github.io/ecma262/#sec-%asyncfromsynciteratorprototype%.next
@@ -5685,11 +5692,8 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
           // Step 10.b.i.9: Perform ! PerformPromiseThen(promise, onFulfilled,
           //                                             onRejected).
           // Step 10.b.i.10: Return undefined.
-          auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-            reaction->setIsAsyncGenerator(generator);
-          };
-          return InternalAwait(cx, value, nullptr, onFulfilled, onRejected,
-                               extra);
+          return InternalAsyncGeneratorAwait(cx, generator, value, onFulfilled,
+                                             onRejected);
         }
 
         // Step 10.b.ii: Else,
@@ -5730,11 +5734,8 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
       const PromiseHandler onRejected =
           PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
 
-      auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-        reaction->setIsAsyncGenerator(generator);
-      };
-      return InternalAwait(cx, argument, nullptr, onFulfilled, onRejected,
-                           extra);
+      return InternalAsyncGeneratorAwait(cx, generator, argument, onFulfilled,
+                                         onRejected);
     }
 
     // Step 16 (reordered): Set generator.[[AsyncGeneratorState]] to
