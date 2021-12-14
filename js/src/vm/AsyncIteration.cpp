@@ -751,6 +751,10 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
     return false;
   }
 
+  MOZ_ASSERT_IF(
+      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
+      asyncGenObj->isQueueEmpty());
+
   if (!AsyncGeneratorEnqueue(cx, asyncGenObj, completionKind, completionVal,
                              resultPromise)) {
     return false;
@@ -762,14 +766,6 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
     }
   } else if (asyncGenObj->isSuspendedStart() ||
              asyncGenObj->isSuspendedYield()) {
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::peekRequest(asyncGenObj));
-    if (!request) {
-      return false;
-    }
-
-    CompletionKind completionKind = request->completionKind();
-
     if (completionKind != CompletionKind::Normal &&
         asyncGenObj->isSuspendedStart()) {
       asyncGenObj->setCompleted();
@@ -777,9 +773,8 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
         return false;
       }
     } else {
-      RootedValue resumptionValue(cx, request->completionValue());
       if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-              cx, asyncGenObj, completionKind, resumptionValue)) {
+              cx, asyncGenObj, completionKind, completionValue)) {
         return false;
       }
     }
