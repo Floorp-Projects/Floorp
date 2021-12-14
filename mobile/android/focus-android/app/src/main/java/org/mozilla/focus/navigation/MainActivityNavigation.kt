@@ -17,7 +17,6 @@ import org.mozilla.focus.fragment.AboutFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
-import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.settings.AdvancedSettingsFragment
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
@@ -87,7 +86,7 @@ class MainActivityNavigation(
     /**
      * Show browser for tab with the given [tabId].
      */
-    fun browser(tabId: String, showTabs: Boolean) {
+    fun browser(tabId: String) {
         val fragmentManager = activity.supportFragmentManager
 
         val urlInputFragment = fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
@@ -103,19 +102,6 @@ class MainActivityNavigation(
             fragmentManager
                 .beginTransaction()
                 .replace(R.id.container, BrowserFragment.createForTab(tabId), BrowserFragment.FRAGMENT_TAG)
-                .commitAllowingStateLoss()
-        }
-
-        val tabsTrayFragment = fragmentManager.findFragmentByTag(TabSheetFragment.FRAGMENT_TAG) as TabSheetFragment?
-        if (tabsTrayFragment == null && showTabs) {
-            fragmentManager
-                .beginTransaction()
-                .add(R.id.container, TabSheetFragment(), TabSheetFragment.FRAGMENT_TAG)
-                .commitAllowingStateLoss()
-        } else if (tabsTrayFragment != null && !showTabs) {
-            fragmentManager
-                .beginTransaction()
-                .remove(tabsTrayFragment)
                 .commitAllowingStateLoss()
         }
     }

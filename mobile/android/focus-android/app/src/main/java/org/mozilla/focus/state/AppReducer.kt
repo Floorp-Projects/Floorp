@@ -20,7 +20,6 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.NoTabs -> noTabs(state)
             is AppAction.EditAction -> editAction(state, action)
             is AppAction.FinishEdit -> finishEditing(state, action)
-            is AppAction.ShowTabs -> showTabs(state)
             is AppAction.HideTabs -> hideTabs(state)
             is AppAction.ShowFirstRun -> showFirstRun(state)
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
@@ -74,17 +73,6 @@ private fun finishEditing(state: AppState, action: AppAction.FinishEdit): AppSta
     return state.copy(
         screen = Screen.Browser(tabId = action.tabId, showTabs = false)
     )
-}
-
-/**
- * Show the tabs tray.
- */
-private fun showTabs(state: AppState): AppState {
-    return if (state.screen is Screen.Browser) {
-        state.copy(screen = state.screen.copy(showTabs = true))
-    } else {
-        state
-    }
 }
 
 /**

@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -75,6 +76,7 @@ import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
+import org.mozilla.focus.session.ui.TabsPopup
 import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
@@ -692,7 +694,13 @@ class BrowserFragment :
     private fun tabCounterListener() {
         val openedTabs = requireComponents.store.state.tabs.size
 
-        requireComponents.appStore.dispatch(AppAction.ShowTabs)
+        val tabsPopup = TabsPopup(binding.browserToolbar, requireComponents)
+        tabsPopup.showAsDropDown(
+            binding.browserToolbar,
+            0,
+            0,
+            Gravity.END
+        )
 
         TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
     }

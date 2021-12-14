@@ -43,7 +43,7 @@ class Navigator(
     private fun navigateTo(screen: Screen) {
         when (screen) {
             is Screen.Home -> navigation.home()
-            is Screen.Browser -> navigation.browser(screen.tabId, screen.showTabs)
+            is Screen.Browser -> navigation.browser(screen.tabId)
             is Screen.EditUrl -> navigation.edit(
                 screen.tabId
             )

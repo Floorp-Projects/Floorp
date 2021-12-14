@@ -38,11 +38,6 @@ sealed class AppAction : Action {
     ) : AppAction()
 
     /**
-     * Show the tabs tray.
-     */
-    object ShowTabs : AppAction()
-
-    /**
      * Hide the tabs tray.
      */
     object HideTabs : AppAction()

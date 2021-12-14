@@ -36,7 +36,6 @@ import org.mozilla.focus.navigation.MainActivityNavigation
 import org.mozilla.focus.navigation.Navigator
 import org.mozilla.focus.perf.Performance
 import org.mozilla.focus.session.IntentProcessor
-import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -195,17 +194,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     override fun onBackPressed() {
         val fragmentManager = supportFragmentManager
-
-        val sessionsSheetFragment = fragmentManager.findFragmentByTag(
-            TabSheetFragment.FRAGMENT_TAG
-        ) as TabSheetFragment?
-        if (sessionsSheetFragment != null &&
-            sessionsSheetFragment.isVisible &&
-            sessionsSheetFragment.onBackPressed()
-        ) {
-            // SessionsSheetFragment handles back presses itself (custom animations).
-            return
-        }
 
         val urlInputFragment =
             fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
