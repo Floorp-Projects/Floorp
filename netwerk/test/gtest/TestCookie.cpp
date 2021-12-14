@@ -201,7 +201,7 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   // default"
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
   Preferences::SetBool("network.cookieJarSettings.unblocked_for_testing", true);
-  Preferences::SetBool("dom.securecontext.whitelist_onions", false);
+  Preferences::SetBool("dom.securecontext.allowlist_onions", false);
   Preferences::SetBool("network.cookie.sameSite.schemeful", false);
 }
 
@@ -1034,7 +1034,7 @@ TEST(TestCookie, SameSiteLax)
 
 TEST(TestCookie, OnionSite)
 {
-  Preferences::SetBool("dom.securecontext.whitelist_onions", true);
+  Preferences::SetBool("dom.securecontext.allowlist_onions", true);
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
 
   nsresult rv;
