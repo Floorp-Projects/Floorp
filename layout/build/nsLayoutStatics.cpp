@@ -243,8 +243,6 @@ nsresult nsLayoutStatics::Initialize() {
 
   ProcessPriorityManager::Init();
 
-  PermissionManager::Startup();
-
   UIDirectionManager::Initialize();
 
   CacheObserver::Init();
