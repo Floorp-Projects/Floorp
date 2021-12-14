@@ -22,12 +22,11 @@ NS_INTERFACE_MAP_END
 
 nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI,
                                nsIPrincipal* aPrincipal, int32_t aDelay,
-                               bool aRepeat, bool aMetaRefresh)
+                               bool aMetaRefresh)
     : mDocShell(aDocShell),
       mURI(aURI),
       mPrincipal(aPrincipal),
       mDelay(aDelay),
-      mRepeat(aRepeat),
       mMetaRefresh(aMetaRefresh) {}
 
 nsRefreshTimer::~nsRefreshTimer() {}
