@@ -718,24 +718,33 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(
-      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
-      asyncGenObj->isQueueEmpty());
-
-  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Normal,
-                             completionValue, resultPromise)) {
-    return false;
-  }
+  MOZ_ASSERT_IF(asyncGenObj->isCompleted() || asyncGenObj->isSuspendedStart() ||
+                    asyncGenObj->isSuspendedYield(),
+                asyncGenObj->isQueueEmpty());
 
   if (asyncGenObj->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+    JSObject* resultObj =
+        CreateIterResultObject(cx, UndefinedHandleValue, true);
+    if (!resultObj) {
       return false;
     }
-  } else if (asyncGenObj->isSuspendedStart() ||
-             asyncGenObj->isSuspendedYield()) {
-    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-            cx, asyncGenObj, CompletionKind::Normal, completionValue)) {
+
+    RootedValue resultValue(cx, ObjectValue(*resultObj));
+    if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
       return false;
+    }
+  } else {
+    if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Normal,
+                               completionValue, resultPromise)) {
+      return false;
+    }
+
+    if (asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield()) {
+      RootedValue resumptionValue(cx, completionValue);
+      if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
+              cx, asyncGenObj, CompletionKind::Normal, resumptionValue)) {
+        return false;
+      }
     }
   }
 
@@ -768,9 +777,9 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(
-      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
-      asyncGenObj->isQueueEmpty());
+  MOZ_ASSERT_IF(asyncGenObj->isCompleted() || asyncGenObj->isSuspendedStart() ||
+                    asyncGenObj->isSuspendedYield(),
+                asyncGenObj->isQueueEmpty());
 
   if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Return,
                              completionValue, resultPromise)) {
@@ -821,9 +830,9 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(
-      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
-      asyncGenObj->isQueueEmpty());
+  MOZ_ASSERT_IF(asyncGenObj->isCompleted() || asyncGenObj->isSuspendedStart() ||
+                    asyncGenObj->isSuspendedYield(),
+                asyncGenObj->isQueueEmpty());
 
   if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Throw,
                              completionValue, resultPromise)) {
