@@ -718,6 +718,20 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return true;
 }
 
+[[nodiscard]] static bool AsyncGeneratorEnqueue(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    CompletionKind completionKind, HandleValue completionValue,
+    Handle<PromiseObject*> resultPromise) {
+  Rooted<AsyncGeneratorRequest*> request(
+      cx, AsyncGeneratorObject::createRequest(cx, asyncGenObj, completionKind,
+                                              completionValue, resultPromise));
+  if (!request) {
+    return false;
+  }
+
+  return AsyncGeneratorObject::enqueueRequest(cx, asyncGenObj, request);
+}
+
 [[nodiscard]] static bool AsyncGeneratorMethodCommon(
     JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
     HandleValue completionValue, MutableHandleValue result) {
@@ -754,14 +768,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       return false;
     }
 
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::createRequest(cx, asyncGenObj, completionKind,
-                                                completionVal, resultPromise));
-    if (!request) {
-      return false;
-    }
-
-    if (!AsyncGeneratorObject::enqueueRequest(cx, asyncGenObj, request)) {
+    if (!AsyncGeneratorEnqueue(cx, asyncGenObj, completionKind, completionVal,
+                               resultPromise)) {
       return false;
     }
 
