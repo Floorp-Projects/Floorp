@@ -548,6 +548,7 @@ var DownloadsPanel = {
     }
     if (!element) {
       if (DownloadsView.richListBox.itemCount > 0) {
+        DownloadsView.richListBox.selectedIndex = 0;
         DownloadsView.richListBox.focus();
       } else {
         DownloadsFooter.focus();
