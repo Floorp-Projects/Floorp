@@ -712,12 +712,10 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (asyncGenObj->isSuspendedStart()) {
-    asyncGenObj->setCompleted();
-  }
+  if (asyncGenObj->isSuspendedStart() || asyncGenObj->isCompleted()) {
+    asyncGenObj->setAwaitingReturn();
 
-  if (asyncGenObj->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+    if (!AsyncGeneratorAwaitReturn(cx, asyncGenObj, completionValue)) {
       return false;
     }
   } else if (asyncGenObj->isSuspendedYield()) {
