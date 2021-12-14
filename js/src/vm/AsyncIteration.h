@@ -7,6 +7,7 @@
 #ifndef vm_AsyncIteration_h
 #define vm_AsyncIteration_h
 
+#include "builtin/Promise.h"  // js::PromiseHandler
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
 #include "vm/GeneratorObject.h"
@@ -286,26 +287,9 @@ enum class CompletionKind;
 
 extern const JSClass AsyncGeneratorFunctionClass;
 
-// Resume the async generator when the `await` operand fulfills to `value`.
-[[nodiscard]] bool AsyncGeneratorAwaitedFulfilled(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value);
-
-// Resume the async generator when the `await` operand rejects with `reason`.
-[[nodiscard]] bool AsyncGeneratorAwaitedRejected(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue reason);
-
-// Resume the async generator after awaiting on the value passed to
-// AsyncGenerator#return, when the async generator was still executing.
-// Split into two functions depending on whether the awaited value was
-// fulfilled or rejected.
-[[nodiscard]] bool AsyncGeneratorYieldReturnAwaitedFulfilled(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value);
-[[nodiscard]] bool AsyncGeneratorYieldReturnAwaitedRejected(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue reason);
+[[nodiscard]] bool AsyncGeneratorPromiseReactionJob(
+    JSContext* cx, PromiseHandler handler,
+    Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue argument);
 
 bool AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp);
 bool AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp);
