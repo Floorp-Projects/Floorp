@@ -2270,8 +2270,6 @@ struct GlobalProperties {
   bool indexedDB : 1;
   bool isSecureContext : 1;
   bool rtcIdentityProvider : 1;
-  bool glean : 1;
-  bool gleanPings : 1;
 
  private:
   bool Define(JSContext* cx, JS::HandleObject obj);

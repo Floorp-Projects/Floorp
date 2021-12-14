@@ -9,8 +9,6 @@ const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 function tick(aHowMany) {
   for (let i = 0; i < aHowMany; i++) {
     Services.obs.notifyObservers(null, "user-interaction-active");

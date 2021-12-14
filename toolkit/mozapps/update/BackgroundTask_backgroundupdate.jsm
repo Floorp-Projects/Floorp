@@ -44,8 +44,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-Cu.importGlobalProperties(["Glean", "GleanPings"]);
-
 const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
   "app.update.background.timeoutSec",
   10 * 60

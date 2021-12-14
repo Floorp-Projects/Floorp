@@ -191,6 +191,8 @@ module.exports = {
     GamepadHapticActuator: false,
     GamepadPose: false,
     GamepadServiceTest: false,
+    Glean: false,
+    GleanPings: false,
     Grid: false,
     GridArea: false,
     GridDimension: false,
