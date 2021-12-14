@@ -271,19 +271,19 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue resumptionValue) {
-  if (completionKind == CompletionKind::Return) {
-    generator->setAwaitingYieldReturn();
-
-    const PromiseHandler onFulfilled =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
-    const PromiseHandler onRejected =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
-
-    return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
-                                       onFulfilled, onRejected);
+  if (completionKind != CompletionKind::Return) {
+    return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
   }
 
-  return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
+  generator->setAwaitingYieldReturn();
+
+  const PromiseHandler onFulfilled =
+      PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
+  const PromiseHandler onRejected =
+      PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
+
+  return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
+                                     onFulfilled, onRejected);
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
