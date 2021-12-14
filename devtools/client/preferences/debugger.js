@@ -47,7 +47,6 @@ pref("devtools.debugger.end-panel-collapsed", false);
 pref("devtools.debugger.start-panel-size", 300);
 pref("devtools.debugger.end-panel-size", 300);
 pref("devtools.debugger.tabs", "[]");
-pref("devtools.debugger.tabsBlackBoxed", "[]");
 pref("devtools.debugger.pending-selected-location", "{}");
 pref("devtools.debugger.pending-breakpoints", "{}");
 pref("devtools.debugger.expressions", "[]");
