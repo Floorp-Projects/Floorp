@@ -189,10 +189,6 @@ enum class UnhandledRejectionBehavior { Ignore, Report };
 [[nodiscard]] bool ExtractAwaitValue(JSContext* cx, JS::Handle<JS::Value> val,
                                      JS::MutableHandle<JS::Value> resolved);
 
-[[nodiscard]] bool AsyncGeneratorAwait(
-    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
-    JS::Handle<JS::Value> value);
-
 [[nodiscard]] bool AsyncGeneratorResolve(
     JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
     JS::Handle<JS::Value> value, bool done);
