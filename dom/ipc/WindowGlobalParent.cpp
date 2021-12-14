@@ -949,12 +949,13 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     return nullptr;
   }
 
-  gfx::CrossProcessPaintFlags flags = gfx::CrossProcessPaintFlags::None;
+  gfx::CrossProcessPaintFlags flags =
+      gfx::CrossProcessPaintFlags::UseHighQualityScaling;
   if (!aRect) {
     // If no explicit Rect was passed, we want the currently visible viewport.
-    flags = gfx::CrossProcessPaintFlags::DrawView;
+    flags |= gfx::CrossProcessPaintFlags::DrawView;
   } else if (aResetScrollPosition) {
-    flags = gfx::CrossProcessPaintFlags::ResetScrollPosition;
+    flags |= gfx::CrossProcessPaintFlags::ResetScrollPosition;
   }
 
   if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color, flags,
