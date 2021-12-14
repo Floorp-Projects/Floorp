@@ -43,7 +43,7 @@ nsIGlobalObject::nsIGlobalObject()
 
 bool nsIGlobalObject::IsScriptForbidden(JSObject* aCallback,
                                         bool aIsJSImplementedWebIDL) const {
-  if (mIsScriptForbidden) {
+  if (mIsScriptForbidden || mIsDying) {
     return true;
   }
 
