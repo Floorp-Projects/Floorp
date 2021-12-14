@@ -24,6 +24,7 @@ namespace js {
 class AsyncFunctionGeneratorObject;
 class AsyncGeneratorObject;
 class PromiseObject;
+class SavedFrame;
 
 enum class CompletionKind;
 
@@ -189,20 +190,6 @@ enum class UnhandledRejectionBehavior { Ignore, Report };
 [[nodiscard]] bool ExtractAwaitValue(JSContext* cx, JS::Handle<JS::Value> val,
                                      JS::MutableHandle<JS::Value> resolved);
 
-[[nodiscard]] bool AsyncGeneratorResolve(
-    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
-    JS::Handle<JS::Value> value, bool done);
-
-[[nodiscard]] bool AsyncGeneratorReject(
-    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
-    JS::Handle<JS::Value> exception);
-
-[[nodiscard]] bool AsyncGeneratorEnqueue(JSContext* cx,
-                                         JS::Handle<JS::Value> asyncGenVal,
-                                         CompletionKind completionKind,
-                                         JS::Handle<JS::Value> completionValue,
-                                         JS::MutableHandle<JS::Value> result);
-
 bool AsyncFromSyncIteratorMethod(JSContext* cx, JS::CallArgs& args,
                                  CompletionKind completionKind);
 
@@ -253,6 +240,17 @@ struct PromiseReactionRecordBuilder {
   [[nodiscard]] virtual bool asyncGenerator(
       JSContext* cx, JS::Handle<AsyncGeneratorObject*> unwrappedGenerator) = 0;
 };
+
+[[nodiscard]] PromiseObject* CreatePromiseObjectForAsyncGenerator(
+    JSContext* cx);
+
+[[nodiscard]] bool ResolvePromiseInternal(JSContext* cx,
+                                          JS::Handle<JSObject*> promise,
+                                          JS::Handle<JS::Value> resolutionVal);
+[[nodiscard]] bool RejectPromiseInternal(
+    JSContext* cx, JS::Handle<PromiseObject*> promise,
+    JS::Handle<JS::Value> reason,
+    JS::Handle<SavedFrame*> unwrappedRejectionStack = nullptr);
 
 [[nodiscard]] bool InternalAsyncGeneratorAwait(
     JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
