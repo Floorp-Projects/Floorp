@@ -604,6 +604,14 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
 }
 
+[[nodiscard]] static bool AsyncGeneratorAwaitReturn(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue next) {
+  return InternalAsyncGeneratorAwait(
+      cx, generator, next,
+      PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled,
+      PromiseHandler::AsyncGeneratorResumeNextReturnRejected);
+}
+
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   MOZ_ASSERT(generator->isCompleted());
@@ -628,13 +636,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
         if (completionKind == CompletionKind::Return) {
           generator->setAwaitingReturn();
 
-          const PromiseHandler onFulfilled =
-              PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled;
-          const PromiseHandler onRejected =
-              PromiseHandler::AsyncGeneratorResumeNextReturnRejected;
-
-          return InternalAsyncGeneratorAwait(cx, generator, value, onFulfilled,
-                                             onRejected);
+          return AsyncGeneratorAwaitReturn(cx, generator, value);
         }
 
         MOZ_ASSERT(completionKind == CompletionKind::Throw);
