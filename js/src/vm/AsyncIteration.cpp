@@ -571,6 +571,26 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return true;
 }
 
+[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
+    CompletionKind completionKind, HandleValue resumptionValue) {
+  if (completionKind == CompletionKind::Return) {
+    generator->setAwaitingYieldReturn();
+
+    const PromiseHandler onFulfilled =
+        PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
+    const PromiseHandler onRejected =
+        PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
+
+    return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
+                                       onFulfilled, onRejected);
+  }
+
+  generator->setExecuting();
+
+  return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
+}
+
 [[nodiscard]] static bool AsyncGeneratorResumeNext(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   if (generator->isCompleted()) {
@@ -605,23 +625,9 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
   MOZ_ASSERT(generator->isSuspendedStart() || generator->isSuspendedYield());
 
-  RootedValue argument(cx, request->completionValue());
-
-  if (completionKind == CompletionKind::Return) {
-    generator->setAwaitingYieldReturn();
-
-    const PromiseHandler onFulfilled =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
-    const PromiseHandler onRejected =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
-
-    return InternalAsyncGeneratorAwait(cx, generator, argument, onFulfilled,
-                                       onRejected);
-  }
-
-  generator->setExecuting();
-
-  return AsyncGeneratorResume(cx, generator, completionKind, argument);
+  RootedValue resumptionValue(cx, request->completionValue());
+  return AsyncGeneratorUnwrapYieldResumptionAndResume(
+      cx, generator, completionKind, resumptionValue);
 }
 
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
