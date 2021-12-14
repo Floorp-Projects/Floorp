@@ -770,6 +770,23 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
   }
 };
 
+[[nodiscard]] static bool AsyncGeneratorMethodSanityCheck(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
+  if (generator->isCompleted() || generator->isSuspendedStart() ||
+      generator->isSuspendedYield()) {
+    // The spec assumes the queue is empty when async generator methods are
+    // called with those state, but our debugger allows calling those methods
+    // in unexpected state, such as before suspendedStart.
+    if (MOZ_UNLIKELY(!generator->isQueueEmpty())) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SUSPENDED_QUEUE_NOT_EMPTY);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
 //
 // AsyncGenerator.prototype.next ( value )
@@ -803,9 +820,9 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(generator->isCompleted() || generator->isSuspendedStart() ||
-                    generator->isSuspendedYield(),
-                generator->isQueueEmpty());
+  if (!AsyncGeneratorMethodSanityCheck(cx, generator)) {
+    return false;
+  }
 
   // Step 5. Let state be generator.[[AsyncGeneratorState]].
   // Step 6. If state is completed, then
@@ -891,9 +908,9 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(generator->isCompleted() || generator->isSuspendedStart() ||
-                    generator->isSuspendedYield(),
-                generator->isQueueEmpty());
+  if (!AsyncGeneratorMethodSanityCheck(cx, generator)) {
+    return false;
+  }
 
   // Step 5. Let completion be
   //         Completion { [[Type]]: return, [[Value]]: value,
@@ -968,9 +985,9 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT_IF(generator->isCompleted() || generator->isSuspendedStart() ||
-                    generator->isSuspendedYield(),
-                generator->isQueueEmpty());
+  if (!AsyncGeneratorMethodSanityCheck(cx, generator)) {
+    return false;
+  }
 
   // Step 5. Let state be generator.[[AsyncGeneratorState]].
   // Step 6. If state is suspendedStart, then
