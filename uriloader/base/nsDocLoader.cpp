@@ -1408,7 +1408,7 @@ void nsDocLoader::FireOnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 bool nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress, nsIURI* aURI,
-                                   int32_t aDelay, bool aSameURI) {
+                                   uint32_t aDelay, bool aSameURI) {
   /*
    * Returns true if the refresh may proceed,
    * false if the refresh should be blocked.
