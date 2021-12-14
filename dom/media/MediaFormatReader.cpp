@@ -2260,6 +2260,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
         nsCString error;
         mVideo.mIsHardwareAccelerated =
             mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
+        VideoData* videoData = output->As<VideoData>();
         if (!mVideo.mHasReportedVideoHardwareSupportTelemtry ||
             wasHardwareAccelerated != mVideo.mIsHardwareAccelerated) {
           mVideo.mHasReportedVideoHardwareSupportTelemtry = true;
@@ -2267,11 +2268,18 @@ void MediaFormatReader::Update(TrackType aTrack) {
               Telemetry::ScalarID::MEDIA_VIDEO_HARDWARE_DECODING_SUPPORT,
               NS_ConvertUTF8toUTF16(mVideo.GetCurrentInfo()->mMimeType),
               !!mVideo.mIsHardwareAccelerated);
+          static constexpr gfx::IntSize HD_VIDEO_SIZE{1280, 720};
+          if (videoData->mDisplay.width >= HD_VIDEO_SIZE.Width() &&
+              videoData->mDisplay.height >= HD_VIDEO_SIZE.Height()) {
+            Telemetry::ScalarSet(
+                Telemetry::ScalarID::MEDIA_VIDEO_HD_HARDWARE_DECODING_SUPPORT,
+                NS_ConvertUTF8toUTF16(mVideo.GetCurrentInfo()->mMimeType),
+                !!mVideo.mIsHardwareAccelerated);
+          }
         }
 #ifdef XP_WIN
         // D3D11_YCBCR_IMAGE images are GPU based, we try to limit the amount
         // of GPU RAM used.
-        VideoData* videoData = output->As<VideoData>();
         mVideo.mIsHardwareAccelerated =
             mVideo.mIsHardwareAccelerated ||
             (videoData->mImage &&
