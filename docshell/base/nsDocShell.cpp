@@ -5010,8 +5010,7 @@ void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
-                       bool aMetaRefresh) {
+nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay) {
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   NS_ENSURE_ARG(aURI);
@@ -5040,7 +5039,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
   }
 
   nsCOMPtr<nsITimerCallback> refreshTimer =
-      new nsRefreshTimer(this, aURI, aPrincipal, aDelay, aMetaRefresh);
+      new nsRefreshTimer(this, aURI, aPrincipal, aDelay);
 
   BusyFlags busyFlags = GetBusyFlags();
 
@@ -5071,7 +5070,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
 
 nsresult nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
                                               nsIPrincipal* aPrincipal,
-                                              int32_t aDelay, bool aMetaRefresh,
+                                              int32_t aDelay,
                                               nsITimer* aTimer) {
   MOZ_ASSERT(aTimer, "Must have a timer here");
 
@@ -5089,12 +5088,12 @@ nsresult nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
     }
   }
 
-  return ForceRefreshURI(aURI, aPrincipal, aDelay, aMetaRefresh);
+  return ForceRefreshURI(aURI, aPrincipal, aDelay);
 }
 
 NS_IMETHODIMP
 nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                            int32_t aDelay, bool aMetaRefresh) {
+                            int32_t aDelay) {
   NS_ENSURE_ARG(aURI);
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
@@ -5102,7 +5101,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   loadState->SetResultPrincipalURI(aURI);
   loadState->SetResultPrincipalURIIsSome(true);
   loadState->SetKeepResultPrincipalURIIfSet(true);
-  loadState->SetIsMetaRefresh(aMetaRefresh);
+  loadState->SetIsMetaRefresh(true);
 
   // Set the triggering pricipal to aPrincipal if available, or current
   // document's principal otherwise.
@@ -5131,8 +5130,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   nsresult rv = aURI->Equals(mCurrentURI, &equalUri);
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  if (NS_SUCCEEDED(rv) && (!equalUri) && aMetaRefresh &&
-      aDelay <= REFRESH_REDIRECT_TIMER) {
+  if (NS_SUCCEEDED(rv) && !equalUri && aDelay <= REFRESH_REDIRECT_TIMER) {
     /* It is a META refresh based redirection within the threshold time
      * we have in mind (15000 ms as defined by REFRESH_REDIRECT_TIMER).
      * Pass a REPLACE flag to LoadURI().
@@ -5406,7 +5404,7 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
           return NS_ERROR_FAILURE;
         }
 
-        rv = RefreshURI(uri, aPrincipal, seconds * 1000, true);
+        rv = RefreshURI(uri, aPrincipal, seconds * 1000);
       }
     }
   }
