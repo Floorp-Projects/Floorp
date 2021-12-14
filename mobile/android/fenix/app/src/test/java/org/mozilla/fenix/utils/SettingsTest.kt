@@ -36,7 +36,8 @@ class SettingsTest {
         autoplayAudible = AutoplayAction.BLOCKED,
         autoplayInaudible = AutoplayAction.ALLOWED,
         persistentStorage = ASK_TO_ALLOW,
-        mediaKeySystemAccess = ASK_TO_ALLOW
+        mediaKeySystemAccess = ASK_TO_ALLOW,
+        crossOriginStorageAccess = ASK_TO_ALLOW,
     )
 
     @Before
@@ -624,6 +625,22 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(persistentStorage = BLOCKED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+    }
+    @Test
+    fun getSitePermissionsCustomSettingsRules_crossOriginStorageAccess() {
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS, ALLOWED)
+
+        assertEquals(
+            defaultPermissions.copy(crossOriginStorageAccess = ALLOWED),
+            settings.getSitePermissionsCustomSettingsRules()
+        )
+
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS, BLOCKED)
+
+        assertEquals(
+            defaultPermissions.copy(crossOriginStorageAccess = BLOCKED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }

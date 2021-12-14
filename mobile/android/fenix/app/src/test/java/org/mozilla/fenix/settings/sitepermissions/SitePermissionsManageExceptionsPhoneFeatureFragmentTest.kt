@@ -377,6 +377,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(rules.microphone.toStatus(), result.microphone)
         assertEquals(rules.notification.toStatus(), result.notification)
         assertEquals(rules.persistentStorage.toStatus(), result.localStorage)
+        assertEquals(rules.crossOriginStorageAccess.toStatus(), result.crossOriginStorageAccess)
         assertEquals(rules.mediaKeySystemAccess.toStatus(), result.mediaKeySystemAccess)
     }
 
@@ -404,6 +405,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(rules.microphone.toStatus(), result.microphone)
         assertEquals(rules.notification.toStatus(), result.notification)
         assertEquals(rules.persistentStorage.toStatus(), result.localStorage)
+        assertEquals(rules.crossOriginStorageAccess.toStatus(), result.crossOriginStorageAccess)
         assertEquals(rules.mediaKeySystemAccess.toStatus(), result.mediaKeySystemAccess)
     }
 
@@ -431,6 +433,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(rules.microphone.toStatus(), result.microphone)
         assertEquals(rules.notification.toStatus(), result.notification)
         assertEquals(rules.persistentStorage.toStatus(), result.localStorage)
+        assertEquals(rules.crossOriginStorageAccess.toStatus(), result.crossOriginStorageAccess)
         assertEquals(rules.mediaKeySystemAccess.toStatus(), result.mediaKeySystemAccess)
     }
 
@@ -458,6 +461,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(sitePermissions.microphone, result.microphone)
         assertEquals(sitePermissions.notification, result.notification)
         assertEquals(sitePermissions.localStorage, result.localStorage)
+        assertEquals(sitePermissions.crossOriginStorageAccess, result.crossOriginStorageAccess)
         assertEquals(sitePermissions.mediaKeySystemAccess, result.mediaKeySystemAccess)
     }
 
@@ -485,6 +489,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(sitePermissions.microphone, result.microphone)
         assertEquals(sitePermissions.notification, result.notification)
         assertEquals(sitePermissions.localStorage, result.localStorage)
+        assertEquals(sitePermissions.crossOriginStorageAccess, result.crossOriginStorageAccess)
         assertEquals(sitePermissions.mediaKeySystemAccess, result.mediaKeySystemAccess)
     }
 
@@ -512,6 +517,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         assertEquals(sitePermissions.microphone, result.microphone)
         assertEquals(sitePermissions.notification, result.notification)
         assertEquals(sitePermissions.localStorage, result.localStorage)
+        assertEquals(sitePermissions.crossOriginStorageAccess, result.crossOriginStorageAccess)
         assertEquals(sitePermissions.mediaKeySystemAccess, result.mediaKeySystemAccess)
     }
 
@@ -533,6 +539,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
         autoplayAudible = AutoplayAction.BLOCKED,
         autoplayInaudible = AutoplayAction.BLOCKED,
         persistentStorage = Action.ASK_TO_ALLOW,
-        mediaKeySystemAccess = Action.ASK_TO_ALLOW
+        mediaKeySystemAccess = Action.ASK_TO_ALLOW,
+        crossOriginStorageAccess = Action.ASK_TO_ALLOW,
     )
 }

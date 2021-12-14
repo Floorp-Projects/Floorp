@@ -22,6 +22,7 @@
         <item name="android:windowEnableSplitTouch">false</item>
         <item name="android:splitMotionEvents">false</item>
         <item name="bottomSheetDialogTheme">@style/BottomSheet</item>
+        <item name="android:textColorLink">@color/fx_mobile_text_color_action</item>
 
         <item name="mozacInputLayoutErrorTextColor"
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>

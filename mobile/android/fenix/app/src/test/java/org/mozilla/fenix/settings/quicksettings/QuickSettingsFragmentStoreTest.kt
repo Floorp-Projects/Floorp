@@ -139,6 +139,7 @@ class QuickSettingsFragmentStoreTest {
         every { permissions.notification } returns SitePermissions.Status.BLOCKED
         every { permissions.location } returns SitePermissions.Status.ALLOWED
         every { permissions.localStorage } returns SitePermissions.Status.ALLOWED
+        every { permissions.crossOriginStorageAccess } returns SitePermissions.Status.ALLOWED
         every { permissions.mediaKeySystemAccess } returns SitePermissions.Status.NO_DECISION
         every { permissions.autoplayAudible } returns SitePermissions.AutoplayStatus.ALLOWED
         every { permissions.autoplayInaudible } returns SitePermissions.AutoplayStatus.BLOCKED
@@ -158,6 +159,7 @@ class QuickSettingsFragmentStoreTest {
         assertNotNull(state[PhoneFeature.AUTOPLAY_AUDIBLE])
         assertNotNull(state[PhoneFeature.AUTOPLAY_INAUDIBLE])
         assertNotNull(state[PhoneFeature.PERSISTENT_STORAGE])
+        assertNotNull(state[PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS])
         assertNotNull(state[PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS])
         assertNotNull(state[PhoneFeature.AUTOPLAY])
     }
@@ -363,6 +365,7 @@ class QuickSettingsFragmentStoreTest {
         autoplayAudible = AutoplayAction.BLOCKED,
         autoplayInaudible = AutoplayAction.BLOCKED,
         persistentStorage = Action.ASK_TO_ALLOW,
-        mediaKeySystemAccess = Action.ASK_TO_ALLOW
+        mediaKeySystemAccess = Action.ASK_TO_ALLOW,
+        crossOriginStorageAccess = Action.ASK_TO_ALLOW,
     )
 }

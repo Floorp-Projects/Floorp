@@ -32,6 +32,7 @@ fun SitePermissions.get(field: PhoneFeature) = when (field) {
     PhoneFeature.AUTOPLAY_INAUDIBLE -> autoplayInaudible.toStatus()
     PhoneFeature.PERSISTENT_STORAGE -> localStorage
     PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS -> mediaKeySystemAccess
+    PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS -> crossOriginStorageAccess
 }
 
 fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) = when (field) {
@@ -47,6 +48,7 @@ fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) =
     PhoneFeature.AUTOPLAY_INAUDIBLE -> copy(autoplayInaudible = value.toAutoplayStatus())
     PhoneFeature.PERSISTENT_STORAGE -> copy(localStorage = value)
     PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS -> copy(mediaKeySystemAccess = value)
+    PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS -> copy(crossOriginStorageAccess = value)
 }
 
 /**

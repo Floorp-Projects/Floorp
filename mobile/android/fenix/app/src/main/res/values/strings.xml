@@ -993,6 +993,8 @@
     <string name="preference_phone_feature_notification">Notification</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Persistent Storage</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cross-site cookies</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM-controlled content</string>
     <!-- Label that indicates that a permission must be asked always -->

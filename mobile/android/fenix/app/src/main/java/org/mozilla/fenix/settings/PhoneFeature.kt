@@ -33,7 +33,8 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
     AUTOPLAY_AUDIBLE(emptyArray()),
     AUTOPLAY_INAUDIBLE(emptyArray()),
     PERSISTENT_STORAGE(emptyArray()),
-    MEDIA_KEY_SYSTEM_ACCESS(emptyArray());
+    MEDIA_KEY_SYSTEM_ACCESS(emptyArray()),
+    CROSS_ORIGIN_STORAGE_ACCESS(emptyArray());
 
     fun isAndroidPermissionGranted(context: Context): Boolean {
         return context.isPermissionGranted(androidPermissionsList.asIterable())
@@ -82,6 +83,8 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
             MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
             NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
             PERSISTENT_STORAGE -> context.getString(R.string.preference_phone_feature_persistent_storage)
+            CROSS_ORIGIN_STORAGE_ACCESS ->
+                context.getString(R.string.preference_phone_feature_cross_origin_storage_access)
             MEDIA_KEY_SYSTEM_ACCESS -> context.getString(R.string.preference_phone_feature_media_key_system_access)
             AUTOPLAY, AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE ->
                 context.getString(R.string.preference_browser_feature_autoplay)
@@ -103,6 +106,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
             AUTOPLAY_AUDIBLE -> R.string.pref_key_browser_feature_autoplay_audible_v2
             AUTOPLAY_INAUDIBLE -> R.string.pref_key_browser_feature_autoplay_inaudible_v2
             PERSISTENT_STORAGE -> R.string.pref_key_browser_feature_persistent_storage
+            CROSS_ORIGIN_STORAGE_ACCESS -> R.string.pref_key_browser_feature_cross_origin_storage_access
             MEDIA_KEY_SYSTEM_ACCESS -> R.string.pref_key_browser_feature_media_key_system_access
         }
     }

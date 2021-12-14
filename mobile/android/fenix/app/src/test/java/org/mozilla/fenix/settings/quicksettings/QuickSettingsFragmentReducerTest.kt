@@ -116,5 +116,6 @@ class QuickSettingsFragmentReducerTest {
         SitePermissionsRules.AutoplayAction.ALLOWED,
         SitePermissionsRules.Action.ALLOWED,
         SitePermissionsRules.Action.ALLOWED,
+        SitePermissionsRules.Action.ALLOWED,
     )
 }

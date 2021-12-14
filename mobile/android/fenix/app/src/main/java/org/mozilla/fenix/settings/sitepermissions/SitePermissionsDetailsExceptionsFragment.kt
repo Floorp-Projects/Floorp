@@ -32,6 +32,7 @@ import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.settings.PhoneFeature.PERSISTENT_STORAGE
 import org.mozilla.fenix.settings.PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY
+import org.mozilla.fenix.settings.PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS
 import org.mozilla.fenix.settings.quicksettings.AutoplayValue
 import org.mozilla.fenix.settings.requirePreference
 import org.mozilla.fenix.utils.Settings
@@ -70,6 +71,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         initPhoneFeature(MICROPHONE)
         initPhoneFeature(NOTIFICATION)
         initPhoneFeature(PERSISTENT_STORAGE)
+        initPhoneFeature(CROSS_ORIGIN_STORAGE_ACCESS)
         initPhoneFeature(MEDIA_KEY_SYSTEM_ACCESS)
         initAutoplayFeature()
         bindClearPermissionsButton()

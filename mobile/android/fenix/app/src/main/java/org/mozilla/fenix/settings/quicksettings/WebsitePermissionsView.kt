@@ -24,6 +24,7 @@ import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.settings.PhoneFeature.PERSISTENT_STORAGE
 import org.mozilla.fenix.settings.PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS
+import org.mozilla.fenix.settings.PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS
 import org.mozilla.fenix.settings.quicksettings.WebsitePermissionsView.PermissionViewHolder.SpinnerPermission
 import org.mozilla.fenix.settings.quicksettings.WebsitePermissionsView.PermissionViewHolder.ToggleablePermission
 import java.util.EnumMap
@@ -88,6 +89,10 @@ class WebsitePermissionsView(
             PERSISTENT_STORAGE to ToggleablePermission(
                 binding.persistentStorageLabel,
                 binding.persistentStorageStatus
+            ),
+            CROSS_ORIGIN_STORAGE_ACCESS to ToggleablePermission(
+                binding.crossOriginStorageAccessLabel,
+                binding.crossOriginStorageAccessStatus
             ),
             MEDIA_KEY_SYSTEM_ACCESS to ToggleablePermission(
                 binding.mediaKeySystemAccessLabel,

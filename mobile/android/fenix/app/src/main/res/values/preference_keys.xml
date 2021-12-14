@@ -111,6 +111,7 @@
     <string name="pref_key_browser_feature_autoplay_audible_v2" translatable="false">pref_key_browser_feature_autoplay_v2</string>
     <string name="pref_key_browser_feature_autoplay_inaudible_v2" translatable="false">pref_key_browser_feature_autoplay_inaudible_v2</string>
     <string name="pref_key_browser_feature_persistent_storage" translatable="false">pref_key_browser_feature_persistent_storage</string>
+    <string name="pref_key_browser_feature_cross_origin_storage_access" translatable="false">pref_key_browser_feature_cross_origin_storage_access</string>
     <string name="pref_key_browser_feature_media_key_system_access" translatable="false">pref_key_browser_feature_media_key_system_access</string>
     <string name="pref_key_phone_feature_camera" translatable="false">pref_key_phone_feature_camera</string>
     <string name="pref_key_phone_feature_location" translatable="false">pref_key_phone_feature_location</string>
