@@ -18,6 +18,9 @@ async function runBackgroundTask(commandLine) {
   if (get == "ShouldNotProcessUpdates(): DevToolsLaunching") {
     exitCode = 79;
   }
+  if (get == "ShouldNotProcessUpdates(): NotAnUpdatingTask") {
+    exitCode = 78;
+  }
   console.debug(`runBackgroundTask: shouldprocessupdates`, {
     exists: env.exists("MOZ_TEST_PROCESS_UPDATES"),
     get,

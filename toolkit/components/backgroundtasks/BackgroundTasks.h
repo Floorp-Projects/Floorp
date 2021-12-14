@@ -133,6 +133,18 @@ class BackgroundTasks final : public nsIBackgroundTasks {
     return NS_OK;
   }
 
+  /**
+   * Whether the given task name should process updates.  Most tasks should not
+   * process updates to avoid Firefox being updated unexpectedly.
+   *
+   * Right now, we only process updates for the `backgroundupdate` task and the
+   * test-only `shouldprocessupdates` task.
+   */
+  static bool IsUpdatingTaskName(const nsCString& aName) {
+    return aName.EqualsLiteral("backgroundupdate") ||
+           aName.EqualsLiteral("shouldprocessupdates");
+  }
+
  protected:
   static StaticRefPtr<BackgroundTasks> sSingleton;
 
