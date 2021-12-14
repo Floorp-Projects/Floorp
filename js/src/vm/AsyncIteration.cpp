@@ -760,23 +760,20 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
     return false;
   }
 
+  if (completionKind != CompletionKind::Normal &&
+      asyncGenObj->isSuspendedStart()) {
+    asyncGenObj->setCompleted();
+  }
+
   if (asyncGenObj->isCompleted()) {
     if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
       return false;
     }
   } else if (asyncGenObj->isSuspendedStart() ||
              asyncGenObj->isSuspendedYield()) {
-    if (completionKind != CompletionKind::Normal &&
-        asyncGenObj->isSuspendedStart()) {
-      asyncGenObj->setCompleted();
-      if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
-        return false;
-      }
-    } else {
-      if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-              cx, asyncGenObj, completionKind, completionValue)) {
-        return false;
-      }
+    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
+            cx, asyncGenObj, completionKind, completionValue)) {
+      return false;
     }
   }
 
