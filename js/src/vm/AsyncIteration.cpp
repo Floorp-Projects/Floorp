@@ -89,67 +89,6 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue exception);
 
-[[nodiscard]] bool js::AsyncGeneratorPromiseReactionJob(
-    JSContext* cx, PromiseHandler handler,
-    Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue argument) {
-  // Await's handlers don't return a value, nor throw any exceptions.
-  // They fail only on OOM.
-  switch (handler) {
-    case PromiseHandler::AsyncGeneratorAwaitedFulfilled:
-      return AsyncGeneratorAwaitedFulfilled(cx, asyncGenObj, argument);
-
-    case PromiseHandler::AsyncGeneratorAwaitedRejected:
-      return AsyncGeneratorAwaitedRejected(cx, asyncGenObj, argument);
-
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 25.5.3.5.1 AsyncGeneratorResumeNext Return Processor Fulfilled Functions
-    case PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled: {
-      MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
-                 "AsyncGeneratorResumeNext-Return fulfilled when not in "
-                 "'AwaitingReturn' state");
-
-      // Steps 1-2.
-      asyncGenObj->setCompleted();
-
-      // Step 3.
-      if (!AsyncGeneratorCompleteStepNormal(cx, asyncGenObj, argument, true)) {
-        return false;
-      }
-      return AsyncGeneratorDrainQueue(cx, asyncGenObj);
-    }
-
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 25.5.3.5.2 AsyncGeneratorResumeNext Return Processor Rejected Functions
-    case PromiseHandler::AsyncGeneratorResumeNextReturnRejected: {
-      MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
-                 "AsyncGeneratorResumeNext-Return rejected when not in "
-                 "'AwaitingReturn' state");
-
-      // Steps 1-2.
-      asyncGenObj->setCompleted();
-
-      // Step 3.
-      if (!AsyncGeneratorCompleteStepThrow(cx, asyncGenObj, argument)) {
-        return false;
-      }
-      return AsyncGeneratorDrainQueue(cx, asyncGenObj);
-    }
-
-    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled:
-      return AsyncGeneratorYieldReturnAwaitedFulfilled(cx, asyncGenObj,
-                                                       argument);
-
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 25.5.3.7 AsyncGeneratorYield
-    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected:
-      return AsyncGeneratorYieldReturnAwaitedRejected(cx, asyncGenObj,
-                                                      argument);
-
-    default:
-      MOZ_CRASH("Bad handler in AsyncGeneratorPromiseReactionJob");
-  }
-}
-
 const JSClass AsyncFromSyncIteratorObject::class_ = {
     "AsyncFromSyncIteratorObject",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFromSyncIteratorObject::Slots)};
@@ -1035,6 +974,67 @@ static const ClassSpec AsyncGeneratorFunctionClassSpec = {
 const JSClass js::AsyncGeneratorFunctionClass = {
     "AsyncGeneratorFunction", 0, JS_NULL_CLASS_OPS,
     &AsyncGeneratorFunctionClassSpec};
+
+[[nodiscard]] bool js::AsyncGeneratorPromiseReactionJob(
+    JSContext* cx, PromiseHandler handler,
+    Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue argument) {
+  // Await's handlers don't return a value, nor throw any exceptions.
+  // They fail only on OOM.
+  switch (handler) {
+    case PromiseHandler::AsyncGeneratorAwaitedFulfilled:
+      return AsyncGeneratorAwaitedFulfilled(cx, asyncGenObj, argument);
+
+    case PromiseHandler::AsyncGeneratorAwaitedRejected:
+      return AsyncGeneratorAwaitedRejected(cx, asyncGenObj, argument);
+
+    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+    // 25.5.3.5.1 AsyncGeneratorResumeNext Return Processor Fulfilled Functions
+    case PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled: {
+      MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
+                 "AsyncGeneratorResumeNext-Return fulfilled when not in "
+                 "'AwaitingReturn' state");
+
+      // Steps 1-2.
+      asyncGenObj->setCompleted();
+
+      // Step 3.
+      if (!AsyncGeneratorCompleteStepNormal(cx, asyncGenObj, argument, true)) {
+        return false;
+      }
+      return AsyncGeneratorDrainQueue(cx, asyncGenObj);
+    }
+
+    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+    // 25.5.3.5.2 AsyncGeneratorResumeNext Return Processor Rejected Functions
+    case PromiseHandler::AsyncGeneratorResumeNextReturnRejected: {
+      MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
+                 "AsyncGeneratorResumeNext-Return rejected when not in "
+                 "'AwaitingReturn' state");
+
+      // Steps 1-2.
+      asyncGenObj->setCompleted();
+
+      // Step 3.
+      if (!AsyncGeneratorCompleteStepThrow(cx, asyncGenObj, argument)) {
+        return false;
+      }
+      return AsyncGeneratorDrainQueue(cx, asyncGenObj);
+    }
+
+    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled:
+      return AsyncGeneratorYieldReturnAwaitedFulfilled(cx, asyncGenObj,
+                                                       argument);
+
+    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+    // 25.5.3.7 AsyncGeneratorYield
+    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected:
+      return AsyncGeneratorYieldReturnAwaitedRejected(cx, asyncGenObj,
+                                                      argument);
+
+    default:
+      MOZ_CRASH("Bad handler in AsyncGeneratorPromiseReactionJob");
+  }
+}
 
 // https://tc39.es/proposal-iterator-helpers/#sec-asynciterator as of revision
 // 8f10db5.
