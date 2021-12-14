@@ -291,17 +291,12 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 // Most steps are done in generator.
 [[nodiscard]] static bool AsyncGeneratorYield(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
-  // Step 5 is done in bytecode.
-
-  // Step 6.
-  generator->setSuspendedYield();
-
-  // Step 9.
   if (!AsyncGeneratorCompleteStepNormal(cx, generator, value, false)) {
     return false;
   }
 
   if (generator->isQueueEmpty()) {
+    generator->setSuspendedYield();
     return true;
   }
 
