@@ -20,6 +20,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
@@ -5010,7 +5011,8 @@ void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay) {
+nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                       uint32_t aDelay) {
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   NS_ENSURE_ARG(aURI);
@@ -5070,7 +5072,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay) {
 
 nsresult nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
                                               nsIPrincipal* aPrincipal,
-                                              int32_t aDelay,
+                                              uint32_t aDelay,
                                               nsITimer* aTimer) {
   MOZ_ASSERT(aTimer, "Must have a timer here");
 
@@ -5093,7 +5095,7 @@ nsresult nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                            int32_t aDelay) {
+                            uint32_t aDelay) {
   NS_ENSURE_ARG(aURI);
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
@@ -5219,7 +5221,7 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
   MOZ_ASSERT(aPrincipal);
 
   nsAutoCString uriAttrib;
-  int32_t seconds = 0;
+  CheckedInt<uint32_t> seconds(0);
   bool specifiesSeconds = false;
 
   nsACString::const_iterator iter, tokenStart, doneIterating;
@@ -5234,24 +5236,33 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
 
   tokenStart = iter;
 
-  // skip leading + and -
-  if (iter != doneIterating && (*iter == '-' || *iter == '+')) {
-    ++iter;
+  if (iter != doneIterating) {
+    if (*iter == '-') {
+      return NS_ERROR_FAILURE;
+    }
+
+    // skip leading +
+    if (*iter == '+') {
+      ++iter;
+    }
   }
 
   // parse number
   while (iter != doneIterating && (*iter >= '0' && *iter <= '9')) {
     seconds = seconds * 10 + (*iter - '0');
+    if (!seconds.isValid()) {
+      return NS_ERROR_FAILURE;
+    }
     specifiesSeconds = true;
     ++iter;
   }
 
-  if (iter != doneIterating) {
-    // if we started with a '-', number is negative
-    if (*tokenStart == '-') {
-      seconds = -seconds;
-    }
+  CheckedInt<uint32_t> milliSeconds(seconds * 1000);
+  if (!milliSeconds.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
 
+  if (iter != doneIterating) {
     // skip to next ';' or ','
     nsACString::const_iterator iterAfterDigit = iter;
     while (iter != doneIterating && !(*iter == ';' || *iter == ',')) {
@@ -5397,15 +5408,7 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
         }
       }
 
-      if (NS_SUCCEEDED(rv)) {
-        // Since we can't travel back in time yet, just pretend
-        // negative numbers do nothing at all.
-        if (seconds < 0) {
-          return NS_ERROR_FAILURE;
-        }
-
-        rv = RefreshURI(uri, aPrincipal, seconds * 1000);
-      }
+      rv = RefreshURI(uri, aPrincipal, milliSeconds.value());
     }
   }
   return rv;

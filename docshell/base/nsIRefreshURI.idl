@@ -25,7 +25,7 @@ interface nsIRefreshURI : nsISupports {
       * @param aMillis The number of milliseconds to wait.
       */
     void refreshURI(in nsIURI aURI, in nsIPrincipal aPrincipal,
-                    in long aMillis);
+                    in unsigned long aMillis);
 
     /**
       * Loads a URI immediately as if it were a meta refresh.
@@ -38,7 +38,7 @@ interface nsIRefreshURI : nsISupports {
       *                be delayed if it were not being forced.
       */
     void forceRefreshURI(in nsIURI aURI, in nsIPrincipal aPrincipal,
-                         in long aMillis);
+                         in unsigned long aMillis);
 
     /**
       * Cancels all timer loads.

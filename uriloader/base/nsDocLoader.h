@@ -186,7 +186,7 @@ class nsDocLoader : public nsIDocumentLoader,
                             nsIURI* aUri, uint32_t aFlags);
 
   [[nodiscard]] bool RefreshAttempted(nsIWebProgress* aWebProgress,
-                                      nsIURI* aURI, int32_t aDelay,
+                                      nsIURI* aURI, uint32_t aDelay,
                                       bool aSameURI);
 
   // this function is overridden by the docshell, it is provided so that we
