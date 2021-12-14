@@ -76,9 +76,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   void AddPostRefreshObserverIfNecessary();
 
-  mozilla::dom::HTMLCanvasElement* GetParentObject() const {
-    return mCanvasElement;
-  }
+  nsIGlobalObject* GetParentObject() const;
 
   void SetOffscreenCanvas(mozilla::dom::OffscreenCanvas* aOffscreenCanvas) {
     mOffscreenCanvas = aOffscreenCanvas;
