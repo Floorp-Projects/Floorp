@@ -1622,8 +1622,8 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 	--tab-separator-opacity: .35 !important;
 
 	--toolbar-field-background-color: hsl(200, 12%, 95%) !important;
-	--toolbar-field-hover-background-color: hsl(0, 0%, 19%) !important;
-	--toolbar-field-focus-background-color: hsl(0, 0%, 18%) !important;
+	--toolbar-field-hover-background-color: hsl(216, 12%, 92%) !important;
+	--toolbar-field-focus-background-color: hsl(0, 0%, 100%) !important;
 }
 
 :root:-moz-any(:-moz-lwtheme-brighttext, [privatebrowsingmode=temporary])
@@ -1838,7 +1838,7 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 {
 	font-size: var(--toolbar-field-fontsize) !important;
 	border-radius: 99px !important;
-	background-color: hsl(0, 0%, 11.8%);;
+	background-color: var(--toolbar-field-background-color);
 	border: 0 !important;
 	box-shadow: none !important;
 	padding: 2px !important;
