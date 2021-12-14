@@ -604,45 +604,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
 }
 
-[[nodiscard]] static bool AsyncGeneratorResumeNext(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
-  if (generator->isCompleted()) {
-    return AsyncGeneratorDrainQueue(cx, generator);
-  }
-
-  MOZ_ASSERT(!generator->isExecuting());
-  MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-
-  if (generator->isAwaitingReturn()) {
-    return true;
-  }
-
-  if (generator->isQueueEmpty()) {
-    return true;
-  }
-
-  Rooted<AsyncGeneratorRequest*> request(
-      cx, AsyncGeneratorObject::peekRequest(generator));
-  if (!request) {
-    return false;
-  }
-
-  CompletionKind completionKind = request->completionKind();
-
-  if (completionKind != CompletionKind::Normal) {
-    if (generator->isSuspendedStart()) {
-      generator->setCompleted();
-      return AsyncGeneratorDrainQueue(cx, generator);
-    }
-  }
-
-  MOZ_ASSERT(generator->isSuspendedStart() || generator->isSuspendedYield());
-
-  RootedValue resumptionValue(cx, request->completionValue());
-  return AsyncGeneratorUnwrapYieldResumptionAndResume(
-      cx, generator, completionKind, resumptionValue);
-}
-
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
   MOZ_ASSERT(generator->isCompleted());
@@ -773,9 +734,32 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       return false;
     }
 
-    if (!asyncGenObj->isExecuting() && !asyncGenObj->isAwaitingYieldReturn()) {
-      if (!AsyncGeneratorResumeNext(cx, asyncGenObj)) {
+    if (asyncGenObj->isCompleted()) {
+      if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
         return false;
+      }
+    } else if (asyncGenObj->isSuspendedStart() ||
+               asyncGenObj->isSuspendedYield()) {
+      Rooted<AsyncGeneratorRequest*> request(
+          cx, AsyncGeneratorObject::peekRequest(asyncGenObj));
+      if (!request) {
+        return false;
+      }
+
+      CompletionKind completionKind = request->completionKind();
+
+      if (completionKind != CompletionKind::Normal &&
+          asyncGenObj->isSuspendedStart()) {
+        asyncGenObj->setCompleted();
+        if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+          return false;
+        }
+      } else {
+        RootedValue resumptionValue(cx, request->completionValue());
+        if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
+                cx, asyncGenObj, completionKind, resumptionValue)) {
+          return false;
+        }
       }
     }
 
