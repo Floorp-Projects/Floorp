@@ -12,7 +12,6 @@ const { E10SUtils } = ChromeUtils.import(
 const { HiddenFrame } = ChromeUtils.import(
   "resource://gre/modules/HiddenFrame.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
@@ -160,9 +159,7 @@ async function takeScreenshot(
       fr.readAsArrayBuffer(blob);
     });
 
-    await OS.File.writeAtomic(path, new Uint8Array(reader.result), {
-      flush: true,
-    });
+    await IOUtils.write(path, new Uint8Array(reader.result));
     dump("Screenshot saved to: " + path + "\n");
   } catch (e) {
     dump("Failure taking screenshot: " + e + "\n");
@@ -225,10 +222,14 @@ let HeadlessShell = {
         var path = cmdLine.handleFlagWithParam("screenshot", true);
         if (!cmdLine.length && !URLlist.length) {
           URLlist.push(path); // Assume the user wanted to specify a URL
-          path = OS.Path.join(cmdLine.workingDirectory.path, "screenshot.png");
+
+          path = PathUtils.join(
+            cmdLine.workingDirectory.path,
+            "screenshot.png"
+          );
         }
       } catch (e) {
-        path = OS.Path.join(cmdLine.workingDirectory.path, "screenshot.png");
+        path = PathUtils.join(cmdLine.workingDirectory.path, "screenshot.png");
         cmdLine.handleFlag("screenshot", true); // Remove `screenshot`
       }
 

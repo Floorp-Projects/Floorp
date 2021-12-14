@@ -1,5 +1,10 @@
 "use strict";
 add_task(async function() {
+  const cwdScreenshotPath = PathUtils.join(
+    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+    "screenshot.png"
+  );
+
   // Test variations of the "screenshot" argument when a file path
   // isn't specified.
   await testFileCreationPositive(
@@ -7,27 +12,27 @@ add_task(async function() {
       "-screenshot",
       "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
       "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
       "-screenshot",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
       "--screenshot",
       "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
       "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
       "--screenshot",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
 });
