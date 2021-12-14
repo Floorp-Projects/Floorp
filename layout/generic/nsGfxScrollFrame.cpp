@@ -6777,13 +6777,16 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   nsRect vRect;
   if (showVScrollbar) {
     MOZ_ASSERT(mVScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
-    vRect = mScrollPort;
-    if (overlayScrollBarsOnRoot) {
-      vRect.height = compositionSize.height;
+    vRect.height =
+        overlayScrollBarsOnRoot ? compositionSize.height : mScrollPort.height;
+    vRect.y = mScrollPort.y;
+    if (scrollbarOnLeft) {
+      vRect.width = mScrollPort.x - aInsideBorderArea.x;
+      vRect.x = aInsideBorderArea.x;
+    } else {
+      vRect.width = aInsideBorderArea.XMost() - mScrollPort.XMost();
+      vRect.x = mScrollPort.x + compositionSize.width;
     }
-    vRect.width = aInsideBorderArea.width - mScrollPort.width;
-    vRect.x = scrollbarOnLeft ? aInsideBorderArea.x
-                              : mScrollPort.x + compositionSize.width;
 
     // For overlay scrollbars the margin returned from this GetXULMargin call
     // is a negative margin that moves the scrollbar from just outside the
@@ -6811,11 +6814,10 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   nsRect hRect;
   if (showHScrollbar) {
     MOZ_ASSERT(mHScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
-    hRect = mScrollPort;
-    if (overlayScrollBarsOnRoot) {
-      hRect.width = compositionSize.width;
-    }
-    hRect.height = aInsideBorderArea.height - mScrollPort.height;
+    hRect.width =
+        overlayScrollBarsOnRoot ? compositionSize.width : mScrollPort.width;
+    hRect.x = mScrollPort.x;
+    hRect.height = aInsideBorderArea.YMost() - mScrollPort.YMost();
     hRect.y = mScrollPort.y + compositionSize.height;
 
     // For overlay scrollbars the margin returned from this GetXULMargin call
