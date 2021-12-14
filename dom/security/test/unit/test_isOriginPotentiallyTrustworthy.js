@@ -20,11 +20,11 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 Services.prefs.setCharPref(
-  "dom.securecontext.whitelist",
+  "dom.securecontext.allowlist",
   "example.net,example.org"
 );
 
-Services.prefs.setBoolPref("dom.securecontext.whitelist_onions", false);
+Services.prefs.setBoolPref("dom.securecontext.allowlist_onions", false);
 
 add_task(async function test_isOriginPotentiallyTrustworthy() {
   for (let [uriSpec, expectedResult] of [
@@ -52,7 +52,7 @@ add_task(async function test_isOriginPotentiallyTrustworthy() {
   }
   // And now let's test whether .onion sites are properly treated when
   // allowlisted, see bug 1382359.
-  Services.prefs.setBoolPref("dom.securecontext.whitelist_onions", true);
+  Services.prefs.setBoolPref("dom.securecontext.allowlist_onions", true);
   let uri = NetUtil.newURI("http://1234567890abcdef.onion/");
   let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
