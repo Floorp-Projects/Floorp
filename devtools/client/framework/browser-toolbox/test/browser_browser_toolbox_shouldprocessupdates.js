@@ -41,7 +41,7 @@ add_task(async function() {
   ok(result.exists, "MOZ_TEST_PROCESS_UPDATES exists in subprocess");
   is(
     result.get,
-    "!ShouldProcessUpdates()",
+    "ShouldNotProcessUpdates(): DevToolsLaunching",
     "MOZ_TEST_PROCESS_UPDATES is correct in subprocess"
   );
 

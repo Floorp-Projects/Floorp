@@ -4162,7 +4162,23 @@ bool IsWaylandEnabled() {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
+enum struct ShouldNotProcessUpdatesReason {
+  DevToolsLaunching,
+  OtherInstanceRunning,
+};
+
+const char* ShouldNotProcessUpdatesReasonAsString(
+    ShouldNotProcessUpdatesReason aReason) {
+  switch (aReason) {
+    case ShouldNotProcessUpdatesReason::DevToolsLaunching:
+      return "DevToolsLaunching";
+    case ShouldNotProcessUpdatesReason::OtherInstanceRunning:
+      return "OtherInstanceRunning";
+  }
+}
+
+Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
+    nsXREDirProvider& aDirProvider) {
   // Do not process updates if we're launching devtools, as evidenced by
   // "--chrome ..." with the browser toolbox chrome document URL.
 
@@ -4177,8 +4193,8 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
   const char* chromeParam = nullptr;
   if (ARG_FOUND == CheckArg("chrome", &chromeParam, CheckArgFlag::None)) {
     if (!chromeParam || !strcmp(BROWSER_TOOLBOX_WINDOW_URL, chromeParam)) {
-      NS_WARNING("!ShouldProcessUpdates(): launching devtools");
-      return false;
+      NS_WARNING("ShouldNotProcessUpdates(): DevToolsLaunching");
+      return Some(ShouldNotProcessUpdatesReason::DevToolsLaunching);
     }
   }
 
@@ -4196,7 +4212,7 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
                                        getter_AddRefs(anAppFile));
     if (NS_FAILED(rv) || !anAppFile) {
       // Strange, but not a reason to skip processing updates.
-      return true;
+      return Nothing();
     }
 
     auto updateSyncManager = new nsUpdateSyncManager(anAppFile);
@@ -4204,13 +4220,13 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
     bool otherInstance = false;
     updateSyncManager->IsOtherInstanceRunning(&otherInstance);
     if (otherInstance) {
-      NS_WARNING("!ShouldProcessUpdates(): other instance is running");
-      return false;
+      NS_WARNING("ShouldNotProcessUpdates(): OtherInstanceRunning");
+      return Some(ShouldNotProcessUpdatesReason::OtherInstanceRunning);
     }
   }
 #  endif
 
-  return true;
+  return Nothing();
 }
 #endif
 
@@ -4574,7 +4590,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-  if (ShouldProcessUpdates(mDirProvider)) {
+  Maybe<ShouldNotProcessUpdatesReason> shouldNotProcessUpdatesReason =
+      ShouldNotProcessUpdates(mDirProvider);
+  if (shouldNotProcessUpdatesReason.isNothing()) {
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
     bool persistent;
@@ -4632,7 +4650,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       // Support for testing *not* processing an update.  The launched process
       // can witness this environment variable and conclude that its runtime
       // environment resulted in not processing updates.
-      SaveToEnv("MOZ_TEST_PROCESS_UPDATES=!ShouldProcessUpdates()");
+
+      SaveToEnv(nsPrintfCString(
+                    "MOZ_TEST_PROCESS_UPDATES=ShouldNotProcessUpdates(): %s",
+                    ShouldNotProcessUpdatesReasonAsString(
+                        shouldNotProcessUpdatesReason.value()))
+                    .get());
     }
   }
 #endif
