@@ -158,10 +158,8 @@ class DOMEventTargetHelper : public dom::EventTarget,
 
   virtual void LastRelease() {}
 
-  void KeepAliveIfHasListenersFor(const nsAString& aType);
   void KeepAliveIfHasListenersFor(nsAtom* aType);
 
-  void IgnoreKeepAliveIfHasListenersFor(const nsAString& aType);
   void IgnoreKeepAliveIfHasListenersFor(nsAtom* aType);
 
   void BindToOwner(nsIGlobalObject* aOwner);
@@ -176,10 +174,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mOwnerWindow;
   bool mHasOrHasHadOwnerWindow;
 
-  struct {
-    nsTArray<nsString> mStrings;
-    nsTArray<RefPtr<nsAtom>> mAtoms;
-  } mKeepingAliveTypes;
+  nsTArray<RefPtr<nsAtom>> mKeepingAliveTypes;
 
   bool mIsKeptAlive;
 };
