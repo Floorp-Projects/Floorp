@@ -79,22 +79,6 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
     HandleValue valueOrException = UndefinedHandleValue, bool done = false);
 
-// 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
-[[nodiscard]] static bool AsyncGeneratorResolve(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue value,
-    bool done) {
-  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
-                                  value, done);
-}
-
-// 25.5.3.4 AsyncGeneratorReject ( generator, exception )
-[[nodiscard]] static bool AsyncGeneratorReject(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue exception) {
-  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject,
-                                  exception);
-}
-
 [[nodiscard]] bool js::AsyncGeneratorPromiseReactionJob(
     JSContext* cx, PromiseHandler handler,
     Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue argument) {
@@ -130,7 +114,8 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
       asyncGenObj->setCompleted();
 
       // Step 3.
-      return AsyncGeneratorResolve(cx, asyncGenObj, argument, true);
+      return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
+                                      argument, true);
     }
 
     // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
@@ -144,7 +129,8 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
       asyncGenObj->setCompleted();
 
       // Step 3.
-      return AsyncGeneratorReject(cx, asyncGenObj, argument);
+      return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject,
+                                      argument);
     }
 
     // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
@@ -460,7 +446,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   // Step 5.f.i (implicit).
 
   // Step 5.g.
-  return AsyncGeneratorResolve(cx, asyncGenObj, value, true);
+  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
+                                  value, true);
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
@@ -482,7 +469,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   // Step 5.f.ii.
-  return AsyncGeneratorReject(cx, asyncGenObj, value);
+  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject,
+                                  value);
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
@@ -497,7 +485,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   asyncGenObj->setSuspendedYield();
 
   // Step 9.
-  return AsyncGeneratorResolve(cx, asyncGenObj, value, false);
+  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
+                                  value, false);
 }
 
 // 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
