@@ -966,10 +966,6 @@ static bool IsSettledMaybeWrappedPromise(JSObject* promise) {
     JSContext* cx, HandleObject promiseObj, HandleValue reason,
     HandleSavedFrame unwrappedRejectionStack);
 
-[[nodiscard]] static bool RejectPromiseInternal(
-    JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason,
-    HandleSavedFrame unwrappedRejectionStack = nullptr);
-
 /**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
@@ -1048,9 +1044,9 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
  *
  * Steps 7-15.
  */
-[[nodiscard]] static bool ResolvePromiseInternal(JSContext* cx,
-                                                 HandleObject promise,
-                                                 HandleValue resolutionVal) {
+[[nodiscard]] bool js::ResolvePromiseInternal(
+    JSContext* cx, JS::Handle<JSObject*> promise,
+    JS::Handle<JS::Value> resolutionVal) {
   cx->check(promise, resolutionVal);
   MOZ_ASSERT(!IsSettledMaybeWrappedPromise(promise));
 
@@ -1479,9 +1475,10 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
  * RejectPromise ( promise, reason )
  * https://tc39.es/ecma262/#sec-rejectpromise
  */
-[[nodiscard]] static bool RejectPromiseInternal(
-    JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason,
-    HandleSavedFrame unwrappedRejectionStack) {
+[[nodiscard]] bool js::RejectPromiseInternal(
+    JSContext* cx, JS::Handle<PromiseObject*> promise,
+    JS::Handle<JS::Value> reason,
+    JS::Handle<SavedFrame*> unwrappedRejectionStack /* = nullptr */) {
   return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected,
                         unwrappedRejectionStack);
 }
@@ -5151,7 +5148,7 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
          PromiseHasAnyFlag(promise->as<PromiseObject>(), PROMISE_FLAG_ASYNC);
 }
 
-[[nodiscard]] static PromiseObject* CreatePromiseObjectForAsyncGenerator(
+[[nodiscard]] PromiseObject* js::CreatePromiseObjectForAsyncGenerator(
     JSContext* cx) {
   PromiseObject* promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
   if (!promise) {
@@ -5492,341 +5489,6 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
   // Step 11: Return promiseCapability.[[Promise]].
   args.rval().setObject(*resultPromise);
   return true;
-}
-
-enum class ResumeNextKind { Enqueue, Reject, Resolve };
-
-[[nodiscard]] static bool AsyncGeneratorResumeNext(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
-    HandleValue valueOrException = UndefinedHandleValue, bool done = false);
-
-// 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
-[[nodiscard]] bool js::AsyncGeneratorResolve(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue value,
-    bool done) {
-  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
-                                  value, done);
-}
-
-// 25.5.3.4 AsyncGeneratorReject ( generator, exception )
-[[nodiscard]] bool js::AsyncGeneratorReject(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue exception) {
-  return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject,
-                                  exception);
-}
-
-// Unified implementation of:
-// 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
-// 25.5.3.4 AsyncGeneratorReject ( generator, exception )
-// 25.5.3.5 AsyncGeneratorResumeNext ( generator )
-[[nodiscard]] static bool AsyncGeneratorResumeNext(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
-    HandleValue valueOrException_ /* = UndefinedHandleValue */,
-    bool done /* = false */) {
-  RootedValue valueOrException(cx, valueOrException_);
-
-  // Many paths through the algorithm end in recursive tail-calls.
-  // We implement these with a loop.
-  while (true) {
-    switch (kind) {
-      case ResumeNextKind::Enqueue:
-        // No further action required.
-        break;
-      case ResumeNextKind::Reject: {
-        // 25.5.3.4 AsyncGeneratorReject ( generator, exception )
-        HandleValue exception = valueOrException;
-
-        // Step 1: Assert: generator is an AsyncGenerator instance (implicit).
-        // Step 2: Let queue be generator.[[AsyncGeneratorQueue]].
-        // Step 3: Assert: queue is not an empty List.
-        MOZ_ASSERT(!generator->isQueueEmpty());
-
-        // Step 4: Remove the first element from queue and let next be the value
-        //         of that element.
-        AsyncGeneratorRequest* request =
-            AsyncGeneratorObject::dequeueRequest(cx, generator);
-        if (!request) {
-          return false;
-        }
-
-        // Step 5: Let promiseCapability be next.[[Capability]].
-        Rooted<PromiseObject*> resultPromise(cx, request->promise());
-
-        generator->cacheRequest(request);
-
-        // Step 6: Perform ! Call(promiseCapability.[[Reject]], undefined,
-        //                        « exception »).
-        if (!RejectPromiseInternal(cx, resultPromise, exception)) {
-          return false;
-        }
-
-        // Step 7: Perform ! AsyncGeneratorResumeNext(generator).
-        // Step 8: Return undefined.
-        break;
-      }
-      case ResumeNextKind::Resolve: {
-        // 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
-        HandleValue value = valueOrException;
-
-        // Step 1: Assert: generator is an AsyncGenerator instance (implicit).
-        // Step 2: Let queue be generator.[[AsyncGeneratorQueue]].
-        // Step 3: Assert: queue is not an empty List.
-        MOZ_ASSERT(!generator->isQueueEmpty());
-
-        // Step 4: Remove the first element from queue and let next be the value
-        //         of that element.
-        AsyncGeneratorRequest* request =
-            AsyncGeneratorObject::dequeueRequest(cx, generator);
-        if (!request) {
-          return false;
-        }
-
-        // Step 5: Let promiseCapability be next.[[Capability]].
-        Rooted<PromiseObject*> resultPromise(cx, request->promise());
-
-        generator->cacheRequest(request);
-
-        // Step 6: Let iteratorResult be ! CreateIterResultObject(value, done).
-        JSObject* resultObj = CreateIterResultObject(cx, value, done);
-        if (!resultObj) {
-          return false;
-        }
-
-        RootedValue resultValue(cx, ObjectValue(*resultObj));
-
-        // Step 7: Perform ! Call(promiseCapability.[[Resolve]], undefined,
-        //                        « iteratorResult »).
-        if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
-          return false;
-        }
-
-        // Step 8: Perform ! AsyncGeneratorResumeNext(generator).
-        // Step 9: Return undefined.
-        break;
-      }
-    }
-
-    // 25.5.3.5 AsyncGeneratorResumeNext ( generator )
-    // Step 1: Assert: generator is an AsyncGenerator instance (implicit).
-    // Step 2: Let state be generator.[[AsyncGeneratorState]] (implicit).
-    // Step 3: Assert: state is not "executing".
-    MOZ_ASSERT(!generator->isExecuting());
-    MOZ_ASSERT(!generator->isAwaitingYieldReturn());
-
-    // Step 4: If state is "awaiting-return", return undefined.
-    if (generator->isAwaitingReturn()) {
-      return true;
-    }
-
-    // Step 5: Let queue be generator.[[AsyncGeneratorQueue]].
-    // Step 6: If queue is an empty List, return undefined.
-    if (generator->isQueueEmpty()) {
-      return true;
-    }
-
-    // Step 7: Let next be the value of the first element of queue.
-    // Step 8: Assert: next is an AsyncGeneratorRequest record.
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::peekRequest(generator));
-    if (!request) {
-      return false;
-    }
-
-    // Step 9: Let completion be next.[[Completion]].
-    CompletionKind completionKind = request->completionKind();
-
-    // Step 10: If completion is an abrupt completion, then
-    if (completionKind != CompletionKind::Normal) {
-      // Step 10.a: If state is "suspendedStart", then
-      if (generator->isSuspendedStart()) {
-        // Step 10.a.i: Set generator.[[AsyncGeneratorState]] to "completed".
-        // Step 10.a.ii: Set state to "completed".
-        generator->setCompleted();
-      }
-
-      // Step 10.b: If state is "completed", then
-      if (generator->isCompleted()) {
-        RootedValue value(cx, request->completionValue());
-
-        // Step 10.b.i: If completion.[[Type]] is return, then
-        if (completionKind == CompletionKind::Return) {
-          // Step 10.b.i.1: Set generator.[[AsyncGeneratorState]] to
-          //                "awaiting-return".
-          generator->setAwaitingReturn();
-
-          // (reordered)
-          // Step 10.b.i.3: Let stepsFulfilled be the algorithm steps defined in
-          //                AsyncGeneratorResumeNext Return Processor Fulfilled
-          //                Functions.
-          // Step 10.b.i.4: Let onFulfilled be CreateBuiltinFunction(
-          //                stepsFulfilled, « [[Generator]] »).
-          // Step 10.b.i.5: Set onFulfilled.[[Generator]] to generator.
-          // Step 10.b.i.6: Let stepsRejected be the algorithm steps defined in
-          //                AsyncGeneratorResumeNext Return Processor Rejected
-          //                Functions.
-          // Step 10.b.i.7: Let onRejected be CreateBuiltinFunction(
-          //                stepsRejected, « [[Generator]] »).
-          // Step 10.b.i.8: Set onRejected.[[Generator]] to generator.
-          //
-          const PromiseHandler onFulfilled =
-              PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled;
-          const PromiseHandler onRejected =
-              PromiseHandler::AsyncGeneratorResumeNextReturnRejected;
-
-          // These steps are nearly identical to some steps in Await;
-          // InternalAwait() implements the idiom.
-          //
-          // Step 10.b.i.2: Let promise be ? PromiseResolve(%Promise%,
-          //                « _completion_.[[Value]] »).
-          // Step 10.b.i.9: Perform ! PerformPromiseThen(promise, onFulfilled,
-          //                                             onRejected).
-          // Step 10.b.i.10: Return undefined.
-          return InternalAsyncGeneratorAwait(cx, generator, value, onFulfilled,
-                                             onRejected);
-        }
-
-        // Step 10.b.ii: Else,
-
-        // Step 10.b.ii.1: Assert: completion.[[Type]] is throw.
-        MOZ_ASSERT(completionKind == CompletionKind::Throw);
-
-        // Step 10.b.ii.2: Perform ! AsyncGeneratorReject(generator,
-        //                 completion.[[Value]]).
-        // Step 10.b.ii.3: Return undefined.
-        kind = ResumeNextKind::Reject;
-        valueOrException.set(value);
-        continue;
-      }
-    } else if (generator->isCompleted()) {
-      // Step 11: Else if state is "completed", return
-      //          ! AsyncGeneratorResolve(generator, undefined, true).
-      kind = ResumeNextKind::Resolve;
-      valueOrException.setUndefined();
-      done = true;
-      continue;
-    }
-
-    // Step 12: Assert: state is either "suspendedStart" or "suspendedYield".
-    MOZ_ASSERT(generator->isSuspendedStart() || generator->isSuspendedYield());
-
-    RootedValue argument(cx, request->completionValue());
-
-    if (completionKind == CompletionKind::Return) {
-      // 25.5.3.7 AsyncGeneratorYield steps 8.b-e.
-      // Since we don't have the place that handles return from yield
-      // inside the generator, handle the case here, with extra state
-      // State_AwaitingYieldReturn.
-      generator->setAwaitingYieldReturn();
-
-      const PromiseHandler onFulfilled =
-          PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
-      const PromiseHandler onRejected =
-          PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
-
-      return InternalAsyncGeneratorAwait(cx, generator, argument, onFulfilled,
-                                         onRejected);
-    }
-
-    // Step 16 (reordered): Set generator.[[AsyncGeneratorState]] to
-    //                      "executing".
-    generator->setExecuting();
-
-    // Steps 13-15, 17-21.
-    return AsyncGeneratorResume(cx, generator, completionKind, argument);
-  }
-}
-
-// 25.5.3.6 AsyncGeneratorEnqueue ( generator, completion )
-[[nodiscard]] bool js::AsyncGeneratorEnqueue(JSContext* cx,
-                                             HandleValue asyncGenVal,
-                                             CompletionKind completionKind,
-                                             HandleValue completionValue,
-                                             MutableHandleValue result) {
-  // Step 1 (implicit).
-
-  // Step 3.
-  if (!asyncGenVal.isObject() ||
-      !asyncGenVal.toObject().canUnwrapAs<AsyncGeneratorObject>()) {
-    // Step 2.
-    Rooted<PromiseObject*> resultPromise(
-        cx, CreatePromiseObjectForAsyncGenerator(cx));
-    if (!resultPromise) {
-      return false;
-    }
-
-    // Step 3.a.
-    RootedValue badGeneratorError(cx);
-    if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_GENERATOR, &badGeneratorError)) {
-      return false;
-    }
-
-    // Step 3.b.
-    if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError)) {
-      return false;
-    }
-
-    // Step 3.c.
-    result.setObject(*resultPromise);
-    return true;
-  }
-
-  Rooted<AsyncGeneratorObject*> asyncGenObj(
-      cx, &asyncGenVal.toObject().unwrapAs<AsyncGeneratorObject>());
-
-  bool wrapResult = false;
-  {
-    // The |resultPromise| must be same-compartment with |asyncGenObj|, because
-    // it is stored in AsyncGeneratorRequest, which in turn is stored in a
-    // reserved slot of |asyncGenObj|.
-    // So we first enter the realm of |asyncGenObj|, then create the result
-    // promise and resume the generator, and finally wrap the result promise to
-    // match the original compartment.
-
-    mozilla::Maybe<AutoRealm> ar;
-    RootedValue completionVal(cx, completionValue);
-    if (asyncGenObj->compartment() != cx->compartment()) {
-      ar.emplace(cx, asyncGenObj);
-      wrapResult = true;
-
-      if (!cx->compartment()->wrap(cx, &completionVal)) {
-        return false;
-      }
-    }
-
-    // Step 2.
-    Rooted<PromiseObject*> resultPromise(
-        cx, CreatePromiseObjectForAsyncGenerator(cx));
-    if (!resultPromise) {
-      return false;
-    }
-
-    // Step 5 (reordered).
-    Rooted<AsyncGeneratorRequest*> request(
-        cx, AsyncGeneratorObject::createRequest(cx, asyncGenObj, completionKind,
-                                                completionVal, resultPromise));
-    if (!request) {
-      return false;
-    }
-
-    // Steps 4, 6.
-    if (!AsyncGeneratorObject::enqueueRequest(cx, asyncGenObj, request)) {
-      return false;
-    }
-
-    // Step 7.
-    if (!asyncGenObj->isExecuting() && !asyncGenObj->isAwaitingYieldReturn()) {
-      // Step 8.
-      if (!AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Enqueue)) {
-        return false;
-      }
-    }
-
-    // Step 9.
-    result.setObject(*resultPromise);
-  }
-
-  return !wrapResult || cx->compartment()->wrap(cx, result);
 }
 
 /**
