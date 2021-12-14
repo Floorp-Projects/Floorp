@@ -6,6 +6,7 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 
+loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(
   this,
   "isRemoteBrowserElement",
@@ -60,8 +61,63 @@ class NodePicker {
     // originalTarget allows access to the "real" element before any retargeting
     // is applied, such as in the case of XBL anonymous elements.  See also
     // https://developer.mozilla.org/docs/XBL/XBL_1.0_Reference/Anonymous_Content#Event_Flow_and_Targeting
-    const node = event.originalTarget || event.target;
+    let node = event.originalTarget || event.target;
+
+    // When holding the Shift key, search for the element at the mouse position (as opposed
+    // to the event target). This would make it possible to pick nodes for which we won't
+    // get events for  (e.g. elements with `pointer-events: none`).
+    if (event.shiftKey) {
+      node = this._findNodeAtMouseEventPosition(event) || node;
+    }
+
     return this._walker.attachElement(node);
+  }
+
+  /**
+   * Return the topmost visible element located at the event mouse position. This is
+   * different from retrieving the event target as it allows to retrieve elements for which
+   * we wouldn't have mouse event triggered (e.g. elements with `pointer-events: none`)
+   *
+   * @param {MouseEvent} event
+   * @returns HTMLElement
+   */
+  _findNodeAtMouseEventPosition(event) {
+    const winUtils = this._targetActor.window.windowUtils;
+    const rectSize = 1;
+    const elements = winUtils.nodesFromRect(
+      // aX
+      event.clientX,
+      // aY
+      event.clientY,
+      // aTopSize
+      rectSize,
+      // aRightSize
+      rectSize,
+      // aBottomSize
+      rectSize,
+      // aLeftSize
+      rectSize,
+      // aIgnoreRootScrollFrame
+      true,
+      // aFlushLayout
+      false,
+      // aOnlyVisible
+      true,
+      // aTransparencyThreshold
+      1
+    );
+
+    // ⚠️ When a highlighter was added to the page (which is the case at this point),
+    // the first element is the html node, and might be the last one as well (See Bug 1744941).
+    // Until we figure this out, let's pick the second returned item when hit this.
+    if (
+      elements.length > 1 &&
+      ChromeUtils.getClassName(elements[0]) == "HTMLHtmlElement"
+    ) {
+      return elements[1];
+    }
+
+    return elements[0];
   }
 
   /**
@@ -129,9 +185,9 @@ class NodePicker {
       return;
     }
 
-    // If Shift is pressed, this is only a preview click.
+    // If Ctrl (Or Cmd on OSX) is pressed, this is only a preview click.
     // Send the event to the client, but don't stop picking.
-    if (event.shiftKey) {
+    if ((IS_OSX && event.metaKey) || (!IS_OSX && event.ctrlKey)) {
       this._walker.emit(
         "picker-node-previewed",
         this._findAndAttachElement(event)
