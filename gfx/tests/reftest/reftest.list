@@ -32,4 +32,4 @@ skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-897) fuzzy-if(useDrawSnapsh
 fuzzy(64-99,512-523) == 1696439-1.html 1696439-1-ref.html
 random-if(gtkWidget) == 1722689-1.html 1722689-1-ref.html
 fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html
-pref(image.downscale-during-decode.enabled,true) skip-if(Android) fuzzy-if(useDrawSnapshot,255-255,189821-189821) HTTP == 1724901-2.html 1724901-2-ref.html
+pref(image.downscale-during-decode.enabled,true) skip-if(Android) fuzzy-if(useDrawSnapshot&&browserIsFission,203-203,193600-193600) HTTP == 1724901-2.html 1724901-2-ref.html
