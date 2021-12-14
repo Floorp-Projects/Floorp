@@ -12,7 +12,8 @@
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/CSSFontFeatureValuesRule.h"
 #include "mozilla/dom/CSSImportRule.h"
-#include "mozilla/dom/CSSLayerRule.h"
+#include "mozilla/dom/CSSLayerBlockRule.h"
+#include "mozilla/dom/CSSLayerStatementRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
@@ -89,7 +90,8 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE(FontFeatureValues, FontFeatureValues)
       CASE_RULE(FontFace, FontFace)
       CASE_RULE(CounterStyle, CounterStyle)
-      CASE_RULE(Layer, Layer)
+      CASE_RULE(LayerBlock, LayerBlock)
+      CASE_RULE(LayerStatement, LayerStatement)
       CASE_RULE(ScrollTimeline, ScrollTimeline)
 #undef CASE_RULE
       case StyleCssRuleType::Viewport:
@@ -242,7 +244,8 @@ void ServoCSSRuleList::SetRawAfterClone(RefPtr<ServoCssRules> aNewRules) {
       CASE_FOR(FontFeatureValues, FontFeatureValues)
       CASE_FOR(FontFace, FontFace)
       CASE_FOR(CounterStyle, CounterStyle)
-      CASE_FOR(Layer, Layer)
+      CASE_FOR(LayerBlock, LayerBlock)
+      CASE_FOR(LayerStatement, LayerStatement)
       CASE_FOR(ScrollTimeline, ScrollTimeline)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
