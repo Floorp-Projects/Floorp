@@ -44,6 +44,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTh
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingToolbarPositionPickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
+import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -168,6 +169,8 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object PocketStoriesItem :
         AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
 
+    object BottomSpacer : AdapterItem(BottomSpacerViewHolder.LAYOUT_ID)
+
     /**
      * True if this item represents the same value as other. Used by [AdapterItemDiffCallback].
      */
@@ -231,6 +234,9 @@ class SessionControlAdapter(
                 store = store,
                 interactor = interactor,
                 metrics = components.analytics.metrics
+            )
+            BottomSpacerViewHolder.LAYOUT_ID -> return BottomSpacerViewHolder(
+                composeView = ComposeView(parent.context)
             )
         }
 

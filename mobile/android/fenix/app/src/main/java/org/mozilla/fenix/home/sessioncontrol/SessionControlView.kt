@@ -93,6 +93,8 @@ internal fun normalModeAdapterItems(
         items.add(AdapterItem.CustomizeHomeButton)
     }
 
+    items.add(AdapterItem.BottomSpacer)
+
     return items
 }
 
