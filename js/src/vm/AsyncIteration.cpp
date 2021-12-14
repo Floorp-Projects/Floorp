@@ -694,20 +694,21 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
   }
 };
 
-[[nodiscard]] static bool AsyncGeneratorMethodCommon(
-    JSContext* cx, HandleValue asyncGenVal, CompletionKind completionKind,
-    HandleValue completionValue, MutableHandleValue result) {
-  if (!IsAsyncGeneratorValid(asyncGenVal)) {
-    return AsyncGeneratorValidateThrow(cx, result);
+// AsyncGenerator.prototype.next
+bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!IsAsyncGeneratorValid(args.thisv())) {
+    return AsyncGeneratorValidateThrow(cx, args.rval());
   }
 
   Rooted<AsyncGeneratorObject*> asyncGenObj(
-      cx, &asyncGenVal.toObject().unwrapAs<AsyncGeneratorObject>());
+      cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
 
   MaybeEnterAsyncGeneratorRealm maybeEnterRealm;
 
-  RootedValue completionVal(cx, completionValue);
-  if (!maybeEnterRealm.maybeEnterAndWrap(cx, asyncGenObj, &completionVal)) {
+  RootedValue completionValue(cx, args.get(0));
+  if (!maybeEnterRealm.maybeEnterAndWrap(cx, asyncGenObj, &completionValue)) {
     return false;
   }
 
@@ -721,14 +722,9 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
       asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
       asyncGenObj->isQueueEmpty());
 
-  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, completionKind, completionVal,
-                             resultPromise)) {
+  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Normal,
+                             completionValue, resultPromise)) {
     return false;
-  }
-
-  if (completionKind != CompletionKind::Normal &&
-      asyncGenObj->isSuspendedStart()) {
-    asyncGenObj->setCompleted();
   }
 
   if (asyncGenObj->isCompleted()) {
@@ -738,38 +734,120 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
   } else if (asyncGenObj->isSuspendedStart() ||
              asyncGenObj->isSuspendedYield()) {
     if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-            cx, asyncGenObj, completionKind, completionValue)) {
+            cx, asyncGenObj, CompletionKind::Normal, completionValue)) {
       return false;
     }
   }
 
-  result.setObject(*resultPromise);
+  args.rval().setObject(*resultPromise);
 
-  return maybeEnterRealm.maybeLeaveAndWrap(cx, result);
-}
-
-// AsyncGenerator.prototype.next
-bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Normal,
-                                    args.get(0), args.rval());
+  return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
 // AsyncGenerator.prototype.return
 bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Return,
-                                    args.get(0), args.rval());
+  if (!IsAsyncGeneratorValid(args.thisv())) {
+    return AsyncGeneratorValidateThrow(cx, args.rval());
+  }
+
+  Rooted<AsyncGeneratorObject*> asyncGenObj(
+      cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
+
+  MaybeEnterAsyncGeneratorRealm maybeEnterRealm;
+
+  RootedValue completionValue(cx, args.get(0));
+  if (!maybeEnterRealm.maybeEnterAndWrap(cx, asyncGenObj, &completionValue)) {
+    return false;
+  }
+
+  Rooted<PromiseObject*> resultPromise(
+      cx, CreatePromiseObjectForAsyncGenerator(cx));
+  if (!resultPromise) {
+    return false;
+  }
+
+  MOZ_ASSERT_IF(
+      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
+      asyncGenObj->isQueueEmpty());
+
+  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Return,
+                             completionValue, resultPromise)) {
+    return false;
+  }
+
+  if (asyncGenObj->isSuspendedStart()) {
+    asyncGenObj->setCompleted();
+  }
+
+  if (asyncGenObj->isCompleted()) {
+    if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+      return false;
+    }
+  } else if (asyncGenObj->isSuspendedYield()) {
+    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
+            cx, asyncGenObj, CompletionKind::Return, completionValue)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*resultPromise);
+
+  return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
 // AsyncGenerator.prototype.throw
 bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  return AsyncGeneratorMethodCommon(cx, args.thisv(), CompletionKind::Throw,
-                                    args.get(0), args.rval());
+  if (!IsAsyncGeneratorValid(args.thisv())) {
+    return AsyncGeneratorValidateThrow(cx, args.rval());
+  }
+
+  Rooted<AsyncGeneratorObject*> asyncGenObj(
+      cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
+
+  MaybeEnterAsyncGeneratorRealm maybeEnterRealm;
+
+  RootedValue completionValue(cx, args.get(0));
+  if (!maybeEnterRealm.maybeEnterAndWrap(cx, asyncGenObj, &completionValue)) {
+    return false;
+  }
+
+  Rooted<PromiseObject*> resultPromise(
+      cx, CreatePromiseObjectForAsyncGenerator(cx));
+  if (!resultPromise) {
+    return false;
+  }
+
+  MOZ_ASSERT_IF(
+      asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield(),
+      asyncGenObj->isQueueEmpty());
+
+  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Throw,
+                             completionValue, resultPromise)) {
+    return false;
+  }
+
+  if (asyncGenObj->isSuspendedStart()) {
+    asyncGenObj->setCompleted();
+  }
+
+  if (asyncGenObj->isCompleted()) {
+    if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+      return false;
+    }
+  } else if (asyncGenObj->isSuspendedYield()) {
+    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
+            cx, asyncGenObj, CompletionKind::Throw, completionValue)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*resultPromise);
+
+  return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
