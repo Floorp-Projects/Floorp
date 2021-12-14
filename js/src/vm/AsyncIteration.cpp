@@ -313,9 +313,43 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorDrainQueue(cx, asyncGenObj);
 }
 
+[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue value) {
+  MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
+             "YieldReturn-Await fulfilled when not in "
+             "'AwaitingYieldReturn' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
+}
+
+[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue reason) {
+  MOZ_ASSERT(
+      asyncGenObj->isAwaitingYieldReturn(),
+      "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
+
+  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
+}
+
 [[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
-    CompletionKind completionKind, HandleValue resumptionValue);
+    CompletionKind completionKind, HandleValue resumptionValue) {
+  if (completionKind == CompletionKind::Return) {
+    generator->setAwaitingYieldReturn();
+
+    const PromiseHandler onFulfilled =
+        PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
+    const PromiseHandler onRejected =
+        PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
+
+    return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
+                                       onFulfilled, onRejected);
+  }
+
+  return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
+}
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.3.7 AsyncGeneratorYield (partially)
@@ -428,44 +462,6 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   }
 
   return true;
-}
-
-[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value) {
-  MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
-             "YieldReturn-Await fulfilled when not in "
-             "'AwaitingYieldReturn' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
-}
-
-[[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue reason) {
-  MOZ_ASSERT(
-      asyncGenObj->isAwaitingYieldReturn(),
-      "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
-
-  return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
-}
-
-[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
-    CompletionKind completionKind, HandleValue resumptionValue) {
-  if (completionKind == CompletionKind::Return) {
-    generator->setAwaitingYieldReturn();
-
-    const PromiseHandler onFulfilled =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled;
-    const PromiseHandler onRejected =
-        PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected;
-
-    return InternalAsyncGeneratorAwait(cx, generator, resumptionValue,
-                                       onFulfilled, onRejected);
-  }
-
-  return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
 }
 
 [[nodiscard]] static bool AsyncGeneratorAwaitReturnFulfilled(
