@@ -935,10 +935,6 @@ with modules["URILOADER"]:
     # doesn't need to be reparsed from the original source.
     errors["NS_ERROR_PARSED_DATA_CACHED"] = FAILURE(33)
 
-    # This success code indicates that a refresh header was found and
-    # successfully setup.
-    errors["NS_REFRESHURI_HEADER_FOUND"] = SUCCESS(2)
-
 
 # =======================================================================
 # 25: NS_ERROR_MODULE_CONTENT

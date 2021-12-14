@@ -5411,36 +5411,6 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetupRefreshURI(nsIChannel* aChannel) {
-  nsresult rv;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoCString refreshHeader;
-    rv = httpChannel->GetResponseHeader("refresh"_ns, refreshHeader);
-
-    if (!refreshHeader.IsEmpty()) {
-      nsCOMPtr<nsIScriptSecurityManager> secMan =
-          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = secMan->GetChannelResultPrincipal(aChannel,
-                                             getter_AddRefs(principal));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      SetupReferrerInfoFromChannel(aChannel);
-      // We have no idea what window id to use for error reporting
-      // here, so just pass 0.
-      rv = SetupRefreshURIFromHeader(mCurrentURI, principal, 0, refreshHeader);
-      if (NS_SUCCEEDED(rv)) {
-        return NS_REFRESHURI_HEADER_FOUND;
-      }
-    }
-  }
-  return rv;
-}
-
 static void DoCancelRefreshURITimers(nsIMutableArray* aTimerList) {
   if (!aTimerList) {
     return;
@@ -10767,14 +10737,6 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
   return NS_OK;
 }
 
-void nsDocShell::SetupReferrerInfoFromChannel(nsIChannel* aChannel) {
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (httpChannel) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
-    SetReferrerInfo(referrerInfo);
-  }
-}
-
 bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                           nsIPrincipal* aTriggeringPrincipal,
                           nsIPrincipal* aPrincipalToInherit,
@@ -10999,12 +10961,11 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
       SetCurrentURI(aURI, aChannel, aFireOnLocationChange,
                     /* aIsInitialAboutBlank */ false, locationFlags);
   // Make sure to store the referrer from the channel, if any
-  SetupReferrerInfoFromChannel(aChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) {
+    mReferrerInfo = httpChannel->GetReferrerInfo();
+  }
   return onLocationChangeNeeded;
-}
-
-void nsDocShell::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
-  mReferrerInfo = aReferrerInfo;  // This assigment addrefs
 }
 
 //*****************************************************************************

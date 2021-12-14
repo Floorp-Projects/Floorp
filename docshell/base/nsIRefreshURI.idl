@@ -41,38 +41,6 @@ interface nsIRefreshURI : nsISupports {
                          in long aMillis);
 
     /**
-      * Checks the passed in channel to see if there is a refresh header,
-      * if there is, will setup a timer to refresh the uri found
-      * in the header. If docshell is busy loading a page currently, the
-      * request will be queued and executed when the current page
-      * finishes loading.
-      *
-      * Returns the NS_REFRESHURI_HEADER_FOUND success code if a refresh
-      * header was found and successfully setup.
-      *
-      * @param aChannel The channel to be parsed.
-      */
-    void setupRefreshURI(in nsIChannel aChannel);
-
-    /**
-      * Parses the passed in header string and sets up a refreshURI if
-      * a "refresh" header is found. If docshell is busy loading a page
-      * currently, the request will be queued and executed when
-      * the current page finishes loading.
-      *
-      * @param aBaseURI base URI to resolve refresh uri with.
-      * @param aPrincipal The triggeringPrincipal for the refresh load
-      *   May be null, in which case the principal of current document will be
-      *   applied.
-      * @param aInnerWindowID The window id to use for error reporting.
-      * @param aHeader  The meta refresh header string.
-      */
-    void setupRefreshURIFromHeader(in nsIURI aBaseURI,
-                                   in nsIPrincipal principal,
-                                   in unsigned long long aInnerWindowID,
-                                   in ACString aHeader);
-
-    /**
       * Cancels all timer loads.
       */
     void cancelRefreshURITimers();
