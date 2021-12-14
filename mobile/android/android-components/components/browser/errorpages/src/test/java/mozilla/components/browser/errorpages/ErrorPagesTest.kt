@@ -8,13 +8,43 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.errorpages.ErrorPages.createUrlEncodedErrorPage
 import mozilla.components.support.ktx.kotlin.urlEncode
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
 class ErrorPagesTest {
+
+    @Test
+    fun `createUrlEncodedErrorPage allows overriding title and description`() {
+        val errorPage = createUrlEncodedErrorPage(
+            testContext,
+            ErrorType.ERROR_HTTPS_ONLY,
+            "https://localhost/"
+        )
+
+        assertFalse(errorPage.contains("radio"))
+        assertFalse(errorPage.contains("spider"))
+
+        val customErrorPage = createUrlEncodedErrorPage(
+            testContext,
+            ErrorType.ERROR_HTTPS_ONLY,
+            "https://localhost/",
+            titleOverride = { errorType ->
+                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
+                "radio"
+            },
+            descriptionOverride = { errorType ->
+                assertEquals(ErrorType.ERROR_HTTPS_ONLY, errorType)
+                "spider"
+            }
+        )
+
+        assertTrue(customErrorPage.contains("radio"))
+        assertTrue(customErrorPage.contains("spider"))
+    }
 
     @Test
     fun `createUrlEncodedErrorPage should encoded error information into the URL`() {
@@ -48,29 +78,27 @@ class ErrorPagesTest {
     }
 
     private fun assertUrlEncodingIsValid(errorType: ErrorType) {
-        val context = spy(testContext)
-
         val htmlFilename = "htmlResource.html"
 
         val uri = "sampleUri"
 
         val errorPage = createUrlEncodedErrorPage(
-            context,
+            testContext,
             errorType,
             uri,
             htmlFilename
         )
 
         val expectedImageName = if (errorType.imageNameRes != null) {
-            context.resources.getString(errorType.imageNameRes!!) + ".svg"
+            testContext.resources.getString(errorType.imageNameRes!!) + ".svg"
         } else {
             ""
         }
 
         assertTrue(errorPage.startsWith("resource://android/assets/$htmlFilename"))
-        assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes).urlEncode()}"))
+        assertTrue(errorPage.contains("&button=${testContext.resources.getString(errorType.refreshButtonRes).urlEncode()}"))
 
-        val description = context.resources.getString(errorType.messageRes, uri).replace("<ul>", "<ul role=\"presentation\">")
+        val description = testContext.resources.getString(errorType.messageRes, uri).replace("<ul>", "<ul role=\"presentation\">")
 
         assertTrue(errorPage.contains("&description=${description.urlEncode()}"))
         assertTrue(errorPage.contains("&image=$expectedImageName"))

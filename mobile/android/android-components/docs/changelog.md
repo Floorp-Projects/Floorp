@@ -24,6 +24,9 @@ permalink: /changelog/
   * `AutofillCrypto` is now using `concept-storage`@`KeyManager` as its basis.
   * `AutofillCrypto` is now able to recover from key loss (by scrubbing encrypted credit card data).
 
+* **browser-errorpages**
+  * `ErrorPages.createUrlEncodedErrorPage()` allows overriding the title or description for specific error types now.
+
 # 96.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v95.0.0...v96.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/143?closed=1)

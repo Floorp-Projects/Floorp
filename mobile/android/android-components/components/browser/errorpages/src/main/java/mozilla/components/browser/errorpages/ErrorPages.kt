@@ -16,17 +16,26 @@ object ErrorPages {
 
     /**
      * Provides an encoded URL for an error page. Supports displaying images
+     *
+     * @param titleOverride A function that can return an error page title for an error type. If not
+     * provided or if `null` is returned from the function then the default page title for this
+     * error type, provided by this component, will be used.
+     * @param descriptionOverride  A function that can return an error page description text for an
+     * error type. If not provided or if `null` is returned from the function then the default
+     * description text for this error type, provided by this component, will be used.
      */
     @SuppressLint("StringFormatInvalid")
     fun createUrlEncodedErrorPage(
         context: Context,
         errorType: ErrorType,
         uri: String? = null,
-        htmlResource: String = HTML_RESOURCE_FILE
+        htmlResource: String = HTML_RESOURCE_FILE,
+        titleOverride: (ErrorType) -> String? = { null },
+        descriptionOverride: (ErrorType) -> String? = { null }
     ): String {
-        val title = context.getString(errorType.titleRes)
+        val title = titleOverride(errorType) ?: context.getString(errorType.titleRes)
         val button = context.getString(errorType.refreshButtonRes)
-        val description = context.getString(errorType.messageRes, uri)
+        val description = descriptionOverride(errorType) ?: context.getString(errorType.messageRes, uri)
         val imageName = if (errorType.imageNameRes != null) context.getString(errorType.imageNameRes) + ".svg" else ""
         val continueHttpButton = context.getString(R.string.mozac_browser_errorpages_httpsonly_button)
         val badCertAdvanced = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced)
