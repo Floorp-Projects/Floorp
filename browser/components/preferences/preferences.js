@@ -604,9 +604,26 @@ function appendSearchKeywords(aId, keywords) {
   element.setAttribute("searchkeywords", keywords.join(" "));
 }
 
+async function ensureScrollPadding() {
+  let stickyContainer = document.querySelector(".sticky-container");
+  let height = await window.browsingContext.topChromeWindow
+    .promiseDocumentFlushed(() => stickyContainer.clientHeight)
+    .catch(err => Cu.reportError); // Can reject if the window goes away.
+
+  // Make it a bit more, to ensure focus rectangles etc. don't get cut off.
+  // This being 8px causes us to end up with 90px if the policies container
+  // is not visible (the common case), which matches the CSS and thus won't
+  // cause a style change, repaint, or other changes.
+  height += 8;
+  stickyContainer
+    .closest(".main-content")
+    .style.setProperty("scroll-padding-top", height + "px");
+}
+
 function maybeDisplayPoliciesNotice() {
   if (Services.policies.status == Services.policies.ACTIVE) {
     document.getElementById("policies-container").removeAttribute("hidden");
+    ensureScrollPadding();
   }
 }
 
