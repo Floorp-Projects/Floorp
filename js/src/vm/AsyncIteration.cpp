@@ -32,29 +32,26 @@ using namespace js;
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument);
 
-// ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
-// 6.2.3.1.1 Await Fulfilled Functions
-//
 // Resume the async generator when the `await` operand fulfills to `value`.
 [[nodiscard]] static bool AsyncGeneratorAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "Await fulfilled when not in 'Executing' state");
+
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Normal, value);
 }
 
-// ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
-// 6.2.3.1.2 Await Rejected Functions
-//
 // Resume the async generator when the `await` operand rejects with `reason`.
 [[nodiscard]] static bool AsyncGeneratorAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason) {
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "Await rejected when not in 'Executing' state");
+
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
 }
 
-// ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
-// 25.5.3.7 AsyncGeneratorYield, step 8.e.
-//
 // Resume the async generator after awaiting on the value passed to
 // AsyncGenerator#return, when the async generator was still executing.
 // Split into two functions depending on whether the awaited value was
@@ -62,14 +59,32 @@ using namespace js;
 [[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
+  MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
+             "YieldReturn-Await fulfilled when not in "
+             "'AwaitingYieldReturn' state");
+
+  // We're using a separate 'AwaitingYieldReturn' state when awaiting a
+  // return completion in yield expressions, whereas the spec uses the
+  // 'Executing' state all along. So we now need to transition into the
+  // 'Executing' state.
+  asyncGenObj->setExecuting();
+
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
 }
 
-// ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
-// 25.5.3.7 AsyncGeneratorYield, step 8.c.
 [[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason) {
+  MOZ_ASSERT(
+      asyncGenObj->isAwaitingYieldReturn(),
+      "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
+
+  // We're using a separate 'AwaitingYieldReturn' state when awaiting a
+  // return completion in yield expressions, whereas the spec uses the
+  // 'Executing' state all along. So we now need to transition into the
+  // 'Executing' state.
+  asyncGenObj->setExecuting();
+
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
 }
 
@@ -92,23 +107,11 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
   // Await's handlers don't return a value, nor throw any exceptions.
   // They fail only on OOM.
   switch (handler) {
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 6.2.3.1.1 Await Fulfilled Functions
-    case PromiseHandler::AsyncGeneratorAwaitedFulfilled: {
-      MOZ_ASSERT(asyncGenObj->isExecuting(),
-                 "Await fulfilled when not in 'Executing' state");
-
+    case PromiseHandler::AsyncGeneratorAwaitedFulfilled:
       return AsyncGeneratorAwaitedFulfilled(cx, asyncGenObj, argument);
-    }
 
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 6.2.3.1.2 Await Rejected Functions
-    case PromiseHandler::AsyncGeneratorAwaitedRejected: {
-      MOZ_ASSERT(asyncGenObj->isExecuting(),
-                 "Await rejected when not in 'Executing' state");
-
+    case PromiseHandler::AsyncGeneratorAwaitedRejected:
       return AsyncGeneratorAwaitedRejected(cx, asyncGenObj, argument);
-    }
 
     // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
     // 25.5.3.5.1 AsyncGeneratorResumeNext Return Processor Fulfilled Functions
@@ -144,41 +147,15 @@ enum class ResumeNextKind { Enqueue, Reject, Resolve };
       return AsyncGeneratorDrainQueue(cx, asyncGenObj);
     }
 
-    // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-    // 25.5.3.7 AsyncGeneratorYield
-    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled: {
-      MOZ_ASSERT(asyncGenObj->isAwaitingYieldReturn(),
-                 "YieldReturn-Await fulfilled when not in "
-                 "'AwaitingYieldReturn' state");
-
-      // We're using a separate 'AwaitingYieldReturn' state when awaiting a
-      // return completion in yield expressions, whereas the spec uses the
-      // 'Executing' state all along. So we now need to transition into the
-      // 'Executing' state.
-      asyncGenObj->setExecuting();
-
-      // Steps 8.d-e.
+    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled:
       return AsyncGeneratorYieldReturnAwaitedFulfilled(cx, asyncGenObj,
                                                        argument);
-    }
 
     // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
     // 25.5.3.7 AsyncGeneratorYield
-    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected: {
-      MOZ_ASSERT(
-          asyncGenObj->isAwaitingYieldReturn(),
-          "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
-
-      // We're using a separate 'AwaitingYieldReturn' state when awaiting a
-      // return completion in yield expressions, whereas the spec uses the
-      // 'Executing' state all along. So we now need to transition into the
-      // 'Executing' state.
-      asyncGenObj->setExecuting();
-
-      // Step 8.c.
+    case PromiseHandler::AsyncGeneratorYieldReturnAwaitedRejected:
       return AsyncGeneratorYieldReturnAwaitedRejected(cx, asyncGenObj,
                                                       argument);
-    }
 
     default:
       MOZ_CRASH("Bad handler in AsyncGeneratorPromiseReactionJob");
