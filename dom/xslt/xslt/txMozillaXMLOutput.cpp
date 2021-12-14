@@ -39,6 +39,7 @@
 #include "nsIFrame.h"
 #include <algorithm>
 #include "nsTextNode.h"
+#include "nsDocShell.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
@@ -219,9 +220,9 @@ nsresult txMozillaXMLOutput::endDocument(nsresult aResult) {
   if (!mRefreshString.IsEmpty()) {
     nsPIDOMWindowOuter* win = mDocument->GetWindow();
     if (win) {
-      nsCOMPtr<nsIRefreshURI> refURI = do_QueryInterface(win->GetDocShell());
-      if (refURI) {
-        refURI->SetupRefreshURIFromHeader(
+      nsDocShell* docShell = nsDocShell::Cast(win->GetDocShell());
+      if (docShell) {
+        docShell->SetupRefreshURIFromHeader(
             mDocument->GetDocBaseURI(), mDocument->NodePrincipal(),
             mDocument->InnerWindowID(), mRefreshString);
       }
