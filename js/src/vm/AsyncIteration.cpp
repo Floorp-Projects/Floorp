@@ -32,8 +32,6 @@ using namespace js;
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue argument);
 
-enum class ResumeNextKind { Enqueue, Reject, Resolve };
-
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator);
 
