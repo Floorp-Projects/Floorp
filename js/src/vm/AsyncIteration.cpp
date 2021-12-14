@@ -758,23 +758,25 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
                     asyncGenObj->isSuspendedYield(),
                 asyncGenObj->isQueueEmpty());
 
-  if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Throw,
-                             completionValue, resultPromise)) {
-    return false;
-  }
-
   if (asyncGenObj->isSuspendedStart()) {
     asyncGenObj->setCompleted();
   }
 
   if (asyncGenObj->isCompleted()) {
-    if (!AsyncGeneratorDrainQueue(cx, asyncGenObj)) {
+    if (!RejectPromiseInternal(cx, resultPromise, completionValue)) {
       return false;
     }
-  } else if (asyncGenObj->isSuspendedYield()) {
-    if (!AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw,
-                              completionValue)) {
+  } else {
+    if (!AsyncGeneratorEnqueue(cx, asyncGenObj, CompletionKind::Throw,
+                               completionValue, resultPromise)) {
       return false;
+    }
+
+    if (asyncGenObj->isSuspendedYield()) {
+      if (!AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw,
+                                completionValue)) {
+        return false;
+      }
     }
   }
 
