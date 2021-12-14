@@ -164,7 +164,7 @@ class RefreshBlockerChild extends JSWindowActorChild {
         let docShell = data.browsingContext.docShell;
         let refreshURI = docShell.QueryInterface(Ci.nsIRefreshURI);
         let URI = Services.io.newURI(data.URI);
-        refreshURI.forceRefreshURI(URI, null, data.delay);
+        refreshURI.forceRefreshURI(URI, null, data.delay, true);
         break;
 
       case "PreferenceChanged":
