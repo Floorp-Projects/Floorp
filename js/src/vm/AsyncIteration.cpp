@@ -468,7 +468,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
 }
 
-[[nodiscard]] static bool AsyncGeneratorResumeNextReturnFulfilled(
+[[nodiscard]] static bool AsyncGeneratorAwaitReturnFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
@@ -483,7 +483,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorDrainQueue(cx, asyncGenObj);
 }
 
-[[nodiscard]] static bool AsyncGeneratorResumeNextReturnRejected(
+[[nodiscard]] static bool AsyncGeneratorAwaitReturnRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   MOZ_ASSERT(asyncGenObj->isAwaitingReturn(),
@@ -503,9 +503,8 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 [[nodiscard]] static bool AsyncGeneratorAwaitReturn(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue next) {
   return InternalAsyncGeneratorAwait(
-      cx, generator, next,
-      PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled,
-      PromiseHandler::AsyncGeneratorResumeNextReturnRejected);
+      cx, generator, next, PromiseHandler::AsyncGeneratorAwaitReturnFulfilled,
+      PromiseHandler::AsyncGeneratorAwaitReturnRejected);
 }
 
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
@@ -1015,11 +1014,11 @@ const JSClass js::AsyncGeneratorFunctionClass = {
     case PromiseHandler::AsyncGeneratorAwaitedRejected:
       return AsyncGeneratorAwaitedRejected(cx, asyncGenObj, argument);
 
-    case PromiseHandler::AsyncGeneratorResumeNextReturnFulfilled:
-      return AsyncGeneratorResumeNextReturnFulfilled(cx, asyncGenObj, argument);
+    case PromiseHandler::AsyncGeneratorAwaitReturnFulfilled:
+      return AsyncGeneratorAwaitReturnFulfilled(cx, asyncGenObj, argument);
 
-    case PromiseHandler::AsyncGeneratorResumeNextReturnRejected:
-      return AsyncGeneratorResumeNextReturnRejected(cx, asyncGenObj, argument);
+    case PromiseHandler::AsyncGeneratorAwaitReturnRejected:
+      return AsyncGeneratorAwaitReturnRejected(cx, asyncGenObj, argument);
 
     case PromiseHandler::AsyncGeneratorYieldReturnAwaitedFulfilled:
       return AsyncGeneratorYieldReturnAwaitedFulfilled(cx, asyncGenObj,
