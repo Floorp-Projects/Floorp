@@ -54,13 +54,13 @@ function do_test() {
   // test a property with keywords and colors
   var prop = "color";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "revert", ...allColors ];
+  var expected = [ "initial", "inherit", "unset", "revert", "revert-layer", ...allColors ];
   ok(testValues(values, expected), "property color's values.");
 
   // test a shorthand property
   var prop = "background";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "auto", "initial", "inherit", "unset", "revert", ...allColors, "no-repeat", "repeat",
+  var expected = [ "auto", "initial", "inherit", "unset", "revert", "revert-layer", ...allColors, "no-repeat", "repeat",
       "repeat-x", "repeat-y", "space", "round", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "text", "contain",
       "cover", "none", "-moz-element", "-moz-image-rect", "url", ...allGradients, "image-set" ];
@@ -73,7 +73,7 @@ function do_test() {
 
   var prop = "border";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "unset", "revert", "dashed", "dotted", "double",
+  var expected = [ "initial", "unset", "revert", "revert-layer", "dashed", "dotted", "double",
       "groove", "hidden", "inherit", "inset", "medium", "none", "outset", "ridge",
       "solid", "thick", "thin", ...allColors ]
   ok(testValues(values, expected), "property border values.");
@@ -81,20 +81,20 @@ function do_test() {
   // test keywords only
   var prop = "border-top";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "revert", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
+  var expected = [ "initial", "inherit", "revert", "revert-layer", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
       "dashed", "solid", "double", "groove", "ridge", "inset", "outset", ...allColors ];
   ok(testValues(values, expected), "property border-top's values.");
 
   // tests no keywords or colors
   var prop = "padding-bottom";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "revert" ];
+  var expected = [ "initial", "inherit", "unset", "revert", "revert-layer" ];
   ok(testValues(values, expected), "property padding-bottom's values.");
 
   // test proprety
   var prop = "display";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "revert", "none", "inline", "block", "inline-block", "list-item",
+  var expected = [ "initial", "inherit", "unset", "revert", "revert-layer", "none", "inline", "block", "inline-block", "list-item",
       "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row",
       "table-column-group", "table-column", "table-cell", "table-caption",
       "flex", "inline-flex", "-webkit-box", "-webkit-inline-box",
@@ -106,26 +106,26 @@ function do_test() {
   // test property
   var prop = "float";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "revert", "none", "left", "right", "inline-start", "inline-end" ];
+  var expected = [ "initial", "inherit", "unset", "revert", "revert-layer", "none", "left", "right", "inline-start", "inline-end" ];
   ok(testValues(values, expected), "property float's values.");
 
   // Test property with "auto"
   var prop = "margin";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "unset", "auto", "inherit", "revert" ];
+  var expected = [ "initial", "unset", "auto", "inherit", "revert", "revert-layer" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"
   var prop = "font-style";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "revert", "italic", "normal", "oblique" ];
+  var expected = [ "initial", "inherit", "unset", "revert", "revert-layer", "italic", "normal", "oblique" ];
   ok(testValues(values, expected), "property font-style's values.");
 
   // Test property with "cubic-bezier" and "step".
   var prop = "-moz-transition";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
-                   "ease-out", "inherit", "revert", "linear", "none", "step-end", "step-start",
+                   "ease-out", "inherit", "revert", "revert-layer", "linear", "none", "step-end", "step-start",
                    "steps" ];
   ok(testValues(values, expected), "property -moz-transition's values.");
 
@@ -142,7 +142,7 @@ function do_test() {
   // test border-image property, for bug 973345
   var prop = "border-image";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "auto", "inherit", "revert", "initial", "unset", "repeat", "stretch",
+  var expected = [ "auto", "inherit", "revert", "revert-layer", "initial", "unset", "repeat", "stretch",
                    "-moz-element", "-moz-image-rect", "url", ...allGradients,
                    "fill", "none", "round", "space", "image-set" ];
 
@@ -154,24 +154,24 @@ function do_test() {
 
   var prop = "background-size"
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "auto", "inherit", "revert", "initial", "unset", "contain", "cover" ];
+  var expected = [ "auto", "inherit", "revert", "revert-layer", "initial", "unset", "contain", "cover" ];
   ok(testValues(values, expected), "property background-size's values.");
 
   // Regression test for bug 1255401.
   var prop = "all"
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "inherit", "initial", "unset", "revert" ];
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer" ];
   ok(testValues(values, expected), "property all's values.");
 
   var prop = "quotes"
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "inherit", "initial", "unset", "revert", "auto", "none" ];
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "auto", "none" ];
   ok(testValues(values, expected), "property quotes's values.");
 
   // Regression test for bug 1255384.
   for (prop of ["counter-increment", "counter-reset"]) {
     var values = InspectorUtils.getCSSValuesForProperty(prop);
-    var expected = [ "inherit", "initial", "unset", "none", "revert" ];
+    var expected = [ "inherit", "initial", "unset", "none", "revert", "revert-layer" ];
     ok(testValues(values, expected), "property " + prop + "'s values.");
   }
 
@@ -181,7 +181,7 @@ function do_test() {
   ok(values.includes("match-parent"), "property text-align includes match-parent");
 
   // Regression test for bug 1255402.
-  var expected = [ "inherit", "initial", "unset", "revert", "left", "right",
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "left", "right",
                    "top", "center", "bottom" ];
   for (prop of ["object-position", "perspective-origin"]) {
     var values = InspectorUtils.getCSSValuesForProperty(prop);
@@ -189,23 +189,23 @@ function do_test() {
   }
 
   // Regression test for bug 1255378.
-  var expected = [ "inherit", "initial", "unset", "revert", "none", ...allColors ];
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "none", ...allColors ];
   var values = InspectorUtils.getCSSValuesForProperty("text-shadow");
   ok(testValues(values, expected), "property text-shadow's values");
 
-  var expected = [ "inherit", "initial", "unset", "revert", "inset", "none", ...allColors ];
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "inset", "none", ...allColors ];
   var values = InspectorUtils.getCSSValuesForProperty("box-shadow");
   ok(testValues(values, expected), "property box-shadow's values");
 
   // Regression test for bug 1255379.
-  var expected = [ "inherit", "initial", "unset", "revert", "none", "url",
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "none", "url",
                    "polygon", "circle", "ellipse", "inset", "path",
                    "fill-box", "stroke-box", "view-box", "margin-box",
                    "border-box", "padding-box", "content-box" ];
   var values = InspectorUtils.getCSSValuesForProperty("clip-path");
   ok(testValues(values, expected), "property clip-path's values");
 
-  var expected = [ "inherit", "initial", "unset", "revert", "auto", "rect" ];
+  var expected = [ "inherit", "initial", "unset", "revert", "revert-layer", "auto", "rect" ];
   var values = InspectorUtils.getCSSValuesForProperty("clip");
   ok(testValues(values, expected), "property clip's values");
 
@@ -213,7 +213,7 @@ function do_test() {
   var expected = [ "normal", "none", "counter", "counters",
                    "attr", "open-quote", "close-quote", "no-open-quote",
                    "no-close-quote", "inherit", "initial", "unset", "revert",
-                   "-moz-alt-content", "image-set", "url" ];
+                   "revert-layer", "-moz-alt-content", "image-set", "url" ];
   var values = InspectorUtils.getCSSValuesForProperty("content");
   ok(testValues(values, expected), "property counter's values");
 
@@ -231,7 +231,7 @@ function do_test() {
                   "korean-hangul-formal", "korean-hanja-informal", "korean-hanja-formal",
                   "simp-chinese-informal", "simp-chinese-formal",
                   "trad-chinese-informal", "trad-chinese-formal", "cjk-ideographic",
-                  "ethiopic-numeric", "symbols", "inherit", "initial", "unset", "revert" ];
+                  "ethiopic-numeric", "symbols", "inherit", "initial", "unset", "revert", "revert-layer" ];
   var values = InspectorUtils.getCSSValuesForProperty("list-style-type");
   ok(testValues(values, expected), "property list-style-type's values");
 
