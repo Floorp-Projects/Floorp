@@ -22,6 +22,16 @@ mozilla::PresShell* nsICanvasRenderingContextInternal::GetPresShell() {
   return nullptr;
 }
 
+nsIGlobalObject* nsICanvasRenderingContextInternal::GetParentObject() const {
+  if (mCanvasElement) {
+    return mCanvasElement->OwnerDoc()->GetScopeObject();
+  }
+  if (mOffscreenCanvas) {
+    return mOffscreenCanvas->GetParentObject();
+  }
+  return nullptr;
+}
+
 void nsICanvasRenderingContextInternal::RemovePostRefreshObserver() {
   if (mRefreshDriver) {
     mRefreshDriver->RemovePostRefreshObserver(this);
