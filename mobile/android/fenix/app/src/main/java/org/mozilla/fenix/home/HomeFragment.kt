@@ -394,6 +394,12 @@ class HomeFragment : Fragment() {
         requireComponents.core.engine.profiler?.addMarker(
             MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "HomeFragment.onCreateView",
         )
+
+        if (FeatureFlags.showWallpapers) {
+            val wallpaperManger = requireComponents.wallpaperManager
+            wallpaperManger.updateWallpaper(binding.homeLayout, wallpaperManger.currentWallpaper)
+        }
+
         return binding.root
     }
 
@@ -750,6 +756,16 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch(IO) {
             requireComponents.reviewPromptController.promptReview(requireActivity())
+        }
+
+        if (FeatureFlags.showWallpapers) {
+            binding.wordmark.setOnClickListener {
+                val manager = requireComponents.wallpaperManager
+                manager.updateWallpaper(
+                    wallpaperContainer = binding.homeLayout,
+                    newWallpaper = manager.switchToNextWallpaper()
+                )
+            }
         }
     }
 

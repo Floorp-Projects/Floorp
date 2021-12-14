@@ -105,5 +105,5 @@ object FeatureFlags {
     /**
      * Enables showing the wallpaper functionality.
      */
-    const val showWallpapers = false
+    val showWallpapers = Config.channel.isNightlyOrDebug
 }

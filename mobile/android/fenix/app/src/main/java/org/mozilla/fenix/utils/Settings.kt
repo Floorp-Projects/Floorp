@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
@@ -156,6 +157,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var adjustCreative by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_adjust_creative),
         default = ""
+    )
+
+    var currentWallpaper by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
+        default = Wallpaper.NONE.name
     )
 
     var openLinksInAPrivateTab by booleanPreference(
