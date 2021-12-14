@@ -377,12 +377,12 @@
 
     <string name="search_add_confirmation">Se agregó un buscador nuevo.</string>
 
-    <string name="search_add_error_empty_name">Ingrese el nombre del motor de búsqueda</string>
+    <string name="search_add_error_empty_name">Ingresar el nombre del buscador</string>
     <string name="search_add_error_duplicate_name">Ya hay instalado un buscador con ese nombre.</string>
 
     <string name="search_add_error_empty_search">Ingresar cadena de búsqueda</string>
 
-    <string name="search_add_error_format">Verifique que la cadena de búsqueda coincida con el formato del ejemplo</string>
+    <string name="search_add_error_format">Verificar que la cadena de búsqueda coincida con el formato del ejemplo</string>
 
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">Borrar entrada</string>
@@ -636,7 +636,7 @@
     <string name="preference_advanced_summary">Herramientas para desarrolladores</string>
 
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Abrir enlaces en apps</string>
+    <string name="preferences_open_links_in_apps">Abrir enlaces en aplicaciones</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avanzadas</string>
@@ -776,6 +776,11 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_safe_browsing_title">Bloquear sitios potencialmente peligrosos y engañosos</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Bloquear los sitios de ataque y engaños informados, sitios de aplicaciones dañinas y sitios de software no deseados.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Modo solo HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS proporciona una conexión segura y encriptada entre %1$s y los sitios web que visités. La mayoría de los sitios web admiten HTTPS y si el modo solo HTTPS está habilitado, entonces %1$s actualizará todas las conexiones a HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Excepciones</string>
