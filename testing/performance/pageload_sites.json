@@ -141,7 +141,8 @@
     {
       "login": false,
       "name": "amazon",
-      "test_url": "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
+      "test_url": "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1",
+      "secondary_url": "https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3"
     },
     {
       "login": false,
