@@ -520,23 +520,21 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     CompletionKind completionKind = request->completionKind();
 
-    if (completionKind != CompletionKind::Normal) {
-      if (generator->isCompleted()) {
-        RootedValue value(cx, request->completionValue());
+    if (completionKind == CompletionKind::Return) {
+      RootedValue value(cx, request->completionValue());
 
-        if (completionKind == CompletionKind::Return) {
-          generator->setAwaitingReturn();
+      generator->setAwaitingReturn();
 
-          return AsyncGeneratorAwaitReturn(cx, generator, value);
-        }
+      return AsyncGeneratorAwaitReturn(cx, generator, value);
+    }
 
-        MOZ_ASSERT(completionKind == CompletionKind::Throw);
+    if (completionKind == CompletionKind::Throw) {
+      RootedValue value(cx, request->completionValue());
 
-        if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
-          return false;
-        }
-        continue;
+      if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
+        return false;
       }
+      continue;
     }
 
     if (!AsyncGeneratorCompleteStepNormal(cx, generator, UndefinedHandleValue,
