@@ -386,8 +386,7 @@ class nsWindow final : public nsBaseWidget {
 
 #ifdef MOZ_WAYLAND
   // Use xdg-activation protocol to transfer focus from gFocusWindow to aWindow.
-  // RequestFocusWaylandWindow needs to be called on focused window only.
-  void RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow);
+  static void RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow);
   void FocusWaylandWindow(const char* aTokenID);
 
   bool GetCSDDecorationOffset(int* aDx, int* aDy);

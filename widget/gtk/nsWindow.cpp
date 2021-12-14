@@ -2845,6 +2845,9 @@ void nsWindow::FocusWaylandWindow(const char* aTokenID) {
     return;
   }
 
+  LOG("  requesting xdg-activation, surface ID %d",
+      wl_proxy_get_id((struct wl_proxy*)surface));
+
   xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
   xdg_activation_v1_activate(xdg_activation, aTokenID, surface);
 }
@@ -2862,12 +2865,17 @@ static const struct xdg_activation_token_v1_listener token_listener = {
 };
 
 void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
-  LOG("nsWindow::RequestWindowFocusWayland(%p)", (void*)aWindow);
+  LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p",
+       (void*)aWindow, gFocusWindow);
+
+  if (!gFocusWindow) {
+    LOGW("  missing gFocusWindow, quit.");
+  }
 
   RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
   xdg_activation_v1* xdg_activation = display->GetXdgActivation();
   if (!xdg_activation) {
-    LOG("  xdg-activation is missing, quit.");
+    LOGW("  xdg-activation is missing, quit.");
     return;
   }
 
@@ -2875,13 +2883,25 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
   uint32_t focusSerial;
   KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
   if (!focusSurface) {
-    LOG("  We're missing focused window, quit.");
+    LOGW("  We're missing focused window, quit.");
     return;
   }
 
-  LOG("  requesting xdg-activation token, surface ID %d serial %d seat ID %d",
-      wl_proxy_get_id((struct wl_proxy*)focusSurface), focusSerial,
-      wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
+  GdkWindow* gdkWindow = gtk_widget_get_window(gFocusWindow->mShell);
+  wl_surface* surface =
+      gdkWindow ? gdk_wayland_window_get_wl_surface(gdkWindow) : nullptr;
+  if (focusSurface != surface) {
+    LOGW("  focused surface %p and gFocusWindow surface %p don't match, quit.",
+         focusSurface, surface);
+    return;
+  }
+
+  LOGW(
+      "  requesting xdg-activation token, surface %p ID %d serial %d seat ID "
+      "%d",
+      focusSurface,
+      focusSurface ? wl_proxy_get_id((struct wl_proxy*)focusSurface) : 0,
+      focusSerial, wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
 
   // Store activation token at activated window for further release.
   g_clear_pointer(&aWindow->mXdgToken, xdg_activation_token_v1_destroy);
