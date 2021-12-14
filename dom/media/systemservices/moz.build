@@ -49,6 +49,7 @@ if CONFIG["MOZ_WEBRTC"]:
         UNIFIED_SOURCES += ["video_engine/desktop_device_info_win.cc"]
 
     if CONFIG["OS_TARGET"] != "Android":
+        DEFINES["MULTI_MONITOR_SCREENSHARE"] = True
         UNIFIED_SOURCES += [
             "video_engine/desktop_capture_impl.cc",
             "video_engine/desktop_device_info.cc",
