@@ -3397,8 +3397,17 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   if (usePreciseDeltas && hasPhaseInformation) {
     PanGestureInput panEvent(PanGestureTypeForEvent(theEvent), eventIntervalTime, eventTimeStamp,
-                             position, preciseDelta, modifiers);
-    panEvent.SetLineOrPageDeltas(lineOrPageDelta.x, lineOrPageDelta.y);
+                             position, ScreenPoint(), modifiers);
+
+    // Always force zero deltas on event types that shouldn't cause any scrolling,
+    // so that we don't dispatch DOM wheel events for them.
+    bool shouldIgnoreDeltas = panEvent.mType == PanGestureInput::PANGESTURE_MAYSTART ||
+                              panEvent.mType == PanGestureInput::PANGESTURE_CANCELLED;
+
+    if (!shouldIgnoreDeltas) {
+      panEvent.mPanDisplacement = preciseDelta;
+      panEvent.SetLineOrPageDeltas(lineOrPageDelta.x, lineOrPageDelta.y);
+    }
 
     if (panEvent.mType == PanGestureInput::PANGESTURE_END) {
       // Check if there's a momentum start event in the event queue, so that we
