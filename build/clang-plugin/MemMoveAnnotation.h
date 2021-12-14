@@ -19,7 +19,8 @@ public:
   virtual ~MemMoveAnnotation() {}
 
 protected:
-  std::string getImplicitReason(const TagDecl *D) const override {
+  std::string getImplicitReason(const TagDecl *D,
+                                VisitFlags &ToVisit) const override {
     // Annotate everything in ::std, with a few exceptions; see bug
     // 1201314 for discussion.
     if (getDeclarationNamespace(D) == "std") {
