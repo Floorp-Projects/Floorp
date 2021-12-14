@@ -472,14 +472,8 @@ def check_output(out, err, rc, timed_out, test, options):
 
     if test.expect_error:
         # The shell exits with code 3 on uncaught exceptions.
-        # Sometimes 0 is returned on Windows for unknown reasons.
-        # See bug 899697.
-        if sys.platform in ["win32", "cygwin"]:
-            if rc != 3 and rc != 0:
-                return False
-        else:
-            if rc != 3:
-                return False
+        if rc != 3:
+            return False
 
         return test.expect_error in err
 
@@ -519,12 +513,6 @@ def check_output(out, err, rc, timed_out, test, options):
         return False
 
     if rc != test.expect_status:
-        # Tests which expect a timeout check for exit code 6.
-        # Sometimes 0 is returned on Windows for unknown reasons.
-        # See bug 899697.
-        if sys.platform in ["win32", "cygwin"] and rc == 0:
-            return True
-
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
         if (
