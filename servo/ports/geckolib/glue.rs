@@ -87,10 +87,11 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerRule,
-    RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule, RawServoNamespaceRule,
-    RawServoPageRule, RawServoScrollTimelineRule, RawServoSharedMemoryBuilder, RawServoStyleSet,
-    RawServoStyleSheetContents, RawServoSupportsRule, ServoCssRules,
+    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerBlockRule,
+    RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
+    RawServoNamespaceRule, RawServoPageRule, RawServoScrollTimelineRule,
+    RawServoSharedMemoryBuilder, RawServoStyleSet, RawServoStyleSheetContents,
+    RawServoSupportsRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{
@@ -118,15 +119,15 @@ use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
+use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::scroll_timeline_rule::ScrollDirection;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
-use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::{
     AllowImportRules, CounterStyleRule, CssRule, CssRuleType, CssRules, CssRulesHelpers,
-    DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule, LayerRule,
-    MediaRule, NamespaceRule, Origin, OriginSet, PageRule, SanitizationData, SanitizationKind,
-    ScrollTimelineRule, StyleRule, StylesheetContents, StylesheetLoader as StyleStylesheetLoader,
-    SupportsRule, UrlExtraData,
+    DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule, LayerBlockRule,
+    LayerStatementRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule, SanitizationData,
+    SanitizationKind, ScrollTimelineRule, StyleRule, StylesheetContents,
+    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2329,20 +2330,19 @@ impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     changed: Servo_StyleSet_SupportsRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Layer, LayerRule, RawServoLayerRule),
-    getter: Servo_CssRules_GetLayerRuleAt,
-    debug: Servo_LayerRule_Debug,
-    to_css: Servo_LayerRule_GetCssText,
-    changed: Servo_StyleSet_LayerRuleChanged,
+impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, RawServoLayerBlockRule),
+    get_rules: Servo_LayerBlockRule_GetRules,
+    getter: Servo_CssRules_GetLayerBlockRuleAt,
+    debug: Servo_LayerBlockRule_Debug,
+    to_css: Servo_LayerBlockRule_GetCssText,
+    changed: Servo_StyleSet_LayerBlockRuleChanged,
 }
 
-#[no_mangle]
-pub extern "C" fn Servo_LayerRule_GetRules(rule: &RawServoLayerRule) -> Strong<ServoCssRules> {
-    use style::stylesheets::layer_rule::LayerRuleKind;
-    read_locked_arc(rule, |rule: &LayerRule| match rule.kind {
-        LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
-        LayerRuleKind::Statement { .. } => Strong::null(),
-    })
+impl_basic_rule_funcs! { (LayerStatement, LayerStatementRule, RawServoLayerStatementRule),
+    getter: Servo_CssRules_GetLayerStatementRuleAt,
+    debug: Servo_LayerStatementRule_Debug,
+    to_css: Servo_LayerStatementRule_GetCssText,
+    changed: Servo_StyleSet_LayerStatementRuleChanged,
 }
 
 impl_group_rule_funcs! { (Document, DocumentRule, RawServoMozDocumentRule),
@@ -2622,6 +2622,17 @@ pub unsafe extern "C" fn Servo_SelectorList_QueryAll(
 pub extern "C" fn Servo_ImportRule_GetHref(rule: &RawServoImportRule, result: &mut nsAString) {
     read_locked_arc(rule, |rule: &ImportRule| {
         write!(result, "{}", rule.url.as_str()).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ImportRule_GetLayerName(
+    rule: &RawServoImportRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &ImportRule| match rule.layer {
+        Some(ref layer) => layer.name.to_css(&mut CssWriter::new(result)).unwrap(),
+        None => result.set_is_void(true),
     })
 }
 
@@ -7258,4 +7269,36 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
     };
     *out = scheme.raw_bits();
     true
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_LayerBlockRule_GetName(
+    rule: &RawServoLayerBlockRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &LayerBlockRule| {
+        if let Some(ref name) = rule.name {
+            name.to_css(&mut CssWriter::new(result)).unwrap()
+        }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_LayerStatementRule_GetNameCount(
+    rule: &RawServoLayerStatementRule,
+) -> usize {
+    read_locked_arc(rule, |rule: &LayerStatementRule| rule.names.len())
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_LayerStatementRule_GetNameAt(
+    rule: &RawServoLayerStatementRule,
+    index: usize,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &LayerStatementRule| {
+        if let Some(ref name) = rule.names.get(index) {
+            name.to_css(&mut CssWriter::new(result)).unwrap()
+        }
+    })
 }

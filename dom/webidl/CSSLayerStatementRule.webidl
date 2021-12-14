@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * This is just scaffolding waiting for
- * https://github.com/w3c/csswg-drafts/issues/6576 to get resolved.
+ * The origin of this IDL file is
+ * https://drafts.csswg.org/css-cascade-5/#the-csslayerstatementrule-interface
  */
-
 [Exposed=Window, Pref="layout.css.cascade-layers.enabled"]
-interface CSSLayerRule : CSSGroupingRule {
+interface CSSLayerStatementRule : CSSRule {
+  // readonly attribute FrozenArray<CSSOMString> nameList;
+  [Frozen, Cached, Pure]
+  readonly attribute sequence<UTF8String> nameList;
 };

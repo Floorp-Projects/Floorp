@@ -19,3 +19,9 @@ interface CSSImportRule : CSSRule {
   // be.  See <https://bugzilla.mozilla.org/show_bug.cgi?id=1326509>.
   [SameObject, BinaryName="styleSheetForBindings"] readonly attribute CSSStyleSheet? styleSheet;
 };
+
+// https://drafts.csswg.org/css-cascade-5/#extensions-to-cssimportrule-interface
+partial interface CSSImportRule {
+  [Pref="layout.css.cascade-layers.enabled"]
+  readonly attribute UTF8String? layerName;
+};
