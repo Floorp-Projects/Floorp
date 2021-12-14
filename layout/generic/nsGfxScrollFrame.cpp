@@ -6764,6 +6764,8 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   bool scrollbarOnLeft = !IsScrollbarOnRight();
   const bool overlayScrollbars = UsesOverlayScrollbars();
   const bool overlayScrollBarsOnRoot = overlayScrollbars && mIsRoot;
+  const bool showVScrollbar = mVScrollbarBox && mHasVerticalScrollbar;
+  const bool showHScrollbar = mHScrollbarBox && mHasHorizontalScrollbar;
 
   nsSize compositionSize = mScrollPort.Size();
   if (overlayScrollBarsOnRoot) {
@@ -6773,7 +6775,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
   nsPresContext* presContext = mScrolledFrame->PresContext();
   nsRect vRect;
-  if (mVScrollbarBox) {
+  if (showVScrollbar) {
     MOZ_ASSERT(mVScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
     vRect = mScrollPort;
     if (overlayScrollBarsOnRoot) {
@@ -6782,40 +6784,32 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     vRect.width = aInsideBorderArea.width - mScrollPort.width;
     vRect.x = scrollbarOnLeft ? aInsideBorderArea.x
                               : mScrollPort.x + compositionSize.width;
-    if (mHasVerticalScrollbar) {
-      nsMargin margin;
 
-      // For overlay scrollbars the margin returned from this GetXULMargin call
-      // is a negative margin that moves the scrollbar from just outside the
-      // scrollport (and hence not visible) to just inside the scrollport (and
-      // hence visible). For non-overlay scrollbars it is a 0 margin.
-      mVScrollbarBox->GetXULMargin(margin);
+    // For overlay scrollbars the margin returned from this GetXULMargin call
+    // is a negative margin that moves the scrollbar from just outside the
+    // scrollport (and hence not visible) to just inside the scrollport (and
+    // hence visible). For non-overlay scrollbars it is a 0 margin.
+    nsMargin margin;
+    mVScrollbarBox->GetXULMargin(margin);
 
-      if (!overlayScrollbars && mOnlyNeedVScrollbarToScrollVVInsideLV) {
-        // There is no space reserved for the layout scrollbar, it is currently
-        // not visible because it is positioned just outside the scrollport. But
-        // we know that it needs to be made visible so we shift it back in.
-        nsSize vScrollbarPrefSize(0, 0);
-        GetScrollbarMetrics(aState, mVScrollbarBox, nullptr,
-                            &vScrollbarPrefSize);
-        if (scrollbarOnLeft) {
-          margin.right -= vScrollbarPrefSize.width;
-        } else {
-          margin.left -= vScrollbarPrefSize.width;
-        }
+    if (!overlayScrollbars && mOnlyNeedVScrollbarToScrollVVInsideLV) {
+      // There is no space reserved for the layout scrollbar, it is currently
+      // not visible because it is positioned just outside the scrollport. But
+      // we know that it needs to be made visible so we shift it back in.
+      nsSize vScrollbarPrefSize(0, 0);
+      GetScrollbarMetrics(aState, mVScrollbarBox, nullptr, &vScrollbarPrefSize);
+      if (scrollbarOnLeft) {
+        margin.right -= vScrollbarPrefSize.width;
+      } else {
+        margin.left -= vScrollbarPrefSize.width;
       }
-
-      vRect.Deflate(margin);
     }
+
+    vRect.Deflate(margin);
   }
 
-  bool hasVisualOnlyScrollbarsOnBothDirections =
-      !overlayScrollbars && mHScrollbarBox && mHasHorizontalScrollbar &&
-      mOnlyNeedHScrollbarToScrollVVInsideLV && mVScrollbarBox &&
-      mHasVerticalScrollbar && mOnlyNeedVScrollbarToScrollVVInsideLV;
-
   nsRect hRect;
-  if (mHScrollbarBox) {
+  if (showHScrollbar) {
     MOZ_ASSERT(mHScrollbarBox->IsXULBoxFrame(), "Must be a box frame!");
     hRect = mScrollPort;
     if (overlayScrollBarsOnRoot) {
@@ -6823,28 +6817,30 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     }
     hRect.height = aInsideBorderArea.height - mScrollPort.height;
     hRect.y = mScrollPort.y + compositionSize.height;
-    if (mHasHorizontalScrollbar) {
-      nsMargin margin;
 
-      // For overlay scrollbars the margin returned from this GetXULMargin call
-      // is a negative margin that moves the scrollbar from just outside the
-      // scrollport (and hence not visible) to just inside the scrollport (and
-      // hence visible). For non-overlay scrollbars it is a 0 margin.
-      mHScrollbarBox->GetXULMargin(margin);
+    // For overlay scrollbars the margin returned from this GetXULMargin call
+    // is a negative margin that moves the scrollbar from just outside the
+    // scrollport (and hence not visible) to just inside the scrollport (and
+    // hence visible). For non-overlay scrollbars it is a 0 margin.
+    nsMargin margin;
+    mHScrollbarBox->GetXULMargin(margin);
 
-      if (!overlayScrollbars && mOnlyNeedHScrollbarToScrollVVInsideLV) {
-        // There is no space reserved for the layout scrollbar, it is currently
-        // not visible because it is positioned just outside the scrollport. But
-        // we know that it needs to be made visible so we shift it back in.
-        nsSize hScrollbarPrefSize(0, 0);
-        GetScrollbarMetrics(aState, mHScrollbarBox, nullptr,
-                            &hScrollbarPrefSize);
-        margin.top -= hScrollbarPrefSize.height;
-      }
-
-      hRect.Deflate(margin);
+    if (!overlayScrollbars && mOnlyNeedHScrollbarToScrollVVInsideLV) {
+      // There is no space reserved for the layout scrollbar, it is currently
+      // not visible because it is positioned just outside the scrollport. But
+      // we know that it needs to be made visible so we shift it back in.
+      nsSize hScrollbarPrefSize(0, 0);
+      GetScrollbarMetrics(aState, mHScrollbarBox, nullptr, &hScrollbarPrefSize);
+      margin.top -= hScrollbarPrefSize.height;
     }
+
+    hRect.Deflate(margin);
   }
+
+  const bool hasVisualOnlyScrollbarsOnBothDirections =
+      !overlayScrollbars && showHScrollbar &&
+      mOnlyNeedHScrollbarToScrollVVInsideLV && showVScrollbar &&
+      mOnlyNeedVScrollbarToScrollVVInsideLV;
 
   // place the scrollcorner
   if (mScrollCornerBox || mResizerBox) {
