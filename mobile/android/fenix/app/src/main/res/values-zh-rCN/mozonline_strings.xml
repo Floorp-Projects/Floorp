@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Privacy Notice-->
     <!-- Privacy Notice title-->
     <string name="privacy_notice_title">关于您的权利</string>
@@ -18,7 +18,8 @@
     <!-- Privacy Notice positive button-->
     <string name="privacy_notice_positive_button">同意并继续</string>
     <!-- Privacy Notice neutral button-->
-    <string name="privacy_notice_neutral_button">退出应用</string>
+    <string name="privacy_notice_neutral_button" moz:removedIn="96" tools:ignore="UnusedResources">退出应用</string>
+    <string name="privacy_notice_neutral_button_2">不同意并退出</string>
 
     <!-- Topsites-->
     <!-- Default title for pinned Baidu top site that links to Baidu home page  -->

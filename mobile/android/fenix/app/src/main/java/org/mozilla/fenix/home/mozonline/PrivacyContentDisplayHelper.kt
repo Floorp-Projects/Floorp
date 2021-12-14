@@ -50,7 +50,7 @@ fun showPrivacyPopWindow(context: Context, activity: Activity) {
             }
         )
         .setNeutralButton(
-            context.getString(R.string.privacy_notice_neutral_button),
+            context.getString(R.string.privacy_notice_neutral_button_2),
             { _, _ -> exitProcess(0) }
         )
         .setTitle(context.getString(R.string.privacy_notice_title))
