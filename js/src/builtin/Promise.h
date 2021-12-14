@@ -55,8 +55,8 @@ enum class PromiseHandler : uint32_t {
   //
   // Step 7. fulfilledClosure Abstract Closure.
   // Step 9. rejectedClosure Abstract Closure.
-  AsyncGeneratorResumeNextReturnFulfilled,
-  AsyncGeneratorResumeNextReturnRejected,
+  AsyncGeneratorAwaitReturnFulfilled,
+  AsyncGeneratorAwaitReturnRejected,
 
   // AsyncGeneratorUnwrapYieldResumption
   // https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
