@@ -76,9 +76,9 @@
     <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen20</color>
     <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow20</color>
     <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet20</color>
+    <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet20</color>
     <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_end" tools:ignore="UnusedResources">@color/photonBlue20</color>
+    <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue20</color>
 
     <!-- Border -->
     <!-- Form parts -->
@@ -126,8 +126,6 @@
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_normal_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonViolet50</color>
-    <color name="readermode_start_gradient_normal_theme">@color/photonViolet30</color>
-    <color name="readermode_end_gradient_normal_theme">@color/photonBlue30</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen60</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
     <color name="select_login_header_normal_theme">@color/accent_high_contrast_dark_theme</color>

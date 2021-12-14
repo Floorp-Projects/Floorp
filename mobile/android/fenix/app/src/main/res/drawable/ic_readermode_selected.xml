@@ -17,8 +17,8 @@
                 android:startY="0"
                 android:endX="0"
                 android:endY="24"
-                android:startColor="?readerModeStartGradient"
-                android:endColor="?readerModeEndGradient"/>
+                android:startColor="@color/fx_mobile_icon_color_gradient_start"
+                android:endColor="@color/fx_mobile_icon_color_gradient_end"/>
         </aapt:attr>
     </path>
     <path
@@ -30,8 +30,8 @@
                 android:startY="0"
                 android:endX="0"
                 android:endY="24"
-                android:startColor="?readerModeStartGradient"
-                android:endColor="?readerModeEndGradient"/>
+                android:startColor="@color/fx_mobile_icon_color_gradient_start"
+                android:endColor="@color/fx_mobile_icon_color_gradient_end"/>
         </aapt:attr>
     </path>
 </vector>

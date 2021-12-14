@@ -76,9 +76,9 @@
     <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen60</color>
     <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow60</color>
     <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet50</color>
+    <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet50</color>
     <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_end" tools:ignore="UnusedResources">@color/photonBlue60</color>
+    <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue60</color>
 
     <!-- Border -->
     <!-- Form parts -->
@@ -136,8 +136,6 @@
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
-    <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>
-    <color name="readermode_end_gradient_normal_theme">@color/photonBlue60</color>
     <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
 
     <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
