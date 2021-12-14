@@ -120,6 +120,7 @@ use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::scroll_timeline_rule::ScrollDirection;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
+use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::{
     AllowImportRules, CounterStyleRule, CssRule, CssRuleType, CssRules, CssRulesHelpers,
     DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule, LayerRule,
@@ -3757,6 +3758,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
                 extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
                     rule.read_with(level.guard(&guards)).block.clone(),
                     level,
+                    LayerOrder::root(),
                 ));
             }
         }
