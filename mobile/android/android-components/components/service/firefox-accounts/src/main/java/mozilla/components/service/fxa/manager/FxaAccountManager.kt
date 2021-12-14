@@ -893,7 +893,7 @@ open class FxaAccountManager(
             DeviceSettings(
                 fxaDeviceId = account.getCurrentDeviceId()!!,
                 name = deviceConfig.name,
-                type = deviceConfig.type.intoSyncType()
+                kind = deviceConfig.type.intoSyncType()
             )
         )
         return true

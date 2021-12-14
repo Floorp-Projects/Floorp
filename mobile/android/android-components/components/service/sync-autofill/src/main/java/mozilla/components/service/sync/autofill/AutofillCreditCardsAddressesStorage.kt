@@ -176,10 +176,6 @@ class AutofillCreditCardsAddressesStorage(
         conn.getStorage().registerWithSyncManager()
     }
 
-    override fun getHandle(): Long {
-        throw NotImplementedError("Use registerWithSyncManager instead")
-    }
-
     override fun close() {
         coroutineContext.cancel()
         conn.close()

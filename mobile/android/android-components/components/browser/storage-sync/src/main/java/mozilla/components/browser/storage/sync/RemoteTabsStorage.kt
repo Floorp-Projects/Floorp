@@ -86,10 +86,6 @@ open class RemoteTabsStorage(
         scope.coroutineContext.cancelChildren()
     }
 
-    override fun getHandle(): Long {
-        throw NotImplementedError("use registerWithSyncManager instead")
-    }
-
     override fun registerWithSyncManager() {
         return api.registerWithSyncManager()
     }

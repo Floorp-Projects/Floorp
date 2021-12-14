@@ -47,14 +47,7 @@ data class SyncAuthInfo(
  */
 interface SyncableStore {
     /**
-     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
-     *
-     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
-     */
-    fun getHandle(): Long
-
-    /**
-     * Registers this storage with a sync manager. Replaces [getHandle] for newer storage layers.
+     * Registers this storage with a sync manager.
      */
     fun registerWithSyncManager()
 }

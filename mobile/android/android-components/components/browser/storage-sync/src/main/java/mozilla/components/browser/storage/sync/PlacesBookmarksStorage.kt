@@ -209,17 +209,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
         return places.readPinnedSitesFromFennec(dbPath)
     }
 
-    /**
-     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
-     *
-     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
-     */
-    override fun getHandle(): Long {
-        return places.getHandle()
-    }
-
     override fun registerWithSyncManager() {
-        // See https://github.com/mozilla-mobile/android-components/issues/10128
-        throw NotImplementedError("Use getHandle instead")
+        places.registerWithSyncManager()
     }
 }

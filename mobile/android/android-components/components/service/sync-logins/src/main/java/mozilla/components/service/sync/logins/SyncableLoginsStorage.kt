@@ -237,10 +237,6 @@ class SyncableLoginsStorage(
         conn.getStorage().registerWithSyncManager()
     }
 
-    override fun getHandle(): Long {
-        throw NotImplementedError("Use registerWithSyncManager instead")
-    }
-
     /**
      * @throws [CryptoException] invalid encryption key
      * @throws [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors

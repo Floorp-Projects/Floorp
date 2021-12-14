@@ -27,12 +27,7 @@ const val DB_NAME = "places.sqlite"
  * Writer is always the same, as guaranteed by [PlacesApi].
  */
 internal interface Connection : Closeable {
-    /**
-     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
-     *
-     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
-     */
-    fun getHandle(): Long
+    fun registerWithSyncManager()
 
     fun reader(): PlacesReaderConnection
     fun writer(): PlacesWriterConnection
@@ -81,10 +76,10 @@ internal object RustPlacesConnection : Connection {
         cachedReader = api!!.openReader()
     }
 
-    override fun getHandle(): Long {
+    override fun registerWithSyncManager() {
         val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api.getHandle()
+        api.registerWithSyncManager()
     }
 
     override fun reader(): PlacesReaderConnection = synchronized(this) {

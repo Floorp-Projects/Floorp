@@ -33,7 +33,7 @@ class FxaDeviceSettingsCache(context: Context) : SharedPreferencesCache<DeviceSe
         return JSONObject().also {
             it.put(KEY_FXA_DEVICE_ID, this.fxaDeviceId)
             it.put(KEY_DEVICE_NAME, this.name)
-            it.put(KEY_DEVICE_TYPE, this.type.name)
+            it.put(KEY_DEVICE_TYPE, this.kind.toString())
         }
     }
 
@@ -41,7 +41,7 @@ class FxaDeviceSettingsCache(context: Context) : SharedPreferencesCache<DeviceSe
         return DeviceSettings(
             fxaDeviceId = obj.getString(KEY_FXA_DEVICE_ID),
             name = obj.getString(KEY_DEVICE_NAME),
-            type = obj.getString(KEY_DEVICE_TYPE).toDeviceType()
+            kind = obj.getString(KEY_DEVICE_TYPE).toDeviceType()
         )
     }
 

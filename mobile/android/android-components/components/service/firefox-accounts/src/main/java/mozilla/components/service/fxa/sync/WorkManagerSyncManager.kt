@@ -22,8 +22,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mozilla.appservices.sync15.SyncTelemetryPing
+import mozilla.appservices.syncmanager.ServiceStatus
+import mozilla.appservices.syncmanager.SyncEngineSelection
 import mozilla.appservices.syncmanager.SyncParams
-import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.components.concept.storage.KeyProvider
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
@@ -315,26 +317,19 @@ internal class WorkManagerSyncWorker(
 
     @Suppress("LongMethod", "ComplexMethod")
     private suspend fun doSync(syncableStores: Map<SyncEngine, LazyStoreWithKey>): Result {
+        val syncManager = RustSyncManager()
         val engineKeyProviders = mutableMapOf<SyncEngine, KeyProvider>()
 
         // We need to tell RustSyncManager which engines to sync.
-        // - 'null' means "sync all engines for which storage is registered with the sync manager"
-        // - empty list means sync metadata only (e.g. which engines are enabled)
-        // Currently, we pass along a list of all engines configured to sync.
-        // These should be Sync1.5 collection names for these engines.
-        val enginesToSync = syncableStores.map { it.key.nativeName }
+        val enginesToSync = SyncEngineSelection.Some(syncableStores.map { it.key.nativeName })
 
         // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
         syncableStores.entries.forEach {
             // We're assuming all syncable stores live in Rust.
             // Currently `RustSyncManager` doesn't support non-Rust sync engines.
             when (it.key) {
-                // NB: History and Bookmarks will have the same handle.
-                SyncEngine.History -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
-                SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
-
-                // These stores don't expose `getHandle` (yay!), and instead are able to handle
-                // sync manager registration on their own.
+                SyncEngine.History -> it.value.lazyStore.value.registerWithSyncManager()
+                SyncEngine.Bookmarks -> it.value.lazyStore.value.registerWithSyncManager()
                 SyncEngine.CreditCards -> {
                     it.value.lazyStore.value.registerWithSyncManager()
 
@@ -427,7 +422,7 @@ internal class WorkManagerSyncWorker(
             localEncryptionKeys = localEncryptionKeys
         )
 
-        val syncResult = RustSyncManager.sync(syncParams)
+        val syncResult = syncManager.sync(syncParams)
 
         // Persist the sync state; it may have changed during a sync, and RustSyncManager relies on us
         // to store it.
@@ -458,12 +453,12 @@ internal class WorkManagerSyncWorker(
         }
 
         // Process telemetry.
-        syncResult.telemetry?.let { SyncTelemetry.processSyncTelemetry(it) }
+        syncResult.telemetryJson?.let { SyncTelemetry.processSyncTelemetry(SyncTelemetryPing.fromJSONString(it)) }
 
         // Finally, declare success, failure or request a retry based on 'sync status'.
         return when (syncResult.status) {
             // Happy case.
-            SyncServiceStatus.OK -> {
+            ServiceStatus.OK -> {
                 // Worker should set the "last-synced" timestamp, and since we have a single timestamp,
                 // it's not clear if a single failure should prevent its update. That's the current behaviour
                 // in Fennec, but for very specific reasons that aren't relevant here. We could have
@@ -477,11 +472,11 @@ internal class WorkManagerSyncWorker(
             // NB: retry doesn't mean "immediate retry". It means "retry, but respecting this worker's
             // backoff policy, as configured during worker's creation.
             // TODO FOR ALL retries: look at workerParams.mRunAttemptCount, don't retry after a certain number.
-            SyncServiceStatus.NETWORK_ERROR -> {
+            ServiceStatus.NETWORK_ERROR -> {
                 logger.error("Network error")
                 Result.retry()
             }
-            SyncServiceStatus.BACKED_OFF -> {
+            ServiceStatus.BACKED_OFF -> {
                 logger.error("Backed-off error")
                 // As part of `syncResult`, we get back `nextSyncAllowedAt`. Ideally, we should not retry
                 // before that passes. However, we can not reconfigure back-off policy for an already
@@ -492,16 +487,16 @@ internal class WorkManagerSyncWorker(
             }
 
             // Failure cases.
-            SyncServiceStatus.AUTH_ERROR -> {
+            ServiceStatus.AUTH_ERROR -> {
                 logger.error("Auth error")
                 GlobalAccountManager.authError("RustSyncManager.sync")
                 Result.failure()
             }
-            SyncServiceStatus.SERVICE_ERROR -> {
+            ServiceStatus.SERVICE_ERROR -> {
                 logger.error("Service error")
                 Result.failure()
             }
-            SyncServiceStatus.OTHER_ERROR -> {
+            ServiceStatus.OTHER_ERROR -> {
                 logger.error("'Other' error :(")
                 Result.failure()
             }
