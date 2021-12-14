@@ -81,7 +81,6 @@ const backgroundtaskPhases = {
         "@mozilla.org/network/url-parser;1?auth=no",
         "@mozilla.org/network/url-parser;1?auth=yes",
         "@mozilla.org/observer-service;1",
-        "@mozilla.org/permissionmanager;1",
         "@mozilla.org/power/powermanagerservice;1",
         "@mozilla.org/preferences-service;1",
         "@mozilla.org/process/environment;1",
@@ -129,12 +128,7 @@ const backgroundtaskPhases = {
     allowlist: {
       components: [],
       modules: [],
-      services: [
-        "@mozilla.org/network/protocol/about;1?what=preferences",
-        "@mozilla.org/network/protocol;1?name=about",
-        "@mozilla.org/network/protocol;1?name=http",
-        "@mozilla.org/network/protocol;1?name=https",
-      ],
+      services: [],
     },
   },
 };
