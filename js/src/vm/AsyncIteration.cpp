@@ -52,15 +52,23 @@ const JSClassOps AsyncGeneratorObject::classOps_ = {
     CallTraceMethod<AbstractGeneratorObject>,  // trace
 };
 
-// ES 2017 draft 9.1.13.
-// OrdinaryCreateFromConstructor specialized for AsyncGeneratorObjects.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto
+//                                 [ , internalSlotsList ] )
+// https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
+//
+// specialized for AsyncGeneratorObjects.
 static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
-    JSContext* cx, HandleFunction fun) {
-  // Step 1 (skipped).
+    JSContext* cx, HandleFunction constructor) {
+  // Step 1: Assert...
+  // (implicit)
 
-  // Step 2.
+  // Step 2. Let proto be
+  //         ? GetPrototypeFromConstructor(constructor, intrinsicDefaultProto).
   RootedValue protoVal(cx);
-  if (!GetProperty(cx, fun, fun, cx->names().prototype, &protoVal)) {
+  if (!GetProperty(cx, constructor, constructor, cx->names().prototype,
+                   &protoVal)) {
     return nullptr;
   }
 
@@ -72,10 +80,16 @@ static AsyncGeneratorObject* OrdinaryCreateFromConstructorAsynGen(
     }
   }
 
-  // Step 3.
+  // Step 3. Return ! OrdinaryObjectCreate(proto, internalSlotsList).
   return NewObjectWithGivenProto<AsyncGeneratorObject>(cx, proto);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorStart ( generator, generatorBody )
+// https://tc39.es/ecma262/#sec-asyncgeneratorstart
+//
+// Steps 6-7.
 /* static */
 AsyncGeneratorObject* AsyncGeneratorObject::create(JSContext* cx,
                                                    HandleFunction asyncGen) {
@@ -87,13 +101,10 @@ AsyncGeneratorObject* AsyncGeneratorObject::create(JSContext* cx,
     return nullptr;
   }
 
-  // ES2019 draft rev c2aad21fee7f5ddc89fdf7d3d305618ca3a13242
-  // 25.5.3.2 AsyncGeneratorStart.
-
-  // Step 7.
+  // Step 6. Set generator.[[AsyncGeneratorState]] to suspendedStart.
   generator->setSuspendedStart();
 
-  // Step 8.
+  // Step 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator->clearSingleQueueRequest();
 
   generator->clearCachedRequest();
@@ -175,8 +186,10 @@ const JSClass AsyncGeneratorRequest::class_ = {
     "AsyncGeneratorRequest",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorRequest::Slots)};
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.5.3.1 AsyncGeneratorRequest Records
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorRequest Records
+// https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records
 /* static */
 AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     JSContext* cx, CompletionKind completionKind, HandleValue completionValue,
@@ -206,29 +219,40 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue exception);
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.5.3.2 AsyncGeneratorStart
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorStart ( generator, generatorBody )
+// https://tc39.es/ecma262/#sec-asyncgeneratorstart
+//
+// Steps 4.e-j. "return" case.
 [[nodiscard]] static bool AsyncGeneratorReturned(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
-  // Step 5.d.
+  // Step 4.e. Set generator.[[AsyncGeneratorState]] to completed.
   generator->setCompleted();
 
-  // Step 5.e (done in bytecode).
-  // Step 5.f.i (implicit).
+  // Step 4.g. If result.[[Type]] is return, set result to
+  //           NormalCompletion(result.[[Value]]).
+  // (implicit)
 
-  // Step 5.g.
+  // Step 4.h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
   if (!AsyncGeneratorCompleteStepNormal(cx, generator, value, true)) {
     return false;
   }
 
+  // Step 4.i. Perform ! AsyncGeneratorDrainQueue(generator).
+  // Step 4.j. Return undefined.
   return AsyncGeneratorDrainQueue(cx, generator);
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.5.3.2 AsyncGeneratorStart
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorStart ( generator, generatorBody )
+// https://tc39.es/ecma262/#sec-asyncgeneratorstart
+//
+// Steps 4.e-j. "throw" case.
 [[nodiscard]] static bool AsyncGeneratorThrown(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
-  // Step 5.d.
+  // Step 4.e. Set generator.[[AsyncGeneratorState]] to completed.
   generator->setCompleted();
 
   // Not much we can do about uncatchable exceptions, so just bail.
@@ -236,28 +260,44 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     return false;
   }
 
-  // Step 5.f.i.
+  // Step 4.h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
   RootedValue value(cx);
   if (!GetAndClearException(cx, &value)) {
     return false;
   }
-
-  // Step 5.f.ii.
   if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
     return false;
   }
+
+  // Step 4.i. Perform ! AsyncGeneratorDrainQueue(generator).
+  // Step 4.j. Return undefined.
   return AsyncGeneratorDrainQueue(cx, generator);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
+// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+//
+// Steps 4-5.
 [[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   MOZ_ASSERT(generator->isAwaitingYieldReturn(),
              "YieldReturn-Await fulfilled when not in "
              "'AwaitingYieldReturn' state");
 
+  // Step 4. Assert: awaited.[[Type]] is normal.
+  // Step 5. Return Completion { [[Type]]: return, [[Value]]:
+  //         awaited.[[Value]], [[Target]]: empty }.
   return AsyncGeneratorResume(cx, generator, CompletionKind::Return, value);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
+// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+//
+// Step 3.
 [[nodiscard]] static bool AsyncGeneratorYieldReturnAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue reason) {
@@ -265,16 +305,30 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       generator->isAwaitingYieldReturn(),
       "YieldReturn-Await rejected when not in 'AwaitingYieldReturn' state");
 
+  // Step 3. If awaited.[[Type]] is throw, return Completion(awaited).
   return AsyncGeneratorResume(cx, generator, CompletionKind::Throw, reason);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
+// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+//
+// Steps 1-2.
 [[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionAndResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue resumptionValue) {
+  // Step 1. If resumptionValue.[[Type]] is not return, return
+  //         Completion(resumptionValue).
   if (completionKind != CompletionKind::Return) {
     return AsyncGeneratorResume(cx, generator, completionKind, resumptionValue);
   }
 
+  // Step 2. Let awaited be Await(resumptionValue.[[Value]]).
+  //
+  // Since we don't have the place that handles return from yield
+  // inside the generator, handle the case here, with extra state
+  // State_AwaitingYieldReturn.
   generator->setAwaitingYieldReturn();
 
   const PromiseHandler onFulfilled =
@@ -286,53 +340,99 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
                                      onFulfilled, onRejected);
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.5.3.7 AsyncGeneratorYield (partially)
-// Most steps are done in generator.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorYield ( value )
+// https://tc39.es/ecma262/#sec-asyncgeneratoryield
+//
+// Stesp 10-13.
 [[nodiscard]] static bool AsyncGeneratorYield(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
+  // Step 10. Perform
+  //          ! AsyncGeneratorCompleteStep(generator, completion, false,
+  //                                       previousRealm).
   if (!AsyncGeneratorCompleteStepNormal(cx, generator, value, false)) {
     return false;
   }
 
+  // Step 11. Let queue be generator.[[AsyncGeneratorQueue]].
+  // Step 12. If queue is not empty, then
+  // Step 13. Else,
+  // (reordered)
   if (generator->isQueueEmpty()) {
+    // Step 13.a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
     generator->setSuspendedYield();
+
+    // Steps 13.b-c are done in caller.
+
+    // Step 13.d. Return undefined.
     return true;
   }
 
-  Rooted<AsyncGeneratorRequest*> request(
+  // Step 12. If queue is not empty, then
+  // Step 12.a. NOTE: Execution continues without suspending the generator.
+
+  // Step 12.b. Let toYield be the first element of queue.
+  Rooted<AsyncGeneratorRequest*> toYield(
       cx, AsyncGeneratorObject::peekRequest(generator));
-  if (!request) {
+  if (!toYield) {
     return false;
   }
 
-  CompletionKind completionKind = request->completionKind();
-  RootedValue resumptionValue(cx, request->completionValue());
+  // Step 12.c. Let resumptionValue be toYield.[[Completion]].
+  CompletionKind completionKind = toYield->completionKind();
+  RootedValue resumptionValue(cx, toYield->completionValue());
+
+  // Step 12.d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
   return AsyncGeneratorUnwrapYieldResumptionAndResume(
       cx, generator, completionKind, resumptionValue);
 }
 
-// Resume the async generator when the `await` operand fulfills to `value`.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// Await in async function
+// https://tc39.es/ecma262/#await
+//
+// Steps 3.c-f.
 [[nodiscard]] static bool AsyncGeneratorAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   MOZ_ASSERT(generator->isExecuting(),
              "Await fulfilled when not in 'Executing' state");
 
+  // Step 3.c. Push asyncContext onto the execution context stack; asyncContext
+  //           is now the running execution context.
+  // Step 3.d. Resume the suspended evaluation of asyncContext using
+  //           NormalCompletion(value) as the result of the operation that
+  //           suspended it.
+  // Step 3.f. Return undefined.
   return AsyncGeneratorResume(cx, generator, CompletionKind::Normal, value);
 }
 
-// Resume the async generator when the `await` operand rejects with `reason`.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// Await in async function
+// https://tc39.es/ecma262/#await
+//
+// Steps 5.c-f.
 [[nodiscard]] static bool AsyncGeneratorAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue reason) {
   MOZ_ASSERT(generator->isExecuting(),
              "Await rejected when not in 'Executing' state");
 
+  // Step 5.c. Push asyncContext onto the execution context stack; asyncContext
+  //           is now the running execution context.
+  // Step 5.d. Resume the suspended evaluation of asyncContext using
+  //           ThrowCompletion(reason) as the result of the operation that
+  //           suspended it.
+  // Step 5.f. Return undefined.
   return AsyncGeneratorResume(cx, generator, CompletionKind::Throw, reason);
 }
 
-// 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
-// evaluating an `await` expression in an async generator.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// Await in async function
+// https://tc39.es/ecma262/#await
 [[nodiscard]] static bool AsyncGeneratorAwait(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   return InternalAsyncGeneratorAwait(
@@ -340,143 +440,260 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       PromiseHandler::AsyncGeneratorAwaitedRejected);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorCompleteStep ( generator, completion, done [ , realm ] )
+// https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep
+//
+// "normal" case.
 [[nodiscard]] static bool AsyncGeneratorCompleteStepNormal(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value,
     bool done) {
+  // Step 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  // Step 2. Assert: queue is not empty.
   MOZ_ASSERT(!generator->isQueueEmpty());
 
-  AsyncGeneratorRequest* request =
+  // Step 3. Let next be the first element of queue.
+  // Step 4. Remove the first element from queue.
+  AsyncGeneratorRequest* next =
       AsyncGeneratorObject::dequeueRequest(cx, generator);
-  if (!request) {
+  if (!next) {
     return false;
   }
 
-  Rooted<PromiseObject*> resultPromise(cx, request->promise());
+  // Step 5. Let promiseCapability be next.[[Capability]].
+  Rooted<PromiseObject*> resultPromise(cx, next->promise());
 
-  generator->cacheRequest(request);
+  generator->cacheRequest(next);
 
+  // Step 6. Let value be completion.[[Value]].
+  // (passed by caller)
+
+  // Step 7. If completion.[[Type]] is throw, then
+  // Step 8. Else,
+  // Step 8.a. Assert: completion.[[Type]] is normal.
+
+  // Step 8.b. If realm is present, then
+  // (skipped)
+  // Step 8.c. Else,
+
+  // Step 8.c.i. Let iteratorResult be ! CreateIterResultObject(value, done).
   JSObject* resultObj = CreateIterResultObject(cx, value, done);
   if (!resultObj) {
     return false;
   }
 
+  // Step 8.d. Perform
+  //           ! Call(promiseCapability.[[Resolve]], undefined,
+  //                  « iteratorResult »).
   RootedValue resultValue(cx, ObjectValue(*resultObj));
-
-  if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
-    return false;
-  }
-
-  return true;
+  return ResolvePromiseInternal(cx, resultPromise, resultValue);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorCompleteStep ( generator, completion, done [ , realm ] )
+// https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep
+//
+// "throw" case.
 [[nodiscard]] static bool AsyncGeneratorCompleteStepThrow(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     HandleValue exception) {
+  // Step 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  // Step 2. Assert: queue is not empty.
   MOZ_ASSERT(!generator->isQueueEmpty());
 
-  AsyncGeneratorRequest* request =
+  // Step 3. Let next be the first element of queue.
+  // Step 4. Remove the first element from queue.
+  AsyncGeneratorRequest* next =
       AsyncGeneratorObject::dequeueRequest(cx, generator);
-  if (!request) {
+  if (!next) {
     return false;
   }
 
-  Rooted<PromiseObject*> resultPromise(cx, request->promise());
+  // Step 5. Let promiseCapability be next.[[Capability]].
+  Rooted<PromiseObject*> resultPromise(cx, next->promise());
 
-  generator->cacheRequest(request);
+  generator->cacheRequest(next);
 
-  if (!RejectPromiseInternal(cx, resultPromise, exception)) {
-    return false;
-  }
+  // Step 6. Let value be completion.[[Value]].
+  // (passed by caller)
 
-  return true;
+  // Step 7. If completion.[[Type]] is throw, then
+  // Step 7.a. Perform
+  //           ! Call(promiseCapability.[[Reject]], undefined, « value »).
+  return RejectPromiseInternal(cx, resultPromise, exception);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorAwaitReturn ( generator )
+// https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn
+//
+// Steps 7.a-e.
 [[nodiscard]] static bool AsyncGeneratorAwaitReturnFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   MOZ_ASSERT(generator->isAwaitingReturn(),
              "AsyncGeneratorResumeNext-Return fulfilled when not in "
              "'AwaitingReturn' state");
 
+  // Step 7.a. Set generator.[[AsyncGeneratorState]] to completed.
   generator->setCompleted();
 
+  // Step 7.b. Let result be NormalCompletion(value).
+  // Step 7.c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
   if (!AsyncGeneratorCompleteStepNormal(cx, generator, value, true)) {
     return false;
   }
+
+  // Step 7.d. Perform ! AsyncGeneratorDrainQueue(generator).
+  // Step 7.e. Return undefined.
   return AsyncGeneratorDrainQueue(cx, generator);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorAwaitReturn ( generator )
+// https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn
+//
+// Steps 9.a-e.
 [[nodiscard]] static bool AsyncGeneratorAwaitReturnRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
   MOZ_ASSERT(generator->isAwaitingReturn(),
              "AsyncGeneratorResumeNext-Return rejected when not in "
              "'AwaitingReturn' state");
 
-  // Steps 1-2.
+  // Step 9.a. Set generator.[[AsyncGeneratorState]] to completed.
   generator->setCompleted();
 
-  // Step 3.
+  // Step 9.b. Let result be ThrowCompletion(reason).
+  // Step 9.c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
   if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
     return false;
   }
+
+  // Step 9.d. Perform ! AsyncGeneratorDrainQueue(generator).
+  // Step 9.e. Return undefined.
   return AsyncGeneratorDrainQueue(cx, generator);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorAwaitReturn ( generator )
+// https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn
 [[nodiscard]] static bool AsyncGeneratorAwaitReturn(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue next) {
+  // Step 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  // Step 2. Assert: queue is not empty.
+  MOZ_ASSERT(!generator->isQueueEmpty());
+
+  // Step 3. Let next be the first element of queue.
+  // (passed by caller)
+
+  // Step 4. Let completion be next.[[Completion]].
+  // Step 5. Assert: completion.[[Type]] is return.
+  // (implicit)
+
+  // Steps 6-11.
   return InternalAsyncGeneratorAwait(
       cx, generator, next, PromiseHandler::AsyncGeneratorAwaitReturnFulfilled,
       PromiseHandler::AsyncGeneratorAwaitReturnRejected);
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorDrainQueue ( generator )
+// https://tc39.es/ecma262/#sec-asyncgeneratordrainqueue
 [[nodiscard]] static bool AsyncGeneratorDrainQueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator) {
+  // Step 1. Assert: generator.[[AsyncGeneratorState]] is completed.
   MOZ_ASSERT(generator->isCompleted());
 
+  // Step 2. Let queue be generator.[[AsyncGeneratorQueue]].
+  // Step 3. If queue is empty, return.
   if (generator->isQueueEmpty()) {
     return true;
   }
 
+  // Step 4. Let done be false.
+  // (implicit)
+
+  // Step 5. Repeat, while done is false,
   while (true) {
-    Rooted<AsyncGeneratorRequest*> request(
+    // Step 5.a. Let next be the first element of queue.
+    Rooted<AsyncGeneratorRequest*> next(
         cx, AsyncGeneratorObject::peekRequest(generator));
-    if (!request) {
+    if (!next) {
       return false;
     }
 
-    CompletionKind completionKind = request->completionKind();
+    // Step 5.b. Let completion be next.[[Completion]].
+    CompletionKind completionKind = next->completionKind();
 
+    // Step 5.c. If completion.[[Type]] is return, then
     if (completionKind == CompletionKind::Return) {
-      RootedValue value(cx, request->completionValue());
+      RootedValue value(cx, next->completionValue());
 
+      // Step 5.c.i. Set generator.[[AsyncGeneratorState]] to awaiting-return.
       generator->setAwaitingReturn();
 
+      // Step 5.c.ii. Perform ! AsyncGeneratorAwaitReturn(generator).
+      // Step 5.c.iii. Set done to true.
       return AsyncGeneratorAwaitReturn(cx, generator, value);
     }
 
+    // Step 5.d. Else,
     if (completionKind == CompletionKind::Throw) {
-      RootedValue value(cx, request->completionValue());
+      RootedValue value(cx, next->completionValue());
 
+      // Step 5.d.ii. Perform
+      //              ! AsyncGeneratorCompleteStep(generator, completion, true).
       if (!AsyncGeneratorCompleteStepThrow(cx, generator, value)) {
         return false;
       }
     } else {
+      // Step 5.d.i. If completion.[[Type]] is normal, then
+      // Step 5.d.i.1. Set completion to NormalCompletion(undefined).
+      // Step 5.d.ii. Perform
+      //              ! AsyncGeneratorCompleteStep(generator, completion, true).
       if (!AsyncGeneratorCompleteStepNormal(cx, generator, UndefinedHandleValue,
                                             true)) {
         return false;
       }
     }
 
+    // Step 5.d.iii. If queue is empty, set done to true.
     if (generator->isQueueEmpty()) {
       return true;
     }
   }
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorValidate ( generator, generatorBrand )
+// https://tc39.es/ecma262/#sec-asyncgeneratorvalidate
+//
+// Testing part.
 [[nodiscard]] static bool IsAsyncGeneratorValid(HandleValue asyncGenVal) {
+  // Step 1. Perform
+  //         ? RequireInternalSlot(generator, [[AsyncGeneratorContext]]).
+  // Step 2. Perform
+  //         ? RequireInternalSlot(generator, [[AsyncGeneratorState]]).
+  // Step 3. Perform
+  //         ? RequireInternalSlot(generator, [[AsyncGeneratorQueue]]).
+  // Step 4. If generator.[[GeneratorBrand]] is not the same value as
+  //         generatorBrand, throw a TypeError exception.
   return asyncGenVal.isObject() &&
          asyncGenVal.toObject().canUnwrapAs<AsyncGeneratorObject>();
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorValidate ( generator, generatorBrand )
+// https://tc39.es/ecma262/#sec-asyncgeneratorvalidate
+//
+// Throwing part.
 [[nodiscard]] static bool AsyncGeneratorValidateThrow(
     JSContext* cx, MutableHandleValue result) {
   Rooted<PromiseObject*> resultPromise(
@@ -498,10 +715,17 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return true;
 }
 
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGeneratorEnqueue ( generator, completion, promiseCapability )
+// https://tc39.es/ecma262/#sec-asyncgeneratorenqueue
 [[nodiscard]] static bool AsyncGeneratorEnqueue(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue completionValue,
     Handle<PromiseObject*> resultPromise) {
+  // Step 1. Let request be
+  //         AsyncGeneratorRequest { [[Completion]]: completion,
+  //                                 [[Capability]]: promiseCapability }.
   Rooted<AsyncGeneratorRequest*> request(
       cx, AsyncGeneratorObject::createRequest(cx, generator, completionKind,
                                               completionValue, resultPromise));
@@ -509,6 +733,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     return false;
   }
 
+  // Step 2. Append request to the end of generator.[[AsyncGeneratorQueue]].
   return AsyncGeneratorObject::enqueueRequest(cx, generator, request);
 }
 
@@ -545,14 +770,22 @@ class MOZ_STACK_CLASS MaybeEnterAsyncGeneratorRealm {
   }
 };
 
-// AsyncGenerator.prototype.next
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGenerator.prototype.next ( value )
+// https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next
 bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  // Step 3. Let result be AsyncGeneratorValidate(generator, empty).
+  // Step 4. IfAbruptRejectPromise(result, promiseCapability).
+  // (reordered)
   if (!IsAsyncGeneratorValid(args.thisv())) {
     return AsyncGeneratorValidateThrow(cx, args.rval());
   }
 
+  // Step 1. Let generator be the this value.
+  // (implicit)
   Rooted<AsyncGeneratorObject*> generator(
       cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
 
@@ -563,6 +796,7 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Step 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   Rooted<PromiseObject*> resultPromise(
       cx, CreatePromiseObjectForAsyncGenerator(cx));
   if (!resultPromise) {
@@ -573,45 +807,73 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
                     generator->isSuspendedYield(),
                 generator->isQueueEmpty());
 
+  // Step 5. Let state be generator.[[AsyncGeneratorState]].
+  // Step 6. If state is completed, then
   if (generator->isCompleted()) {
+    // Step 6.a. Let iteratorResult be
+    //           ! CreateIterResultObject(undefined, true).
     JSObject* resultObj =
         CreateIterResultObject(cx, UndefinedHandleValue, true);
     if (!resultObj) {
       return false;
     }
 
+    // Step 6.b. Perform
+    //           ! Call(promiseCapability.[[Resolve]], undefined,
+    //                  « iteratorResult »).
     RootedValue resultValue(cx, ObjectValue(*resultObj));
     if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
       return false;
     }
   } else {
+    // Step 7. Let completion be NormalCompletion(value).
+    // Step 8. Perform
+    //         ! AsyncGeneratorEnqueue(generator, completion,
+    //                                 promiseCapability).
     if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Normal,
                                completionValue, resultPromise)) {
       return false;
     }
 
+    // Step 9. If state is either suspendedStart or suspendedYield, then
     if (generator->isSuspendedStart() || generator->isSuspendedYield()) {
       RootedValue resumptionValue(cx, completionValue);
+      // Step 9.a. Perform ! AsyncGeneratorResume(generator, completion).
       if (!AsyncGeneratorResume(cx, generator, CompletionKind::Normal,
                                 resumptionValue)) {
         return false;
       }
+    } else {
+      // Step 10. Else,
+      // Step 10.a. Assert: state is either executing or awaiting-return.
+      MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingReturn() ||
+                 generator->isAwaitingYieldReturn());
     }
   }
 
+  // Step 6.c. Return promiseCapability.[[Promise]].
+  // and
+  // Step 11. Return promiseCapability.[[Promise]].
   args.rval().setObject(*resultPromise);
 
   return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
-// AsyncGenerator.prototype.return
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGenerator.prototype.return ( value )
+// https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return
 bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  // Step 3. Let result be AsyncGeneratorValidate(generator, empty).
+  // Step 4. IfAbruptRejectPromise(result, promiseCapability).
+  // (reordered)
   if (!IsAsyncGeneratorValid(args.thisv())) {
     return AsyncGeneratorValidateThrow(cx, args.rval());
   }
 
+  // Step 1. Let generator be the this value.
   Rooted<AsyncGeneratorObject*> generator(
       cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
 
@@ -622,6 +884,7 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Step 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   Rooted<PromiseObject*> resultPromise(
       cx, CreatePromiseObjectForAsyncGenerator(cx));
   if (!resultPromise) {
@@ -632,37 +895,62 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
                     generator->isSuspendedYield(),
                 generator->isQueueEmpty());
 
+  // Step 5. Let completion be
+  //         Completion { [[Type]]: return, [[Value]]: value,
+  //                      [[Target]]: empty }.
+  // Step 6. Perform
+  //         ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
   if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Return,
                              completionValue, resultPromise)) {
     return false;
   }
 
+  // Step 7. Let state be generator.[[AsyncGeneratorState]].
+  // Step 8. If state is either suspendedStart or completed, then
   if (generator->isSuspendedStart() || generator->isCompleted()) {
+    // Step 8.a. Set generator.[[AsyncGeneratorState]] to awaiting-return.
     generator->setAwaitingReturn();
 
+    // Step 8.b. Perform ! AsyncGeneratorAwaitReturn(generator).
     if (!AsyncGeneratorAwaitReturn(cx, generator, completionValue)) {
       return false;
     }
   } else if (generator->isSuspendedYield()) {
+    // Step 9. Else if state is suspendedYield, then
+
+    // Step 9.a. Perform ! AsyncGeneratorResume(generator, completion).
     if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
             cx, generator, CompletionKind::Return, completionValue)) {
       return false;
     }
+  } else {
+    // Step 10. Else,
+    // Step 10.a. Assert: state is either executing or awaiting-return.
+    MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingReturn() ||
+               generator->isAwaitingYieldReturn());
   }
 
+  // Step 11. Return promiseCapability.[[Promise]].
   args.rval().setObject(*resultPromise);
 
   return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
-// AsyncGenerator.prototype.throw
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+//
+// AsyncGenerator.prototype.throw ( exception )
+// https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw
 bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
+  // Step 3. Let result be AsyncGeneratorValidate(generator, empty).
+  // Step 4. IfAbruptRejectPromise(result, promiseCapability).
+  // (reordered)
   if (!IsAsyncGeneratorValid(args.thisv())) {
     return AsyncGeneratorValidateThrow(cx, args.rval());
   }
 
+  // Step 1. Let generator be the this value.
   Rooted<AsyncGeneratorObject*> generator(
       cx, &args.thisv().toObject().unwrapAs<AsyncGeneratorObject>());
 
@@ -673,6 +961,7 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Step 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   Rooted<PromiseObject*> resultPromise(
       cx, CreatePromiseObjectForAsyncGenerator(cx));
   if (!resultPromise) {
@@ -683,41 +972,58 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
                     generator->isSuspendedYield(),
                 generator->isQueueEmpty());
 
+  // Step 5. Let state be generator.[[AsyncGeneratorState]].
+  // Step 6. If state is suspendedStart, then
   if (generator->isSuspendedStart()) {
+    // Step 6.a. Set generator.[[AsyncGeneratorState]] to completed.
+    // Step 6.b. Set state to completed.
     generator->setCompleted();
   }
 
+  // Step 7. If state is completed, then
   if (generator->isCompleted()) {
+    // Step 7.a. Perform
+    //           ! Call(promiseCapability.[[Reject]], undefined, « exception »).
     if (!RejectPromiseInternal(cx, resultPromise, completionValue)) {
       return false;
     }
   } else {
+    // Step 8. Let completion be ThrowCompletion(exception).
+    // Step 9. Perform
+    //         ! AsyncGeneratorEnqueue(generator, completion,
+    //                                 promiseCapability).
     if (!AsyncGeneratorEnqueue(cx, generator, CompletionKind::Throw,
                                completionValue, resultPromise)) {
       return false;
     }
 
+    // Step 10. If state is suspendedYield, then
     if (generator->isSuspendedYield()) {
+      // Step 10.a. Perform ! AsyncGeneratorResume(generator, completion).
       if (!AsyncGeneratorResume(cx, generator, CompletionKind::Throw,
                                 completionValue)) {
         return false;
       }
+    } else {
+      // Step 11. Else,
+      // Step 11.a. Assert: state is either executing or awaiting-return.
+      MOZ_ASSERT(generator->isExecuting() || generator->isAwaitingReturn() ||
+                 generator->isAwaitingYieldReturn());
     }
   }
 
+  // Step 7.b. Return promiseCapability.[[Promise]].
+  // and
+  // Step 12. Return promiseCapability.[[Promise]].
   args.rval().setObject(*resultPromise);
 
   return maybeEnterRealm.maybeLeaveAndWrap(cx, args.rval());
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 6.2.3.1 Await, steps 2-9.
-// 14.4.13 RS: Evaluation, yield*, steps 7.a.vi, 7.b.ii.7, 7.c.ix.
-// 25.5.3.2 AsyncGeneratorStart, steps 5.d-g.
-// 25.5.3.5 AsyncGeneratorResumeNext, steps 12-20.
-// 25.5.3.7 AsyncGeneratorYield, steps 5-6, 9.
+// ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
 //
-// Note: Execution context switching is handled in generator.
+// AsyncGeneratorResume ( generator, completion )
+// https://tc39.es/ecma262/#sec-asyncgeneratorresume
 [[nodiscard]] static bool AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue argument) {
@@ -726,9 +1032,22 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(generator->isSuspended(),
              "non-suspended generator when resuming async generator");
 
+  // Step 1. Assert: generator.[[AsyncGeneratorState]] is either
+  //         suspendedStart or suspendedYield.
+  //
+  // NOTE: We're using suspend/resume also for await. and the state can be
+  //       anything.
+
+  // Steps 2-4 are handled in generator.
+
+  // Step 5. Set generator.[[AsyncGeneratorState]] to executing.
   generator->setExecuting();
 
-  // 25.5.3.5, steps 12-14, 16-20.
+  // Step 6. Push genContext onto the execution context stack; genContext is
+  //         now the running execution context.
+  // Step 7. Resume the suspended evaluation of genContext using completion as
+  //         the result of the operation that suspended it. Let result be the
+  //         completion record returned by the resumed computation.
   HandlePropertyName funName = completionKind == CompletionKind::Normal
                                    ? cx->names().AsyncGeneratorNext
                                : completionKind == CompletionKind::Throw
@@ -772,7 +1091,10 @@ static JSObject* CreateAsyncGeneratorFunction(JSContext* cx, JSProtoKey key) {
   }
   HandlePropertyName name = cx->names().AsyncGeneratorFunction;
 
-  // 25.3.1 The AsyncGeneratorFunction Constructor
+  // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+  //
+  // The AsyncGeneratorFunction Constructor
+  // https://tc39.es/ecma262/#sec-asyncgeneratorfunction-constructor
   return NewFunctionWithProto(cx, AsyncGeneratorConstructor, 1,
                               FunctionFlags::NATIVE_CTOR, nullptr, name, proto,
                               gc::AllocKind::FUNCTION, TenuredObject);
@@ -808,7 +1130,10 @@ static bool AsyncGeneratorFunctionClassFinish(JSContext* cx,
     return false;
   }
 
-  // 25.5 AsyncGenerator Objects
+  // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+  //
+  // AsyncGenerator Objects
+  // https://tc39.es/ecma262/#sec-asyncgenerator-objects
   RootedObject asyncGenProto(cx, GlobalObject::createBlankPrototypeInheriting(
                                      cx, &PlainObject::class_, asyncIterProto));
   if (!asyncGenProto) {
@@ -820,7 +1145,10 @@ static bool AsyncGeneratorFunctionClassFinish(JSContext* cx,
     return false;
   }
 
-  // 25.3.3 Properties of the AsyncGeneratorFunction Prototype Object
+  // ES2022 draft rev 193211a3d889a61e74ef7da1475dfa356e029f29
+  //
+  // Properties of the AsyncGeneratorFunction Prototype Object
+  // https://tc39.es/ecma262/#sec-properties-of-asyncgeneratorfunction-prototype
   if (!LinkConstructorAndPrototype(cx, asyncGenerator, asyncGenProto,
                                    JSPROP_READONLY, JSPROP_READONLY) ||
       !DefineToStringTag(cx, asyncGenerator,
