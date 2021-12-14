@@ -468,6 +468,16 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
   return AsyncGeneratorResolve(cx, asyncGenObj, value, false);
 }
 
+// 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
+// evaluating an `await` expression in an async generator.
+[[nodiscard]] static bool AsyncGeneratorAwait(
+    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
+    HandleValue value) {
+  return InternalAsyncGeneratorAwait(
+      cx, asyncGenObj, value, PromiseHandler::AsyncGeneratorAwaitedFulfilled,
+      PromiseHandler::AsyncGeneratorAwaitedRejected);
+}
+
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 6.2.3.1 Await, steps 2-9.
 // 14.4.13 RS: Evaluation, yield*, steps 7.a.vi, 7.b.ii.7, 7.c.ix.

@@ -5287,16 +5287,6 @@ template <typename T>
   return genObj->promise();
 }
 
-// 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
-// evaluating an `await` expression in an async generator.
-[[nodiscard]] bool js::AsyncGeneratorAwait(
-    JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
-    HandleValue value) {
-  return InternalAsyncGeneratorAwait(
-      cx, asyncGenObj, value, PromiseHandler::AsyncGeneratorAwaitedFulfilled,
-      PromiseHandler::AsyncGeneratorAwaitedRejected);
-}
-
 // https://tc39.github.io/ecma262/#sec-%asyncfromsynciteratorprototype%.next
 // 25.1.4.2.1 %AsyncFromSyncIteratorPrototype%.next
 // 25.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return
