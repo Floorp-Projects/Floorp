@@ -44,6 +44,7 @@ enum class CrossProcessPaintFlags {
   None = 0,
   DrawView = 1 << 1,
   ResetScrollPosition = 1 << 2,
+  UseHighQualityScaling = 1 << 3,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CrossProcessPaintFlags)
@@ -137,7 +138,8 @@ class CrossProcessPaint final {
  private:
   typedef nsTHashMap<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
 
-  CrossProcessPaint(float aScale, dom::TabId aRoot);
+  CrossProcessPaint(float aScale, dom::TabId aRoot,
+                    CrossProcessPaintFlags aFlags);
   ~CrossProcessPaint();
 
   void QueueDependencies(const nsTHashSet<uint64_t>& aDependencies);
@@ -166,11 +168,19 @@ class CrossProcessPaint final {
     return mPromise.Ensure(__func__);
   }
 
+  // UseHighQualityScaling is the only flag that dependencies inherit, and we
+  // always want to use DrawView for dependencies.
+  CrossProcessPaintFlags GetFlagsForDependencies() const {
+    return (mFlags & CrossProcessPaintFlags::UseHighQualityScaling) |
+           CrossProcessPaintFlags::DrawView;
+  }
+
   MozPromiseHolder<ResolvePromise> mPromise;
   dom::TabId mRoot;
   float mScale;
   uint32_t mPendingFragments;
   ReceivedFragmentMap mReceivedFragments;
+  CrossProcessPaintFlags mFlags;
 };
 
 }  // namespace gfx
