@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
+var EXPORTED_SYMBOLS = ["allowNullOrigin", "WebSocketHandshake"];
 
 // This file is an XPCOM service-ified copy of ../devtools/server/socket/websocket-server.js.
 
@@ -15,7 +15,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
@@ -28,6 +31,16 @@ XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
 
 // TODO(ato): Merge this with httpd.js so that we can respond to both HTTP/1.1
 // as well as WebSocket requests on the same server.
+
+// Well-known localhost loopback addresses.
+const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
+
+// This should only be used by the CDP browser mochitests which create a
+// websocket handshake with a non-null origin.
+let nullOriginAllowed = false;
+function allowNullOrigin(allowed) {
+  nullOriginAllowed = allowed;
+}
 
 /**
  * Write a string of bytes to async output stream
@@ -75,10 +88,59 @@ function writeHttpResponse(output, headers, body = "") {
 }
 
 /**
+ * Check if the provided URI's host is an IP address.
+ *
+ * @param {nsIURI} uri
+ *     The URI to check.
+ * @return {boolean}
+ */
+function isIPAddress(uri) {
+  try {
+    // getBaseDomain throws an explicit error if the uri host is an IP address.
+    Services.eTLD.getBaseDomain(uri);
+  } catch (e) {
+    return e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS;
+  }
+  return false;
+}
+
+/**
  * Process the WebSocket handshake headers and return the key to be sent in
  * Sec-WebSocket-Accept response header.
  */
 function processRequest({ requestLine, headers }) {
+  const origin = headers.get("origin");
+
+  // A "null" origin is exceptionally allowed in browser mochitests.
+  const isTestOrigin = origin === "null" && nullOriginAllowed;
+  if (headers.has("origin") && !isTestOrigin) {
+    throw new Error(
+      `The handshake request has incorrect Host header ${origin}`
+    );
+  }
+
+  const hostHeader = headers.get("host");
+
+  let hostUri, host, port;
+  try {
+    // Might throw both when calling newURI or when accessing the host/port.
+    hostUri = Services.io.newURI(`https://${hostHeader}`);
+    ({ host, port } = hostUri);
+  } catch (e) {
+    throw new Error(
+      `The handshake request Host header must be a well-formed host: ${hostHeader}`
+    );
+  }
+
+  const isHostnameValid = LOOPBACKS.includes(host) || isIPAddress(hostUri);
+  // For nsIURI a port value of -1 corresponds to the protocol's default port.
+  const isPortValid = port === -1 || port == RemoteAgent.port;
+  if (!isHostnameValid || !isPortValid) {
+    throw new Error(
+      `The handshake request has incorrect Host header ${hostHeader}`
+    );
+  }
+
   const method = requestLine.split(" ")[0];
   if (method !== "GET") {
     throw new Error("The handshake request must use GET method");
