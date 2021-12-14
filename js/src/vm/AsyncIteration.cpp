@@ -704,8 +704,8 @@ bool js::AsyncGeneratorNext(JSContext* cx, unsigned argc, Value* vp) {
 
     if (asyncGenObj->isSuspendedStart() || asyncGenObj->isSuspendedYield()) {
       RootedValue resumptionValue(cx, completionValue);
-      if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-              cx, asyncGenObj, CompletionKind::Normal, resumptionValue)) {
+      if (!AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Normal,
+                                resumptionValue)) {
         return false;
       }
     }
@@ -811,8 +811,8 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
   } else if (asyncGenObj->isSuspendedYield()) {
-    if (!AsyncGeneratorUnwrapYieldResumptionAndResume(
-            cx, asyncGenObj, CompletionKind::Throw, completionValue)) {
+    if (!AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw,
+                              completionValue)) {
       return false;
     }
   }
