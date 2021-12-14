@@ -10,6 +10,6 @@
     <!-- Background color of the circle -->
     <solid android:color="?tabTrayItemMediaBackground" />
     <!-- Outer circle border -->
-    <stroke android:color="@color/tab_tray_item_media_stroke"
+    <stroke android:color="@color/photonWhite"
         android:width="2dp"/>
 </shape>

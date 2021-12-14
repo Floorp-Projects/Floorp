@@ -141,9 +141,6 @@
     <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
 
-    <!-- Tab Tray -->
-    <color name="tab_tray_item_media_stroke">@color/photonWhite</color>
-
     <!-- Dark theme color palette -->
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
