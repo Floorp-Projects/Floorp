@@ -123,11 +123,17 @@
         <toolbarbutton id="appMenu-fullscreen-button2"
                        class="subviewbutton subviewbutton-iconic"
                        data-l10n-id="appmenuitem-fullscreen"
-                       observes="View:FullScreen"
                        type="checkbox"
-                       closemenu="auto"
-                       onclick="if (event.button == 0) this.closest('panel').hidePopup();"
-                       tooltip="dynamic-shortcut-tooltip"/>
+# Note that we're custom-handling this click to make sure the panel disappears
+# before entering fullscreen, as it does some odd moving about on the screen
+# in the middle of the fullscreen transition otherwise.
+                       oncommand="
+                         this.closest('panel').hidePopup();
+                         setTimeout(() => BrowserFullScreen(), 0);
+                       "
+                       tooltip="dynamic-shortcut-tooltip">
+           <observes element="View:FullScreen" attribute="checked"/>
+        </toolbarbutton>
       </toolbaritem>
       <toolbarseparator/>
       <toolbarbutton id="appMenu-settings-button"
