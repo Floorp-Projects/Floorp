@@ -253,7 +253,7 @@ struct PromiseReactionRecordBuilder {
     JS::Handle<SavedFrame*> unwrappedRejectionStack = nullptr);
 
 [[nodiscard]] bool InternalAsyncGeneratorAwait(
-    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
+    JSContext* cx, JS::Handle<AsyncGeneratorObject*> generator,
     JS::Handle<JS::Value> value, PromiseHandler onFulfilled,
     PromiseHandler onRejected);
 
