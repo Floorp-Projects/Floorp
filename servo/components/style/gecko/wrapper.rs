@@ -1709,8 +1709,8 @@ impl<'le> TElement for GeckoElement<'le> {
         use crate::properties::longhands::_x_text_zoom::SpecifiedValue as SpecifiedZoom;
         use crate::properties::longhands::color::SpecifiedValue as SpecifiedColor;
         use crate::properties::longhands::text_align::SpecifiedValue as SpecifiedTextAlign;
-        use crate::values::specified::color::Color;
         use crate::stylesheets::layer_rule::LayerOrder;
+        use crate::values::specified::color::Color;
         lazy_static! {
             static ref TH_RULE: ApplicableDeclarationBlock = {
                 let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -1719,7 +1719,11 @@ impl<'le> TElement for GeckoElement<'le> {
                     Importance::Normal,
                 );
                 let arc = Arc::new_leaked(global_style_data.shared_lock.wrap(pdb));
-                ApplicableDeclarationBlock::from_declarations(arc, ServoCascadeLevel::PresHints, LayerOrder::root())
+                ApplicableDeclarationBlock::from_declarations(
+                    arc,
+                    ServoCascadeLevel::PresHints,
+                    LayerOrder::root(),
+                )
             };
             static ref TABLE_COLOR_RULE: ApplicableDeclarationBlock = {
                 let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -1728,7 +1732,11 @@ impl<'le> TElement for GeckoElement<'le> {
                     Importance::Normal,
                 );
                 let arc = Arc::new_leaked(global_style_data.shared_lock.wrap(pdb));
-                ApplicableDeclarationBlock::from_declarations(arc, ServoCascadeLevel::PresHints, LayerOrder::root())
+                ApplicableDeclarationBlock::from_declarations(
+                    arc,
+                    ServoCascadeLevel::PresHints,
+                    LayerOrder::root(),
+                )
             };
             static ref MATHML_LANG_RULE: ApplicableDeclarationBlock = {
                 let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -1737,7 +1745,11 @@ impl<'le> TElement for GeckoElement<'le> {
                     Importance::Normal,
                 );
                 let arc = Arc::new_leaked(global_style_data.shared_lock.wrap(pdb));
-                ApplicableDeclarationBlock::from_declarations(arc, ServoCascadeLevel::PresHints, LayerOrder::root())
+                ApplicableDeclarationBlock::from_declarations(
+                    arc,
+                    ServoCascadeLevel::PresHints,
+                    LayerOrder::root(),
+                )
             };
             static ref SVG_TEXT_DISABLE_ZOOM_RULE: ApplicableDeclarationBlock = {
                 let global_style_data = &*GLOBAL_STYLE_DATA;
@@ -1746,7 +1758,11 @@ impl<'le> TElement for GeckoElement<'le> {
                     Importance::Normal,
                 );
                 let arc = Arc::new_leaked(global_style_data.shared_lock.wrap(pdb));
-                ApplicableDeclarationBlock::from_declarations(arc, ServoCascadeLevel::PresHints, LayerOrder::root())
+                ApplicableDeclarationBlock::from_declarations(
+                    arc,
+                    ServoCascadeLevel::PresHints,
+                    LayerOrder::root(),
+                )
             };
         };
 

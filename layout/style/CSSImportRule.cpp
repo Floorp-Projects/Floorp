@@ -116,6 +116,10 @@ void CSSImportRule::GetHref(nsAString& aHref) const {
   Servo_ImportRule_GetHref(mRawRule, &aHref);
 }
 
+void CSSImportRule::GetLayerName(nsACString& aName) const {
+  Servo_ImportRule_GetLayerName(mRawRule, &aName);
+}
+
 /* virtual */
 void CSSImportRule::GetCssText(nsACString& aCssText) const {
   Servo_ImportRule_GetCssText(mRawRule, &aCssText);
