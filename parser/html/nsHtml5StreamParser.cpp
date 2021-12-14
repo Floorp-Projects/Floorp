@@ -2273,6 +2273,11 @@ void nsHtml5StreamParser::ParseAvailableData() {
                     source == kCharsetFromFinalUserForcedAutoDetection);
                 mTreeBuilder->NeedsCharsetSwitchTo(encoding, source, 0);
                 requestedReload = true;
+              } else if (mCharsetSource ==
+                             kCharsetFromInitialAutoDetectionASCII &&
+                         mDetectorHasSeenNonAscii) {
+                mCharsetSource = source;
+                mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
               }
             }
 
