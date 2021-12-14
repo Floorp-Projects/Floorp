@@ -20,6 +20,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadBound.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -364,6 +365,7 @@ class PermissionManager final : public nsIPermissionManager,
 
  private:
   ~PermissionManager();
+  static StaticMutex sCreationMutex;
 
   /**
    * Get all permissions for a given principal, which should not be isolated
