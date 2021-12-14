@@ -1,0 +1,26 @@
+<head>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+function checkNumberOfLoads(shouldBe) {
+  var numDownloads = 0;
+  window.performance.getEntriesByName("http://example.com/browser/netwerk/test/browser/square.png").forEach(entry => {
+    if (entry.transferSize > 0) {
+      numDownloads++;
+    }
+  });
+  window.parent.ok(numDownloads == shouldBe, "The number of downloads of square.png is not correct");
+};
+
+var img = document.createElement("img");
+img.src = "http://example.com/browser/netwerk/test/browser/square.png";
+img.addEventListener("load",() => {
+  checkNumberOfLoads(1);
+  window.parent.iframeTestCompleted();
+});
+
+document.body.appendChild(img);
+
+</script>
+</body>
