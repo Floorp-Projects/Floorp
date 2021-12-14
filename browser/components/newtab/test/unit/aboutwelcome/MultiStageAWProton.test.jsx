@@ -150,7 +150,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         id: "DEFAULT_ABOUTWELCOME_PROTON",
         template: "multistage",
         transitions: true,
-        background_url: `chrome://activity-stream/content/data/content/assets/proton-bkg.jpg`,
+        background_url: `chrome://activity-stream/content/data/content/assets/proton-bkg.avif`,
         screens: [
           {
             id: "AW_PIN_FIREFOX",
