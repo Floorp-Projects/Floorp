@@ -293,16 +293,28 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
         gc::PreWriteBarrier(dst.tls->instance->objectUnbarriered());
       }
 
-      FunctionTableElem& src = srcTable.functions_[srcIndex];
-      dst.code = src.code;
-      dst.tls = src.tls;
-
-      if (dst.tls) {
-        MOZ_ASSERT(dst.code);
-        MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
-                   "no postWriteBarrier (Table::copy)");
+      if (isImportedOrExported() && !srcTable.isImportedOrExported()) {
+        RootedFunction fun(cx);
+        if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
+          // OOM, pass it on
+          return false;
+        }
+        if (!fillFuncRef(Nothing(), dstIndex, 1, FuncRef::fromJSFunction(fun),
+                         cx)) {
+          ReportOutOfMemory(cx);
+          return false;
+        }
       } else {
-        MOZ_ASSERT(!dst.code);
+        FunctionTableElem& src = srcTable.functions_[srcIndex];
+        dst.code = src.code;
+        dst.tls = src.tls;
+        if (dst.tls) {
+          MOZ_ASSERT(dst.code);
+          MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
+                     "no postWriteBarrier (Table::copy)");
+        } else {
+          MOZ_ASSERT(!dst.code);
+        }
       }
       break;
     }
