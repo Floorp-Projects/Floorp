@@ -16,6 +16,21 @@ Fluent to Fluent. When migrating legacy code paths, you'll need to adjust the
 Fluent strings for the quirks Mozilla uses in the legacy code paths. You'll
 find a number of specialized functionalities here.
 
+Legacy Migration Tools
+----------------------
+
+To assist with legacy format migrations, some scripting tools are provided:
+
+ - `XUL+DTD to Fluent`_
+ - `.properties to Fluent`_
+
+When creating a migration, one or both of these tools may provide a good
+starting point for manual work by automating at least a part of the migration,
+including recipe generation and refactoring the calling code.
+
+.. _XUL+DTD to Fluent: https://github.com/zbraniecki/convert_xul_to_fluent
+.. _.properties to Fluent: https://github.com/mozilla/properties-to-ftl
+
 Basic Migration
 ---------------
 
