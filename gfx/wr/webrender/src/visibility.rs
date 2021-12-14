@@ -270,7 +270,7 @@ pub fn update_primitive_visibility(
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
                     let (is_visible, is_passthrough) = {
                         let pic = &store.pictures[pic_index.0];
-                        (pic.is_visible(), pic.raster_config.is_none())
+                        (pic.is_visible(frame_context.spatial_tree), pic.raster_config.is_none())
                     };
 
                     if !is_visible {
