@@ -3177,7 +3177,7 @@
   value: false
   mirror: always
 
-- name: dom.securecontext.whitelist_onions
+- name: dom.securecontext.allowlist_onions
   type: bool
   value: false
   mirror: always
