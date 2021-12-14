@@ -820,10 +820,10 @@ class PromiseReactionRecord : public NativeObject {
     return &generator.toObject().as<AsyncFunctionGeneratorObject>();
   }
 
-  void setIsAsyncGenerator(AsyncGeneratorObject* asyncGenObj) {
+  void setIsAsyncGenerator(AsyncGeneratorObject* generator) {
     setFlagOnInitialState(REACTION_FLAG_ASYNC_GENERATOR);
     setFixedSlot(ReactionRecordSlot_GeneratorOrPromiseToResolve,
-                 ObjectValue(*asyncGenObj));
+                 ObjectValue(*generator));
   }
   bool isAsyncGenerator() {
     int32_t flags = this->flags();
@@ -2013,9 +2013,9 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
   }
   if (reaction->isAsyncGenerator()) {
     RootedValue argument(cx, reaction->handlerArg());
-    Rooted<AsyncGeneratorObject*> asyncGenObj(cx, reaction->asyncGenerator());
+    Rooted<AsyncGeneratorObject*> generator(cx, reaction->asyncGenerator());
     auto handler = static_cast<PromiseHandler>(reaction->handler().toInt32());
-    return AsyncGeneratorPromiseReactionJob(cx, handler, asyncGenObj, argument);
+    return AsyncGeneratorPromiseReactionJob(cx, handler, generator, argument);
   }
   if (reaction->isDebuggerDummy()) {
     return true;
@@ -5255,11 +5255,11 @@ template <typename T>
 }
 
 [[nodiscard]] bool js::InternalAsyncGeneratorAwait(
-    JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
+    JSContext* cx, JS::Handle<AsyncGeneratorObject*> generator,
     JS::Handle<JS::Value> value, PromiseHandler onFulfilled,
     PromiseHandler onRejected) {
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
-    reaction->setIsAsyncGenerator(asyncGenObj);
+    reaction->setIsAsyncGenerator(generator);
   };
   return InternalAwait(cx, value, nullptr, onFulfilled, onRejected, extra);
 }
