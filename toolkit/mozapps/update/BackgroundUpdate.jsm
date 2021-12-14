@@ -48,8 +48,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateService"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 // We may want to change the definition of the task over time. When we do this,
 // we need to remove and re-register the task. We will make sure this happens
 // by storing the installed version number of the task to a pref and comparing

@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["Glean"]);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TELEMETRY_SERVER_PREF = "toolkit.telemetry.server";

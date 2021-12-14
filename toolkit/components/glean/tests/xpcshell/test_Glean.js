@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["Glean", "GleanPings"]);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
