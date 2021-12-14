@@ -593,7 +593,7 @@ class HomeFragment : Fragment() {
             requireContext(),
             onItemTapped,
             iconColor = if (mode == BrowsingMode.Private) {
-                ContextCompat.getColor(requireContext(), R.color.primary_text_private_theme)
+                ContextCompat.getColor(requireContext(), R.color.fx_mobile_private_text_color_primary)
             } else {
                 null
             }

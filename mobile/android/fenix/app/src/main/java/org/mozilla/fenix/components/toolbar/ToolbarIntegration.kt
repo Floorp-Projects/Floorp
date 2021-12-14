@@ -111,7 +111,7 @@ class DefaultToolbarIntegration(
                 interactor.onTabCounterMenuItemTapped(it)
             },
             iconColor = if (isPrivate) {
-                ContextCompat.getColor(context, R.color.primary_text_private_theme)
+                ContextCompat.getColor(context, R.color.fx_mobile_private_text_color_primary)
             } else {
                 null
             }
