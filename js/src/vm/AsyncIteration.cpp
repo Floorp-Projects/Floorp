@@ -510,6 +510,57 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
       PromiseHandler::AsyncGeneratorAwaitedRejected);
 }
 
+[[nodiscard]] static bool AsyncGeneratorCompleteStepNormal(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value,
+    bool done) {
+  MOZ_ASSERT(!generator->isQueueEmpty());
+
+  AsyncGeneratorRequest* request =
+      AsyncGeneratorObject::dequeueRequest(cx, generator);
+  if (!request) {
+    return false;
+  }
+
+  Rooted<PromiseObject*> resultPromise(cx, request->promise());
+
+  generator->cacheRequest(request);
+
+  JSObject* resultObj = CreateIterResultObject(cx, value, done);
+  if (!resultObj) {
+    return false;
+  }
+
+  RootedValue resultValue(cx, ObjectValue(*resultObj));
+
+  if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
+    return false;
+  }
+
+  return true;
+}
+
+[[nodiscard]] static bool AsyncGeneratorCompleteStepThrow(
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator,
+    HandleValue exception) {
+  MOZ_ASSERT(!generator->isQueueEmpty());
+
+  AsyncGeneratorRequest* request =
+      AsyncGeneratorObject::dequeueRequest(cx, generator);
+  if (!request) {
+    return false;
+  }
+
+  Rooted<PromiseObject*> resultPromise(cx, request->promise());
+
+  generator->cacheRequest(request);
+
+  if (!RejectPromiseInternal(cx, resultPromise, exception)) {
+    return false;
+  }
+
+  return true;
+}
+
 [[nodiscard]] static bool AsyncGeneratorResumeNext(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
     HandleValue valueOrException_ /* = UndefinedHandleValue */,
@@ -520,55 +571,17 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
     switch (kind) {
       case ResumeNextKind::Enqueue:
         break;
-      case ResumeNextKind::Reject: {
-        HandleValue exception = valueOrException;
-
-        MOZ_ASSERT(!generator->isQueueEmpty());
-
-        AsyncGeneratorRequest* request =
-            AsyncGeneratorObject::dequeueRequest(cx, generator);
-        if (!request) {
+      case ResumeNextKind::Reject:
+        if (!AsyncGeneratorCompleteStepThrow(cx, generator, valueOrException)) {
           return false;
         }
-
-        Rooted<PromiseObject*> resultPromise(cx, request->promise());
-
-        generator->cacheRequest(request);
-
-        if (!RejectPromiseInternal(cx, resultPromise, exception)) {
-          return false;
-        }
-
         break;
-      }
-      case ResumeNextKind::Resolve: {
-        HandleValue value = valueOrException;
-
-        MOZ_ASSERT(!generator->isQueueEmpty());
-
-        AsyncGeneratorRequest* request =
-            AsyncGeneratorObject::dequeueRequest(cx, generator);
-        if (!request) {
+      case ResumeNextKind::Resolve:
+        if (!AsyncGeneratorCompleteStepNormal(cx, generator, valueOrException,
+                                              done)) {
           return false;
         }
-
-        Rooted<PromiseObject*> resultPromise(cx, request->promise());
-
-        generator->cacheRequest(request);
-
-        JSObject* resultObj = CreateIterResultObject(cx, value, done);
-        if (!resultObj) {
-          return false;
-        }
-
-        RootedValue resultValue(cx, ObjectValue(*resultObj));
-
-        if (!ResolvePromiseInternal(cx, resultPromise, resultValue)) {
-          return false;
-        }
-
         break;
-      }
     }
 
     MOZ_ASSERT(!generator->isExecuting());
