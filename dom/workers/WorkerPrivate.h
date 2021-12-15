@@ -28,6 +28,7 @@
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerLoadInfo.h"
@@ -107,7 +108,9 @@ class SharedMutex {
 
 nsString ComputeWorkerPrivateId();
 
-class WorkerPrivate final : public RelativeTimeline {
+class WorkerPrivate final
+    : public RelativeTimeline,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   struct LocationInfo {
     nsCString mHref;
