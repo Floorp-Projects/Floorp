@@ -282,19 +282,15 @@ function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
 }
 
 async function withFakeChannel(channel, f) {
-  const module = ChromeUtils.import(
-    "resource://services-common/uptake-telemetry.js",
-    null
+  const { Policy } = ChromeUtils.import(
+    "resource://services-common/uptake-telemetry.js"
   );
-  const oldPolicy = module.Policy;
-  module.Policy = {
-    ...oldPolicy,
-    getChannel: () => channel,
-  };
+  let oldGetChannel = Policy.getChannel;
+  Policy.getChannel = () => channel;
   try {
     return await f();
   } finally {
-    module.Policy = oldPolicy;
+    Policy.getChannel = oldGetChannel;
   }
 }
 

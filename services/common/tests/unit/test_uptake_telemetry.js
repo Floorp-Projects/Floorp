@@ -1,5 +1,3 @@
-const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -10,20 +8,16 @@ const { UptakeTelemetry } = ChromeUtils.import(
 const COMPONENT = "remotesettings";
 
 async function withFakeClientID(uuid, f) {
-  const module = ChromeUtils.import(
-    "resource://services-common/uptake-telemetry.js",
-    null
+  const { Policy } = ChromeUtils.import(
+    "resource://services-common/uptake-telemetry.js"
   );
-  const oldPolicy = module.Policy;
-  module.Policy = {
-    ...oldPolicy,
-    _clientIDHash: null,
-    getClientID: () => Promise.resolve(uuid),
-  };
+  let oldGetClientID = Policy.getClientID;
+  Policy._clientIDHash = null;
+  Policy.getClientID = () => Promise.resolve(uuid);
   try {
     return await f();
   } finally {
-    module.Policy = oldPolicy;
+    Policy.getClientID = oldGetClientID;
   }
 }
 
