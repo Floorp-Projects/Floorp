@@ -4228,6 +4228,13 @@
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
 
+# Default background color of HTML editor.  This is referred only when
+# "editor.use_custom_colors" is set to `true`.
+- name: editor.background_color
+  type: String
+  value: "#FFFFFF"
+  mirror: never
+
 # Use CreateElementTransaction or not.  This is available only in a couple of
 # release cycles to make it possible to cancel stopping using
 # CreateElementTransaction.
@@ -4235,6 +4242,14 @@
   type: bool
   value: false
   mirror: always
+
+# Default length unit of indent blocks with CSS.
+# TODO: Delete this pref after checking the compatibility with the other
+#       browsers.
+- name: editor.css.default_length_unit
+  type: String
+  value: "px"
+  mirror: never
 
 # Allow or disallow to delete `<hr>` element when caret is at start of
 # following line of the element.  If false, Backspace from start of following
@@ -4263,26 +4278,18 @@
   value: false
   mirror: always
 
-# General prefs for editor, indicating whether Gecko-specific editing UI is
-# enabled by default. Those UIs are not implemented by any other browsers.  So,
-# only Firefox users can change some styles with them. This means that Firefox
-# users may get unexpected result of some web apps if they assume that users
-# cannot change such styles.
-- name: editor.resizing.enabled_by_default
-  type: bool
-  value: false
-  mirror: always
-- name: editor.inline_table_editing.enabled_by_default
-  type: bool
-  value: false
-  mirror: always
-- name: editor.positioning.enabled_by_default
-  type: bool
-  value: false
+# When an element becomes absolutely positioned, this offset is applied to
+# both `left` and `top`.
+# TODO: Delete this pref after verifying that nobody uses this pref.
+- name: editor.positioning.offset
+  type: int32_t
+  value: 0
   mirror: always
 
-# Whether user pastes should be truncated.
-- name: editor.truncate_user_pastes
+# Whether resizer keeps aspect ratio of `<img>` or can change its width/height
+# independently.
+# TODO: Delete this pref after verifying that nobody uses this pref.
+- name: editor.resizing.preserve_ratio
   type: bool
   value: true
   mirror: always
@@ -4301,9 +4308,60 @@
   value: 2
   mirror: always
 
+# Whether user pastes should be truncated.
+- name: editor.truncate_user_pastes
+  type: bool
+  value: true
+  mirror: always
+
+# When this is set to `true`, "editor.background_color" must be set, then,
+# the value is treated as default background color of the HTML editor.
+# If `false` and "browser.display.use_system_colors" is set to `true`,
+# "browser.display.background_color" is used instead.
+# Otherwise, no color is used as default background color.
+# This pref is for Thunderbird and SeaMonkey.
+- name: editor.use_custom_colors
+  type: bool
+  value: false
+  mirror: always
+
+# If this is set to `true`, CSS mode of style editor is enabled by default
+# unless it's a mail editor.
+# This pref is for Thunderbird and SeaMonkey.
+- name: editor.use_css
+  type: bool
+  value: false
+  mirror: always
+
+# Whether inserting <div> when typing Enter in a block element which can
+# contain <div>.  If false, inserts <br> instead.
+# TODO: Delete this pref after verifying nobody uses this pref.
+- name: editor.use_div_for_default_newlines
+  type: bool
+  value: true
+  mirror: always
+
 # Whether enabling blink compatible white-space normalizer or keep using
 # Gecko's traditional white-space normalizer.
 - name: editor.white_space_normalization.blink_compatible
+  type: bool
+  value: false
+  mirror: always
+
+# General prefs for editor, indicating whether Gecko-specific editing UI is
+# enabled by default. Those UIs are not implemented by any other browsers.  So,
+# only Firefox users can change some styles with them. This means that Firefox
+# users may get unexpected result of some web apps if they assume that users
+# cannot change such styles.
+- name: editor.resizing.enabled_by_default
+  type: bool
+  value: false
+  mirror: always
+- name: editor.inline_table_editing.enabled_by_default
+  type: bool
+  value: false
+  mirror: always
+- name: editor.positioning.enabled_by_default
   type: bool
   value: false
   mirror: always

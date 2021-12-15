@@ -176,7 +176,7 @@ HTMLEditor::HTMLEditor()
       mPositionedObjectBorderTop(0),
       mGridSize(0),
       mDefaultParagraphSeparator(
-          Preferences::GetBool("editor.use_div_for_default_newlines", true)
+          StaticPrefs::editor_use_div_for_default_newlines()
               ? ParagraphSeparator::div
               : ParagraphSeparator::br) {
   mIsHTMLEditorClass = true;
