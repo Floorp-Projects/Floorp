@@ -2645,7 +2645,7 @@ void gfxPlatform::InitWebRenderConfig() {
   if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup()) {
     gfxVars::SetAllowSoftwareWebRenderD3D11(true);
   }
-  if (Preferences::GetBool("gfx.webrender.dcomp-video-overlay-win", false)) {
+  if (StaticPrefs::gfx_webrender_dcomp_video_overlay_win_AtStartup()) {
     if (IsWin10AnniversaryUpdateOrLater() &&
         gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
       MOZ_ASSERT(gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
