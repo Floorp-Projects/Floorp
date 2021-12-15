@@ -186,7 +186,7 @@ addonsManager:
       These events are recorded during the install and update flow for extensions and themes,
       the value of the event is an install_id shared by the events related to the same install
       or update flow.
-    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other", "unknown"]
     methods: ["install", "update"]
     extra_keys:
       addon_id: A string which identify the extension (when available)
@@ -228,7 +228,7 @@ addonsManager:
       These events are recorded at the end of the install flow, but only when
       the source that originally triggered the add-on installation is "amo" or
       "disco". The value of an event is the SHA256 hash of the addon_id.
-    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other", "unknown"]
     extra_keys:
       addon_id: >
         A string which identifies the add-on. This value might be trimmed.
@@ -259,7 +259,7 @@ addonsManager:
       This events are recorded when an installed add-ons is being disable/enabled/uninstalled,
       the value of the event is the addon_id (which also allow to correlate multiple events
       related to each other).
-    objects: ["extension", "theme", "locale", "dictionary", "other"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other"]
     methods: ["disable", "enable", "sideload_prompt", "uninstall"]
     extra_keys:
       source: >
