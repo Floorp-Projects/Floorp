@@ -1596,6 +1596,9 @@ MOZ_ARG_DISABLE_BOOL(negotiateauth,
 [  --disable-negotiateauth Disable GSS-API negotiation ],
     MOZ_AUTH_EXTENSION=,
     MOZ_AUTH_EXTENSION=1 )
+if test "$MOZ_AUTH_EXTENSION"; then
+  AC_DEFINE(MOZ_AUTH_EXTENSION)
+fi
 
 dnl ========================================================
 dnl Searching of system directories for extensions.

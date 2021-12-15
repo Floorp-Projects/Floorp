@@ -32,7 +32,9 @@
 #include "nsHttp.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
-#include "nsHttpNegotiateAuth.h"
+#ifdef MOZ_AUTH_EXTENSION
+#  include "nsHttpNegotiateAuth.h"
+#endif
 #include "nsHttpNTLMAuth.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
@@ -1166,9 +1168,12 @@ nsresult nsHttpChannelAuthProvider::GetAuthenticator(
   GetAuthType(aChallenge, authType);
 
   nsCOMPtr<nsIHttpAuthenticator> authenticator;
+#ifdef MOZ_AUTH_EXTENSION
   if (authType.EqualsLiteral("negotiate")) {
     authenticator = nsHttpNegotiateAuth::GetOrCreate();
-  } else if (authType.EqualsLiteral("basic")) {
+  } else
+#endif
+      if (authType.EqualsLiteral("basic")) {
     authenticator = nsHttpBasicAuth::GetOrCreate();
   } else if (authType.EqualsLiteral("digest")) {
     authenticator = nsHttpDigestAuth::GetOrCreate();
