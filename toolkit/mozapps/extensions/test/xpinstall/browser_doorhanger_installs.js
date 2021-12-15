@@ -131,7 +131,7 @@ function acceptAppMenuNotificationWhenShown(
     dismiss = false,
     checkIncognito = false,
     incognitoChecked = false,
-    privileged = false,
+    incognitoHidden = false,
     global = window,
   } = {}
 ) {
@@ -162,7 +162,7 @@ function acceptAppMenuNotificationWhenShown(
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
 
       let checkbox = document.getElementById("addon-incognito-checkbox");
-      is(checkbox.hidden, privileged, "checkbox visibility is correct");
+      is(checkbox.hidden, incognitoHidden, "checkbox visibility is correct");
       is(checkbox.checked, incognitoChecked, "checkbox is marked as expected");
 
       // If we're unchecking or checking the incognito property, this will
@@ -260,6 +260,8 @@ async function waitForNotification(aId, aExpectedCount = 1) {
     let notification = nodes.find(n => n.id == aId + "-notification");
     ok(notification, "Should have seen the " + aId + " notification");
   }
+
+  await SimpleTest.promiseFocus(PopupNotifications.window);
 
   return PopupNotifications.panel;
 }
@@ -438,8 +440,6 @@ var TESTS = [
         ["extensions.install_origins.enabled", true],
       ],
     });
-    // The addon has an unknown property that will be supported in later patches (D131317).
-    ExtensionTestUtils.failOnSchemaWarnings(false);
 
     let progressPromise = waitForProgressNotification();
     let notificationPromise = waitForNotification("addon-install-failed");
@@ -463,7 +463,85 @@ var TESTS = [
     );
 
     await removeTabAndWaitForNotificationClose();
-    ExtensionTestUtils.failOnSchemaWarnings(true);
+    await SpecialPowers.popPrefEnv();
+  },
+
+  async function test_allowedInstallDomain() {
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["extensions.postDownloadThirdPartyPrompt", true],
+        ["extensions.install_origins.enabled", true],
+      ],
+    });
+
+    let notificationPromise = waitForNotification("addon-install-blocked");
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: TESTROOT + "webmidi_permission.xpi",
+      })
+    );
+    BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+    let panel = await notificationPromise;
+
+    let notification = panel.childNodes[0];
+    is(
+      notification.button.label,
+      "Continue to Installation",
+      "Should have seen the right button"
+    );
+    let message = panel.ownerDocument.getElementById(
+      "addon-install-blocked-message"
+    );
+    is(
+      message.textContent,
+      "You are attempting to install an add-on from example.com. Make sure you trust this site before continuing.",
+      "Should have seen the right message"
+    );
+
+    // Next we get the permissions prompt, which also warns of the unsigned state of the addon
+    notificationPromise = waitForNotification("addon-webext-permissions");
+    // Click on Allow on the 3rd party panel
+    notification.button.click();
+    panel = await notificationPromise;
+    notification = panel.childNodes[0];
+
+    is(notification.button.label, "Add", "Should have seen the right button");
+
+    is(
+      notification.id,
+      "addon-webext-permissions-notification",
+      "Should have seen the permissions panel"
+    );
+    let singlePerm = panel.ownerDocument.getElementById(
+      "addon-webext-perm-single-entry"
+    );
+    is(
+      singlePerm.textContent,
+      "Access MIDI devices",
+      "Should have seen the right permission text"
+    );
+
+    notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      "webmidi@test.mozilla.org",
+      { incognitoHidden: true }
+    );
+
+    // Click on Allow on the permissions panel
+    notification.button.click();
+
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID("webmidi@test.mozilla.org");
+    await addon.uninstall();
+
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await SpecialPowers.popPrefEnv();
   },
 
@@ -587,7 +665,7 @@ var TESTS = [
     let notificationPromise = acceptAppMenuNotificationWhenShown(
       "addon-installed",
       "test@tests.mozilla.org",
-      { privileged: true }
+      { incognitoHidden: true }
     );
 
     (await installDialogPromise).button.click();
