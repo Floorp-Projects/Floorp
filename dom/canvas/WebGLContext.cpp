@@ -17,7 +17,6 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxEnv.h"
 #include "gfxPattern.h"
-#include "gfxUtils.h"
 #include "MozFramebuffer.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
@@ -1017,7 +1016,6 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
   }
   gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
-  gfxUtils::ConvertBGRAtoRGBA(dest.begin().get(), dstByteCount);
 
   return ret;
 }
