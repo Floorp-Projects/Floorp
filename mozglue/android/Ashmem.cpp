@@ -30,7 +30,7 @@ int ashmem_create(const char* name, size_t size) {
     return fCreate(name, size);
   }
 
-  int fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
+  int fd = open("/" ASHMEM_NAME_DEF, O_RDWR);
   if (fd < 0) {
     return fd;
   }
