@@ -14,6 +14,8 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/ProcInfo.h"
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
@@ -112,6 +114,11 @@ void FlushAllChildData(
     }
   }
 
+  if (net::SocketProcessParent* socketParent =
+          net::SocketProcessParent::GetSingleton()) {
+    promises.EmplaceBack(socketParent->SendFlushFOGData());
+  }
+
   if (promises.Length() == 0) {
     // No child processes at the moment. Resolve synchronously.
     fog_ipc::flush_durations.Cancel(std::move(timerId));
@@ -164,6 +171,10 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       break;
     case GeckoProcessType_RDD:
       Unused << mozilla::RDDParent::GetSingleton()->SendFOGData(std::move(buf));
+      break;
+    case GeckoProcessType_Socket:
+      Unused << net::SocketProcessChild::GetSingleton()->SendFOGData(
+          std::move(buf));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");

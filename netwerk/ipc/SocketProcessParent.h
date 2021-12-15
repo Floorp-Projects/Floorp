@@ -125,6 +125,8 @@ class SocketProcessParent final
       const HttpConnectionInfoCloneArgs& aArgs);
   mozilla::ipc::IPCResult RecvOnConsoleMessage(const nsString& aMessage);
 
+  mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
+
  private:
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
