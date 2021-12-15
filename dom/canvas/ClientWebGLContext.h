@@ -485,6 +485,7 @@ class WebGLSyncJS final : public nsWrapperCache,
   friend class webgl::AvailabilityRunnable;
 
   bool mCanBeAvailable = false;
+  bool mHasWarnedNotAvailable = false;
   bool mSignaled = false;
 
  public:

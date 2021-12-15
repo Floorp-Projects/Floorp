@@ -5119,9 +5119,12 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   const bool canBeAvailable =
       (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
-    EnqueueWarning(
-        "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
-        " returned to the user agent's main loop.");
+    if (!sync.mHasWarnedNotAvailable) {
+      EnqueueWarning(
+          "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
+          " returned to the user agent's main loop. (only warns once)");
+      sync.mHasWarnedNotAvailable = true;
+    }
     return LOCAL_GL_TIMEOUT_EXPIRED;
   }
 
