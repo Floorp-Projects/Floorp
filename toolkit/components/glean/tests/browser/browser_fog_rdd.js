@@ -47,7 +47,7 @@ add_task(async () => {
 
   await TestUtils.waitForCondition(async () => {
     try {
-      await Services.fog.testTriggerRDDMetrics();
+      await Services.fog.testTriggerMetrics(Ci.nsIXULRuntime.PROCESS_TYPE_RDD);
       return true;
     } catch (e) {
       return false;
