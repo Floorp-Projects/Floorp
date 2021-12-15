@@ -139,20 +139,9 @@ void OffscreenCanvas::GetContext(
       break;
   }
 
-  mImageContainer =
-      MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
-
   if (mDisplay) {
-    mDisplay->UpdateContext(mImageContainer, mCurrentContextType, childId);
+    mDisplay->UpdateContext(mCurrentContextType, childId);
   }
-}
-
-layers::ImageContainer* OffscreenCanvas::GetImageContainer() {
-  if (!mDisplay) {
-    return nullptr;
-  }
-  // return mCanvasRenderer->GetImageContainer();
-  MOZ_CRASH("todo");
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>
@@ -205,7 +194,14 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
     return nullptr;
   }
 
-  // TODO: Clear the content?
+  if (result && mCurrentContext) {
+    // FIXME(aosmond): The spec is unclear about the state of the canvas after
+    // clearing. Does it expect to preserve the WebGL state, other than the
+    // buffer state? Once we have clarity, we should ensure we clear the WebGL
+    // canvas as desired.
+    mCurrentContext->Reset();
+    mCurrentContext->SetDimensions(result->Width(), result->Height());
+  }
   return result.forget();
 }
 
