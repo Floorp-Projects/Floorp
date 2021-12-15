@@ -1589,6 +1589,24 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
   return NS_OK;
 }
 
+Result<RefPtr<ServiceWorkerPrivate::PromiseExtensionWorkerHasListener>,
+       nsresult>
+ServiceWorkerPrivate::WakeForExtensionAPIEvent(
+    const nsAString& aExtensionAPINamespace,
+    const nsAString& aExtensionAPIEventName) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mInner) {
+    return mInner->WakeForExtensionAPIEvent(aExtensionAPINamespace,
+                                            aExtensionAPIEventName);
+  }
+
+  MOZ_ASSERT_UNREACHABLE(
+      "WakeForExtensionAPIEvent unsupported in parent intercept mode.");
+
+  return Err(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
                                                    bool* aNewWorkerCreated,
                                                    nsILoadGroup* aLoadGroup) {

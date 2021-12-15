@@ -2841,6 +2841,80 @@ ServiceWorkerManager::GetRegistrationForAddonPrincipal(
 }
 
 NS_IMETHODIMP
+ServiceWorkerManager::WakeForExtensionAPIEvent(
+    const nsAString& aExtensionBaseURL, const nsAString& aAPINamespace,
+    const nsAString& aAPIEventName, JSContext* aCx, dom::Promise** aPromise) {
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<Promise> outer = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  auto enabled =
+      StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
+  if (!enabled) {
+    outer->MaybeRejectWithNotAllowedError(
+        "Disabled. extensions.backgroundServiceWorker.enabled is false");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aExtensionBaseURL);
+  if (NS_FAILED(rv)) {
+    outer->MaybeReject(rv);
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  MOZ_TRY_VAR(principal, ScopeToPrincipal(scopeURI, {}));
+
+  auto* addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
+  if (NS_WARN_IF(!addonPolicy)) {
+    outer->MaybeRejectWithNotAllowedError(
+        "Not an extension principal or extension disabled");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  OriginAttributes attrs;
+  ServiceWorkerInfo* info = GetActiveWorkerInfoForScope(
+      attrs, NS_ConvertUTF16toUTF8(aExtensionBaseURL));
+  if (NS_WARN_IF(!info)) {
+    outer->MaybeRejectWithInvalidStateError(
+        "No active worker for the extension background service worker");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  ServiceWorkerPrivate* workerPrivate = info->WorkerPrivate();
+  auto result =
+      workerPrivate->WakeForExtensionAPIEvent(aAPINamespace, aAPIEventName);
+  if (result.isErr()) {
+    outer->MaybeReject(result.propagateErr());
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  RefPtr<ServiceWorkerPrivate::PromiseExtensionWorkerHasListener> innerPromise =
+      result.unwrap();
+
+  innerPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [outer](bool aSubscribedEvent) { outer->MaybeResolve(aSubscribedEvent); },
+      [outer](nsresult aErrorResult) { outer->MaybeReject(aErrorResult); });
+
+  outer.forget(aPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceWorkerManager::GetRegistrationByPrincipal(
     nsIPrincipal* aPrincipal, const nsAString& aScope,
     nsIServiceWorkerRegistrationInfo** aInfo) {

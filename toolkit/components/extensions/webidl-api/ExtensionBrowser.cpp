@@ -218,5 +218,10 @@ ExtensionTest* ExtensionBrowser::GetExtensionTest() {
   return mExtensionTest;
 }
 
+bool ExtensionBrowser::HasWakeupEventListener(const nsString& aAPINamespace,
+                                              const nsString& aAPIName) {
+  return false;
+}
+
 }  // namespace extensions
 }  // namespace mozilla

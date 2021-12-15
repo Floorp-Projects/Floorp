@@ -62,6 +62,11 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // should be reported to the console
   bool ClearLastError();
 
+  // Helpers used to keep track of the event listeners added during the
+  // initial sync worker script execution.
+  bool HasWakeupEventListener(const nsString& aAPINamespace,
+                              const nsString& aAPIName);
+
   // Helpers used for the ExtensionPort.
 
   // Get an ExtensionPort instance given its port descriptor (returns an
