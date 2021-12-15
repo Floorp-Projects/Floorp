@@ -506,12 +506,12 @@
 
 /* Custom request panel */
 
-.network-monitor .custom-request-panel {
+.network-monitor .custom-request-panel, .http-custom-request-panel {
   height: 100%;
   background-color: var(--theme-sidebar-background);
 }
 
-.theme-dark .network-monitor .custom-request-panel {
+.theme-dark .network-monitor .custom-request-panel, .http-custom-request-panel {
   color: var(--theme-selection-color);
 }
 
@@ -519,7 +519,7 @@
   font-weight: 600;
 }
 
-.network-monitor .custom-request-panel textarea {
+.network-monitor .custom-request-panel, .http-custom-request-panel textarea {
   resize: none;
   font: message-box;
   font-size: var(--theme-body-font-size);
@@ -528,26 +528,34 @@
 .network-monitor .custom-header,
 .network-monitor .custom-method-and-url,
 .network-monitor .custom-request,
-.network-monitor .custom-section {
+.network-monitor .custom-section,
+.network-monitor .http-custom-header,
+.network-monitor .http-custom-method-and-url,
+.network-monitor .http-custom-request,
+.network-monitor .http-custom-section {
   display: flex;
 }
 
-.network-monitor .custom-header {
+.network-monitor .custom-header,
+.network-monitor .http-custom-header  {
   flex-grow: 1;
   font-size: 1.1em;
   padding-top: 4px;
 }
 
-.network-monitor .custom-section {
+.network-monitor .custom-section,
+.network-monitor .http-custom-section{
   flex-direction: column;
   margin-top: 0.5em;
 }
 
-.network-monitor .custom-method-value {
+.network-monitor .custom-method-value,
+.network-monitor .http-custom-method-value{
   width: 4.5em;
 }
 
-.network-monitor .custom-url-value {
+.network-monitor .custom-url-value,
+.network-monitor .http-custom-url-value {
   flex-grow: 1;
   margin-inline-start: 6px;
 }

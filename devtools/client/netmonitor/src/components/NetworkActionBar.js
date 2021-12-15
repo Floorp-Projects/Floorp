@@ -38,6 +38,12 @@ loader.lazyGetter(this, "RequestBlockingPanel", function() {
   );
 });
 
+loader.lazyGetter(this, "HTTPCustomRequestPanel", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/new-request/HTTPCustomRequestPanel")
+  );
+});
+
 class NetworkActionBar extends Component {
   static get propTypes() {
     return {
@@ -63,6 +69,9 @@ class NetworkActionBar extends Component {
     const showSearchPanel = Services.prefs.getBoolPref(
       "devtools.netmonitor.features.search"
     );
+    const showNewCustomRequestPanel = Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend"
+    );
 
     return div(
       { className: "network-action-bar" },
@@ -79,6 +88,15 @@ class NetworkActionBar extends Component {
             canVerticalSplit: false,
           },
         },
+        showNewCustomRequestPanel &&
+          TabPanel(
+            {
+              id: PANELS.HTTP_CUSTOM_REQUEST,
+              title: L10N.getStr("netmonitor.actionbar.HTTPCustomRequest"),
+              className: "network-action-bar-HTTP-custom-request",
+            },
+            HTTPCustomRequestPanel()
+          ),
         showSearchPanel &&
           TabPanel(
             {
