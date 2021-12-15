@@ -83,6 +83,18 @@ const kEscapeSequences = /\\[^.{}]/;
 //    plus an optional ) before the )$/
 const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 
+// The list of types provided by XPIProvider. In order to block add-ons,
+// they should be signed and their type should be part of this list.
+// NOTE: This array should be kept in sync with the same addon type strings part of
+// the ALL_EXTERNAL_TYPES set defined by XPIProvider.jsm.
+const kXPIAddonTypes = [
+  "extension",
+  "theme",
+  "locale",
+  "dictionary",
+  "sitepermission",
+];
+
 // For a given input string matcher, produce either a string to compare with,
 // a regular expression, or a set of strings to compare with.
 function processMatcher(str) {
@@ -773,8 +785,7 @@ this.ExtensionBlocklistRS = {
     await this.ensureInitialized();
     await this._updateEntries();
 
-    const types = ["extension", "theme", "locale", "dictionary", "service"];
-    let addons = await AddonManager.getAddonsByTypes(types);
+    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       if (addon.updateBlocklistState) {
@@ -1136,9 +1147,7 @@ this.ExtensionBlocklistMLBF = {
     this.ensureInitialized();
     await this._updateMLBF(true);
 
-    // Check add-ons from XPIProvider.
-    const types = ["extension", "theme", "locale", "dictionary"];
-    let addons = await AddonManager.getAddonsByTypes(types);
+    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       await addon.updateBlocklistState(false);

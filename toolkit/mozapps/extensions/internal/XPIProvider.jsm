@@ -168,6 +168,8 @@ const BOOTSTRAP_REASONS = {
   ADDON_DOWNGRADE: 8,
 };
 
+// NOTE: This set should be kept in sync with the same addon type strings part of
+// the kXPIAddonTypes array defined by Blocklist.jsm.
 const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
