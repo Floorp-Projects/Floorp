@@ -294,7 +294,6 @@ void js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session) {
 
 void js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_RUNTIME_DATA);
-  rt->tracePermanentThingsDuringInit(trc);
   TraceAtoms(trc);
   jit::JitRuntime::TraceAtomZoneRoots(trc);
 }

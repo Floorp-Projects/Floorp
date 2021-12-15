@@ -150,12 +150,13 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
 }
 
 JSAtom* ParserAtom::instantiatePermanentAtom(
-    JSContext* cx, ParserAtomIndex index,
+    JSContext* cx, AtomSet& atomSet, ParserAtomIndex index,
     CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!cx->zone());
 
   MOZ_ASSERT(hasLatin1Chars());
-  JSAtom* atom = PermanentlyAtomizeChars(cx, hash(), latin1Chars(), length());
+  JSAtom* atom =
+      PermanentlyAtomizeChars(cx, atomSet, hash(), latin1Chars(), length());
   if (!atom) {
     return nullptr;
   }
@@ -1028,7 +1029,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
   return true;
 }
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache) {
   MOZ_ASSERT(!cx->zone());
@@ -1048,7 +1049,7 @@ bool InstantiateMarkedAtomsAsPermanent(JSContext* cx,
       continue;
     }
 
-    if (!entry->instantiatePermanentAtom(cx, index, atomCache)) {
+    if (!entry->instantiatePermanentAtom(cx, atomSet, index, atomCache)) {
       return false;
     }
   }

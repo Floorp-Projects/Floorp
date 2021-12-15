@@ -145,7 +145,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       beingDestroyed_(false),
       allowContentJS_(true),
       atoms_(nullptr),
-      permanentAtomsDuringInit_(nullptr),
       permanentAtoms_(nullptr),
       staticStrings(nullptr),
       commonNames(nullptr),
