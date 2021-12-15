@@ -58,6 +58,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDebugImpl.h"
 #include "nsIGfxInfo.h"
+#include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
 #include "nscore.h"
 #include "prenv.h"
@@ -627,7 +628,7 @@ mozilla::ipc::IPCResult GPUParent::RecvFlushFOGData(
 
 mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics(
     TestTriggerMetricsResolver&& aResolve) {
-  mozilla::glean::test_only_ipc::a_counter.Add(45326);
+  mozilla::glean::test_only_ipc::a_counter.Add(nsIXULRuntime::PROCESS_TYPE_GPU);
   aResolve(true);
   return IPC_OK();
 }
