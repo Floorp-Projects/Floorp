@@ -1154,7 +1154,7 @@ void BaseCompiler::startCallArgs(size_t stackArgAreaSizeUnaligned,
       masm.framePushed() +
       // Extra space we'll push to get the frame aligned
       call->frameAlignAdjustment +
-      // Extra space we'll push to get the outbound arg area 16-aligned
+      // Extra space we'll push to get the outbound arg area aligned
       (stackArgAreaSizeAligned - stackArgAreaSizeUnaligned));
 
   call->stackArgAreaSize = stackArgAreaSizeAligned;
