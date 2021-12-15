@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
-#include "unicode/uidna.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
 #include "mozilla/net/IDNBlocklistUtils.h"
