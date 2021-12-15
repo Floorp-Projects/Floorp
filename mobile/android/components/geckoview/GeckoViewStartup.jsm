@@ -21,6 +21,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
 
+var { DelayedInit } = ChromeUtils.import(
+  "resource://gre/modules/DelayedInit.jsm"
+);
+
+function InitLater(fn, object, name) {
+  return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
+}
+
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
     child: {
@@ -56,6 +64,10 @@ class GeckoViewStartup {
     switch (aTopic) {
       case "app-startup": {
         // Parent and content process.
+        EventDispatcher.instance.registerListener(this, [
+          "GeckoView:StorageDelegate:Attached",
+        ]);
+
         GeckoViewUtils.addLazyGetter(this, "GeckoViewPermission", {
           service: "@mozilla.org/content-permission/prompt;1",
           observers: [
@@ -239,6 +251,15 @@ class GeckoViewStartup {
           Ci.nsIPrefLocalizedString,
           pls
         );
+        break;
+
+      case "GeckoView:StorageDelegate:Attached":
+        InitLater(() => {
+          const loginDetection = Cc[
+            "@mozilla.org/login-detection-service;1"
+          ].createInstance(Ci.nsILoginDetectionService);
+          loginDetection.init();
+        });
         break;
     }
   }
