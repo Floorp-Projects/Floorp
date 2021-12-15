@@ -927,6 +927,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleArcSlice<mozilla::StyleSimpleShadow> mTextShadow;
   mozilla::StyleTextEmphasisStyle mTextEmphasisStyle;
 
+  mozilla::StyleHyphenateCharacter mHyphenateCharacter =
+      mozilla::StyleHyphenateCharacter::Auto();
+
   mozilla::StyleWordBreak EffectiveWordBreak() const {
     if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
       return mozilla::StyleWordBreak::Normal;
