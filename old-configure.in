@@ -43,10 +43,6 @@ _SUBDIR_HOST_CXXFLAGS="$HOST_CXXFLAGS"
 _SUBDIR_HOST_LDFLAGS="$HOST_LDFLAGS"
 _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
-dnl Set the version number of the libs included with mozilla
-dnl ========================================================
-MOZPNG=10635
-
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=2.42
@@ -1306,55 +1302,6 @@ LIBS=$_SAVE_LIBS
 
 AC_SUBST(MOZ_SYSTEM_LIBEVENT)
 
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-
-dnl ========================================================
-dnl system PNG Support
-dnl ========================================================
-MOZ_ARG_WITH_STRING(system-png,
-[  --with-system-png[=PFX]
-                          Use system libpng [installed at prefix PFX]],
-    PNG_DIR=$withval)
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-if test -n "${PNG_DIR}" -a "${PNG_DIR}" != "yes"; then
-    CFLAGS="-I${PNG_DIR}/include $CFLAGS"
-    LDFLAGS="-L${PNG_DIR}/lib $LDFLAGS"
-fi
-if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
-    MOZ_SYSTEM_PNG=
-else
-    AC_CHECK_LIB(png, png_get_valid, [MOZ_SYSTEM_PNG=1 MOZ_PNG_LIBS="-lpng"],
-                 AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
-    AC_CHECK_LIB(png, png_get_acTL, ,
-                 AC_MSG_ERROR([--with-system-png won't work because the system's libpng doesn't have APNG support]))
-fi
-if test "$MOZ_SYSTEM_PNG" = 1; then
-    AC_TRY_COMPILE([ #include <stdio.h>
-                     #include <sys/types.h>
-                     #include <png.h> ],
-                   [ #if PNG_LIBPNG_VER < $MOZPNG
-                     #error "Insufficient libpng version ($MOZPNG required)."
-                     #endif
-                     #ifndef PNG_UINT_31_MAX
-                     #error "Insufficient libpng version."
-                     #endif ],
-                   MOZ_SYSTEM_PNG=1,
-                   AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
-fi
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_SYSTEM_PNG" = 1; then
-    MOZ_PNG_CFLAGS="-I${PNG_DIR}/include"
-    MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
-fi
-
-fi # SKIP_LIBRARY_CHECKS
-
 dnl ========================================================
 dnl =
 dnl = Application
@@ -2415,11 +2362,6 @@ HOST_CXXFLAGS=`echo \
     $_WARNINGS_HOST_CXXFLAGS \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
-
-AC_SUBST(MOZ_SYSTEM_PNG)
-
-AC_SUBST_LIST(MOZ_PNG_CFLAGS)
-AC_SUBST_LIST(MOZ_PNG_LIBS)
 
 HOST_CMFLAGS="-x objective-c -fobjc-exceptions"
 HOST_CMMFLAGS="-x objective-c++ -fobjc-exceptions"

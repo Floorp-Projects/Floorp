@@ -117,7 +117,6 @@ def old_configure_options(*options):
     "--with-distribution-id",
     "--with-macbundlename-prefix",
     "--with-system-libevent",
-    "--with-system-png",
     "--with-user-appdir",
     "--x-includes",
     "--x-libraries",
