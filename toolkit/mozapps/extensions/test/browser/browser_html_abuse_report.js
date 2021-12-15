@@ -283,6 +283,24 @@ async function test_abusereport_suggestions(addonId) {
     ok(radioEl, `Found radio button for "${reason}"`);
     radioEl.checked = true;
 
+    // Make sure the element localization is completed before
+    // checking the content isn't empty.
+    await document.l10n.translateFragment(radioEl);
+
+    // Verify each radio button has a non-empty localized string.
+    const localizedRadioContent = Array.from(
+      radioEl.closest("label").querySelectorAll("[data-l10n-id]")
+    ).filter(el => !el.hidden);
+
+    for (let el of localizedRadioContent) {
+      isnot(
+        el.textContent,
+        "",
+        `Fluent string id '${el.getAttribute("data-l10n-id")}' missing`
+      );
+    }
+
+    // Switch to the submit form with the current reason radio selected.
     let oncePanelUpdated = AbuseReportTestUtils.promiseReportUpdated(
       abuseReportEl,
       "submit"
@@ -365,15 +383,30 @@ add_task(async function test_abusereport_suggestions_theme() {
   await theme.unload();
 });
 
+add_task(async function test_abusereport_suggestions_sitepermission() {
+  const SITEPERM_ADDON_ID = "webmidi@mochi.test";
+  const sitePermAddon = await installTestExtension(
+    SITEPERM_ADDON_ID,
+    "sitepermission"
+  );
+  await test_abusereport_suggestions(SITEPERM_ADDON_ID);
+  await sitePermAddon.unload();
+});
+
 // This test case verifies the message bars created on other
 // scenarios (e.g. report creation and submissions errors).
 add_task(async function test_abusereport_messagebars() {
   const EXT_ID = "test-extension-report@mochi.test";
   const EXT_ID2 = "test-extension-report-2@mochi.test";
   const THEME_ID = "test-theme-report@mochi.test";
+  const SITEPERM_ADDON_ID = "webmidi-report@mochi.test";
   const extension = await installTestExtension(EXT_ID);
   const extension2 = await installTestExtension(EXT_ID2);
   const theme = await installTestExtension(THEME_ID, "theme");
+  const sitePermAddon = await installTestExtension(
+    SITEPERM_ADDON_ID,
+    "sitepermission"
+  );
 
   async function assertMessageBars(
     expectedMessageBarIds,
@@ -518,7 +551,7 @@ add_task(async function test_abusereport_messagebars() {
     );
   }
 
-  for (const extId of [EXT_ID2, THEME_ID]) {
+  for (const extId of [EXT_ID2, THEME_ID, SITEPERM_ADDON_ID]) {
     const testFn = async () => {
       info(`Test message bars on ${extId} reported opened from addon removal`);
       setTestRequestHandler(200, "{}");
@@ -530,12 +563,37 @@ add_task(async function test_abusereport_messagebars() {
       await addon.uninstall(true);
       AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
     };
-    await assertMessageBars(["submitting", "submitted-and-removed"], testFn);
+    const assertMessageBarDetails = async ([
+      submittingDetails,
+      submittedDetails,
+    ]) => AbuseReportTestUtils.assertFluentStrings(submittedDetails.messagebar);
+    await assertMessageBars(
+      ["submitting", "submitted-and-removed"],
+      testFn,
+      assertMessageBarDetails
+    );
   }
+
+  // Verify message bar on sitepermission add-on type.
+  await assertMessageBars(
+    ["submitting", "submitted"],
+    async () => {
+      info(
+        "Test message bars for report submitted on an sitepermission addon type"
+      );
+      setTestRequestHandler(200, "{}");
+      AbuseReportTestUtils.triggerNewReport(SITEPERM_ADDON_ID, "menu");
+      await AbuseReportTestUtils.promiseReportRendered();
+      AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
+    },
+    ([submittingDetails, submittedDetails]) =>
+      AbuseReportTestUtils.assertFluentStrings(submittedDetails.messagebar)
+  );
 
   await extension.unload();
   await extension2.unload();
   await theme.unload();
+  await sitePermAddon.unload();
 });
 
 add_task(async function test_abusereport_from_aboutaddons_menu() {
@@ -926,4 +984,34 @@ add_task(async function test_author_hidden_when_missing() {
 
   await closeAboutAddons();
   await extension.unload();
+});
+
+// Verify addon.siteOrigin is used as a fallback when homepage_url/developer.url
+// or support url are missing.
+add_task(async function test_siteperm_siteorigin_fallback() {
+  const SITEPERM_ADDON_ID = "webmidi-site-origin@mochi.test";
+  const sitePermAddon = await installTestExtension(
+    SITEPERM_ADDON_ID,
+    "sitepermission",
+    {
+      homepage_url: undefined,
+    }
+  );
+
+  const abuseReportEl = await AbuseReportTestUtils.openReport(
+    SITEPERM_ADDON_ID
+  );
+  const addon = await AddonManager.getAddonByID(SITEPERM_ADDON_ID);
+
+  ok(addon.siteOrigin, "addon.siteOrigin should not be undefined");
+  ok(!addon.supportURL, "addon.supportURL should not be set");
+  ok(!addon.homepageURL, "addon.homepageURL should not be set");
+  is(
+    abuseReportEl.supportURL,
+    addon.siteOrigin,
+    "Got the expected support_url"
+  );
+
+  await closeAboutAddons();
+  await sitePermAddon.unload();
 });
