@@ -303,6 +303,7 @@ var dataProviders = {
       "extension",
       "locale",
       "dictionary",
+      "sitepermission",
     ]);
     addons = addons.filter(e => !e.isSystem);
     addons.sort(function(a, b) {
