@@ -20,7 +20,6 @@
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/SafeRefPtr.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
@@ -94,7 +93,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerGlobalScopeBase,
                                                          DOMEventTargetHelper)
 
-  WorkerGlobalScopeBase(WorkerPrivate* aWorkerPrivate,
+  WorkerGlobalScopeBase(NotNull<WorkerPrivate*> aWorkerPrivate,
                         UniquePtr<ClientSource> aClientSource);
 
   virtual bool WrapGlobalObject(JSContext* aCx,
@@ -163,7 +162,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
  protected:
   ~WorkerGlobalScopeBase();
 
-  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
+  const NotNull<WorkerPrivate*> mWorkerPrivate;
 
  private:
   RefPtr<Console> mConsole;
@@ -345,7 +344,7 @@ class DedicatedWorkerGlobalScope final
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
       DedicatedWorkerGlobalScope, WorkerGlobalScope)
 
-  DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+  DedicatedWorkerGlobalScope(NotNull<WorkerPrivate*> aWorkerPrivate,
                              UniquePtr<ClientSource> aClientSource,
                              const nsString& aName);
 
@@ -389,7 +388,7 @@ class SharedWorkerGlobalScope final
     : public WorkerGlobalScope,
       public workerinternals::NamedWorkerGlobalScopeMixin {
  public:
-  SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
+  SharedWorkerGlobalScope(NotNull<WorkerPrivate*> aWorkerPrivate,
                           UniquePtr<ClientSource> aClientSource,
                           const nsString& aName);
 
@@ -411,7 +410,8 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
                                            WorkerGlobalScope)
 
   ServiceWorkerGlobalScope(
-      WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
+      NotNull<WorkerPrivate*> aWorkerPrivate,
+      UniquePtr<ClientSource> aClientSource,
       const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor);
 
   bool WrapGlobalObject(JSContext* aCx,

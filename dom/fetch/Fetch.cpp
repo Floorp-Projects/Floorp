@@ -43,6 +43,7 @@
 #include "InternalResponse.h"
 
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -1088,15 +1089,16 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
 template <class Derived>
 FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
     : mOwner(aOwner),
+      mWorkerPrivate(nullptr),
       mReadableStreamBody(nullptr),
       mReadableStreamReader(nullptr),
       mBodyUsed(false) {
   MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
-    WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(wp);
-    mMainThreadEventTarget = wp->MainThreadEventTarget();
+    mWorkerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(mWorkerPrivate);
+    mMainThreadEventTarget = mWorkerPrivate->MainThreadEventTarget();
   } else {
     mMainThreadEventTarget = aOwner->EventTargetFor(TaskCategory::Other);
   }
