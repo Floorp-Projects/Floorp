@@ -11,6 +11,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AbuseReporter",
+  "resource://gre/modules/AbuseReporter.jsm"
+);
+
 const IS_DIALOG_WINDOW = window.arguments && window.arguments.length;
 
 let openWebLink = IS_DIALOG_WINDOW
@@ -582,6 +588,7 @@ class AbuseReport extends HTMLElement {
 
     const {
       addonId,
+      addonType,
       _addonAuthorContainer,
       _addonIconElement,
       _addonNameElement,
@@ -595,7 +602,12 @@ class AbuseReport extends HTMLElement {
     this.switchToListMode();
 
     // Cancel the abuse report if the addon is not an extension or theme.
-    if (!["extension", "theme"].includes(this.addonType)) {
+    if (!AbuseReporter.isSupportedAddonType(addonType)) {
+      Cu.reportError(
+        new Error(
+          `Closing abuse report panel on unexpected addon type: ${addonType}`
+        )
+      );
       this.cancel();
       return;
     }
