@@ -77,6 +77,11 @@ def _activate_mach_virtualenv():
     )
     mach_site.activate()
 
+    if TASKCLUSTER:
+        # In CI, the directory structure is different: xpcshell code is in
+        # "$topsrcdir/xpcshell/" rather than "$topsrcdir/testing/xpcshell".
+        sys.path.append("xpcshell")
+
 
 def run_tests(mach_cmd, kwargs, client_args):
     """This tests runner can be used directly via main or via Mach.
