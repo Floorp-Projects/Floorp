@@ -471,6 +471,103 @@ struct AutoHandlingTrap {
   MOZ_ASSERT(sAlreadyHandlingTrap.get());
 
   uint8_t* pc = ContextToPC(context);
+
+#  ifdef ENABLE_WASM_CALL_INDIRECT_NULL
+  // If pc is null and a plausible return address can be obtained then the pc
+  // will be set to that address and indirectCallToNull will be set to true.
+  // After that, the normal filtering will validate the pc, and we will check
+  // below that there is an IndirectCallToNull trap at that address.
+
+  bool indirectCallToNull = false;
+  if (pc == nullptr) {
+#    if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+
+    // On Intel we must read the return address from the stack, but before
+    // doing that we want to validate the sp as much as possible.
+
+    uint8_t* sp = ContextToSP(context);
+
+    // Check that sp has pointer alignment.
+
+    if (uintptr_t(sp) & (sizeof(uintptr_t) - 1)) {
+      return false;
+    }
+
+    // Check that the stack would be aligned for the Wasm ABI after popping the
+    // return address.  Outgoing argument areas are a multiple of
+    // WasmStackAlignment but calls are only aligned to JitStackAlignment.
+
+    static_assert(jit::WasmStackAlignment >= jit::JitStackAlignment,
+                  "subsumes");
+    if (uintptr_t(sp + sizeof(uintptr_t)) & (jit::JitStackAlignment - 1)) {
+      return false;
+    }
+
+    // Check that the SP/FP relationship is sane.
+
+    if (sp >= ContextToFP(context)) {
+      return false;
+    }
+
+    // Check that sp is within the stack base and limit, when we can.
+
+    if (assertCx) {
+      if (uintptr_t(sp) >= assertCx->nativeStackBase() ||
+          uintptr_t(sp) < assertCx->jitStackLimitNoInterrupt) {
+        return false;
+      }
+    } else {
+      // (Darwin-on-Intel only) We're on a different thread, hence TlsContext
+      // could supply no JSContext to us, and we can't verify that the sp points
+      // into the stack area.  It may not matter much, because if we get a wild
+      // sp value then either it points to unmapped memory and we will fault, or
+      // it points to an address that is either not code or does not have the
+      // correct trap value associated with it.
+    }
+
+    // Even when we know sp points into a stack and is aligned, we don't know
+    // for sure whether the memory at *sp will be mapped, and the load could
+    // fault.  That would indicate buggy code however, and regular recursive
+    // SIGSEGV handling should take care of it, see comments above.
+    //
+    // One reason for unmapped stack is that the stack has never extended that
+    // far down before.  In this case the sp could have been moved into the
+    // unmapped area by a bug.  Importantly the sp will not be moved into the
+    // unmapped area by a legitimate call instruction, since it pushes the
+    // return address and a page will be mapped in for that through a mechanism
+    // that does not affect us here (as we're guarded on pc==0, which would not
+    // be the case for a stack fault).
+    //
+    // Another reason for unmapped stack is that the memory could have become
+    // unmapped *after* the return address was successfully pushed and the pc
+    // updated.  This would be a weird race, again a bug.
+
+    pc = *reinterpret_cast<uint8_t**>(sp);
+    indirectCallToNull = true;
+
+#    elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+        defined(JS_CODEGEN_MIPS64)
+
+    uint8_t* lr = ContextToLR(context);
+
+    // Check that the return address is a plausible code pointer.  On these
+    // platforms, instructions are all four bytes long.
+
+    if (uintptr_t(lr) & 3) {
+      return false;
+    }
+
+    pc = lr;
+    indirectCallToNull = true;
+
+#    else
+
+#      error "Platform code needed"
+
+#    endif
+  }
+#  endif  // ENABLE_WASM_CALL_INDIRECT_NULL
+
   const CodeSegment* codeSegment = LookupCodeSegment(pc);
   if (!codeSegment || !codeSegment->isModule()) {
     return false;
@@ -484,11 +581,26 @@ struct AutoHandlingTrap {
     return false;
   }
 
+#  ifdef ENABLE_WASM_CALL_INDIRECT_NULL
+  if (indirectCallToNull) {
+    // Final validation: We must find the right trap type at the call.
+    if (trap != Trap::IndirectCallToNull) {
+      return false;
+    }
+
+    // Roll the PC back to the return point in the caller.
+    SetContextPC(context, pc);
+  }
+#  endif
+
   // We have a safe, expected wasm trap, so fp is well-defined to be a Frame*.
   // For the first sanity check, the Trap::IndirectCallBadSig special case is
   // due to this trap occurring in the indirect call prologue, while fp points
   // to the caller's Frame which can be in a different Module. In any case,
   // though, the containing JSContext is the same.
+  //
+  // (Note the special case does not apply to Trap::IndirectCallToNull because
+  // in that case the pc has been rolled back to the caller.)
 
   auto* frame = reinterpret_cast<Frame*>(ContextToFP(context));
   Instance* instance = GetNearestEffectiveTls(frame)->instance;
