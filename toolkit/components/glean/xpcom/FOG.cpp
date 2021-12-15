@@ -299,14 +299,8 @@ FOG::TestResetFOG(const nsACString& aDataPathOverride,
 }
 
 NS_IMETHODIMP
-FOG::TestTriggerGPUMetrics() {
-  glean::TestTriggerGPUMetrics();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FOG::TestTriggerRDDMetrics(JSContext* aCx,
-                           mozilla::dom::Promise** aOutPromise) {
+FOG::TestTriggerMetrics(uint32_t aProcessType, JSContext* aCx,
+                        mozilla::dom::Promise** aOutPromise) {
   NS_ENSURE_ARG(aOutPromise);
   *aOutPromise = nullptr;
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
@@ -320,7 +314,7 @@ FOG::TestTriggerRDDMetrics(JSContext* aCx,
     return erv.StealNSResult();
   }
 
-  glean::TestTriggerRDDMetrics(promise);
+  glean::TestTriggerMetrics(aProcessType, promise);
 
   promise.forget(aOutPromise);
   return NS_OK;
