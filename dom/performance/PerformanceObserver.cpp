@@ -10,6 +10,7 @@
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryBinding.h"
 #include "mozilla/dom/PerformanceObserverBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsIScriptError.h"

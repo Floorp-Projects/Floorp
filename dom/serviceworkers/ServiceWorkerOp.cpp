@@ -56,6 +56,7 @@
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
