@@ -5063,7 +5063,11 @@
 
 - name: gfx.direct3d11.reuse-decoder-device
   type: RelaxedAtomicInt32
+#ifdef NIGHTLY_BUILD
+  value: 1
+#else
   value: -1
+#endif
   mirror: always
 
 - name: gfx.direct3d11.allow-keyed-mutex
