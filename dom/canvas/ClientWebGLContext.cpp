@@ -21,6 +21,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/ipc/Shmem.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/OOPCanvasRenderer.h"
@@ -884,53 +885,15 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
                                                         /*zero=*/true));
   };
 
-  auto snapshot = [&]() -> RefPtr<gfx::DataSourceSurface> {
-    const auto& inProcess = mNotLost->inProcess;
-    if (inProcess) {
-      const auto maybeSize = inProcess->FrontBufferSnapshotInto({});
-      if (!maybeSize) return nullptr;
-      const auto& surfSize = *maybeSize;
-      const auto stride = surfSize.x * 4;
-      const auto byteSize = stride * surfSize.y;
-      const auto surf = fnNewSurf(surfSize);
-      if (!surf) return nullptr;
-      {
-        const gfx::DataSourceSurface::ScopedMap map(
-            surf, gfx::DataSourceSurface::READ_WRITE);
-        if (!map.IsMapped()) {
-          MOZ_ASSERT(false);
-          return nullptr;
-        }
-        MOZ_RELEASE_ASSERT(map.GetStride() == static_cast<int64_t>(stride));
-        auto range = Range<uint8_t>{map.GetData(), byteSize};
-        if (!inProcess->FrontBufferSnapshotInto(Some(range))) {
-          gfxCriticalNote << "ClientWebGLContext::GetFrontBufferSnapshot: "
-                             "FrontBufferSnapshotInto(some) failed after "
-                             "FrontBufferSnapshotInto(none)";
-          return nullptr;
-        }
-      }
-      return surf;
-    }
-    const auto& child = mNotLost->outOfProcess;
-    child->FlushPendingCmds();
-    webgl::FrontBufferSnapshotIpc res;
-    if (!child->SendGetFrontBufferSnapshot(&res)) {
-      res = {};
-    }
-    if (!res.shmem) return nullptr;
-
-    const auto& surfSize = res.surfSize;
-    const webgl::RaiiShmem shmem{child, res.shmem.ref()};
-    const auto& shmemBytes = shmem.ByteRange();
-    if (!surfSize.x) return nullptr;  // Zero means failure.
-
+  const auto& inProcess = mNotLost->inProcess;
+  if (inProcess) {
+    const auto maybeSize = inProcess->FrontBufferSnapshotInto({});
+    if (!maybeSize) return nullptr;
+    const auto& surfSize = *maybeSize;
     const auto stride = surfSize.x * 4;
     const auto byteSize = stride * surfSize.y;
-
     const auto surf = fnNewSurf(surfSize);
     if (!surf) return nullptr;
-
     {
       const gfx::DataSourceSurface::ScopedMap map(
           surf, gfx::DataSourceSurface::READ_WRITE);
@@ -939,26 +902,71 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
         return nullptr;
       }
       MOZ_RELEASE_ASSERT(map.GetStride() == static_cast<int64_t>(stride));
-      MOZ_RELEASE_ASSERT(shmemBytes.length() == byteSize);
-      memcpy(map.GetData(), shmemBytes.begin().get(), byteSize);
+      auto range = Range<uint8_t>{map.GetData(), byteSize};
+      if (!inProcess->FrontBufferSnapshotInto(Some(range))) {
+        gfxCriticalNote << "ClientWebGLContext::GetFrontBufferSnapshot: "
+                           "FrontBufferSnapshotInto(some) failed after "
+                           "FrontBufferSnapshotInto(none)";
+        return nullptr;
+      }
+      if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
+        bool rv = gfx::PremultiplyData(
+            map.GetData(), map.GetStride(), gfx::SurfaceFormat::R8G8B8A8,
+            map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
+            surf->GetSize());
+        MOZ_RELEASE_ASSERT(rv, "PremultiplyData failed!");
+      } else {
+        bool rv = gfx::SwizzleData(
+            map.GetData(), map.GetStride(), gfx::SurfaceFormat::R8G8B8A8,
+            map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
+            surf->GetSize());
+        MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
+      }
     }
     return surf;
-  }();
-  if (!snapshot) return nullptr;
-
-  if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
-    const auto nonPremultSurf = snapshot;
-    const auto& size = nonPremultSurf->GetSize();
-    const auto format = nonPremultSurf->GetFormat();
-    snapshot =
-        gfx::Factory::CreateDataSourceSurface(size, format, /*zero=*/false);
-    if (!snapshot) {
-      gfxCriticalNote << "CreateDataSourceSurface failed for size " << size;
-    }
-    gfxUtils::PremultiplyDataSurface(nonPremultSurf, snapshot);
   }
+  const auto& child = mNotLost->outOfProcess;
+  child->FlushPendingCmds();
+  webgl::FrontBufferSnapshotIpc res;
+  if (!child->SendGetFrontBufferSnapshot(&res)) {
+    res = {};
+  }
+  if (!res.shmem) return nullptr;
 
-  return snapshot;
+  const auto& surfSize = res.surfSize;
+  const webgl::RaiiShmem shmem{child, res.shmem.ref()};
+  const auto& shmemBytes = shmem.ByteRange();
+  if (!surfSize.x) return nullptr;  // Zero means failure.
+
+  const auto stride = surfSize.x * 4;
+  const auto byteSize = stride * surfSize.y;
+
+  const auto surf = fnNewSurf(surfSize);
+  if (!surf) return nullptr;
+
+  {
+    const gfx::DataSourceSurface::ScopedMap map(
+        surf, gfx::DataSourceSurface::READ_WRITE);
+    if (!map.IsMapped()) {
+      MOZ_ASSERT(false);
+      return nullptr;
+    }
+    MOZ_RELEASE_ASSERT(shmemBytes.length() == byteSize);
+    if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
+      bool rv = gfx::PremultiplyData(
+          shmemBytes.begin().get(), stride, gfx::SurfaceFormat::R8G8B8A8,
+          map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
+          surf->GetSize());
+      MOZ_RELEASE_ASSERT(rv, "PremultiplyData failed!");
+    } else {
+      bool rv = gfx::SwizzleData(shmemBytes.begin().get(), stride,
+                                 gfx::SurfaceFormat::R8G8B8A8, map.GetData(),
+                                 map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
+                                 surf->GetSize());
+      MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
+    }
+  }
+  return surf;
 }
 
 RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
