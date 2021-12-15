@@ -168,7 +168,7 @@ impl PrimitiveVisibility {
 pub fn update_primitive_visibility(
     store: &mut PrimitiveStore,
     pic_index: PictureIndex,
-    parent_surface_index: SurfaceIndex,
+    parent_surface_index: Option<SurfaceIndex>,
     world_culling_rect: &WorldRect,
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
@@ -204,7 +204,7 @@ pub fn update_primitive_visibility(
                 (raster_config.surface_index, true)
             }
             None => {
-                (parent_surface_index, false)
+                (parent_surface_index.expect("bug: pass-through with no parent"), false)
             }
         };
 
@@ -287,7 +287,7 @@ pub fn update_primitive_visibility(
                     let pic_surface_rect = update_primitive_visibility(
                         store,
                         pic_index,
-                        surface_index,
+                        Some(surface_index),
                         world_culling_rect,
                         frame_context,
                         frame_state,
@@ -596,7 +596,7 @@ pub fn update_primitive_visibility(
 
         None
     } else {
-        let parent_surface = &surfaces[parent_surface_index.0 as usize];
+        let parent_surface = &surfaces[parent_surface_index.expect("bug: no parent").0 as usize];
         let map_surface_to_parent_surface = SpaceMapper::new_with_target(
             parent_surface.surface_spatial_node_index,
             surface_spatial_node_index,

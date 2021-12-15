@@ -245,7 +245,6 @@ impl ScratchBuffer {
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         self.primitive.recycle(recycler);
         self.picture.recycle(recycler);
-        self.frame.recycle(recycler);
     }
 
     pub fn memory_pressure(&mut self) {

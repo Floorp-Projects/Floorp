@@ -5,7 +5,7 @@
 use crate::frame_builder::FrameBuildingContext;
 use crate::internal_types::FastHashMap;
 use crate::prim_store::{PictureIndex, PrimitiveInstance};
-use crate::picture::{PicturePrimitive, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceInfo};
+use crate::picture::{PicturePrimitive, SurfaceIndex, SurfaceInfo};
 use crate::picture::{TileCacheInstance, SliceId};
 use crate::render_backend::DataStores;
 use smallvec::SmallVec;
@@ -13,7 +13,7 @@ use smallvec::SmallVec;
 #[derive(Debug)]
 pub struct PictureInfo {
     pub update_pass: Option<usize>,
-    pub surface_index: SurfaceIndex,
+    pub surface_index: Option<SurfaceIndex>,
     pub parent: Option<PictureIndex>,
 }
 
@@ -55,7 +55,7 @@ impl PictureGraph {
             self.pic_info.push(PictureInfo {
                 update_pass: None,
                 parent: None,
-                surface_index: ROOT_SURFACE_INDEX,
+                surface_index: None,
             })
         };
 
@@ -98,18 +98,20 @@ impl PictureGraph {
             for pic_index in pass {
                 let parent = self.pic_info[pic_index.0].parent;
 
-                let parent_surface_index = parent.map_or(ROOT_SURFACE_INDEX, |parent| {
-                    self.pic_info[parent.0].surface_index
+                let parent_surface_index = parent.map(|parent| {
+                    // Can unwrap here as by the time we have a parent that parent's
+                    // surface must have been assigned.
+                    self.pic_info[parent.0].surface_index.unwrap()
                 });
 
                 let info = &mut self.pic_info[pic_index.0];
 
-                info.surface_index = pictures[pic_index.0].assign_surface(
+                info.surface_index = Some(pictures[pic_index.0].assign_surface(
                     frame_context,
                     tile_caches,
                     parent_surface_index,
                     surfaces,
-                );
+                ));
             }
         }
     }
@@ -127,10 +129,14 @@ impl PictureGraph {
             for pic_index in pass {
                 let parent = self.pic_info[pic_index.0].parent;
 
-                let surface_index = self.pic_info[pic_index.0].surface_index;
+                let surface_index = self.pic_info[pic_index.0]
+                    .surface_index
+                    .expect("bug: no surface assigned during propagate_bounding_rects");
 
-                let parent_surface_index = parent.map_or(ROOT_SURFACE_INDEX, |parent| {
-                    self.pic_info[parent.0].surface_index
+                let parent_surface_index = parent.map(|parent| {
+                    // Can unwrap here as by the time we have a parent that parent's
+                    // surface must have been assigned.
+                    self.pic_info[parent.0].surface_index.unwrap()
                 });
 
                 pictures[pic_index.0].propagate_bounding_rect(
