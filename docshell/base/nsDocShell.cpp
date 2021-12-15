@@ -5936,7 +5936,7 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
 
   nsCOMPtr<nsIX509Cert> cert;
   rv = tsi->GetServerCert(getter_AddRefs(cert));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv) || !cert)) {
     return nullptr;
   }
 
