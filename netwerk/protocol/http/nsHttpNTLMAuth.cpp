@@ -176,6 +176,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
   if (challenge.Equals("NTLM"_ns, nsCaseInsensitiveCStringComparator)) {
     nsCOMPtr<nsIAuthModule> module;
 
+#ifdef MOZ_AUTH_EXTENSION
     // Check to see if we should default to our generic NTLM auth module
     // through UseGenericNTLM. (We use native auth by default if the
     // system provides it.) If *sessionState is non-null, we failed to
@@ -192,7 +193,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
         // a default credentials attempt once we return.
         module = nsIAuthModule::CreateInstance("sys-ntlm");
       }
-#ifdef XP_WIN
+#  ifdef XP_WIN
       else {
         // Try to use native NTLM and prompt the user for their domain,
         // username, and password. (only supported by windows nsAuthSSPI
@@ -203,15 +204,15 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
         module = nsIAuthModule::CreateInstance("sys-ntlm");
         *identityInvalid = true;
       }
-#endif  // XP_WIN
+#  endif  // XP_WIN
       if (!module) LOG(("Native sys-ntlm auth module not found.\n"));
     }
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
     // On windows, never fall back unless the user has specifically requested
     // so.
     if (!forceGeneric && !module) return NS_ERROR_UNEXPECTED;
-#endif
+#  endif
 
     // If no native support was available. Fall back on our internal NTLM
     // implementation.
@@ -233,6 +234,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
       // Prompt user for domain, username, and password.
       *identityInvalid = true;
     }
+#endif
 
     // If this fails, then it means that we cannot do NTLM auth.
     if (!module) {
