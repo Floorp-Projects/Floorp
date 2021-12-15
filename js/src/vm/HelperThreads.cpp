@@ -615,7 +615,6 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors);
-  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   parse(cx);
 
@@ -904,8 +903,6 @@ static JS::OffThreadToken* StartOffThreadParseTask(
   // Suppress GC so that calls below do not trigger a new incremental GC
   // which could require barriers on the atoms zone.
   gc::AutoSuppressGC nogc(cx);
-  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
-  AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
   if (!task->init(cx, options)) {
     return nullptr;
