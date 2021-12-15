@@ -293,8 +293,6 @@ class BackgroundParentImpl : public PBackgroundParent,
       PMessagePortParent* aActor, const nsID& aUUID,
       const nsID& aDestinationUUID, const uint32_t& aSequenceID) override;
 
-  already_AddRefed<PIPCClientCertsParent> AllocPIPCClientCertsParent() override;
-
   bool DeallocPMessagePortParent(PMessagePortParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvMessagePortForceClose(

@@ -88,7 +88,8 @@ macro_rules! manager_guard_to_manager {
 // Helper macro to prefix log messages with the current thread ID.
 macro_rules! log_with_thread_id {
     ($log_level:ident, $($message:expr),*) => {
-        $log_level!("{:?} {}", thread::current().id(), format_args!($($message),*));
+        let message = format!($($message),*);
+        $log_level!("{:?} {}", thread::current().id(), message);
     };
 }
 
