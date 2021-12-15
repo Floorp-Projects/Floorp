@@ -213,4 +213,9 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">धोखादायक साइट समस्या</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s पर यह वेबपेज एक धोखादायक साइट के रूप में रिपोट किया गया है और आपकी सुरक्षा प्राथमिकताओं के आधार पर ब्लॉक किया गया हैं।</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">सुरक्षित साइट उपलब्ध नहीं है</string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP साइट को जारी रखें</string>
 </resources>
