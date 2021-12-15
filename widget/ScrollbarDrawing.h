@@ -69,35 +69,34 @@ class ScrollbarDrawing {
     return Nothing();
   }
 
-  static bool IsScrollbarTrackOpaque(nsIFrame*);
-  static sRGBColor ComputeScrollbarTrackColor(nsIFrame*, const ComputedStyle&,
-                                              const EventStates& aDocumentState,
-                                              const Colors&);
-  static sRGBColor ComputeScrollbarThumbColor(nsIFrame*, const ComputedStyle&,
-                                              const EventStates& aElementState,
-                                              const EventStates& aDocumentState,
-                                              const Colors&);
+  bool IsScrollbarTrackOpaque(nsIFrame*);
+  virtual sRGBColor ComputeScrollbarTrackColor(
+      nsIFrame*, const ComputedStyle&, const EventStates& aDocumentState,
+      const Colors&);
+  virtual sRGBColor ComputeScrollbarThumbColor(
+      nsIFrame*, const ComputedStyle&, const EventStates& aElementState,
+      const EventStates& aDocumentState, const Colors&);
 
   static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
                                                 const ComputedStyle& aStyle,
                                                 bool aIsHorizontal);
   static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
 
-  static nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
-  static Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
+  nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
+  Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
 
   // Returned colors are button, arrow.
-  std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
+  virtual std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
       nsIFrame*, StyleAppearance, const ComputedStyle&,
       const EventStates& aElementState, const EventStates& aDocumentState,
       const Colors&);
 
-  bool PaintScrollbarButton(DrawTarget&, StyleAppearance,
-                            const LayoutDeviceRect&, nsIFrame*,
-                            const ComputedStyle&,
-                            const EventStates& aElementState,
-                            const EventStates& aDocumentState, const Colors&,
-                            const DPIRatio&);
+  virtual bool PaintScrollbarButton(DrawTarget&, StyleAppearance,
+                                    const LayoutDeviceRect&, nsIFrame*,
+                                    const ComputedStyle&,
+                                    const EventStates& aElementState,
+                                    const EventStates& aDocumentState,
+                                    const Colors&);
 
   virtual bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
                                    bool aHorizontal, nsIFrame*,
