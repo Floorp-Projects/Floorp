@@ -63,6 +63,10 @@ void PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(
         continue;
       }
 
+      MOZ_ASSERT(timeline->IsMonotonicallyIncreasing(),
+                 "Don't put non-MonotoniciallyIncreasing timeline into "
+                 "PendingAnimationTracker");
+
       // When the timeline's refresh driver is under test control, its values
       // have no correspondance to wallclock times so we shouldn't try to
       // convert aReadyTime (which is a wallclock time) to a timeline value.
@@ -142,15 +146,6 @@ void PendingAnimationTracker::MarkAnimationsThatMightNeedSynchronization() {
   mHasPlayPendingGeometricAnimations = CheckState::Absent;
   for (const auto& animation : mPlayPendingSet) {
     if (animation->GetEffect() && animation->GetEffect()->AffectsGeometry()) {
-      if (animation->UsingScrollTimeline()) {
-        // Skip the animation if it is using scroll-timeline. Its geometric
-        // animations shouldn't affect others (because the animation ticks
-        // based on the scrolling or the frame size changes).
-        // If we don't do scrolling, its geometry doesn't change, so no effect.
-        // If we do scrolling, we may un-throttle the transform animations by
-        // other ways. (See Keyframe::CanThrottle() for more info in this case.)
-        continue;
-      }
       mHasPlayPendingGeometricAnimations &= ~CheckState::Absent;
       mHasPlayPendingGeometricAnimations |= IsTransition(*animation)
                                                 ? CheckState::TransitionsPresent

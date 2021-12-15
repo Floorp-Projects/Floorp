@@ -901,9 +901,12 @@ void Animation::TriggerNow() {
   }
 
   // If we don't have an active timeline we can't trigger the animation.
-  // However, this is a test-only method that we don't expect to be used in
-  // conjunction with animations without an active timeline so generate
-  // a warning if we do find ourselves in that situation.
+  // For non monotonically increasing timelines, we call this function in Play()
+  // and Pause() immediately,
+  //
+  // For monotonically increasing timelines, this is a test-only method that we
+  // don't expect to be used in conjunction with animations without an active
+  // timeline so generate a warning if we do find ourselves in that situation.
   if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     NS_WARNING("Failed to trigger an animation with an active timeline");
     return;
@@ -1434,12 +1437,18 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   // animations if it applies.
   mSyncWithGeometricAnimations = false;
 
-  if (Document* doc = GetRenderedDocument()) {
-    PendingAnimationTracker* tracker =
-        doc->GetOrCreatePendingAnimationTracker();
-    tracker->AddPlayPending(*this);
+  // If the animation use finite timeline, e.g. scroll timeline, we don't use
+  // pending animation tracker. Instead, we let it play immediately.
+  if (HasFiniteTimeline()) {
+    TriggerNow();
   } else {
-    TriggerOnNextTick(Nullable<TimeDuration>());
+    if (Document* doc = GetRenderedDocument()) {
+      PendingAnimationTracker* tracker =
+          doc->GetOrCreatePendingAnimationTracker();
+      tracker->AddPlayPending(*this);
+    } else {
+      TriggerOnNextTick(Nullable<TimeDuration>());
+    }
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -1490,12 +1499,18 @@ void Animation::Pause(ErrorResult& aRv) {
 
   mPendingState = PendingState::PausePending;
 
-  if (Document* doc = GetRenderedDocument()) {
-    PendingAnimationTracker* tracker =
-        doc->GetOrCreatePendingAnimationTracker();
-    tracker->AddPausePending(*this);
+  // If the animation use finite timeline, e.g. scroll timeline, we don't use
+  // pending animation tracker. Instead, we let it pause immediately.
+  if (HasFiniteTimeline()) {
+    TriggerNow();
   } else {
-    TriggerOnNextTick(Nullable<TimeDuration>());
+    if (Document* doc = GetRenderedDocument()) {
+      PendingAnimationTracker* tracker =
+          doc->GetOrCreatePendingAnimationTracker();
+      tracker->AddPausePending(*this);
+    } else {
+      TriggerOnNextTick(Nullable<TimeDuration>());
+    }
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
