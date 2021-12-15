@@ -2573,15 +2573,17 @@ class MOZ_STACK_CLASS AutoSelfHostingErrorReporter {
   }
 };
 
-[[nodiscard]] static bool InitSelfHostingFromStencil(
+[[nodiscard]] static bool InitSelfHostingAtomsFromStencil(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     const frontend::CompilationStencil& stencil) {
   // We must instantiate the atoms since they are shared between runtimes and
   // must be frozen during this startup.
-  if (!stencil.instantiateSelfHostedForRuntime(cx, atomCache)) {
-    return false;
-  }
+  return stencil.instantiateSelfHostedAtoms(cx, atomCache);
+}
 
+[[nodiscard]] static bool InitSelfHostingFromStencil(
+    JSContext* cx, frontend::CompilationAtomCache& atomCache,
+    const frontend::CompilationStencil& stencil) {
   // Build the JSAtom -> ScriptIndexRange mapping and save on the runtime.
   {
     auto& scriptMap = cx->runtime()->selfHostScriptMap.ref();
@@ -2761,6 +2763,12 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   cx->runtime()->selfHostStencil_ = stencil.forget().take();
 
   return true;
+}
+
+bool JSRuntime::initSelfHostingAtomsFromStencil(JSContext* cx) {
+  return InitSelfHostingAtomsFromStencil(
+      cx, cx->runtime()->selfHostStencilInput_->atomCache,
+      *cx->runtime()->selfHostStencil_);
 }
 
 bool JSRuntime::initSelfHostingFromStencil(JSContext* cx) {
