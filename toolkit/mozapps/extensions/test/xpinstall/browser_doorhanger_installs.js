@@ -260,6 +260,7 @@ async function waitForNotification(aId, aExpectedCount = 1) {
     let notification = nodes.find(n => n.id == aId + "-notification");
     ok(notification, "Should have seen the " + aId + " notification");
   }
+  await SimpleTest.promiseFocus(PopupNotifications.window);
 
   await SimpleTest.promiseFocus(PopupNotifications.window);
 
@@ -344,7 +345,8 @@ var TESTS = [
     );
     is(
       notification.getAttribute("label"),
-      "Software installation is currently disabled. Click Enable and try again."
+      "Software installation is currently disabled. Click Enable and try again.",
+      "notification label is correct"
     );
 
     let closePromise = waitForNotificationClose();
@@ -505,7 +507,7 @@ var TESTS = [
     notificationPromise = acceptAppMenuNotificationWhenShown(
       "addon-installed",
       "webmidi@test.mozilla.org",
-      { incognitoHidden: true }
+      { incognitoHidden: false, checkIncognito: true }
     );
 
     // Click on Allow on the permissions panel
@@ -517,7 +519,54 @@ var TESTS = [
     is(installs.length, 0, "Should be no pending installs");
 
     let addon = await AddonManager.getAddonByID("webmidi@test.mozilla.org");
+    await TestUtils.topicObserved("webextension-sitepermissions-startup");
+
+    // This addon should have a site permission with private browsing.
+    let uri = Services.io.newURI(addon.siteOrigin);
+    let pbPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {
+        privateBrowsingId: 1,
+      }
+    );
+    let permission = Services.perms.testExactPermissionFromPrincipal(
+      pbPrincipal,
+      "midi"
+    );
+    is(
+      permission,
+      Services.perms.ALLOW_ACTION,
+      "api access in private browsing granted"
+    );
+
+    assertActionAMTelemetryEvent(
+      [
+        {
+          method: "action",
+          object: "doorhanger",
+          value: "on",
+          extra: {
+            action: "privateBrowsingAllowed",
+            view: "postInstall",
+            addonId: addon.id,
+            type: "sitepermission",
+          },
+        },
+      ],
+      "Expect telemetry events for privateBrowsingAllowed action",
+      { actionType: "privateBrowsingAllowed" }
+    );
+
     await addon.uninstall();
+
+    // Verify the permission has not been retained.
+    let { permissions } = await ExtensionPermissions.get(
+      "webmidi@test.mozilla.org"
+    );
+    ok(
+      !permissions.includes("internal:privateBrowsingAllowed"),
+      "permission is not set after uninstall"
+    );
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await SpecialPowers.popPrefEnv();
