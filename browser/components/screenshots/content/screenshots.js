@@ -51,17 +51,26 @@ class ScreenshotsUI extends HTMLElement {
   }
 
   async handleEvent(event) {
-    if (event.type == "click" && event.target == this._cancelButton) {
+    if (event.type == "click" && event.currentTarget == this._cancelButton) {
       this.close();
-    } else if (event.type == "click" && event.target == this._copyButton) {
+    } else if (
+      event.type == "click" &&
+      event.currentTarget == this._copyButton
+    ) {
       this.saveToClipboard(
         this.ownerDocument.getElementById("placeholder-image").src
       );
-    } else if (event.type == "click" && event.target == this._downloadButton) {
+    } else if (
+      event.type == "click" &&
+      event.currentTarget == this._downloadButton
+    ) {
       await this.saveToFile(
         this.ownerDocument.getElementById("placeholder-image").src
       );
-    } else if (event.type == "click" && event.target == this._retryButton) {
+    } else if (
+      event.type == "click" &&
+      event.currentTarget == this._retryButton
+    ) {
       Services.obs.notifyObservers(
         window.parent.ownerGlobal,
         "menuitem-screenshot",
