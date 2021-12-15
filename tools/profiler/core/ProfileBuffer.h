@@ -178,10 +178,18 @@ class ProfileBuffer final {
   // - Adding JIT info.
   // - Streaming stacks to JSON.
   // Mutable because it's accessed from non-multithreaded const methods.
-  mutable mozilla::ProfileBufferChunkManagerSingle mWorkerChunkManager{
-      mozilla::ProfileBufferChunk::Create(
+  mutable mozilla::Maybe<mozilla::ProfileBufferChunkManagerSingle>
+      mMaybeWorkerChunkManager;
+  mozilla::ProfileBufferChunkManagerSingle& WorkerChunkManager() const {
+    if (mMaybeWorkerChunkManager.isNothing()) {
+      // Only actually allocate it on first use. (Some ProfileBuffers are
+      // temporary and don't actually need this.)
+      mMaybeWorkerChunkManager.emplace(
           mozilla::ProfileBufferChunk::SizeofChunkMetadata() +
-          mozilla::ProfileBufferChunkManager::scExpectedMaximumStackSize)};
+          mozilla::ProfileBufferChunkManager::scExpectedMaximumStackSize);
+    }
+    return *mMaybeWorkerChunkManager;
+  }
 
   // GetStreamingParametersForThreadCallback:
   //   (ProfilerThreadId) -> Maybe<StreamingParametersForThread>
