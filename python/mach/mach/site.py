@@ -315,11 +315,11 @@ class MachSiteManager:
                 sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
             elif self._site_packages_source == SitePackagesSource.NONE:
                 # Since the system packages aren't used, remove them from the sys.path
+                external_site_packages = ExternalPythonSite(
+                    sys.executable
+                ).all_site_packages_dirs()
                 sys.path = [
-                    path
-                    for path in sys.path
-                    if path
-                    not in ExternalPythonSite(sys.executable).all_site_packages_dirs()
+                    path for path in sys.path if path not in external_site_packages
                 ]
                 sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
             elif self._site_packages_source == SitePackagesSource.VENV:
@@ -327,13 +327,11 @@ class MachSiteManager:
                 # started from the Mach virtualenv.
                 if Path(sys.prefix) != Path(self._metadata.prefix):
                     # Since the system packages aren't used, remove them from the sys.path
+                    external_site_packages = ExternalPythonSite(
+                        sys.executable
+                    ).all_site_packages_dirs()
                     sys.path = [
-                        path
-                        for path in sys.path
-                        if path
-                        not in ExternalPythonSite(
-                            sys.executable
-                        ).all_site_packages_dirs()
+                        path for path in sys.path if path not in external_site_packages
                     ]
 
                     # Activate the Mach virtualenv in the current Python context. This
