@@ -259,6 +259,20 @@ Result CheckSubjectPublicKeyInfo(Input subjectPublicKeyInfo,
 #else
 #error Unsupported compiler for MOZILLA_PKIX_UNREACHABLE_DEFAULT.
 #endif
+
+inline size_t DigestAlgorithmToSizeInBytes(DigestAlgorithm digestAlgorithm) {
+  switch (digestAlgorithm) {
+    case DigestAlgorithm::sha1:
+      return 160 / 8;
+    case DigestAlgorithm::sha256:
+      return 256 / 8;
+    case DigestAlgorithm::sha384:
+      return 384 / 8;
+    case DigestAlgorithm::sha512:
+      return 512 / 8;
+      MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
+  }
+}
 }
 }  // namespace mozilla::pkix
 

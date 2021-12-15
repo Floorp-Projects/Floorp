@@ -43,14 +43,7 @@ DigestSignedData(TrustDomain& trustDomain,
     return Result::ERROR_BAD_DER;
   }
 
-  size_t digestLen;
-  switch (signedDigest.digestAlgorithm) {
-    case DigestAlgorithm::sha512: digestLen = 512 / 8; break;
-    case DigestAlgorithm::sha384: digestLen = 384 / 8; break;
-    case DigestAlgorithm::sha256: digestLen = 256 / 8; break;
-    case DigestAlgorithm::sha1: digestLen = 160 / 8; break;
-    MOZILLA_PKIX_UNREACHABLE_DEFAULT_ENUM
-  }
+  size_t digestLen = DigestAlgorithmToSizeInBytes(signedDigest.digestAlgorithm);
   assert(digestLen <= sizeof(digestBuf));
 
   rv = trustDomain.DigestBuf(signedData.data, signedDigest.digestAlgorithm,
