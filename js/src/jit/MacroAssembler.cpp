@@ -3946,12 +3946,19 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
 
+#ifdef ENABLE_WASM_CALL_INDIRECT_NULL
+  CodeOffset callOffset = call(desc, scratch);
+  append(wasm::Trap::IndirectCallToNull,
+         wasm::TrapSite(callOffset.offset(), trapOffset));
+  return callOffset;
+#else
   Label nonNull;
   branchTestPtr(Assembler::NonZero, scratch, scratch, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
   return call(desc, scratch);
+#endif
 }
 
 void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
