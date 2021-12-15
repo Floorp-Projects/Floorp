@@ -241,16 +241,19 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
   }
 #endif
 
-  if (!rt->initializeAtoms(cx)) {
-    return false;
-  }
+  {
+    JS::AutoAssertNoGC nogc;
+    if (!rt->initializeAtoms(cx)) {
+      return false;
+    }
 
-  if (!rt->initSelfHostingAtomsFromStencil(cx)) {
-    return false;
-  }
+    if (!rt->initSelfHostingAtomsFromStencil(cx)) {
+      return false;
+    }
 
-  if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
-    return false;
+    if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
+      return false;
+    }
   }
 
   if (!rt->initSelfHostingFromStencil(cx)) {
