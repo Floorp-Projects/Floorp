@@ -77,6 +77,7 @@ class RequestListContent extends Component {
       cloneRequest: PropTypes.func.isRequired,
       clickedRequest: PropTypes.object,
       openDetailsPanelTab: PropTypes.func.isRequired,
+      openDetailsHTTPCustomRequestTab: PropTypes.func.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
@@ -340,6 +341,7 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
+        openDetailsHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -350,6 +352,7 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
+        openDetailsHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -460,6 +463,8 @@ module.exports = connect(
   (dispatch, props) => ({
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
+    openDetailsHTTPCustomRequestTab: () =>
+      dispatch(Actions.openHTTPCustomRequest(true)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: open =>

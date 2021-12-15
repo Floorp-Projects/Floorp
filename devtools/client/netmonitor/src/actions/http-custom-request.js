@@ -11,6 +11,16 @@ const {
 } = require("devtools/client/netmonitor/src/constants");
 
 /**
+ * Open the entire HTTP Custom Request panel
+ * @returns {Function}
+ */
+function openHTTPCustomRequest() {
+  return ({ dispatch, getState }) => {
+    dispatch({ type: OPEN_ACTION_BAR, open: true });
+  };
+}
+
+/**
  * Toggle visibility of New Custom Request panel in network panel
  */
 function toggleHTTPCustomRequestPanel() {
@@ -30,5 +40,6 @@ function toggleHTTPCustomRequestPanel() {
 }
 
 module.exports = {
+  openHTTPCustomRequest,
   toggleHTTPCustomRequestPanel,
 };
