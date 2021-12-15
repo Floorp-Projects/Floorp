@@ -30,8 +30,7 @@ class OffscreenCanvasDisplayHelper final {
 
   RefPtr<layers::ImageContainer> GetImageContainer() const;
 
-  void UpdateContext(layers::ImageContainer* aContainer,
-                     CanvasContextType aType, int32_t aChildId);
+  void UpdateContext(CanvasContextType aType, int32_t aChildId);
 
   void UpdateParameters(uint32_t aWidth, uint32_t aHeight, bool aHasAlpha,
                         bool aIsPremultiplied, bool aIsOriginBottomLeft);

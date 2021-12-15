@@ -25,10 +25,6 @@ namespace gfx {
 class SourceSurface;
 }
 
-namespace layers {
-class ImageContainer;
-}  // namespace layers
-
 namespace dom {
 enum class OffscreenRenderingContextId : uint8_t;
 class Blob;
@@ -176,8 +172,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     return mCompositorBackendType;
   }
 
-  layers::ImageContainer* GetImageContainer();
-
   bool ShouldResistFingerprinting() const;
 
   void QueueCommitToCompositor();
@@ -204,7 +198,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   layers::LayersBackend mCompositorBackendType;
   layers::TextureType mTextureType;
 
-  RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
 };
 
