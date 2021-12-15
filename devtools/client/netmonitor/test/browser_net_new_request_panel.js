@@ -65,3 +65,53 @@ add_task(async function() {
 
   await teardown(monitor);
 });
+
+/**
+ * Test if the context menu open the new HTTP Custom Request Panel
+ * when the pref is true
+ */
+
+add_task(async function() {
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
+    requestCount: 1,
+  });
+  info("Starting test... ");
+
+  const { document, store, windowRequire } = monitor.panelWin;
+
+  // Action should be processed synchronously in tests.
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  await performRequests(monitor, tab, 1);
+
+  await pushPref("devtools.netmonitor.features.newEditAndResend", true);
+
+  info("selecting first request");
+  const firstRequestItem = document.querySelectorAll(".request-list-item")[0];
+  EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequestItem);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequestItem);
+
+  // Cheking if the item "Resend" is hidden
+  is(
+    !!getContextMenuItem(monitor, "request-list-context-resend-only"),
+    false,
+    "The'Resend' item should be hidden when the pref is true."
+  );
+
+  info("opening the new request panel");
+  const waitForPanels = waitForDOM(
+    document,
+    ".monitor-panel .network-action-bar"
+  );
+  getContextMenuItem(monitor, "request-list-context-resend").click();
+  await waitForPanels;
+
+  is(
+    !!document.querySelector("#network-action-bar-HTTP-custom-request-panel"),
+    true,
+    "The 'New Request' header should be visible when the pref is true."
+  );
+
+  await teardown(monitor);
+});
