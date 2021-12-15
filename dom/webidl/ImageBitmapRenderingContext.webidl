@@ -17,6 +17,8 @@
 // to getContext) is "bitmaprenderer".
 [Exposed=(Window,Worker)]
 interface ImageBitmapRenderingContext {
+  readonly attribute CanvasSource? canvas;
+
   // Displays the given ImageBitmap in the canvas associated with this
   // rendering context. Ownership of the ImageBitmap is transferred to
   // the canvas. The caller may not use its reference to the ImageBitmap
