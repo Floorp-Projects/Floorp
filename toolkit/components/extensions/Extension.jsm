@@ -11,6 +11,7 @@ var EXPORTED_SYMBOLS = [
   "ExtensionData",
   "Langpack",
   "Management",
+  "SitePermission",
   "ExtensionAddonObserver",
 ];
 
@@ -144,6 +145,12 @@ XPCOMUtils.defineLazyGetter(this, "LAZY_NO_PROMPT_PERMISSIONS", async () => {
       "OptionalPermissionNoPrompt",
     ])
   );
+});
+
+XPCOMUtils.defineLazyGetter(this, "LAZY_SCHEMA_SITE_PERMISSIONS", async () => {
+  // Wait until all extension API schemas have been loaded and parsed.
+  await Management.lazyInit();
+  return Schemas.getPermissionNames(["SitePermission"]);
 });
 
 const { sharedData } = Services.ppmm;
@@ -377,6 +384,10 @@ var ExtensionAddonObserver = {
   },
 
   onUninstalled(addon) {
+    // Cleanup anything that is used by non-extension addon types
+    // since only extensions have uuid's.
+    ExtensionPermissions.removeAll(addon.id);
+
     let uuid = UUIDMap.get(addon.id, false);
     if (!uuid) {
       return;
@@ -455,8 +466,6 @@ var ExtensionAddonObserver = {
       Services.perms.removeFromPrincipal(principal, "indexedDB");
       Services.perms.removeFromPrincipal(principal, "persistent-storage");
     }
-
-    ExtensionPermissions.removeAll(addon.id);
 
     if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
@@ -1968,6 +1977,24 @@ class LangpackBootstrapScope extends BootstrapScope {
   }
 }
 
+class SitePermissionBootstrapScope extends BootstrapScope {
+  install(data, reason) {}
+  uninstall(data, reason) {}
+
+  startup(data, reason) {
+    // eslint-disable-next-line no-use-before-define
+    this.sitepermission = new SitePermission(data);
+    return this.sitepermission.startup(
+      this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]
+    );
+  }
+
+  shutdown(data, reason) {
+    this.sitepermission.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    this.sitepermission = null;
+  }
+}
+
 let activeExtensionIDs = new Set();
 
 let pendingExtensions = new Map();
@@ -3020,5 +3047,100 @@ class Langpack extends ExtensionData {
     }
 
     resourceProtocol.setSubstitution(this.startupData.langpackId, null);
+  }
+}
+
+class SitePermission extends ExtensionData {
+  constructor(addonData, startupReason) {
+    super(addonData.resourceURI);
+
+    this.hasShutdown = false;
+  }
+
+  async loadManifest() {
+    let [manifestData] = await Promise.all([this.parseManifest()]);
+
+    if (!manifestData) {
+      return;
+    }
+
+    if (!this.id) {
+      this.id = manifestData.id;
+    }
+
+    this.manifest = manifestData.manifest;
+    this.type = manifestData.type;
+    this.sitePermissions = this.manifest.site_permissions;
+    // 1 install_origins is mandatory for this addon type
+    this.siteOrigin = this.manifest.install_origins[0];
+
+    return this.manifest;
+  }
+
+  static getBootstrapScope() {
+    return new SitePermissionBootstrapScope();
+  }
+
+  async startup(reason) {
+    await this.loadManifest();
+
+    this.ensureNoErrors();
+
+    if (this.hasShutdown) {
+      // Startup was interrupted and shutdown() has taken care of unloading
+      // the extension and running cleanup logic.
+      return;
+    }
+
+    const uri = Services.io.newURI(this.siteOrigin);
+    this.sitePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {}
+    );
+
+    // Get all permissions and remove any not contained in site_permissions
+    let site_permissions = await LAZY_SCHEMA_SITE_PERMISSIONS;
+    let existing = Services.perms.getAllForPrincipal(this.sitePrincipal);
+    for (let perm of existing) {
+      if (
+        site_permissions.includes(perm) &&
+        !this.sitePermissions.includes(perm)
+      ) {
+        Services.perms.removeFromPrincipal(this.sitePrincipal, perm);
+      }
+    }
+
+    // Ensure all permissions in site_permissions have been set, but do not
+    // overwrite the permission so the user can override the values in preferences.
+    for (let perm of this.sitePermissions) {
+      let permission = Services.perms.testExactPermissionFromPrincipal(
+        this.sitePrincipal,
+        perm
+      );
+      if (permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+        Services.perms.addFromPrincipal(
+          this.sitePrincipal,
+          perm,
+          Services.perms.ALLOW_ACTION,
+          Services.perms.EXPIRE_NEVER
+        );
+      }
+    }
+
+    Services.obs.notifyObservers(
+      { wrappedJSObject: { sitepermissions: this } },
+      "webextension-sitepermissions-startup"
+    );
+  }
+
+  async shutdown(reason) {
+    this.hasShutdown = true;
+    // Permissions are retained across restarts
+    if (reason == "APP_SHUTDOWN") {
+      return;
+    }
+    for (let perm of this.sitePermissions || []) {
+      Services.perms.removeFromPrincipal(this.sitePrincipal, perm);
+    }
   }
 }
