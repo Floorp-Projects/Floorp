@@ -43,6 +43,7 @@ union Utf8Unit;
 
 namespace js {
 
+class AtomSet;
 class GenericPrinter;
 class LifoAlloc;
 class StringBuffer;
@@ -463,7 +464,8 @@ class alignas(alignof(uint32_t)) ParserAtom {
                               CompilationAtomCache& atomCache) const;
   JSAtom* instantiateAtom(JSContext* cx, ParserAtomIndex index,
                           CompilationAtomCache& atomCache) const;
-  JSAtom* instantiatePermanentAtom(JSContext* cx, ParserAtomIndex index,
+  JSAtom* instantiatePermanentAtom(JSContext* cx, AtomSet& atomSet,
+                                   ParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const;
 
  private:
@@ -615,7 +617,7 @@ class WellKnownParserAtoms {
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache);
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache);
 

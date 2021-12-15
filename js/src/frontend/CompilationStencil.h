@@ -47,6 +47,7 @@ class JSString;
 
 namespace js {
 
+class AtomSet;
 class JSONPrinter;
 class ModuleObject;
 
@@ -1125,7 +1126,7 @@ struct CompilationStencil {
 
   // Decode the special self-hosted stencil
   [[nodiscard]] bool instantiateSelfHostedAtoms(
-      JSContext* cx, CompilationAtomCache& atomCache) const;
+      JSContext* cx, AtomSet& atomSet, CompilationAtomCache& atomCache) const;
   [[nodiscard]] JSScript* instantiateSelfHostedTopLevelForRealm(
       JSContext* cx, CompilationInput& input);
   [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(

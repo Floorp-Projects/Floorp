@@ -18,6 +18,8 @@
 
 namespace js {
 
+class AtomSet;
+
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
  * The returned string is guaranteed to contain only ASCII characters.
@@ -35,8 +37,6 @@ namespace js {
  */
 void TraceAtoms(JSTracer* trc);
 
-void TraceWellKnownSymbols(JSTracer* trc);
-
 extern JSAtom* Atomize(
     JSContext* cx, const char* bytes, size_t length,
     const mozilla::Maybe<uint32_t>& indexValue = mozilla::Nothing());
@@ -53,7 +53,8 @@ extern JSAtom* AtomizeChars(JSContext* cx, mozilla::HashNumber hash,
                             const CharT* chars, size_t length);
 
 template <typename CharT>
-extern JSAtom* PermanentlyAtomizeChars(JSContext* cx, mozilla::HashNumber hash,
+extern JSAtom* PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
+                                       mozilla::HashNumber hash,
                                        const CharT* chars, size_t length);
 
 /**
