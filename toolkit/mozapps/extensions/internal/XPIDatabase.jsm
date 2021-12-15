@@ -146,6 +146,8 @@ const PROP_JSON_FIELDS = [
   "incognito",
   "userPermissions",
   "optionalPermissions",
+  "sitePermissions",
+  "siteOrigin",
   "icons",
   "iconURL",
   "blocklistState",
@@ -1401,6 +1403,8 @@ function defineAddonWrapperProperty(name, getter) {
   "validInstallOrigins",
   "dependencies",
   "signedState",
+  "sitePermissions",
+  "siteOrigin",
   "isCorrectlySigned",
 ].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {

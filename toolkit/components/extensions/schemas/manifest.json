@@ -514,10 +514,14 @@
       },
       {
         "id": "SitePermission",
-        "type": "string",
-        "enum": [
-          "midi",
-          "midi-sysex"
+        "choices": [
+          {
+            "type": "string",
+            "enum": [
+              "midi",
+              "midi-sysex"
+            ]
+          }
         ]
       },
       {
