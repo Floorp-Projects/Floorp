@@ -46,23 +46,31 @@ class OrientationDelegateTest : BaseSessionTest() {
         promise.value
     }
 
+    private fun lockPortrait() {
+        sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
+        val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('portrait-primary')")
+        sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
+        sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_PORTRAIT)
+        promise.value
+    }
+
+    private fun lockLandscape() {
+        sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
+        val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('landscape-primary')")
+        sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
+        sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_LANDSCAPE)
+        promise.value
+    }
+
     @Ignore("disable test for frequently failing Bug 1744372")
     @Test fun orientationLockedAlready() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
         goFullscreen()
         // Lock to the current orientation
         if (activityRule.activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
-            sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
-            val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('portrait-primary')")
-            sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
-            sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_PORTRAIT)
-            promise.value
+            lockPortrait()
         } else if (activityRule.activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
-            val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('landscape-primary')")
-            sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
-            sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_LANDSCAPE)
-            promise.value
+            lockLandscape()
         }
     }
 
@@ -81,23 +89,61 @@ class OrientationDelegateTest : BaseSessionTest() {
         goFullscreen()
         // If the orientation is landscape, lock to portrait and wait for delegate. If portrait, lock to landscape instead.
         if (activityRule.activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
-            sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
-            val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('portrait-primary')")
-            sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT))
-            sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_PORTRAIT)
-            promise.value
+            lockPortrait()
         } else if (activityRule.activity.resources.configuration.orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-            sessionRule.delegateUntilTestEnd(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
-            val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('landscape-primary')")
-            sessionRule.waitUntilCalled(TestOrientationDelegate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE))
-            sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_LANDSCAPE)
-            promise.value
+            lockLandscape()
         }
+    }
+
+    @Test fun orientationUnlock() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
+        goFullscreen()
+        mainSession.evaluateJS("screen.orientation.unlock()")
+        sessionRule.waitUntilCalled(object : OrientationController.OrientationDelegate {
+            @AssertCalled(count = 1)
+            override fun onOrientationUnlock() {
+                activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        })
+    }
+
+    @Test fun orientationLockUnlock() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.screenorientation.allow-lock" to true))
+        goFullscreen()
+
+        val promise = mainSession.evaluatePromiseJS("screen.orientation.lock('landscape-primary')")
+        sessionRule.waitUntilCalled(object : OrientationController.OrientationDelegate {
+            @AssertCalled(count = 1)
+            override fun onOrientationLock(aOrientation: Int): GeckoResult<AllowOrDeny>? {
+                assertThat(
+                    "The orientation value is as expected",
+                    aOrientation,
+                    equalTo(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+                )
+                activityRule.activity.requestedOrientation = aOrientation
+                return GeckoResult.allow()
+            }
+        })
+        sessionRule.runtime.orientationChanged(Configuration.ORIENTATION_LANDSCAPE)
+        promise.value
+
+        // after locking to orientation landscape, unlock to default
+        mainSession.evaluateJS("screen.orientation.unlock()")
+        sessionRule.waitUntilCalled(object : OrientationController.OrientationDelegate {
+            @AssertCalled(count = 1)
+            override fun onOrientationUnlock() {
+                activityRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        })
     }
 
     inner class TestOrientationDelegate(private val expectedOrientation : Int) : OrientationController.OrientationDelegate {
         override fun onOrientationLock(aOrientation: Int): GeckoResult<AllowOrDeny>? {
-            assertThat("The orientation value is as expected", aOrientation, equalTo(expectedOrientation))
+            assertThat(
+                "The orientation value is as expected",
+                aOrientation,
+                equalTo(expectedOrientation)
+            )
             activityRule.activity.requestedOrientation = aOrientation
             return GeckoResult.allow()
         }
