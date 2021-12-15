@@ -24,7 +24,6 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
