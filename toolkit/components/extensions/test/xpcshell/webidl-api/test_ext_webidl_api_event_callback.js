@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+/* import-globals-from ../head_service_worker.js */
+
 AddonTestUtils.init(this);
 AddonTestUtils.createAppInfo(
   "xpcshell@tests.mozilla.org",
@@ -418,4 +420,161 @@ add_task(async function test_send_response_multiple_eventListener() {
       }
     },
   });
+});
+
+// Unit test nsIServiceWorkerManager.wakeForExtensionAPIEvent method.
+add_task(async function test_serviceworkermanager_wake_for_api_event_helper() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      version: "1.0",
+      background: {
+        service_worker: "sw.js",
+      },
+      applications: { gecko: { id: "test-bg-sw-wakeup@mochi.test" } },
+    },
+    files: {
+      "sw.js": `
+        dump("Background ServiceWorker - executing\\n");
+        const lifecycleEvents = [];
+        self.oninstall = () => {
+          dump('Background ServiceWorker - oninstall\\n');
+          lifecycleEvents.push("install");
+        };
+        self.onactivate = () => {
+          dump('Background ServiceWorker - onactivate\\n');
+          lifecycleEvents.push("activate");
+        };
+        browser.test.onMessage.addListener(msg => {
+          if (msg === "bgsw-getSWEvents") {
+            browser.test.sendMessage("bgsw-gotSWEvents", lifecycleEvents);
+            return;
+          }
+
+          browser.test.fail("Got unexpected test message: " + msg);
+        });
+
+        const fakeListener01 = () => {};
+        const fakeListener02 = () => {};
+
+        // Adding and removing the same listener, and so we expect
+        // ExtensionEventWakeupMap to not have any wakeup listener
+        // for the runtime.onInstalled event.
+        browser.runtime.onInstalled.addListener(fakeListener01);
+        browser.runtime.onInstalled.removeListener(fakeListener01);
+        // Removing the same listener more than ones should make any
+        // difference, and it shouldn't trigger any assertion in 
+        // debug builds.
+        browser.runtime.onInstalled.removeListener(fakeListener01);
+
+        browser.runtime.onStartup.addListener(fakeListener02);
+        // Removing an unrelated listener, runtime.onStartup is expected to
+        // still have one wakeup listener tracked by ExtensionEventWakeupMap.
+        browser.runtime.onStartup.removeListener(fakeListener01);
+
+        browser.test.sendMessage("bgsw-executed");
+        dump("Background ServiceWorker - executed\\n");
+      `,
+    },
+  });
+
+  const testWorkerWatcher = new TestWorkerWatcher("../data");
+  let watcher = await testWorkerWatcher.watchExtensionServiceWorker(extension);
+
+  await extension.startup();
+
+  info("Wait for the background service worker to be spawned");
+  ok(
+    await watcher.promiseWorkerSpawned,
+    "The extension service worker has been spawned as expected"
+  );
+
+  await extension.awaitMessage("bgsw-executed");
+
+  extension.sendMessage("bgsw-getSWEvents");
+  let lifecycleEvents = await extension.awaitMessage("bgsw-gotSWEvents");
+  Assert.deepEqual(
+    lifecycleEvents,
+    ["install", "activate"],
+    "Got install and activate lifecycle events as expected"
+  );
+
+  info("Wait for the background service worker to be terminated");
+  ok(
+    await watcher.terminate(),
+    "The extension service worker has been terminated as expected"
+  );
+
+  const swReg = testWorkerWatcher.getRegistration(extension);
+  ok(swReg, "Got a service worker registration");
+  ok(swReg?.activeWorker, "Got an active worker");
+
+  watcher = await testWorkerWatcher.watchExtensionServiceWorker(extension);
+
+  const extensionBaseURL = extension.extension.baseURI.spec;
+
+  async function testWakeupOnAPIEvent(eventName, expectedResult) {
+    const result = await testWorkerWatcher.swm.wakeForExtensionAPIEvent(
+      extensionBaseURL,
+      "runtime",
+      eventName
+    );
+    equal(
+      result,
+      expectedResult,
+      `Got expected result from wakeForExtensionAPIEvent for ${eventName}`
+    );
+    info(
+      `Wait for the background service worker to be spawned for ${eventName}`
+    );
+    ok(
+      await watcher.promiseWorkerSpawned,
+      "The extension service worker has been spawned as expected"
+    );
+    await extension.awaitMessage("bgsw-executed");
+  }
+
+  info("Wake up active worker for API event");
+  // Extension API event listener has been added and removed synchronously by
+  // the worker script, and so we expect the promise to resolve successfully
+  // to `false`.
+  await testWakeupOnAPIEvent("onInstalled", false);
+
+  extension.sendMessage("bgsw-getSWEvents");
+  lifecycleEvents = await extension.awaitMessage("bgsw-gotSWEvents");
+  Assert.deepEqual(
+    lifecycleEvents,
+    [],
+    "No install and activate lifecycle events expected on spawning active worker"
+  );
+
+  info("Wait for the background service worker to be terminated");
+  ok(
+    await watcher.terminate(),
+    "The extension service worker has been terminated as expected"
+  );
+
+  info("Wakeup again with an API event that has been subscribed");
+  // Extension API event listener has been added synchronously (and not removed)
+  // by the worker script, and so we expect the promise to resolve successfully
+  // to `true`.
+  await testWakeupOnAPIEvent("onStartup", true);
+
+  info("Wait for the background service worker to be terminated");
+  ok(
+    await watcher.terminate(),
+    "The extension service worker has been terminated as expected"
+  );
+
+  await extension.unload();
+
+  await Assert.rejects(
+    testWorkerWatcher.swm.wakeForExtensionAPIEvent(
+      extensionBaseURL,
+      "runtime",
+      "onStartup"
+    ),
+    /Not an extension principal or extension disabled/,
+    "Got the expected rejection on wakeForExtensionAPIEvent called for an uninstalled extension"
+  );
 });
