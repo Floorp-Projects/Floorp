@@ -42,6 +42,7 @@
           <button is="category-button" viewid="addons://list/plugin" class="category" role="tab" name="plugin"></button>
           <button is="category-button" viewid="addons://list/dictionary" class="category" role="tab" name="dictionary" hidden default-hidden></button>
           <button is="category-button" viewid="addons://list/locale" class="category" role="tab" name="locale" hidden default-hidden></button>
+          <button is="category-button" viewid="addons://list/sitepermission" class="category" role="tab" name="sitepermission" hidden default-hidden></button>
           <button is="category-button" viewid="addons://updates/available" class="category" role="tab" name="available-updates" hidden default-hidden></button>
           <button is="category-button" viewid="addons://updates/recent" class="category" role="tab" name="recent-updates" hidden default-hidden></button>
         </categories-box>
@@ -132,6 +133,13 @@
       <div class="addon-detail-row addon-permissions-empty" data-l10n-id="addon-permissions-empty" hidden></div>
       <div class="addon-detail-row">
         <a is="support-link" support-page="extension-permissions" data-l10n-id="addon-permissions-learnmore"></a>
+      </div>
+    </template>
+
+    <template name="addon-sitepermissions-list">
+      <div class="addon-permissions-required" hidden>
+        <h2 class="permission-header" data-l10n-id="addon-sitepermissions-required"><span data-l10n-name="hostname" class="addon-sitepermissions-host"></span></h2>
+        <ul class="addon-permissions-list"></ul>
       </div>
     </template>
 
@@ -231,6 +239,9 @@
               data-l10n-id="detail-contributions-button"
               data-l10n-attrs="accesskey">
             </button>
+          </div>
+          <div class="addon-detail-sitepermissions">
+            <addon-sitepermissions-list></addon-sitepermissions-list>
           </div>
           <div class="addon-detail-row addon-detail-row-updates">
             <label data-l10n-id="addon-detail-updates-label"></label>

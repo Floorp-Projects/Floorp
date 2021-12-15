@@ -165,6 +165,16 @@ add_task(async function enableHtmlViews() {
       type: "extension",
     },
     {
+      id: "sitepermission@mochi.test",
+      name: "Test site permission add-on",
+      creator: { name: "you got it" },
+      description: "permission description",
+      fullDescription: "detailed description",
+      siteOrigin: "http://mochi.test",
+      sitePermissions: ["midi"],
+      type: "sitepermission",
+    },
+    {
       id: "theme1@mochi.test",
       name: "Test theme",
       creator: { name: "Artist", url: "http://example.com/artist" },
@@ -778,6 +788,44 @@ add_task(async function testStaticTheme() {
   is(text.textContent, "Artist", "The author is set");
 
   is(rows.length, 0, "There was only 1 row");
+
+  await closeView(win);
+});
+
+add_task(async function testSitePermission() {
+  let win = await loadInitialView("sitepermission");
+
+  // The list card.
+  let card = getAddonCard(win, "sitepermission@mochi.test");
+  ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+
+  // Load the detail view.
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = getAddonCard(win, "sitepermission@mochi.test");
+
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingHidden(card.details.tabGroup);
+
+  let rows = getDetailRows(card);
+
+  // Automatic updates.
+  let row = rows.shift();
+  checkLabel(row, "updates");
+
+  // Author.
+  let author = rows.shift();
+  checkLabel(author, "author");
+
+  is(rows.length, 0, "There was only 1 row");
+
+  let permissions = Array.from(
+    card.querySelectorAll(".addon-permissions-list .permission-info")
+  );
+  is(permissions.length, 1, "a permission is listed");
+  is(permissions[0].textContent, "Access MIDI devices", "got midi permission");
 
   await closeView(win);
 });

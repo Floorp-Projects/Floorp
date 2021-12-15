@@ -172,6 +172,7 @@ const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
   "locale",
+  "sitepermission",
   "theme",
 ]);
 
@@ -3327,6 +3328,13 @@ var addonTypes = [
     "type.locale.name",
     AddonManager.VIEW_TYPE_LIST,
     8000
+  ),
+  new AddonManagerPrivate.AddonType(
+    "sitepermission",
+    URI_EXTENSION_STRINGS,
+    "type.sitepermission.name",
+    AddonManager.VIEW_TYPE_LIST,
+    9000
   ),
 ];
 
