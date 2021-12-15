@@ -5052,6 +5052,20 @@ public class GeckoSession {
   }
 
   /**
+   * Get a matrix for transforming from layout device client coordinates to screen coordinates.
+   *
+   * @param matrix Matrix to be replaced by the transformation matrix.
+   * @see #getClientToScreenMatrix(Matrix)
+   * @see #getPageToSurfaceMatrix(Matrix)
+   */
+  @UiThread
+  /* package */ void getClientToScreenOffsetMatrix(@NonNull final Matrix matrix) {
+    ThreadUtils.assertOnUiThread();
+
+    matrix.postTranslate(mLeft, mTop);
+  }
+
+  /**
    * Get the bounds of the client area in client coordinates. The returned top-left coordinates are
    * always (0, 0). Use the matrix from {@link #getClientToSurfaceMatrix(Matrix)} or {@link
    * #getClientToScreenMatrix(Matrix)} to map these bounds to surface or screen coordinates,

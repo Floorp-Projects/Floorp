@@ -421,7 +421,7 @@ import org.mozilla.gecko.util.ThreadUtils;
     mCursorAnchorInfoBuilder.reset();
 
     final Matrix matrix = new Matrix();
-    mSession.getClientToScreenMatrix(matrix);
+    mSession.getClientToScreenOffsetMatrix(matrix);
     mCursorAnchorInfoBuilder.setMatrix(matrix);
 
     for (int i = 0; i < rects.length; i++) {
