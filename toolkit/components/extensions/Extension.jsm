@@ -3117,10 +3117,27 @@ class SitePermission extends ExtensionData {
     return new SitePermissionBootstrapScope();
   }
 
+  // Array of principals that may be set by the addon.
+  getSupportedPrincipals() {
+    if (!this.siteOrigin) {
+      return [];
+    }
+    const uri = Services.io.newURI(this.siteOrigin);
+    return [
+      Services.scriptSecurityManager.createContentPrincipal(uri, {}),
+      Services.scriptSecurityManager.createContentPrincipal(uri, {
+        privateBrowsingId: 1,
+      }),
+    ];
+  }
+
   async startup(reason) {
     await this.loadManifest();
 
     this.ensureNoErrors();
+
+    let site_permissions = await LAZY_SCHEMA_SITE_PERMISSIONS;
+    let perms = await ExtensionPermissions.get(this.id);
 
     if (this.hasShutdown) {
       // Startup was interrupted and shutdown() has taken care of unloading
@@ -3128,38 +3145,40 @@ class SitePermission extends ExtensionData {
       return;
     }
 
-    const uri = Services.io.newURI(this.siteOrigin);
-    this.sitePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      {}
-    );
+    let privateAllowed = perms.permissions.includes(PRIVATE_ALLOWED_PERMISSION);
+    let principals = this.getSupportedPrincipals();
 
-    // Get all permissions and remove any not contained in site_permissions
-    let site_permissions = await LAZY_SCHEMA_SITE_PERMISSIONS;
-    let existing = Services.perms.getAllForPrincipal(this.sitePrincipal);
-    for (let perm of existing) {
-      if (
-        site_permissions.includes(perm) &&
-        !this.sitePermissions.includes(perm)
-      ) {
-        Services.perms.removeFromPrincipal(this.sitePrincipal, perm);
+    // Remove any permissions not contained in site_permissions
+    for (let principal of principals) {
+      let existing = Services.perms.getAllForPrincipal(principal);
+      for (let perm of existing) {
+        if (
+          site_permissions.includes(perm) &&
+          !this.sitePermissions.includes(perm)
+        ) {
+          Services.perms.removeFromPrincipal(principal, perm);
+        }
       }
     }
 
     // Ensure all permissions in site_permissions have been set, but do not
     // overwrite the permission so the user can override the values in preferences.
     for (let perm of this.sitePermissions) {
-      let permission = Services.perms.testExactPermissionFromPrincipal(
-        this.sitePrincipal,
-        perm
-      );
-      if (permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
-        Services.perms.addFromPrincipal(
-          this.sitePrincipal,
-          perm,
-          Services.perms.ALLOW_ACTION,
-          Services.perms.EXPIRE_NEVER
+      for (let principal of principals) {
+        let permission = Services.perms.testExactPermissionFromPrincipal(
+          principal,
+          perm
         );
+        if (permission == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+          let { privateBrowsingId } = principal.originAttributes;
+          let allow = privateBrowsingId == 0 || privateAllowed;
+          Services.perms.addFromPrincipal(
+            principal,
+            perm,
+            allow ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
+            Services.perms.EXPIRE_NEVER
+          );
+        }
       }
     }
 
@@ -3175,8 +3194,12 @@ class SitePermission extends ExtensionData {
     if (reason == "APP_SHUTDOWN") {
       return;
     }
+    let principals = this.getSupportedPrincipals();
+
     for (let perm of this.sitePermissions || []) {
-      Services.perms.removeFromPrincipal(this.sitePrincipal, perm);
+      for (let principal of principals) {
+        Services.perms.removeFromPrincipal(principal, perm);
+      }
     }
   }
 }
