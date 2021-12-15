@@ -3,11 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { setupCommands, clientCommands } from "./firefox/commands";
-import {
-  setupCreate,
-  createPause,
-  prepareSourcePayload,
-} from "./firefox/create";
+import { setupCreate, createPause } from "./firefox/create";
 import { features } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
@@ -153,18 +149,28 @@ function onTargetDestroyed({ targetFront }) {
 }
 
 async function onSourceAvailable(sources) {
-  const frontendSources = await Promise.all(
+  const sourceInfo = await Promise.all(
     sources
-      .filter(source => {
-        return !source.targetFront.isDestroyed();
+      .filter(sourceFront => {
+        return !sourceFront.targetFront.isDestroyed();
       })
-      .map(async source => {
-        const threadFront = await source.targetFront.getFront("thread");
-        const frontendSource = prepareSourcePayload(threadFront, source);
-        return frontendSource;
+      .map(async sourceFront => {
+        const threadFront = await sourceFront.targetFront.getFront("thread");
+        // Maintain backward-compat with servers that only return introductionUrl and
+        // not sourceMapBaseURL.
+        if (
+          typeof sourceFront.sourceMapBaseURL === "undefined" &&
+          typeof sourceFront.introductionUrl !== "undefined"
+        ) {
+          sourceFront.sourceMapBaseURL =
+            sourceFront.url || sourceFront.introductionUrl || null;
+          delete sourceFront.introductionUrl;
+        }
+
+        return { thread: threadFront.actor, sourceFront };
       })
   );
-  await actions.newGeneratedSources(frontendSources);
+  await actions.newGeneratedSources(sourceInfo);
 }
 
 async function onThreadStateAvailable(resources) {

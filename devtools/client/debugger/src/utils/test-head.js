@@ -110,7 +110,7 @@ function createMakeSource() {
     return {
       id: name,
       thread: "FakeThread",
-      source: {
+      sourceFront: {
         actor: `${name}-${index}-actor`,
         url: `http://localhost:8000/examples/${name}`,
         sourceMapBaseURL: props.sourceMapBaseURL || null,
