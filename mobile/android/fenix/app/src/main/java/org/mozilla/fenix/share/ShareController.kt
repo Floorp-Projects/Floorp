@@ -204,7 +204,9 @@ class DefaultShareController(
     }
 
     @VisibleForTesting
-    internal fun getShareSubject() = shareSubject ?: shareData.map { it.title }.joinToString(", ")
+    internal fun getShareSubject() =
+        shareSubject ?: shareData.filterNot { it.title.isNullOrEmpty() }
+            .joinToString(", ") { it.title.toString() }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     @VisibleForTesting

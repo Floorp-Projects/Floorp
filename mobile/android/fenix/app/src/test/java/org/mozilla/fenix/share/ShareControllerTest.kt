@@ -188,6 +188,73 @@ class ShareControllerTest {
     }
 
     @Test
+    fun `getShareSubject should return the shareSubject when shareSubject is not null`() {
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(
+            activityContext, shareSubject, shareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        )
+
+        assertEquals(shareSubject, testController.getShareSubject())
+    }
+
+    @Test
+    fun `getShareSubject should return a combination of non-null titles when shareSubject is null`() {
+        val activityContext: Context = mockk<Activity>()
+        val testController = DefaultShareController(
+            activityContext, null, shareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        )
+
+        assertEquals("title0, title1", testController.getShareSubject())
+    }
+
+    @Test
+    fun `getShareSubject should return just the not null titles string when shareSubject is  null`() {
+        val activityContext: Context = mockk<Activity>()
+        val partialTitlesShareData = listOf(
+            ShareData(url = "url0", title = null),
+            ShareData(url = "url1", title = "title1")
+        )
+        val testController = DefaultShareController(
+            activityContext, null, partialTitlesShareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        )
+
+        assertEquals("title1", testController.getShareSubject())
+    }
+
+    @Test
+    fun `getShareSubject should return empty string when shareSubject and all titles are null`() {
+        val activityContext: Context = mockk<Activity>()
+        val noTitleShareData = listOf(
+            ShareData(url = "url0", title = null),
+            ShareData(url = "url1", title = null)
+        )
+        val testController = DefaultShareController(
+            activityContext, null, noTitleShareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        )
+
+        assertEquals("", testController.getShareSubject())
+    }
+
+    @Test
+    fun `getShareSubject should return empty string when shareSubject is null and and all titles are empty`() {
+        val activityContext: Context = mockk<Activity>()
+        val noTitleShareData = listOf(
+            ShareData(url = "url0", title = ""),
+            ShareData(url = "url1", title = "")
+        )
+        val testController = DefaultShareController(
+            activityContext, null, noTitleShareData, mockk(),
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        )
+
+        assertEquals("", testController.getShareSubject())
+    }
+
+    @Test
     @Suppress("DeferredResultUnused")
     fun `handleShareToDevice should share to account device, inform callbacks and dismiss`() {
         val deviceToShareTo = Device(
