@@ -31,6 +31,7 @@ except Exception:
     psutil = None
 
 from mach.mixin.logging import LoggingMixin
+from mach.util import get_state_dir
 import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
@@ -1511,7 +1512,7 @@ class BuildDriver(MozbuildObject):
 
         build_site = CommandSiteManager.from_environment(
             self.topsrcdir,
-            self.statedir,
+            get_state_dir(specific_to_topsrcdir=True, topsrcdir=self.topsrcdir),
             "build",
             os.path.join(self.topobjdir, "_virtualenvs"),
         )
