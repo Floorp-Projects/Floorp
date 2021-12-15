@@ -243,6 +243,10 @@ var ScreenshotsUtils = {
       dialog._frame.contentDocument
         .getElementById("preview-image-div")
         .appendChild(newImg);
+
+      if (Cu.isInAutomation) {
+        Services.obs.notifyObservers(null, "screenshots-preview-ready");
+      }
     });
 
     snapshot.close();
