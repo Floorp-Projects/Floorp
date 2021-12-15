@@ -14,7 +14,7 @@ use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
-use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks, SubSliceIndex};
+use crate::picture::{SurfaceInfo, SurfaceIndex, SurfaceRenderTasks, SubSliceIndex};
 use crate::picture::{BackdropKind, SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
@@ -31,7 +31,7 @@ use crate::scene::{BuiltScene, SceneProperties};
 use crate::space::SpaceMapper;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
-use crate::util::{VecHelper, Recycler, Preallocator};
+use crate::util::{VecHelper, Preallocator};
 use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
 use plane_split::Splitter;
 
@@ -124,7 +124,6 @@ impl FrameGlobalResources {
 }
 
 pub struct FrameScratchBuffer {
-    surfaces: Vec<SurfaceInfo>,
     dirty_region_stack: Vec<DirtyRegion>,
     surface_stack: Vec<SurfaceIndex>,
     clip_chain_stack: ClipChainStack,
@@ -133,7 +132,6 @@ pub struct FrameScratchBuffer {
 impl Default for FrameScratchBuffer {
     fn default() -> Self {
         FrameScratchBuffer {
-            surfaces: Vec::new(),
             dirty_region_stack: Vec::new(),
             surface_stack: Vec::new(),
             clip_chain_stack: ClipChainStack::new(),
@@ -143,20 +141,9 @@ impl Default for FrameScratchBuffer {
 
 impl FrameScratchBuffer {
     pub fn begin_frame(&mut self) {
-        self.surfaces.clear();
         self.dirty_region_stack.clear();
         self.surface_stack.clear();
         self.clip_chain_stack.clear();
-    }
-
-    pub fn recycle(&mut self, recycler: &mut Recycler) {
-        recycler.recycle_vec(&mut self.surfaces);
-        // Don't call recycle on the stacks because the reycler's
-        // role is to get rid of allocations when the capacity
-        // is much larger than the lengths. with stacks the
-        // length varies through the frame but is supposedly
-        // back to zero by the end so we would always throw the
-        // allocation away.
     }
 }
 
@@ -359,20 +346,6 @@ impl FrameBuilder {
             root_spatial_node_index,
         };
 
-        // Construct a dummy root surface, that represents the
-        // main framebuffer surface.
-        let root_surface = SurfaceInfo::new(
-            root_spatial_node_index,
-            root_spatial_node_index,
-            0.0,
-            global_screen_world_rect,
-            spatial_tree,
-            global_device_pixel_scale,
-            (1.0, 1.0),
-        );
-        let mut surfaces = scratch.frame.surfaces.take();
-        surfaces.push(root_surface);
-
         scene.picture_graph.build_update_passes(
             &mut scene.prim_store.pictures,
             &frame_context,
@@ -380,14 +353,14 @@ impl FrameBuilder {
 
         scene.picture_graph.assign_surfaces(
             &mut scene.prim_store.pictures,
-            &mut surfaces,
+            &mut scene.surfaces,
             tile_caches,
             &frame_context,
         );
 
         scene.picture_graph.propagate_bounding_rects(
             &mut scene.prim_store.pictures,
-            &mut surfaces,
+            &mut scene.surfaces,
             &frame_context,
             data_stores,
             &mut scene.prim_instances,
@@ -449,14 +422,14 @@ impl FrameBuilder {
                         update_primitive_visibility(
                             &mut scene.prim_store,
                             *pic_index,
-                            ROOT_SURFACE_INDEX,
+                            None,
                             &world_culling_rect,
                             &visibility_context,
                             &mut visibility_state,
                             tile_cache,
                             true,
                             &mut scene.prim_instances,
-                            &mut surfaces,
+                            &mut scene.surfaces,
                         );
 
                         // Build the dirty region(s) for this tile cache.
@@ -487,7 +460,7 @@ impl FrameBuilder {
             gpu_cache,
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
-            surfaces: &mut surfaces,
+            surfaces: &mut scene.surfaces,
             dirty_region_stack: scratch.frame.dirty_region_stack.take(),
             composite_state,
             num_visible_primitives: 0,
@@ -515,7 +488,7 @@ impl FrameBuilder {
                     *pic_index,
                     root_spatial_node_index,
                     root_spatial_node_index,
-                    ROOT_SURFACE_INDEX,
+                    None,
                     SubpixelMode::Allow,
                     &mut frame_state,
                     &frame_context,
@@ -552,7 +525,6 @@ impl FrameBuilder {
         profile.set(profiler::VISIBLE_PRIMITIVES, frame_state.num_visible_primitives);
 
         scratch.frame.dirty_region_stack = frame_state.dirty_region_stack.take();
-        scratch.frame.surfaces = surfaces.take();
 
         {
             profile_marker!("BlockOnResources");
@@ -589,6 +561,10 @@ impl FrameBuilder {
         scratch.begin_frame();
         gpu_cache.begin_frame(stamp);
         resource_cache.begin_frame(stamp, gpu_cache, profile);
+
+        // TODO(gw): Follow up patches won't clear this, as they'll be assigned
+        //           statically during scene building.
+        scene.surfaces.clear();
 
         self.globals.update(gpu_cache);
 
@@ -667,7 +643,7 @@ impl FrameBuilder {
                     batch_lookback_count: scene.config.batch_lookback_count,
                     spatial_tree,
                     data_stores,
-                    surfaces: &scratch.frame.surfaces,
+                    surfaces: &scene.surfaces,
                     scratch: &mut scratch.primitive,
                     screen_world_rect,
                     globals: &self.globals,
@@ -707,7 +683,7 @@ impl FrameBuilder {
                 batch_lookback_count: scene.config.batch_lookback_count,
                 spatial_tree,
                 data_stores,
-                surfaces: &scratch.frame.surfaces,
+                surfaces: &scene.surfaces,
                 scratch: &mut scratch.primitive,
                 screen_world_rect,
                 globals: &self.globals,
