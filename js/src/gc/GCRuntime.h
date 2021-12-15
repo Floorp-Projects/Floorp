@@ -285,6 +285,10 @@ class GCRuntime {
   void finishRoots();
   void finish();
 
+#ifdef DEBUG
+  void assertNoPermanentSharedThings();
+#endif
+
   void freezePermanentSharedThings();
   template <typename T>
   void freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
