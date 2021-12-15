@@ -871,6 +871,8 @@ public final class GeckoRuntime implements Parcelable {
       return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
     } else if (geckoOrientation == ScreenOrientation.LANDSCAPE_SECONDARY.value) {
       return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+    } else if (geckoOrientation == ScreenOrientation.DEFAULT.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
     }
     return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
   }
@@ -900,6 +902,19 @@ public final class GeckoRuntime implements Parcelable {
           }
         });
     return res;
+  }
+
+  /** Unlock screen orientation using OrientationController's onOrientationUnlock. */
+  @WrapForJNI(calledFrom = "gecko")
+  private void unlockScreenOrientation() {
+    ThreadUtils.runOnUiThread(
+        () -> {
+          final OrientationController.OrientationDelegate delegate =
+              getOrientationController().getDelegate();
+          if (delegate != null) {
+            delegate.onOrientationUnlock();
+          }
+        });
   }
 
   /**

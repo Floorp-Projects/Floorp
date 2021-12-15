@@ -126,13 +126,7 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
 
 RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
     const hal::ScreenOrientation& aOrientation) {
-  // Force the default orientation to be portrait-primary.
-  hal::ScreenOrientation orientation =
-      aOrientation == eScreenOrientation_Default
-          ? eScreenOrientation_PortraitPrimary
-          : aOrientation;
-
-  switch (orientation) {
+  switch (aOrientation) {
     // The Android backend only supports these orientations.
     case eScreenOrientation_PortraitPrimary:
     case eScreenOrientation_PortraitSecondary:
@@ -145,7 +139,7 @@ RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
     case eScreenOrientation_Default: {
       java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
       if (runtime != NULL) {
-        auto result = runtime->LockScreenOrientation(orientation);
+        auto result = runtime->LockScreenOrientation(aOrientation);
         auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
         return geckoResult
                    ? MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
@@ -160,7 +154,12 @@ RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
   }
 }
 
-void UnlockScreenOrientation() {}
+void UnlockScreenOrientation() {
+  java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+  if (runtime != NULL) {
+    runtime->UnlockScreenOrientation();
+  }
+}
 
 }  // namespace hal_impl
 }  // namespace mozilla
