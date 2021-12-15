@@ -26,12 +26,12 @@ add_task(async () => {
     "Ensure we begin without value."
   );
 
-  await Services.fog.testTriggerMetrics(Ci.nsIXULRuntime.PROCESS_TYPE_GPU);
+  Services.fog.testTriggerGPUMetrics();
   await Services.fog.testFlushAllChildren();
 
   is(
+    45326, // See gfx/ipc/GPUParent.cpp's RecvTestTriggerMetrics().
     Glean.testOnlyIpc.aCounter.testGetValue(),
-    Ci.nsIXULRuntime.PROCESS_TYPE_GPU,
     "Ensure the GPU-process-set value shows up in the parent process."
   );
 });
