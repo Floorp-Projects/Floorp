@@ -60,6 +60,15 @@ struct ServiceWorkerNotificationEventOpArgs {
   uint32_t disableOpenClickDelay;
 };
 
+struct ServiceWorkerExtensionAPIEventOpArgs {
+  // WebExtensions API namespace and event names, for a list of the API namespaces
+  // and related API event names refer to the API JSONSchema files in-tree:
+  //
+  // https://searchfox.org/mozilla-central/search?q=&path=extensions%2Fschemas%2F*.json
+  nsString apiNamespace;
+  nsString apiEventName;
+};
+
 struct ServiceWorkerMessageEventOpArgs {
   ClientInfoAndState clientInfoAndState;
   ClonedOrErrorMessageData clonedData;
@@ -101,6 +110,7 @@ union ServiceWorkerOpArgs {
   ServiceWorkerPushSubscriptionChangeEventOpArgs;
   ServiceWorkerNotificationEventOpArgs;
   ServiceWorkerMessageEventOpArgs;
+  ServiceWorkerExtensionAPIEventOpArgs;
   ParentToChildServiceWorkerFetchEventOpArgs;
 };
 
@@ -163,10 +173,15 @@ struct ServiceWorkerFetchEventOpResult {
   nsresult rv;
 };
 
+struct ServiceWorkerExtensionAPIEventOpResult {
+  bool extensionAPIEventListenerWasAdded;
+};
+
 union ServiceWorkerOpResult {
   nsresult;
   ServiceWorkerCheckScriptEvaluationOpResult;
   ServiceWorkerFetchEventOpResult;
+  ServiceWorkerExtensionAPIEventOpResult;
 };
 
 }  // namespace dom

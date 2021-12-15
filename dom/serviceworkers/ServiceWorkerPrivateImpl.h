@@ -41,6 +41,9 @@ class ServiceWorkerRegistrationInfo;
 
 class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
                                        public RemoteWorkerObserver {
+  using PromiseExtensionWorkerHasListener =
+      ServiceWorkerPrivate::PromiseExtensionWorkerHasListener;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerPrivateImpl, override);
 
@@ -100,6 +103,10 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
                           nsCOMPtr<nsIInterceptedChannel> aChannel,
                           const nsAString& aClientId,
                           const nsAString& aResultingClientId) override;
+
+  RefPtr<PromiseExtensionWorkerHasListener> WakeForExtensionAPIEvent(
+      const nsAString& aExtensionAPINamespace,
+      const nsAString& aExtensionAPIEventName) override;
 
   nsresult SpawnWorkerIfNeeded() override;
 
