@@ -469,6 +469,7 @@ ExtensionAddonObserver.init();
 
 const manifestTypes = new Map([
   ["theme", "manifest.ThemeManifest"],
+  ["sitepermission", "manifest.WebExtensionSitePermissionsManifest"],
   ["langpack", "manifest.WebExtensionLangpackManifest"],
   ["dictionary", "manifest.WebExtensionDictionaryManifest"],
   ["extension", "manifest.WebExtensionManifest"],
@@ -1000,6 +1001,8 @@ class ExtensionData {
       this.type = "langpack";
     } else if (this.manifest.dictionaries) {
       this.type = "dictionary";
+    } else if (this.manifest.site_permissions) {
+      this.type = "sitepermission";
     } else {
       this.type = "extension";
     }
