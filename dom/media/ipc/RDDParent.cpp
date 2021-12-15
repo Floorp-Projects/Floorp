@@ -48,6 +48,7 @@
 
 #include "mozilla/ipc/ProcessUtils.h"
 #include "nsDebugImpl.h"
+#include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -272,7 +273,7 @@ mozilla::ipc::IPCResult RDDParent::RecvFlushFOGData(
 
 mozilla::ipc::IPCResult RDDParent::RecvTestTriggerMetrics(
     TestTriggerMetricsResolver&& aResolve) {
-  mozilla::glean::test_only_ipc::a_counter.Add(45327);
+  mozilla::glean::test_only_ipc::a_counter.Add(nsIXULRuntime::PROCESS_TYPE_RDD);
   aResolve(true);
   return IPC_OK();
 }
