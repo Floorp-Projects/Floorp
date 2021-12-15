@@ -852,7 +852,6 @@ struct JSRuntime {
     return permanentAtomsDuringInit_.ref();
   }
 
-  bool initMainAtomsTables(JSContext* cx);
   void tracePermanentThingsDuringInit(JSTracer* trc);
 
   // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
