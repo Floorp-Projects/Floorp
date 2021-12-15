@@ -12,7 +12,6 @@
 
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/StructuredCloneTags.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "MainThreadUtils.h"
 #include "jsapi.h"

@@ -22,7 +22,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkletGlobalScope.h"

@@ -16,7 +16,6 @@
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
 #include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 
 #include "mozilla/dom/Promise.h"
