@@ -48,6 +48,17 @@ ImageBitmapRenderingContext::ClipToIntrinsicSize() {
   return result.forget();
 }
 
+void ImageBitmapRenderingContext::GetCanvas(
+    Nullable<OwningHTMLCanvasElementOrOffscreenCanvas>& retval) const {
+  if (mCanvasElement && !mCanvasElement->IsInNativeAnonymousSubtree()) {
+    retval.SetValue().SetAsHTMLCanvasElement() = mCanvasElement;
+  } else if (mOffscreenCanvas) {
+    retval.SetValue().SetAsOffscreenCanvas() = mOffscreenCanvas;
+  } else {
+    retval.SetNull();
+  }
+}
+
 void ImageBitmapRenderingContext::TransferImageBitmap(
     ImageBitmap& aImageBitmap) {
   TransferFromImageBitmap(&aImageBitmap);
