@@ -434,7 +434,7 @@ class WebIDLChildAPIManager extends ChildAPIManager {
           // Remove the previously added listener and forget the cleanup
           // observer previously passed to context.callOnClose.
           listener._callOnClose.close();
-          this.contet.forgetOnclose(listener._callOnClose);
+          this.context.forgetOnClose(listener._callOnClose);
           this.forgetListenerWrapper(request);
         }
         return undefined;
