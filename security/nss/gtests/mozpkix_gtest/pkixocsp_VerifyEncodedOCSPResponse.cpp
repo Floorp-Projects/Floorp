@@ -217,9 +217,13 @@ public:
                     const TestSignatureAlgorithm& signatureAlgorithm,
        /*optional*/ const ByteString* certs = nullptr,
        /*optional*/ OCSPResponseExtension* singleExtensions = nullptr,
-       /*optional*/ OCSPResponseExtension* responseExtensions = nullptr)
+       /*optional*/ OCSPResponseExtension* responseExtensions = nullptr,
+       /*optional*/ DigestAlgorithm certIDHashAlgorithm = DigestAlgorithm::sha1,
+       /*optional*/ ByteString certIDHashAlgorithmEncoded = ByteString())
   {
     OCSPResponseContext context(certID, producedAt);
+    context.certIDHashAlgorithm = certIDHashAlgorithm;
+    context.certIDHashAlgorithmEncoded = certIDHashAlgorithmEncoded;
     if (signerName) {
       context.signerNameDER = CNToDERName(signerName);
       EXPECT_FALSE(ENCODING_FAILED(context.signerNameDER));
@@ -465,6 +469,72 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, ct_extension)
   ASSERT_EQ(BytesToByteString(dummySctList),
             trustDomain.signedCertificateTimestamps);
 }
+
+struct CertIDHashAlgorithm
+{
+  DigestAlgorithm hashAlgorithm;
+  ByteString encodedHashAlgorithm;
+  Result expectedResult;
+};
+
+// python DottedOIDToCode.py --alg id-sha1 1.3.14.3.2.26
+static const uint8_t alg_id_sha1[] = {
+  0x30, 0x07, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a
+};
+// python DottedOIDToCode.py --alg id-sha256 2.16.840.1.101.3.4.2.1
+static const uint8_t alg_id_sha256[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01
+};
+static const uint8_t not_an_encoded_hash_oid[] = {
+  0x01, 0x02, 0x03, 0x04
+};
+
+static const CertIDHashAlgorithm CERTID_HASH_ALGORITHMS[] = {
+  { DigestAlgorithm::sha1, ByteString(), Success },
+  { DigestAlgorithm::sha256, ByteString(), Success },
+  { DigestAlgorithm::sha384, ByteString(), Success },
+  { DigestAlgorithm::sha512, ByteString(), Success },
+  { DigestAlgorithm::sha256, BytesToByteString(alg_id_sha1),
+    Result::ERROR_OCSP_MALFORMED_RESPONSE },
+  { DigestAlgorithm::sha1, BytesToByteString(alg_id_sha256),
+    Result::ERROR_OCSP_MALFORMED_RESPONSE },
+  { DigestAlgorithm::sha1, BytesToByteString(not_an_encoded_hash_oid),
+    Result::ERROR_OCSP_MALFORMED_RESPONSE },
+};
+
+class pkixocsp_VerifyEncodedResponse_CertIDHashAlgorithm
+  : public pkixocsp_VerifyEncodedResponse_successful
+  , public ::testing::WithParamInterface<CertIDHashAlgorithm>
+{
+};
+
+TEST_P(pkixocsp_VerifyEncodedResponse_CertIDHashAlgorithm, CertIDHashAlgorithm)
+{
+  ByteString responseString(
+               CreateEncodedOCSPSuccessfulResponse(
+                         OCSPResponseContext::good, *endEntityCertID, byKey,
+                         *rootKeyPair, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow,
+                         sha256WithRSAEncryption(),
+                         nullptr,
+                         nullptr,
+                         nullptr,
+                         GetParam().hashAlgorithm,
+                         GetParam().encodedHashAlgorithm));
+  Input response;
+  ASSERT_EQ(Success,
+            response.Init(responseString.data(), responseString.length()));
+  bool expired;
+  ASSERT_EQ(GetParam().expectedResult,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
+                                      Now(), END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      response, expired));
+  ASSERT_FALSE(expired);
+}
+
+INSTANTIATE_TEST_SUITE_P(pkixocsp_VerifyEncodedResponse_CertIDHashAlgorithm,
+                        pkixocsp_VerifyEncodedResponse_CertIDHashAlgorithm,
+                        testing::ValuesIn(CERTID_HASH_ALGORITHMS));
 
 ///////////////////////////////////////////////////////////////////////////////
 // indirect responses (signed by a delegated OCSP responder cert)
