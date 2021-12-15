@@ -1259,51 +1259,6 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl ========================================================
 dnl =
-dnl = Check for external package dependencies
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(External Packages)
-
-dnl ========================================================
-dnl system libevent Support
-dnl ========================================================
-MOZ_ARG_WITH_STRING(system-libevent,
-[  --with-system-libevent[=PFX]
-                          Use system libevent [installed at prefix PFX]],
-    LIBEVENT_DIR=$withval)
-
-_SAVE_CFLAGS=$CFLAGS
-_SAVE_LDFLAGS=$LDFLAGS
-_SAVE_LIBS=$LIBS
-if test "$LIBEVENT_DIR" = yes; then
-    PKG_CHECK_MODULES(MOZ_LIBEVENT, libevent,
-        MOZ_SYSTEM_LIBEVENT=1,
-        LIBEVENT_DIR=/usr)
-fi
-if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
-    MOZ_SYSTEM_LIBEVENT=
-elif test -z "$MOZ_SYSTEM_LIBEVENT"; then
-    CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
-    LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
-    MOZ_CHECK_HEADER(event.h,
-        [if test ! -f "${LIBEVENT_DIR}/include/event.h"; then
-             AC_MSG_ERROR([event.h found, but is not in ${LIBEVENT_DIR}/include])
-         fi],
-        AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
-    AC_CHECK_LIB(event, event_init,
-                 [MOZ_SYSTEM_LIBEVENT=1
-                  MOZ_LIBEVENT_CFLAGS="-I${LIBEVENT_DIR}/include"
-                  MOZ_LIBEVENT_LIBS="-L${LIBEVENT_DIR}/lib -levent"],
-                 [MOZ_SYSTEM_LIBEVENT= MOZ_LIBEVENT_CFLAGS= MOZ_LIBEVENT_LIBS=])
-fi
-CFLAGS=$_SAVE_CFLAGS
-LDFLAGS=$_SAVE_LDFLAGS
-LIBS=$_SAVE_LIBS
-
-AC_SUBST(MOZ_SYSTEM_LIBEVENT)
-
-dnl ========================================================
-dnl =
 dnl = Application
 dnl =
 dnl ========================================================
