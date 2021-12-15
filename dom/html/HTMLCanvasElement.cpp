@@ -1268,11 +1268,8 @@ layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
 }
 
 void HTMLCanvasElement::OnMemoryPressure() {
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
-    // Dispatch to GetActiveEventTarget.
-    return;
-  }
+  // FIXME(aosmond): We need to implement memory pressure handling for
+  // OffscreenCanvas when it is on worker threads. See bug 1746260.
 
   if (mCurrentContext) {
     mCurrentContext->OnMemoryPressure();
