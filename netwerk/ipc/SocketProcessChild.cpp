@@ -15,6 +15,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -177,6 +178,10 @@ void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     NS_WARNING("Shutting down Socket process early due to a crash!");
     ProcessChild::QuickExit();
   }
+
+  // Send the last bits of Glean data over to the main process.
+  glean::FlushFOGData(
+      [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
 
   if (mProfilerController) {
     mProfilerController->Shutdown();
@@ -663,6 +668,12 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRecheckDNS() {
   if (ncs) {
     ncs->RecheckDNS();
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvFlushFOGData(
+    FlushFOGDataResolver&& aResolver) {
+  glean::FlushFOGData(std::move(aResolver));
   return IPC_OK();
 }
 
