@@ -781,6 +781,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modd HTTPS-yn-Unig</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">Mae HTTPS yn darparu cysylltiad diogel, wedi’i amgryptio rhwng %1$s a’r gwefannau rydych chi’n ymweld â nhw. Mae’r mwyafrif o wefannau yn cefnogi HTTPS, ac os yw Modd HTTPS-yn-Unig wedi’i alluogi, yna bydd %1$s yn uwchraddio’r holl gysylltiadau â HTTPS.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Eithriadau</string>
     <!-- Description for the exceptions preference screen-->
