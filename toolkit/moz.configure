@@ -1904,6 +1904,37 @@ with only_when(compile_environment):
     )
 
 
+# PNG
+# ===
+with only_when(compile_environment):
+    system_lib_option(
+        "--with-system-png",
+        nargs="?",
+        help="Use system libpng",
+    )
+
+    @depends("--with-system-png")
+    def deprecated_system_png_path(value):
+        if len(value) == 1:
+            die(
+                "--with-system-png=PATH is not supported anymore. Please use "
+                "--with-system-png and set any necessary pkg-config environment variable."
+            )
+
+    png = pkg_check_modules("MOZ_PNG", "libpng >= 1.6.35", when="--with-system-png")
+
+    check_symbol(
+        "png_get_acTL",
+        flags=png.libs,
+        onerror=lambda: die(
+            "--with-system-png won't work because the system's libpng doesn't have APNG support"
+        ),
+        when="--with-system-png",
+    )
+
+    set_config("MOZ_SYSTEM_PNG", True, when="--with-system-png")
+
+
 # FFmpeg's ffvpx configuration
 # ==============================================================
 with only_when(compile_environment):
