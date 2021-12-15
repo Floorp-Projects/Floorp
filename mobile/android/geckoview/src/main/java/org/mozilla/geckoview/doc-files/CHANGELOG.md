@@ -20,12 +20,14 @@ exclude: true
   and corresponding [`CRASHED_PROCESS_TYPE_*`][97.4] constants, indicating which
   type of process a crash occured in.
 - ⚠️ Deprecated [`EXTRA_CRASH_FATAL`][97.5]. Use `EXTRA_CRASH_PROCESS_TYPE` instead.
+- Added [`OrientationController`][97.6] to allow GeckoView to handle orientation locking.
 
 [97.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#rawId
 [97.2]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#id
 [97.3]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_PROCESS_TYPE
 [97.4]: {{javadoc_uri}}/GeckoRuntime.html#CRASHED_PROCESS_TYPE_MAIN
 [97.5]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_FATAL
+[97.6]: {{javadoc_uri}}/OrientationController.html
 
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
@@ -40,13 +42,11 @@ exclude: true
   HTML content as plain text.
 - Removed deprecated Content Blocking APIs.
   ([bug 1743706]({{bugzilla}}1743706)).
-- Added [`OrientationController`][96.5] to allow GeckoView to handle orientation locking.
 
 [96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
 [96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
 [96.3]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
 [96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText--
-[96.5]: {{javadoc_uri}}/OrientationController.html
 
 ## v95
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
