@@ -2603,3 +2603,24 @@ option(
 
 set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
 set_define("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
+
+# libevent
+# ==============================================================
+with only_when(compile_environment):
+    system_lib_option(
+        "--with-system-libevent",
+        nargs="?",
+        help="Use system libevent",
+    )
+
+    @depends("--with-system-libevent")
+    def deprecated_system_libevent_path(value):
+        if len(value) == 1:
+            die(
+                "--with-system-libevent=PATH is not supported anymore. Please use "
+                "--with-system-libevent and set any necessary pkg-config environment variable."
+            )
+
+    pkg_check_modules("MOZ_LIBEVENT", "libevent", when="--with-system-libevent")
+
+    set_config("MOZ_SYSTEM_LIBEVENT", True, when="--with-system-libevent")
