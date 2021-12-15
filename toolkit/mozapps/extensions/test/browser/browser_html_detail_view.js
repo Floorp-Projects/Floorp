@@ -794,6 +794,7 @@ add_task(async function testStaticTheme() {
 
 add_task(async function testSitePermission() {
   let win = await loadInitialView("sitepermission");
+  let doc = win.document;
 
   // The list card.
   let card = getAddonCard(win, "sitepermission@mochi.test");
@@ -810,10 +811,24 @@ add_task(async function testSitePermission() {
   assertDeckHeadingHidden(card.details.tabGroup);
 
   let rows = getDetailRows(card);
+  is(rows.length, 4, "There are 4 rows");
 
   // Automatic updates.
   let row = rows.shift();
   checkLabel(row, "updates");
+
+  // Private browsing.
+  let private = rows.shift();
+  checkLabel(private, "private-browsing");
+
+  let help = rows.shift();
+  ok(help.classList.contains("addon-detail-help-row"), "There's a help row");
+  ok(!row.hidden, "The help row is shown");
+  is(
+    doc.l10n.getAttributes(help).id,
+    "addon-detail-private-browsing-help",
+    "The help row is for private browsing"
+  );
 
   // Author.
   let author = rows.shift();

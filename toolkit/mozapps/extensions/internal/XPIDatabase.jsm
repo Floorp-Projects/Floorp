@@ -791,7 +791,7 @@ class AddonInternal {
     // when the extension has opted out or it gets the permission automatically
     // on every extension startup (as system, privileged and builtin addons).
     if (
-      this.type === "extension" &&
+      (this.type === "extension" || this.type == "sitepermission") &&
       this.incognito !== "not_allowed" &&
       this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
       this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&

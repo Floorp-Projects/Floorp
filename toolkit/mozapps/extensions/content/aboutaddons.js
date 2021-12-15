@@ -2854,7 +2854,7 @@ class AddonDetails extends HTMLElement {
     );
 
     // By default, all private browsing rows are hidden. Possibly show one.
-    if (addon.type != "extension") {
+    if (addon.type != "extension" && addon.type != "sitepermission") {
       // All add-addons of this type are allowed in private browsing mode, so
       // do not show any UI.
     } else if (addon.incognito == "not_allowed") {
@@ -3389,7 +3389,10 @@ class AddonCard extends HTMLElement {
     }
 
     // Set the private browsing badge visibility.
-    if (addon.type == "extension" && addon.incognito != "not_allowed") {
+    if (
+      addon.incognito != "not_allowed" &&
+      (addon.type == "extension" || addon.type == "sitepermission")
+    ) {
       // Keep update synchronous, the badge can appear later.
       isAllowedInPrivateBrowsing(addon).then(isAllowed => {
         card.querySelector(
