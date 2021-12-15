@@ -544,6 +544,11 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
 template <typename CharT>
+static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtom(
+    JSContext* cx, const CharT* chars, size_t length,
+    const AtomHasher::Lookup& lookup);
+
+template <typename CharT>
 MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     JSContext* cx, const CharT* chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
@@ -615,12 +620,10 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
     return p->get();
   }
 
-  JSAtom* atom = AllocateNewAtom(cx, chars, length, Nothing(), lookup);
+  JSAtom* atom = AllocateNewPermanentAtom(cx, chars, length, lookup);
   if (!atom) {
     return nullptr;
   }
-
-  atom->morphIntoPermanentAtom();
 
   // We are single threaded at this point, and the operations we've done since
   // then can't GC; therefore the atoms table has not been modified and p is
@@ -722,6 +725,31 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     if (atom->isIndexSlow(&index)) {
       atom->setIsIndex(index);
     }
+  }
+
+  return atom;
+}
+
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtom(
+    JSContext* cx, const CharT* chars, size_t length,
+    const AtomHasher::Lookup& lookup) {
+  AutoAllocInAtomsZone ac(cx);
+
+  JSLinearString* linear = MakeLinearStringForAtomization(cx, chars, length);
+  if (!linear) {
+    // Do not bother with a last-ditch GC here since we are very early in
+    // startup and there is no potential garbage to collect.
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  JSAtom* atom = linear->morphAtomizedStringIntoPermanentAtom(lookup.hash);
+  MOZ_ASSERT(atom->hash() == lookup.hash);
+
+  uint32_t index;
+  if (atom->isIndexSlow(&index)) {
+    atom->setIsIndex(index);
   }
 
   return atom;
