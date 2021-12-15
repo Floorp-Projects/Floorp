@@ -64,8 +64,6 @@ class D3D11ShareHandleImage final : public Image {
   TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
-  Maybe<SurfaceDescriptor> GetDesc() override { return GetDescFromTexClient(); }
-
   ID3D11Texture2D* GetTexture() const;
 
   gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }

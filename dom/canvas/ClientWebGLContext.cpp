@@ -3960,6 +3960,8 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
   }
 }
 
+// -
+
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
                                   const ivec3& offset, const ivec3& isize,
@@ -3984,6 +3986,9 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   // report if a GC is possible while any data pointers extracted from the
   // typed array are still live.
   dom::Uint8ClampedArray scopedArr;
+  const auto reset = MakeScopeExit([&] {
+    scopedArr.Reset();  // (For the hazard analysis) Done with the data.
+  });
 
   // -
   bool isDataUpload = false;
@@ -4048,7 +4053,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         imageTarget, explicitSize, gfxAlphaType::NonPremult, {}, {}});
   }();
   if (!desc) {
-    scopedArr.Reset();
     return;
   }
 
@@ -4081,7 +4085,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       EnqueueError(LOCAL_GL_INVALID_OPERATION,
                    "Non-DOM-Element uploads with alpha-premult"
                    " or y-flip do not support subrect selection.");
-      scopedArr.Reset();  // (For the hazard analysis) Done with the data.
       return;
     }
   }
@@ -4090,25 +4093,40 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
-  if (desc->sd) {
-    auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
+  mozilla::ipc::Shmem* pShmem = nullptr;
 
+  if (desc->sd) {
     const auto& sd = *(desc->sd);
     const auto sdType = sd.type();
     const auto& contextInfo = mNotLost->info;
 
-    const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
-    if (!canUploadViaSd) {
-      const nsPrintfCString msg(
-          "Fast uploads for resource type %i not implemented.", int(sdType));
-      fallbackReason.reset();
-      fallbackReason.emplace(ToString(msg));
-    }
+    const auto fallbackReason = [&]() -> Maybe<std::string> {
+      auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
+      if (fallbackReason) return fallbackReason;
 
-    if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
-      fallbackReason.reset();
-      fallbackReason.emplace("DOM blit uploads are disabled.");
-    }
+      const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
+      if (!canUploadViaSd) {
+        const nsPrintfCString msg(
+            "Fast uploads for resource type %i not implemented.", int(sdType));
+        return Some(ToString(msg));
+      }
+
+      if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorBuffer) {
+        const auto& sdb = sd.get_SurfaceDescriptorBuffer();
+        const auto& data = sdb.data();
+        if (data.type() == layers::MemoryOrShmem::TShmem) {
+          pShmem = &data.get_Shmem();
+        } else {
+          return Some(
+              std::string{"SurfaceDescriptorBuffer data is not Shmem."});
+        }
+      }
+
+      if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
+        return Some(std::string{"DOM blit uploads are disabled."});
+      }
+      return {};
+    }();
 
     if (fallbackReason) {
       EnqueuePerfWarning("Missed GPU-copy fast-path: %s",
@@ -4130,13 +4148,60 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   }
   desc->image = nullptr;
 
-  // -
-
   desc->Shrink(pi);
 
-  Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
-                       CastUvec3(offset), pi, std::move(*desc));
-  scopedArr.Reset();  // (For the hazard analysis) Done with the data.
+  // -
+
+  const bool doInlineUpload = !desc->sd;
+  // Why always de-inline SDs here?
+  // 1. This way we always send SDs down the same handling path, which
+  // should keep things from breaking if things flip between paths because of
+  // what we get handed by SurfaceFromElement etc.
+  // 2. We don't actually always grab strong-refs to the resources in the SDs,
+  // so we should try to use them sooner rather than later. Yes we should fix
+  // this, but for now let's give the SDs the best chance of lucking out, eh?
+  // :)
+  // 3. It means we don't need to write QueueParamTraits<SurfaceDescriptor>.
+  if (doInlineUpload) {
+    // We definitely want e.g. TexImage(PBO) here.
+    Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
+                         CastUvec3(offset), pi, std::move(*desc));
+  } else {
+    // We can't handle shmems like SurfaceDescriptorBuffer inline, so use ipdl.
+    const auto& inProcess = mNotLost->inProcess;
+    if (inProcess) {
+      return inProcess->TexImage(static_cast<uint32_t>(level), respecFormat,
+                                 CastUvec3(offset), pi, *desc);
+    }
+    const auto& child = mNotLost->outOfProcess;
+    child->FlushPendingCmds();
+
+    // The shmem we're handling was only shared from RDD to Content, and
+    // immediately on Content receiving it, it was closed! RIP
+    // Eventually we'll be able to make shmems that can traverse multiple
+    // endpoints, but for now we need to make a new Content->WebGLParent shmem
+    // and memcpy into it. We don't use `desc` elsewhere, so just replace the
+    // Shmem buried within it with one that's valid for WebGLChild->Parent
+    // transport.
+    if (pShmem) {
+      MOZ_ASSERT(desc->sd);
+      const auto byteCount = pShmem->Size<uint8_t>();
+      const auto* const src = pShmem->get<uint8_t>();
+      const auto shmemType =
+          mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
+      mozilla::ipc::Shmem shmemForResend;
+      if (!child->AllocShmem(byteCount, shmemType, &shmemForResend)) {
+        NS_WARNING("AllocShmem failed in TexImage");
+        return;
+      }
+      auto* const dst = shmemForResend.get<uint8_t>();
+      memcpy(dst, src, byteCount);
+      *pShmem = shmemForResend;
+    }
+
+    (void)child->SendTexImage(static_cast<uint32_t>(level), respecFormat,
+                              CastUvec3(offset), pi, std::move(*desc));
+  }
 }
 
 void ClientWebGLContext::RawTexImage(
@@ -4146,6 +4211,8 @@ void ClientWebGLContext::RawTexImage(
   if (IsContextLost()) return;
   Run<RPROC(TexImage)>(level, respecFormat, offset, pi, desc);
 }
+
+// -
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
                                             GLenum imageTarget, GLint level,
