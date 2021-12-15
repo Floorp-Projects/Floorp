@@ -463,6 +463,8 @@ class alignas(alignof(uint32_t)) ParserAtom {
                               CompilationAtomCache& atomCache) const;
   JSAtom* instantiateAtom(JSContext* cx, ParserAtomIndex index,
                           CompilationAtomCache& atomCache) const;
+  JSAtom* instantiatePermanentAtom(JSContext* cx, ParserAtomIndex index,
+                                   CompilationAtomCache& atomCache) const;
 
  private:
   void markUsedByStencil(Atomize atomize) {
@@ -612,6 +614,10 @@ class WellKnownParserAtoms {
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache);
+
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx,
+                                       const ParserAtomSpan& entries,
+                                       CompilationAtomCache& atomCache);
 
 /**
  * A ParserAtomsTable owns and manages the vector of ParserAtom entries

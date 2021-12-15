@@ -52,6 +52,10 @@ template <typename CharT>
 extern JSAtom* AtomizeChars(JSContext* cx, mozilla::HashNumber hash,
                             const CharT* chars, size_t length);
 
+template <typename CharT>
+extern JSAtom* PermanentlyAtomizeChars(JSContext* cx, mozilla::HashNumber hash,
+                                       const CharT* chars, size_t length);
+
 /**
  * Create an atom whose contents are those of the |utf8ByteLength| code units
  * starting at |utf8Chars|, interpreted as UTF-8.

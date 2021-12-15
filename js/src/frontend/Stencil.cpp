@@ -2029,7 +2029,7 @@ bool CompilationStencil::instantiateSelfHostedAtoms(
 
   // We must instantiate atoms during startup so they can be made permanent
   // across multiple runtimes.
-  return InstantiateAtoms(cx, atomCache, *this);
+  return InstantiateMarkedAtomsAsPermanent(cx, parserAtomData, atomCache);
 }
 
 JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
