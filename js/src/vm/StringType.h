@@ -1166,13 +1166,6 @@ class JSAtom : public JSLinearString {
   MOZ_ALWAYS_INLINE
   bool isPermanent() const { return JSString::isPermanentAtom(); }
 
-  // Transform this atom into a permanent atom. This is only done during
-  // initialization of the runtime. Permanent atoms are always pinned.
-  MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
-    MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
-    setFlagBit(PERMANENT_ATOM_MASK);
-  }
-
   MOZ_ALWAYS_INLINE bool isIndex() const {
     MOZ_ASSERT(JSString::isAtom());
     mozilla::DebugOnly<uint32_t> index;
