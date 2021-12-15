@@ -5,6 +5,8 @@
 
 // Test the ResourceCommand API around NETWORK_EVENT
 
+const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+
 // We are borrowing tests from the netmonitor frontend
 const NETMONITOR_TEST_FOLDER =
   "https://example.com/browser/devtools/client/netmonitor/test/";
@@ -14,131 +16,116 @@ const CSS_CSP_URL = `${NETMONITOR_TEST_FOLDER}internal-loaded.css`;
 
 const CSP_BLOCKED_REASON_CODE = 4000;
 
-add_task(async function() {
-  info(`Tests for NETWORK_EVENT resources from the content process`);
+add_task(async function testContentProcessRequests() {
+  info(`Tests for NETWORK_EVENT resources fired from the content process`);
 
-  const allResourcesOnAvailable = [];
-  const allResourcesOnUpdate = [];
+  const expectedAvailable = [
+    {
+      url: CSP_URL,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: JS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+    {
+      url: CSS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+  ];
+  const expectedUpdated = [
+    {
+      url: CSP_URL,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: JS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+    {
+      url: CSS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+  ];
 
-  const tab = await addTab(CSP_URL);
+  await assertNetworkResourcesOnPage(
+    CSP_URL,
+    expectedAvailable,
+    expectedUpdated
+  );
+});
+
+async function assertNetworkResourcesOnPage(
+  url,
+  expectedAvailable,
+  expectedUpdated
+) {
+  // First open a blank document to avoid spawning any request
+  const tab = await addTab("about:blank");
+
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
   const { resourceCommand } = commands;
 
-  let onAvailable = () => {};
-  let onUpdated = () => {};
+  const onAvailable = resources => {
+    for (const resource of resources) {
+      // Immediately assert the resource, as the same resource object
+      // will be notified to onUpdated and so if we assert it later
+      // we will not highlight attributes that aren't set yet from onAvailable.
+      const idx = expectedAvailable.findIndex(e => e.url === resource.url);
+      ok(
+        idx != -1,
+        "Found a matching available notification for: " + resource.url
+      );
+      // Remove the match from the list in case there is many requests with the same url
+      const [expected] = expectedAvailable.splice(idx, 1);
 
-  await new Promise(resolve => {
-    onAvailable = resources => {
-      for (const resource of resources) {
-        allResourcesOnAvailable.push(resource);
-      }
-    };
-    onUpdated = updates => {
-      for (const { resource } of updates) {
-        allResourcesOnUpdate.push(resource);
-      }
-      // Make sure we get 3 updates for the 3 requests sent
-      if (allResourcesOnUpdate.length == 3) {
-        resolve();
-      }
-    };
+      assertResources(resource, expected);
+    }
+  };
+  const onUpdated = updates => {
+    for (const { resource } of updates) {
+      const idx = expectedUpdated.findIndex(e => e.url === resource.url);
+      ok(
+        idx != -1,
+        "Found a matching updated notification for: " + resource.url
+      );
+      // Remove the match from the list in case there is many requests with the same url
+      const [expected] = expectedUpdated.splice(idx, 1);
 
-    resourceCommand
-      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
-        onAvailable,
-        onUpdated,
-      })
-      .then(() => reloadBrowser());
+      assertResources(resource, expected);
+    }
+  };
+
+  // Start observing for network events before loading the test page
+  await resourceCommand.watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
+    onAvailable,
+    onUpdated,
   });
 
-  is(
-    allResourcesOnAvailable.length,
-    3,
-    "Got three network events fired on available"
-  );
-  is(
-    allResourcesOnUpdate.length,
-    3,
-    "Got three network events fired on update"
-  );
+  // Load the test page that fires network requests
+  const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await onLoaded;
 
-  // Find the page's request
-  const availablePageResource = allResourcesOnAvailable.find(
-    resource => resource.url === CSP_URL
+  // Make sure we processed all the expected request updates
+  await waitFor(
+    () => expectedAvailable.length == 0,
+    "Wait for all expected available notifications"
   );
-  is(
-    availablePageResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availablePageResource.isNavigationRequest,
-    true,
-    "The page request is correctly flaged as a navigation request"
-  );
-
-  // Find the Blocked CSP JS resource
-  const availableJSResource = allResourcesOnAvailable.find(
-    resource => resource.url === JS_CSP_URL
-  );
-  const updateJSResource = allResourcesOnUpdate.find(
-    update => update.url === JS_CSP_URL
-  );
-
-  // Assert the data for the CSP blocked JS script file
-  is(
-    availableJSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availableJSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The js resource is blocked by CSP"
-  );
-
-  is(
-    updateJSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    updateJSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The js resource is blocked by CSP"
-  );
-
-  // Find the Blocked CSP CSS resource
-  const availableCSSResource = allResourcesOnAvailable.find(
-    resource => resource.url === CSS_CSP_URL
-  );
-
-  const updateCSSResource = allResourcesOnUpdate.find(
-    update => update.url === CSS_CSP_URL
-  );
-
-  // Assert the data for the CSP blocked CSS file
-  is(
-    availableCSSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availableCSSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The css resource is blocked by CSP"
-  );
-
-  is(
-    updateCSSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    updateCSSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The css resource is blocked by CSP"
+  await waitFor(
+    () => expectedUpdated.length == 0,
+    "Wait for all expected updated notifications"
   );
 
   resourceCommand.unwatchResources([resourceCommand.TYPES.NETWORK_EVENT], {
@@ -149,4 +136,15 @@ add_task(async function() {
   await commands.destroy();
 
   BrowserTestUtils.removeTab(tab);
-});
+}
+
+function assertResources(actual, expected) {
+  is(
+    actual.resourceType,
+    ResourceCommand.TYPES.NETWORK_EVENT,
+    "The resource type is correct"
+  );
+  for (const name in expected) {
+    is(actual[name], expected[name], `The '${name}' attribute is correct`);
+  }
+}
