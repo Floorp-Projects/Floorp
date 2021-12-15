@@ -55,7 +55,8 @@ workers:
             provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover
             os: scriptworker
-            worker-type: 'mobile-1-beetmover-dev'
+            # Note: if dep bucket is wanted, *temporarily* switch to 'mobile-1-beetmover-dev'
+            worker-type: 'mobile-{level}-beetmover'
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing

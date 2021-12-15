@@ -50,14 +50,20 @@ def make_task_description(config, tasks):
         if task.get("locale"):
             attributes["locale"] = task["locale"]
 
+        # Switch between nightly and release scope
+        # Note: if dep bucket is wanted, *temporarily* switch it to "~:dep"
+        if task['build-type']['nightly']:
+            bucket_scope = "project:mobile:fenix:releng:beetmover:bucket:nightly"
+        else:
+            bucket_scope = "project:mobile:fenix:releng:beetmover:bucket:release"
+        
         task = {
             "label": label,
             "description": description,
             "worker-type": "beetmover",
             "worker": task["worker"],
             "scopes": [
-                # TODO: Adjust scope
-                "project:mobile:fenix:releng:beetmover:bucket:dep",
+                bucket_scope,
                 "project:mobile:fenix:releng:beetmover:action:direct-push-to-bucket",
             ],
             "dependencies": task["dependencies"],
