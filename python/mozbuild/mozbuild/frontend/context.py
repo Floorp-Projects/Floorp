@@ -46,12 +46,6 @@ import itertools
 import six
 
 
-# The MOZ_HARDENING_CFLAGS and MOZ_HARDENING_LDFLAGS differ depending on whether
-# the context is under $TOPOBJDIR/js/src.
-def _context_under_js_src(context):
-    return mozpath.commonprefix([context.relsrcdir, "js/src"]) != ""
-
-
 class ContextDerivedValue(object):
     """Classes deriving from this one receive a special treatment in a
     Context. See Context documentation.
@@ -442,11 +436,7 @@ class LinkFlags(BaseCompileFlags):
             ("OS", self._os_ldflags(), ("LDFLAGS",)),
             (
                 "MOZ_HARDENING_LDFLAGS",
-                (
-                    context.config.substs.get("MOZ_HARDENING_LDFLAGS_JS")
-                    if _context_under_js_src(context)
-                    else context.config.substs.get("MOZ_HARDENING_LDFLAGS")
-                ),
+                context.config.substs.get("MOZ_HARDENING_LDFLAGS"),
                 ("LDFLAGS",),
             ),
             ("DEFFILE", None, ("LDFLAGS",)),
@@ -565,11 +555,7 @@ class CompileFlags(TargetCompileFlags):
             ),
             (
                 "MOZ_HARDENING_CFLAGS",
-                (
-                    context.config.substs.get("MOZ_HARDENING_CFLAGS_JS")
-                    if _context_under_js_src(context)
-                    else context.config.substs.get("MOZ_HARDENING_CFLAGS")
-                ),
+                context.config.substs.get("MOZ_HARDENING_CFLAGS"),
                 ("CXXFLAGS", "CFLAGS", "CXX_LDFLAGS", "C_LDFLAGS"),
             ),
             ("DEFINES", None, ("CXXFLAGS", "CFLAGS")),

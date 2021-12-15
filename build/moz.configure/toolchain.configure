@@ -1890,8 +1890,6 @@ def security_hardening_cflags(
 
     flags = []
     ldflags = []
-    js_flags = []
-    js_ldflags = []
 
     # WASI compiler doesn't support security hardening cflags
     if target.os == "WASI":
@@ -1906,12 +1904,9 @@ def security_hardening_cflags(
         if compiler_is_gccish and optimize and not asan:
             flags.append("-U_FORTIFY_SOURCE")
             flags.append("-D_FORTIFY_SOURCE=2")
-            js_flags.append("-U_FORTIFY_SOURCE")
-            js_flags.append("-D_FORTIFY_SOURCE=2")
             if mingw_clang:
                 # mingw-clang needs to link in ssp which is not done by default
                 ldflags.append("-lssp")
-                js_ldflags.append("-lssp")
 
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
@@ -1919,8 +1914,6 @@ def security_hardening_cflags(
         if compiler_is_gccish and not asan:
             flags.append("-fstack-protector-strong")
             ldflags.append("-fstack-protector-strong")
-            js_flags.append("-fstack-protector-strong")
-            js_ldflags.append("-fstack-protector-strong")
 
             if (
                 c_compiler.type == "clang"
@@ -1930,8 +1923,6 @@ def security_hardening_cflags(
             ):
                 flags.append("-fstack-clash-protection")
                 ldflags.append("-fstack-clash-protection")
-                js_flags.append("-fstack-clash-protection")
-                js_ldflags.append("-fstack-clash-protection")
 
         # ftrivial-auto-var-init ------------------------------
         # Initialize local variables with a 0xAA pattern in clang debug builds.
@@ -1945,16 +1936,13 @@ def security_hardening_cflags(
         ):
             if c_compiler.type == "clang-cl":
                 flags.append("-Xclang")
-                js_flags.append("-Xclang")
             flags.append("-ftrivial-auto-var-init=pattern")
-            js_flags.append("-ftrivial-auto-var-init=pattern")
 
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
         # mingw-clang build requires it to be explicitly enabled
         if mingw_clang:
             ldflags.append("-Wl,--dynamicbase")
-            js_ldflags.append("-Wl,--dynamicbase")
 
         # Control Flow Guard (CFG) ----------------------------
         if (
@@ -1965,20 +1953,16 @@ def security_hardening_cflags(
             if target.cpu == "aarch64" and c_compiler.version >= "10.0.0":
                 # The added checks in clang 10 make arm64 builds crash. (Bug 1639318)
                 flags.append("-guard:cf,nochecks")
-                js_flags.append("-guard:cf,nochecks")
             else:
                 flags.append("-guard:cf")
-                js_flags.append("-guard:cf")
             # nolongjmp is needed because clang doesn't emit the CFG tables of
             # setjmp return addresses https://bugs.llvm.org/show_bug.cgi?id=40057
             ldflags.append("-guard:cf,nolongjmp")
-            js_ldflags.append("-guard:cf,nolongjmp")
 
     # ----------------------------------------------------------
     # If ASAN _is_ on, undefine FORTIFY_SOURCE just to be safe
     if asan:
         flags.append("-U_FORTIFY_SOURCE")
-        js_flags.append("-U_FORTIFY_SOURCE")
 
     # fno-common -----------------------------------------
     # Do not merge variables for ASAN; can detect some subtle bugs
@@ -1991,15 +1975,11 @@ def security_hardening_cflags(
     return namespace(
         flags=flags,
         ldflags=ldflags,
-        js_flags=js_flags,
-        js_ldflags=js_ldflags,
     )
 
 
 set_config("MOZ_HARDENING_CFLAGS", security_hardening_cflags.flags)
 set_config("MOZ_HARDENING_LDFLAGS", security_hardening_cflags.ldflags)
-set_config("MOZ_HARDENING_CFLAGS_JS", security_hardening_cflags.js_flags)
-set_config("MOZ_HARDENING_LDFLAGS_JS", security_hardening_cflags.js_ldflags)
 
 
 # Intel Control-flow Enforcement Technology
