@@ -588,6 +588,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
 
   const auto UploadableSdTypes = [&]() {
     webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorBuffer] = true;
     if (webgl->gl->IsANGLE()) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
       types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;

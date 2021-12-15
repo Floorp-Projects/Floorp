@@ -41,8 +41,10 @@ namespace mozilla {
 namespace layers {
 class Image;
 class GPUVideoImage;
+struct PlanarYCbCrData;
 class PlanarYCbCrImage;
 class SurfaceDescriptor;
+class SurfaceDescriptorBuffer;
 
 #ifdef XP_WIN
 class D3D11ShareHandleImage;
@@ -172,8 +174,8 @@ class GLBlitHelper final {
   const DrawBlitProg* CreateDrawBlitProg(const DrawBlitProg::Key& key) const;
 
  public:
-  bool BlitImage(layers::PlanarYCbCrImage* yuvImage,
-                 const gfx::IntSize& destSize, OriginPos destOrigin);
+  bool BlitPlanarYCbCr(const layers::PlanarYCbCrData&,
+                       const gfx::IntSize& destSize, OriginPos destOrigin);
 #ifdef MOZ_WIDGET_ANDROID
   // Blit onto the current FB.
   bool BlitImage(layers::SurfaceTextureImage* stImage,

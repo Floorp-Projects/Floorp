@@ -75,6 +75,15 @@ IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
   return IPC_OK();
 }
 
+IPCResult WebGLParent::RecvTexImage(const uint32_t level,
+                                    const uint32_t respecFormat,
+                                    const uvec3& offset,
+                                    const webgl::PackingInfo& pi,
+                                    webgl::TexUnpackBlobDesc&& desc) {
+  mHost->TexImage(level, respecFormat, offset, pi, desc);
+  return IPC_OK();
+}
+
 // -
 
 mozilla::ipc::IPCResult WebGLParent::Recv__delete__() {

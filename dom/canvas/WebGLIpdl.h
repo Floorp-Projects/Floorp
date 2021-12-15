@@ -6,6 +6,7 @@
 #ifndef WEBGLIPDL_H_
 #define WEBGLIPDL_H_
 
+#include "gfxTypes.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
@@ -145,6 +146,38 @@ struct IPDLParamTraits<mozilla::webgl::ReadPixelsResultIpc> final {
   }
 };
 
+// -
+
+template <>
+struct IPDLParamTraits<mozilla::webgl::TexUnpackBlobDesc> final {
+  using T = mozilla::webgl::TexUnpackBlobDesc;
+
+  static void Write(IPC::Message* const msg, IProtocol* actor, T&& in) {
+    WriteParam(msg, in.imageTarget);
+    WriteParam(msg, in.size);
+    WriteParam(msg, in.srcAlphaType);
+    MOZ_RELEASE_ASSERT(!in.cpuData);
+    MOZ_RELEASE_ASSERT(!in.pboOffset);
+    WriteParam(msg, in.imageSize);
+    MOZ_RELEASE_ASSERT(!in.image);
+    WriteIPDLParam(msg, actor, std::move(in.sd));
+    MOZ_RELEASE_ASSERT(!in.dataSurf);
+    WriteParam(msg, in.unpacking);
+    WriteParam(msg, in.applyUnpackTransforms);
+  }
+
+  static bool Read(const IPC::Message* const msg, PickleIterator* const itr,
+                   IProtocol* actor, T* const out) {
+    return ReadParam(msg, itr, &out->imageTarget) &&
+           ReadParam(msg, itr, &out->size) &&
+           ReadParam(msg, itr, &out->srcAlphaType) &&
+           ReadParam(msg, itr, &out->imageSize) &&
+           ReadIPDLParam(msg, itr, actor, &out->sd) &&
+           ReadParam(msg, itr, &out->unpacking) &&
+           ReadParam(msg, itr, &out->applyUnpackTransforms);
+  }
+};
+
 }  // namespace ipc
 
 namespace webgl {
@@ -155,6 +188,13 @@ using Int32Vector = std::vector<int32_t>;
 namespace IPC {
 
 template <>
+struct ParamTraits<mozilla::webgl::AttribBaseType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::webgl::AttribBaseType,
+          mozilla::webgl::AttribBaseType::Boolean,
+          mozilla::webgl::AttribBaseType::Uint> {};
+
+template <>
 struct ParamTraits<mozilla::webgl::ContextLossReason>
     : public ContiguousEnumSerializerInclusive<
           mozilla::webgl::ContextLossReason,
@@ -162,11 +202,9 @@ struct ParamTraits<mozilla::webgl::ContextLossReason>
           mozilla::webgl::ContextLossReason::Guilty> {};
 
 template <>
-struct ParamTraits<mozilla::webgl::AttribBaseType>
+struct ParamTraits<gfxAlphaType>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::webgl::AttribBaseType,
-          mozilla::webgl::AttribBaseType::Boolean,
-          mozilla::webgl::AttribBaseType::Uint> {};
+          gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
 
 // -
 
@@ -260,6 +298,10 @@ struct ParamTraits<mozilla::webgl::ExtensionBits> final
 template <>
 struct ParamTraits<mozilla::webgl::Limits> final
     : public PlainOldDataSerializer<mozilla::webgl::Limits> {};
+
+template <>
+struct ParamTraits<mozilla::WebGLPixelStore> final
+    : public PlainOldDataSerializer<mozilla::WebGLPixelStore> {};
 
 // -
 
