@@ -200,10 +200,11 @@ void VisualViewport::VisualViewportResizeEvent::Revoke() {
   mPresContext = nullptr;
 }
 
-NS_IMETHODIMP
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 VisualViewport::VisualViewportResizeEvent::Run() {
-  if (mViewport) {
-    mViewport->FireResizeEvent();
+  if (RefPtr<VisualViewport> viewport = mViewport) {
+    viewport->FireResizeEvent();
   }
   return NS_OK;
 }
@@ -213,16 +214,18 @@ void VisualViewport::FireResizeEvent() {
   mResizeEvent->Revoke();
   mResizeEvent = nullptr;
 
+  RefPtr<nsPresContext> presContext = GetPresContext();
+
   VVP_LOG("%p, FireResizeEvent, fire mozvisualresize\n", this);
   WidgetEvent mozEvent(true, eMozVisualResize);
   mozEvent.mFlags.mOnlySystemGroupDispatch = true;
-  EventDispatcher::Dispatch(this, GetPresContext(), &mozEvent);
+  EventDispatcher::Dispatch(this, presContext, &mozEvent);
 
   VVP_LOG("%p, FireResizeEvent, fire VisualViewport resize\n", this);
   WidgetEvent event(true, eResize);
   event.mFlags.mBubbles = false;
   event.mFlags.mCancelable = false;
-  EventDispatcher::Dispatch(this, GetPresContext(), &event);
+  EventDispatcher::Dispatch(this, presContext, &event);
 }
 
 /* ================= Scroll event handling ================= */
@@ -274,10 +277,11 @@ void VisualViewport::VisualViewportScrollEvent::Revoke() {
   mPresContext = nullptr;
 }
 
-NS_IMETHODIMP
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 VisualViewport::VisualViewportScrollEvent::Run() {
-  if (mViewport) {
-    mViewport->FireScrollEvent();
+  if (RefPtr<VisualViewport> viewport = mViewport) {
+    viewport->FireScrollEvent();
   }
   return NS_OK;
 }
@@ -289,14 +293,16 @@ void VisualViewport::FireScrollEvent() {
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;
 
-  if (PresShell* presShell = GetPresShell()) {
+  if (RefPtr<PresShell> presShell = GetPresShell()) {
+    RefPtr<nsPresContext> presContext = GetPresContext();
+
     if (presShell->GetVisualViewportOffset() != prevVisualOffset) {
       // The internal event will be fired whenever the visual viewport's
       // *absolute* offset changed, i.e. relative to the page.
       VVP_LOG("%p: FireScrollEvent, fire mozvisualscroll\n", this);
       WidgetEvent mozEvent(true, eMozVisualScroll);
       mozEvent.mFlags.mOnlySystemGroupDispatch = true;
-      EventDispatcher::Dispatch(this, GetPresContext(), &mozEvent);
+      EventDispatcher::Dispatch(this, presContext, &mozEvent);
     }
 
     // Check whether the relative visual viewport offset actually changed -
@@ -315,7 +321,7 @@ void VisualViewport::FireScrollEvent() {
       WidgetGUIEvent event(true, eScroll, nullptr);
       event.mFlags.mBubbles = false;
       event.mFlags.mCancelable = false;
-      EventDispatcher::Dispatch(this, GetPresContext(), &event);
+      EventDispatcher::Dispatch(this, presContext, &event);
     }
   }
 }
