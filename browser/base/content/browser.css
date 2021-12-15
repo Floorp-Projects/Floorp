@@ -309,8 +309,10 @@ toolbar[customizing] #whats-new-menu-button {
 
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-buttonbox-container,
-:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
+/* Hide the TabsToolbar titlebar controls if the menubar is permanently shown.
+ * (That is, if the menu bar doesn't autohide, and we're not in a fullscreen or
+ * popup window.) */
+:root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer),
 %endif
 %ifndef MOZ_WIDGET_COCOA
 %ifndef MOZ_WIDGET_GTK
