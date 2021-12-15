@@ -217,7 +217,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerGlobalScopeBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 WorkerGlobalScopeBase::WorkerGlobalScopeBase(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource)
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource)
     : mWorkerPrivate(aWorkerPrivate),
       mClientSource(std::move(aClientSource)),
       mSerialEventTarget(aWorkerPrivate->HybridEventTarget()) {
@@ -779,9 +780,9 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(DedicatedWorkerGlobalScope,
                                                WorkerGlobalScope)
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource, const nsString& aName)
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool DedicatedWorkerGlobalScope::WrapGlobalObject(
@@ -953,9 +954,9 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
 }
 
 SharedWorkerGlobalScope::SharedWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource, const nsString& aName)
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool SharedWorkerGlobalScope::WrapGlobalObject(
@@ -987,9 +988,10 @@ NS_IMPL_ADDREF_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
+    NotNull<WorkerPrivate*> aWorkerPrivate,
+    UniquePtr<ClientSource> aClientSource,
     const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
+    : WorkerGlobalScope(aWorkerPrivate, std::move(aClientSource)),
       mScope(NS_ConvertUTF8toUTF16(aRegistrationDescriptor.Scope()))
 
       // Eagerly create the registration because we will need to receive

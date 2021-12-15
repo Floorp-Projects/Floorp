@@ -9,10 +9,11 @@
 
 #include "nsISerialEventTarget.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
+
+class WorkerPrivate;
 
 class WorkerEventTarget final : public nsISerialEventTarget {
  public:
@@ -29,7 +30,7 @@ class WorkerEventTarget final : public nsISerialEventTarget {
 
  private:
   mozilla::Mutex mMutex;
-  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   const Behavior mBehavior;
 
   ~WorkerEventTarget() = default;
