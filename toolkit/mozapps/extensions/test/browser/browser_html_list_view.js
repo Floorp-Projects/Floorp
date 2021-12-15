@@ -908,9 +908,27 @@ add_task(async function testSectionHeadingKeys() {
       type: "dictionary",
       userDisabled: true,
     },
+    {
+      id: "test-sitepermission",
+      name: "Test Enabled Site Permission",
+      type: "sitepermission",
+    },
+    {
+      id: "test-sitepermission-disabled",
+      name: "Test Disabled Site Permission",
+      type: "sitepermission",
+      userDisabled: true,
+    },
   ]);
 
-  for (let type of ["extension", "theme", "plugin", "locale", "dictionary"]) {
+  for (let type of [
+    "extension",
+    "theme",
+    "plugin",
+    "locale",
+    "dictionary",
+    "sitepermission",
+  ]) {
     let win = await loadInitialView(type);
     let doc = win.document;
 
