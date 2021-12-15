@@ -186,13 +186,11 @@ class CSPValidator final : public nsCSPSrcVisitor {
       : mURL(aURL),
         mDirective(CSP_CSPDirectiveToString(aDirective)),
         mPermittedPolicy(aPermittedPolicy),
+        mDirectiveRequired(aDirectiveRequired),
         mFoundSelf(false) {
     // Start with the default error message for a missing directive, since no
     // visitors will be called if the directive isn't present.
     mError.SetIsVoid(true);
-    if (aDirectiveRequired) {
-      FormatError("csp-error-missing-directive"_ns);
-    }
   }
 
   // Visitors
@@ -290,7 +288,13 @@ class CSPValidator final : public nsCSPSrcVisitor {
 
   // Accessors
 
-  inline nsAString& GetError() { return mError; };
+  inline nsAString& GetError() {
+    if (mError.IsVoid() && mDirectiveRequired) {
+      FormatError("csp-error-missing-directive"_ns);
+    }
+
+    return mError;
+  };
 
   inline bool FoundSelf() { return mFoundSelf; };
 
@@ -375,6 +379,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
   nsString mError;
 
   uint32_t mPermittedPolicy;
+  bool mDirectiveRequired;
   bool mFoundSelf;
 };
 
