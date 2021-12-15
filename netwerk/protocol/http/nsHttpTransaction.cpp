@@ -26,7 +26,9 @@
 #include "nsHttpDigestAuth.h"
 #include "nsHttpHandler.h"
 #include "nsHttpNTLMAuth.h"
-#include "nsHttpNegotiateAuth.h"
+#ifdef MOZ_AUTH_EXTENSION
+#  include "nsHttpNegotiateAuth.h"
+#endif
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsICancelable.h"
@@ -2649,7 +2651,9 @@ bool nsHttpTransaction::IsStickyAuthSchemeAt(nsACString const& auth) {
     // using a new instance because of thread safety of auth modules refcnt
     nsCOMPtr<nsIHttpAuthenticator> authenticator;
     if (schema.EqualsLiteral("negotiate")) {
+#ifdef MOZ_AUTH_EXTENSION
       authenticator = new nsHttpNegotiateAuth();
+#endif
     } else if (schema.EqualsLiteral("basic")) {
       authenticator = new nsHttpBasicAuth();
     } else if (schema.EqualsLiteral("digest")) {
