@@ -410,19 +410,14 @@ static nscolor ConvertAndroidColor(uint32_t aArgb) {
 }
 
 static jni::ObjectArray::LocalRef ConvertRectArrayToJavaRectFArray(
-    const nsTArray<LayoutDeviceIntRect>& aRects,
-    const CSSToLayoutDeviceScale aScale) {
+    const nsTArray<LayoutDeviceIntRect>& aRects) {
   const size_t length = aRects.Length();
   auto rects = jni::ObjectArray::New<java::sdk::RectF>(length);
 
   for (size_t i = 0; i < length; i++) {
     const LayoutDeviceIntRect& tmp = aRects[i];
 
-    // Character bounds in CSS units.
-    auto rect =
-        java::sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
-                              (tmp.x + tmp.width) / aScale.scale,
-                              (tmp.y + tmp.height) / aScale.scale);
+    auto rect = java::sdk::RectF::New(tmp.x, tmp.y, tmp.XMost(), tmp.YMost());
     rects->SetElement(i, rect);
   }
   return rects;
@@ -815,8 +810,7 @@ void GeckoEditableSupport::UpdateCompositionRects() {
   auto rects = ConvertRectArrayToJavaRectFArray(
       queryTextRectsEvent.Succeeded()
           ? queryTextRectsEvent.mReply->mRectArray
-          : CopyableTArray<mozilla::LayoutDeviceIntRect>(),
-      widget->GetDefaultScale());
+          : CopyableTArray<mozilla::LayoutDeviceIntRect>());
 
   mEditable->UpdateCompositionRects(rects);
 }
