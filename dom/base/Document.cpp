@@ -7955,8 +7955,9 @@ void Document::DispatchContentLoadedEvents() {
           nsEventStatus status = nsEventStatus_eIgnore;
 
           if (RefPtr<nsPresContext> context = parent->GetPresContext()) {
-            EventDispatcher::Dispatch(ToSupports(parent), context, innerEvent,
-                                      event, &status);
+            // TODO: Bug 1506441
+            EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(parent)),
+                                      context, innerEvent, event, &status);
           }
         }
       }
