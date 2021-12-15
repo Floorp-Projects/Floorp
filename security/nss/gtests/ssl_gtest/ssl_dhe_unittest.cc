@@ -754,6 +754,34 @@ TEST_P(TlsConnectTls12, ConnectSigAlgDisabledByPolicyDhe) {
   CheckSkeSigScheme(capture_ske, ssl_sig_rsa_pkcs1_sha384);
 }
 
+TEST_P(TlsConnectPre12, ConnectSigAlgDisabledWeakGroupByOption3072DhePre12) {
+  EnableOnlyDheCiphers();
+
+  // explicitly enable the weak groups
+  EXPECT_EQ(SECSuccess,
+            SSL_EnableWeakDHEPrimeGroup(server_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess,
+            SSL_EnableWeakDHEPrimeGroup(client_->ssl_fd(), PR_TRUE));
+  server_->SetNssOption(NSS_DH_MIN_KEY_SIZE, 3072);
+  Connect();
+  client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+  server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+}
+
+TEST_P(TlsConnectPre12, ConnectSigAlgDisabledWeakGroupByOption2048DhePre12) {
+  EnableOnlyDheCiphers();
+
+  // explicitly enable the weak groups
+  EXPECT_EQ(SECSuccess,
+            SSL_EnableWeakDHEPrimeGroup(server_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess,
+            SSL_EnableWeakDHEPrimeGroup(client_->ssl_fd(), PR_TRUE));
+  server_->SetNssOption(NSS_DH_MIN_KEY_SIZE, 2048);
+  Connect();
+  client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_2048, 2048);
+  server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_2048, 2048);
+}
+
 TEST_P(TlsConnectPre12, ConnectSigAlgDisabledByPolicyDhePre12) {
   EnableOnlyDheCiphers();
 
@@ -776,6 +804,30 @@ TEST_P(TlsConnectPre12, ConnectSigAlgDisabledByPolicyDhePre12) {
   Handshake();
 
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM);
+}
+
+TEST_P(TlsConnectTls12, ConnectSigAlgDisablePreferredGroupByOption3072Dhe) {
+  EnableOnlyDheCiphers();
+  static const SSLDHEGroupType dhe_groups[] = {
+      ssl_ff_dhe_2048_group,  // first in the lists is the preferred group
+      ssl_ff_dhe_3072_group};
+
+  server_->SetNssOption(NSS_DH_MIN_KEY_SIZE, 3072);
+  EXPECT_EQ(SECSuccess, SSL_DHEGroupPrefSet(server_->ssl_fd(), &dhe_groups[0],
+                                            PR_ARRAY_SIZE(dhe_groups)));
+  Connect();
+  // our option size should override the preferred group
+  client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+  server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+}
+
+TEST_P(TlsConnectTls12, ConnectSigAlgDisableGroupByOption3072Dhe) {
+  EnableOnlyDheCiphers();
+
+  server_->SetNssOption(NSS_DH_MIN_KEY_SIZE, 3072);
+  Connect();
+  client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
+  server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
 }
 
 }  // namespace nss_test

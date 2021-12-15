@@ -35,15 +35,15 @@
 
 #if GTEST_HAS_DEATH_TEST
 
-#if GTEST_HAS_SEH
-#include <windows.h>  // For RaiseException().
-#endif
+# if GTEST_HAS_SEH
+#  include <windows.h>          // For RaiseException().
+# endif
 
-#include "gtest/gtest-spi.h"
+# include "gtest/gtest-spi.h"
 
-#if GTEST_HAS_EXCEPTIONS
+# if GTEST_HAS_EXCEPTIONS
 
-#include <exception>  // For std::exception.
+#  include <exception>  // For std::exception.
 
 // Tests that death tests report thrown exceptions as failures and that the
 // exceptions do not escape death test macros.
@@ -59,7 +59,7 @@ TEST(CxxExceptionDeathTest, ExceptionIsFailure) {
 
 class TestException : public std::exception {
  public:
-  const char* what() const throw() override { return "exceptional message"; }
+  const char* what() const noexcept override { return "exceptional message"; }
 };
 
 TEST(CxxExceptionDeathTest, PrintsMessageForStdExceptions) {
@@ -67,11 +67,12 @@ TEST(CxxExceptionDeathTest, PrintsMessageForStdExceptions) {
   EXPECT_NONFATAL_FAILURE(EXPECT_DEATH(throw TestException(), ""),
                           "exceptional message");
   // Verifies that the location is mentioned in the failure text.
-  EXPECT_NONFATAL_FAILURE(EXPECT_DEATH(throw TestException(), ""), __FILE__);
+  EXPECT_NONFATAL_FAILURE(EXPECT_DEATH(throw TestException(), ""),
+                          __FILE__);
 }
-#endif  // GTEST_HAS_EXCEPTIONS
+# endif  // GTEST_HAS_EXCEPTIONS
 
-#if GTEST_HAS_SEH
+# if GTEST_HAS_SEH
 // Tests that enabling interception of SEH exceptions with the
 // catch_exceptions flag does not interfere with SEH exceptions being
 // treated as death by death tests.
@@ -80,7 +81,7 @@ TEST(SehExceptionDeasTest, CatchExceptionsDoesNotInterfere) {
       << "with catch_exceptions "
       << (testing::GTEST_FLAG(catch_exceptions) ? "enabled" : "disabled");
 }
-#endif
+# endif
 
 #endif  // GTEST_HAS_DEATH_TEST
 

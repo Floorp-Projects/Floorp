@@ -195,6 +195,13 @@ void TlsConnectTestBase::SaveAlgorithmPolicy() {
     ASSERT_EQ(SECSuccess, rv);
     saved_policies_.push_back(std::make_tuple(*it, policy));
   }
+  saved_options_.clear();
+  for (auto it : options_) {
+    int32_t option;
+    SECStatus rv = NSS_OptionGet(it, &option);
+    ASSERT_EQ(SECSuccess, rv);
+    saved_options_.push_back(std::make_tuple(it, option));
+  }
 }
 
 void TlsConnectTestBase::RestoreAlgorithmPolicy() {
@@ -203,6 +210,12 @@ void TlsConnectTestBase::RestoreAlgorithmPolicy() {
     auto policy = std::get<1>(*it);
     SECStatus rv = NSS_SetAlgorithmPolicy(
         algorithm, policy, NSS_USE_POLICY_IN_SSL | NSS_USE_ALG_IN_SSL_KX);
+    ASSERT_EQ(SECSuccess, rv);
+  }
+  for (auto it = saved_options_.begin(); it != saved_options_.end(); ++it) {
+    auto option_id = std::get<0>(*it);
+    auto option = std::get<1>(*it);
+    SECStatus rv = NSS_OptionSet(option_id, option);
     ASSERT_EQ(SECSuccess, rv);
   }
 }

@@ -233,7 +233,7 @@ class TlsAgent : public PollTarget {
   static const char* state_str(State state) { return states[state]; }
 
   NssManagedFileDesc ssl_fd() const {
-    return NssManagedFileDesc(ssl_fd_.get(), policy_);
+    return NssManagedFileDesc(ssl_fd_.get(), policy_, option_);
   }
   std::shared_ptr<DummyPrSocket>& adapter() { return adapter_; }
 
@@ -313,6 +313,9 @@ class TlsAgent : public PollTarget {
   // set the given policy before this agent runs
   void SetPolicy(SECOidTag oid, PRUint32 set, PRUint32 clear) {
     policy_ = NssPolicy(oid, set, clear);
+  }
+  void SetNssOption(PRInt32 id, PRInt32 value) {
+    option_ = NssOption(id, value);
   }
 
  private:
@@ -461,6 +464,7 @@ class TlsAgent : public PollTarget {
   bool skip_version_checks_;
   std::vector<uint8_t> resumption_token_;
   NssPolicy policy_;
+  NssOption option_;
 };
 
 inline std::ostream& operator<<(std::ostream& stream,
