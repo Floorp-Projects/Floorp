@@ -262,12 +262,14 @@ export function newOriginalSources(sourceInfo) {
   };
 }
 
+// Wrapper around newGeneratedSources, only used by tests
 export function newGeneratedSource(sourceInfo) {
   return async ({ dispatch }) => {
     const sources = await dispatch(newGeneratedSources([sourceInfo]));
     return sources[0];
   };
 }
+
 export function newGeneratedSources(sourceInfo) {
   return async ({ dispatch, getState, client }) => {
     if (sourceInfo.length == 0) {
@@ -278,38 +280,42 @@ export function newGeneratedSources(sourceInfo) {
     const newSourcesObj = {};
     const newSourceActors = [];
 
-    for (const { thread, source, id } of sourceInfo) {
-      const newId = id || makeSourceId(source, thread);
+    // `sourceInfo` is an array of objects returned by `prepareSourceActorPayload` (in production)
+    // and `makeSource` (in jest tests)
+    for (const { thread, sourceFront, id } of sourceInfo) {
+      // Only jest test pass an `id` to avoid having to call makeSourceId.
+      // i.e. production code will always call makeSourceId.
+      const newId = id || makeSourceId(sourceFront, thread);
 
       if (!getSource(getState(), newId) && !newSourcesObj[newId]) {
         newSourcesObj[newId] = {
           id: newId,
-          url: source.url,
-          relativeUrl: source.url,
+          url: sourceFront.url,
+          relativeUrl: sourceFront.url,
           isPrettyPrinted: false,
-          extensionName: source.extensionName,
+          extensionName: sourceFront.extensionName,
           isBlackBoxed: false,
-          isWasm: !!features.wasm && source.introductionType === "wasm",
-          isExtension: (source.url && isUrlExtension(source.url)) || false,
+          isWasm: !!features.wasm && sourceFront.introductionType === "wasm",
+          isExtension:
+            (sourceFront.url && isUrlExtension(sourceFront.url)) || false,
           isOriginal: false,
         };
       }
 
-      const actorId = stringToSourceActorId(source.actor);
+      const actorId = stringToSourceActorId(sourceFront.actor);
 
       // We are sometimes notified about a new source multiple times if we
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
         newSourceActors.push({
           id: actorId,
-          actor: source.actor,
+          actor: sourceFront.actor,
           thread,
           source: newId,
-          isBlackBoxed: source.isBlackBoxed,
-          sourceMapBaseURL: source.sourceMapBaseURL,
-          sourceMapURL: source.sourceMapURL,
-          url: source.url,
-          introductionType: source.introductionType,
+          sourceMapBaseURL: sourceFront.sourceMapBaseURL,
+          sourceMapURL: sourceFront.sourceMapURL,
+          url: sourceFront.url,
+          introductionType: sourceFront.introductionType,
         });
       }
 

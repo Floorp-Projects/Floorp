@@ -24,6 +24,8 @@ export default function update(state = initial, action) {
   switch (action.type) {
     case "INSERT_SOURCE_ACTORS": {
       const { items } = action;
+      // The `item` objects are defined from `newGeneratedSources` action:
+      // https://searchfox.org/mozilla-central/rev/4646b826a25d3825cf209db890862b45fa09ffc3/devtools/client/debugger/src/actions/sources/newSources.js#300-314
       state = insertResources(
         state,
         items.map(item => ({
