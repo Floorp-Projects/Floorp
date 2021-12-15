@@ -50,8 +50,8 @@ PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
 
 PostMessageEvent::~PostMessageEvent() = default;
 
-NS_IMETHODIMP
-PostMessageEvent::Run() {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP PostMessageEvent::Run() {
   // Note: We don't init this AutoJSAPI with targetWindow, because we do not
   // want exceptions during message deserialization to trigger error events on
   // targetWindow.
@@ -249,8 +249,9 @@ void PostMessageEvent::Dispatch(nsGlobalWindowInner* aTargetWindow,
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(ToSupports(aTargetWindow), presContext,
-                            internalEvent, aEvent, &status);
+  // TODO: Bug 1506441
+  EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(aTargetWindow)),
+                            presContext, internalEvent, aEvent, &status);
 }
 
 void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
