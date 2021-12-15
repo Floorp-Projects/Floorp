@@ -2868,7 +2868,7 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
   LOGW("nsWindow::RequestFocusWaylandWindow(%p) gFocusWindow %p",
        (void*)aWindow, gFocusWindow);
 
-  if (!gFocusWindow) {
+  if (!gFocusWindow || gFocusWindow->IsDestroyed()) {
     LOGW("  missing gFocusWindow, quit.");
   }
 
@@ -2883,13 +2883,16 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
   uint32_t focusSerial;
   KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
   if (!focusSurface) {
-    LOGW("  We're missing focused window, quit.");
+    LOGW("  We're missing KeymapWrapper focused window, quit.");
     return;
   }
 
   GdkWindow* gdkWindow = gtk_widget_get_window(gFocusWindow->mShell);
-  wl_surface* surface =
-      gdkWindow ? gdk_wayland_window_get_wl_surface(gdkWindow) : nullptr;
+  if (!gdkWindow) {
+    LOGW("  gFocusWindow is not mapped, quit.");
+    return;
+  }
+  wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
   if (focusSurface != surface) {
     LOGW("  focused surface %p and gFocusWindow surface %p don't match, quit.",
          focusSurface, surface);
