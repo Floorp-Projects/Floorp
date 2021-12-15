@@ -372,7 +372,8 @@ nsresult Http3Session::ProcessEvents() {
           break;
         }
 
-        stream->SetResponseHeaders(data, event.header_ready.fin);
+        stream->SetResponseHeaders(data, event.header_ready.fin,
+                                   event.header_ready.interim);
 
         uint32_t read = 0;
         rv = ProcessTransactionRead(stream, &read);

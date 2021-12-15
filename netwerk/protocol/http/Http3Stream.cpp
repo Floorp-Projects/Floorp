@@ -280,12 +280,11 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
 }
 
 void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
-                                     bool aFin) {
-  MOZ_ASSERT(mRecvState == BEFORE_HEADERS);
-  MOZ_ASSERT(mFlatResponseHeaders.IsEmpty(),
-             "Cannot set response headers more than once");
-  mFlatResponseHeaders = std::move(aResponseHeaders);
-  mRecvState = READING_HEADERS;
+                                     bool aFin, bool interim) {
+  MOZ_ASSERT(mRecvState == BEFORE_HEADERS ||
+             mRecvState == READING_INTERIM_HEADERS);
+  mFlatResponseHeaders.AppendElements(aResponseHeaders);
+  mRecvState = (interim) ? READING_INTERIM_HEADERS : READING_HEADERS;
   mDataReceived = true;
   mFin = aFin;
 }
@@ -308,7 +307,8 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
       *countWritten = 0;
       rv = NS_BASE_STREAM_WOULD_BLOCK;
     } break;
-    case READING_HEADERS: {
+    case READING_HEADERS:
+    case READING_INTERIM_HEADERS: {
       // SetResponseHeaders should have been previously called.
       MOZ_ASSERT(!mFlatResponseHeaders.IsEmpty(), "Headers empty!");
       *countWritten = (mFlatResponseHeaders.Length() > count)
@@ -318,7 +318,14 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
 
       mFlatResponseHeaders.RemoveElementsAt(0, *countWritten);
       if (mFlatResponseHeaders.Length() == 0) {
-        mRecvState = mFin ? RECEIVED_FIN : READING_DATA;
+        if (mRecvState == READING_INTERIM_HEADERS) {
+          // neqo makes sure that fin cannot be received before the final
+          // headers are received.
+          MOZ_ASSERT(!mFin);
+          mRecvState = BEFORE_HEADERS;
+        } else {
+          mRecvState = mFin ? RECEIVED_FIN : READING_DATA;
+        }
       }
 
       if (*countWritten == 0) {
