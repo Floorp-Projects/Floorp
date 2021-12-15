@@ -679,7 +679,6 @@ struct JSRuntime {
 
   bool initSelfHostingStencil(JSContext* cx, JS::SelfHostedCache xdrCache,
                               JS::SelfHostedWriter xdrWriter);
-  bool initSelfHostingAtomsFromStencil(JSContext* cx);
   bool initSelfHostingFromStencil(JSContext* cx);
   void finishSelfHosting();
   void traceSelfHostingStencil(JSTracer* trc);
