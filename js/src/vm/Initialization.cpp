@@ -245,12 +245,6 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
     return false;
   }
 
-#ifndef JS_CODEGEN_NONE
-  if (!rt->createJitRuntime(cx)) {
-    return false;
-  }
-#endif
-
   if (!rt->initSelfHostingFromStencil(cx)) {
     return false;
   }
@@ -258,6 +252,18 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
   if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
     return false;
   }
+
+#ifndef JS_CODEGEN_NONE
+  if (!rt->createJitRuntime(cx)) {
+    return false;
+  }
+#endif
+
+#ifdef DEBUG
+  if (!rt->parentRuntime) {
+    rt->gc.assertNoPermanentSharedThings();
+  }
+#endif
 
   return true;
 }
