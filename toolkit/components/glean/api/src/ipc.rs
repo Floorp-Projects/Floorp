@@ -122,6 +122,9 @@ fn register_process_shutdown(process_type: u32) {
         nsIXULRuntime::PROCESS_TYPE_RDD => {
             // RDD process shutdown is handled in RDDParent::ActorDestroy.
         }
+        nsIXULRuntime::PROCESS_TYPE_SOCKET => {
+            // Socket process shutdown is handled in SocketProcessChild::ActorDestroy.
+        }
         _ => {
             // We don't yet support other process types.
             log::error!("Process type {} tried to use FOG, but isn't supported! (Process type constants are in nsIXULRuntime.rs)", process_type);

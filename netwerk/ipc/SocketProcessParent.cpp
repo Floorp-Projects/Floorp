@@ -12,6 +12,7 @@
 #include "SocketProcessHost.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
@@ -467,6 +468,11 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvOnConsoleMessage(
   if (consoleService) {
     consoleService->LogStringMessage(aMessage.get());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvFOGData(ByteBuf&& aBuf) {
+  glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
 
