@@ -322,12 +322,7 @@ static inline size_t StackArgAreaSizeUnaligned(
 }
 
 static inline size_t AlignStackArgAreaSize(size_t unalignedSize) {
-  return AlignBytes(unalignedSize, 16u);
-}
-
-template <class T>
-static inline size_t StackArgAreaSizeAligned(const T& argTypes) {
-  return AlignStackArgAreaSize(StackArgAreaSizeUnaligned(argTypes));
+  return AlignBytes(unalignedSize, jit::WasmStackAlignment);
 }
 
 // A stackmap creation helper.  Create a stackmap from a vector of booleans.
