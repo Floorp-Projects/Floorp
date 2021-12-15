@@ -50,20 +50,23 @@ ImageBitmapRenderingContext::ClipToIntrinsicSize() {
 
 void ImageBitmapRenderingContext::TransferImageBitmap(
     ImageBitmap& aImageBitmap) {
-  TransferFromImageBitmap(aImageBitmap);
+  TransferFromImageBitmap(&aImageBitmap);
 }
 
 void ImageBitmapRenderingContext::TransferFromImageBitmap(
-    ImageBitmap& aImageBitmap) {
+    ImageBitmap* aImageBitmap) {
   Reset();
-  mImage = aImageBitmap.TransferAsImage();
 
-  if (!mImage) {
-    return;
-  }
+  if (aImageBitmap) {
+    mImage = aImageBitmap->TransferAsImage();
 
-  if (aImageBitmap.IsWriteOnly() && mCanvasElement) {
-    mCanvasElement->SetWriteOnly();
+    if (aImageBitmap->IsWriteOnly()) {
+      if (mCanvasElement) {
+        mCanvasElement->SetWriteOnly();
+      } else if (mOffscreenCanvas) {
+        mOffscreenCanvas->SetWriteOnly();
+      }
+    }
   }
 
   Redraw(gfxRect(0, 0, mWidth, mHeight));
@@ -229,27 +232,12 @@ ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
   mIsCapturedFrameInvalid = true;
 
   if (mOffscreenCanvas) {
-    RefPtr<layers::ImageContainer> imageContainer =
-        mOffscreenCanvas->GetImageContainer();
-    if (imageContainer) {
-      RefPtr<layers::Image> image = ClipToIntrinsicSize();
-      if (image) {
-        AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
-        imageList.AppendElement(layers::ImageContainer::NonOwningImage(image));
-        imageContainer->SetCurrentImages(imageList);
-      } else {
-        imageContainer->ClearAllImages();
-      }
-    }
     mOffscreenCanvas->CommitFrameToCompositor();
+  } else if (mCanvasElement) {
+    mozilla::gfx::Rect rect = ToRect(aDirty);
+    mCanvasElement->InvalidateCanvasContent(&rect);
   }
 
-  if (!mCanvasElement) {
-    return NS_OK;
-  }
-
-  mozilla::gfx::Rect rect = ToRect(aDirty);
-  mCanvasElement->InvalidateCanvasContent(&rect);
   return NS_OK;
 }
 

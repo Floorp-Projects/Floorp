@@ -41,11 +41,11 @@ RefPtr<layers::ImageContainer> OffscreenCanvasDisplayHelper::GetImageContainer()
   return mImageContainer;
 }
 
-void OffscreenCanvasDisplayHelper::UpdateContext(
-    layers::ImageContainer* aContainer, CanvasContextType aType,
-    int32_t aChildId) {
+void OffscreenCanvasDisplayHelper::UpdateContext(CanvasContextType aType,
+                                                 int32_t aChildId) {
   MutexAutoLock lock(mMutex);
-  mImageContainer = aContainer;
+  mImageContainer =
+      MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
   mType = aType;
 
   if (aChildId) {
@@ -127,10 +127,14 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     }
   }
 
-  AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(layers::ImageContainer::NonOwningImage(
-      image, TimeStamp(), mLastFrameID++, mImageProducerID));
-  mImageContainer->SetCurrentImages(imageList);
+  if (image) {
+    AutoTArray<layers::ImageContainer::NonOwningImage, 1> imageList;
+    imageList.AppendElement(layers::ImageContainer::NonOwningImage(
+        image, TimeStamp(), mLastFrameID++, mImageProducerID));
+    mImageContainer->SetCurrentImages(imageList);
+  } else {
+    mImageContainer->ClearAllImages();
+  }
 
   mFrontBufferDesc = std::move(desc);
   mFrontBufferSurface = std::move(surface);
