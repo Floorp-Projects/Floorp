@@ -1904,10 +1904,8 @@ def security_hardening_cflags(
         # Require optimization for FORTIFY_SOURCE. See Bug 1417452
         # Also, undefine it before defining it just in case a distro adds it, see Bug 1418398
         if compiler_is_gccish and optimize and not asan:
-            # Don't enable FORTIFY_SOURCE on Android on the top-level, but do enable in js/
-            if target.os != "Android":
-                flags.append("-U_FORTIFY_SOURCE")
-                flags.append("-D_FORTIFY_SOURCE=2")
+            flags.append("-U_FORTIFY_SOURCE")
+            flags.append("-D_FORTIFY_SOURCE=2")
             js_flags.append("-U_FORTIFY_SOURCE")
             js_flags.append("-D_FORTIFY_SOURCE=2")
             if mingw_clang:
