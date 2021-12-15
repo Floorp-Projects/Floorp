@@ -474,7 +474,7 @@ var TESTS = [
       ],
     });
 
-    let notificationPromise = waitForNotification("addon-install-blocked");
+    let notificationPromise = waitForNotification("addon-webext-permissions");
     let triggers = encodeURIComponent(
       JSON.stringify({
         XPI: TESTROOT + "webmidi_permission.xpi",
@@ -485,29 +485,7 @@ var TESTS = [
       TESTROOT + "installtrigger.html?" + triggers
     );
     let panel = await notificationPromise;
-
     let notification = panel.childNodes[0];
-    is(
-      notification.button.label,
-      "Continue to Installation",
-      "Should have seen the right button"
-    );
-    let message = panel.ownerDocument.getElementById(
-      "addon-install-blocked-message"
-    );
-    is(
-      message.textContent,
-      "You are attempting to install an add-on from example.com. Make sure you trust this site before continuing.",
-      "Should have seen the right message"
-    );
-
-    // Next we get the permissions prompt, which also warns of the unsigned state of the addon
-    notificationPromise = waitForNotification("addon-webext-permissions");
-    // Click on Allow on the 3rd party panel
-    notification.button.click();
-    panel = await notificationPromise;
-    notification = panel.childNodes[0];
-
     is(notification.button.label, "Add", "Should have seen the right button");
 
     is(
@@ -579,7 +557,7 @@ var TESTS = [
 
     let dialogPromise = waitForInstallDialog();
     // Click on Allow
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+    notification.button.click();
 
     let installDialog = await dialogPromise;
 
