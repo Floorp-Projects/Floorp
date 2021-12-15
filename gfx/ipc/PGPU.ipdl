@@ -120,7 +120,8 @@ parent:
 
   // Test-only method.
   // Asks the gpu process to trigger test-only instrumentation.
-  async TestTriggerMetrics();
+  // The unused returned value is to have a promise we can await.
+  async TestTriggerMetrics() returns (bool unused);
 
   // Causes the GPU process to crash. Used for tests and diagnostics.
   async CrashProcess();

@@ -21,6 +21,7 @@
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/Unused.h"
+#include "nsIXULRuntime.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -202,15 +203,25 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
   return ret;
 }
 
-void TestTriggerGPUMetrics() {
-  gfx::GPUProcessManager::Get()->TestTriggerMetrics();
-}
-
-void TestTriggerRDDMetrics(const RefPtr<dom::Promise>& promise) {
-  RDDProcessManager::Get()->TestTriggerMetrics()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [promise]() { promise->MaybeResolveWithUndefined(); },
-      [promise]() { promise->MaybeRejectWithUndefined(); });
+void TestTriggerMetrics(uint32_t aProcessType,
+                        const RefPtr<dom::Promise>& promise) {
+  switch (aProcessType) {
+    case nsIXULRuntime::PROCESS_TYPE_GPU:
+      gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise]() { promise->MaybeResolveWithUndefined(); },
+          [promise]() { promise->MaybeRejectWithUndefined(); });
+      break;
+    case nsIXULRuntime::PROCESS_TYPE_RDD:
+      RDDProcessManager::Get()->TestTriggerMetrics()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise]() { promise->MaybeResolveWithUndefined(); },
+          [promise]() { promise->MaybeRejectWithUndefined(); });
+      break;
+    default:
+      promise->MaybeRejectWithUndefined();
+      break;
+  }
 }
 
 }  // namespace glean
