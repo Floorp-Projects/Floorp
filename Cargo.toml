@@ -78,11 +78,9 @@ opt-level = 2
 opt-level = 2
 
 [patch.crates-io]
-chardetng = { git = "https://github.com/hsivonen/chardetng", rev="302c995f91f44cf26e77dc4758ad56c3ff0153ad" }
-chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
-libudev-sys = { path = "dom/webauthn/libudev-sys" }
-packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="8b4bd7d8229660a749dbe419a57ea01df9de5453" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852" }
+# Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
+autocfg = { path = "third_party/rust/autocfg" }
+
 # The following overrides point to dummy projects, as a temporary measure until this is resolved:
 # https://github.com/rust-lang/cargo/issues/6179
 js-sys = { git = "https://github.com/kvark/dummy-web" }
@@ -90,9 +88,12 @@ slotmap = { git = "https://github.com/kvark/dummy-web" }
 wasm-bindgen = { git = "https://github.com/kvark/dummy-web" }
 web-sys = { git = "https://github.com/kvark/dummy-web" }
 
-# Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
-[patch.crates-io.autocfg]
-path = "third_party/rust/autocfg"
+# Other overrides
+chardetng = { git = "https://github.com/hsivonen/chardetng", rev="302c995f91f44cf26e77dc4758ad56c3ff0153ad" }
+chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
+libudev-sys = { path = "dom/webauthn/libudev-sys" }
+packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="8b4bd7d8229660a749dbe419a57ea01df9de5453" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
