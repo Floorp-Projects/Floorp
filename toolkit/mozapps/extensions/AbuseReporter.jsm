@@ -116,6 +116,10 @@ const AbuseReporter = {
     return currentTimestamp - this._lastReportTimestamp;
   },
 
+  isSupportedAddonType(addonType) {
+    return SUPPORTED_ADDON_TYPES.includes(addonType);
+  },
+
   /**
    * Create an AbuseReport instance, given the addonId and a reportEntryPoint.
    *
