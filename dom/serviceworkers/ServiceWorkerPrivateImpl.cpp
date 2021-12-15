@@ -1008,6 +1008,39 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
   return NS_OK;
 }
 
+RefPtr<ServiceWorkerPrivate::PromiseExtensionWorkerHasListener>
+ServiceWorkerPrivateImpl::WakeForExtensionAPIEvent(
+    const nsAString& aExtensionAPINamespace,
+    const nsAString& aExtensionAPIEventName) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mOuter);
+
+  ServiceWorkerExtensionAPIEventOpArgs args;
+  args.apiNamespace() = nsString(aExtensionAPINamespace);
+  args.apiEventName() = nsString(aExtensionAPIEventName);
+
+  auto promise =
+      MakeRefPtr<PromiseExtensionWorkerHasListener::Private>(__func__);
+
+  nsresult rv = ExecServiceWorkerOp(
+      std::move(args),
+      [promise](ServiceWorkerOpResult&& aResult) {
+        MOZ_ASSERT(
+            aResult.type() ==
+            ServiceWorkerOpResult::TServiceWorkerExtensionAPIEventOpResult);
+        auto& result = aResult.get_ServiceWorkerExtensionAPIEventOpResult();
+        promise->Resolve(result.extensionAPIEventListenerWasAdded(), __func__);
+      },
+      [promise]() { promise->Reject(NS_ERROR_FAILURE, __func__); });
+
+  if (NS_FAILED(rv)) {
+    promise->Reject(rv, __func__);
+  }
+
+  RefPtr<PromiseExtensionWorkerHasListener> outPromise(promise);
+  return outPromise.forget();
+}
+
 void ServiceWorkerPrivateImpl::TerminateWorker() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
