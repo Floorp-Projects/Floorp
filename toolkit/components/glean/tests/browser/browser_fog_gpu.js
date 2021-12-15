@@ -26,7 +26,7 @@ add_task(async () => {
     "Ensure we begin without value."
   );
 
-  Services.fog.testTriggerGPUMetrics();
+  await Services.fog.testTriggerMetrics(Ci.nsIXULRuntime.PROCESS_TYPE_GPU);
   await Services.fog.testFlushAllChildren();
 
   is(
