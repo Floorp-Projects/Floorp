@@ -99,7 +99,8 @@ class GPUParent final : public PGPUParent {
 
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvTestTriggerMetrics();
+  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
+      TestTriggerMetricsResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCrashProcess();
 

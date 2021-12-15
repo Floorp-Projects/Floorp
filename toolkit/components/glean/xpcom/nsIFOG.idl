@@ -122,17 +122,15 @@ interface nsIFOG : nsISupports
   /**
    * ** Test-only Method **
    *
-   * Trigger test metric instrumentation on the GPU process.
-   */
-  void testTriggerGPUMetrics();
-
-  /**
-   * ** Test-only Method **
+   * Trigger test metric instrumentation on the GPU, RDD or Socket process.
    *
-   * Trigger test metric instrumentation on the RDD process.
+   * @param aProcessType - A PROCESS_TYPE_* value from the constants defined
+   *                       in the nsIXULRuntime interface.
    *
    * @returns A promise that resolves when the test data has been added.
+   *          The promise will be rejected if the process type is not supported
+   *          or if sending the IPC to the child process fails.
    */
   [implicit_jscontext]
-  Promise testTriggerRDDMetrics();
+  Promise testTriggerMetrics(in unsigned long aProcessType);
 };

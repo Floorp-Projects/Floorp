@@ -625,8 +625,10 @@ mozilla::ipc::IPCResult GPUParent::RecvFlushFOGData(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics() {
+mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
   mozilla::glean::test_only_ipc::a_counter.Add(45326);
+  aResolve(true);
   return IPC_OK();
 }
 
