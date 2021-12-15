@@ -772,8 +772,8 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_safe_browsing_summary">Block reported deceptive and attack sites, malware sites, and unwanted software sites.</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS-Only Mode</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS provides a secure, encrypted connection between %1$s and the websites you visit. Most websites support HTTPS, and if HTTPS-Only Mode is enabled, then %1$s will upgrade all connections to HTTPS.</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Automatically attempts to connect to sites using HTTPS for increased security. HTTPS connections provide a secure, encrypted connection to websites you visit.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
@@ -852,6 +852,10 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Follow device theme</string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">The site you requested does not support HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. -->
+    <string name="errorpage_httpsonly_message">By default, %1$s attempts to connect using HTTPS for increased security. To change this setting or to learn more, go to Settings > Privacy &amp; Security > Security.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

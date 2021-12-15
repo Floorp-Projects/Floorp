@@ -7,7 +7,6 @@ package org.mozilla.focus.settings
 import android.content.Context
 import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
-import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.Features
 
@@ -36,10 +35,5 @@ class HttpsOnlyModePreference(
             }
             true
         }
-    }
-
-    override fun getDescription(): String {
-        val appName = context.getString(R.string.app_name)
-        return context.getString(R.string.preference_https_only_summary, appName)
     }
 }
