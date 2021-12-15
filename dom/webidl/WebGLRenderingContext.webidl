@@ -537,7 +537,7 @@ interface mixin WebGLRenderingContextBase {
     const GLenum BROWSER_DEFAULT_WEBGL          = 0x9244;
 
     // The canvas might actually be null in some cases, apparently.
-    readonly attribute (HTMLCanvasElement or OffscreenCanvas)? canvas;
+    readonly attribute CanvasSource? canvas;
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 
