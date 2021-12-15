@@ -89,14 +89,13 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
   Maybe<RawId> id = mBridge->AdapterRequestDevice(mId, aDesc, &limits);
   if (id.isSome()) {
     RefPtr<Device> device =
-        new Device(this, id.value(), aDesc.mRequiredFeatures,
-                   MakeUnique<ffi::WGPULimits>(limits));
+        new Device(this, id.value(), MakeUnique<ffi::WGPULimits>(limits));
     // copy over the features
     for (const auto& feature : aDesc.mRequiredFeatures) {
       NS_ConvertASCIItoUTF16 string(
           dom::GPUFeatureNameValues::GetString(feature));
-      dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(mFeatures, string,
-                                                             aRv);
+      dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(device->mFeatures,
+                                                             string, aRv);
     }
     promise->MaybeResolve(device);
   } else {
