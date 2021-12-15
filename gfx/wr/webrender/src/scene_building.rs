@@ -57,7 +57,7 @@ use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
-use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
+use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo};
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
@@ -463,6 +463,11 @@ pub struct SceneBuilder<'a> {
     /// A map of pipeline ids encountered during scene build - used to create unique
     /// pipeline instance ids as they are encountered.
     pipeline_instance_ids: FastHashMap<PipelineId, u32>,
+
+    /// A list of surfaces (backing textures) that are relevant for this scene.
+    /// Every picture is assigned to a surface (either a new surface if the picture
+    /// has a composite mode, or the parent surface if it's a pass-through).
+    surfaces: Vec<SurfaceInfo>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -518,6 +523,7 @@ impl<'a> SceneBuilder<'a> {
             plane_splitters: Vec::new(),
             prim_instances: Vec::new(),
             pipeline_instance_ids: FastHashMap::default(),
+            surfaces: Vec::new(),
         };
 
         builder.build_all(&root_pipeline);
@@ -549,6 +555,7 @@ impl<'a> SceneBuilder<'a> {
             picture_graph: builder.picture_graph,
             plane_splitters: builder.plane_splitters,
             prim_instances: builder.prim_instances,
+            surfaces: builder.surfaces,
         }
     }
 
