@@ -295,11 +295,12 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
   template <typename U>
   static bool Write(ProducerView<U>& view, const ParamType& in) {
     MOZ_RELEASE_ASSERT(!in.image);
+    MOZ_RELEASE_ASSERT(!in.sd);
     const bool isDataSurf = bool(in.dataSurf);
     if (!view.WriteParam(in.imageTarget) || !view.WriteParam(in.size) ||
         !view.WriteParam(in.srcAlphaType) || !view.WriteParam(in.unpacking) ||
         !view.WriteParam(in.cpuData) || !view.WriteParam(in.pboOffset) ||
-        !view.WriteParam(in.imageSize) || !view.WriteParam(in.sd) ||
+        !view.WriteParam(in.imageSize) ||
         !view.WriteParam(in.applyUnpackTransforms) ||
         !view.WriteParam(isDataSurf)) {
       return false;
@@ -334,7 +335,6 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
         !view.ReadParam(&out->srcAlphaType) ||
         !view.ReadParam(&out->unpacking) || !view.ReadParam(&out->cpuData) ||
         !view.ReadParam(&out->pboOffset) || !view.ReadParam(&out->imageSize) ||
-        !view.ReadParam(&out->sd) ||
         !view.ReadParam(&out->applyUnpackTransforms) ||
         !view.ReadParam(&isDataSurf)) {
       return false;
