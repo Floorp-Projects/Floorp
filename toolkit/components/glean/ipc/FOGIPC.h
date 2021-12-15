@@ -62,14 +62,19 @@ RefPtr<GenericPromise> FlushAndUseFOGData();
 /**
  * ** Test-only Method **
  *
- * Trigger GPU, RDD or Socket process test instrumentation.
- *
- * @param processType - one of the PROCESS_TYPE_* constants from nsIXULRuntime.
- * @param promise - a promise that will be resolved when the data has made it to
- *                  the target process.
+ * Trigger GPU-process test instrumentation.
  */
-void TestTriggerMetrics(uint32_t processType,
-                        const RefPtr<dom::Promise>& promise);
+void TestTriggerGPUMetrics();
+
+/**
+ * ** Test-only Method **
+ *
+ * Trigger RDD-process test instrumentation.
+ *
+ * @param promise - a promise that will be resolved when the data has made it to
+ *                  the RDD process.
+ */
+void TestTriggerRDDMetrics(const RefPtr<dom::Promise>& promise);
 
 }  // namespace glean
 }  // namespace mozilla

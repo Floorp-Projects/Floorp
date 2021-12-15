@@ -148,11 +148,6 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvRecheckIPConnectivity();
   mozilla::ipc::IPCResult RecvRecheckDNS();
 
-  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
-
-  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
-      TestTriggerMetricsResolver&& aResolve);
-
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
