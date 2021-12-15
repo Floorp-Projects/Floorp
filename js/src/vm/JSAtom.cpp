@@ -241,7 +241,9 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
       reinterpret_cast<ImmutablePropertyNamePtr*>(commonNames.ref());
   for (size_t i = 0; i < uint32_t(WellKnownAtomId::Limit); i++) {
     const auto& info = wellKnownAtomInfos[i];
-    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length);
+    JSAtom* atom = PermanentlyAtomizeChars(
+        cx, info.hash, reinterpret_cast<const Latin1Char*>(info.content),
+        info.length);
     if (!atom) {
       return false;
     }
@@ -250,7 +252,9 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   }
 
   for (const auto& info : symbolDescInfo) {
-    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length);
+    JSAtom* atom = PermanentlyAtomizeChars(
+        cx, info.hash, reinterpret_cast<const Latin1Char*>(info.content),
+        info.length);
     if (!atom) {
       return false;
     }
@@ -841,6 +845,23 @@ template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
 
 template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
                                   const char16_t* chars, size_t length);
+
+template <typename CharT>
+JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, HashNumber hash,
+                                    const CharT* chars, size_t length) {
+  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
+    return s;
+  }
+
+  AtomHasher::Lookup lookup(hash, chars, length);
+  Maybe<AtomSet::AddPtr> zonePtr;
+  return PermanentlyAtomizeAndCopyChars(cx, zonePtr, chars, length, Nothing(),
+                                        lookup);
+}
+
+template JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, HashNumber hash,
+                                             const Latin1Char* chars,
+                                             size_t length);
 
 JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                              size_t utf8ByteLength) {
