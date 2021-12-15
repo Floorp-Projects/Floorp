@@ -99,14 +99,8 @@ class SocketProcessParent final
       const int32_t& aPort, const uint32_t& aProviderFlags,
       const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
       Maybe<ByteArray>&& aClientCert, nsTArray<ByteArray>&& aCollectedCANames,
-      bool* aSucceeded, ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain);
-
-  mozilla::ipc::IPCResult RecvFindIPCClientCertObjects(
-      nsTArray<IPCClientCertObject>* aObjects);
-  mozilla::ipc::IPCResult RecvIPCClientCertSign(ByteArray aCert,
-                                                ByteArray aData,
-                                                ByteArray aParams,
-                                                ByteArray* aSignature);
+      bool* aSucceeded, ByteArray* aOutCert, ByteArray* aOutKey,
+      nsTArray<ByteArray>* aBuiltChain);
 
   already_AddRefed<PProxyConfigLookupParent> AllocPProxyConfigLookupParent(
       nsIURI* aURI, const uint32_t& aProxyResolveFlags);
