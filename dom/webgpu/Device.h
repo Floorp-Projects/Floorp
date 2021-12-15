@@ -84,9 +84,10 @@ class Device final : public DOMEventTargetHelper {
   GPU_DECL_JS_WRAP(Device)
 
   const RawId mId;
+  RefPtr<SupportedFeatures> mFeatures;
+  RefPtr<SupportedLimits> mLimits;
 
   explicit Device(Adapter* const aParent, RawId aId,
-                  const dom::Sequence<dom::GPUFeatureName>& aRequiredFeatures,
                   UniquePtr<ffi::WGPULimits> aRawLimits);
 
   RefPtr<WebGPUChild> GetBridge();
@@ -113,8 +114,6 @@ class Device final : public DOMEventTargetHelper {
   nsString mLabel;
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
-  RefPtr<SupportedFeatures> mFeatures;
-  RefPtr<SupportedLimits> mLimits;
 
  public:
   void GetLabel(nsAString& aValue) const;

@@ -54,15 +54,14 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
 }
 
 Device::Device(Adapter* const aParent, RawId aId,
-               const dom::Sequence<dom::GPUFeatureName>& aRequiredFeatures,
                UniquePtr<ffi::WGPULimits> aRawLimits)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aId),
-      mBridge(aParent->mBridge),
-      mQueue(new class Queue(this, aParent->mBridge, aId)),
       // features are filled in Adapter::RequestDevice
       mFeatures(new SupportedFeatures(aParent)),
-      mLimits(new SupportedLimits(aParent, std::move(aRawLimits))) {
+      mLimits(new SupportedLimits(aParent, std::move(aRawLimits))),
+      mBridge(aParent->mBridge),
+      mQueue(new class Queue(this, aParent->mBridge, aId)) {
   mBridge->RegisterDevice(mId, this);
 }
 
