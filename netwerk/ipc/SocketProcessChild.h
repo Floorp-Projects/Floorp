@@ -150,6 +150,9 @@ class SocketProcessChild final
 
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
+      TestTriggerMetricsResolver&& aResolve);
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

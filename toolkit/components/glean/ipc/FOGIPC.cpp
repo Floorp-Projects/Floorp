@@ -218,6 +218,14 @@ void TestTriggerMetrics(uint32_t aProcessType,
           [promise]() { promise->MaybeResolveWithUndefined(); },
           [promise]() { promise->MaybeRejectWithUndefined(); });
       break;
+    case nsIXULRuntime::PROCESS_TYPE_SOCKET:
+      Unused << net::SocketProcessParent::GetSingleton()
+                    ->SendTestTriggerMetrics()
+                    ->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [promise]() { promise->MaybeResolveWithUndefined(); },
+                        [promise]() { promise->MaybeRejectWithUndefined(); });
+      break;
     default:
       promise->MaybeRejectWithUndefined();
       break;

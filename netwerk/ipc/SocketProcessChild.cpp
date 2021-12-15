@@ -16,6 +16,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/FOGIPC.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -42,6 +43,7 @@
 #include "nsHttpHandler.h"
 #include "nsIDNSService.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsNSSComponent.h"
 #include "nsSocketTransportService2.h"
@@ -674,6 +676,14 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRecheckDNS() {
 mozilla::ipc::IPCResult SocketProcessChild::RecvFlushFOGData(
     FlushFOGDataResolver&& aResolver) {
   glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
+  mozilla::glean::test_only_ipc::a_counter.Add(
+      nsIXULRuntime::PROCESS_TYPE_SOCKET);
+  aResolve(true);
   return IPC_OK();
 }
 
