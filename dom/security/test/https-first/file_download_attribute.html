@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test download attribute for http site</title>
+</head>
+<body>
+  <a href="http://nocert.example.com/browser/dom/security/test/https-first/file_download_attribute.sjs" download="some.html" id="testlink">download by attribute</a>
+  <script>
+    // click the link to start download
+    let testlink = document.getElementById("testlink");
+    testlink.click();
+  </script>
+  </body>
+</html>
