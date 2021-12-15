@@ -28,12 +28,6 @@
 #include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixutil.h"
 
-namespace {
-
-const size_t SHA1_DIGEST_LENGTH = 160 / 8;
-
-} // namespace
-
 namespace mozilla { namespace pkix {
 
 // These values correspond to the tag values in the ASN.1 CertStatus
@@ -181,10 +175,12 @@ static inline Result MatchCertID(Reader& input,
                                  const Context& context,
                                  /*out*/ bool& match);
 static Result MatchKeyHash(TrustDomain& trustDomain,
+                           DigestAlgorithm hashAlgorithm,
                            Input issuerKeyHash,
                            Input issuerSubjectPublicKeyInfo,
                            /*out*/ bool& match);
 static Result KeyHash(TrustDomain& trustDomain,
+                      DigestAlgorithm hashAlgorithm,
                       Input subjectPublicKeyInfo,
                       /*out*/ uint8_t* hashBuf, size_t hashBufSize);
 
@@ -213,7 +209,7 @@ MatchResponderID(TrustDomain& trustDomain,
       if (rv != Success) {
         return rv;
       }
-      return MatchKeyHash(trustDomain, keyHash,
+      return MatchKeyHash(trustDomain, DigestAlgorithm::sha1, keyHash,
                           potentialSignerSubjectPublicKeyInfo, match);
     }
 
@@ -741,36 +737,36 @@ MatchCertID(Reader& input, const Context& context, /*out*/ bool& match)
     return Success;
   }
 
-  // TODO: support SHA-2 hashes.
-
-  if (hashAlgorithm != DigestAlgorithm::sha1) {
-    // Again, not interested in this response. Consume input, return success.
-    input.SkipToEnd();
-    return Success;
-  }
-
-  if (issuerNameHash.GetLength() != SHA1_DIGEST_LENGTH) {
+  size_t hashAlgorithmLength = DigestAlgorithmToSizeInBytes(hashAlgorithm);
+  if (issuerNameHash.GetLength() != hashAlgorithmLength) {
     return Result::ERROR_OCSP_MALFORMED_RESPONSE;
   }
 
   // From http://tools.ietf.org/html/rfc6960#section-4.1.1:
   // "The hash shall be calculated over the DER encoding of the
   // issuer's name field in the certificate being checked."
-  uint8_t hashBuf[SHA1_DIGEST_LENGTH];
+  uint8_t hashBuf[MAX_DIGEST_SIZE_IN_BYTES];
+  if (hashAlgorithmLength > sizeof(hashBuf)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
   rv = context.trustDomain.DigestBuf(context.certID.issuer,
-                                     DigestAlgorithm::sha1, hashBuf,
-                                     sizeof(hashBuf));
+                                     hashAlgorithm, hashBuf,
+                                     hashAlgorithmLength);
   if (rv != Success) {
     return rv;
   }
-  Input computed(hashBuf);
+  Input computed;
+  rv = computed.Init(hashBuf, hashAlgorithmLength);
+  if (rv != Success) {
+    return rv;
+  }
   if (!InputsAreEqual(computed, issuerNameHash)) {
     // Again, not interested in this response. Consume input, return success.
     input.SkipToEnd();
     return Success;
   }
 
-  return MatchKeyHash(context.trustDomain, issuerKeyHash,
+  return MatchKeyHash(context.trustDomain, hashAlgorithm, issuerKeyHash,
                       context.certID.issuerSubjectPublicKeyInfo, match);
 }
 
@@ -784,30 +780,53 @@ MatchCertID(Reader& input, const Context& context, /*out*/ bool& match)
 //                          -- BIT STRING subjectPublicKey [excluding
 //                          -- the tag, length, and number of unused
 //                          -- bits] in the responder's certificate)
+//
+// From https://datatracker.ietf.org/doc/html/rfc6960#section-4.1.1:
+//    CertID          ::=     SEQUENCE {
+//        hashAlgorithm       AlgorithmIdentifier,
+//        issuerNameHash      OCTET STRING, -- Hash of issuer's DN
+//        issuerKeyHash       OCTET STRING, -- Hash of issuer's public key
+//        serialNumber        CertificateSerialNumber }
+// ...
+//    o  hashAlgorithm is the hash algorithm used to generate the
+//       issuerNameHash and issuerKeyHash values.
+// ...
+//    o  issuerKeyHash is the hash of the issuer's public key.  The hash
+//       shall be calculated over the value (excluding tag and length) of
+//       the subject public key field in the issuer's certificate.
 static Result
-MatchKeyHash(TrustDomain& trustDomain, Input keyHash,
-             const Input subjectPublicKeyInfo, /*out*/ bool& match)
+MatchKeyHash(TrustDomain& trustDomain, DigestAlgorithm hashAlgorithm,
+             Input keyHash, const Input subjectPublicKeyInfo,
+             /*out*/ bool& match)
 {
-  if (keyHash.GetLength() != SHA1_DIGEST_LENGTH)  {
+  size_t hashLength = DigestAlgorithmToSizeInBytes(hashAlgorithm);
+  if (keyHash.GetLength() != hashLength)  {
     return Result::ERROR_OCSP_MALFORMED_RESPONSE;
   }
-  uint8_t hashBuf[SHA1_DIGEST_LENGTH];
-  Result rv = KeyHash(trustDomain, subjectPublicKeyInfo, hashBuf,
-                      sizeof hashBuf);
+  uint8_t hashBuf[MAX_DIGEST_SIZE_IN_BYTES];
+  if (hashLength > MAX_DIGEST_SIZE_IN_BYTES) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  Result rv = KeyHash(trustDomain, hashAlgorithm, subjectPublicKeyInfo,
+                      hashBuf, hashLength);
   if (rv != Success) {
     return rv;
   }
-  Input computed(hashBuf);
+  Input computed;
+  rv = computed.Init(hashBuf, hashLength);
+  if (rv != Success) {
+    return rv;
+  }
   match = InputsAreEqual(computed, keyHash);
   return Success;
 }
 
-// TODO(bug 966856): support SHA-2 hashes
 Result
-KeyHash(TrustDomain& trustDomain, const Input subjectPublicKeyInfo,
-        /*out*/ uint8_t* hashBuf, size_t hashBufSize)
+KeyHash(TrustDomain& trustDomain, DigestAlgorithm hashAlgorithm,
+        const Input subjectPublicKeyInfo, /*out*/ uint8_t* hashBuf,
+        size_t hashBufSize)
 {
-  if (!hashBuf || hashBufSize != SHA1_DIGEST_LENGTH) {
+  if (!hashBuf || hashBufSize != DigestAlgorithmToSizeInBytes(hashAlgorithm)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
@@ -840,8 +859,8 @@ KeyHash(TrustDomain& trustDomain, const Input subjectPublicKeyInfo,
     return rv;
   }
 
-  return trustDomain.DigestBuf(subjectPublicKey, DigestAlgorithm::sha1,
-                               hashBuf, hashBufSize);
+  return trustDomain.DigestBuf(subjectPublicKey, hashAlgorithm, hashBuf,
+                               hashBufSize);
 }
 
 Result
@@ -921,8 +940,6 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   // and thus more likely to fit within the 255 byte limit for OCSP GET that
   // is specified in RFC 5019 Section 5.
 
-  // Bug 966856: Add the id-pkix-ocsp-pref-sig-algs extension.
-
   // Since we don't know whether the OCSP responder supports anything other
   // than SHA-1, we have no choice but to use SHA-1 for issuerNameHash and
   // issuerKeyHash.
@@ -986,7 +1003,8 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   // reqCert.issuerKeyHash (OCTET STRING)
   *d++ = 0x04;
   *d++ = hashLen;
-  rv = KeyHash(trustDomain, certID.issuerSubjectPublicKeyInfo, d, hashLen);
+  rv = KeyHash(trustDomain, DigestAlgorithm::sha1,
+               certID.issuerSubjectPublicKeyInfo, d, hashLen);
   if (rv != Success) {
     return rv;
   }
