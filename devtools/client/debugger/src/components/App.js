@@ -89,7 +89,7 @@ class App extends Component {
     );
 
     shortcuts.on("Escape", this.onEscape);
-    shortcuts.on("Cmd+/", this.onCommandSlash);
+    shortcuts.on("CmdOrCtrl+/", this.onCommandSlash);
   }
 
   componentWillUnmount() {
@@ -109,6 +109,7 @@ class App extends Component {
     shortcuts.off(L10N.getStr("gotoLineModal.key3"), this.toggleQuickOpenModal);
 
     shortcuts.off("Escape", this.onEscape);
+    shortcuts.off("CmdOrCtrl+/", this.onCommandSlash);
   }
 
   onEscape = e => {
