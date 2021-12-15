@@ -603,6 +603,7 @@ pub enum Http3Event {
     HeaderReady {
         stream_id: u64,
         fin: bool,
+        interim: bool,
     },
     /// New bytes available for reading.
     DataReadable {
@@ -709,18 +710,14 @@ pub extern "C" fn neqo_http3conn_event(
                 fin,
                 interim,
             } => {
-                if interim {
-                    // This are 1xx responses and they are ignored.
-                    Http3Event::NoEvent
-                } else {
-                    let res = convert_h3_to_h1_headers(headers, data);
-                    if res != NS_OK {
-                        return res;
-                    }
-                    Http3Event::HeaderReady {
-                        stream_id: stream_id.as_u64(),
-                        fin,
-                    }
+                let res = convert_h3_to_h1_headers(headers, data);
+                if res != NS_OK {
+                    return res;
+                }
+                Http3Event::HeaderReady {
+                    stream_id: stream_id.as_u64(),
+                    fin,
+                    interim,
                 }
             }
             Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable {
