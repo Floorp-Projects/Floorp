@@ -477,8 +477,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
 
 template <typename CharT>
 static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
-    size_t length, const Maybe<uint32_t>& indexValue,
+    JSContext* cx, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup);
 
 template <typename CharT>
@@ -503,13 +502,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     }
   }
 
-  // This function can be called during initialization, while the permanent
-  // atoms table is being created. In this case all atoms created are added to
-  // the permanent atoms table.
-  if (!cx->permanentAtomsPopulated()) {
-    return PermanentlyAtomizeAndCopyChars(cx, zonePtr, chars, length,
-                                          indexValue, lookup);
-  }
+  MOZ_ASSERT(cx->permanentAtomsPopulated());
 
   AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
   if (pp) {
@@ -610,8 +603,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyChars(
 
 template <typename CharT>
 static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
-    size_t length, const Maybe<uint32_t>& indexValue,
+    JSContext* cx, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup) {
   MOZ_ASSERT(!cx->permanentAtomsPopulated());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -623,7 +615,7 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
     return p->get();
   }
 
-  JSAtom* atom = AllocateNewAtom(cx, chars, length, indexValue, lookup);
+  JSAtom* atom = AllocateNewAtom(cx, chars, length, Nothing(), lookup);
   if (!atom) {
     return nullptr;
   }
@@ -635,11 +627,6 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
   // still valid.
   if (!atoms.add(p, atom)) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
-    return nullptr;
-  }
-
-  if (zonePtr && MOZ_UNLIKELY(!cx->zone()->atomCache().add(*zonePtr, atom))) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
@@ -854,9 +841,7 @@ JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, HashNumber hash,
   }
 
   AtomHasher::Lookup lookup(hash, chars, length);
-  Maybe<AtomSet::AddPtr> zonePtr;
-  return PermanentlyAtomizeAndCopyChars(cx, zonePtr, chars, length, Nothing(),
-                                        lookup);
+  return PermanentlyAtomizeAndCopyChars(cx, chars, length, lookup);
 }
 
 template JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, HashNumber hash,
