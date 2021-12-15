@@ -7,7 +7,6 @@
 if not CONFIG["MOZ_GLEAN_ANDROID"]:
     UNIFIED_SOURCES += [
         "TestFog.cpp",
-        "TestFogIPC.cpp",
     ]
 
 FINAL_LIBRARY = "xul-gtest"
