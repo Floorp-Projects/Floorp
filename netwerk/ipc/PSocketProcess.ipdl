@@ -202,6 +202,11 @@ child:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FlushFOGData() returns (ByteBuf buf);
 
+  // Test-only method.
+  // Asks the Socket process to trigger test-only instrumentation.
+  // The unused returned value is to have a promise we can await.
+  async TestTriggerMetrics() returns (bool unused);
+
 both:
   async PFileDescriptorSet(FileDescriptor fd);
   async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
