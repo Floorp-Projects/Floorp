@@ -14,6 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.text.TextUtilsCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
@@ -59,6 +61,7 @@ import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
+import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
 private const val TIP_ONE_CAROUSEL_POSITION = 1
@@ -225,6 +228,20 @@ class UrlInputFragment :
         val context = context ?: return
         val tips = TipManager.getAvailableTips(context)
         binding.homeTips.tipsAdapter.submitList(tips)
+        updateTipsPosition()
+    }
+
+    /**
+     * The pro tips should start from right to left if the language is read right to left
+     * (example Persian)
+     */
+    private fun updateTipsPosition() {
+        val isRightToLeftLanguage = TextUtilsCompat.getLayoutDirectionFromLocale(
+            Locale.getDefault()
+        ) == ViewCompat.LAYOUT_DIRECTION_RTL
+        if (isRightToLeftLanguage) {
+            binding.homeTips.scrollToPosition(binding.homeTips.tipsAdapter.itemCount - 1)
+        }
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
