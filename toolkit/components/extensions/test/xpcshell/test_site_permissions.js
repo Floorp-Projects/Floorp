@@ -18,6 +18,16 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
+const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
+
+// Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
+// override Services.appinfo.
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+
 async function _test_manifest(manifest, expectedError) {
   ExtensionTestUtils.failOnSchemaWarnings(false);
   let normalized = await ExtensionTestUtils.normalizeManifest(
@@ -262,4 +272,26 @@ add_task(async function test_sitepermission_type() {
     "no permission for site"
   );
   assertGeo();
+});
+
+add_task(async function test_site_permissions_have_localization_strings() {
+  await ExtensionParent.apiManager.lazyInit();
+  const SCHEMA_SITE_PERMISSIONS = Schemas.getPermissionNames([
+    "SitePermission",
+  ]);
+  ok(SCHEMA_SITE_PERMISSIONS.length, "we have site permissions");
+
+  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+
+  for (const perm of SCHEMA_SITE_PERMISSIONS) {
+    try {
+      const str = bundle.GetStringFromName(
+        `webextSitePerms.description.${perm}`
+      );
+
+      ok(str.length, `Found localization string for '${perm}' site permission`);
+    } catch (e) {
+      ok(false, `Site permission missing '${perm}'`);
+    }
+  }
 });

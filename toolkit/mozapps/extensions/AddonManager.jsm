@@ -3188,6 +3188,22 @@ var AddonManagerInternal = {
                 subject,
                 "webextension-permission-prompt"
               );
+            } else if (info.addon.sitePermissions) {
+              // Handle prompting for DOM permissions in SitePermission addons.
+              let { sitePermissions, siteOrigin } = info.addon;
+              let subject = {
+                wrappedJSObject: {
+                  target: browser,
+                  info: Object.assign(
+                    { resolve, reject, source, sitePermissions, siteOrigin },
+                    info
+                  ),
+                },
+              };
+              Services.obs.notifyObservers(
+                subject,
+                "webextension-permission-prompt"
+              );
             } else if (requireConfirm) {
               // The methods below all want to call the install() or cancel()
               // method on the provided AddonInstall object to either accept
