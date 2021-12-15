@@ -4542,6 +4542,7 @@ AMTelemetry = {
       case "theme":
       case "locale":
       case "dictionary":
+      case "sitepermission":
         return addonType;
       default:
         // Currently this should only include plugins and gmp-plugins
