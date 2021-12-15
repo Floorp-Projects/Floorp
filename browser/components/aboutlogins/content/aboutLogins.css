@@ -2,16 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+   position: fixed;
+}
 html,
 body {
   height: 100%;
+  width: 100%;
 }
 
 body {
   --sidebar-width: 320px;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-areas: "logins main";
+  grid-template-rows: 1fr;
 }
 
 @media (max-width: 830px) {
@@ -44,7 +48,7 @@ menu-button {
 }
 
 login-list {
-  grid-area: logins;
+  grid-row: 1/4;
 }
 
 :root:not(.initialized) login-intro,
@@ -64,10 +68,6 @@ login-item[data-editing="true"] + login-intro,
   justify-content: center;
   width: var(--sidebar-width);
   font-weight: 600;
-}
-
-body > section {
-  grid-area: main;
 }
 
 :root:not(.official-branding) #branding-logo {
