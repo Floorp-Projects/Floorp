@@ -167,7 +167,6 @@ static const char sIntPrefs[][43] = {
     "ui.GtkCSDMaximizeButtonPosition",
     "ui.GtkCSDCloseButtonPosition",
     "ui.GtkCSDReversedPlacement",
-    "ui.GtkWayland",
     "ui.systemUsesDarkTheme",
     "ui.prefersReducedMotion",
     "ui.primaryPointerCapabilities",

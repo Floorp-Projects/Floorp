@@ -348,10 +348,7 @@ menuitem.bookmark-item {
  *
  * Consider the simple case (default system theme). We render the titlebar
  * using `-moz-default-appearance: -moz-window-titlebar;`, then don't draw
- * anything else. Success! Almost. On Wayland, the compositor takes care of
- * drawing the titlebar border and shadow as well, so we need to clip it to not
- * draw a darker shadow on the corners. That's what the -moz-gtk-wayland block
- * below does.
+ * anything else. Success!
  *
  * Now consider lightweight themes: We need to render the native titlebar
  * behind the "theme" titlebar in order to render the native shadow on X11. But
@@ -393,23 +390,10 @@ menuitem.bookmark-item {
     -moz-default-appearance: -moz-window-titlebar;
   }
 
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme {
-    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-  }
-
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
   :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) ::backdrop {
     border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
     border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-  }
-
-  /* On Wayland the compositor draws the titlebar border and shadow as well, so
-   * trim it by setting the radius on an ancestor of the toolbox-background */
-  @media (-moz-gtk-wayland) {
-    :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) > body {
-      border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-      border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-    }
   }
 
   /* When temporarily showing the menu bar, make it at least as tall as the tab

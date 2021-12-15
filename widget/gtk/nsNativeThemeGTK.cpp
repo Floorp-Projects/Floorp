@@ -765,8 +765,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  bool useHiDPIWidgets =
-      (aScaleFactor != 1) && (sCairoSurfaceSetDeviceScalePtr != nullptr);
+  const bool useHiDPIWidgets =
+      aScaleFactor != 1 && sCairoSurfaceSetDeviceScalePtr;
 
   Point drawOffsetScaled;
   Point drawOffsetOriginal;
@@ -1063,8 +1063,9 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                         int32_t(dirtyRect.Width()),
                         int32_t(dirtyRect.Height()));
   if (widgetRect.IsEmpty() ||
-      !drawingRect.IntersectRect(overflowRect, drawingRect))
+      !drawingRect.IntersectRect(overflowRect, drawingRect)) {
     return NS_OK;
+  }
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance),
                "Trying to render an unsafe widget!");
