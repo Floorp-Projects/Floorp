@@ -65,6 +65,76 @@ add_task(async function testContentProcessRequests() {
   );
 });
 
+add_task(async function testCanceledRequest() {
+  info(`Tests for NETWORK_EVENT resources with a canceled request`);
+
+  // Do a XHR request that we cancel against a slow loading page
+  const requestUrl =
+    "https://example.org/document-builder.sjs?delay=1000&html=foo";
+  const html =
+    "<!DOCTYPE html><script>(" +
+    function(xhrUrl) {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", xhrUrl);
+      xhr.send(null);
+    } +
+    ")(" +
+    JSON.stringify(requestUrl) +
+    ")</script>";
+  const pageUrl =
+    "https://example.org/document-builder.sjs?html=" + encodeURIComponent(html);
+
+  const expectedAvailable = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: requestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      blockedReason: "NS_BINDING_ABORTED",
+    },
+  ];
+  const expectedUpdated = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: requestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      blockedReason: "NS_BINDING_ABORTED",
+    },
+  ];
+
+  // Register a one-off listener to cancel the XHR request
+  // Using XMLHttpRequest's abort() method from the content process
+  // isn't reliable and would introduce many race condition in the test.
+  // Canceling the request via nsIRequest.cancel privileged method,
+  // from the parent process is much more reliable.
+  const observer = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    observe(subject, topic, data) {
+      subject = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (subject.URI.spec == requestUrl) {
+        subject.cancel(Cr.NS_BINDING_ABORTED);
+        Services.obs.removeObserver(observer, "http-on-modify-request");
+      }
+    },
+  };
+  Services.obs.addObserver(observer, "http-on-modify-request");
+
+  await assertNetworkResourcesOnPage(
+    pageUrl,
+    expectedAvailable,
+    expectedUpdated
+  );
+});
+
 async function assertNetworkResourcesOnPage(
   url,
   expectedAvailable,
