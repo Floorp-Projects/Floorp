@@ -220,10 +220,16 @@ class Animation : public DOMEventTargetHelper,
    */
   void TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime);
   /**
-   * Testing only: Start or pause a pending animation using the current
-   * timeline time. This is used to support existing tests that expect
-   * animations to begin immediately. Ideally we would rewrite the those tests
-   * and get rid of this method, but there are a lot of them.
+   * For the non-monotonically increasing timeline (e.g. ScrollTimeline), this
+   * is used when playing or pausing because we don't put the animations into
+   * PendingAnimationTracker, and we would like to use the current scroll
+   * position as the ready time.
+   *
+   * For the monotonically increasing timeline, we use this only for testing:
+   * Start or pause a pending animation using the current timeline time. This
+   * is used to support existing tests that expect animations to begin
+   * immediately. Ideally we would rewrite the those tests and get rid of this
+   * method, but there are a lot of them.
    *
    * As with TriggerOnNextTick, the caller of this method is responsible for
    * removing the animation from any PendingAnimationTracker it may have been
