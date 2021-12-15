@@ -340,24 +340,30 @@ add_task(async function test_sitepermission_type() {
   assertGeo();
 });
 
-add_task(async function test_site_permissions_have_localization_strings() {
-  await ExtensionParent.apiManager.lazyInit();
-  const SCHEMA_SITE_PERMISSIONS = Schemas.getPermissionNames([
-    "SitePermission",
-  ]);
-  ok(SCHEMA_SITE_PERMISSIONS.length, "we have site permissions");
+add_task(
+  { skip_if: () => AppConstants.platform === "android" },
+  async function test_site_permissions_have_localization_strings() {
+    await ExtensionParent.apiManager.lazyInit();
+    const SCHEMA_SITE_PERMISSIONS = Schemas.getPermissionNames([
+      "SitePermission",
+    ]);
+    ok(SCHEMA_SITE_PERMISSIONS.length, "we have site permissions");
 
-  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+    const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 
-  for (const perm of SCHEMA_SITE_PERMISSIONS) {
-    try {
-      const str = bundle.GetStringFromName(
-        `webextSitePerms.description.${perm}`
-      );
+    for (const perm of SCHEMA_SITE_PERMISSIONS) {
+      try {
+        const str = bundle.GetStringFromName(
+          `webextSitePerms.description.${perm}`
+        );
 
-      ok(str.length, `Found localization string for '${perm}' site permission`);
-    } catch (e) {
-      ok(false, `Site permission missing '${perm}'`);
+        ok(
+          str.length,
+          `Found localization string for '${perm}' site permission`
+        );
+      } catch (e) {
+        ok(false, `Site permission missing '${perm}'`);
+      }
     }
   }
-});
+);
