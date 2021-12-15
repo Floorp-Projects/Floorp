@@ -134,6 +134,8 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     return mCurrentContext;
   }
 
+  CanvasContextType GetContextType() const { return mCurrentContextType; }
+
   already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(
       gfxAlphaType* aOutAlphaType = nullptr);
 

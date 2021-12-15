@@ -12,8 +12,8 @@ namespace dom {
 
 // So we don't have to forward declare this elsewhere.
 class
-    HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData;
-typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData
+    HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrOffscreenCanvasOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData;
+typedef HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrOffscreenCanvasOrImageBitmapOrBlobOrCanvasRenderingContext2DOrImageData
     ImageBitmapSource;
 
 }  // namespace dom
