@@ -234,7 +234,7 @@ AddonManagerListenerHandler.addListener(AddonCardListenerHandler);
 function isAbuseReportSupported(addon) {
   return (
     ABUSE_REPORT_ENABLED &&
-    ["extension", "theme"].includes(addon.type) &&
+    AbuseReporter.isSupportedAddonType(addon.type) &&
     !(addon.isBuiltin || addon.isSystem)
   );
 }
