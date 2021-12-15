@@ -884,6 +884,15 @@ void GCRuntime::finish() {
   stats().printTotalProfileTimes();
 }
 
+#ifdef DEBUG
+void GCRuntime::assertNoPermanentSharedThings() {
+  MOZ_ASSERT(atomsZone->cellIterUnsafe<JSAtom>(AllocKind::ATOM).done());
+  MOZ_ASSERT(
+      atomsZone->cellIterUnsafe<JSAtom>(AllocKind::FAT_INLINE_ATOM).done());
+  MOZ_ASSERT(atomsZone->cellIterUnsafe<JS::Symbol>(AllocKind::SYMBOL).done());
+}
+#endif
+
 void GCRuntime::freezePermanentSharedThings() {
   // This is called just after permanent atoms and well-known symbols have been
   // created. At this point all existing atoms and symbols are permanent. Move

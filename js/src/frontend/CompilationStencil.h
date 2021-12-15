@@ -529,6 +529,8 @@ struct CompilationAtomCache {
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSString* atom);
   bool allocate(JSContext* cx, size_t length);
 
+  bool empty() const { return atoms_.empty(); }
+
   void stealBuffer(AtomCacheVector& atoms);
   void releaseBuffer(AtomCacheVector& atoms);
 
