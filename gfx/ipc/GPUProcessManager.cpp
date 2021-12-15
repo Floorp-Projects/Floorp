@@ -1273,14 +1273,10 @@ RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
   return new GPUMemoryReporter();
 }
 
-RefPtr<PGPUChild::TestTriggerMetricsPromise>
-GPUProcessManager::TestTriggerMetrics() {
+void GPUProcessManager::TestTriggerMetrics() {
   if (!NS_WARN_IF(!mGPUChild)) {
-    return mGPUChild->SendTestTriggerMetrics();
+    mGPUChild->SendTestTriggerMetrics();
   }
-
-  return PGPUChild::TestTriggerMetricsPromise::CreateAndReject(
-      ipc::ResponseRejectReason::SendError, __func__);
 }
 
 }  // namespace gfx

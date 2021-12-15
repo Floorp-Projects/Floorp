@@ -14,14 +14,11 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/net/SocketProcessChild.h"
-#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/ProcInfo.h"
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/Unused.h"
-#include "nsIXULRuntime.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -115,11 +112,6 @@ void FlushAllChildData(
     }
   }
 
-  if (net::SocketProcessParent* socketParent =
-          net::SocketProcessParent::GetSingleton()) {
-    promises.EmplaceBack(socketParent->SendFlushFOGData());
-  }
-
   if (promises.Length() == 0) {
     // No child processes at the moment. Resolve synchronously.
     fog_ipc::flush_durations.Cancel(std::move(timerId));
@@ -173,10 +165,6 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     case GeckoProcessType_RDD:
       Unused << mozilla::RDDParent::GetSingleton()->SendFOGData(std::move(buf));
       break;
-    case GeckoProcessType_Socket:
-      Unused << net::SocketProcessChild::GetSingleton()->SendFOGData(
-          std::move(buf));
-      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
   }
@@ -203,33 +191,15 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
   return ret;
 }
 
-void TestTriggerMetrics(uint32_t aProcessType,
-                        const RefPtr<dom::Promise>& promise) {
-  switch (aProcessType) {
-    case nsIXULRuntime::PROCESS_TYPE_GPU:
-      gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise]() { promise->MaybeResolveWithUndefined(); },
-          [promise]() { promise->MaybeRejectWithUndefined(); });
-      break;
-    case nsIXULRuntime::PROCESS_TYPE_RDD:
-      RDDProcessManager::Get()->TestTriggerMetrics()->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise]() { promise->MaybeResolveWithUndefined(); },
-          [promise]() { promise->MaybeRejectWithUndefined(); });
-      break;
-    case nsIXULRuntime::PROCESS_TYPE_SOCKET:
-      Unused << net::SocketProcessParent::GetSingleton()
-                    ->SendTestTriggerMetrics()
-                    ->Then(
-                        GetCurrentSerialEventTarget(), __func__,
-                        [promise]() { promise->MaybeResolveWithUndefined(); },
-                        [promise]() { promise->MaybeRejectWithUndefined(); });
-      break;
-    default:
-      promise->MaybeRejectWithUndefined();
-      break;
-  }
+void TestTriggerGPUMetrics() {
+  gfx::GPUProcessManager::Get()->TestTriggerMetrics();
+}
+
+void TestTriggerRDDMetrics(const RefPtr<dom::Promise>& promise) {
+  RDDProcessManager::Get()->TestTriggerMetrics()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise]() { promise->MaybeResolveWithUndefined(); },
+      [promise]() { promise->MaybeRejectWithUndefined(); });
 }
 
 }  // namespace glean
