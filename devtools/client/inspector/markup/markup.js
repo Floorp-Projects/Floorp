@@ -919,6 +919,9 @@ MarkupView.prototype = {
    * - If the reason is null (used to reset the selection),
    * - if it's "inspector-default-selection" (initial node selected, either when
    *   opening the inspector or after a navigation/reload)
+   * - if it's "picker-node-picked" or "picker-node-previewed" (node selected with the
+   *   node picker. Note that this does not include the "Inspect element" context menu,
+   *   which has a dedicated reason, "browser-context-menu").
    * - if it's "test" (this is a special case for mochitest. In tests, we often
    * need to select elements but don't necessarily want the highlighter to come
    * and go after a delay as this might break test scenarios)
@@ -931,6 +934,8 @@ MarkupView.prototype = {
     const unwantedReasons = [
       "inspector-default-selection",
       "nodeselected",
+      "picker-node-picked",
+      "picker-node-previewed",
       "test",
     ];
 

@@ -1350,7 +1350,7 @@ Toolbox.prototype = {
     };
   },
 
-  _isDebugTargetFenix() {
+  isDebugTargetFenix() {
     return this._getDebugTargetData()?.runtimeInfo?.isFenix;
   },
 
@@ -2169,7 +2169,7 @@ Toolbox.prototype = {
   },
 
   _getPickerAdditionalClassName() {
-    if (this._isDebugTargetFenix()) {
+    if (this.isDebugTargetFenix()) {
       return "remote-fenix";
     }
     return null;
@@ -2189,7 +2189,7 @@ Toolbox.prototype = {
     const isMac = Services.appinfo.OS === "Darwin";
 
     let label;
-    if (this._isDebugTargetFenix()) {
+    if (this.isDebugTargetFenix()) {
       label = isMac
         ? "toolbox.androidElementPicker.mac.tooltip"
         : "toolbox.androidElementPicker.tooltip";
