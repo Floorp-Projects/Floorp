@@ -110,6 +110,9 @@ body {
 .category[name="recent-updates"] {
   background-image: url("chrome://mozapps/skin/extensions/category-recent.svg");
 }
+.category[name="sitepermission"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-sitepermission.svg");
+}
 
 .sticky-container {
   background: var(--in-content-page-background);
@@ -512,6 +515,7 @@ addon-details {
   background-position-x: right 8px;
 }
 
+.addon-detail-sitepermissions,
 .addon-detail-row {
   display: flex;
   justify-content: space-between;
@@ -801,4 +805,8 @@ section:not(:empty) ~ #empty-addons-message {
 
 .monochromatic-addon-list .addon-name-container .spacer {
   display: none;
+}
+
+.permission-header > .addon-sitepermissions-host {
+  font-weight: bolder;
 }
