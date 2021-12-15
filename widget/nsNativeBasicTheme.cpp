@@ -28,6 +28,7 @@
 #include "ScrollbarDrawingCocoa.h"
 #include "ScrollbarDrawingGTK.h"
 #include "ScrollbarDrawingWin.h"
+#include "ScrollbarDrawingWin11.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1162,7 +1163,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           GetScrollbarDrawing().PaintScrollbarButton(
               aPaintData, aAppearance, devPxRect, aFrame,
               *nsLayoutUtils::StyleForScrollbar(aFrame), eventState, docState,
-              colors, dpiRatio);
+              colors);
         }
       }
       break;
@@ -1368,6 +1369,8 @@ nsNativeBasicTheme::DetermineScrollbarStyleSetByPrefs() {
       return MakeUnique<ScrollbarDrawingAndroid>();
     case 4:
       return MakeUnique<ScrollbarDrawingWin>();
+    case 5:
+      return MakeUnique<ScrollbarDrawingWin11>();
     default:
       return nullptr;
   }
@@ -1382,6 +1385,9 @@ UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::DetermineScrollbarStyle() {
   }
   // Default to native scrollbar style for each platform.
 #ifdef XP_WIN
+  if (IsWin11OrLater()) {
+    return MakeUnique<ScrollbarDrawingWin11>();
+  }
   return MakeUnique<ScrollbarDrawingWin>();
 #elif MOZ_WIDGET_COCOA
   return MakeUnique<ScrollbarDrawingCocoa>();

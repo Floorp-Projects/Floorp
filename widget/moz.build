@@ -217,6 +217,7 @@ UNIFIED_SOURCES += [
     "ScrollbarDrawingCocoa.cpp",
     "ScrollbarDrawingGTK.cpp",
     "ScrollbarDrawingWin.cpp",
+    "ScrollbarDrawingWin11.cpp",
     "SharedWidgetUtils.cpp",
     "TextEventDispatcher.cpp",
     "ThemeColors.cpp",
