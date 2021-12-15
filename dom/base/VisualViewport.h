@@ -97,8 +97,8 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;
 
-  void FireResizeEvent();
-  void FireScrollEvent();
+  MOZ_CAN_RUN_SCRIPT void FireResizeEvent();
+  MOZ_CAN_RUN_SCRIPT void FireScrollEvent();
 
   RefPtr<VisualViewportResizeEvent> mResizeEvent;
   RefPtr<VisualViewportScrollEvent> mScrollEvent;
