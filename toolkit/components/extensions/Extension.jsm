@@ -1668,6 +1668,56 @@ class ExtensionData {
       optionalOrigins: {},
     };
 
+    const haveAccessKeys = AppConstants.platform !== "android";
+
+    let headerKey;
+    result.text = "";
+    result.listIntro = "";
+    result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
+    result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
+    if (haveAccessKeys) {
+      result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
+      result.cancelKey = bundle.GetStringFromName(
+        "webextPerms.cancel.accessKey"
+      );
+    }
+
+    // Generate a map of site_permission names to permission strings for site
+    // permissions.  Since SitePermission addons cannot have regular permissions,
+    // we reuse msgs to pass the strings to the permissions panel.
+    if (info.sitePermissions) {
+      for (let permission of info.sitePermissions) {
+        try {
+          result.msgs.push(
+            bundle.GetStringFromName(
+              `webextSitePerms.description.${permission}`
+            )
+          );
+        } catch (err) {
+          Cu.reportError(
+            `site_permission ${permission} missing readable text property`
+          );
+          // We must never have a DOM api permission that is hidden so in
+          // the case of any error, we'll use the plain permission string.
+          // test_ext_sitepermissions.js tests for no missing messages, this
+          // is just an extra fallback.
+          result.msgs.push(permission);
+        }
+      }
+
+      // Generate header message
+      headerKey = info.unsigned
+        ? "webextSitePerms.headerUnsignedWithPerms"
+        : "webextSitePerms.headerWithPerms";
+      // We simplify the origin to make it more user friendly.  The origin is
+      // assured to be available via schema requirement.
+      result.header = bundle.formatStringFromName(headerKey, [
+        "<>",
+        new URL(info.siteOrigin).hostname,
+      ]);
+      return result;
+    }
+
     let perms = info.permissions || { origins: [], permissions: [] };
     let optional_permissions = info.optionalPermissions || {
       origins: [],
@@ -1778,20 +1828,6 @@ class ExtensionData {
     if (allUrls) {
       result.optionalOrigins[allUrls] = bundle.GetStringFromName(
         "webextPerms.hostDescription.allUrls"
-      );
-    }
-
-    const haveAccessKeys = AppConstants.platform !== "android";
-
-    let headerKey;
-    result.text = "";
-    result.listIntro = "";
-    result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
-    result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
-    if (haveAccessKeys) {
-      result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
-      result.cancelKey = bundle.GetStringFromName(
-        "webextPerms.cancel.accessKey"
       );
     }
 
