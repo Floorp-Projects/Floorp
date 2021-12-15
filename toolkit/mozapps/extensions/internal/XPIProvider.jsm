@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
+  SitePermission: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
@@ -127,7 +128,7 @@ const XPI_PERMISSION = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD = 24 * 60 * 60;
 
-const DB_SCHEMA = 34;
+const DB_SCHEMA = 35;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -1881,6 +1882,10 @@ class BootstrapScope {
         case "extension":
         case "theme":
           this.scope = Extension.getBootstrapScope();
+          break;
+
+        case "sitepermission":
+          this.scope = SitePermission.getBootstrapScope();
           break;
 
         case "locale":
