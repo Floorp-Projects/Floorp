@@ -20,7 +20,10 @@ use std::os::raw::c_void;
 use std::{borrow::Cow, cell::RefCell};
 use thin_vec::ThinVec;
 use unic_langid::LanguageIdentifier;
-use xpcom::{interfaces::nsrefcnt, RefCounted, RefPtr, Refcnt};
+use xpcom::{
+    interfaces::{nsIRunnablePriority, nsrefcnt},
+    RefCounted, RefPtr, Refcnt,
+};
 
 #[derive(Debug)]
 #[repr(C)]
@@ -290,7 +293,7 @@ impl LocalizationRc {
         let id = nsCString::from(id);
         let strong_promise = RefPtr::new(promise);
 
-        moz_task::spawn_local("LocalizationRc::format_value", async move {
+        moz_task::TaskBuilder::new("LocalizationRc::format_value", async move {
             let mut errors = vec![];
             let value = if let Some(value) = bundles
                 .format_value(&id.to_utf8(), args.as_ref(), &mut errors)
@@ -309,6 +312,8 @@ impl LocalizationRc {
                 .collect();
             callback(&strong_promise, &value, &errors);
         })
+        .priority(nsIRunnablePriority::PRIORITY_RENDER_BLOCKING as u32)
+        .spawn_local()
         .detach();
     }
 
@@ -324,7 +329,7 @@ impl LocalizationRc {
 
         let strong_promise = RefPtr::new(promise);
 
-        moz_task::spawn_local("LocalizationRc::format_values", async move {
+        moz_task::TaskBuilder::new("LocalizationRc::format_values", async move {
             let mut errors = vec![];
             let ret_val = bundles
                 .format_values(&keys, &mut errors)
@@ -350,6 +355,8 @@ impl LocalizationRc {
 
             callback(&strong_promise, &ret_val, &errors);
         })
+        .priority(nsIRunnablePriority::PRIORITY_RENDER_BLOCKING as u32)
+        .spawn_local()
         .detach();
     }
 
@@ -369,7 +376,7 @@ impl LocalizationRc {
 
         let strong_promise = RefPtr::new(promise);
 
-        moz_task::spawn_local("LocalizationRc::format_messages", async move {
+        moz_task::TaskBuilder::new("LocalizationRc::format_messages", async move {
             let mut errors = vec![];
             let ret_val = bundles
                 .format_messages(&keys, &mut errors)
@@ -399,6 +406,8 @@ impl LocalizationRc {
 
             callback(&strong_promise, &ret_val, &errors);
         })
+        .priority(nsIRunnablePriority::PRIORITY_RENDER_BLOCKING as u32)
+        .spawn_local()
         .detach();
     }
 }
