@@ -274,6 +274,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         
         if job["attributes"]["build-type"] == "nightly":
             folder_prefix = upload_date.strftime("%Y/%m/%Y-%m-%d-%H-%M-%S-")
+            version = version.split('-')[0]
         else:
             folder_prefix = f"{version}/android/"
 
