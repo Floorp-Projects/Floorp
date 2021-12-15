@@ -217,7 +217,7 @@ def setup(app):
     topsrcdir = manager.topsrcdir
     site = CommandSiteManager.from_environment(
         topsrcdir,
-        get_state_dir(),
+        get_state_dir(specific_to_topsrcdir=True, topsrcdir=topsrcdir),
         "common",
         os.path.join(app.outdir, "_venv"),
     )
