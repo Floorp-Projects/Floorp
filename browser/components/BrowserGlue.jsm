@@ -1982,18 +1982,32 @@ BrowserGlue.prototype = {
   // Set up a listener to enable/disable the screenshots extension
   // based on its preference.
   _monitorScreenshotsPref() {
-    const PREF = "extensions.screenshots.disabled";
+    const SCREENSHOTS_PREF = "extensions.screenshots.disabled";
+    const COMPONENT_PREF = "screenshots.browser.component.enabled";
     const ID = "screenshots@mozilla.org";
     const _checkScreenshotsPref = async () => {
       let addon = await AddonManager.getAddonByID(ID);
-      let disabled = Services.prefs.getBoolPref(PREF, false);
-      if (disabled) {
+      let screenshotsDisabled = Services.prefs.getBoolPref(
+        SCREENSHOTS_PREF,
+        false
+      );
+      let componentEnabled = Services.prefs.getBoolPref(COMPONENT_PREF, false);
+      if (screenshotsDisabled) {
+        if (componentEnabled) {
+          ScreenshotsUtils.uninitialize();
+        } else {
+          await addon.disable({ allowSystemAddons: true });
+        }
+      } else if (componentEnabled) {
+        ScreenshotsUtils.initialize();
         await addon.disable({ allowSystemAddons: true });
       } else {
         await addon.enable({ allowSystemAddons: true });
+        ScreenshotsUtils.uninitialize();
       }
     };
-    Services.prefs.addObserver(PREF, _checkScreenshotsPref);
+    Services.prefs.addObserver(SCREENSHOTS_PREF, _checkScreenshotsPref);
+    Services.prefs.addObserver(COMPONENT_PREF, _checkScreenshotsPref);
     _checkScreenshotsPref();
   },
 
