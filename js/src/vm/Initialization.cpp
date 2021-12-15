@@ -247,10 +247,6 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
       return false;
     }
 
-    if (!rt->initSelfHostingAtomsFromStencil(cx)) {
-      return false;
-    }
-
     if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
       return false;
     }
