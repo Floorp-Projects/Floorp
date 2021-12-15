@@ -9,6 +9,10 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
@@ -93,6 +97,68 @@ add_task(async function test_manifest_site_permissions() {
     },
     `Unexpected property`
   );
+});
+
+add_task(async function test_sitepermission_telemetry() {
+  await AddonTestUtils.promiseStartupManager();
+
+  Services.telemetry.clearEvents();
+
+  const addon_id = "webmidi@test";
+  const origin = "https://example.com";
+  const permName = "midi";
+
+  let site_permission = {
+    "manifest.json": {
+      name: "test Site Permission",
+      version: "1.0",
+      manifest_version: 2,
+      browser_specific_settings: {
+        gecko: { id: addon_id },
+      },
+      install_origins: [origin],
+      site_permissions: [permName],
+    },
+  };
+
+  let [, { addon }] = await Promise.all([
+    TestUtils.topicObserved("webextension-sitepermissions-startup"),
+    AddonTestUtils.promiseInstallXPI(site_permission),
+  ]);
+
+  await addon.uninstall();
+
+  await TelemetryTestUtils.assertEvents(
+    [
+      [
+        "addonsManager",
+        "install",
+        "sitepermission",
+        /.*/,
+        {
+          step: "started",
+          addon_id,
+        },
+      ],
+      [
+        "addonsManager",
+        "install",
+        "sitepermission",
+        /.*/,
+        {
+          step: "completed",
+          addon_id,
+        },
+      ],
+      ["addonsManager", "uninstall", "sitepermission", addon_id],
+    ],
+    {
+      category: "addonsManager",
+      method: /^install|uninstall$/,
+    }
+  );
+
+  await AddonTestUtils.promiseShutdownManager();
 });
 
 async function _test_ext_site_permissions(site_permissions, install_origins) {
