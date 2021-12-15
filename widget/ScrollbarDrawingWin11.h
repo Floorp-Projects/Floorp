@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_widget_ScrollbarDrawingWin_h
-#define mozilla_widget_ScrollbarDrawingWin_h
+#ifndef mozilla_widget_ScrollbarDrawingWin11_h
+#define mozilla_widget_ScrollbarDrawingWin11_h
 
 #include "nsITheme.h"
 #include "nsNativeTheme.h"
@@ -12,20 +12,35 @@
 
 namespace mozilla::widget {
 
-class ScrollbarDrawingWin : public ScrollbarDrawing {
+class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
  public:
-  ScrollbarDrawingWin() = default;
-  virtual ~ScrollbarDrawingWin() = default;
+  ScrollbarDrawingWin11() = default;
+  virtual ~ScrollbarDrawingWin11() = default;
 
   LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                            StyleAppearance aAppearance,
                                            nsIFrame* aFrame) override;
 
-  Maybe<nsITheme::Transparency> GetScrollbarPartTransparency(
-      nsIFrame* aFrame, StyleAppearance aAppearance) override;
+  sRGBColor ComputeScrollbarTrackColor(nsIFrame*, const ComputedStyle&,
+                                       const EventStates& aDocumentState,
+                                       const Colors&) override;
+  sRGBColor ComputeScrollbarThumbColor(nsIFrame*, const ComputedStyle&,
+                                       const EventStates& aElementState,
+                                       const EventStates& aDocumentState,
+                                       const Colors&) override;
 
-  static ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame,
-                                                bool* aDarkScrollbar = nullptr);
+  // Returned colors are button, arrow.
+  std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
+      nsIFrame*, StyleAppearance, const ComputedStyle&,
+      const EventStates& aElementState, const EventStates& aDocumentState,
+      const Colors&) override;
+
+  bool PaintScrollbarButton(DrawTarget&, StyleAppearance,
+                            const LayoutDeviceRect&, nsIFrame*,
+                            const ComputedStyle&,
+                            const EventStates& aElementState,
+                            const EventStates& aDocumentState,
+                            const Colors&) override;
 
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
@@ -43,8 +58,6 @@ class ScrollbarDrawingWin : public ScrollbarDrawing {
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
-
-  void RecomputeScrollbarParams() override;
 };
 
 }  // namespace mozilla::widget

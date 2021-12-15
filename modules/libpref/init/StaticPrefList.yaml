@@ -12203,6 +12203,7 @@
 #   2: GTK scrollbars
 #   3: Android scrollbars
 #   4: Windows 10 scrollbars
+#   5: Windows 11 scrollbars
 #
 # Note that switching to non-default scrollbars is experimental and other
 # scrollbar-related prefs may interfere with the experience. For example,
