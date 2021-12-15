@@ -253,6 +253,11 @@ static ProfileBufferBlockIndex AddMarkerWithOptionalStackToBuffer(
 using BacktraceCaptureFunction = bool (*)(ProfileChunkedBuffer&,
                                           StackCaptureOptions);
 
+// Use a static (cleared) chunked buffer in the main thread's
+// `AddMarkerToBuffer()`. This is a separate non-templated function, to ensure
+// there is only one allocation, regardless of the type of marker.
+MFBT_API ProfileChunkedBuffer& StaticClearedBufferForMainThreadAddMarker();
+
 // Add a marker with the given name, options, and arguments to the given buffer.
 // Because this may be called from either Base or Gecko Profiler functions, the
 // appropriate backtrace-capturing function must also be provided.
@@ -286,6 +291,13 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
       return AddMarkerWithOptionalStackToBuffer<MarkerType>(
           aBuffer, aName, aCategory, std::move(aOptions), aTs...);
     };
+
+    if (baseprofiler::profiler_is_main_thread()) {
+      // Use a static buffer for the main thread (because it's the most used
+      // thread, and most sensitive to overhead), so it's only allocated once.
+      return CaptureStackAndAddMarker(
+          StaticClearedBufferForMainThreadAddMarker());
+    }
     // TODO use a local on-stack byte buffer to remove last allocation.
     ProfileBufferChunkManagerSingle chunkManager(
         ProfileBufferChunkManager::scExpectedMaximumStackSize);
