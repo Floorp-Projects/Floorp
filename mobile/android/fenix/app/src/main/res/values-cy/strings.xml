@@ -1842,6 +1842,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="quick_settings_sheet_insecure_connection_2">Nid yw’r cysylltiad yn ddiogel</string>
     <!-- Label to clear site data -->
     <string name="clear_site_data">Clirio cwcis a data gwefan</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Ydych chi’n siŵr eich bod chi am glirio’r holl gwcis a data ar gyfer gwefan <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ydych chi’n siŵr eich bod am glirio pob caniatâd ar bob gwefan?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
