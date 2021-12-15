@@ -215,7 +215,7 @@ jobs:
 
     windows:
         description: Runs WebRender CI tests on a Windows worker
-        worker-type: t-win10-64
+        worker-type: win10-64-2004-ssd
         worker:
             max-run-time: 5400
             env:
@@ -231,7 +231,7 @@ jobs:
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
             tooltool-downloads: internal
         treeherder:
-            platform: windows10-64-qr/release
+            platform: windows10-64-2004-qr/release
             symbol: WR(wrench)
         when:
             files-changed:
