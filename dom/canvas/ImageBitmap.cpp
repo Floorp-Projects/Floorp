@@ -1010,6 +1010,56 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
 
 /* static */
 already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, OffscreenCanvas& aOffscreenCanvas,
+    const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
+    ErrorResult& aRv) {
+  if (aOffscreenCanvas.Width() == 0) {
+    aRv.ThrowInvalidStateError("Passed-in canvas has width 0");
+    return nullptr;
+  }
+
+  if (aOffscreenCanvas.Height() == 0) {
+    aRv.ThrowInvalidStateError("Passed-in canvas has height 0");
+    return nullptr;
+  }
+
+  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
+
+  // by default surfaces have premultiplied alpha
+  // attempt to get non premultiplied if required
+  if (aOptions.mPremultiplyAlpha == PremultiplyAlpha::None) {
+    flags |= nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
+  }
+
+  SurfaceFromElementResult res =
+      nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas, flags);
+
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    aRv.ThrowInvalidStateError("Passed-in canvas failed to create snapshot");
+    return nullptr;
+  }
+
+  gfxAlphaType alphaType = res.mAlphaType;
+  bool writeOnly = res.mIsWriteOnly;
+
+  // If the OffscreenCanvas's rendering context is WebGL/WebGPU, then the
+  // snapshot we got from the OffscreenCanvas is a DataSourceSurface which
+  // is a copy of the rendering context. We handle cropping in this case.
+  bool needToReportMemoryAllocation = false;
+  bool mustCopy =
+      aCropRect.isSome() &&
+      (aOffscreenCanvas.GetContextType() == CanvasContextType::WebGL1 ||
+       aOffscreenCanvas.GetContextType() == CanvasContextType::WebGL2 ||
+       aOffscreenCanvas.GetContextType() == CanvasContextType::WebGPU);
+
+  return CreateImageBitmapInternal(aGlobal, surface, aCropRect, aOptions,
+                                   writeOnly, needToReportMemoryAllocation,
+                                   mustCopy, alphaType, aRv);
+}
+
+/* static */
+already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     nsIGlobalObject* aGlobal, ImageData& aImageData,
     const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
     ErrorResult& aRv) {
@@ -1437,6 +1487,9 @@ already_AddRefed<Promise> ImageBitmap::Create(
         NS_IsMainThread(),
         "Creating ImageBitmap from HTMLCanvasElement off the main thread.");
     imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLCanvasElement(),
+                                 aCropRect, aOptions, aRv);
+  } else if (aSrc.IsOffscreenCanvas()) {
+    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsOffscreenCanvas(),
                                  aCropRect, aOptions, aRv);
   } else if (aSrc.IsImageData()) {
     imageBitmap = CreateInternal(aGlobal, aSrc.GetAsImageData(), aCropRect,
