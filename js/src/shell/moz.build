@@ -4,12 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["JS_SHELL_NAME"]:
-    GeckoProgram(CONFIG["JS_SHELL_NAME"], linkage=None)
-    if CONFIG["JS_BUNDLED_EDITLINE"]:
-        DIRS += ["../editline"]
-        USE_LIBS += ["editline"]
-    USE_LIBS += ["static:js"]
+GeckoProgram("js", linkage=None)
+if CONFIG["JS_BUNDLED_EDITLINE"]:
+    DIRS += ["../editline"]
+    USE_LIBS += ["editline"]
+USE_LIBS += ["static:js"]
 
 include("../js-config.mozbuild")
 include("../js-cxxflags.mozbuild")
