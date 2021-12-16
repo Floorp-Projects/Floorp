@@ -1688,6 +1688,11 @@ interface nsIDOMWindowUtils : nsISupports {
                                      in long aFlushType);
 
   /**
+   * Returns the effective canvas background color for the window.
+   */
+  readonly attribute AString canvasBackgroundColor;
+
+  /**
    * Get the type of the currently focused html input, if any.
    */
   readonly attribute AString focusedInputType;
