@@ -4445,65 +4445,6 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvCanSavePresentation(
-    const MaybeDiscarded<BrowsingContext>& aTopLevelContext,
-    Maybe<uint64_t> aDocumentChannelId,
-    CanSavePresentationResolver&& aResolver) {
-  if (aTopLevelContext.IsNullOrDiscarded()) {
-    aResolver(false);
-    return IPC_OK();
-  }
-
-  bool canSave = true;
-  // XXXBFCache pass the flags to telemetry.
-  uint32_t flags = 0;
-  BrowsingContext* browsingContext = aTopLevelContext.get();
-  browsingContext->PreOrderWalk([&](BrowsingContext* aContext) {
-    Document* doc = aContext->GetDocument();
-    if (doc) {
-      nsIRequest* request = nullptr;
-      if (aDocumentChannelId.isSome() && aContext->IsTop()) {
-        nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-        if (loadGroup) {
-          nsCOMPtr<nsISimpleEnumerator> requests;
-          loadGroup->GetRequests(getter_AddRefs(requests));
-          bool hasMore = false;
-          if (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
-            // If there are any requests, the only one we allow with bfcache
-            // is the DocumentChannel request.
-            nsCOMPtr<nsISupports> elem;
-            requests->GetNext(getter_AddRefs(elem));
-            nsCOMPtr<nsIIdentChannel> identChannel = do_QueryInterface(elem);
-            if (identChannel &&
-                identChannel->ChannelId() == aDocumentChannelId.value()) {
-              request = identChannel;
-            }
-          }
-        }
-      }
-      // Go through also the subdocuments so that flags are collected.
-      bool canSaveDoc = doc->CanSavePresentation(request, flags, false);
-      canSave = canSaveDoc && canSave;
-
-      if (MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug)) {
-        nsAutoCString uri;
-        if (doc->GetDocumentURI()) {
-          uri = doc->GetDocumentURI()->GetSpecOrDefault();
-        }
-
-        MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                ("ContentChild::RecvCanSavePresentation can save presentation "
-                 "[%i] for [%s]",
-                 canSaveDoc, uri.get()));
-      }
-    }
-  });
-
-  aResolver(canSave);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvDecoderSupportedMimeTypes(
     nsTArray<nsCString>&& aSupportedTypes) {
 #ifdef MOZ_WIDGET_ANDROID
