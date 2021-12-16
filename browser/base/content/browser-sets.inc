@@ -92,15 +92,6 @@
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>
     <command id="Browser:Screenshot" oncommand="ScreenshotsUtils.notify(window, 'shortcut')"/>
-    
-#ifdef NIGHTLY_BUILD
-    <command id="Tools:FissionWindow"
-      oncommand="OpenBrowserWindow({fission: true, private: !!window?.browsingContext?.usePrivateBrowsing});"
-      hidden="true"/>
-    <command id="Tools:NonFissionWindow"
-      oncommand="OpenBrowserWindow({fission: false, private: !!window?.browsingContext?.usePrivateBrowsing});"
-      hidden="true"/>
-#endif
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();" data-l10n-args='{"tabCount": 1}'/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
 
