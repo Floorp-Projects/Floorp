@@ -68,12 +68,6 @@ bool WindowContext::IsCurrent() const {
   return mBrowsingContext->mCurrentWindowContext == this;
 }
 
-bool WindowContext::HasActivePeerConnections() {
-  MOZ_ASSERT(TopWindowContext() == this,
-             "HasActivePeerConnections is set only in the top window context");
-  return Canonical()->HasActivePeerConnections();
-}
-
 bool WindowContext::IsInBFCache() {
   if (mozilla::SessionHistoryInParent()) {
     return mBrowsingContext->IsInBFCache();
