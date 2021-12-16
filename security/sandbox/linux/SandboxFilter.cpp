@@ -1806,9 +1806,13 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         auto shifted_type = request & kIoctlTypeMask;
         static constexpr unsigned long kDrmType =
             static_cast<unsigned long>('d') << _IOC_TYPESHIFT;
+        // Note: 'b' is also the Binder device on Android.
+        static constexpr unsigned long kDmaBufType =
+            static_cast<unsigned long>('b') << _IOC_TYPESHIFT;
 
-        // Allow DRI for VA-API
+        // Allow DRI and DMA-Buf for VA-API
         return If(shifted_type == kDrmType, Allow())
+            .ElseIf(shifted_type == kDmaBufType, Allow())
             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
