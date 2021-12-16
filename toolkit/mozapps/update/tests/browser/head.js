@@ -196,13 +196,16 @@ function lockWriteTestFile() {
   );
   // Remove the file if it exists just in case.
   if (file.exists()) {
-    file.readOnly = false;
+    file.fileAttributesWin |= file.WFA_READWRITE;
+    file.fileAttributesWin &= ~file.WFA_READONLY;
     file.remove(false);
   }
   file.create(file.NORMAL_FILE_TYPE, 0o444);
-  file.readOnly = true;
+  file.fileAttributesWin |= file.WFA_READONLY;
+  file.fileAttributesWin &= ~file.WFA_READWRITE;
   registerCleanupFunction(() => {
-    file.readOnly = false;
+    file.fileAttributesWin |= file.WFA_READWRITE;
+    file.fileAttributesWin &= ~file.WFA_READONLY;
     file.remove(false);
   });
 }
