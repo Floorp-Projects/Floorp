@@ -178,46 +178,44 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(9, "stackwalk", StackWalk,                                           \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(10, "threads", Threads, "Profile the registered secondary threads")  \
+    MACRO(10, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(11, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
-                                                                               \
-    MACRO(12, "jsallocations", JSAllocations,                                  \
+    MACRO(11, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(13, "nostacksampling", NoStackSampling,                              \
+    MACRO(12, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(14, "preferencereads", PreferenceReads,                              \
+    MACRO(13, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(15, "nativeallocations", NativeAllocations,                          \
+    MACRO(14, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(16, "ipcmessages", IPCMessages,                                      \
+    MACRO(15, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")                   \
                                                                                \
-    MACRO(17, "audiocallbacktracing", AudioCallbackTracing,                    \
+    MACRO(16, "audiocallbacktracing", AudioCallbackTracing,                    \
           "Audio callback tracing")                                            \
                                                                                \
-    MACRO(18, "cpu", CPUUtilization, "CPU utilization")                        \
+    MACRO(17, "cpu", CPUUtilization, "CPU utilization")                        \
                                                                                \
-    MACRO(19, "notimerresolutionchange", NoTimerResolutionChange,              \
+    MACRO(18, "notimerresolutionchange", NoTimerResolutionChange,              \
           "Do not adjust the timer resolution for fast sampling, so that "     \
           "other Firefox timers do not get affected")                          \
                                                                                \
-    MACRO(20, "cpuallthreads", CPUAllThreads,                                  \
+    MACRO(19, "cpuallthreads", CPUAllThreads,                                  \
           "Sample the CPU utilization of all registered threads")              \
                                                                                \
-    MACRO(21, "samplingallthreads", SamplingAllThreads,                        \
+    MACRO(20, "samplingallthreads", SamplingAllThreads,                        \
           "Sample the stacks of all registered threads")                       \
                                                                                \
-    MACRO(22, "markersallthreads", MarkersAllThreads,                          \
+    MACRO(21, "markersallthreads", MarkersAllThreads,                          \
           "Record markers from all registered threads")                        \
                                                                                \
-    MACRO(23, "unregisteredthreads", UnregisteredThreads,                      \
+    MACRO(22, "unregisteredthreads", UnregisteredThreads,                      \
           "Discover and profile unregistered threads -- beware: expensive!")
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
