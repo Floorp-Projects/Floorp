@@ -1847,7 +1847,8 @@ function createUpdateInProgressLockFile(aDir) {
   file.append(FILE_UPDATE_IN_PROGRESS_LOCK);
   file.create(file.NORMAL_FILE_TYPE, 0o444);
   file.QueryInterface(Ci.nsILocalFileWin);
-  file.readOnly = true;
+  file.fileAttributesWin |= file.WFA_READONLY;
+  file.fileAttributesWin &= ~file.WFA_READWRITE;
   Assert.ok(file.exists(), MSG_SHOULD_EXIST + getMsgPath(file.path));
   Assert.ok(!file.isWritable(), "the lock file should not be writeable");
 }
