@@ -4446,7 +4446,8 @@ nsIFrame* EventStateManager::DispatchMouseOrPointerEvent(
 
   nsEventStatus status = nsEventStatus_eIgnore;
   ESMEventCB callback(targetContent);
-  EventDispatcher::Dispatch(targetContent, mPresContext, dispatchEvent.get(),
+  RefPtr<nsPresContext> presContext = mPresContext;
+  EventDispatcher::Dispatch(targetContent, presContext, dispatchEvent.get(),
                             nullptr, &status, &callback);
 
   if (mPresContext) {
@@ -4520,23 +4521,28 @@ class EnterLeaveDispatcher {
     }
   }
 
-  void Dispatch() {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch() {
     if (mEventMessage == eMouseEnter || mEventMessage == ePointerEnter) {
       for (int32_t i = mTargets.Count() - 1; i >= 0; --i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          mTargets[i], mRelatedTarget);
+                                          MOZ_KnownLive(mTargets[i]),
+                                          mRelatedTarget);
       }
     } else {
       for (int32_t i = 0; i < mTargets.Count(); ++i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          mTargets[i], mRelatedTarget);
+                                          MOZ_KnownLive(mTargets[i]),
+                                          mRelatedTarget);
       }
     }
   }
 
-  EventStateManager* mESM;
+  // Nothing overwrites anything after constructor. Please remove MOZ_KnownLive
+  // and MOZ_KNOWN_LIVE if anything marked as such becomes mutable.
+  const RefPtr<EventStateManager> mESM;
   nsCOMArray<nsIContent> mTargets;
-  nsCOMPtr<nsIContent> mRelatedTarget;
+  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mRelatedTarget;
   WidgetMouseEvent* mMouseEvent;
   EventMessage mEventMessage;
 };
@@ -4590,8 +4596,9 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                        isPointer ? ePointerLeave : eMouseLeave);
 
   // Fire mouseout
+  nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
   DispatchMouseOrPointerEvent(aMouseEvent, isPointer ? ePointerOut : eMouseOut,
-                              wrapper->mLastOverElement, aMovingInto);
+                              lastOverElement, aMovingInto);
   leaveDispatcher.Dispatch();
 
   wrapper->mLastOverFrame = nullptr;
