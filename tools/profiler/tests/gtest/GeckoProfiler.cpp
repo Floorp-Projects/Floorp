@@ -1509,7 +1509,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
   // Try a couple of features and filters.
   {
-    uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+    uint32_t features = ProfilerFeature::JS;
     const char* filters[] = {"GeckoMain", "Compositor"};
 
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -1545,9 +1545,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::IPCMessages));
 
-    // Profiler::Threads is added because filters has multiple entries.
-    ActiveParamsCheck(PowerOfTwo32(999999).Value(), 3,
-                      features | ProfilerFeature::Threads, filters,
+    ActiveParamsCheck(int(PowerOfTwo32(999999).Value()), 3, features, filters,
                       MOZ_ARRAY_LENGTH(filters), 123, Some(25.0));
 
     profiler_stop();
@@ -1568,9 +1566,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::IPCMessages));
 
-    // Profiler::Threads is added because filters has multiple entries.
-    ActiveParamsCheck(PowerOfTwo32(999999).Value(), 3,
-                      features | ProfilerFeature::Threads, filters,
+    ActiveParamsCheck(int(PowerOfTwo32(999999).Value()), 3, features, filters,
                       MOZ_ARRAY_LENGTH(filters), 0, Nothing());
 
     profiler_stop();
@@ -1612,8 +1608,7 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     // Entries and intervals go to defaults if 0 is specified.
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
-                      PROFILER_DEFAULT_INTERVAL,
-                      features | ProfilerFeature::Threads, filters,
+                      PROFILER_DEFAULT_INTERVAL, features, filters,
                       MOZ_ARRAY_LENGTH(filters), 0, Nothing());
 
     profiler_stop();
@@ -1632,7 +1627,7 @@ TEST(GeckoProfiler, EnsureStarted)
 {
   InactiveFeaturesAndParamsCheck();
 
-  uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+  uint32_t features = ProfilerFeature::JS;
   const char* filters[] = {"GeckoMain", "Compositor"};
   {
     // Inactive -> Active
@@ -1770,7 +1765,7 @@ TEST(GeckoProfiler, DifferentThreads)
   // Control the profiler on a background thread and verify flags on the
   // main thread.
   {
-    uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+    uint32_t features = ProfilerFeature::JS;
     const char* filters[] = {"GeckoMain", "Compositor"};
 
     thread->Dispatch(
@@ -1802,7 +1797,7 @@ TEST(GeckoProfiler, DifferentThreads)
   // Control the profiler on the main thread and verify flags on a
   // background thread.
   {
-    uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+    uint32_t features = ProfilerFeature::JS;
     const char* filters[] = {"GeckoMain", "Compositor"};
 
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -3348,7 +3343,7 @@ PROFILER_DEFINE_COUNT_TOTAL(TestCounter2, COUNTER_NAME2, COUNTER_DESCRIPTION2);
 
 TEST(GeckoProfiler, Counters)
 {
-  uint32_t features = ProfilerFeature::Threads;
+  uint32_t features = 0;
   const char* filters[] = {"GeckoMain"};
 
   // We will record some counter values, and check that they're present (and no
@@ -3514,8 +3509,6 @@ TEST(GeckoProfiler, GetProfile)
   ASSERT_TRUE(activeFeatures.isSome());
   // Not all platforms support stack-walking.
   const bool hasStackWalk = ProfilerFeature::HasStackWalk(*activeFeatures);
-  // "threads" may automatically be added when `filters` is not empty.
-  const bool hasThreads = ProfilerFeature::HasThreads(*activeFeatures);
 
   UniquePtr<char[]> profile = profiler_get_profile();
   JSONOutputCheck(profile.get(), [&](const Json::Value& aRoot) {
@@ -3525,13 +3518,9 @@ TEST(GeckoProfiler, GetProfile)
       {
         GET_JSON(features, configuration["features"], Array);
         {
-          EXPECT_EQ(features.size(),
-                    (hasStackWalk ? 1u : 0u) + (hasThreads ? 1u : 0u));
+          EXPECT_EQ(features.size(), (hasStackWalk ? 1u : 0u));
           if (hasStackWalk) {
             EXPECT_JSON_ARRAY_CONTAINS(features, String, "stackwalk");
-          }
-          if (hasThreads) {
-            EXPECT_JSON_ARRAY_CONTAINS(features, String, "threads");
           }
         }
         GET_JSON(threads, configuration["threads"], Array);
@@ -3735,7 +3724,7 @@ TEST(GeckoProfiler, SuspendAndSample)
 
   DoSuspendAndSample(ProfilerThreadId{}, thread);
 
-  uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+  uint32_t features = ProfilerFeature::JS;
   const char* filters[] = {"GeckoMain", "Compositor"};
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
@@ -4402,7 +4391,7 @@ TEST(GeckoProfiler, AllThreads)
 
     ASSERT_TRUE(!profiler_is_active());
 
-    uint32_t features = ProfilerFeature::StackWalk | ProfilerFeature::Threads;
+    uint32_t features = ProfilerFeature::StackWalk;
     std::string featuresString = "Features: StackWalk Threads";
     if (threadCPU) {
       features |= ProfilerFeature::CPUAllThreads;

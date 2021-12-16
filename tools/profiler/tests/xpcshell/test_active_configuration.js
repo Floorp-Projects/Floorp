@@ -19,7 +19,7 @@ function run_test() {
     const entries = 10000;
     const interval = 1;
     const threads = ["GeckoMain"];
-    const features = ["js", "leaf", "threads"];
+    const features = ["js", "leaf"];
     const activeTabID = 123;
     Services.profiler.StartProfiler(
       entries,
@@ -61,7 +61,7 @@ function run_test() {
     const entries = 20000;
     const interval = 0.5;
     const threads = ["GeckoMain", "DOM Worker"];
-    const features = ["threads"];
+    const features = [];
     const activeTabID = 111;
     const duration = 20;
 

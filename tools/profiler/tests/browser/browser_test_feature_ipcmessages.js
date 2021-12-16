@@ -32,7 +32,7 @@ add_task(async function test_profile_feature_ipcmessges() {
   const url = BASE_URL + "simple.html";
 
   info("Open a tab while profiling IPC messages.");
-  startProfiler({ features: ["threads", "leaf", "ipcmessages"] });
+  startProfiler({ features: ["leaf", "ipcmessages"] });
   info("Started the profiler sucessfully! Now, let's open a tab.");
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
@@ -71,7 +71,7 @@ add_task(async function test_profile_feature_ipcmessges() {
   });
 
   info("Now open a tab without profiling IPC messages.");
-  startProfiler({ features: ["threads", "leaf"] });
+  startProfiler({ features: ["leaf"] });
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
