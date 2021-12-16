@@ -3482,24 +3482,10 @@ bool BrowsingContext::IsPopupAllowed() {
   return false;
 }
 
-/* static */
-bool BrowsingContext::ShouldAddEntryForRefresh(
-    nsIURI* aCurrentURI, const SessionHistoryInfo& aInfo) {
-  if (aInfo.GetPostData()) {
-    return true;
-  }
-
-  bool equalsURI = false;
-  if (aCurrentURI) {
-    aCurrentURI->Equals(aInfo.GetURI(), &equalsURI);
-  }
-  return !equalsURI;
-}
-
 void BrowsingContext::SessionHistoryCommit(
     const LoadingSessionHistoryInfo& aInfo, uint32_t aLoadType,
-    nsIURI* aCurrentURI, bool aHadActiveEntry, bool aPersist,
-    bool aCloneEntryChildren, bool aChannelExpired) {
+    bool aHadActiveEntry, bool aPersist, bool aCloneEntryChildren,
+    bool aChannelExpired) {
   nsID changeID = {};
   if (XRE_IsContentProcess()) {
     RefPtr<ChildSHistory> rootSH = Top()->GetChildSessionHistory();
@@ -3509,17 +3495,13 @@ void BrowsingContext::SessionHistoryCommit(
         // CanonicalBrowsingContext::SessionHistoryCommit. We'll be
         // incrementing the session history length if we're not replacing,
         // this is a top-level load or it's not the initial load in an iframe,
-        // ShouldUpdateSessionHistory(loadType) returns true and it's not a
-        // refresh for which ShouldAddEntryForRefresh returns false.
+        // and ShouldUpdateSessionHistory(loadType) returns true.
         // It is possible that this leads to wrong length temporarily, but
         // so would not having the check for replace.
         if (!LOAD_TYPE_HAS_FLAGS(
                 aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) &&
             (IsTop() || aHadActiveEntry) &&
-            ShouldUpdateSessionHistory(aLoadType) &&
-            (!LOAD_TYPE_HAS_FLAGS(aLoadType,
-                                  nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) ||
-             ShouldAddEntryForRefresh(aCurrentURI, aInfo.mInfo))) {
+            ShouldUpdateSessionHistory(aLoadType)) {
           changeID = rootSH->AddPendingHistoryChange();
         }
       } else {
