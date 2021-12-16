@@ -360,7 +360,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   MOZ_CAN_RUN_SCRIPT void RequestSubmit(nsGenericHTMLElement* aSubmitter,
                                         ErrorResult& aRv);
 
-  void Reset();
+  MOZ_CAN_RUN_SCRIPT void Reset();
 
   bool CheckValidity() { return CheckFormValidity(nullptr); }
 
