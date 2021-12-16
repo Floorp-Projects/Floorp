@@ -16,6 +16,8 @@ if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
         "nsPrintingProxy.cpp",
         "PrintingParent.cpp",
+        "PrintProgressDialogChild.cpp",
+        "PrintProgressDialogParent.cpp",
         "PrintSettingsDialogChild.cpp",
         "PrintSettingsDialogParent.cpp",
     ]
@@ -23,6 +25,7 @@ if CONFIG["NS_PRINTING"]:
 IPDL_SOURCES += [
     "PPrinting.ipdl",
     "PPrintingTypes.ipdlh",
+    "PPrintProgressDialog.ipdl",
     "PPrintSettingsDialog.ipdl",
 ]
 

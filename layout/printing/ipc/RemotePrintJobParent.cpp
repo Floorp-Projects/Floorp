@@ -267,7 +267,6 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvStatusChange(
 void RemotePrintJobParent::RegisterListener(nsIWebProgressListener* aListener) {
   MOZ_ASSERT(aListener);
 
-  // Our listener is a Promise created by CanonicalBrowsingContext::Print
   mPrintProgressListeners.AppendElement(aListener);
 }
 
