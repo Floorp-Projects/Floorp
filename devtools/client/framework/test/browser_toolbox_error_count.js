@@ -5,11 +5,7 @@
 // Test for error icon and the error count displayed at right of the
 // toolbox toolbar
 
-// TODO: We currently use mochi.test:8888 to avoid the automatic upgrade to HTTPS
-// from https-first. This is because 404 requests in HTTPS from httpd.js are
-// incorrectly treated as 200, filed as Bug 1733420. Once this bug is fixed we
-// could use a more standard URL, such as https://example.com
-const TEST_URI = `http://mochi.test:8888/document-builder.sjs?html=<meta charset=utf8></meta>
+const TEST_URI = `https://example.com/document-builder.sjs?html=<meta charset=utf8></meta>
 <script>
   console.error("Cache Error1");
   console.exception(false, "Cache Exception");
