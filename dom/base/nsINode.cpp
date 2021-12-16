@@ -862,7 +862,7 @@ void nsINode::Normalize() {
   }
 
   // We're relying on mozAutoSubtreeModified to keep the doc alive here.
-  Document* doc = OwnerDoc();
+  RefPtr<Document> doc = OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nullptr);
@@ -872,10 +872,11 @@ void nsINode::Normalize() {
   bool hasRemoveListeners = nsContentUtils::HasMutationListeners(
       doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
   if (hasRemoveListeners) {
-    for (uint32_t i = 0; i < nodes.Length(); ++i) {
-      nsINode* parentNode = nodes[i]->GetParentNode();
-      if (parentNode) {  // Node may have already been removed.
-        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode);
+    for (nsCOMPtr<nsIContent>& node : nodes) {
+      // Node may have already been removed.
+      if (nsCOMPtr<nsINode> parentNode = node->GetParentNode()) {
+        // TODO: Bug 1622253
+        nsContentUtils::MaybeFireNodeRemoved(MOZ_KnownLive(node), parentNode);
       }
     }
   }
@@ -2468,8 +2469,7 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     // If the new node already has a parent, fire for removing from old
     // parent
-    nsINode* oldParent = aNewChild->GetParentNode();
-    if (oldParent) {
+    if (nsCOMPtr<nsINode> oldParent = aNewChild->GetParentNode()) {
       nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent);
     }
 
