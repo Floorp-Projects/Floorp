@@ -2041,7 +2041,8 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
+      !StaticPrefs::browser_tabs_documentchannel_parent_controlled() ||
+      !mozilla::SessionHistoryInParent()) {
     return false;
   }
 
@@ -2049,6 +2050,8 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
   if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
     return false;
   }
+
+  MOZ_ASSERT(!net::SchemeIsJavascript(aLoadState->URI()));
 
   // Note: If successful, this will recurse into StartDocumentLoad and
   // set mCurrentLoad to the DocumentLoadListener instance created.
@@ -2065,7 +2068,8 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
+      (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
+       mozilla::SessionHistoryInParent())) {
     return false;
   }
 
@@ -2085,7 +2089,7 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
   // If we're controlling loads from the parent, then starting a new load means
   // that we need to cancel any existing ones.
   if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
-      mCurrentLoad) {
+      mozilla::SessionHistoryInParent() && mCurrentLoad) {
     mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
   mCurrentLoad = aLoad;
