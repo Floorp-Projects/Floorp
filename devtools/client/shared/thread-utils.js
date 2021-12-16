@@ -14,7 +14,7 @@ const asyncStore = asyncStoreHelper("debugger", {
   tabs: ["tabs", []],
   xhrBreakpoints: ["xhr-breakpoints", []],
   eventListenerBreakpoints: ["event-listener-breakpoints", undefined],
-  tabsBlackBoxed: ["tabsBlackBoxed", []],
+  blackboxedRanges: ["blackboxedRanges", {}],
 });
 exports.asyncStore = asyncStore;
 
