@@ -2720,3 +2720,17 @@ set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
 option("--enable-debug-js-modules", help="Enable debug mode for frontend JS libraries")
 
 set_config("DEBUG_JS_MODULES", True, when="--enable-debug-js-modules")
+
+
+# moz_dump_painting
+# ==============================================================
+option("--enable-dump-painting", help="Enable paint debugging")
+
+set_define(
+    "MOZ_DUMP_PAINTING",
+    True,
+    when=depends("--enable-dump-painting", "--enable-debug")(
+        lambda painting, debug: painting or debug
+    ),
+)
+set_define("MOZ_LAYERS_HAVE_LOG", True, when="--enable-dump-painting")
