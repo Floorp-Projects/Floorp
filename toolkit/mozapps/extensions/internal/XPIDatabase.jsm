@@ -96,7 +96,6 @@ const PENDING_INSTALL_METADATA = [
   "userDisabled",
   "softDisabled",
   "embedderDisabled",
-  "existingAddonID",
   "sourceURI",
   "releaseNotesURI",
   "installDate",
