@@ -187,7 +187,13 @@ class NetworkEventWatcher {
         // So do this when navigating a second time, we will navigate from a distinct WindowGlobal
         // and check that this is the top level window global and not an iframe one.
         // So that we avoid clearing the top navigation when an iframe navigates
+        //
+        // Avoid destroying the request if innerWindowId isn't set. This happens when we reload many times in a row.
+        // The previous navigation request will be cancelled and because of that its innerWindowId will be null.
+        // But the frontend will receive it after the navigation begins (after will-navigate) and will display it
+        // and try to fetch extra data about it. So, avoid destroying its NetworkEventActor.
       } else if (
+        child.innerWindowId &&
         child.innerWindowId != innerWindowId &&
         windowGlobal.browsingContext ==
           this.watcherActor.browserElement?.browsingContext
