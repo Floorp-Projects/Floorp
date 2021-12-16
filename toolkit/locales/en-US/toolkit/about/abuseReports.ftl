@@ -10,7 +10,7 @@
 abuse-report-dialog-title = Report for { $addon-name }
 
 abuse-report-title-extension = Report This Extension to { -vendor-short-name }
-abuse-report-title-sitepermission = Report This Site Permission add-on to { -vendor-short-name }
+abuse-report-title-sitepermission = Report This Site Permissions add-on to { -vendor-short-name }
 abuse-report-title-theme = Report This Theme to { -vendor-short-name }
 abuse-report-subtitle = What’s the issue?
 
@@ -46,7 +46,7 @@ abuse-report-messagebar-submitting = Sending report for <span data-l10n-name="ad
 abuse-report-messagebar-submitted = Thank you for submitting a report. Do you want to remove <span data-l10n-name="addon-name">{ $addon-name }</span>?
 abuse-report-messagebar-submitted-noremove = Thank you for submitting a report.
 abuse-report-messagebar-removed-extension = Thank you for submitting a report. You’ve removed the extension <span data-l10n-name="addon-name">{ $addon-name }</span>.
-abuse-report-messagebar-removed-sitepermission = Thank you for submitting a report. You’ve removed the Site Permission add-on <span data-l10n-name="addon-name">{ $addon-name }</span>.
+abuse-report-messagebar-removed-sitepermission = Thank you for submitting a report. You’ve removed the Site Permissions add-on <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-removed-theme = Thank you for submitting a report. You’ve removed the theme <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-error = There was an error sending the report for <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-error-recent-submit = The report for <span data-l10n-name="addon-name">{ $addon-name }</span> wasn’t sent because another report was submitted recently.
