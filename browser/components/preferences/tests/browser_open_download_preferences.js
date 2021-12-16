@@ -112,10 +112,12 @@ add_task(async function alwaysAskPreferenceWorks() {
   );
 
   let domWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "empty_pdf_file.pdf"
-  );
+    opening: TEST_PATH + "empty_pdf_file.pdf",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   let domWindow = await domWindowPromise;
   let dialog = domWindow.document.querySelector("#unknownContentType");
@@ -154,10 +156,12 @@ add_task(async function handleInternallyPreferenceWorks() {
     "Should have selected 'handle internally' for pdf"
   );
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "empty_pdf_file.pdf"
-  );
+    opening: TEST_PATH + "empty_pdf_file.pdf",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   await ContentTask.spawn(loadingTab.linkedBrowser, null, async () => {
     await ContentTaskUtils.waitForCondition(
@@ -203,10 +207,12 @@ add_task(async function saveToDiskPreferenceWorks() {
 
   let downloadFinishedPromise = downloadHadFinished(publicList);
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "empty_pdf_file.pdf"
-  );
+    opening: TEST_PATH + "empty_pdf_file.pdf",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   let download = await downloadFinishedPromise;
   BrowserTestUtils.removeTab(loadingTab);
@@ -263,10 +269,12 @@ add_task(async function useSystemDefaultPreferenceWorks() {
 
   let downloadFinishedPromise = downloadHadFinished(publicList);
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "empty_pdf_file.pdf"
-  );
+    opening: TEST_PATH + "empty_pdf_file.pdf",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   info("Downloading had finished");
   let download = await downloadFinishedPromise;
@@ -330,10 +338,12 @@ add_task(async function useSystemDefaultAndAskForDestinationWorks() {
     MockFilePicker.cleanup();
   });
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "empty_pdf_file.pdf"
-  );
+    opening: TEST_PATH + "empty_pdf_file.pdf",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   await filePickerShown;
 

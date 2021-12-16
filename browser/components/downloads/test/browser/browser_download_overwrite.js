@@ -63,35 +63,43 @@ add_task(async function test_overwrite_does_not_delete_first() {
   let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
 
   // Now try and download a thing to the file:
-  await BrowserTestUtils.withNewTab(TEST_ROOT + "foo.txt", async function() {
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
-      )
-    ) {
-      let dialog = await dialogPromise;
-      info("Got dialog.");
-      let saveEl = dialog.document.getElementById("save");
-      dialog.document.getElementById("mode").selectedItem = saveEl;
-      // Allow accepting the dialog (to avoid the delay helper):
-      dialog.document
-        .getElementById("unknownContentType")
-        .getButton("accept").disabled = false;
-      // Then accept it:
-      dialog.document.querySelector("dialog").acceptDialog();
-    }
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      opening: TEST_ROOT + "foo.txt",
+      waitForLoad: false,
+      waitForStateStop: true,
+    },
+    async function() {
+      if (
+        !Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      ) {
+        let dialog = await dialogPromise;
+        info("Got dialog.");
+        let saveEl = dialog.document.getElementById("save");
+        dialog.document.getElementById("mode").selectedItem = saveEl;
+        // Allow accepting the dialog (to avoid the delay helper):
+        dialog.document
+          .getElementById("unknownContentType")
+          .getButton("accept").disabled = false;
+        // Then accept it:
+        dialog.document.querySelector("dialog").acceptDialog();
+      }
 
-    ok(await transferCompletePromise, "download should succeed");
-    ok(
-      gTestTargetFile.exists(),
-      "File should still exist and not have been deleted."
-    );
-    // Note: the download transfer is fake so data won't have been written to
-    // the file, so we can't verify that the download actually overwrites data
-    // like this.
-    mockTransferRegisterer.unregister();
-    unregisteredTransfer = true;
-  });
+      ok(await transferCompletePromise, "download should succeed");
+      ok(
+        gTestTargetFile.exists(),
+        "File should still exist and not have been deleted."
+      );
+      // Note: the download transfer is fake so data won't have been written to
+      // the file, so we can't verify that the download actually overwrites data
+      // like this.
+      mockTransferRegisterer.unregister();
+      unregisteredTransfer = true;
+    }
+  );
 });
 
 // If we download a file and the user accepts overwriting an existing one,
@@ -114,35 +122,43 @@ add_task(async function test_overwrite_works() {
     });
   });
   // Now try and download a thing to the file:
-  await BrowserTestUtils.withNewTab(TEST_ROOT + "foo.txt", async function() {
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
-      )
-    ) {
-      let dialog = await dialogPromise;
-      info("Got dialog.");
-      let saveEl = dialog.document.getElementById("save");
-      dialog.document.getElementById("mode").selectedItem = saveEl;
-      // Allow accepting the dialog (to avoid the delay helper):
-      dialog.document
-        .getElementById("unknownContentType")
-        .getButton("accept").disabled = false;
-      // Then accept it:
-      dialog.document.querySelector("dialog").acceptDialog();
-    }
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      opening: TEST_ROOT + "foo.txt",
+      waitForLoad: false,
+      waitForStateStop: true,
+    },
+    async function() {
+      if (
+        !Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      ) {
+        let dialog = await dialogPromise;
+        info("Got dialog.");
+        let saveEl = dialog.document.getElementById("save");
+        dialog.document.getElementById("mode").selectedItem = saveEl;
+        // Allow accepting the dialog (to avoid the delay helper):
+        dialog.document
+          .getElementById("unknownContentType")
+          .getButton("accept").disabled = false;
+        // Then accept it:
+        dialog.document.querySelector("dialog").acceptDialog();
+      }
 
-    info("wait for download to finish");
-    let download = await downloadFinishedPromise;
-    ok(download.succeeded, "Download should succeed");
-    ok(
-      gTestTargetFile.exists(),
-      "File should still exist and not have been deleted."
-    );
-    let contents = new TextDecoder().decode(
-      await IOUtils.read(gTestTargetFile.path)
-    );
-    info("Got: " + contents);
-    ok(contents.startsWith("Dummy"), "The file was overwritten.");
-  });
+      info("wait for download to finish");
+      let download = await downloadFinishedPromise;
+      ok(download.succeeded, "Download should succeed");
+      ok(
+        gTestTargetFile.exists(),
+        "File should still exist and not have been deleted."
+      );
+      let contents = new TextDecoder().decode(
+        await IOUtils.read(gTestTargetFile.path)
+      );
+      info("Got: " + contents);
+      ok(contents.startsWith("Dummy"), "The file was overwritten.");
+    }
+  );
 });
