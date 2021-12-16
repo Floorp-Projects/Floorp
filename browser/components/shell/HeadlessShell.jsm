@@ -216,25 +216,39 @@ let HeadlessShell = {
         }
       }
 
-      // Only command line argument left should be `screenshot`
-      // There could still be URLs however
+      let urlOrFileToSave = null;
       try {
-        var path = cmdLine.handleFlagWithParam("screenshot", true);
-        if (!cmdLine.length && !URLlist.length) {
-          URLlist.push(path); // Assume the user wanted to specify a URL
-
-          path = PathUtils.join(
-            cmdLine.workingDirectory.path,
-            "screenshot.png"
-          );
-        }
+        urlOrFileToSave = cmdLine.handleFlagWithParam("screenshot", true);
       } catch (e) {
-        path = PathUtils.join(cmdLine.workingDirectory.path, "screenshot.png");
+        // We know that the flag exists so we only get here if there was no parameter.
         cmdLine.handleFlag("screenshot", true); // Remove `screenshot`
       }
 
+      // Assume that the remaining arguments that do not start
+      // with a hyphen are URLs
       for (let i = 0; i < cmdLine.length; ++i) {
-        URLlist.push(cmdLine.getArgument(i)); // Assume that all remaining arguments are URLs
+        const argument = cmdLine.getArgument(i);
+        if (argument.startsWith("-")) {
+          dump(`Warning: unrecognized command line flag ${argument}\n`);
+          // To emulate the pre-nsICommandLine behavior, we ignore
+          // the argument after an unrecognized flag.
+          ++i;
+        } else {
+          URLlist.push(argument);
+        }
+      }
+
+      let path = null;
+      if (urlOrFileToSave && !URLlist.length) {
+        // URL was specified next to "-screenshot"
+        // Example: -screenshot https://www.example.com -attach-console
+        URLlist.push(urlOrFileToSave);
+      } else {
+        path = urlOrFileToSave;
+      }
+
+      if (!path) {
+        path = PathUtils.join(cmdLine.workingDirectory.path, "screenshot.png");
       }
 
       if (URLlist.length == 1) {
