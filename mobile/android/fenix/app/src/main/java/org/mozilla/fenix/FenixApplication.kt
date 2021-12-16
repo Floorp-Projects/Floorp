@@ -80,6 +80,8 @@ import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.isCustomEngine
+import org.mozilla.fenix.ext.isKnownSearchDomain
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.utils.Settings
 
@@ -643,11 +645,20 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         browserStore.waitForSelectedOrDefaultSearchEngine { searchEngine ->
-            if (searchEngine != null) {
-                SearchDefaultEngine.apply {
-                    code.set(searchEngine.id)
-                    name.set(searchEngine.name)
-                    searchUrl.set(searchEngine.buildSearchUrl(""))
+            searchEngine?.let {
+                val sendSearchUrl =
+                    !searchEngine.isCustomEngine() || searchEngine.isKnownSearchDomain()
+                if (sendSearchUrl) {
+                    SearchDefaultEngine.apply {
+                        code.set(searchEngine.id)
+                        name.set(searchEngine.name)
+                        searchUrl.set(searchEngine.buildSearchUrl(""))
+                    }
+                } else {
+                    SearchDefaultEngine.apply {
+                        code.set(searchEngine.id)
+                        name.set("custom")
+                    }
                 }
             }
         }

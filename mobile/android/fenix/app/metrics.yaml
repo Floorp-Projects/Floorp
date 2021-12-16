@@ -1842,7 +1842,7 @@ search.default_engine:
       URL we use to build the search query for the search engine. For example:
       https://mysearchengine.com/?query=%s. If it's a custom search engine
       (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value
-      will be "custom"
+      will not be set.
     send_in_pings:
       - metrics
     bugs:
