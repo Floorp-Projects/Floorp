@@ -182,7 +182,7 @@ class QSTestUtils {
     // If we try to set the scenario before a previous update has finished,
     // `updateFirefoxSuggestScenario` will bail, so wait.
     await this.waitForScenarioUpdated();
-    await UrlbarPrefs.updateFirefoxSuggestScenario(false, { scenario });
+    await UrlbarPrefs.updateFirefoxSuggestScenario({ scenario });
   }
 
   /**

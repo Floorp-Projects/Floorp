@@ -115,10 +115,11 @@ async function doMigrateTest({
   for (let i = 0; i < 2; i++) {
     info(`Calling updateFirefoxSuggestScenario, i=${i}`);
 
-    // Do the scenario update and pass true to simulate startup.
-    await UrlbarPrefs.updateFirefoxSuggestScenario(true, {
+    // Do the scenario update and set `isStartup` to simulate startup.
+    await UrlbarPrefs.updateFirefoxSuggestScenario({
       ...testOverrides,
       scenario,
+      isStartup: true,
     });
 
     // Check expected pref values. Store expected effective values as we go so

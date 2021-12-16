@@ -594,14 +594,11 @@ class Preferences {
    *   default, and the user will be shown an onboarding dialog that prompts
    *   them to opt in to it. The user can also opt in in about:preferences.
    *
-   * @param {boolean} isStartup
-   *   Pass true when calling at startup. Appropriate pref migrations are
-   *   applied in that case.
    * @param {string} [testOverrides]
    *   This is intended for tests only. Pass to force the following:
-   *   `{ scenario, migrationVersion, defaultPrefs }`
+   *   `{ scenario, migrationVersion, defaultPrefs, isStartup }`
    */
-  async updateFirefoxSuggestScenario(isStartup, testOverrides = null) {
+  async updateFirefoxSuggestScenario(testOverrides = null) {
     // Make sure we don't re-enter this method while updating prefs. Updates to
     // prefs that are fallbacks for Nimbus variables trigger the pref observer
     // in Nimbus, which triggers our Nimbus `onUpdate` callback, which calls
@@ -609,6 +606,10 @@ class Preferences {
     if (this._updatingFirefoxSuggestScenario) {
       return;
     }
+
+    let isStartup =
+      !this._updateFirefoxSuggestScenarioCalled || !!testOverrides?.isStartup;
+    this._updateFirefoxSuggestScenarioCalled = true;
 
     try {
       this._updatingFirefoxSuggestScenario = true;
@@ -620,6 +621,7 @@ class Preferences {
       // prefs can end up wrong if their migrations use the wrong scenario.
       await Region.init();
       await NimbusFeatures.urlbar.ready();
+      this._clearNimbusCache();
 
       this._updateFirefoxSuggestScenarioHelper(isStartup, testOverrides);
     } finally {
@@ -1117,12 +1119,17 @@ class Preferences {
    * Called when the `NimbusFeatures.urlbar` value changes.
    */
   _onNimbusUpdate() {
-    for (let key of Object.keys(this._nimbus)) {
-      this._map.delete(key);
-    }
-    this.__nimbus = null;
+    this._clearNimbusCache();
+    this.updateFirefoxSuggestScenario();
+  }
 
-    this.updateFirefoxSuggestScenario(false);
+  _clearNimbusCache() {
+    if (this.__nimbus) {
+      for (let key of Object.keys(this.__nimbus)) {
+        this._map.delete(key);
+      }
+      this.__nimbus = null;
+    }
   }
 
   get _nimbus() {
