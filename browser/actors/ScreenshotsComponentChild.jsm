@@ -110,8 +110,8 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
   getFullPageBounds() {
     let doc = this.document.documentElement;
     let rect = new DOMRect(
-      doc.clientLeft,
-      doc.clientTop,
+      doc.scrollTop,
+      doc.scrollLeft,
       doc.scrollWidth,
       doc.scrollHeight
     );
@@ -145,8 +145,8 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
   getVisibleBounds() {
     let doc = this.document.documentElement;
     let rect = new DOMRect(
-      doc.scrollLeft,
-      doc.scrollTop,
+      doc.clientTop,
+      doc.clientLeft,
       doc.clientWidth,
       doc.clientHeight
     );
