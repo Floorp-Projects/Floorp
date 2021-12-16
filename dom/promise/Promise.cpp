@@ -687,6 +687,10 @@ already_AddRefed<PromiseWorkerProxy> PromiseWorkerProxy::Create(
   RefPtr<PromiseWorkerProxy> proxy =
       new PromiseWorkerProxy(aWorkerPromise, aCb);
 
+  // Maintain a reference so that we have a valid object to clean up when
+  // removing the feature.
+  proxy.get()->AddRef();
+
   // We do this to make sure the worker thread won't shut down before the
   // promise is resolved/rejected on the worker thread.
   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
@@ -695,15 +699,11 @@ already_AddRefed<PromiseWorkerProxy> PromiseWorkerProxy::Create(
   if (NS_WARN_IF(!workerRef)) {
     // Probably the worker is terminating. We cannot complete the operation
     // and we have to release all the resources.
-    proxy->CleanProperties();
+    proxy->CleanUp();
     return nullptr;
   }
 
   proxy->mWorkerRef = new ThreadSafeWorkerRef(workerRef);
-
-  // Maintain a reference so that we have a valid object to clean up when
-  // removing the feature.
-  proxy.get()->AddRef();
 
   return proxy.forget();
 }
@@ -722,19 +722,6 @@ PromiseWorkerProxy::~PromiseWorkerProxy() {
   MOZ_ASSERT(mCleanedUp);
   MOZ_ASSERT(!mWorkerPromise);
   MOZ_ASSERT(!mWorkerRef);
-}
-
-void PromiseWorkerProxy::CleanProperties() {
-  MOZ_ASSERT(IsCurrentThreadRunningWorker());
-
-  // Ok to do this unprotected from Create().
-  // CleanUp() holds the lock before calling this.
-  mCleanedUp = true;
-  mWorkerPromise = nullptr;
-  mWorkerRef = nullptr;
-
-  // Clear the StructuredCloneHolderBase class.
-  Clear();
 }
 
 WorkerPrivate* PromiseWorkerProxy::GetWorkerPrivate() const {
@@ -806,7 +793,12 @@ void PromiseWorkerProxy::CleanUp() {
     // Release the Promise and remove the PromiseWorkerProxy from the holders of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
-    CleanProperties();
+    mCleanedUp = true;
+    mWorkerPromise = nullptr;
+    mWorkerRef = nullptr;
+
+    // Clear the StructuredCloneHolderBase class.
+    Clear();
   }
   Release();
 }
