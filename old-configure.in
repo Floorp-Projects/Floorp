@@ -1185,7 +1185,6 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
 # The custom dynamic linker doesn't support TLS variables
-MOZ_TLS=
 if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
@@ -1202,7 +1201,6 @@ if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
       ;;
     *)
       AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
-      MOZ_TLS=1
       ;;
   esac
 fi
