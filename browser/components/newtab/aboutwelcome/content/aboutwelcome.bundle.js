@@ -1021,6 +1021,14 @@ function Colorways(props) {
     })
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: typeof description === "object" ? description : {}
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+    className: "sr-only colorway label",
+    id: `${id}-label`,
+    "data-l10n-args": JSON.stringify({
+      colorwayName: label
+    })
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: typeof description === "object" ? description : {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
     type: "radio",
     "data-colorway": id,
@@ -1031,7 +1039,8 @@ function Colorways(props) {
     "data-l10n-attrs": "aria-description",
     "data-l10n-args": JSON.stringify({
       colorwayName: label
-    })
+    }),
+    "aria-labelledby": `${id}-label`
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `icon colorway ${colorwayId === id ? "selected" : ""} ${id}`
   })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(VariationsCircle, {
