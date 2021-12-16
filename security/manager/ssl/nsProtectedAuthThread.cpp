@@ -39,6 +39,7 @@ nsProtectedAuthThread::nsProtectedAuthThread()
 nsProtectedAuthThread::~nsProtectedAuthThread() = default;
 
 NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver* aObserver) {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aObserver);
 
   if (!mSlot)
@@ -128,6 +129,7 @@ void nsProtectedAuthThread::Run(void) {
 }
 
 void nsProtectedAuthThread::Join() {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mThreadHandle) return;
 
   PR_JoinThread(mThreadHandle);
