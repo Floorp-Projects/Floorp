@@ -49,35 +49,12 @@ interface nsILocalFileWin : nsIFile
     [noscript] readonly attribute ACString nativeCanonicalPath;
 
     /**
-     * Windows specific file attributes.
-     */
-
-    /*
-     * WFA_SEARCH_INDEXED: Generally the default on files in Windows except
-     * those created in temp locations. Valid on XP and up. When set the
-     * file or directory is marked to be indexed by desktop search services.
-     */
-    const unsigned long WFA_SEARCH_INDEXED = 1;
-
-    /*
-     * WFA_READONLY: Whether the file is readonly or not.
-     */
-    const unsigned long WFA_READONLY = 2;
-
-    /*
-     * WFA_READWRITE: Used to clear the readonly attribute.
-     */
-    const unsigned long WFA_READWRITE = 4;
-
-    /**
-     * fileAttributesWin
-     *
-     * Set or get windows specific file attributes.
+     * Get or set whether this file is marked read-only.
      *
      * Throws NS_ERROR_FILE_INVALID_PATH for an invalid file.
      * Throws NS_ERROR_FAILURE if the set or get fails.
      */
-    attribute unsigned long fileAttributesWin;
+    attribute bool readOnly;
 
     /**
      * Setting this to true will prepend the prefix "\\?\" to all parsed file
