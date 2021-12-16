@@ -155,9 +155,11 @@ describe("PrefsFeed", () => {
     );
   });
   it("should send a PREF_CHANGED actions when onPocketExperimentUpdated is called", () => {
-    sandbox.stub(global.NimbusFeatures.newtab, "getAllVariables").returns({
-      prefsButtonIcon: "icon-new",
-    });
+    sandbox
+      .stub(global.NimbusFeatures.pocketNewtab, "getAllVariables")
+      .returns({
+        prefsButtonIcon: "icon-new",
+      });
     feed.onPocketExperimentUpdated();
     assert.calledWith(
       feed.store.dispatch,
@@ -188,6 +190,26 @@ describe("PrefsFeed", () => {
           },
         },
       })
+    );
+  });
+
+  it("should remove all events on removeListeners", () => {
+    feed.geo = "";
+    sandbox.spy(global.NimbusFeatures.pocketNewtab, "off");
+    sandbox.spy(global.NimbusFeatures.newtab, "off");
+    feed.removeListeners();
+    assert.calledWith(
+      global.NimbusFeatures.pocketNewtab.off,
+      feed.onPocketExperimentUpdated
+    );
+    assert.calledWith(
+      global.NimbusFeatures.newtab.off,
+      feed.onExperimentUpdated
+    );
+    assert.calledWith(
+      ServicesStub.obs.removeObserver,
+      feed,
+      global.Region.REGION_TOPIC
     );
   });
 
