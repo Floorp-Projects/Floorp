@@ -222,6 +222,9 @@ Maybe<SurfaceDescriptor> Image::GetDescFromTexClient(
   if (!tcOverride) {
     tc = GetTextureClient(nullptr);
   }
+  if (!tc) {
+    return {};
+  }
 
   const auto& tcd = tc->GetInternalData();
 
