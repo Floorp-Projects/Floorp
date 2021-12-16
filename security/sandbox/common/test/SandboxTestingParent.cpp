@@ -76,21 +76,17 @@ void SandboxTestingParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult SandboxTestingParent::RecvReportTestResults(
-    const nsCString& testName, bool shouldSucceed, bool didSucceed,
-    const nsCString& resultMessage) {
+    const nsCString& testName, bool passed, const nsCString& resultMessage) {
   NS_DispatchToMainThread(
       NS_NewRunnableFunction("SandboxReportTestResults", [=]() {
         nsCOMPtr<nsIObserverService> observerService =
             mozilla::services::GetObserverService();
         MOZ_RELEASE_ASSERT(observerService);
-        nsCString shouldPermit(shouldSucceed ? "true"_ns : "false"_ns);
-        nsCString wasPermitted(didSucceed ? "true"_ns : "false"_ns);
+        nsCString passedStr(passed ? "true"_ns : "false"_ns);
         nsString json;
         json += u"{ \"testid\" : \""_ns + NS_ConvertUTF8toUTF16(testName) +
-                u"\", \"shouldPermit\" : "_ns +
-                NS_ConvertUTF8toUTF16(shouldPermit) +
-                u", \"wasPermitted\" : "_ns +
-                NS_ConvertUTF8toUTF16(wasPermitted) + u", \"message\" : \""_ns +
+                u"\", \"passed\" : "_ns + NS_ConvertUTF8toUTF16(passedStr) +
+                u", \"message\" : \""_ns +
                 NS_ConvertUTF8toUTF16(resultMessage) + u"\" }"_ns;
         observerService->NotifyObservers(nullptr, "sandbox-test-result",
                                          json.BeginReading());
