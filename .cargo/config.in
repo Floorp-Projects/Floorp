@@ -56,6 +56,11 @@ git = "https://github.com/kinetiknz/mio-named-pipes"
 replace-with = "vendored-sources"
 rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 
+[source."https://github.com/kinetiknz/audioipc-2"]
+git = "https://github.com/kinetiknz/audioipc-2"
+replace-with = "vendored-sources"
+rev = "abd4a0132ea65057b554221c8f112a9bedd33a92"
+
 [source."https://github.com/kinetiknz/ashmem-rs"]
 git = "https://github.com/kinetiknz/ashmem-rs"
 replace-with = "vendored-sources"
