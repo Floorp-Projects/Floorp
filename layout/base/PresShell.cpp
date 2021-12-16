@@ -5305,27 +5305,24 @@ void PresShell::AddCanvasBackgroundColorItem(
 }
 
 static bool IsTransparentContainerElement(nsPresContext* aPresContext) {
-  nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
+  nsIDocShell* docShell = aPresContext->GetDocShell();
   if (!docShell) {
     return false;
   }
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = docShell->GetWindow();
-  if (!pwin) return false;
-  nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
-
-  BrowserChild* tab = BrowserChild::GetFrom(docShell);
-  if (tab) {
-    // Check if presShell is the top PresShell. Only the top can
-    // influence the canvas background color.
-    if (aPresContext->GetPresShell() != tab->GetTopLevelPresShell()) {
-      tab = nullptr;
-    }
+  nsPIDOMWindowOuter* pwin = docShell->GetWindow();
+  if (!pwin) {
+    return false;
   }
-
-  return (containerElement && containerElement->HasAttr(
-                                  kNameSpaceID_None, nsGkAtoms::transparent)) ||
-         (tab && tab->IsTransparent());
+  if (Element* containerElement = pwin->GetFrameElementInternal()) {
+    return containerElement->HasAttr(nsGkAtoms::transparent);
+  }
+  if (BrowserChild* tab = BrowserChild::GetFrom(docShell)) {
+    // Check if presShell is the top PresShell. Only the top can influence the
+    // canvas background color.
+    return aPresContext->GetPresShell() == tab->GetTopLevelPresShell() &&
+           tab->IsTransparent();
+  }
+  return false;
 }
 
 nscolor PresShell::GetDefaultBackgroundColorToDraw() {
