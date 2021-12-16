@@ -41,4 +41,5 @@ Table of Contents
    experiments
    dynamic-result-types
    preferences
+   testing
    contact
