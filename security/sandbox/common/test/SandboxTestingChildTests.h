@@ -269,7 +269,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
   });
 
   struct sched_param param_pid_Ntid = {};
-  child->ErrnoTest("sched_getparam(Ntid)"_ns, false, [&] {
+  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, false, EPERM, [&] {
     return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
   });
 
