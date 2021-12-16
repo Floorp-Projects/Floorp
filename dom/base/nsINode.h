@@ -1511,8 +1511,7 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   Document* GetOwnerDocument() const;
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Normalize();
+  void Normalize();
 
   /**
    * Get the base URI for any relative URIs within this piece of
@@ -2042,9 +2041,7 @@ class nsINode : public mozilla::dom::EventTarget {
                         mozilla::ErrorResult& aError) {
     return ReplaceOrInsertBefore(true, &aNode, &aChild, aError);
   }
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* RemoveChild(
-      nsINode& aChild, mozilla::ErrorResult& aError);
+  nsINode* RemoveChild(nsINode& aChild, mozilla::ErrorResult& aError);
   already_AddRefed<nsINode> CloneNode(bool aDeep, mozilla::ErrorResult& aError);
   bool IsSameNode(nsINode* aNode);
   bool IsEqualNode(nsINode* aNode);
@@ -2191,10 +2188,9 @@ class nsINode : public mozilla::dom::EventTarget {
   void EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                    nsINode* aRefChild,
                                    mozilla::ErrorResult& aError);
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* ReplaceOrInsertBefore(
-      bool aReplace, nsINode* aNewChild, nsINode* aRefChild,
-      mozilla::ErrorResult& aError);
+  nsINode* ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
+                                 nsINode* aRefChild,
+                                 mozilla::ErrorResult& aError);
 
   /**
    * Returns the Element that should be used for resolving namespaces
