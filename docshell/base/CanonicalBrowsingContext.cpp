@@ -797,7 +797,6 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             RemoveDynEntriesFromActiveSessionHistoryEntry();
           }
         }
-        mActiveEntry = newActiveEntry;
 
         if (LOAD_TYPE_HAS_FLAGS(aLoadType,
                                 nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
@@ -808,8 +807,16 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           // should append instead.
           addEntry = index < 0;
           if (!addEntry) {
-            shistory->ReplaceEntry(index, mActiveEntry);
+            shistory->ReplaceEntry(index, newActiveEntry);
           }
+          mActiveEntry = newActiveEntry;
+        } else if (LOAD_TYPE_HAS_FLAGS(
+                       aLoadType, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) &&
+                   !ShouldAddEntryForRefresh(newActiveEntry)) {
+          addEntry = false;
+          mActiveEntry->ReplaceWith(*newActiveEntry);
+        } else {
+          mActiveEntry = newActiveEntry;
         }
 
         if (loadFromSessionHistory) {
@@ -841,7 +848,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         } else if (addEntry) {
           if (mActiveEntry) {
             if (LOAD_TYPE_HAS_FLAGS(
-                    aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
+                    aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) ||
+                (LOAD_TYPE_HAS_FLAGS(aLoadType,
+                                     nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) &&
+                 !ShouldAddEntryForRefresh(newActiveEntry))) {
               // FIXME We need to make sure that when we create the info we
               //       make a copy of the shared state.
               mActiveEntry->ReplaceWith(*newActiveEntry);
