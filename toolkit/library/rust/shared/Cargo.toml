@@ -75,8 +75,8 @@ webext_storage_bridge = { path = "../../../components/extensions/storage/webext_
 
 # https://github.com/mozilla/audioipc-2/commits/master
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "776ef93a9fdb20ac1ef6b7907bdd0493480388ee", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "776ef93a9fdb20ac1ef6b7907bdd0493480388ee", optional = true }
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f", optional = true }
 
 # https://github.com/kinetiknz/audioipc-2/commits/macos
 [target.'cfg(target_os = "macos")'.dependencies]
