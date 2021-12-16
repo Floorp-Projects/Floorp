@@ -2624,3 +2624,46 @@ with only_when(compile_environment):
     pkg_check_modules("MOZ_LIBEVENT", "libevent", when="--with-system-libevent")
 
     set_config("MOZ_SYSTEM_LIBEVENT", True, when="--with-system-libevent")
+
+
+# Crash reporting
+# ==============================================================
+@depends(target, developer_options)
+def crashreporter_default(target, developer_options):
+    if target.kernel in ("WINNT", "Darwin"):
+        return True
+    if target.kernel == "Linux" and target.cpu in ("x86", "x86_64", "arm", "aarch64"):
+        # The crash reporter prevents crash stacktraces to be logged in the
+        # logs on Android, so we leave it out by default in developer builds.
+        return target.os != "Android" or not developer_options
+
+
+option(
+    "--enable-crashreporter",
+    default=crashreporter_default,
+    help="{Enable|Disable} crash reporting",
+)
+
+
+set_config("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+set_define("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+add_old_configure_assignment("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+
+with only_when(compile_environment):
+    with only_when("--enable-crashreporter"):
+        pkg_check_modules(
+            "MOZ_GTHREAD",
+            "gthread-2.0",
+            when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
+        )
+
+        set_config(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
+        set_define(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
