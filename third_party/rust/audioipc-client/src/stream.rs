@@ -13,6 +13,7 @@ use audioipc::{
     messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage},
 };
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
+use fallible_collections::FallibleVec;
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
 use std::ffi::{CStr, CString};
@@ -211,9 +212,8 @@ impl rpc::Server for CallbackServer {
                 };
 
                 self.duplex_input = if let StreamDirection::Duplex = self.dir {
-                    let mut duplex_input = Vec::new();
-                    match duplex_input.try_reserve_exact(shm_area_size) {
-                        Ok(()) => Some(duplex_input),
+                    match Vec::try_with_capacity(shm_area_size) {
+                        Ok(duplex_input) => Some(duplex_input),
                         Err(e) => {
                             warn!(
                                 "duplex_input allocation failed (size={}, err={:?})",
