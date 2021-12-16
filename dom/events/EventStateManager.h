@@ -386,10 +386,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * specified content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
-                                        EventMessage aMessage,
-                                        nsIContent* aTargetContent,
-                                        nsIContent* aRelatedContent);
+  MOZ_CAN_RUN_SCRIPT nsIFrame* DispatchMouseOrPointerEvent(
+      WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
+      nsIContent* aTargetContent, nsIContent* aRelatedContent);
   /**
    * Synthesize DOM pointerover and pointerout events
    */
@@ -404,17 +403,21 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * Tell this ESM and ESMs in parent documents that the mouse is
    * over some content in this document.
    */
-  void NotifyMouseOver(WidgetMouseEvent* aMouseEvent, nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyMouseOver(
+      WidgetMouseEvent* aMouseEvent, nsIContent* aContent);
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+   *
    * @param aMouseEvent the event that triggered the mouseout
    * @param aMovingInto the content node we've moved into.  This is used to set
    *        the relatedTarget for mouseout events.  Also, if it's non-null
    *        NotifyMouseOut will NOT change the current hover content to null;
    *        in that case the caller is responsible for updating hover state.
    */
-  void NotifyMouseOut(WidgetMouseEvent* aMouseEvent, nsIContent* aMovingInto);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
+                                                  nsIContent* aMovingInto);
   MOZ_CAN_RUN_SCRIPT void GenerateDragDropEnterExit(
       nsPresContext* aPresContext, WidgetDragEvent* aDragEvent);
 
