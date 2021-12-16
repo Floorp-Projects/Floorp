@@ -6,6 +6,7 @@
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportWin.h"
 
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/WindowsConsole.h"
 
 using namespace mozilla;
@@ -26,30 +27,26 @@ class nsNativeAppSupportWin : public nsNativeAppSupportBase {
 };  // nsNativeAppSupportWin
 
 void nsNativeAppSupportWin::CheckConsole() {
-  for (int i = 1; i < gArgc; ++i) {
-    if (strcmp("-console", gArgv[i]) == 0 ||
-        strcmp("--console", gArgv[i]) == 0 ||
-        strcmp("/console", gArgv[i]) == 0) {
-      if (AllocConsole()) {
-        // Redirect the standard streams to the new console, but
-        // only if they haven't been redirected to a valid file.
-        // Visual Studio's _fileno() returns -2 for the standard
-        // streams if they aren't associated with an output stream.
-        if (_fileno(stdout) == -2) {
-          freopen("CONOUT$", "w", stdout);
-        }
-        // There is no CONERR$, so use CONOUT$ for stderr as well.
-        if (_fileno(stderr) == -2) {
-          freopen("CONOUT$", "w", stderr);
-        }
-        if (_fileno(stdin) == -2) {
-          freopen("CONIN$", "r", stdin);
-        }
+  if (CheckArg(gArgc, gArgv, "attach-console") == ARG_FOUND) {
+    UseParentConsole();
+  }
+
+  if (CheckArg(gArgc, gArgv, "console") == ARG_FOUND) {
+    if (AllocConsole()) {
+      // Redirect the standard streams to the new console, but
+      // only if they haven't been redirected to a valid file.
+      // Visual Studio's _fileno() returns -2 for the standard
+      // streams if they aren't associated with an output stream.
+      if (_fileno(stdout) == -2) {
+        freopen("CONOUT$", "w", stdout);
       }
-    } else if (strcmp("-attach-console", gArgv[i]) == 0 ||
-               strcmp("--attach-console", gArgv[i]) == 0 ||
-               strcmp("/attach-console", gArgv[i]) == 0) {
-      UseParentConsole();
+      // There is no CONERR$, so use CONOUT$ for stderr as well.
+      if (_fileno(stderr) == -2) {
+        freopen("CONOUT$", "w", stderr);
+      }
+      if (_fileno(stdin) == -2) {
+        freopen("CONIN$", "r", stdin);
+      }
     }
   }
 }
