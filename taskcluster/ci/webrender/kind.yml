@@ -15,7 +15,7 @@ transforms:
 job-defaults:
     attributes:
         retrigger: true
-    run-on-projects: ['mozilla-beta', 'trunk']
+    run-on-projects: ['integration', 'release']
     treeherder:
         tier: 1
         kind: other
