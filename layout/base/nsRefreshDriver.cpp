@@ -107,9 +107,6 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 #define LOG(...) \
   MOZ_LOG(sRefreshDriverLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-#define DEFAULT_THROTTLED_FRAME_RATE 1
-#define DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS 1000
-#define DEFAULT_NOTIFY_INTERSECTION_OBSERVERS_INTERVAL_MS 100
 // after 10 minutes, stop firing off inactive timers
 #define DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS 600
 
@@ -1087,29 +1084,23 @@ double nsRefreshDriver::GetRegularTimerInterval() const {
 
 /* static */
 double nsRefreshDriver::GetThrottledTimerInterval() {
-  int32_t rate = Preferences::GetInt("layout.throttled_frame_rate", -1);
-  if (rate <= 0) {
-    rate = DEFAULT_THROTTLED_FRAME_RATE;
-  }
+  uint32_t rate = StaticPrefs::layout_throttled_frame_rate();
   return 1000.0 / rate;
 }
 
-/* static */ mozilla::TimeDuration
-nsRefreshDriver::GetMinRecomputeVisibilityInterval() {
-  int32_t interval =
-      Preferences::GetInt("layout.visibility.min-recompute-interval-ms", -1);
-  if (interval <= 0) {
-    interval = DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS;
-  }
-  return TimeDuration::FromMilliseconds(interval);
+/* static */
+TimeDuration nsRefreshDriver::GetMinRecomputeVisibilityInterval() {
+  return TimeDuration::FromMilliseconds(
+      StaticPrefs::layout_visibility_min_recompute_interval_ms());
 }
 
 RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
   if (mThrottled) {
-    if (!sThrottledRateTimer)
+    if (!sThrottledRateTimer) {
       sThrottledRateTimer = new InactiveRefreshDriverTimer(
           GetThrottledTimerInterval(),
           DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS * 1000.0);
+    }
     return sThrottledRateTimer;
   }
 
@@ -1160,8 +1151,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mInNormalTick(false),
       mAttemptedExtraTickSinceLastVsync(false),
       mHasExceededAfterLoadTickPeriod(false),
-      mHasStartedTimerAtLeastOnce(false),
-      mWarningThreshold(REFRESH_WAIT_WARNING) {
+      mHasStartedTimerAtLeastOnce(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
              "Need a pres context to tell us to call Disconnect() later "
@@ -1209,7 +1199,6 @@ void nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds) {
       // Disable any refresh driver throttling when entering test mode
       mWaitingForTransaction = false;
       mSkippedPaints = false;
-      mWarningThreshold = REFRESH_WAIT_WARNING;
     }
   }
 
@@ -1829,29 +1818,31 @@ bool nsRefreshDriver::ShouldKeepTimerRunningAfterPageLoad() {
   }
 
   nsPIDOMWindowInner* innerWindow = mPresContext->Document()->GetInnerWindow();
-  if (innerWindow) {
-    if (PerformanceMainThread* perf = static_cast<PerformanceMainThread*>(
-            innerWindow->GetPerformance())) {
-      nsDOMNavigationTiming* timing = perf->GetDOMTiming();
-      if (timing) {
-        TimeStamp loadend = timing->LoadEventEnd();
-        if (loadend) {
-          // Keep ticking after the page load for some time.
-          bool retval =
-              (loadend +
-               TimeDuration::FromMilliseconds(
-                   StaticPrefs::layout_keep_ticking_after_load_ms())) >
-              TimeStamp::Now();
-          if (!retval) {
-            mHasExceededAfterLoadTickPeriod = true;
-          }
-          return retval;
-        }
-      }
-    }
+  if (!innerWindow) {
+    return false;
   }
-
-  return false;
+  auto* perf =
+      static_cast<PerformanceMainThread*>(innerWindow->GetPerformance());
+  if (!perf) {
+    return false;
+  }
+  nsDOMNavigationTiming* timing = perf->GetDOMTiming();
+  if (!timing) {
+    return false;
+  }
+  TimeStamp loadend = timing->LoadEventEnd();
+  if (!loadend) {
+    return false;
+  }
+  // Keep ticking after the page load for some time.
+  const bool retval =
+      (loadend + TimeDuration::FromMilliseconds(
+                     StaticPrefs::layout_keep_ticking_after_load_ms())) >
+      TimeStamp::Now();
+  if (!retval) {
+    mHasExceededAfterLoadTickPeriod = true;
+  }
+  return retval;
 }
 
 nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
@@ -2193,7 +2184,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     mRootRefresh = nullptr;
   }
   mSkippedPaints = false;
-  mWarningThreshold = 1;
 
   RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (!presShell) {
@@ -2666,7 +2656,6 @@ void nsRefreshDriver::Thaw() {
 void nsRefreshDriver::FinishedWaitingForTransaction() {
   mWaitingForTransaction = false;
   mSkippedPaints = false;
-  mWarningThreshold = 1;
 }
 
 mozilla::layers::TransactionId nsRefreshDriver::GetTransactionId(
@@ -2684,7 +2673,6 @@ mozilla::layers::TransactionId nsRefreshDriver::GetTransactionId(
       LOG("[%p] Hit max pending transaction limit, entering wait mode", this);
       mWaitingForTransaction = true;
       mSkippedPaints = false;
-      mWarningThreshold = 1;
     }
   }
 
@@ -2762,16 +2750,6 @@ bool nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime) {
   }
 
   if (mWaitingForTransaction) {
-    if (mSkippedPaints &&
-        aTime > (mMostRecentRefresh +
-                 TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
-      // XXX - Bug 1303369 - too many false positives.
-      // gfxCriticalNote << "Refresh driver waiting for the compositor for "
-      //                << (aTime - mMostRecentRefresh).ToSeconds()
-      //                << " seconds.";
-      mWarningThreshold *= 2;
-    }
-
     LOG("[%p] Over max pending transaction limit when trying to paint, "
         "skipping",
         this);
