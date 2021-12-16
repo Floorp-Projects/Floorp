@@ -22,7 +22,10 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
+const BROWSER_PROPERTIES =
+  AppConstants.MOZ_APP_NAME == "thunderbird"
+    ? "chrome://messenger/locale/addons.properties"
+    : "chrome://browser/locale/browser.properties";
 
 // Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
 // override Services.appinfo.
