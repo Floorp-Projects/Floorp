@@ -8941,8 +8941,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
       bool hadActiveEntry = !!mActiveEntry;
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
+      // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
+      // does require a non-null uri if this is for a refresh load of the same
+      // URI, but in that case mCurrentURI won't be null here.
       mBrowsingContext->SessionHistoryCommit(
-          *mLoadingEntry, mLoadType, hadActiveEntry, true, true,
+          *mLoadingEntry, mLoadType, mCurrentURI, hadActiveEntry, true, true,
           /* No expiration update on the same document loads*/
           false);
       // FIXME Need to set postdata.
@@ -13477,8 +13480,13 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired) {
     MOZ_ASSERT(loadingEntry);
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
-    mBrowsingContext->SessionHistoryCommit(
-        *loadingEntry, loadType, hadActiveEntry, aPersist, false, aExpired);
+
+    // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
+    // does require a non-null uri if this is for a refresh load of the same
+    // URI, but in that case mCurrentURI won't be null here.
+    mBrowsingContext->SessionHistoryCommit(*loadingEntry, loadType, mCurrentURI,
+                                           hadActiveEntry, aPersist, false,
+                                           aExpired);
   }
 }
 
