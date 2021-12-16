@@ -20,7 +20,7 @@ WORKDIR /builds/worker/
 #----------------------------------------------------------------------------------------------------------------------
 
 ENV CURL='curl --location --retry 5' \
-    GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
+    GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false' \
     LANG='en_US.UTF-8' \
     TERM='dumb'
 
