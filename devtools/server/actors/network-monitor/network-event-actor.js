@@ -98,12 +98,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Returns a grip for this actor.
    */
   asResource() {
-    // The browsingContextID is used by the ResourceCommand on the client
-    // to find the related Target Front.
-    const browsingContextID = this._browsingContextID
-      ? this._browsingContextID
-      : -1;
-
     // Ensure that we have a browsing context ID for all requests when debugging a tab (=`browserId` is defined).
     // Only privileged requests debugged via the Browser Toolbox (=`browserId` null) can be unrelated to any browsing context.
     if (!this._browsingContextID && this._networkEventWatcher.browserId) {
@@ -111,6 +105,18 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
         `Got a request ${this._request.url} without a browsingContextID set`
       );
     }
+
+    // The browsingContextID is used by the ResourceCommand on the client
+    // to find the related Target Front.
+    //
+    // For now in the browser toolbox (where watcher.browserId is undefined),
+    // do not relate requests to any WindowGlobalTargetActor
+    // as we are still using a unique target (ParentProcessTargetActor) for everything.
+    const browsingContextID =
+      this._browsingContextID && this._networkEventWatcher.browserId
+        ? this._browsingContextID
+        : -1;
+
     return {
       resourceType: NETWORK_EVENT,
       browsingContextID,
