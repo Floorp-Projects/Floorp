@@ -35,4 +35,14 @@ add_task(async function() {
     ],
     cwdScreenshotPath
   );
+
+  // Test with additional command options
+  await testFileCreationPositive(
+    [
+      "--screenshot",
+      "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
+      "-attach-console",
+    ],
+    cwdScreenshotPath
+  );
 });
