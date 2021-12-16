@@ -963,9 +963,11 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   auto oldOverride = mColorSchemeOverride;
   mColorSchemeOverride = browsingContext->Top()->PrefersColorSchemeOverride();
   if (oldOverride != mColorSchemeOverride) {
-    // This is a bit of a lie, but it's the code-path that gets taken for
-    // regular system metrics changes via ThemeChanged().
-    MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange},
+    // We need to restyle because not only media queries have changed, system
+    // colors may as well via the prefers-color-scheme meta tag / effective
+    // color-scheme property value.
+    MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(), nsChangeHint(0),
+                               MediaFeatureChangeReason::SystemMetricsChange},
                               MediaFeatureChangePropagation::JustThisDocument);
   }
 
