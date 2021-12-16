@@ -216,7 +216,7 @@ this.PrefsFeed = class PrefsFeed {
   removeListeners() {
     this._prefs.ignoreBranch(this);
     NimbusFeatures.newtab.off(this.onExperimentUpdated);
-    NimbusFeatures.newtab.off(this.onPocketExperimentUpdated);
+    NimbusFeatures.pocketNewtab.off(this.onPocketExperimentUpdated);
     if (this.geo === "") {
       Services.obs.removeObserver(this, Region.REGION_TOPIC);
     }
