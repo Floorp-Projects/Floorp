@@ -22,10 +22,15 @@ function test() {
 
   // A callback called after each test-result.
   let sandboxTestResult = (subject, topic, data) => {
-    let { testid, passed, message } = JSON.parse(data);
+    let { testid, shouldPermit, wasPermitted, message } = JSON.parse(data);
     ok(
-      passed,
-      "Test " + testid + (passed ? " passed: " : " failed: ") + message
+      shouldPermit == wasPermitted,
+      "Test " +
+        testid +
+        " was " +
+        (wasPermitted ? "" : "not ") +
+        "permitted.  | " +
+        message
     );
   };
   Services.obs.addObserver(sandboxTestResult, "sandbox-test-result");

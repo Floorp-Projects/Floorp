@@ -6,7 +6,6 @@
 
 #include "SandboxTestingChild.h"
 
-#include "mozilla/StaticPrefs_security.h"
 #include "nsXULAppAPI.h"
 
 #ifdef XP_UNIX
@@ -65,7 +64,7 @@ void RunTestsContent(SandboxTestingChild* child) {
   // work.
   // Checking ENETUNREACH should be thrown by SandboxBrokerClient::Connect()
   // when it detects it does not starts with a '/'
-  child->ErrnoValueTest("connect_abstract_blocked"_ns, ENETUNREACH, [&] {
+  child->ErrnoValueTest("connect_abstract_blocked"_ns, false, ENETUNREACH, [&] {
     int sockfd;
     struct sockaddr_un addr;
     char str[] = "\0xyz";  // Abstract socket requires first byte to be NULL
@@ -86,22 +85,14 @@ void RunTestsContent(SandboxTestingChild* child) {
   });
 
   // An abstract socket that does starts with /, so we do want it to work.
-  // Checking ECONNREFUSED because this is what the broker should get
-  // when trying to establish the connect call for us if it's allowed;
-  // otherwise we get EACCES, meaning that it was passed to the broker
-  // (unlike the previous test) but rejected.
-  const int errorForX =
-      StaticPrefs::security_sandbox_content_headless_AtStartup() ? EACCES
-                                                                 : ECONNREFUSED;
-  child->ErrnoValueTest("connect_abstract_permit"_ns, errorForX, [&] {
+  // Checking ECONNREFUSED because this is what the broker should get when
+  // trying to establish the connect call for us.
+  child->ErrnoValueTest("connect_abstract_permit"_ns, false, ECONNREFUSED, [&] {
     int sockfd;
     struct sockaddr_un addr;
     // we re-use actual X path, because this is what is allowed within
     // SandboxBrokerPolicyFactory::InitContentPolicy()
     // We can't just use any random path allowed, but one with CONNECT allowed.
-
-    // (Note that the real X11 sockets have names like `X0` for
-    // display `:0`; there shouldn't be anything named just `X`.)
 
     // Abstract socket requires first byte to be NULL
     char str[] = "\0/tmp/.X11-unix/X";
@@ -149,7 +140,7 @@ void RunTestsContent(SandboxTestingChild* child) {
   CFDictionaryRef windowServerDict = CGSessionCopyCurrentDictionary();
   bool gotWindowServerDetails = (windowServerDict != nullptr);
   child->SendReportTestResults(
-      "CGSessionCopyCurrentDictionary"_ns, !gotWindowServerDetails,
+      "CGSessionCopyCurrentDictionary"_ns, false, gotWindowServerDetails,
       gotWindowServerDetails ? "Failed: dictionary unexpectedly returned"_ns
                              : "Succeeded: no dictionary returned"_ns);
   if (windowServerDict != nullptr) {
@@ -218,7 +209,7 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
 #ifdef XP_UNIX
 #  ifdef XP_LINUX
-  child->ErrnoValueTest("ioctl_tiocsti"_ns, ENOSYS, [&] {
+  child->ErrnoValueTest("ioctl_tiocsti"_ns, false, ENOSYS, [&] {
     int rv = ioctl(1, TIOCSTI, "x");
     return rv;
   });
@@ -229,12 +220,12 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return rv;
   });
 
-  child->ErrnoValueTest("unlink"_ns, ENOENT, [&] {
+  child->ErrnoValueTest("unlink"_ns, false, ENOENT, [&] {
     int rv = unlink("");
     return rv;
   });
 
-  child->ErrnoValueTest("unlinkat"_ns, ENOENT, [&] {
+  child->ErrnoValueTest("unlinkat"_ns, false, ENOENT, [&] {
     int rv = unlinkat(AT_FDCWD, "", 0);
     return rv;
   });
