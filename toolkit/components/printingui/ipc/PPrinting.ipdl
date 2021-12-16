@@ -6,7 +6,6 @@
 include PPrintingTypes;
 include protocol PContent;
 include protocol PBrowser;
-include protocol PPrintProgressDialog;
 include protocol PPrintSettingsDialog;
 include protocol PRemotePrintJob;
 
@@ -16,21 +15,14 @@ namespace embedding {
 sync protocol PPrinting
 {
   manager PContent;
-  manages PPrintProgressDialog;
   manages PPrintSettingsDialog;
   manages PRemotePrintJob;
 
 parent:
-  async ShowProgress(PBrowser browser,
-                     PPrintProgressDialog printProgressDialog,
-                     nullable PRemotePrintJob remotePrintJob,
-                     bool isForPrinting);
-
   async ShowPrintDialog(PPrintSettingsDialog dialog,
                         nullable PBrowser browser,
                         PrintData settings);
 
-  async PPrintProgressDialog();
   async PPrintSettingsDialog();
 
   sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,

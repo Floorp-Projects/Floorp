@@ -18,7 +18,6 @@
 #include "nsCOMArray.h"
 
 class nsPrintObject;
-class nsIPrintProgressParams;
 class nsIWebProgressListener;
 
 //------------------------------------------------------------------------
@@ -50,7 +49,6 @@ class nsPrintData {
   mozilla::UniquePtr<nsPrintObject> mPrintObject;
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
-  nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
   // If there is a focused iframe, mSelectionRoot is set to its nsPrintObject.
   // Otherwise, if there is a selection, it is set to the root nsPrintObject.

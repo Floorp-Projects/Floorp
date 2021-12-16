@@ -36,11 +36,6 @@ class nsPrintingProxy final : public nsIPrintingPromptService,
                              uint32_t aFlags);
 
  protected:
-  PPrintProgressDialogChild* AllocPPrintProgressDialogChild() final;
-
-  bool DeallocPPrintProgressDialogChild(
-      PPrintProgressDialogChild* aActor) final;
-
   PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild() final;
 
   bool DeallocPPrintSettingsDialogChild(
