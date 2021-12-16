@@ -1,0 +1,10 @@
+[package]
+name = "ashmem"
+version = "0.1.0"
+authors = ["Matthew Gregan <kinetik@flim.org>"]
+edition = "2018"
+license = "ISC"
+
+[dependencies]
+libc = "0.2"
+ioctl-sys = "0.7"
