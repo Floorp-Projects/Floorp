@@ -85,7 +85,7 @@ class HomeMenu(
     private val quitItem by lazy {
         BrowserMenuImageText(
             context.getString(R.string.delete_browsing_data_on_quit_action),
-            R.drawable.ic_exit,
+            R.drawable.mozac_ic_quit,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Quit)
