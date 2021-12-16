@@ -25,7 +25,7 @@ import {
   isInlineScript,
 } from "../../utils/source";
 import {
-  getBlackBoxList,
+  getBlackBoxRanges,
   getSource,
   getSourceFromId,
   hasSourceActor,
@@ -184,13 +184,17 @@ function checkPendingBreakpoints(cx, sourceId) {
 
 function restoreBlackBoxedSources(cx, sources) {
   return async ({ dispatch, getState }) => {
-    const tabs = getBlackBoxList(getState());
-    if (tabs.length == 0) {
+    const currentRanges = getBlackBoxRanges(getState());
+
+    if (Object.keys(currentRanges).length == 0) {
       return;
     }
+
     for (const source of sources) {
-      if (tabs.includes(source.url) && !source.isBlackBoxed) {
-        dispatch(toggleBlackBox(cx, source));
+      const ranges = currentRanges[source.url];
+      if (ranges) {
+        // If the ranges is an empty then the whole source was blackboxed.
+        await dispatch(toggleBlackBox(cx, source, true, ranges));
       }
     }
   };
@@ -371,7 +375,7 @@ function checkNewSources(cx, sources) {
       dispatch(checkSelectedSource(cx, source.id));
     }
 
-    dispatch(restoreBlackBoxedSources(cx, sources));
+    await dispatch(restoreBlackBoxedSources(cx, sources));
 
     return sources;
   };
