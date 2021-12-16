@@ -866,11 +866,13 @@
     },
 
     getTabDialogBox(aBrowser) {
-      let browser = aBrowser || this.selectedBrowser;
-      if (!browser.tabDialogBox) {
-        browser.tabDialogBox = new TabDialogBox(browser);
+      if (!aBrowser) {
+        throw new Error("aBrowser is required");
       }
-      return browser.tabDialogBox;
+      if (!aBrowser.tabDialogBox) {
+        aBrowser.tabDialogBox = new TabDialogBox(aBrowser);
+      }
+      return aBrowser.tabDialogBox;
     },
 
     getTabFromAudioEvent(aEvent) {
