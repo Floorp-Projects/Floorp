@@ -767,6 +767,22 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
                        "mismatched parent window context?");
   }
 
+  // For content-initiated loads, this flag is set in nsDocShell::LoadURI.
+  // For parent-initiated loads, we have to set it here.
+  // Below comment is copied from nsDocShell::LoadURI -
+  // If we have a system triggering principal, we can assume that this load was
+  // triggered by some UI in the browser chrome, such as the URL bar or
+  // bookmark bar. This should count as a user interaction for the current sh
+  // entry, so that the user may navigate back to the current entry, from the
+  // entry that is going to be added as part of this load.
+  if (!mSupportsRedirectToRealChannel && aLoadState->TriggeringPrincipal() &&
+      aLoadState->TriggeringPrincipal()->IsSystemPrincipal()) {
+    WindowContext* topWc = loadingContext->GetTopWindowContext();
+    if (topWc && !topWc->IsDiscarded()) {
+      MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(true));
+    }
+  }
+
   *aRv = NS_OK;
   mOpenPromise = new OpenPromise::Private(__func__);
   // We make the promise use direct task dispatch in order to reduce the number
