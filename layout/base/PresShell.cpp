@@ -1312,11 +1312,6 @@ void PresShell::Destroy() {
     mReflowContinueTimer = nullptr;
   }
 
-  if (mDelayedPaintTimer) {
-    mDelayedPaintTimer->Cancel();
-    mDelayedPaintTimer = nullptr;
-  }
-
   mSynthMouseMoveEvent.Revoke();
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
