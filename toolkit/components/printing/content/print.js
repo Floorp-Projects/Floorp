@@ -296,7 +296,6 @@ var PrintEventHandler = {
         this.settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
           ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
           : this.settings.clone();
-      settings.showPrintProgress = false;
       // Update the settings print options on whether there is a selection since
       // getPrintSettings won't have the correct value.
       settings.isPrintSelectionRBEnabled = this.hasSelection;
@@ -415,7 +414,6 @@ var PrintEventHandler = {
 
     try {
       // We'll provide our own progress indicator.
-      this.settings.showPrintProgress = false;
       let l10nId =
         settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
           ? "printui-print-progress-indicator-saving"
@@ -802,9 +800,6 @@ var PrintEventHandler = {
    */
   async _updatePrintPreview() {
     let { settings } = this;
-
-    // We never want the progress dialog to show
-    settings.showPrintProgress = false;
 
     const isFirstCall = !this.printInitiationTime;
     if (isFirstCall) {

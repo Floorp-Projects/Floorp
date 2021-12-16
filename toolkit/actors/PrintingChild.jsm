@@ -360,9 +360,6 @@ class PrintingChild extends JSWindowActorChild {
       let contentWindow = browsingContext.window;
       let printSettings = this.getPrintSettings(lastUsedPrinterName);
 
-      // Disable the progress dialog for generating previews.
-      printSettings.showPrintProgress = false;
-
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
       // "about:blank" as its URI.

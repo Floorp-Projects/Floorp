@@ -41,7 +41,6 @@ function printpreview() {
 
   let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService).newPrintSettings;
-  settings.showPrintProgress = false;
 
   gPrintPreviewWin = frameElts[0].contentWindow.printPreview(settings, listener);
   gWbp = gPrintPreviewWin.docShell.contentViewer;

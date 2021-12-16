@@ -1715,7 +1715,6 @@ function RecvStartPrint(isPrintSelection, printRange)
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService);
     let ps = PSSVC.newPrintSettings;
     ps.printSilent = true;
-    ps.showPrintProgress = false;
     ps.printBGImages = true;
     ps.printBGColors = true;
     ps.unwriteableMarginTop = 0;
