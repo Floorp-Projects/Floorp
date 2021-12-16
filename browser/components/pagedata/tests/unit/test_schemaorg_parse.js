@@ -98,3 +98,67 @@ add_task(async function test_microdata_parse() {
     ]
   );
 });
+
+add_task(async function test_json_ld_parse() {
+  await verifyItems(
+    `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <script type="application/ld+json">
+        {
+          "@context": "http://schema.org",
+          "@type": "Organization",
+          "employee": {
+            "@type": "Person",
+            "name": "Mr. Nested Name"
+          },
+          "name": "Mozilla"
+        }
+      </script>
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "image": "bon-echo-microwave-17in.jpg",
+          "url": "microwave.html",
+          "name": "Bon Echo Microwave",
+          "offers": {
+            "@type": "Offer",
+            "price": "3.50",
+            "priceCurrency": "GBP"
+          },
+          "gtin": "13572468",
+          "description": "The most amazing microwave in the world"
+        }
+      </script>
+      </head>
+      <body>
+      </body>
+      </html>
+    `,
+    [
+      {
+        "@type": "Organization",
+        employee: {
+          "@type": "Person",
+          name: "Mr. Nested Name",
+        },
+        name: "Mozilla",
+      },
+      {
+        "@type": "Product",
+        image: "bon-echo-microwave-17in.jpg",
+        url: "microwave.html",
+        name: "Bon Echo Microwave",
+        offers: {
+          "@type": "Offer",
+          price: "3.50",
+          priceCurrency: "GBP",
+        },
+        gtin: "13572468",
+        description: "The most amazing microwave in the world",
+      },
+    ]
+  );
+});

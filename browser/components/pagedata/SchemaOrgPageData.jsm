@@ -194,14 +194,17 @@ function parseMicrodataProp(propElement) {
 /**
  * Collects product data from an item.
  *
+ * @param {Document} document
+ *   The document the item comes from.
  * @param {PageData} pageData
  *   The pageData object to add to.
  * @param {Item} item
  *   The product item.
  */
-function collectProduct(pageData, item) {
+function collectProduct(document, pageData, item) {
   if (item.has("image")) {
-    pageData.image = item.get("image");
+    let url = new URL(item.get("image"), document.documentURI);
+    pageData.image = url.toString();
   }
 
   if (item.has("description")) {
@@ -310,9 +313,85 @@ function collectMicrodataItems(document) {
 }
 
 /**
+ * Returns the root JSON-LD items from the given document.
+ *
+ * @param {Document} document
+ *   The DOM document to collect from.
+ * @returns {Item[]}
+ */
+function collectJsonLDItems(document) {
+  /**
+   * The root items.
+   * @type {Item[]}
+   */
+  let items = [];
+
+  /**
+   * Converts a JSON-LD value into an Item if appropriate.
+   *
+   * @param {any} val
+   *   The value to convert.
+   * @returns {any}
+   */
+  function fromLD(val) {
+    if (typeof val == "object" && "@type" in val) {
+      let item = new Item(val["@type"]);
+
+      for (let [prop, value] of Object.entries(val)) {
+        // Ignore meta properties.
+        if (prop.startsWith("@")) {
+          continue;
+        }
+
+        if (!Array.isArray(value)) {
+          value = [value];
+        }
+
+        item.properties.set(prop, value.map(fromLD));
+      }
+
+      return item;
+    }
+
+    return val;
+  }
+
+  let scripts = document.querySelectorAll("script[type='application/ld+json'");
+  for (let script of scripts) {
+    try {
+      let content = JSON.parse(script.textContent);
+
+      if (typeof content != "object") {
+        continue;
+      }
+
+      if (!("@context" in content)) {
+        continue;
+      }
+
+      if (
+        content["@context"] != "http://schema.org" &&
+        content["@context"] != "https://schema.org"
+      ) {
+        continue;
+      }
+
+      let item = fromLD(content);
+      if (item instanceof Item) {
+        items.push(item);
+      }
+    } catch (e) {
+      // Unparsable content.
+    }
+  }
+
+  return items;
+}
+
+/**
  * Collects schema.org related data from a page.
  *
- * Currently only supports HTML Microdata, not RDFa or JSON-LD formats.
+ * Currently only supports HTML Microdata and JSON-LD formats, not RDFa.
  */
 const SchemaOrgPageData = {
   /**
@@ -325,7 +404,7 @@ const SchemaOrgPageData = {
    * @returns {Item[]}
    */
   collectItems(document) {
-    return collectMicrodataItems(document);
+    return collectMicrodataItems(document).concat(collectJsonLDItems(document));
   },
 
   /**
@@ -344,7 +423,7 @@ const SchemaOrgPageData = {
       switch (item.type) {
         case "Product":
           if (!(PageDataSchema.DATA_TYPE.PRODUCT in pageData.data)) {
-            collectProduct(pageData, item);
+            collectProduct(document, pageData, item);
           }
           break;
         case "Organization":
