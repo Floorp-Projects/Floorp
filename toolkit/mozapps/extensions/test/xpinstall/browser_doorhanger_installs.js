@@ -262,8 +262,6 @@ async function waitForNotification(aId, aExpectedCount = 1) {
   }
   await SimpleTest.promiseFocus(PopupNotifications.window);
 
-  await SimpleTest.promiseFocus(PopupNotifications.window);
-
   return PopupNotifications.panel;
 }
 
