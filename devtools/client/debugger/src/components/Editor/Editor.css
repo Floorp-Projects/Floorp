@@ -53,14 +53,6 @@ html[dir="rtl"] .editor-mount {
   direction: ltr;
 }
 
-.theme-light .cm-s-mozilla .empty-line .CodeMirror-linenumber {
-  color: var(--grey-40);
-}
-
-.theme-dark .cm-s-mozilla .empty-line .CodeMirror-linenumber {
-  color: var(--grey-50);
-}
-
 .function-search {
   max-height: 300px;
   overflow: hidden;
