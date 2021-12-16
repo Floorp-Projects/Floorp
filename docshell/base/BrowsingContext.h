@@ -791,13 +791,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // context or any of its ancestors.
   bool IsPopupAllowed();
 
-  // aCurrentURI is only required to be non-null if the load type contains the
-  // nsIWebNavigation::LOAD_FLAGS_IS_REFRESH flag and aInfo is for a refresh to
-  // the current URI.
   void SessionHistoryCommit(const LoadingSessionHistoryInfo& aInfo,
-                            uint32_t aLoadType, nsIURI* aCurrentURI,
-                            bool aHadActiveEntry, bool aPersist,
-                            bool aCloneEntryChildren, bool aChannelExpired);
+                            uint32_t aLoadType, bool aHadActiveEntry,
+                            bool aPersist, bool aCloneEntryChildren,
+                            bool aChannelExpired);
 
   // Set a new active entry on this browsing context. This is used for
   // implementing history.pushState/replaceState and same document navigations.
@@ -900,9 +897,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     // FIXME Do we need to unset mHasSessionHistory?
     return mChildSessionHistory.forget();
   }
-
-  static bool ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
-                                       const SessionHistoryInfo& aInfo);
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);
