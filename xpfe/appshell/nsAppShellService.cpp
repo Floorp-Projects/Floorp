@@ -101,6 +101,10 @@ nsAppShellService::CreateHiddenWindow() {
     return NS_ERROR_FAILURE;
   }
 
+  if (mHiddenWindow) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIFile> profileDir;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                          getter_AddRefs(profileDir));
