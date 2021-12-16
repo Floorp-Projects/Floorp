@@ -5457,21 +5457,16 @@
         )
       ) {
         if (tab.linkedBrowser) {
-          // When enabled, show the PID of the content process, and if
-          // we're running with fission enabled, try to include PIDs for
-          // every remote subframe.
+          // Show the PIDs of the content process and remote subframe processes.
           let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
             tab.linkedBrowser,
             gFissionBrowser
           );
           if (contentPid) {
-            label += " (pid " + contentPid + ")";
-            if (gFissionBrowser) {
-              label += " [F";
-              if (framePids.length) {
-                label += " " + framePids.join(", ");
-              }
-              label += "]";
+            if (framePids && framePids.length) {
+              label += ` (pids ${contentPid}, ${framePids.sort().join(", ")})`;
+            } else {
+              label += ` (pid ${contentPid})`;
             }
           }
           if (tab.linkedBrowser.docShellIsActive) {
