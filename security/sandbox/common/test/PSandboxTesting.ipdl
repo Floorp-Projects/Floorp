@@ -8,7 +8,7 @@ namespace mozilla {
 
 async protocol PSandboxTesting {
 parent:
-  async ReportTestResults(nsCString testName, bool shouldSucceed, bool didSucceed, nsCString resultMessage);
+  async ReportTestResults(nsCString testName, bool passed, nsCString message);
   async TestCompleted();
 
 child:

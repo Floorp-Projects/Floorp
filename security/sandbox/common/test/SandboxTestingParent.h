@@ -28,8 +28,7 @@ class SandboxTestingParent : public PSandboxTestingParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvReportTestResults(const nsCString& testName,
-                                                bool shouldSucceed,
-                                                bool didSucceed,
+                                                bool passed,
                                                 const nsCString& resultMessage);
   mozilla::ipc::IPCResult RecvTestCompleted();
 
