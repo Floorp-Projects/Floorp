@@ -59,8 +59,22 @@ class PresentationData {
   std::vector<RawId> mQueuedBufferIds;
   Mutex mBuffersLock;
 
-  PresentationData() : mBuffersLock("WebGPU presentation buffers") {
+  PresentationData(RawId aDeviceId, RawId aQueueId,
+                   already_AddRefed<layers::MemoryTextureHost> aTextureHost,
+                   uint32_t aSourcePitch, uint32_t aTargetPitch, uint32_t aRows,
+                   const nsTArray<RawId>& aBufferIds)
+      : mDeviceId(aDeviceId),
+        mQueueId(aQueueId),
+        mTextureHost(aTextureHost),
+        mSourcePitch(aSourcePitch),
+        mTargetPitch(aTargetPitch),
+        mRowCount(aRows),
+        mBuffersLock("WebGPU presentation buffers") {
     MOZ_COUNT_CTOR(PresentationData);
+
+    for (const RawId id : aBufferIds) {
+      mUnassignedBufferIds.push_back(id);
+    }
   }
 
  private:
@@ -520,17 +534,9 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
       textureHostData, aDesc, layers::TextureFlags::NO_FLAGS);
   textureHost->DisableExternalTextures();
   textureHost->CreateRenderTexture(aExternalId);
-  nsTArray<RawId> bufferIds(aBufferIds.Clone());
-  RefPtr<PresentationData> data = new PresentationData();
-  data->mDeviceId = aSelfId;
-  data->mQueueId = aQueueId;
-  data->mTextureHost = textureHost;
-  data->mSourcePitch = bufferStride;
-  data->mTargetPitch = textureStride;
-  data->mRowCount = rows;
-  for (const RawId id : bufferIds) {
-    data->mUnassignedBufferIds.push_back(id);
-  }
+  RefPtr<PresentationData> data =
+      new PresentationData(aSelfId, aQueueId, textureHost.forget(),
+                           bufferStride, textureStride, rows, aBufferIds);
   if (!mCanvasMap.insert({AsUint64(aExternalId), data}).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
@@ -547,11 +553,13 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   auto* req = reinterpret_cast<PresentRequest*>(userdata);
   PresentationData* data = req->mData.get();
   // get the buffer ID
-  data->mBuffersLock.Lock();
-  RawId bufferId = data->mQueuedBufferIds.back();
-  data->mQueuedBufferIds.pop_back();
-  data->mAvailableBufferIds.push_back(bufferId);
-  data->mBuffersLock.Unlock();
+  RawId bufferId;
+  {
+    MutexAutoLock lock(data->mBuffersLock);
+    bufferId = data->mQueuedBufferIds.back();
+    data->mQueuedBufferIds.pop_back();
+    data->mAvailableBufferIds.push_back(bufferId);
+  }
   MOZ_LOG(
       sLogger, LogLevel::Info,
       ("PresentCallback for buffer %" PRIu64 " status=%d\n", bufferId, status));
@@ -594,36 +602,36 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   const auto bufferSize = data->mRowCount * data->mSourcePitch;
 
   // step 1: find an available staging buffer, or create one
-  data->mBuffersLock.Lock();
-  if (!data->mAvailableBufferIds.empty()) {
-    bufferId = data->mAvailableBufferIds.back();
-    data->mAvailableBufferIds.pop_back();
-  } else if (!data->mUnassignedBufferIds.empty()) {
-    bufferId = data->mUnassignedBufferIds.back();
-    data->mUnassignedBufferIds.pop_back();
+  {
+    MutexAutoLock lock(data->mBuffersLock);
+    if (!data->mAvailableBufferIds.empty()) {
+      bufferId = data->mAvailableBufferIds.back();
+      data->mAvailableBufferIds.pop_back();
+    } else if (!data->mUnassignedBufferIds.empty()) {
+      bufferId = data->mUnassignedBufferIds.back();
+      data->mUnassignedBufferIds.pop_back();
 
-    ffi::WGPUBufferUsages usage =
-        WGPUBufferUsages_COPY_DST | WGPUBufferUsages_MAP_READ;
-    ffi::WGPUBufferDescriptor desc = {};
-    desc.size = bufferSize;
-    desc.usage = usage;
+      ffi::WGPUBufferUsages usage =
+          WGPUBufferUsages_COPY_DST | WGPUBufferUsages_MAP_READ;
+      ffi::WGPUBufferDescriptor desc = {};
+      desc.size = bufferSize;
+      desc.usage = usage;
 
-    ErrorBuffer error;
-    ffi::wgpu_server_device_create_buffer(mContext, data->mDeviceId, &desc,
-                                          bufferId, error.ToFFI());
-    if (ForwardError(data->mDeviceId, error)) {
-      // Don't forget to unlock this!
-      data->mBuffersLock.Unlock();
-      return IPC_OK();
+      ErrorBuffer error;
+      ffi::wgpu_server_device_create_buffer(mContext, data->mDeviceId, &desc,
+                                            bufferId, error.ToFFI());
+      if (ForwardError(data->mDeviceId, error)) {
+        return IPC_OK();
+      }
+    } else {
+      bufferId = 0;
     }
-  } else {
-    bufferId = 0;
+
+    if (bufferId) {
+      data->mQueuedBufferIds.insert(data->mQueuedBufferIds.begin(), bufferId);
+    }
   }
 
-  if (bufferId) {
-    data->mQueuedBufferIds.insert(data->mQueuedBufferIds.begin(), bufferId);
-  }
-  data->mBuffersLock.Unlock();
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvSwapChainPresent with buffer %" PRIu64 "\n", bufferId));
   if (!bufferId) {
@@ -708,7 +716,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   data->mTextureHost = nullptr;
   layers::TextureHost::DestroyRenderTexture(aExternalId);
 
-  data->mBuffersLock.Lock();
+  MutexAutoLock lock(data->mBuffersLock);
   ipc::ByteBuf dropByteBuf;
   for (const auto bid : data->mUnassignedBufferIds) {
     wgpu_server_buffer_free(bid, ToFFI(&dropByteBuf));
@@ -722,7 +730,6 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   for (const auto bid : data->mQueuedBufferIds) {
     ffi::wgpu_server_buffer_drop(mContext, bid);
   }
-  data->mBuffersLock.Unlock();
   return IPC_OK();
 }
 
