@@ -119,8 +119,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                            nsIFrame* aTargetFrame, nsEventStatus* aStatus,
                            nsIContent* aOverrideClickTarget);
 
-  void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
-                               nsIFrame* aTargetFrame, nsEventStatus& aStatus);
+  MOZ_CAN_RUN_SCRIPT void PostHandleKeyboardEvent(
+      WidgetKeyboardEvent* aKeyboardEvent, nsIFrame* aTargetFrame,
+      nsEventStatus& aStatus);
 
   /**
    * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll
