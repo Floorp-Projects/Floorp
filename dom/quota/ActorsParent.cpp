@@ -157,16 +157,6 @@
 #include "prthread.h"
 #include "prtime.h"
 
-#define DISABLE_ASSERTS_FOR_FUZZING 0
-
-#if DISABLE_ASSERTS_FOR_FUZZING
-#  define ASSERT_UNLESS_FUZZING(...) \
-    do {                             \
-    } while (0)
-#else
-#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
-#endif
-
 // As part of bug 1536596 in order to identify the remaining sources of
 // principal info inconsistencies, we have added anonymized crash logging and
 // are temporarily making these checks occur on both debug and optimized
@@ -8036,7 +8026,7 @@ bool Quota::VerifyRequestParams(const UsageRequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8068,7 +8058,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8080,13 +8070,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_InitializeTemporaryOriginParams();
 
       if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8097,13 +8087,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       const GetFullOriginMetadataParams& params =
           aParams.get_GetFullOriginMetadataParams();
       if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8116,20 +8106,20 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
       if (params.persistenceTypeIsExplicit()) {
         if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-          ASSERT_UNLESS_FUZZING();
+          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
       }
 
       if (params.clientTypeIsExplicit()) {
         if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          ASSERT_UNLESS_FUZZING();
+          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
       }
@@ -8143,20 +8133,20 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
       if (params.persistenceTypeIsExplicit()) {
         if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-          ASSERT_UNLESS_FUZZING();
+          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
       }
 
       if (params.clientTypeIsExplicit()) {
         if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          ASSERT_UNLESS_FUZZING();
+          MOZ_CRASH_UNLESS_FUZZING();
           return false;
         }
       }
@@ -8166,7 +8156,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TClearDataParams: {
       if (BackgroundParent::IsOtherProcessActor(Manager())) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8183,7 +8173,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8195,7 +8185,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8207,7 +8197,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        ASSERT_UNLESS_FUZZING();
+        MOZ_CRASH_UNLESS_FUZZING();
         return false;
       }
 
@@ -8246,7 +8236,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 #endif
 
   if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -8313,7 +8303,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 #endif
 
   if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -8416,7 +8406,7 @@ mozilla::ipc::IPCResult Quota::RecvStartIdleMaintenance() {
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -8441,7 +8431,7 @@ mozilla::ipc::IPCResult Quota::RecvStopIdleMaintenance() {
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -8467,7 +8457,7 @@ mozilla::ipc::IPCResult Quota::RecvAbortOperationsForProcess(
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
