@@ -2713,3 +2713,10 @@ def necko_wifi_dbus(necko_wifi, dbus):
 
 
 set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
+
+
+# Frontend JS debug mode
+# ==============================================================
+option("--enable-debug-js-modules", help="Enable debug mode for frontend JS libraries")
+
+set_config("DEBUG_JS_MODULES", True, when="--enable-debug-js-modules")
