@@ -35,6 +35,24 @@
 
 namespace mozilla {
 
+#ifdef XP_LINUX
+static void RunTestsSched(SandboxTestingChild* child) {
+  struct sched_param param_pid_0 = {};
+  child->ErrnoTest("sched_getparam(0)"_ns, true,
+                   [&] { return sched_getparam(0, &param_pid_0); });
+
+  struct sched_param param_pid_tid = {};
+  child->ErrnoTest("sched_getparam(tid)"_ns, true, [&] {
+    return sched_getparam((pid_t)syscall(__NR_gettid), &param_pid_tid);
+  });
+
+  struct sched_param param_pid_Ntid = {};
+  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, false, EPERM, [&] {
+    return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
+  });
+}
+#endif  // XP_LINUX
+
 void RunTestsContent(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
 
@@ -229,6 +247,9 @@ void RunTestsRDD(SandboxTestingChild* child) {
     int rv = unlinkat(AT_FDCWD, "", 0);
     return rv;
   });
+
+  RunTestsSched(child);
+
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
@@ -259,19 +280,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
   child->ErrnoTest("geteuid"_ns, true, [&] { return geteuid(); });
   child->ErrnoTest("getegid"_ns, true, [&] { return getegid(); });
 
-  struct sched_param param_pid_0 = {};
-  child->ErrnoTest("sched_getparam(0)"_ns, true,
-                   [&] { return sched_getparam(0, &param_pid_0); });
-
-  struct sched_param param_pid_tid = {};
-  child->ErrnoTest("sched_getparam(tid)"_ns, true, [&] {
-    return sched_getparam((pid_t)syscall(__NR_gettid), &param_pid_tid);
-  });
-
-  struct sched_param param_pid_Ntid = {};
-  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, false, EPERM, [&] {
-    return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
-  });
+  RunTestsSched(child);
 
   std::vector<std::pair<const char*, bool>> open_tests = {
       {"/etc/ld.so.cache", true},

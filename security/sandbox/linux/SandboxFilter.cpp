@@ -1806,6 +1806,22 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       case __NR_eventfd2:
         return Allow();
 
+        // Allow the sched_* syscalls for the current thread only.
+        // Mesa attempts to use them to optimize performance; often
+        // this involves passing other threads' tids, which we can't
+        // safely allow, but maybe a future Mesa version could fix that.
+      case __NR_sched_getaffinity:
+      case __NR_sched_setaffinity:
+      case __NR_sched_getparam:
+      case __NR_sched_setparam:
+      case __NR_sched_getscheduler:
+      case __NR_sched_setscheduler:
+      case __NR_sched_getattr:
+      case __NR_sched_setattr: {
+        Arg<pid_t> pid(0);
+        return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
+      }
+
         // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
