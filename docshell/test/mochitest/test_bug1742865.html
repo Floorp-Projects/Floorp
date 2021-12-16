@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Auto refreshing pages shouldn't add an entry to session history</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    const REFRESH_REDIRECT_TIMER = 15;
+
+    // 2 tests (same and cross origin) consisting of 2 refreshes of maximum 1 seconds
+    // 2 tests (same and cross origin) consisting of 2 refreshes of REFRESH_REDIRECT_TIMER seconds
+    // => We need (2 * 1) + (2 * 15) seconds
+    SimpleTest.requestLongerTimeout(3);
+    SimpleTest.waitForExplicitFinish();
+
+    const SJS = new URL("file_bug1742865.sjs", location.href);
+    const SJS_OUTER = new URL("file_bug1742865_outer.sjs", location.href);
+
+    function openWindowAndCheckRefresh(url, shouldAddToHistory) {
+      let resetURL = new URL(SJS);
+      resetURL.search = "?reset";
+      return fetch(resetURL).then(() => {
+        return new Promise((resolve) => {
+          let count = 0;
+          window.addEventListener("message", function listener({ data: { commandType, commandData = {} } }) {
+            if (commandType == "onChangedInputValue") {
+              let { historyLength, inputValue } = commandData;
+
+              if (shouldAddToHistory) {
+                is(historyLength, count, "Auto-refresh should add entries to session history");
+              } else {
+                is(historyLength, 1, "Auto-refresh shouldn't add entries to session history");
+              }
+
+              is(inputValue, "1234", "Input's value should have been changed");
+
+              win.postMessage("loadNext", "*");
+              return;
+            }
+
+            is(commandType, "pageShow", "Unknown command type");
+
+            let { inputValue } = commandData;
+
+            switch (++count) {
+              // file_bug1742865.sjs causes 3 loads:
+              //  * first load, returns first meta refresh
+              //  * second load, caused by first meta refresh, returns second meta refresh
+              //  * third load, caused by second meta refresh, doesn't return a meta refresh
+              case 3:
+                win.postMessage("changeInputValue", "*");
+                break;
+              case 4:
+                win.postMessage("back", "*");
+                break;
+              case 5:
+                is(inputValue, "1234", "Entries for auto-refresh should be attached to session history");
+                removeEventListener("message", listener);
+                win.close();
+                resolve();
+                break;
+            }
+          });
+          let win = window.open(url);
+        });
+      });
+    }
+
+    function doTest(seconds, crossOrigin, shouldAddToHistory) {
+      let url = new URL(SJS);
+      url.searchParams.append("seconds", seconds);
+      url.searchParams.append("crossorigin", crossOrigin);
+
+      let urlOuter = new URL(SJS_OUTER);
+      urlOuter.searchParams.append("seconds", seconds);
+      urlOuter.searchParams.append("crossorigin", crossOrigin);
+
+      return openWindowAndCheckRefresh(url, shouldAddToHistory).then(() =>
+        openWindowAndCheckRefresh(urlOuter, shouldAddToHistory)
+      );
+    }
+
+    function runTest() {
+      const FAST = Math.min(1, REFRESH_REDIRECT_TIMER);
+      const SLOW = REFRESH_REDIRECT_TIMER + 1;
+      let tests = [
+        // [ time, crossOrigin, shouldAddToHistory ]
+        [ FAST, false, false ],
+        [ FAST, true, false ],
+        [ SLOW, false, false ],
+        [ SLOW, true, true ],
+      ];
+
+      let test = Promise.resolve();
+      for (let [ time, crossOrigin, shouldAddToHistory ] of tests) {
+        test = test.then(() => doTest(time, crossOrigin, shouldAddToHistory));
+      }
+      test.then(() => SimpleTest.finish());
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test"></pre>
+</body>
+</html>
