@@ -250,6 +250,9 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
   RunTestsSched(child);
 
+  child->ErrnoTest("socket"_ns, false,
+                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
+
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();

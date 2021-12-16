@@ -1782,6 +1782,20 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   }
 #endif
 
+  Maybe<ResultExpr> EvaluateSocketCall(int aCall,
+                                       bool aHasArgs) const override {
+    switch (aCall) {
+      // Mesa can call getpwuid_r to get the home dir, which can try
+      // to connect to nscd (or maybe servers like NIS or LDAP); this
+      // can't be safely allowed, but we can quietly deny it.
+      case SYS_SOCKET:
+        return Some(Error(EACCES));
+
+      default:
+        return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
+    }
+  }
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
