@@ -6,11 +6,8 @@ package org.mozilla.fenix.home.recentvisits.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +18,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -315,12 +311,6 @@ private fun RecentlyVisitedMenu(
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
             .background(color = FirefoxTheme.colors.layer2)
-            .height(52.dp)
-            .scrollable(
-                state = ScrollState(0),
-                orientation = Orientation.Vertical,
-                enabled = false
-            )
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
@@ -328,21 +318,14 @@ private fun RecentlyVisitedMenu(
                     onDismissRequest()
                     item.onClick(recentVisit)
                 },
-                modifier = Modifier.fillMaxHeight()
             ) {
                 Text(
                     text = item.title,
                     color = FirefoxTheme.colors.textPrimary,
                     maxLines = 1,
                     modifier = Modifier
-                        .align(Alignment.Top)
-                        .padding(top = 6.dp)
-                        .scrollable(
-                            state = ScrollState(0),
-                            orientation = Orientation.Vertical,
-                            enabled = false
-                        )
                         .fillMaxHeight()
+                        .align(Alignment.CenterVertically)
                 )
             }
         }
