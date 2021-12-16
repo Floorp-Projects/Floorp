@@ -2158,17 +2158,8 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
 
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(aTextFrame);
-  auto* fontGroup = fm->GetThebesFontGroup();
-  auto appPerDev = aTextFrame->PresContext()->AppUnitsPerDevPixel();
-  const auto& hyphenateChar = aTextFrame->StyleText()->mHyphenateCharacter;
-  if (hyphenateChar.IsAuto()) {
-    return fontGroup->MakeHyphenTextRun(dt, appPerDev);
-  }
-  auto* missingFonts = aTextFrame->PresContext()->MissingFontRecorder();
-  const NS_ConvertUTF8toUTF16 hyphenStr(hyphenateChar.AsString().AsString());
-  return fontGroup->MakeTextRun(hyphenStr.BeginReading(), hyphenStr.Length(),
-                                dt, appPerDev, gfx::ShapedTextFlags(),
-                                nsTextFrameUtils::Flags(), missingFonts);
+  return fm->GetThebesFontGroup()->MakeHyphenTextRun(
+      dt, aTextFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
 already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
@@ -3650,13 +3641,7 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
 
 gfxFloat nsTextFrame::PropertyProvider::GetHyphenWidth() const {
   if (mHyphenWidth < 0) {
-    const auto& hyphenateChar = mTextStyle->mHyphenateCharacter;
-    if (hyphenateChar.IsAuto()) {
-      mHyphenWidth = GetFontGroup()->GetHyphenWidth(this);
-    } else {
-      RefPtr<gfxTextRun> hyphRun = GetHyphenTextRun(mFrame, nullptr);
-      mHyphenWidth = hyphRun ? hyphRun->GetAdvanceWidth() : 0;
-    }
+    mHyphenWidth = GetFontGroup()->GetHyphenWidth(this);
   }
   return mHyphenWidth + mLetterSpacing;
 }

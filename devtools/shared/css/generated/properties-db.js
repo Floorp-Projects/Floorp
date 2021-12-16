@@ -3094,7 +3094,6 @@ exports.CSS_PROPERTIES = {
       "text-underline-offset",
       "text-underline-position",
       "text-decoration-skip-ink",
-      "hyphenate-character",
       "cursor",
       "pointer-events",
       "-moz-user-input",
@@ -7275,20 +7274,6 @@ exports.CSS_PROPERTIES = {
       "min-content",
       "revert",
       "revert-layer",
-      "unset"
-    ]
-  },
-  "hyphenate-character": {
-    "isInherited": true,
-    "subproperties": [
-      "hyphenate-character"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "revert",
       "unset"
     ]
   },
@@ -11636,10 +11621,6 @@ exports.PREFERENCES = [
   [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
-  ],
-  [
-    "hyphenate-character",
-    "layout.css.hyphenate-character.enabled"
   ],
   [
     "justify-tracks",
