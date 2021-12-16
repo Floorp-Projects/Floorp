@@ -5,9 +5,9 @@
 package org.mozilla.fenix.library.history
 
 import android.content.Context
-import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import org.mozilla.fenix.R
@@ -87,24 +87,29 @@ class HistoryAdapter(
         private const val oneDay = 1
         private const val sevenDays = 7
         private const val thirtyDays = 30
-        private val zeroDaysAgo = getDaysAgo(zeroDays).time
-        private val oneDayAgo = getDaysAgo(oneDay).time
+        private val today = getDaysAgo(zeroDays).time
+        private val yesterday = getDaysAgo(oneDay).time
         private val sevenDaysAgo = getDaysAgo(sevenDays).time
         private val thirtyDaysAgo = getDaysAgo(thirtyDays).time
-        private val yesterdayRange = LongRange(oneDayAgo, zeroDaysAgo)
-        private val lastWeekRange = LongRange(sevenDaysAgo, oneDayAgo)
+        private val todayRange = LongRange(today, Long.MAX_VALUE) // all future time is considered today
+        private val yesterdayRange = LongRange(yesterday, today)
+        private val lastWeekRange = LongRange(sevenDaysAgo, yesterday)
         private val lastMonthRange = LongRange(thirtyDaysAgo, sevenDaysAgo)
 
         private fun getDaysAgo(daysAgo: Int): Date {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
-
-            return calendar.time
+            return Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+                add(Calendar.DAY_OF_YEAR, -daysAgo)
+            }.time
         }
 
-        private fun timeGroupForHistoryItem(item: History): HistoryItemTimeGroup {
+        @VisibleForTesting
+        internal fun timeGroupForHistoryItem(item: History): HistoryItemTimeGroup {
             return when {
-                DateUtils.isToday(item.visitedAt) -> HistoryItemTimeGroup.Today
+                todayRange.contains(item.visitedAt) -> HistoryItemTimeGroup.Today
                 yesterdayRange.contains(item.visitedAt) -> HistoryItemTimeGroup.Yesterday
                 lastWeekRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisWeek
                 lastMonthRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisMonth
