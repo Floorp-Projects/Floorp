@@ -8,11 +8,11 @@ const TEST_URI2 =
 
 add_task(async () => {
   await BrowserTestUtils.withNewTab(TEST_URI1, async browser => {
-    const topWindow = browser.browsingContext.topWindowContext;
-    Assert.ok(topWindow);
+    const windowGlobal = browser.browsingContext.currentWindowGlobal;
+    Assert.ok(windowGlobal);
 
     Assert.strictEqual(
-      topWindow.hasActivePeerConnections,
+      windowGlobal.hasActivePeerConnections(),
       false,
       "No active connections at the beginning"
     );
@@ -30,7 +30,7 @@ add_task(async () => {
     });
 
     Assert.strictEqual(
-      topWindow.hasActivePeerConnections,
+      windowGlobal.hasActivePeerConnections(),
       true,
       "One connection in the top window"
     );
@@ -48,7 +48,7 @@ add_task(async () => {
     });
 
     Assert.strictEqual(
-      topWindow.hasActivePeerConnections,
+      windowGlobal.hasActivePeerConnections(),
       false,
       "All connections have been closed"
     );
@@ -106,7 +106,7 @@ add_task(async () => {
     );
 
     Assert.strictEqual(
-      topWindow.hasActivePeerConnections,
+      windowGlobal.hasActivePeerConnections(),
       true,
       "#iframe-cross-origin still has an active connection"
     );
@@ -126,7 +126,7 @@ add_task(async () => {
     });
 
     Assert.strictEqual(
-      topWindow.hasActivePeerConnections,
+      windowGlobal.hasActivePeerConnections(),
       false,
       "All connections have been closed"
     );
