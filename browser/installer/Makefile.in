@@ -120,7 +120,7 @@ MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-ifeq (bundle, $(MOZ_FS_LAYOUT))
+ifeq (Darwin,$(OS_TARGET))
 BINPATH = $(_BINPATH)
 DEFINES += -DAPPNAME='$(_APPNAME)'
 else
