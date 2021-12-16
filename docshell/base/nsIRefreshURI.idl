@@ -22,13 +22,10 @@ interface nsIRefreshURI : nsISupports {
       *   May be null, in which case the principal of current document will be
       *   applied.
       * @param aMillis The number of milliseconds to wait.
-      * @param aRepeat Flag to indicate if the uri is to be
-      *                repeatedly refreshed every aMillis milliseconds.
       * @param aMetaRefresh Flag to indicate if this is a Meta refresh.
       */
     void refreshURI(in nsIURI aURI, in nsIPrincipal aPrincipal,
-                    in long aMillis, in boolean aRepeat,
-                    in boolean aMetaRefresh);
+                    in long aMillis, in boolean aMetaRefresh);
 
     /**
       * Loads a URI immediately as if it were a refresh.

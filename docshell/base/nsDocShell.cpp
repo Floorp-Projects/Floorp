@@ -5011,7 +5011,7 @@ void nsDocShell::SetScrollbarPreference(mozilla::ScrollbarPreference aPref) {
 
 NS_IMETHODIMP
 nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
-                       bool aRepeat, bool aMetaRefresh) {
+                       bool aMetaRefresh) {
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   NS_ENSURE_ARG(aURI);
@@ -5040,7 +5040,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
   }
 
   nsCOMPtr<nsITimerCallback> refreshTimer =
-      new nsRefreshTimer(this, aURI, aPrincipal, aDelay, aRepeat, aMetaRefresh);
+      new nsRefreshTimer(this, aURI, aPrincipal, aDelay, aMetaRefresh);
 
   BusyFlags busyFlags = GetBusyFlags();
 
@@ -5406,7 +5406,7 @@ nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
           return NS_ERROR_FAILURE;
         }
 
-        rv = RefreshURI(uri, aPrincipal, seconds * 1000, false, true);
+        rv = RefreshURI(uri, aPrincipal, seconds * 1000, true);
       }
     }
   }
