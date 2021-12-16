@@ -1847,8 +1847,7 @@ function createUpdateInProgressLockFile(aDir) {
   file.append(FILE_UPDATE_IN_PROGRESS_LOCK);
   file.create(file.NORMAL_FILE_TYPE, 0o444);
   file.QueryInterface(Ci.nsILocalFileWin);
-  file.fileAttributesWin |= file.WFA_READONLY;
-  file.fileAttributesWin &= ~file.WFA_READWRITE;
+  file.readOnly = true;
   Assert.ok(file.exists(), MSG_SHOULD_EXIST + getMsgPath(file.path));
   Assert.ok(!file.isWritable(), "the lock file should not be writeable");
 }
@@ -1869,8 +1868,7 @@ function removeUpdateInProgressLockFile(aDir) {
   let file = aDir.clone();
   file.append(FILE_UPDATE_IN_PROGRESS_LOCK);
   file.QueryInterface(Ci.nsILocalFileWin);
-  file.fileAttributesWin |= file.WFA_READWRITE;
-  file.fileAttributesWin &= ~file.WFA_READONLY;
+  file.readOnly = false;
   file.remove(false);
   Assert.ok(!file.exists(), MSG_SHOULD_NOT_EXIST + getMsgPath(file.path));
 }
