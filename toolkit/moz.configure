@@ -2681,4 +2681,35 @@ with only_when(toolkit_gtk):
 
         set_config("MOZ_ENABLE_DBUS", True)
         set_define("MOZ_ENABLE_DBUS", True)
-        add_old_configure_assignment("MOZ_ENABLE_DBUS", True)
+
+
+# Necko's wifi scanner
+# ==============================================================
+@depends(target)
+def necko_wifi_when(target):
+    return target.os in ("WINNT", "OSX", "DragonFly", "FreeBSD") or (
+        target.kernel == "Linux" and target.os == "GNU"
+    )
+
+
+option("--disable-necko-wifi", help="Disable necko wifi scanner", when=necko_wifi_when)
+
+set_config("NECKO_WIFI", True, when="--enable-necko-wifi")
+set_define("NECKO_WIFI", True, when="--enable-necko-wifi")
+
+
+@depends(
+    depends("--enable-necko-wifi", when=necko_wifi_when)(lambda x: x),
+    depends("--enable-dbus", when=toolkit_gtk)(lambda x: x),
+    when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
+)
+def necko_wifi_dbus(necko_wifi, dbus):
+    if necko_wifi and not dbus:
+        die(
+            "Necko WiFi scanning needs DBus on your platform, remove --disable-dbus"
+            " or use --disable-necko-wifi"
+        )
+    return necko_wifi and dbus
+
+
+set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)

@@ -1957,45 +1957,6 @@ AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
-dnl necko configuration options
-dnl ========================================================
-
-dnl
-dnl option to disable necko's wifi scanner
-dnl
-
-if test "$MOZ_WIDGET_TOOLKIT"; then
-
-  case "$OS_TARGET" in
-    Darwin)
-      NECKO_WIFI=1
-      ;;
-    DragonFly|FreeBSD|WINNT)
-      NECKO_WIFI=1
-      ;;
-    Linux)
-      NECKO_WIFI=1
-      NECKO_WIFI_DBUS=1
-      ;;
-  esac
-
-fi
-
-MOZ_ARG_DISABLE_BOOL(necko-wifi,
-[  --disable-necko-wifi    Disable necko wifi scanner],
-    NECKO_WIFI=,
-    NECKO_WIFI=1)
-
-if test "$NECKO_WIFI"; then
-  if test -z "$MOZ_ENABLE_DBUS" -a -n "$NECKO_WIFI_DBUS"; then
-    AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
-  fi
-  AC_DEFINE(NECKO_WIFI)
-fi
-AC_SUBST(NECKO_WIFI)
-AC_SUBST(NECKO_WIFI_DBUS)
-
-dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
 dnl =
