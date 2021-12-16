@@ -68,17 +68,8 @@ observe and control these settings.
 But there are some other pieces of state which absolutely must come from a
 profile, such as the telemetry client ID and logging level settings (see
 `BackgroundTasksUtils.jsm <https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksUtils.jsm>`__).
-We also need to have access to Normandy, so that we can control the rollout of
-the background updater itself, as well as support possible future experiments or
-staged rollouts. It isn't possible to do that on a per-installation basis where
-multiple profiles could be affected, because the profiles could find themselves
-in different experiment groups, and confusion would abound (both for the user
-and for our unfortunate code).  The regular per-profile preference
-``app.update.background.scheduling.enabled`` is mirrored from the default
-profile to the per-installation default value of
-``app.update.background.enabled`` for these purposes.
 
-All of this means that, in addition to our per-installation prefs, we also need
+This means that, in addition to our per-installation prefs, we also need
 to be able to identify and load a profile. To do that, we leverage `the profile
 service <https://searchfox.org/mozilla-central/source/toolkit/profile/nsIToolkitProfileService.idl>`__
 to determine what the default profile for the installation would be if we were
