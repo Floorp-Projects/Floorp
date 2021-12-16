@@ -1489,61 +1489,6 @@ fi # COMPILE_ENVIRONMENT
 
 
 dnl ========================================================
-dnl = Breakpad crash reporting (on by default on supported platforms)
-dnl ========================================================
-
-case $target in
-i?86-*-mingw*|x86_64-*-mingw*|aarch64-*-mingw*)
-  MOZ_CRASHREPORTER=1
-  ;;
-i?86-apple-darwin*|x86_64-apple-darwin*|aarch64-apple-darwin*)
-  MOZ_CRASHREPORTER=1
-  ;;
-*-android*|*-linuxandroid*)
-  dnl Android/arm is arm-unknown-linux-androideabi, so android condition should
-  dnl be before Linux condition
-  dnl The crash reporter prevents crash stacktraces to be logged in the
-  dnl logs so we leave it out by default in developer builds.
-  if test -z "$DEVELOPER_OPTIONS"; then
-    MOZ_CRASHREPORTER=1
-  fi
-  ;;
-i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
-  if test "$MOZ_ENABLE_GTK"; then
-    MOZ_CRASHREPORTER=1
-  fi
-  ;;
-esac
-
-MOZ_ARG_DISABLE_BOOL(crashreporter,
-[  --disable-crashreporter Disable breakpad crash reporting],
-    [MOZ_CRASHREPORTER=],
-    [MOZ_CRASHREPORTER=F # Force enable breakpad])
-
-if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "Darwin" -a "$MOZ_WIDGET_TOOLKIT" != "android"; then
-  if test "$MOZ_CRASHREPORTER" = F; then
-    AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
-  fi
-  MOZ_CRASHREPORTER=
-fi
-
-if test -n "$MOZ_CRASHREPORTER"; then
-   AC_DEFINE(MOZ_CRASHREPORTER)
-
-  if test "$OS_TARGET" = "Linux" && \
-    test -z "$SKIP_LIBRARY_CHECKS"; then
-    PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
-  fi
-
-  if test "$OS_ARCH" = "WINNT"; then
-    if test -z "$HAVE_64BIT_BUILD" -a -n "$COMPILE_ENVIRONMENT"; then
-      MOZ_CRASHREPORTER_INJECTOR=1
-      AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
-    fi
-  fi
-fi
-
-dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
@@ -2086,8 +2031,6 @@ AC_SUBST_LIST(WARNINGS_CFLAGS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
-AC_SUBST(MOZ_CRASHREPORTER)
-AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
 AC_SUBST(MOZ_STUB_INSTALLER)
 AC_SUBST(MOZ_UPDATER)
 
