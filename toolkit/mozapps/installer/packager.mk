@@ -145,10 +145,7 @@ endif
 
 # The install target will install the application to prefix/lib/appname-version
 install:: prepare-package
-ifeq ($(OS_ARCH),WINNT)
-	$(error "make install" is not supported on this platform. Use "make package" instead.)
-endif
-ifeq (bundle,$(MOZ_FS_LAYOUT))
+ifneq (,$(filter WINNT Darwin,$(OS_TARGET)))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 	$(NSINSTALL) -D $(DESTDIR)$(installdir)
