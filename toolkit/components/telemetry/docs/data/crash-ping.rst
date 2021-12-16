@@ -64,6 +64,7 @@ Structure:
           DOMFissionEnabled: "1", // Optional, if set indicates that a Fission window had been opened
           EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
           ExperimentalFeatures: <features>, // Optional, a comma-separated string that specifies the enabled experimental features from about:preferences#experimental
+          FontName: <name>, // Optional, the font family name that is being loaded when the crash occurred
           GPUProcessLaunchCount: <num>, // Number of times the GPU process was launched
           HeadlessMode: "1", // Optional, "1" if the app was invoked in headless mode via `--headless ...` or `--backgroundtask ...`
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
