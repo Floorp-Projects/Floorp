@@ -282,9 +282,10 @@ option(
 )
 
 
-@depends_if("--enable-default-toolkit")
+@depends("--enable-default-toolkit")
 def full_toolkit(value):
-    return value[0]
+    if value:
+        return value[0]
 
 
 @depends(full_toolkit)
@@ -2667,3 +2668,17 @@ with only_when(compile_environment):
             True,
             when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
         )
+
+
+# DBus
+# ==============================================================
+with only_when(toolkit_gtk):
+    option("--disable-dbus", help="Disable dbus support")
+
+    with only_when("--enable-dbus"):
+        pkg_check_modules("MOZ_DBUS", "dbus-1 >= 0.60")
+        pkg_check_modules("MOZ_DBUS_GLIB", "dbus-glib-1 >= 0.60")
+
+        set_config("MOZ_ENABLE_DBUS", True)
+        set_define("MOZ_ENABLE_DBUS", True)
+        add_old_configure_assignment("MOZ_ENABLE_DBUS", True)

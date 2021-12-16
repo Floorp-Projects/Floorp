@@ -52,7 +52,6 @@ CAIRO_VERSION=1.10
 GTK3_VERSION=3.14.0
 GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_14
 W32API_VERSION=3.14
-DBUS_VERSION=0.60
 
 dnl Set various checks
 dnl ========================================================
@@ -1390,28 +1389,6 @@ then
     fi
 fi
 AC_SUBST(MOZ_ENABLE_LIBPROXY)
-
-dnl ========================================================
-dnl = dbus support
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK"
-then
-    MOZ_ENABLE_DBUS=1
-
-    MOZ_ARG_DISABLE_BOOL(dbus,
-    [  --disable-dbus          Disable dbus support ],
-        MOZ_ENABLE_DBUS=,
-        MOZ_ENABLE_DBUS=1)
-
-    if test "$MOZ_ENABLE_DBUS"
-    then
-        PKG_CHECK_MODULES(MOZ_DBUS, dbus-1 >= $DBUS_VERSION)
-        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1 >= $DBUS_VERSION)
-        AC_DEFINE(MOZ_ENABLE_DBUS)
-    fi
-fi
-AC_SUBST(MOZ_ENABLE_DBUS)
 
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
                [ struct ethtool_cmd cmd; cmd.speed_hi = 0; ],
