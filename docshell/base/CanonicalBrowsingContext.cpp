@@ -2095,7 +2095,13 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
   // that we need to cancel any existing ones.
   if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
       mozilla::SessionHistoryInParent() && mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    // Make sure we are not loading a javascript URI.
+    MOZ_ASSERT(!aLoad->IsLoadingJSURI());
+
+    // If we want to do a download, don't cancel the current navigation.
+    if (!aLoad->IsDownload()) {
+      mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    }
   }
   mCurrentLoad = aLoad;
 
