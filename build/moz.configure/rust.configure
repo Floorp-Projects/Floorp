@@ -86,7 +86,7 @@ def unwrap_rustup(prog, name):
                 # we'll catch invalid versions later.
                 prog = from_rustup_which()
 
-        return prog
+        return normalize_path(prog)
 
     return unwrap
 
