@@ -10163,6 +10163,23 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "scrollbar-gutter": {
+    "isInherited": false,
+    "subproperties": [
+      "scrollbar-gutter"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "both-edges",
+      "inherit",
+      "initial",
+      "revert",
+      "revert-layer",
+      "stable",
+      "unset"
+    ]
+  },
   "scrollbar-width": {
     "isInherited": false,
     "subproperties": [
