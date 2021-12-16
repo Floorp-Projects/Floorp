@@ -28,6 +28,7 @@
 #include "nsReadableUtils.h"
 
 #include <direct.h>
+#include <fileapi.h>
 #include <windows.h>
 #include <shlwapi.h>
 #include <aclapi.h>
@@ -3122,43 +3123,36 @@ nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetFileAttributesWin(uint32_t* aAttribs) {
-  *aAttribs = 0;
+nsLocalFile::GetReadOnly(bool* aReadOnly) {
+  NS_ENSURE_ARG_POINTER(aReadOnly);
+
   DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
   if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
-  if (!(dwAttrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)) {
-    *aAttribs |= WFA_SEARCH_INDEXED;
-  }
+  *aReadOnly = dwAttrs & FILE_ATTRIBUTE_READONLY;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetFileAttributesWin(uint32_t aAttribs) {
+nsLocalFile::SetReadOnly(bool aReadOnly) {
   DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
   if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
-  if (aAttribs & WFA_SEARCH_INDEXED) {
-    dwAttrs &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-  } else {
-    dwAttrs |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-  }
-
-  if (aAttribs & WFA_READONLY) {
+  if (aReadOnly) {
     dwAttrs |= FILE_ATTRIBUTE_READONLY;
-  } else if ((aAttribs & WFA_READWRITE) &&
-             (dwAttrs & FILE_ATTRIBUTE_READONLY)) {
+  } else {
     dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
   }
 
   if (SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0) {
     return NS_ERROR_FAILURE;
   }
+
   return NS_OK;
 }
 
