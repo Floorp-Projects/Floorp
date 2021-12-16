@@ -46,6 +46,8 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
         binding.tabs.setupWithViewPager(binding.pager, true)
 
+        binding.skip.setOnClickListener(this)
+
         return binding.root
     }
 
