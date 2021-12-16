@@ -909,52 +909,6 @@ AM_LANGINFO_CODESET
 
 AC_LANG_C
 
-dnl **********************
-dnl *** va_copy checks ***
-dnl **********************
-AC_CACHE_CHECK([for an implementation of va_copy()],
-               ac_cv_va_copy,
-    [AC_TRY_COMPILE([#include <stdarg.h>
-                     #include <stdlib.h>
-        void f (int i, ...) {
-            va_list args1, args2;
-            va_start (args1, i);
-            va_copy (args2, args1);
-            if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-                exit (1);
-            va_end (args1); va_end (args2);
-        }],
-        [f(0, 42); return 0],
-        [ac_cv_va_copy=yes],
-        [ac_cv_va_copy=no]
-    )]
-)
-AC_CACHE_CHECK([whether va_list can be copied by value],
-               ac_cv_va_val_copy,
-    [AC_TRY_COMPILE([#include <stdarg.h>
-                     #include <stdlib.h>
-        void f (int i, ...) {
-            va_list args1, args2;
-            va_start (args1, i);
-            args2 = args1;
-            if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-                exit (1);
-            va_end (args1); va_end (args2);
-        }],
-        [f(0, 42); return 0],
-        [ac_cv_va_val_copy=yes],
-        [ac_cv_va_val_copy=no],
-    )]
-)
-if test "x$ac_cv_va_copy" = "xyes"; then
-    AC_DEFINE(VA_COPY, va_copy)
-    AC_DEFINE(HAVE_VA_COPY)
-fi
-
-if test "x$ac_cv_va_val_copy" = "xno"; then
-   AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)
-fi
-
 dnl ===================================================================
 dnl ========================================================
 dnl Put your C++ language/feature checks below
