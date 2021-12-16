@@ -1184,7 +1184,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
           if (kind == ProfileBufferEntry::Kind::CompactStack) {
             ProfileChunkedBuffer tempBuffer(
                 ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-                mWorkerChunkManager);
+                WorkerChunkManager());
             er.ReadIntoObject(tempBuffer);
             tempBuffer.Read([&](ProfileChunkedBuffer::Reader* aReader) {
               MOZ_ASSERT(aReader,
@@ -1195,7 +1195,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
                         it.CurrentBlockIndex().ConvertToProfileBufferIndex(),
                         unresponsiveDuration, runningTimes);
             });
-            mWorkerChunkManager.Reset(tempBuffer.GetAllChunks());
+            WorkerChunkManager().Reset(tempBuffer.GetAllChunks());
             break;
           }
 
@@ -1394,7 +1394,7 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
                 if (kind == ProfileBufferEntry::Kind::CompactStack) {
                   ProfileChunkedBuffer tempBuffer(
                       ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-                      mWorkerChunkManager);
+                      WorkerChunkManager());
                   er.ReadIntoObject(tempBuffer);
                   tempBuffer.Read([&](ProfileChunkedBuffer::Reader* aReader) {
                     MOZ_ASSERT(
@@ -1408,7 +1408,7 @@ void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
                       stackEntryGetter.Next();
                     }
                   });
-                  mWorkerChunkManager.Reset(tempBuffer.GetAllChunks());
+                  WorkerChunkManager().Reset(tempBuffer.GetAllChunks());
                   break;
                 }
 
@@ -1939,10 +1939,10 @@ bool ProfileBuffer::DuplicateLastSample(ProfilerThreadId aThreadId,
   AUTO_PROFILER_STATS(DuplicateLastSample_copy);
 
   ProfileChunkedBuffer tempBuffer(
-      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, mWorkerChunkManager);
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, WorkerChunkManager());
 
   auto retrieveWorkerChunk = MakeScopeExit(
-      [&]() { mWorkerChunkManager.Reset(tempBuffer.GetAllChunks()); });
+      [&]() { WorkerChunkManager().Reset(tempBuffer.GetAllChunks()); });
 
   const bool ok = mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,
