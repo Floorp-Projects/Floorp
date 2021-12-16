@@ -309,6 +309,12 @@ ExperimentalFeatures:
   type: string
   ping: true
 
+FontName:
+  description: >
+    Set before attempting to load a font to help diagnose crashes during loading.
+  type: string
+  ping: true
+
 GetHGlobalFromStreamFailure:
   description: >
     Error returned when invoking GetHGlobalFromStreamFailure() during the
