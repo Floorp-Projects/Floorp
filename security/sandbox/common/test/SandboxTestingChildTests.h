@@ -253,6 +253,11 @@ void RunTestsRDD(SandboxTestingChild* child) {
   child->ErrnoTest("socket"_ns, false,
                    [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
 
+  child->ErrnoTest("uname"_ns, true, [] {
+    struct utsname uts;
+    return uname(&uts);
+  });
+
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
@@ -264,7 +269,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
 #ifdef XP_UNIX
 #  ifdef XP_LINUX
   struct utsname utsname_res = {};
-  child->ErrnoTest("uname"_ns, true, [&] {
+  child->ErrnoTest("uname_restricted"_ns, true, [&] {
     int rv = uname(&utsname_res);
 
     nsCString expectedSysname("Linux"_ns);
