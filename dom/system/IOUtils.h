@@ -158,6 +158,10 @@ class IOUtils final {
   class EventQueue;
   class State;
 
+  template <typename Fn>
+  static already_AddRefed<Promise> WithPromiseAndState(GlobalObject& aGlobal,
+                                                       Fn aFn);
+
   /**
    * Dispatch a task on the event queue and resolve or reject the associated
    * promise based on the result.
