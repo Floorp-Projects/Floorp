@@ -13,6 +13,7 @@ import {
   getIsCurrentThreadPaused,
   getThreadContext,
   isSourceWithMap,
+  getBlackBoxRanges,
 } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
@@ -30,6 +31,7 @@ class EditorMenu extends Component {
       cx,
       editor,
       selectedSource,
+      blackboxedRanges,
       editorActions,
       hasMappedLocation,
       isPaused,
@@ -50,12 +52,14 @@ class EditorMenu extends Component {
         cx,
         editorActions,
         selectedSource,
+        blackboxedRanges,
         hasMappedLocation,
         location,
         isPaused,
         editorWrappingEnabled,
         selectionText: editor.codeMirror.getSelection().trim(),
         isTextSelected: editor.codeMirror.somethingSelected(),
+        editor,
       })
     );
   }
@@ -67,6 +71,7 @@ class EditorMenu extends Component {
 
 const mapStateToProps = (state, props) => ({
   cx: getThreadContext(state),
+  blackboxedRanges: getBlackBoxRanges(state),
   isPaused: getIsCurrentThreadPaused(state),
   hasMappedLocation:
     (props.selectedSource.isOriginal ||
