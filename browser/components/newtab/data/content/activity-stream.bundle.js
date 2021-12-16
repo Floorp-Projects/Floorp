@@ -777,24 +777,27 @@ const Base = Object(react_redux__WEBPACK_IMPORTED_MODULE_4__["connect"])(state =
 /* 3 */
 /***/ (function(module, exports) {
 
-var g; // This works in non-strict mode
+var g;
 
-g = function () {
-  return this;
-}();
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
 
 try {
-  // This works if eval is allowed (see CSP)
-  g = g || new Function("return this")();
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
 } catch (e) {
-  // This works if the window reference is available
-  if (typeof window === "object") g = window;
-} // g can still be undefined, but nothing to do about it...
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
 // We return undefined, instead of nothing here, so it's
 // easier to handle this case. if(!global) { ...}
 
-
 module.exports = g;
+
 
 /***/ }),
 /* 4 */
@@ -9351,12 +9354,14 @@ function mapBundleSync(iterable, ids) {
     return getBundleForId(iterable, ids);
   }
 
-  return ids.map(id => getBundleForId(iterable, id));
+  return ids.map(
+    id => getBundleForId(iterable, id)
+  );
 }
+
 /*
  * Find the best `FluentBundle` with the translation for `id`.
  */
-
 function getBundleForId(iterable, id) {
   for (const bundle of iterable) {
     if (bundle.hasMessage(id)) {
@@ -9366,6 +9371,7 @@ function getBundleForId(iterable, id) {
 
   return null;
 }
+
 // CONCATENATED MODULE: ./node_modules/fluent-sequence/src/map_async.js
 /*
  * Asynchronously map an identifier or an array of identifiers to the best
@@ -9392,9 +9398,9 @@ async function mapBundleAsync(iterable, ids) {
       if (!foundBundles[index] && bundle.hasMessage(id)) {
         foundBundles[index] = bundle;
         remainingCount--;
-      } // Return early when all ids have been mapped to contexts.
+      }
 
-
+      // Return early when all ids have been mapped to contexts.
       if (remainingCount === 0) {
         return foundBundles;
       }
@@ -9403,11 +9409,14 @@ async function mapBundleAsync(iterable, ids) {
 
   return foundBundles;
 }
+
 // CONCATENATED MODULE: ./node_modules/fluent-sequence/src/index.js
 /*
  * @module fluent-sequence
  * @overview Manage ordered sequences of FluentBundles.
  */
+
+
 
 
 // CONCATENATED MODULE: ./node_modules/cached-iterable/src/cached_iterable.mjs
