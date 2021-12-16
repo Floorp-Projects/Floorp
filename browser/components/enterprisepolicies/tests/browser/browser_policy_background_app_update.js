@@ -68,11 +68,6 @@ async function test_background_update_pref(expectedEnabled, expectedLocked) {
 }
 
 add_task(async function test_background_app_update_policy() {
-  // Turn on the background update UI so we can test it.
-  await SpecialPowers.pushPrefEnv({
-    set: [["app.update.background.scheduling.enabled", true]],
-  });
-
   const origBackgroundUpdateVal = await UpdateUtils.readUpdateConfigSetting(
     PREF_NAME
   );

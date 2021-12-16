@@ -305,32 +305,39 @@ var BackgroundUpdate = {
     return result;
   },
 
-  async _mirrorToPerInstallationPref() {
-    try {
-      let scheduling = Services.prefs.getBoolPref(
-        "app.update.background.scheduling.enabled",
-        true
-      );
-      await UpdateUtils.writeUpdateConfigSetting(
-        "app.update.background.enabled",
-        scheduling,
-        { setDefaultOnly: true }
-      );
-      log.debug(
-        `mirrored per-profile pref "app.update.background.scheduling.enabled" default ` +
-          `to per-installation pref default "app.update.background.enabled": ${scheduling}`
-      );
-    } catch (e) {
-      if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_UNEXPECTED) {
-        // The preference doesn't exist.
-        return;
-      }
-      console.warn(
-        `ignoring failure to mirror per-profile pref "app.update.background.scheduling.enabled" default ` +
-          `to per-installation pref default "app.update.background.enabled"`,
-        e
-      );
+  /**
+   * Background Update is controlled by the per-installation pref
+   * "app.update.background.enabled". When Background Update was still in the
+   * experimental phase, the default value of this pref may have been changed.
+   * Now that the feature has been rolled out, we need to make sure that the
+   * desired default value is restored.
+   */
+  async ensureExperimentToRolloutTransitionPerformed() {
+    if (!UpdateUtils.PER_INSTALLATION_PREFS_SUPPORTED) {
+      return;
     }
+    const transitionPerformedPref = "app.update.background.rolledout";
+    if (Services.prefs.getBoolPref(transitionPerformedPref, false)) {
+      // writeUpdateConfigSetting serializes access to the config file. Because
+      // of this, we can safely return here without worrying about another call
+      // to this function that might still be in progress.
+      return;
+    }
+    Services.prefs.setBoolPref(transitionPerformedPref, true);
+
+    const defaultValue =
+      UpdateUtils.PER_INSTALLATION_PREFS["app.update.background.enabled"]
+        .defaultValue;
+    await UpdateUtils.writeUpdateConfigSetting(
+      "app.update.background.enabled",
+      defaultValue,
+      { setDefaultOnly: true }
+    );
+
+    // To be thorough, remove any traces of the pref that used to control the
+    // default value that we just set. We don't want any users to have the
+    // impression that that pref is still useful.
+    Services.prefs.clearUserPref("app.update.background.scheduling.enabled");
   },
 
   async observe(subject, topic, data) {
@@ -363,12 +370,7 @@ var BackgroundUpdate = {
   async maybeScheduleBackgroundUpdateTask() {
     let SLUG = "maybeScheduleBackgroundUpdateTask";
 
-    if (
-      this._force() ||
-      BackgroundTasksUtils.currentProfileIsDefaultProfile()
-    ) {
-      await this._mirrorToPerInstallationPref();
-    }
+    await this.ensureExperimentToRolloutTransitionPerformed();
 
     log.info(
       `${SLUG}: checking eligibility before scheduling background update task`
@@ -395,15 +397,6 @@ var BackgroundUpdate = {
       // Witness when our own prefs change.
       Services.prefs.addObserver("app.update.background.force", this);
       Services.prefs.addObserver("app.update.background.interval", this);
-
-      // To accommodate forcing with "app.update.background.force"
-      // dynamically, we always observe
-      // "app.update.background.scheduling.enabled", even though we act on it
-      // (usually) only when we're the default profile.
-      Services.prefs.addObserver(
-        "app.update.background.scheduling.enabled",
-        this
-      );
 
       // Witness when the langpack updating feature is changed.
       Services.prefs.addObserver("app.update.langpack.enabled", this);
