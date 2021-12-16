@@ -5281,6 +5281,10 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
+  // Do this before the Base Profiler is stopped, to keep the existing buffer
+  // (if any) alive for our use.
+  mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
+
   UniquePtr<char[]> baseprofile;
   if (baseprofiler::profiler_is_active()) {
     // Note that we still hold the lock, so the sampler cannot run yet and
@@ -5593,6 +5597,8 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   // the SamplerThread a chance to do some cleanup with gPSMutex locked.
   SamplerThread* samplerThread = ActivePS::Destroy(aLock);
   samplerThread->Stop(aLock);
+
+  mozilla::base_profiler_markers_detail::ReleaseBufferForMainThreadAddMarker();
 
   return samplerThread;
 }
