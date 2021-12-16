@@ -262,7 +262,11 @@ var NetworkHelper = {
       // TODO: bug 802246 - getWindowForRequest() throws on b2g: there is no
       // associatedWindow property.
     }
-    return null;
+    // On some request notificationCallbacks and loadGroup are both null,
+    // so that we can't retrieve any nsILoadContext interface.
+    // Fallback on nsILoadInfo to try to retrieve the request's window.
+    // (this is covered by test_network_get.html and its CSS request)
+    return request.loadInfo.loadingDocument?.defaultView;
   },
 
   /**
