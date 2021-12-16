@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Tests that the page data service can parse schema.org metadata.
+ * Tests that the page data service can parse schema.org metadata into PageData.
  */
 
 add_task(async function test_single_product_data() {
@@ -16,6 +16,10 @@ add_task(async function test_single_product_data() {
       </head>
       <body>
         <div itemscope itemtype="https://schema.org/Organization">
+          <div itemprop="employee" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">Mr. Nested Name</span>
+          </div>
+
           <span itemprop="name">Mozilla</span>
         </div>
 
@@ -25,8 +29,10 @@ add_task(async function test_single_product_data() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <span itemprop="price" content="3.50">£3.50</span>
-          <span itemprop="priceCurrency" content="GBP"></span>
+          <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+            <span itemprop="price" content="3.50">£3.50</span>
+            <span itemprop="priceCurrency" content="GBP"></span>
+          </div>
 
           <span itemprop="gtin" content="13572468"></span>
 
@@ -67,8 +73,10 @@ add_task(async function test_single_multiple_data() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <span itemprop="price" content="3.28">£3.28</span>
-          <span itemprop="priceCurrency" content="GBP"></span>
+          <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+            <span itemprop="price" content="3.28">£3.28</span>
+            <span itemprop="priceCurrency" content="GBP"></span>
+          </div>
 
           <span itemprop="gtin" content="13572468"></span>
         </div>
