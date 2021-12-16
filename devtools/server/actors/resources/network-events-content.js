@@ -76,19 +76,19 @@ class NetworkEventContentWatcher {
       return;
     }
 
-    const event = NetworkUtils.createNetworkEvent(channel, {
-      blockedReason: channel.loadInfo.requestBlockingReason,
-    });
-
-    // For same-origin iframe targets, we're notified about this event from both the top-level
-    // target *and* the iframe one. We ignore the event if it doesn't come from the same
-    // browsing context as the target's one to avoid duplicate messages in the netmonitor.
+    // XXX: is window the best filter to use?
     if (
-      this.targetActor.ignoreSubFrames &&
-      event.browsingContextID !== this.targetActor.browsingContext.id
+      !NetworkUtils.matchRequest(channel, {
+        window: this.targetActor.window,
+        matchExactWindow: this.targetActor.ignoreSubFrames,
+      })
     ) {
       return;
     }
+
+    const event = NetworkUtils.createNetworkEvent(channel, {
+      blockedReason: channel.loadInfo.requestBlockingReason,
+    });
 
     const actor = new NetworkEventActor(
       this,
@@ -122,6 +122,16 @@ class NetworkEventContentWatcher {
     }
 
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
+
+    // XXX: is window the best filter to use?
+    if (
+      !NetworkUtils.matchRequest(channel, {
+        window: this.targetActor.window,
+        matchExactWindow: this.targetActor.ignoreSubFrames,
+      })
+    ) {
+      return;
+    }
 
     const event = NetworkUtils.createNetworkEvent(channel, {
       fromCache: true,

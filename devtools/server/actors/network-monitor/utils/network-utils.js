@@ -4,6 +4,7 @@
 
 "use strict";
 const { Ci, Cr } = require("chrome");
+const Services = require("Services");
 
 const {
   wildcardToRegExp,
@@ -16,7 +17,6 @@ loader.lazyRequireGetter(
 );
 
 loader.lazyGetter(this, "tpFlagsMask", () => {
-  const Services = require("Services");
   const trackingProtectionLevel2Enabled = Services.prefs
     .getStringPref("urlclassifier.trackingTable")
     .includes("content-track-digest256");
@@ -303,3 +303,83 @@ exports.fetchRequestHeadersAndCookies = function(
   owner.addRequestHeaders(headers, extraStringData);
   owner.addRequestCookies(cookies);
 };
+
+/**
+ * Check if a given network request should be logged by a network monitor
+ * based on the specified filters.
+ *
+ * @param nsIHttpChannel channel
+ *        Request to check.
+ * @param filters
+ *        NetworkObserver filters to match against.
+ * @return boolean
+ *         True if the network request should be logged, false otherwise.
+ */
+function matchRequest(channel, filters) {
+  // Log everything if no filter is specified
+  if (!filters.browserId && !filters.window && !filters.addonId) {
+    return true;
+  }
+
+  // Ignore requests from chrome or add-on code when we are monitoring
+  // content.
+  if (
+    channel.loadInfo &&
+    channel.loadInfo.loadingDocument === null &&
+    (channel.loadInfo.loadingPrincipal ===
+      Services.scriptSecurityManager.getSystemPrincipal() ||
+      channel.loadInfo.isInDevToolsContext)
+  ) {
+    return false;
+  }
+
+  if (filters.window) {
+    let win = NetworkHelper.getWindowForRequest(channel);
+    if (filters.matchExactWindow) {
+      return win == filters.window;
+    }
+
+    // Since frames support, this.window may not be the top level content
+    // frame, so that we can't only compare with win.top.
+    while (win) {
+      if (win == filters.window) {
+        return true;
+      }
+      if (win.parent == win) {
+        break;
+      }
+      win = win.parent;
+    }
+    return false;
+  }
+
+  if (filters.browserId) {
+    const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+    // `topFrame` is typically null for some chrome requests like favicons
+    // And its `browsingContext` attribute might be null if the request happened
+    // while the tab is being closed.
+    if (topFrame?.browsingContext?.browserId == filters.browserId) {
+      return true;
+    }
+
+    // If we couldn't get the top frame BrowsingContext from the loadContext,
+    // look for it on channel.loadInfo instead.
+    if (
+      channel.loadInfo &&
+      channel.loadInfo.browsingContext &&
+      channel.loadInfo.browsingContext.browserId == filters.browserId
+    ) {
+      return true;
+    }
+  }
+
+  if (
+    filters.addonId &&
+    channel?.loadInfo.loadingPrincipal.addonId === filters.addonId
+  ) {
+    return true;
+  }
+
+  return false;
+}
+exports.matchRequest = matchRequest;
