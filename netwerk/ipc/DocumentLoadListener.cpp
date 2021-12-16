@@ -533,6 +533,9 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   loadingContext->GetOriginAttributes(attrs);
 
   mLoadIdentifier = aLoadState->GetLoadIdentifier();
+  // See description of  mFileName in nsDocShellLoadState.h
+  mIsDownload = !aLoadState->FileName().IsVoid();
+  mIsLoadingJSURI = net::SchemeIsJavascript(aLoadState->URI());
 
   // Check for infinite recursive object or iframe loads
   if (aLoadState->OriginalFrameSrc() || !mIsDocumentLoad) {
