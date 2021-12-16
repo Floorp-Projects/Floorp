@@ -237,4 +237,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Խաբուսիկ կայքի խնդիր</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p> %1$s վեբ էջը հաղորդվել է որպես խաբուսիկ կայք և արգելափակված է ըստ ձեր անվտանգության նախապատվությունների:</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Անվտանգ կայքը հասանելի չէ</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Դուք ակտիվացրել եք միայն HTTPS ռեժիմը ուժեղացված անվտանգության համար, և <em>%1$s</em>-ի HTTPS տարբերակը հասանելի չէ:]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Շարունակել HTTP կայքում</string>
 </resources>
