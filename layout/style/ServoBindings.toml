@@ -589,7 +589,6 @@ cbindgen-types = [
     { gecko = "StyleDProperty", servo = "crate::values::specified::svg::DProperty" },
     { gecko = "StyleImageRendering", servo = "crate::values::computed::ImageRendering" },
     { gecko = "StyleScrollbarGutter", servo = "crate::values::computed::ScrollbarGutter" },
-    { gecko = "StyleHyphenateCharacter", servo = "crate::values::computed::HyphenateCharacter" },
 ]
 
 mapped-generic-types = [
