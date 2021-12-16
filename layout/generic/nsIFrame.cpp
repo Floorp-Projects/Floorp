@@ -5584,10 +5584,12 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     }
   }
 
-  // Use frame edge for grid, flex, table, and non-editable image frames.
+  // Use frame edge for grid, flex, table, and non-draggable & non-editable
+  // image frames.
   const bool useFrameEdge =
       aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame() ||
       (static_cast<nsImageFrame*>(do_QueryFrame(aFrame)) &&
+       !nsContentUtils::ContentIsDraggable(aFrame->GetContent()) &&
        !aFrame->GetContent()->IsEditable());
   return FrameTarget(aFrame, useFrameEdge, false);
 }
