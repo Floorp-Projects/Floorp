@@ -15,21 +15,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 
-// Printing Progress Includes
-#if !defined(XP_MACOSX)
-#  include "nsPrintProgress.h"
-#  include "nsPrintProgressParams.h"
-
-static const char* kPrintProgressDialogURL =
-    "chrome://global/content/printProgress.xhtml";
-static const char* kPrtPrvProgressDialogURL =
-    "chrome://global/content/printPreviewProgress.xhtml";
-#endif
-
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS(nsPrintingPromptService, nsIPrintingPromptService,
-                  nsIWebProgressListener)
+NS_IMPL_ISUPPORTS(nsPrintingPromptService, nsIPrintingPromptService)
 
 StaticRefPtr<nsPrintingPromptService> sSingleton;
 
@@ -76,54 +64,6 @@ nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy* parent,
 }
 
 NS_IMETHODIMP
-nsPrintingPromptService::ShowPrintProgressDialog(
-    mozIDOMWindowProxy* parent,
-    nsIPrintSettings* printSettings,  // ok to be null
-    nsIObserver* openDialogObserver,  // ok to be null
-    bool isForPrinting, nsIWebProgressListener** webProgressListener,
-    nsIPrintProgressParams** printProgressParams, bool* notifyOnOpen) {
-#if !defined(XP_MACOSX)
-  NS_ENSURE_ARG(webProgressListener);
-  NS_ENSURE_ARG(printProgressParams);
-  NS_ENSURE_ARG(notifyOnOpen);
-
-  *notifyOnOpen = false;
-  if (mPrintProgress) {
-    *webProgressListener = nullptr;
-    *printProgressParams = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  nsPrintProgress* prtProgress = new nsPrintProgress(printSettings);
-  mPrintProgress = prtProgress;
-  mWebProgressListener = prtProgress;
-
-  nsCOMPtr<nsIPrintProgressParams> prtProgressParams =
-      new nsPrintProgressParams();
-
-  nsCOMPtr<mozIDOMWindowProxy> parentWindow = parent;
-
-  if (mWatcher && !parentWindow) {
-    mWatcher->GetActiveWindow(getter_AddRefs(parentWindow));
-  }
-
-  if (parentWindow) {
-    mPrintProgress->OpenProgressDialog(
-        parentWindow,
-        isForPrinting ? kPrintProgressDialogURL : kPrtPrvProgressDialogURL,
-        prtProgressParams, openDialogObserver, notifyOnOpen);
-  }
-
-  prtProgressParams.forget(printProgressParams);
-  NS_ADDREF(*webProgressListener = this);
-
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-NS_IMETHODIMP
 nsPrintingPromptService::ShowPageSetupDialog(mozIDOMWindowProxy* parent,
                                              nsIPrintSettings* printSettings) {
   NS_ENSURE_ARG(printSettings);
@@ -135,91 +75,4 @@ nsPrintingPromptService::ShowPageSetupDialog(mozIDOMWindowProxy* parent,
                                    printSettings);
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnStateChange(nsIWebProgress* aWebProgress,
-                                       nsIRequest* aRequest,
-                                       uint32_t aStateFlags, nsresult aStatus) {
-#if !defined(XP_MACOSX)
-  if ((aStateFlags & STATE_STOP) && mWebProgressListener) {
-    mWebProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags,
-                                        aStatus);
-    if (mPrintProgress) {
-      mPrintProgress->CloseProgressDialog(true);
-    }
-    mPrintProgress = nullptr;
-    mWebProgressListener = nullptr;
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnProgressChange(nsIWebProgress* aWebProgress,
-                                          nsIRequest* aRequest,
-                                          int32_t aCurSelfProgress,
-                                          int32_t aMaxSelfProgress,
-                                          int32_t aCurTotalProgress,
-                                          int32_t aMaxTotalProgress) {
-#if !defined(XP_MACOSX)
-  if (mWebProgressListener) {
-    return mWebProgressListener->OnProgressChange(
-        aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-        aCurTotalProgress, aMaxTotalProgress);
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnLocationChange(nsIWebProgress* aWebProgress,
-                                          nsIRequest* aRequest,
-                                          nsIURI* location, uint32_t aFlags) {
-#if !defined(XP_MACOSX)
-  if (mWebProgressListener) {
-    return mWebProgressListener->OnLocationChange(aWebProgress, aRequest,
-                                                  location, aFlags);
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnStatusChange(nsIWebProgress* aWebProgress,
-                                        nsIRequest* aRequest, nsresult aStatus,
-                                        const char16_t* aMessage) {
-#if !defined(XP_MACOSX)
-  if (mWebProgressListener) {
-    return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus,
-                                                aMessage);
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnSecurityChange(nsIWebProgress* aWebProgress,
-                                          nsIRequest* aRequest,
-                                          uint32_t aState) {
-#if !defined(XP_MACOSX)
-  if (mWebProgressListener) {
-    return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest,
-                                                  aState);
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintingPromptService::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
-                                                nsIRequest* aRequest,
-                                                uint32_t aEvent) {
-#if !defined(XP_MACOSX)
-  if (mWebProgressListener) {
-    return mWebProgressListener->OnContentBlockingEvent(aWebProgress, aRequest,
-                                                        aEvent);
-  }
-#endif
-  return NS_OK;
 }
