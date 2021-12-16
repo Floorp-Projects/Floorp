@@ -746,23 +746,6 @@ def ensure_spi_disabled_on_all_but_spi(config, tasks):
         yield task
 
 
-@transforms.add
-def set_e10s_attributes(config, tasks):
-    """
-    This transform is only to keep backwards compatibility with the old way of
-    splitting e10s and should be removed once we're confident consumers aren't
-    relying on it for anything important.
-    """
-    for task in tasks:
-        variant = task["attributes"].get("unittest_variant")
-        if variant and "1proc" in variant:
-            yield task
-            continue
-
-        task["attributes"]["e10s"] = True
-        yield task
-
-
 test_setting_description_schema = Schema(
     {
         Required("_hash"): str,

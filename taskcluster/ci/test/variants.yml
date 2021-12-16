@@ -5,8 +5,6 @@
         $eval: '!("android" in task["test-platform"])'
     suffix: "1proc"
     merge:
-        attributes:
-            e10s: false
         mozharness:
             extra-options:
                 - "--disable-e10s"
