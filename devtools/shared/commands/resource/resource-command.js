@@ -822,10 +822,7 @@ class ResourceCommand {
       return null;
     }
 
-    if (
-      innerWindowId &&
-      this.targetCommand.descriptorFront.isServerTargetSwitchingEnabled()
-    ) {
+    if (innerWindowId && this.targetCommand.isServerTargetSwitchingEnabled()) {
       return this.watcherFront.getWindowGlobalTargetByInnerWindowId(
         innerWindowId
       );
