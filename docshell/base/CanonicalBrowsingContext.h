@@ -459,6 +459,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void RemovePendingDiscard();
 
+  bool ShouldAddEntryForRefresh(const SessionHistoryEntry* aEntry) {
+    nsCOMPtr<nsIURI> currentURI = GetCurrentURI();
+    return BrowsingContext::ShouldAddEntryForRefresh(currentURI,
+                                                     aEntry->Info());
+  }
+
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
