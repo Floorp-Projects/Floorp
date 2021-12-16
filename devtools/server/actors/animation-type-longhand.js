@@ -83,6 +83,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "grid-template-areas",
       "grid-template-columns",
       "grid-template-rows",
+      "hyphenate-character",
       "hyphens",
       "image-orientation",
       "image-rendering",
