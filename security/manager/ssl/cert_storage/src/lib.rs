@@ -1140,15 +1140,16 @@ impl Task for BackgroundReadStashTask {
         if !path.exists() {
             return;
         }
-        let mut stash_file = match File::open(path) {
+        let stash_file = match File::open(path) {
             Ok(file) => file,
             Err(e) => {
                 error!("error opening stash file: {}", e);
                 return;
             }
         };
+        let mut stash_reader = BufReader::new(stash_file);
         let mut crlite_stash = HashMap::new();
-        match load_crlite_stash_from_reader_into_map(&mut stash_file, &mut crlite_stash) {
+        match load_crlite_stash_from_reader_into_map(&mut stash_reader, &mut crlite_stash) {
             Ok(()) => {}
             Err(e) => {
                 error!("error loading crlite stash: {}", e.message);
