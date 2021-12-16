@@ -138,13 +138,23 @@
     The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
     <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Сайтлар: %1$s</string>
 
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">%d сайт</string>
+
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Соңгы каралган</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Соңгы эзләүләр</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Бетерү</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">Тарихны тулысынча күрсәтү төймәсе</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -221,6 +231,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Үзгәртү</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Баш битне көйләү</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Баш битне көйләү</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Өй экран</string>
@@ -247,6 +261,8 @@
     <string name="search_engine_button">Эзләү системасы</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Эзләү системасы көйләүләре</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Хәзер, түбәндәге белән эзләү:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Сылтаманы алмашу буферыннан алу</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -255,6 +271,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Рөхсәт итмәү</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Хосусый сессияләрдә эзләү тәкъдимнәрен рөхсәт итәргәме?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s Сез адрес юлында язган һәрнәрсәне дә стандарт эзләү системагыз белән уртаклашачак.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Күбрәк белү</string>
 
@@ -263,6 +281,10 @@
 
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Адрес юлыннан турыдан-туры эзләү</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefox-тагы яңалыклар</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
