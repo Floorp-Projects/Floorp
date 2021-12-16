@@ -142,6 +142,10 @@ ProxyAutoConfigChild::~ProxyAutoConfigChild() {
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
     const nsCString& aPACURI, const nsCString& aPACScriptData,
     const bool& aIncludePath, const uint32_t& aExtraHeapSize) {
+  if (!mPAC) {
+    return IPC_OK();
+  }
+
   mPAC->ConfigurePAC(aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize,
                      GetMainThreadSerialEventTarget());
   return IPC_OK();
@@ -150,24 +154,41 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
     const nsCString& aTestURI, const nsCString& aTestHost,
     GetProxyForURIResolver&& aResolver) {
-  // When PAC is waiting for DNS result, we need to wait.
-  if (mPAC->WaitingForDNSResolve()) {
-    RefPtr<ProxyAutoConfigChild> self = this;
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "ProxyAutoConfigChild::RecvGetProxyForURI",
-        [self, testURI(aTestURI), testHost(aTestHost),
-         resolver{std::move(aResolver)}]() mutable {
-          self->RecvGetProxyForURI(testURI, testHost, std::move(resolver));
-        }));
+  if (!mPAC) {
     return IPC_OK();
   }
-  nsCString result;
-  nsresult rv = mPAC->GetProxyForURI(aTestURI, aTestHost, result);
-  aResolver(Tuple<const nsresult&, const nsCString&>(rv, result));
+
+  RefPtr<ProxyAutoConfigChild> self = this;
+  auto callResolver = [self, testURI(aTestURI), testHost(aTestHost),
+                       resolver{std::move(aResolver)}]() {
+    if (!self->CanSend()) {
+      return;
+    }
+
+    if (!self->mPAC) {
+      MOZ_ASSERT(false, "Should not happen");
+      return;
+    }
+
+    nsCString result;
+    nsresult rv = self->mPAC->GetProxyForURI(testURI, testHost, result);
+    resolver(Tuple<const nsresult&, const nsCString&>(rv, result));
+  };
+  if (mPAC->WaitingForDNSResolve()) {
+    mPAC->RegisterDNSResolveCallback(
+        [resolverCallback{std::move(callResolver)}]() { resolverCallback(); });
+    return IPC_OK();
+  }
+
+  callResolver();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGC() {
+  if (!mPAC) {
+    return IPC_OK();
+  }
+
   mPAC->GC();
   return IPC_OK();
 }
