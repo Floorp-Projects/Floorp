@@ -678,10 +678,12 @@ VIRTUAL_CALL_CLASSES = set(
         ("PPluginBackgroundDestroyer", "parent"),
         ("PRemotePrintJob", "child"),
         ("PRemotePrintJob", "parent"),
-        # PRemotePrintJob, PPrinting and PPrintSettingsDialog
+        # PRemotePrintJob, PPrinting, PPrintProgressDialog and PPrintSettingsDialog
         # need to be virtual for --disable-printing builds.
         ("PPrinting", "child"),
         ("PPrinting", "parent"),
+        ("PPrintProgressDialog", "child"),
+        ("PPrintProgressDialog", "parent"),
         ("PPrintSettingsDialog", "child"),
         ("PPrintSettingsDialog", "parent"),
         ("PQuota", "child"),

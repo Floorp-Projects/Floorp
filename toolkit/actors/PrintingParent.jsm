@@ -33,6 +33,7 @@ class PrintingParent extends JSWindowActorParent {
       return undefined;
     }
 
+    let listener = PrintUtils._webProgressPP?.value;
     let data = message.data;
 
     switch (message.name) {
@@ -67,11 +68,29 @@ class PrintingParent extends JSWindowActorParent {
       }
 
       case "Printing:Preview:ProgressChange": {
-        // nothing to do now we don't implement a print progress dialog
-        return undefined;
+        if (!PrintUtils._webProgressPP.value) {
+          // We somehow didn't get a nsIWebProgressListener to be updated...
+          // I guess there's nothing to do.
+          return undefined;
+        }
+
+        return listener.onProgressChange(
+          null,
+          null,
+          data.curSelfProgress,
+          data.maxSelfProgress,
+          data.curTotalProgress,
+          data.maxTotalProgress
+        );
       }
 
       case "Printing:Preview:StateChange": {
+        if (!PrintUtils._webProgressPP.value) {
+          // We somehow didn't get a nsIWebProgressListener to be updated...
+          // I guess there's nothing to do.
+          return undefined;
+        }
+
         if (data.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           // Strangely, the printing engine sends 2 STATE_STOP messages when
           // print preview is finishing. One has the STATE_IS_DOCUMENT flag,
@@ -85,8 +104,7 @@ class PrintingParent extends JSWindowActorParent {
           printPreviewTB.disableUpdateTriggers(false);
         }
 
-        // nothing else to do now we don't implement a print progress dialog
-        return undefined;
+        return listener.onStateChange(null, null, data.stateFlags, data.status);
       }
     }
 

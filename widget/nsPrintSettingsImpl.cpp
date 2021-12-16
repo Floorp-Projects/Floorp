@@ -28,6 +28,7 @@ nsPrintSettings::nsPrintSettings()
       mSaveOnCancel(true),
       mPrintSilent(false),
       mShrinkToFit(true),
+      mShowPrintProgress(true),
       mShowMarginGuides(false),
       mHonorPageRuleMargins(true),
       mIsPrintSelectionRBEnabled(false),
@@ -541,6 +542,16 @@ NS_IMETHODIMP nsPrintSettings::SetShrinkToFit(bool aShrinkToFit) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPrintSettings::GetShowPrintProgress(bool* aShowPrintProgress) {
+  NS_ENSURE_ARG_POINTER(aShowPrintProgress);
+  *aShowPrintProgress = mShowPrintProgress;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetShowPrintProgress(bool aShowPrintProgress) {
+  mShowPrintProgress = aShowPrintProgress;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrintSettings::GetShowMarginGuides(bool* aShowMarginGuides) {
   *aShowMarginGuides = mShowMarginGuides;
   return NS_OK;
@@ -936,6 +947,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mSaveOnCancel = rhs.mSaveOnCancel;
   mPrintSilent = rhs.mPrintSilent;
   mShrinkToFit = rhs.mShrinkToFit;
+  mShowPrintProgress = rhs.mShowPrintProgress;
   mShowMarginGuides = rhs.mShowMarginGuides;
   mHonorPageRuleMargins = rhs.mHonorPageRuleMargins;
   mIsPrintSelectionRBEnabled = rhs.mIsPrintSelectionRBEnabled;
