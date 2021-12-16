@@ -276,19 +276,22 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
     // A capture was requested, let's attempt to do it here&now. This avoids a
     // lot of allocations that would be necessary if capturing a backtrace
     // separately.
-    // TODO use a local on-stack byte buffer to remove last allocation.
     // TODO reduce internal profiler stack levels, see bug 1659872.
+    auto CaptureStackAndAddMarker = [&](ProfileChunkedBuffer& aChunkedBuffer) {
+      aOptions.StackRef().UseRequestedBacktrace(
+          aBacktraceCaptureFunction(aChunkedBuffer, captureOptions)
+              ? &aChunkedBuffer
+              : nullptr);
+      // This call must be made from here, while chunkedBuffer is in scope.
+      return AddMarkerWithOptionalStackToBuffer<MarkerType>(
+          aBuffer, aName, aCategory, std::move(aOptions), aTs...);
+    };
+    // TODO use a local on-stack byte buffer to remove last allocation.
     ProfileBufferChunkManagerSingle chunkManager(
         ProfileBufferChunkManager::scExpectedMaximumStackSize);
     ProfileChunkedBuffer chunkedBuffer(
         ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
-    aOptions.StackRef().UseRequestedBacktrace(
-        aBacktraceCaptureFunction(chunkedBuffer, captureOptions)
-            ? &chunkedBuffer
-            : nullptr);
-    // This call must be made from here, while chunkedBuffer is in scope.
-    return AddMarkerWithOptionalStackToBuffer<MarkerType>(
-        aBuffer, aName, aCategory, std::move(aOptions), aTs...);
+    return CaptureStackAndAddMarker(chunkedBuffer);
   }
 
   return AddMarkerWithOptionalStackToBuffer<MarkerType>(
