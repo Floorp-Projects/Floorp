@@ -6,7 +6,34 @@
 
 var gMoreFromMozillaPane = {
   initialized: false,
-  option: null,
+
+  /**
+   * "default" is whatever template is the default, as defined by the code
+   * in this file (currently in `getTemplateName`).  Setting option to an
+   * invalid value will leave it unchanged.
+   */
+  _option: "default",
+  set option(value) {
+    if (!value) {
+      this._option = "default";
+      return;
+    }
+
+    if (value === "default" || value === "simple" || value === "advanced") {
+      this._option = value;
+    }
+  },
+
+  get option() {
+    return this._option;
+  },
+
+  getTemplateName() {
+    if (!this._option || this._option == "default") {
+      return "simple";
+    }
+    return this._option;
+  },
 
   getURL(url, option) {
     const URL_PARAMS = {
@@ -17,6 +44,7 @@ var gMoreFromMozillaPane = {
     // UTM content param used in analytics to record
     // UI template used to open URL
     const utm_content = {
+      default: "fxvt-default",
       simple: "fxvt-113-a-na",
       advanced: "fxvt-113-b-na",
     };
@@ -83,10 +111,10 @@ var gMoreFromMozillaPane = {
       "moreFromMozillaCategory"
     );
     let frag = document.createDocumentFragment();
-    this._template = document.getElementById(this.option || "simple");
+    this._template = document.getElementById(this.getTemplateName());
 
     // Exit when internal data is incomplete
-    if (!this._template || !this.option) {
+    if (!this._template) {
       return;
     }
 
@@ -157,7 +185,11 @@ var gMoreFromMozillaPane = {
         );
 
         let img = template.querySelector(".qr-code-box-image");
-        img.src = product.qrcode.image_src_prefix + "-" + this.option + ".svg";
+        img.src =
+          product.qrcode.image_src_prefix +
+          "-" +
+          this.getTemplateName() +
+          ".svg";
 
         // Note that the QR code image itself is _not_ a link; this is a link that
         // is directly below the image.

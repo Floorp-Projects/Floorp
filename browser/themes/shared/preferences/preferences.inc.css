@@ -1274,6 +1274,16 @@ richlistitem .text-link:hover {
   min-height: 200px;
 }
 
+#moreFromMozillaCategory .text-link {
+  font-size: .87em;
+  line-height: 1.4em;
+
+  text-decoration: underline;
+
+  margin-block: 2px 0;
+  margin-inline: 6px 0;
+}
+
 #moreFromMozillaCategory .simple .text-link {
   display: block;
   margin-inline-start: 4px;
@@ -1392,17 +1402,6 @@ richlistitem .text-link:hover {
   margin-inline: 16px;
   padding-block-start: 30px;
 }
-
-#moreFromMozillaCategory #simple-fxMobile,#advanced-fxMobile {
-  font-size: .87em;
-  line-height: 1.4em;
-
-  text-decoration: underline;
-
-  margin-block: 2px 0;
-  margin-inline: 6px 0;
-}
-
 
 @media (prefers-color-scheme: dark) {
   .qr-code-box:not([hidden="true"]) {

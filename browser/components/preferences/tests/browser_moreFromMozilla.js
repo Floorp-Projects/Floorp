@@ -33,7 +33,7 @@ add_task(async function testwhenPrefDisabled() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(async function testwhenPrefEnabled() {
+add_task(async function testwhenPrefEnabledWithoutTemplatePref() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.moreFromMozilla", true]],
   });
@@ -48,6 +48,9 @@ add_task(async function testwhenPrefEnabled() {
   );
   ok(moreFromMozillaCategory, "The category exists");
   ok(!moreFromMozillaCategory.hidden, "The category is not hidden");
+
+  let productCard = doc.querySelector("vbox.list-item");
+  ok(productCard, "productCard found");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
