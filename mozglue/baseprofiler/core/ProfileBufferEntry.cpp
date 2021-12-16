@@ -1210,10 +1210,10 @@ bool ProfileBuffer::DuplicateLastSample(BaseProfilerThreadId aThreadId,
   }
 
   ProfileChunkedBuffer tempBuffer(
-      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, WorkerChunkManager());
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, mWorkerChunkManager);
 
   auto retrieveWorkerChunk = MakeScopeExit(
-      [&]() { WorkerChunkManager().Reset(tempBuffer.GetAllChunks()); });
+      [&]() { mWorkerChunkManager.Reset(tempBuffer.GetAllChunks()); });
 
   const bool ok = mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
     MOZ_ASSERT(aReader,

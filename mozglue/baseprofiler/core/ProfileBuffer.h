@@ -135,17 +135,10 @@ class ProfileBuffer final {
   // - Adding JIT info.
   // - Streaming stacks to JSON.
   // Mutable because it's accessed from non-multithreaded const methods.
-  mutable Maybe<ProfileBufferChunkManagerSingle> mMaybeWorkerChunkManager;
-  ProfileBufferChunkManagerSingle& WorkerChunkManager() const {
-    if (mMaybeWorkerChunkManager.isNothing()) {
-      // Only actually allocate it on first use. (Some ProfileBuffers are
-      // temporary and don't actually need this.)
-      mMaybeWorkerChunkManager.emplace(
+  mutable ProfileBufferChunkManagerSingle mWorkerChunkManager{
+      ProfileBufferChunk::Create(
           ProfileBufferChunk::SizeofChunkMetadata() +
-          ProfileBufferChunkManager::scExpectedMaximumStackSize);
-    }
-    return *mMaybeWorkerChunkManager;
-  }
+          ProfileBufferChunkManager::scExpectedMaximumStackSize)};
 
   // Time from launch (us) when first sampling was recorded.
   double mFirstSamplingTimeUs = 0.0;
