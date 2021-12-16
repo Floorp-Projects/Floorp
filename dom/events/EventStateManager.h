@@ -126,9 +126,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll
    * event and eLegacyMousePixelScroll event for compatibility with old Gecko.
    */
-  void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
-                                       WidgetWheelEvent* aEvent,
-                                       nsEventStatus* aStatus);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchLegacyMouseScrollEvents(
+      nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent, nsEventStatus* aStatus);
 
   void NotifyDestroyPresContext(nsPresContext* aPresContext);
   void SetPresContext(nsPresContext* aPresContext);
@@ -767,9 +766,11 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aDelta              The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
-  void SendLineScrollEvent(nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
-                           EventState& aState, int32_t aDelta,
-                           DeltaDirection aDeltaDirection);
+  MOZ_CAN_RUN_SCRIPT void SendLineScrollEvent(nsIFrame* aTargetFrame,
+                                              WidgetWheelEvent* aEvent,
+                                              EventState& aState,
+                                              int32_t aDelta,
+                                              DeltaDirection aDeltaDirection);
 
   /**
    * SendPixelScrollEvent() dispatches a MozMousePixelScroll event for the
@@ -784,9 +785,11 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aPixelDelta         The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
-  void SendPixelScrollEvent(nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
-                            EventState& aState, int32_t aPixelDelta,
-                            DeltaDirection aDeltaDirection);
+  MOZ_CAN_RUN_SCRIPT void SendPixelScrollEvent(nsIFrame* aTargetFrame,
+                                               WidgetWheelEvent* aEvent,
+                                               EventState& aState,
+                                               int32_t aPixelDelta,
+                                               DeltaDirection aDeltaDirection);
 
   /**
    * ComputeScrollTargetAndMayAdjustWheelEvent() returns the scrollable frame
