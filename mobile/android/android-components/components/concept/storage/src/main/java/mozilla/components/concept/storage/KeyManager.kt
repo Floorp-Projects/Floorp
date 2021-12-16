@@ -48,7 +48,7 @@ abstract class KeyManager : KeyProvider {
      */
     abstract suspend fun recoverFromKeyLoss(reason: KeyGenerationReason.RecoveryNeeded)
 
-    override suspend fun getOrGenerateKey(): ManagedKey = keyMutex.withLock(this) {
+    override suspend fun getOrGenerateKey(): ManagedKey = keyMutex.withLock {
         val managedKey = getManagedKey()
 
         (managedKey.wasGenerated as? KeyGenerationReason.RecoveryNeeded)?.let {
