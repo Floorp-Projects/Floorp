@@ -1220,3 +1220,19 @@ def enable_new_set_methods(value):
 
 set_config("ENABLE_NEW_SET_METHODS", enable_new_set_methods)
 set_define("ENABLE_NEW_SET_METHODS", enable_new_set_methods)
+
+
+@depends(milestone.version)
+def js_version(version):
+    return Version(version)
+
+
+set_config("MOZJS_MAJOR_VERSION", depends(js_version.major)(lambda m: str(m)))
+set_define("MOZJS_MAJOR_VERSION", js_version.major)
+set_config("MOZJS_MINOR_VERSION", depends(js_version.minor)(lambda m: str(m)))
+set_define("MOZJS_MINOR_VERSION", js_version.minor)
+set_config("MOZJS_PATCH_VERSION", depends(js_version.patch)(lambda p: str(p)))
+set_config(
+    "MOZJS_ALPHA",
+    depends(js_version)(lambda x: x.version[-2] if x.version[-2] in "ab" else None),
+)

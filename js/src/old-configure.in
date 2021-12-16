@@ -186,27 +186,6 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
-# Separate version into components for use in shared object naming etc
-changequote(,)
-MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
-MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
-MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
-IS_ALPHA=`echo $MOZILLA_VERSION | grep '[ab]'`
-
-changequote([,])
-if test -n "$IS_ALPHA"; then
-  changequote(,)
-  MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
-  changequote([,])
-fi
-AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,$MOZJS_MAJOR_VERSION)
-AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,$MOZJS_MINOR_VERSION)
-AC_SUBST(MOZJS_MAJOR_VERSION)
-AC_SUBST(MOZJS_MINOR_VERSION)
-AC_SUBST(MOZJS_PATCH_VERSION)
-AC_SUBST(MOZJS_ALPHA)
-
-
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
