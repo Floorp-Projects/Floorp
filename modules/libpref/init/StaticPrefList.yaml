@@ -7788,6 +7788,12 @@
   value: false
   mirror: always
 
+# Throttled frame rate, in frames per second.
+- name: layout.throttled_frame_rate
+  type: uint32_t
+  value: 1
+  mirror: always
+
 - name: layout.lower_priority_refresh_driver_during_load
   type: bool
   value: true
@@ -7957,6 +7963,11 @@
 - name: layout.outline.include-overflow
   type: bool
   value: false
+  mirror: always
+
+- name: layout.visibility.min-recompute-interval-ms
+  type: uint32_t
+  value: 1000
   mirror: always
 
 # Controls double click and Alt+Arrow word selection behavior.
