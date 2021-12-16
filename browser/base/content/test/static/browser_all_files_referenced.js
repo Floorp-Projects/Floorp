@@ -107,7 +107,7 @@ var whitelist = [
   },
   {
     file: "resource://gre/localization/en-US/toolkit/printing/printDialogs.ftl",
-    platforms: ["macosx"],
+    platforms: ["linux", "macosx"],
   },
 
   // toolkit/content/aboutRights-unbranded.xhtml doesn't use aboutRights.css

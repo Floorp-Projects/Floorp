@@ -4,19 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_SOURCES += [
-    "nsIPrintProgress.idl",
-    "nsIPrintProgressParams.idl",
-]
-
 EXPORTS.mozilla.layout += [
     "ipc/RemotePrintJobChild.h",
     "ipc/RemotePrintJobParent.h",
 ]
 
 EXPORTS.mozilla.layout.printing += ["DrawEventRecorder.h"]
-
-XPIDL_MODULE = "layout_printing"
 
 UNIFIED_SOURCES += [
     "DrawEventRecorder.cpp",

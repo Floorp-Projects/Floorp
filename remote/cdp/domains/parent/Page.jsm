@@ -576,7 +576,6 @@ class Page extends Domain {
     printSettings.printerName = "";
     printSettings.printSilent = true;
     printSettings.printToFile = true;
-    printSettings.showPrintProgress = false;
     printSettings.toFileName = filePath;
 
     printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;

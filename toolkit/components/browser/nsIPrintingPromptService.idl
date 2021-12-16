@@ -8,7 +8,6 @@
 #include "nsISupports.idl"
 #include "nsIWebBrowserPrint.idl"
 #include "nsIWebProgressListener.idl"
-#include "nsIPrintProgressParams.idl"
 #include "nsIPrintSettings.idl"
 #include "nsIObserver.idl"
 
@@ -34,7 +33,6 @@ interface nsIPrintingPromptService : nsISupports
    *
    *           Defaults for platform service:
    *             showPrintDialog           - displays a native dialog
-   *             showPrintProgressDialog   - displays a XUL dialog
    *             showPageSetupDialog       - displays a XUL dialog
    *
    *           Summary for Windows Embedders:
@@ -67,14 +65,12 @@ interface nsIPrintingPromptService : nsISupports
    *       The toolkit will display the native print dialog.
    *
    *       Mac OSX: showPrintDialog           - displays a native dialog
-   *                showPrintProgressDialog   - not implemented (provided by OS)
    *                showPageSetupDialog       - displays a native dialog
    *
    *  GTK: There are no native dialog for GTK.
    *
    *       Defaults for platform service:
    *         showPrintDialog           - displays a native dialog
-   *         showPrintProgressDialog   - displays a XUL dialog
    *         showPageSetupDialog       - displays a native dialog
    *
    */
@@ -91,28 +87,6 @@ interface nsIPrintingPromptService : nsISupports
    */
   void showPrintDialog(in mozIDOMWindowProxy parent,
                        in nsIPrintSettings printSettings);
-
-  /**
-   *  Shows the print progress dialog
-   *
-   *  @param parent - a DOM windows the dialog will be parented to
-   *  @param printSettings - PrintSettings for print "job"
-   *  @param openDialogObserver - an observer that will be notifed when the dialog is opened
-   *  @param isForPrinting - true - for printing, false for print preview
-   *  @param webProgressListener - additional listener can be registered for progress notifications
-   *  @param printProgressParams - parameter object for passing progress state
-   *  @param notifyOnOpen - this indicates that the observer will be notified when the progress
-   *                        dialog has been opened. If false is returned it means the observer
-   *                        (usually the caller) shouldn't wait
-   *                        For Print Preview Progress there is intermediate progress
-   */
-  void showPrintProgressDialog(in mozIDOMWindowProxy parent,
-                               in nsIPrintSettings printSettings,
-                               in nsIObserver openDialogObserver,
-                               in boolean isForPrinting,
-                               out nsIWebProgressListener webProgressListener,
-                               out nsIPrintProgressParams printProgressParams,
-                               out boolean notifyOnOpen);
 
   /**
    *  Shows the print page setup dialog
