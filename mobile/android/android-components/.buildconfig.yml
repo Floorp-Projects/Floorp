@@ -460,3 +460,8 @@ projects:
     description: 'A Gradle plugin to generate code for Glean metrics.'
     publish: true
     artifact-type: jar
+  tooling-nimbus-gradle:
+    path: components/tooling/nimbus-gradle-plugin
+    description: 'A Gradle plugin to generate code for the Nimbus Feature API.'
+    publish: true
+    artifact-type: jar

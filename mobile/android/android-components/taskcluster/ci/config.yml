@@ -113,6 +113,7 @@ treeherder:
         tooling-detekt: tooling-detekt
         tooling-fetch-tests: tooling-fetch-tests
         tooling-glean-gradle: tooling-glean-gradle
+        tooling-nimbus-gradle: tooling-nimbus-gradle
         tooling-lint: tooling-lint
         ui-autocomplete: ui-autocomplete
         ui-colors: ui-colors
