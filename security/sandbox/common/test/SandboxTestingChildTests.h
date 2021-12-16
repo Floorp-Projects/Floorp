@@ -258,6 +258,12 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return uname(&uts);
   });
 
+  child->ErrnoValueTest("ioctl_dma_buf"_ns, false, ENOTTY, [] {
+    // Apply the ioctl to the wrong kind of fd; it should fail with
+    // ENOTTY (rather than ENOSYS if it were blocked).
+    return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
+  });
+
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
