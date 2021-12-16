@@ -9,10 +9,10 @@
 add_task(async function test_type_website() {
   await verifyPageData(
     `
+      <!DOCTYPE html>
       <html>
       <head>
         <title>Internet for people, not profit — Mozilla</title>
-        <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="Mozilla">
         <meta property="og:url" content="https://www.mozilla.org/">
@@ -40,6 +40,7 @@ add_task(async function test_type_website() {
 add_task(async function test_type_movie() {
   await verifyPageData(
     `
+      <!DOCTYPE html>
       <html>
       <head>
         <title>Code Rush (TV Movie 2000)</title>
