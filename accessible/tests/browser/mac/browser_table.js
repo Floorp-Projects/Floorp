@@ -522,3 +522,91 @@ addAccessibleTask(
     );
   }
 );
+
+/*
+ * thead/tbody elements with click handlers should:
+ * (a) render as AXGroup elements
+ * (b) expose their rows as part of their parent table's AXRows array
+ */
+addAccessibleTask(
+  `<table id="table">
+    <thead id="thead">
+      <tr><td>head row</td></tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td>body row</td></tr>
+      <tr><td>another body row</td></tr>
+    </tbody>
+  </table>`,
+  async (browser, accDoc) => {
+    let table = getNativeInterface(accDoc, "table");
+
+    // No click handlers present on thead/tbody
+    let tableChildren = table.getAttributeValue("AXChildren");
+    let tableRows = table.getAttributeValue("AXRows");
+
+    is(tableChildren.length, 4, "Table has four children (3 row + 1 col)");
+    is(tableRows.length, 3, "Table has three rows");
+
+    for (let i = 0; i < tableChildren.length; i++) {
+      const child = tableChildren[i];
+      if (i < 3) {
+        is(
+          child.getAttributeValue("AXRole"),
+          "AXRow",
+          "Table's first 3 children are rows"
+        );
+      } else {
+        is(
+          child.getAttributeValue("AXRole"),
+          "AXColumn",
+          "Table's last child is a column"
+        );
+      }
+    }
+    const reorder = waitForEvent(EVENT_REORDER);
+    await invokeContentTask(browser, [], () => {
+      const head = content.document.getElementById("thead");
+      const body = content.document.getElementById("tbody");
+
+      head.addEventListener("click", function() {});
+      body.addEventListener("click", function() {});
+    });
+    await reorder;
+
+    // Click handlers present
+    tableChildren = table.getAttributeValue("AXChildren");
+
+    is(tableChildren.length, 3, "Table has three children (2 groups + 1 col)");
+    is(
+      tableChildren[0].getAttributeValue("AXRole"),
+      "AXGroup",
+      "Child one is a group"
+    );
+    is(
+      tableChildren[0].getAttributeValue("AXChildren").length,
+      1,
+      "Child one has one child"
+    );
+
+    is(
+      tableChildren[1].getAttributeValue("AXRole"),
+      "AXGroup",
+      "Child two is a group"
+    );
+    is(
+      tableChildren[1].getAttributeValue("AXChildren").length,
+      2,
+      "Child two has two children"
+    );
+
+    is(
+      tableChildren[2].getAttributeValue("AXRole"),
+      "AXColumn",
+      "Child three is a col"
+    );
+
+    tableRows = table.getAttributeValue("AXRows");
+    is(tableRows.length, 3, "Table has three rows");
+  }
+);
