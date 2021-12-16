@@ -382,6 +382,27 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   nscoord HScrollbarMinWidth() const { return mHScrollbarMinSize.width; }
   nscoord HScrollbarPrefHeight() const { return mHScrollbarPrefSize.height; }
 
+  // Returns the sizes occupied by the scrollbar gutters. If aShowVScroll or
+  // aShowHScroll is true, the sizes occupied by the scrollbars are also
+  // included.
+  nsMargin ScrollbarGutter(bool aShowVScrollbar, bool aShowHScrollbar,
+                           bool aScrollbarOnRight) const {
+    nsMargin gutter = mScrollbarGutter;
+    if (aShowVScrollbar && gutter.right == 0 && gutter.left == 0) {
+      const nscoord w = VScrollbarPrefWidth();
+      if (aScrollbarOnRight) {
+        gutter.right = w;
+      } else {
+        gutter.left = w;
+      }
+    }
+    if (aShowHScrollbar && gutter.bottom == 0) {
+      // The horizontal scrollbar is always at the bottom side.
+      gutter.bottom = HScrollbarPrefHeight();
+    }
+    return gutter;
+  }
+
  private:
   // Filled in by the constructor. Put variables here to keep them unchanged
   // after initializing them in the constructor.
@@ -389,6 +410,7 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   nsSize mVScrollbarPrefSize;
   nsSize mHScrollbarMinSize;
   nsSize mHScrollbarPrefSize;
+  nsMargin mScrollbarGutter;
 };
 
 ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
@@ -439,6 +461,33 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
     mHScrollbarAllowedForScrollingVVInsideLV = false;
     mVScrollbar = ShowScrollbar::Never;
     mVScrollbarAllowedForScrollingVVInsideLV = false;
+  } else if (const auto& scrollbarGutterStyle =
+                 scrollbarStyle->StyleDisplay()->mScrollbarGutter) {
+    const auto stable =
+        bool(scrollbarGutterStyle & StyleScrollbarGutter::STABLE);
+    const auto bothEdges =
+        bool(scrollbarGutterStyle & StyleScrollbarGutter::BOTH_EDGES);
+
+    if (mReflowInput.GetWritingMode().IsVertical()) {
+      const nscoord h = HScrollbarPrefHeight();
+      if (bothEdges) {
+        mScrollbarGutter.top = mScrollbarGutter.bottom = h;
+      } else if (stable) {
+        // The horizontal scrollbar gutter is always at the bottom side.
+        mScrollbarGutter.bottom = h;
+      }
+    } else {
+      const nscoord w = VScrollbarPrefWidth();
+      if (bothEdges) {
+        mScrollbarGutter.left = mScrollbarGutter.right = w;
+      } else if (stable) {
+        if (aFrame->IsScrollbarOnRight()) {
+          mScrollbarGutter.right = w;
+        } else {
+          mScrollbarGutter.left = w;
+        }
+      }
+    }
   }
 }
 
@@ -524,28 +573,17 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
     ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics);
   }
 
-  // Bug 1715112: Consider the space occupied by scrollbar-gutter in this
-  // variable.
-  nsMargin scrollbarOrGutterSpace;
-  if (aAssumeVScroll) {
-    if (IsScrollbarOnRight()) {
-      scrollbarOrGutterSpace.right = aState.VScrollbarPrefWidth();
-    } else {
-      scrollbarOrGutterSpace.left = aState.VScrollbarPrefWidth();
-    }
-  }
-  if (aAssumeHScroll) {
-    scrollbarOrGutterSpace.bottom = aState.HScrollbarPrefHeight();
-  }
-  const nsSize scrollbarOrGutterSize(scrollbarOrGutterSpace.LeftRight(),
-                                     scrollbarOrGutterSpace.TopBottom());
+  const nsMargin scrollbarGutter = aState.ScrollbarGutter(
+      aAssumeVScroll, aAssumeHScroll, IsScrollbarOnRight());
+  const nsSize scrollbarGutterSize(scrollbarGutter.LeftRight(),
+                                   scrollbarGutter.TopBottom());
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
   nsSize kidSize = aState.mReflowInput.mStyleDisplay->IsContainSize()
                        ? nsSize(0, 0)
                        : aKidMetrics->PhysicalSize();
-  const nsSize desiredInsideBorderSize = kidSize + scrollbarOrGutterSize;
+  const nsSize desiredInsideBorderSize = kidSize + scrollbarGutterSize;
   aState.mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
 
@@ -554,10 +592,10 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
                           : aState.mInsideBorderSize;
 
   const nsSize scrollPortSize =
-      Max(nsSize(0, 0), layoutSize - scrollbarOrGutterSize);
+      Max(nsSize(0, 0), layoutSize - scrollbarGutterSize);
   if (mHelper.mIsUsingMinimumScaleSize) {
     mHelper.mICBSize =
-        Max(nsSize(0, 0), aState.mInsideBorderSize - scrollbarOrGutterSize);
+        Max(nsSize(0, 0), aState.mInsideBorderSize - scrollbarGutterSize);
   }
 
   nsSize visualViewportSize = scrollPortSize;
@@ -574,7 +612,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
     visualViewportSize = nsLayoutUtils::CalculateCompositionSizeForFrame(
         this, false, &layoutSize);
     visualViewportSize =
-        Max(nsSize(0, 0), visualViewportSize - scrollbarOrGutterSize);
+        Max(nsSize(0, 0), visualViewportSize - scrollbarGutterSize);
 
     float resolution = presShell->GetResolution();
     visualViewportSize.width /= resolution;
@@ -654,8 +692,8 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
   aState.mShowHScrollbar = aAssumeHScroll;
   aState.mShowVScrollbar = aAssumeVScroll;
   const nsPoint scrollPortOrigin(
-      aState.mComputedBorder.left + scrollbarOrGutterSpace.left,
-      aState.mComputedBorder.top + scrollbarOrGutterSpace.top);
+      aState.mComputedBorder.left + scrollbarGutter.left,
+      aState.mComputedBorder.top + scrollbarGutter.top);
   mHelper.SetScrollPort(nsRect(scrollPortOrigin, scrollPortSize));
 
   if (mHelper.mIsRoot && gfxPlatform::UseDesktopZoomingScrollbars()) {
@@ -731,35 +769,21 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput& aState,
     computedMaxBSize = NS_UNCONSTRAINEDSIZE;
   }
 
-  if (wm.IsVertical()) {
-    if (aAssumeVScroll) {
-      const nscoord vScrollbarPrefWidth = aState.VScrollbarPrefWidth();
-      if (computedBSize != NS_UNCONSTRAINEDSIZE) {
-        computedBSize = std::max(0, computedBSize - vScrollbarPrefWidth);
-      }
-      computedMinBSize = std::max(0, computedMinBSize - vScrollbarPrefWidth);
-      if (computedMaxBSize != NS_UNCONSTRAINEDSIZE) {
-        computedMaxBSize = std::max(0, computedMaxBSize - vScrollbarPrefWidth);
-      }
+  const LogicalMargin scrollbarGutter(
+      wm, aState.ScrollbarGutter(aAssumeVScroll, aAssumeHScroll,
+                                 IsScrollbarOnRight()));
+  if (const nscoord inlineEndsGutter = scrollbarGutter.IStartEnd(wm);
+      inlineEndsGutter > 0) {
+    availISize = std::max(0, availISize - inlineEndsGutter);
+  }
+  if (const nscoord blockEndsGutter = scrollbarGutter.BStartEnd(wm);
+      blockEndsGutter > 0) {
+    if (computedBSize != NS_UNCONSTRAINEDSIZE) {
+      computedBSize = std::max(0, computedBSize - blockEndsGutter);
     }
-
-    if (aAssumeHScroll) {
-      availISize = std::max(0, availISize - aState.HScrollbarPrefHeight());
-    }
-  } else {
-    if (aAssumeHScroll) {
-      const nscoord hScrollbarPrefHeight = aState.HScrollbarPrefHeight();
-      if (computedBSize != NS_UNCONSTRAINEDSIZE) {
-        computedBSize = std::max(0, computedBSize - hScrollbarPrefHeight);
-      }
-      computedMinBSize = std::max(0, computedMinBSize - hScrollbarPrefHeight);
-      if (computedMaxBSize != NS_UNCONSTRAINEDSIZE) {
-        computedMaxBSize = std::max(0, computedMaxBSize - hScrollbarPrefHeight);
-      }
-    }
-
-    if (aAssumeVScroll) {
-      availISize = std::max(0, availISize - aState.VScrollbarPrefWidth());
+    computedMinBSize = std::max(0, computedMinBSize - blockEndsGutter);
+    if (computedMaxBSize != NS_UNCONSTRAINEDSIZE) {
+      computedMaxBSize = std::max(0, computedMaxBSize - blockEndsGutter);
     }
   }
 
@@ -5417,6 +5441,15 @@ auto ScrollFrameHelper::GetNeededAnonymousContent() const
     }
     if (styles.mVertical != StyleOverflow::Hidden) {
       result += AnonymousContentType::VerticalScrollbar;
+    }
+
+    // If we have scrollbar-gutter, construct the scrollbar frames to query its
+    // size to reserve the gutter space at the inline start or end edges.
+    if (mOuter->StyleDisplay()->mScrollbarGutter &
+        StyleScrollbarGutter::STABLE) {
+      result += mOuter->GetWritingMode().IsVertical()
+                    ? AnonymousContentType::HorizontalScrollbar
+                    : AnonymousContentType::VerticalScrollbar;
     }
   }
 
