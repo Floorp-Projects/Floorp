@@ -2600,10 +2600,9 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aDelta;
   event.mInputSource = aEvent->mInputSource;
 
-  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
-                            &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
+                            nullptr, &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
@@ -2639,10 +2638,9 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aPixelDelta;
   event.mInputSource = aEvent->mInputSource;
 
-  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
-                            &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
+                            nullptr, &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
@@ -3186,8 +3184,6 @@ void EventStateManager::PostHandleKeyboardEvent(
     return;
   }
 
-  RefPtr<nsPresContext> presContext = mPresContext;
-
   if (!aKeyboardEvent->HasBeenPostedToRemoteProcess()) {
     if (aKeyboardEvent->IsWaitingReplyFromRemoteProcess()) {
       RefPtr<BrowserParent> remote =
@@ -3212,8 +3208,8 @@ void EventStateManager::PostHandleKeyboardEvent(
         // process due to the remote browser wasn't ready.
         WidgetKeyboardEvent keyEvent(*aKeyboardEvent);
         aKeyboardEvent->MarkAsHandledInRemoteProcess();
-        RefPtr<Element> ownerElement = remote->GetOwnerElement();
-        EventDispatcher::Dispatch(ownerElement, presContext, &keyEvent);
+        EventDispatcher::Dispatch(remote->GetOwnerElement(), mPresContext,
+                                  &keyEvent);
         if (keyEvent.DefaultPrevented()) {
           aKeyboardEvent->PreventDefault(!keyEvent.DefaultPreventedByContent());
           aStatus = nsEventStatus_eConsumeNoDefault;
@@ -3251,7 +3247,7 @@ void EventStateManager::PostHandleKeyboardEvent(
           break;
         }
 
-        EnsureDocument(presContext);
+        EnsureDocument(mPresContext);
         nsFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && mDocument) {
           // Shift focus forward or back depending on shift key
@@ -4446,8 +4442,7 @@ nsIFrame* EventStateManager::DispatchMouseOrPointerEvent(
 
   nsEventStatus status = nsEventStatus_eIgnore;
   ESMEventCB callback(targetContent);
-  RefPtr<nsPresContext> presContext = mPresContext;
-  EventDispatcher::Dispatch(targetContent, presContext, dispatchEvent.get(),
+  EventDispatcher::Dispatch(targetContent, mPresContext, dispatchEvent.get(),
                             nullptr, &status, &callback);
 
   if (mPresContext) {
@@ -4521,28 +4516,23 @@ class EnterLeaveDispatcher {
     }
   }
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch() {
+  void Dispatch() {
     if (mEventMessage == eMouseEnter || mEventMessage == ePointerEnter) {
       for (int32_t i = mTargets.Count() - 1; i >= 0; --i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          MOZ_KnownLive(mTargets[i]),
-                                          mRelatedTarget);
+                                          mTargets[i], mRelatedTarget);
       }
     } else {
       for (int32_t i = 0; i < mTargets.Count(); ++i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          MOZ_KnownLive(mTargets[i]),
-                                          mRelatedTarget);
+                                          mTargets[i], mRelatedTarget);
       }
     }
   }
 
-  // Nothing overwrites anything after constructor. Please remove MOZ_KnownLive
-  // and MOZ_KNOWN_LIVE if anything marked as such becomes mutable.
-  const RefPtr<EventStateManager> mESM;
+  EventStateManager* mESM;
   nsCOMArray<nsIContent> mTargets;
-  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mRelatedTarget;
+  nsCOMPtr<nsIContent> mRelatedTarget;
   WidgetMouseEvent* mMouseEvent;
   EventMessage mEventMessage;
 };
@@ -4596,9 +4586,8 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                        isPointer ? ePointerLeave : eMouseLeave);
 
   // Fire mouseout
-  nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
   DispatchMouseOrPointerEvent(aMouseEvent, isPointer ? ePointerOut : eMouseOut,
-                              lastOverElement, aMovingInto);
+                              wrapper->mLastOverElement, aMovingInto);
   leaveDispatcher.Dispatch();
 
   wrapper->mLastOverFrame = nullptr;

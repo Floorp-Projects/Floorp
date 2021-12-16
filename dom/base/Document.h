@@ -2348,9 +2348,8 @@ class Document : public nsINode,
   /**
    * Sanitize the document by resetting all input elements and forms that have
    * autocomplete=off to their default values.
-   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Sanitize();
+  void Sanitize();
 
   /**
    * Enumerate all subdocuments.
@@ -3316,9 +3315,7 @@ class Document : public nsINode,
       const nsAString& target, const nsAString& data, ErrorResult& rv) const;
   already_AddRefed<nsINode> ImportNode(nsINode& aNode, bool aDeep,
                                        ErrorResult& rv) const;
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* AdoptNode(nsINode& aNode,
-                                                 ErrorResult& rv);
+  nsINode* AdoptNode(nsINode& aNode, ErrorResult& rv);
   already_AddRefed<Event> CreateEvent(const nsAString& aEventType,
                                       CallerType aCallerType,
                                       ErrorResult& rv) const;
