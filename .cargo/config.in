@@ -35,7 +35,7 @@ rev = "dea28d0c7d9952bbf430701ee244f6a4349c98f1"
 [source."https://github.com/mozilla/audioipc-2"]
 git = "https://github.com/mozilla/audioipc-2"
 replace-with = "vendored-sources"
-rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f"
+rev = "515bb210a93f520642fd3a60f391652680b3e988"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
@@ -60,11 +60,6 @@ rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 git = "https://github.com/kinetiknz/audioipc-2"
 replace-with = "vendored-sources"
 rev = "abd4a0132ea65057b554221c8f112a9bedd33a92"
-
-[source."https://github.com/kinetiknz/ashmem-rs"]
-git = "https://github.com/kinetiknz/ashmem-rs"
-replace-with = "vendored-sources"
-rev = "e47f470a54193532d60057ec54f864e06aeaff36"
 
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"

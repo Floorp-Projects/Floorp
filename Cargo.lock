@@ -117,15 +117,6 @@ dependencies = [
 
 [[package]]
 name = "ashmem"
-version = "0.1.0"
-source = "git+https://github.com/kinetiknz/ashmem-rs?rev=e47f470a54193532d60057ec54f864e06aeaff36#e47f470a54193532d60057ec54f864e06aeaff36"
-dependencies = [
- "ioctl-sys",
- "libc",
-]
-
-[[package]]
-name = "ashmem"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b43da58b19e1c6ffb1859b10766a2049cefa15f613c42dfeab8423701e8b76b6"
@@ -200,9 +191,9 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=470320364f59672c0e1ee60240f2cd15f0e5b52f#470320364f59672c0e1ee60240f2cd15f0e5b52f"
+source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
- "ashmem 0.1.0",
+ "ashmem",
  "audio_thread_priority",
  "bincode",
  "bytes 0.4.12",
@@ -229,7 +220,7 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=470320364f59672c0e1ee60240f2cd15f0e5b52f#470320364f59672c0e1ee60240f2cd15f0e5b52f"
+source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -244,7 +235,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=470320364f59672c0e1ee60240f2cd15f0e5b52f#470320364f59672c0e1ee60240f2cd15f0e5b52f"
+source = "git+https://github.com/mozilla/audioipc-2?rev=515bb210a93f520642fd3a60f391652680b3e988#515bb210a93f520642fd3a60f391652680b3e988"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
@@ -262,7 +253,7 @@ name = "audioipc2"
 version = "0.5.0"
 source = "git+https://github.com/kinetiknz/audioipc-2?rev=abd4a0132ea65057b554221c8f112a9bedd33a92#abd4a0132ea65057b554221c8f112a9bedd33a92"
 dependencies = [
- "ashmem 0.1.1",
+ "ashmem",
  "audio_thread_priority",
  "bincode",
  "bytes 0.4.12",
