@@ -70,6 +70,9 @@ static mozilla::LazyLogModule sPBContext("PBContext");
 // Global count of canonical browsing contexts with the private attribute set
 static uint32_t gNumberOfPrivateContexts = 0;
 
+// Current parent process epoch for parent initiated navigations
+static uint64_t gParentInitiatedNavigationEpoch = 0;
+
 static void IncreasePrivateCount() {
   gNumberOfPrivateContexts++;
   MOZ_LOG(sPBContext, mozilla::LogLevel::Debug,
@@ -2053,6 +2056,8 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
 
   MOZ_ASSERT(!net::SchemeIsJavascript(aLoadState->URI()));
 
+  MOZ_ALWAYS_SUCCEEDS(
+      SetParentInitiatedNavigationEpoch(++gParentInitiatedNavigationEpoch));
   // Note: If successful, this will recurse into StartDocumentLoad and
   // set mCurrentLoad to the DocumentLoadListener instance created.
   // Ideally in the future we will only start loads from here, and we can
