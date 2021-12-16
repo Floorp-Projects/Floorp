@@ -8,6 +8,10 @@
 /* import-globals-from ../../base/content/aboutDialog-appUpdater.js */
 /* global MozXULElement */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
+});
+
 // Constants & Enumeration Values
 const TYPE_PDF = "application/pdf";
 
@@ -1828,10 +1832,6 @@ var gMainPane = {
 
   isBackgroundUpdateUIAvailable() {
     return (
-      Services.prefs.getBoolPref(
-        "app.update.background.scheduling.enabled",
-        false
-      ) &&
       AppConstants.MOZ_UPDATER &&
       AppConstants.MOZ_UPDATE_AGENT &&
       // This UI controls a per-installation pref. It won't necessarily work
@@ -1870,6 +1870,11 @@ var gMainPane = {
       // further user interaction, we prevent the possibility of entering this
       // function a second time while we are still reading.
       backgroundCheckbox.disabled = true;
+
+      // If we haven't already done this, it might result in the effective value
+      // of the Background Update pref changing. Thus, we should do it before
+      // we tell the user what value this pref has.
+      await BackgroundUpdate.ensureExperimentToRolloutTransitionPerformed();
 
       let enabled = await UpdateUtils.readUpdateConfigSetting(prefName);
       backgroundCheckbox.checked = enabled;
