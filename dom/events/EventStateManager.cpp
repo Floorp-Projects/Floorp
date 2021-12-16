@@ -2600,9 +2600,10 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aDelta;
   event.mInputSource = aEvent->mInputSource;
 
+  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
-                            nullptr, &status);
+  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
+                            &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
@@ -2638,9 +2639,10 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aPixelDelta;
   event.mInputSource = aEvent->mInputSource;
 
+  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
-                            nullptr, &status);
+  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
+                            &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
