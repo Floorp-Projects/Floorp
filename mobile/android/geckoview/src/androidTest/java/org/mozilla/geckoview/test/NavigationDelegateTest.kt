@@ -5,6 +5,7 @@
 package org.mozilla.geckoview.test
 
 import android.graphics.Bitmap
+import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.util.Base64
@@ -31,6 +32,7 @@ import org.mozilla.geckoview.GeckoSession.TextInputDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 import org.mozilla.geckoview.test.util.UiThreadUtils
+import kotlin.concurrent.thread
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -2470,6 +2472,45 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.evaluateJS("document.querySelector('#largeLink').href = \"$dataUri\"")
         mainSession.evaluateJS("document.querySelector('#largeLink').click()")
         mainSession.waitForPageStop()
+    }
+
+    @Test
+    @NullDelegate(NavigationDelegate::class)
+    fun loadOnBackgroundThreadNullNavigationDelegate() {
+        thread {
+            // Make sure we're running in a thread without a Looper.
+            assertThat("We should not have a looper.",
+                    Looper.myLooper(), equalTo(null))
+            mainSession.loadTestPath(HELLO_HTML_PATH)
+        }
+
+        mainSession.waitUntilCalled(object : ProgressDelegate {
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page loaded successfully", success, equalTo(true))
+            }
+        })
+    }
+
+    @Test
+    fun loadOnBackgroundThread() {
+        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return GeckoResult.allow()
+            }
+        })
+
+        thread {
+            // Make sure we're running in a thread without a Looper.
+            assertThat("We should not have a looper.",
+                    Looper.myLooper(), equalTo(null))
+            mainSession.loadTestPath(HELLO_HTML_PATH)
+        }
+
+        mainSession.waitUntilCalled(object : ProgressDelegate {
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page loaded successfully", success, equalTo(true))
+            }
+        })
     }
 
     @Test

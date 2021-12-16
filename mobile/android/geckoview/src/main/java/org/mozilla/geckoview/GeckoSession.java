@@ -1829,7 +1829,8 @@ public class GeckoSession {
       return GeckoResult.allow();
     }
 
-    final GeckoResult<AllowOrDeny> result = new GeckoResult<>();
+    // Always run the callback on the UI thread regardless of what thread we were called in.
+    final GeckoResult<AllowOrDeny> result = new GeckoResult<>(ThreadUtils.getUiHandler());
 
     ThreadUtils.runOnUiThread(
         () -> {
