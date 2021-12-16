@@ -2710,7 +2710,8 @@ class FocusBlurEvent : public Runnable {
         mIsRefocus(aIsRefocus),
         mRelatedTarget(aRelatedTarget) {}
 
-  NS_IMETHOD Run() override {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     InternalFocusEvent event(true, mEventMessage);
     event.mFlags.mBubbles = false;
     event.mFlags.mCancelable = false;
@@ -2743,7 +2744,8 @@ class FocusInOutEvent : public Runnable {
         mOriginalFocusedContent(aOriginalFocusedContent),
         mRelatedTarget(aRelatedTarget) {}
 
-  NS_IMETHOD Run() override {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     nsCOMPtr<nsIContent> originalWindowFocus =
         mOriginalFocusedWindow ? mOriginalFocusedWindow->GetFocusedElement()
                                : nullptr;
