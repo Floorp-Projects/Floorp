@@ -279,7 +279,6 @@ interface nsIPrintSettings : nsISupports
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
   attribute boolean printSilent;         /* print without putting up the dialog */
   [infallible] attribute boolean shrinkToFit; /* shrinks content to fit on page */
-  attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
   attribute AString paperId;       /* identifier of paper (not display name) */

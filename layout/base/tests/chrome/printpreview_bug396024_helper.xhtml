@@ -40,7 +40,6 @@ function printpreview() {
   }
   let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService).newPrintSettings;
-  settings.showPrintProgress = false; 
   gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
 }
 

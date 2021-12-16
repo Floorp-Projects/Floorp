@@ -454,54 +454,14 @@ var PrintUtils = {
         ? this._listener.getSimplifiedPrintPreviewBrowser()
         : this._listener.getPrintPreviewBrowser();
       this._sourceBrowser.collapsed = true;
-
-      // If the user transits too quickly within preview and we have a pending
-      // progress dialog, we will close it before opening a new one.
-      this.ensureProgressDialogClosed();
     }
-
-    this._webProgressPP = {};
-    let ppParams = {};
-    let notifyOnOpen = {};
-    let printSettings = this.getPrintSettings();
-    // Here we get the PrintingPromptService so we can display the PP Progress from script
-    // For the browser implemented via XUL with the PP toolbar we cannot let it be
-    // automatically opened from the print engine because the XUL scrollbars in the PP window
-    // will layout before the content window and a crash will occur.
-    // Doing it all from script, means it lays out before hand and we can let printing do its own thing
-    let PPROMPTSVC = Cc[
-      "@mozilla.org/embedcomp/printingprompt-service;1"
-    ].getService(Ci.nsIPrintingPromptService);
 
     let promise = new Promise((resolve, reject) => {
       this._onEntered.push({ resolve, reject });
     });
 
-    // just in case we are already printing,
-    // an error code could be returned if the Progress Dialog is already displayed
-    try {
-      PPROMPTSVC.showPrintProgressDialog(
-        window,
-        printSettings,
-        this._obsPP,
-        false,
-        this._webProgressPP,
-        ppParams,
-        notifyOnOpen
-      );
-      if (ppParams.value) {
-        ppParams.value.docTitle = this._originalTitle;
-        ppParams.value.docURL = this._originalURL;
-      }
+    this._enterPrintPreview();
 
-      // this tells us whether we should continue on with PP or
-      // wait for the callback via the observer
-      if (!notifyOnOpen.value.valueOf() || this._webProgressPP.value == null) {
-        this._enterPrintPreview();
-      }
-    } catch (e) {
-      this._enterPrintPreview();
-    }
     return promise;
   },
 
@@ -509,7 +469,6 @@ var PrintUtils = {
 
   _listener: null,
   _closeHandlerPP: null,
-  _webProgressPP: null,
   _sourceBrowser: null,
   _originalTitle: "",
   _originalURL: "",
@@ -643,26 +602,6 @@ var PrintUtils = {
     return printSettings;
   },
 
-  // This observer is called once the progress dialog has been "opened"
-  _obsPP: {
-    observe(aSubject, aTopic, aData) {
-      // Only process a null topic which means the progress dialog is open.
-      if (aTopic) {
-        return;
-      }
-
-      // delay the print preview to show the content of the progress dialog
-      setTimeout(function() {
-        PrintUtils._enterPrintPreview();
-      }, 0);
-    },
-
-    QueryInterface: ChromeUtils.generateQI([
-      "nsIObserver",
-      "nsISupportsWeakReference",
-    ]),
-  },
-
   get shouldSimplify() {
     return this._shouldSimplify;
   },
@@ -689,10 +628,7 @@ var PrintUtils = {
 
   _enterPrintPreview() {
     // Send a message to the print preview browser to initialize
-    // print preview. If we happen to have gotten a print preview
-    // progress listener from nsIPrintingPromptService.showPrintProgressDialog
-    // in printPreview, we add listeners to feed that progress
-    // listener.
+    // print preview.
     let ppBrowser = this._shouldSimplify
       ? this._listener.getSimplifiedPrintPreviewBrowser()
       : this._listener.getPrintPreviewBrowser();
@@ -709,12 +645,7 @@ var PrintUtils = {
     }
     this._currentPPBrowser = ppBrowser;
 
-    let waitForPrintProgressToEnableToolbar = false;
-    if (this._webProgressPP.value) {
-      waitForPrintProgressToEnableToolbar = true;
-    }
-
-    gPendingPrintPreviews.set(ppBrowser, waitForPrintProgressToEnableToolbar);
+    gPendingPrintPreviews.set(ppBrowser, false);
 
     // If we happen to have gotten simplify page checked, we will lazily
     // instantiate a new tab that parses the original page using ReaderMode
@@ -947,8 +878,6 @@ var PrintUtils = {
 
     this.setSimplifiedMode(false);
 
-    this.ensureProgressDialogClosed();
-
     this._listener.onExit();
 
     this._originalTitle = "";
@@ -1000,21 +929,6 @@ var PrintUtils = {
     if (isModif) {
       aEvent.preventDefault();
       aEvent.stopPropagation();
-    }
-  },
-
-  /**
-   * If there's a printing or print preview progress dialog displayed, force
-   * it to close now.
-   */
-  ensureProgressDialogClosed() {
-    if (this._webProgressPP && this._webProgressPP.value) {
-      this._webProgressPP.value.onStateChange(
-        null,
-        null,
-        Ci.nsIWebProgressListener.STATE_STOP,
-        0
-      );
     }
   },
 };
