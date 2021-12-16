@@ -6,7 +6,6 @@
 
 #include "nsPrintData.h"
 
-#include "nsIPrintProgressParams.h"
 #include "nsIStringBundle.h"
 #include "nsIWidget.h"
 #include "nsPrintObject.h"

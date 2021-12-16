@@ -47,7 +47,6 @@ struct PrintData {
   bool isCancelled;
   bool printSilent;
   bool shrinkToFit;
-  bool showPrintProgress;
 
   nsString paperId;
   double paperWidth;
