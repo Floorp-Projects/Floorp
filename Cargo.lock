@@ -125,6 +125,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ashmem"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b43da58b19e1c6ffb1859b10766a2049cefa15f613c42dfeab8423701e8b76b6"
+dependencies = [
+ "ioctl-sys",
+ "libc",
+]
+
+[[package]]
 name = "async-task"
 version = "4.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -192,7 +202,7 @@ name = "audioipc"
 version = "0.2.5"
 source = "git+https://github.com/mozilla/audioipc-2?rev=470320364f59672c0e1ee60240f2cd15f0e5b52f#470320364f59672c0e1ee60240f2cd15f0e5b52f"
 dependencies = [
- "ashmem",
+ "ashmem 0.1.0",
  "audio_thread_priority",
  "bincode",
  "bytes 0.4.12",
@@ -204,7 +214,7 @@ dependencies = [
  "libc",
  "log",
  "memmap2 0.2.3",
- "mio",
+ "mio 0.6.23",
  "mio-named-pipes",
  "mio-uds",
  "miow",
@@ -245,6 +255,56 @@ dependencies = [
  "once_cell",
  "slab",
  "tokio 0.1.11",
+]
+
+[[package]]
+name = "audioipc2"
+version = "0.5.0"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=abd4a0132ea65057b554221c8f112a9bedd33a92#abd4a0132ea65057b554221c8f112a9bedd33a92"
+dependencies = [
+ "ashmem 0.1.1",
+ "audio_thread_priority",
+ "bincode",
+ "bytes 0.4.12",
+ "cc",
+ "cubeb",
+ "error-chain",
+ "iovec",
+ "libc",
+ "log",
+ "memmap2 0.2.3",
+ "mio 0.8.0",
+ "scopeguard",
+ "serde",
+ "serde_bytes",
+ "serde_derive",
+ "slab",
+ "winapi",
+]
+
+[[package]]
+name = "audioipc2-client"
+version = "0.5.0"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=abd4a0132ea65057b554221c8f112a9bedd33a92#abd4a0132ea65057b554221c8f112a9bedd33a92"
+dependencies = [
+ "audio_thread_priority",
+ "audioipc2",
+ "cubeb-backend",
+ "log",
+]
+
+[[package]]
+name = "audioipc2-server"
+version = "0.5.0"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=abd4a0132ea65057b554221c8f112a9bedd33a92#abd4a0132ea65057b554221c8f112a9bedd33a92"
+dependencies = [
+ "audio_thread_priority",
+ "audioipc2",
+ "cubeb-core",
+ "error-chain",
+ "log",
+ "once_cell",
+ "slab",
 ]
 
 [[package]]
@@ -1908,6 +1968,8 @@ dependencies = [
  "audio_thread_priority",
  "audioipc-client",
  "audioipc-server",
+ "audioipc2-client",
+ "audioipc2-server",
  "authenticator",
  "bitsdownload",
  "bookmark_sync",
@@ -2293,7 +2355,7 @@ dependencies = [
  "base64 0.10.1",
  "bindgen",
  "log",
- "mio",
+ "mio 0.6.23",
  "mio-extras",
  "neqo-common",
  "neqo-crypto",
@@ -3033,6 +3095,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba272f85fa0b41fc91872be579b3bbe0f56b792aa361a380eb669469f68dafb2"
+dependencies = [
+ "libc",
+ "log",
+ "miow",
+ "ntapi",
+ "winapi",
+]
+
+[[package]]
 name = "mio-extras"
 version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3040,7 +3115,7 @@ checksum = "52403fe290012ce777c4626790c8951324a2b9e3316b3143779c72b029742f19"
 dependencies = [
  "lazycell",
  "log",
- "mio",
+ "mio 0.6.23",
  "slab",
 ]
 
@@ -3050,7 +3125,7 @@ version = "0.1.6"
 source = "git+https://github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321#21c26326f5f45f415c49eac4ba5bc41a2f961321"
 dependencies = [
  "log",
- "mio",
+ "mio 0.6.23",
  "miow",
  "winapi",
 ]
@@ -3063,7 +3138,7 @@ checksum = "afcb699eb26d4332647cc848492bbc15eafb26f08d0304550d5aa1f612e066f0"
 dependencies = [
  "iovec",
  "libc",
- "mio",
+ "mio 0.6.23",
 ]
 
 [[package]]
@@ -3420,6 +3495,15 @@ name = "nsstring-gtest"
 version = "0.1.0"
 dependencies = [
  "nsstring",
+]
+
+[[package]]
+name = "ntapi"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
+dependencies = [
+ "winapi",
 ]
 
 [[package]]
@@ -4994,7 +5078,7 @@ checksum = "6e93c78d23cc61aa245a8acd2c4a79c4d7fa7fb5c3ca90d5737029f043a84895"
 dependencies = [
  "bytes 0.4.12",
  "futures 0.1.31",
- "mio",
+ "mio 0.6.23",
  "tokio-codec",
  "tokio-current-thread",
  "tokio-executor",
@@ -5020,7 +5104,7 @@ dependencies = [
  "iovec",
  "lazy_static",
  "memchr",
- "mio",
+ "mio 0.6.23",
  "pin-project-lite 0.1.12",
  "slab",
 ]
@@ -5086,7 +5170,7 @@ checksum = "8703a5762ff6913510dc64272c714c4389ffd8c4b3cf602879b8bd14ff06b604"
 dependencies = [
  "futures 0.1.31",
  "log",
- "mio",
+ "mio 0.6.23",
  "slab",
  "tokio-executor",
  "tokio-io",
@@ -5101,7 +5185,7 @@ dependencies = [
  "bytes 0.4.12",
  "futures 0.1.31",
  "iovec",
- "mio",
+ "mio 0.6.23",
  "tokio-io",
  "tokio-reactor",
 ]
@@ -5144,7 +5228,7 @@ dependencies = [
  "bytes 0.4.12",
  "futures 0.1.31",
  "log",
- "mio",
+ "mio 0.6.23",
  "tokio-codec",
  "tokio-io",
  "tokio-reactor",
@@ -5161,7 +5245,7 @@ dependencies = [
  "iovec",
  "libc",
  "log",
- "mio",
+ "mio 0.6.23",
  "mio-uds",
  "tokio-codec",
  "tokio-io",
