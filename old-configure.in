@@ -221,8 +221,6 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
-MOZ_FS_LAYOUT=unix
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -1280,7 +1278,6 @@ cocoa)
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
-    MOZ_FS_LAYOUT=bundle
     ;;
 
 uikit)
@@ -1290,7 +1287,6 @@ uikit)
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
-    MOZ_FS_LAYOUT=bundle
     ;;
 
 esac
@@ -1322,8 +1318,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
   fi
 fi # COMPILE_ENVIRONMENT
-
-AC_SUBST(MOZ_FS_LAYOUT)
 
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
