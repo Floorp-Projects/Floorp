@@ -36,7 +36,7 @@ mio-named-pipes = { git = "https://github.com/kinetiknz/mio-named-pipes", rev = 
 winapi = { version = "0.3.6", features = ["combaseapi", "memoryapi", "objbase"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
-ashmem = { git = "https://github.com/kinetiknz/ashmem-rs", rev = "e47f470a54193532d60057ec54f864e06aeaff36" }
+ashmem = "0.1"
 
 [dependencies.error-chain]
 version = "0.11.0"
