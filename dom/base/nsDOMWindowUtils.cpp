@@ -2116,6 +2116,19 @@ nsDOMWindowUtils::GetNodeObservedByIMEContentObserver(nsINode** aNode) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetCanvasBackgroundColor(nsAString& aColor) {
+  if (RefPtr<Document> doc = GetDocument()) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+  nscolor color = NS_RGB(255, 255, 255);
+  if (PresShell* presShell = GetPresShell()) {
+    color = presShell->ComputeCanvasBackground().mColor;
+  }
+  nsStyleUtil::GetSerializedColorValue(color, aColor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetFocusedInputType(nsAString& aType) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
