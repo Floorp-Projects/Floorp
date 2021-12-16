@@ -138,16 +138,6 @@
 #include "prenv.h"
 #include "prtime.h"
 
-#define DISABLE_ASSERTS_FOR_FUZZING 0
-
-#if DISABLE_ASSERTS_FOR_FUZZING
-#  define ASSERT_UNLESS_FUZZING(...) \
-    do {                             \
-    } while (0)
-#else
-#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
-#endif
-
 #define LS_LOG_TEST() MOZ_LOG_TEST(GetLocalStorageLogger(), LogLevel::Info)
 #define LS_LOG(_args) MOZ_LOG(GetLocalStorageLogger(), LogLevel::Info, _args)
 
@@ -3151,13 +3141,13 @@ PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
   }
 
   if (NS_WARN_IF(!gPreparedDatastores)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
   PreparedDatastore* preparedDatastore = gPreparedDatastores->Get(aDatastoreId);
   if (NS_WARN_IF(!preparedDatastore)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -3226,13 +3216,13 @@ PBackgroundLSObserverParent* AllocPBackgroundLSObserverParent(
   }
 
   if (NS_WARN_IF(!gPreparedObsevers)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
   RefPtr<Observer> observer = gPreparedObsevers->Get(aObserverId);
   if (NS_WARN_IF(!observer)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -5354,7 +5344,7 @@ mozilla::ipc::IPCResult Database::RecvAllowToClose() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mAllowedToClose)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5370,17 +5360,17 @@ PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(aIncreasePeakUsage && aRequestedSize <= 0)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
   if (NS_WARN_IF(aIncreasePeakUsage && aMinSize <= 0)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
   if (NS_WARN_IF(mAllowedToClose)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -5557,12 +5547,12 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mHasOtherProcessObservers)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5611,12 +5601,12 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteAndNotifyInfos.IsEmpty())) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!mHasOtherProcessObservers)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5676,7 +5666,7 @@ mozilla::ipc::IPCResult Snapshot::RecvFinish() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5689,22 +5679,22 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadedAllItems)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadKeysReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5728,22 +5718,22 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadedAllItems)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (mLoadedItems.Contains(aKey) || mUnknownItems.Contains(aKey)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5869,17 +5859,17 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadKeys(nsTArray<nsString>* aKeys) {
   MOZ_ASSERT(mDatastore);
 
   if (NS_WARN_IF(mFinishReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadedReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mLoadKeysReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -5900,17 +5890,17 @@ mozilla::ipc::IPCResult Snapshot::RecvIncreasePeakUsage(
   MOZ_ASSERT(aSize);
 
   if (NS_WARN_IF(aRequestedSize <= 0)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aMinSize <= 0)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mFinishReceived)) {
-    ASSERT_UNLESS_FUZZING();
+    MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 

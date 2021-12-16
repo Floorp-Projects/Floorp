@@ -613,6 +613,21 @@ struct AssertionConditionType {
 #define MOZ_ALWAYS_OK(expr) MOZ_ALWAYS_TRUE((expr).isOk())
 #define MOZ_ALWAYS_ERR(expr) MOZ_ALWAYS_TRUE((expr).isErr())
 
+/*
+ * These are disabled when fuzzing
+ */
+#ifdef FUZZING
+#  define MOZ_CRASH_UNLESS_FUZZING(...) \
+    do {                                \
+    } while (0)
+#  define MOZ_ASSERT_UNLESS_FUZZING(...) \
+    do {                                 \
+    } while (0)
+#else
+#  define MOZ_CRASH_UNLESS_FUZZING(...) MOZ_CRASH(__VA_ARGS__)
+#  define MOZ_ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(__VA_ARGS__)
+#endif
+
 #undef MOZ_DUMP_ASSERTION_STACK
 #undef MOZ_CRASH_CRASHREPORT
 
