@@ -232,7 +232,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-default-theme-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-default-theme-description",
+                string_id: "mr2-onboarding-default-theme-label",
               },
             },
             {
@@ -242,7 +242,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
             {
@@ -252,7 +252,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
             {
@@ -262,7 +262,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
             {
@@ -272,7 +272,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
             {
@@ -282,7 +282,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
             {
@@ -292,7 +292,7 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr2-onboarding-colorway-tooltip",
               },
               description: {
-                string_id: "mr2-onboarding-colorway-description",
+                string_id: "mr2-onboarding-colorway-label",
               },
             },
           ],

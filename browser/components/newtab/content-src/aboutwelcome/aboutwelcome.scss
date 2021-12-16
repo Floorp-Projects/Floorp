@@ -474,6 +474,12 @@ body {
         outline-offset: initial;
       }
 
+      .icon.colorway,
+      .label.colorway {
+        width: 20px;
+        height: 20px;
+      }
+
       .icon {
         background-size: cover;
         width: 40px;
@@ -482,11 +488,6 @@ body {
         outline: 1px solid var(--in-content-border-color);
         outline-offset: -0.5px;
         z-index: -1;
-
-        &.colorway {
-          width: 20px;
-          height: 20px;
-        }
 
         &:dir(rtl) {
           transform: scaleX(-1);
