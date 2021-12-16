@@ -123,8 +123,9 @@ class FragmentOrElement : public nsIContent {
 
   /**
    * Fire a DOMNodeRemoved mutation event for all children of this node
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
    */
-  void FireNodeRemovedForChildren();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireNodeRemovedForChildren();
 
   static void ClearContentUnbinder();
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
