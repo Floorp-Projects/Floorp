@@ -153,11 +153,6 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvTestTriggerMetrics(
       TestTriggerMetricsResolver&& aResolve);
 
-#if defined(XP_WIN)
-  mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
-      GetUntrustedModulesDataResolver&& aResolver);
-#endif  // defined(XP_WIN)
-
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

@@ -12,7 +12,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Likely.h"
-#include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
@@ -93,7 +92,6 @@ bool UntrustedModulesProcessor::IsSupportedProcessType() {
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
     case GeckoProcessType_Content:
-    case GeckoProcessType_Socket:
       return Telemetry::CanRecordReleaseData();
     case GeckoProcessType_RDD:
       // For RDD process, we check the telemetry settings in RDDChild::Init()
@@ -696,11 +694,6 @@ UntrustedModulesProcessor::SendGetModulesTrust(ModulePaths&& aModules,
     case GeckoProcessType_RDD: {
       return ::mozilla::SendGetModulesTrust(RDDParent::GetSingleton(),
                                             std::move(aModules), runNormal);
-    }
-    case GeckoProcessType_Socket: {
-      return ::mozilla::SendGetModulesTrust(
-          net::SocketProcessChild::GetSingleton(), std::move(aModules),
-          runNormal);
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");

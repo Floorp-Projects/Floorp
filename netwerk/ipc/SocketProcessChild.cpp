@@ -55,8 +55,6 @@
 
 #if defined(XP_WIN)
 #  include <process.h>
-
-#  include "mozilla/WinDllServices.h"
 #else
 #  include <unistd.h>
 #endif
@@ -170,12 +168,6 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   // Initialize DNS Service here, since it needs to be done in main thread.
   nsCOMPtr<nsIDNSService> dns =
       do_GetService("@mozilla.org/network/dns-service;1", &rv);
-
-#if defined(XP_WIN)
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->StartUntrustedModulesProcessor();
-#endif  // defined(XP_WIN)
-
   return NS_SUCCEEDED(rv);
 }
 
@@ -694,20 +686,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvTestTriggerMetrics(
   aResolve(true);
   return IPC_OK();
 }
-
-#if defined(XP_WIN)
-mozilla::ipc::IPCResult SocketProcessChild::RecvGetUntrustedModulesData(
-    GetUntrustedModulesDataResolver&& aResolver) {
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->GetUntrustedModulesData()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [aResolver](Maybe<UntrustedModulesData>&& aData) {
-        aResolver(std::move(aData));
-      },
-      [aResolver](nsresult aReason) { aResolver(Nothing()); });
-  return IPC_OK();
-}
-#endif  // defined(XP_WIN)
 
 }  // namespace net
 }  // namespace mozilla
