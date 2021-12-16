@@ -309,7 +309,7 @@ class nsDocShell final : public nsDocLoader,
   // the timer involved out of mRefreshURIList if it's there.
   // aTimer must not be null.
   nsresult ForceRefreshURIFromTimer(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                    int32_t aDelay, nsITimer* aTimer);
+                                    uint32_t aDelay, nsITimer* aTimer);
 
   // We need dummy OnLocationChange in some cases to update the UI without
   // updating security info.
