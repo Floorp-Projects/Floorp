@@ -154,7 +154,8 @@ class NetworkEventWatcher {
       return;
     }
     // If we persist, we will keep all requests allocated.
-    if (this.persist) {
+    // For now, consider that the Browser console and toolbox persist all the requests.
+    if (this.persist || this.watcherActor.context.type == "all") {
       return;
     }
     // If the watcher is bound to one browser element (i.e. a tab), ignore
@@ -189,7 +190,7 @@ class NetworkEventWatcher {
       } else if (
         child.innerWindowId != innerWindowId &&
         windowGlobal.browsingContext ==
-          this.watcherActor.browserElement.browsingContext
+          this.watcherActor.browserElement?.browsingContext
       ) {
         child.destroy();
       }
