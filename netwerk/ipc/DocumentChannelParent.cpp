@@ -35,6 +35,11 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
       new nsDocShellLoadState(aArgs.loadState());
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
+  if (aArgs.parentInitiatedNavigationEpoch() <
+      aContext->GetParentInitiatedNavigationEpoch()) {
+    nsresult rv = NS_BINDING_ABORTED;
+    return SendFailedAsyncOpen(rv);
+  }
 
   ContentParent* contentParent =
       static_cast<ContentParent*>(Manager()->Manager());
