@@ -9,10 +9,10 @@
 add_task(async function test_single_product_data() {
   await verifyPageData(
     `
+      <!DOCTYPE html>
       <html>
       <head>
       <title>Product Info 1</title>
-      <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
       </head>
       <body>
         <div itemscope itemtype="https://schema.org/Organization">
@@ -55,10 +55,10 @@ add_task(async function test_single_product_data() {
 add_task(async function test_single_multiple_data() {
   await verifyPageData(
     `
+      <!DOCTYPE html>
       <html>
       <head>
       <title>Product Info 2</title>
-      <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
       </head>
       <body>
         <div itemscope itemtype="https://schema.org/Product">
