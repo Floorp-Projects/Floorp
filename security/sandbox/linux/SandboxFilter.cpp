@@ -1836,6 +1836,10 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
       }
 
+        // Mesa sometimes wants to know the OS version.
+      case __NR_uname:
+        return Allow();
+
         // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
