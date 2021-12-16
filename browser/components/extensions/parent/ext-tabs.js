@@ -1356,6 +1356,7 @@ this.tabs = class extends ExtensionAPI {
                 printSettings.toFileName = picker.file.path;
 
                 printSettings.printSilent = true;
+                printSettings.showPrintProgress = false;
 
                 printSettings.outputFormat =
                   Ci.nsIPrintSettings.kOutputFormatPDF;

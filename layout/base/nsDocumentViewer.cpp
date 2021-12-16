@@ -2950,6 +2950,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   NS_ENSURE_STATE(doc);
 
   if (NS_WARN_IF(GetIsPrinting())) {
+    nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
 
