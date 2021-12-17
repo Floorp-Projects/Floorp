@@ -64,6 +64,8 @@ pub fn prepare_primitives(
             frame_context.spatial_tree,
         );
 
+        frame_state.surfaces[pic_context.surface_index.0].opaque_rect = PictureRect::zero();
+
         for prim_instance_index in cluster.prim_range() {
             // First check for coarse visibility (if this primitive was completely off-screen)
             let prim_instance = &mut prim_instances[prim_instance_index];
@@ -123,6 +125,14 @@ pub fn prepare_primitives(
                 frame_state.num_visible_primitives += 1;
             } else {
                 prim_instances[prim_instance_index].clear_visibility();
+            }
+        }
+
+        if !cluster.opaque_rect.is_empty() {
+            let surface = &mut frame_state.surfaces[pic_context.surface_index.0];
+
+            if let Some(cluster_opaque_rect) = surface.map_local_to_surface.map_inner_bounds(&cluster.opaque_rect) {
+                surface.opaque_rect = crate::util::conservative_union_rect(&surface.opaque_rect, &cluster_opaque_rect);
             }
         }
     }
@@ -258,6 +268,7 @@ fn prepare_interned_prim_for_render(
     let prim_spatial_node_index = cluster.spatial_node_index;
     let is_chased = prim_instance.is_chased();
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
+    let mut is_opaque = false;
 
     match &mut prim_instance.kind {
         PrimitiveInstanceKind::LineDecoration { data_handle, ref mut render_task, .. } => {
@@ -533,6 +544,8 @@ fn prepare_interned_prim_for_render(
                 frame_context.scene_properties,
             );
 
+            is_opaque = prim_data.common.opacity.is_opaque;
+
             write_segment(
                 *segment_instance_index,
                 frame_state,
@@ -551,6 +564,7 @@ fn prepare_interned_prim_for_render(
             let prim_data = &mut data_stores.yuv_image[*data_handle];
             let common_data = &mut prim_data.common;
             let yuv_image_data = &mut prim_data.kind;
+            is_opaque = true;
 
             common_data.may_need_repetition = false;
 
@@ -587,6 +601,9 @@ fn prepare_interned_prim_for_render(
                 frame_context,
                 &mut prim_instance.vis,
             );
+
+            // common_data.opacity.is_opaque is computed in the above update call.
+            is_opaque = common_data.opacity.is_opaque;
 
             write_segment(
                 image_instance.segment_instance_index,
@@ -825,6 +842,26 @@ fn prepare_interned_prim_for_render(
             }
         }
     };
+
+    // If the primitive is opaque, see if it can contribut to it's picture surface's opaque rect.
+
+    is_opaque = is_opaque && {
+        let clip = prim_instance.vis.clip_task_index;
+        clip == ClipTaskIndex::INVALID
+    };
+
+    is_opaque = is_opaque && !frame_context.spatial_tree.is_relative_transform_complex(
+        prim_spatial_node_index,
+        pic_context.raster_spatial_node_index,
+    );
+
+    if is_opaque {
+        let prim_local_rect = data_stores.get_local_prim_rect(
+            prim_instance,
+            store,
+        );
+        cluster.opaque_rect = crate::util::conservative_union_rect(&cluster.opaque_rect, &prim_local_rect);
+    }
 }
 
 
