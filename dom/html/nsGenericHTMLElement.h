@@ -89,7 +89,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetInert(bool aInert, mozilla::ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::inert, aInert, aError);
   }
-  void Click(mozilla::dom::CallerType aCallerType);
+  MOZ_CAN_RUN_SCRIPT void Click(mozilla::dom::CallerType aCallerType);
   void GetAccessKey(nsString& aAccessKey) {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);
   }
@@ -707,13 +707,17 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   virtual mozilla::EventListenerManager* GetEventListenerManagerForAttr(
       nsAtom* aAttrName, bool* aDefer) override;
 
-  /** Handles dispatching a simulated click on `this` on space or enter. */
-  void HandleKeyboardActivation(mozilla::EventChainPostVisitor&);
+  /**
+   * Handles dispatching a simulated click on `this` on space or enter.
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HandleKeyboardActivation(
+      mozilla::EventChainPostVisitor&);
 
   /** Dispatch a simulated mouse click by keyboard to the given element. */
-  static nsresult DispatchSimulatedClick(nsGenericHTMLElement* aElement,
-                                         bool aIsTrusted,
-                                         nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT static nsresult DispatchSimulatedClick(
+      nsGenericHTMLElement* aElement, bool aIsTrusted,
+      nsPresContext* aPresContext);
 
   /**
    * Create a URI for the given aURISpec string.
