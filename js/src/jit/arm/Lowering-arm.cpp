@@ -1141,6 +1141,26 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
               ins);
 }
 
+// On arm we specialize the only cases where compare is {U,}Int32 and select
+// is {U,}Int32.
+bool LIRGeneratorShared::canSpecializeWasmCompareAndSelect(
+    MCompare::CompareType compTy, MIRType insTy) {
+  return insTy == MIRType::Int32 && (compTy == MCompare::Compare_Int32 ||
+                                     compTy == MCompare::Compare_UInt32);
+}
+
+void LIRGeneratorShared::lowerWasmCompareAndSelect(MWasmSelect* ins,
+                                                   MDefinition* lhs,
+                                                   MDefinition* rhs,
+                                                   MCompare::CompareType compTy,
+                                                   JSOp jsop) {
+  MOZ_ASSERT(canSpecializeWasmCompareAndSelect(compTy, ins->type()));
+  auto* lir = new (alloc()) LWasmCompareAndSelect(
+      useRegister(lhs), useRegister(rhs), compTy, jsop,
+      useRegisterAtStart(ins->trueExpr()), useRegister(ins->falseExpr()));
+  defineReuseInput(lir, ins, LWasmCompareAndSelect::IfTrueExprIndex);
+}
+
 void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
   MOZ_CRASH("ternary SIMD NYI");
 }
