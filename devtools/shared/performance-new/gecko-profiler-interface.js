@@ -80,6 +80,7 @@ class ActorReadyGeckoProfilerInterface {
         "stackwalk",
         "cpu",
         "responsiveness",
+        "threads",
         "leaf",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
