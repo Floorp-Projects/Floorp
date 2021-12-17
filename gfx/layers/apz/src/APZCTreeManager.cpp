@@ -992,6 +992,7 @@ void APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
 void APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
                                        HitTestingTreeNode* aParent,
                                        HitTestingTreeNode* aNextSibling) {
+  mTreeLock.AssertCurrentThreadIn();
   if (aNextSibling) {
     aNextSibling->SetPrevSibling(aNode);
   } else if (aParent) {
