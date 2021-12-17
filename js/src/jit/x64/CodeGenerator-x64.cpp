@@ -498,6 +498,93 @@ void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {
   masm.cmovzq(falseExpr, out.reg);
 }
 
+// We expect to handle only the cases: compare is {U,}Int{32,64}, and select
+// is {U,}Int{32,64}, independently.  Some values may be stack allocated, and
+// the "true" input is reused for the output.
+void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
+  bool cmpIs32bit = ins->compareType() == MCompare::Compare_Int32 ||
+                    ins->compareType() == MCompare::Compare_UInt32;
+  bool cmpIs64bit = ins->compareType() == MCompare::Compare_Int64 ||
+                    ins->compareType() == MCompare::Compare_UInt64;
+  bool selIs32bit = ins->mir()->type() == MIRType::Int32;
+  bool selIs64bit = ins->mir()->type() == MIRType::Int64;
+
+  // Throw out unhandled cases
+  MOZ_RELEASE_ASSERT(
+      cmpIs32bit != cmpIs64bit && selIs32bit != selIs64bit,
+      "CodeGenerator::visitWasmCompareAndSelect: unexpected types");
+
+  using C = Assembler::Condition;
+  using R = Register;
+  using A = const Address&;
+
+  // Identify macroassembler methods to generate instructions, based on the
+  // type of the comparison and the select.  This avoids having to duplicate
+  // the code-generation tree below 4 times.  These assignments to
+  // `cmpMove_CRRRR` et al are unambiguous as a result of the combination of
+  // the template parameters and the 5 argument types ((C, R, R, R, R) etc).
+  void (MacroAssembler::*cmpMove_CRRRR)(C, R, R, R, R) = nullptr;
+  void (MacroAssembler::*cmpMove_CRARR)(C, R, A, R, R) = nullptr;
+  void (MacroAssembler::*cmpLoad_CRRAR)(C, R, R, A, R) = nullptr;
+  void (MacroAssembler::*cmpLoad_CRAAR)(C, R, A, A, R) = nullptr;
+
+  if (cmpIs32bit) {
+    if (selIs32bit) {
+      cmpMove_CRRRR = &MacroAssemblerX64::cmpMove<32, 32>;
+      cmpMove_CRARR = &MacroAssemblerX64::cmpMove<32, 32>;
+      cmpLoad_CRRAR = &MacroAssemblerX64::cmpLoad<32, 32>;
+      cmpLoad_CRAAR = &MacroAssemblerX64::cmpLoad<32, 32>;
+    } else {
+      cmpMove_CRRRR = &MacroAssemblerX64::cmpMove<32, 64>;
+      cmpMove_CRARR = &MacroAssemblerX64::cmpMove<32, 64>;
+      cmpLoad_CRRAR = &MacroAssemblerX64::cmpLoad<32, 64>;
+      cmpLoad_CRAAR = &MacroAssemblerX64::cmpLoad<32, 64>;
+    }
+  } else {
+    if (selIs32bit) {
+      cmpMove_CRRRR = &MacroAssemblerX64::cmpMove<64, 32>;
+      cmpMove_CRARR = &MacroAssemblerX64::cmpMove<64, 32>;
+      cmpLoad_CRRAR = &MacroAssemblerX64::cmpLoad<64, 32>;
+      cmpLoad_CRAAR = &MacroAssemblerX64::cmpLoad<64, 32>;
+    } else {
+      cmpMove_CRRRR = &MacroAssemblerX64::cmpMove<64, 64>;
+      cmpMove_CRARR = &MacroAssemblerX64::cmpMove<64, 64>;
+      cmpLoad_CRRAR = &MacroAssemblerX64::cmpLoad<64, 64>;
+      cmpLoad_CRAAR = &MacroAssemblerX64::cmpLoad<64, 64>;
+    }
+  }
+
+  Register trueExprAndDest = ToRegister(ins->output());
+  MOZ_ASSERT(ToRegister(ins->ifTrueExpr()) == trueExprAndDest,
+             "true expr input is reused for output");
+
+  Assembler::Condition cond = Assembler::InvertCondition(
+      JSOpToCondition(ins->compareType(), ins->jsop()));
+  const LAllocation* rhs = ins->rightExpr();
+  const LAllocation* falseExpr = ins->ifFalseExpr();
+  Register lhs = ToRegister(ins->leftExpr());
+
+  // We generate one of four cmp+cmov pairings, depending on whether one of
+  // the cmp args and one of the cmov args is in memory or a register.
+  if (rhs->isRegister()) {
+    if (falseExpr->isRegister()) {
+      (masm.*cmpMove_CRRRR)(cond, lhs, ToRegister(rhs), ToRegister(falseExpr),
+                            trueExprAndDest);
+    } else {
+      (masm.*cmpLoad_CRRAR)(cond, lhs, ToRegister(rhs), ToAddress(falseExpr),
+                            trueExprAndDest);
+    }
+  } else {
+    if (falseExpr->isRegister()) {
+      (masm.*cmpMove_CRARR)(cond, lhs, ToAddress(rhs), ToRegister(falseExpr),
+                            trueExprAndDest);
+    } else {
+      (masm.*cmpLoad_CRAAR)(cond, lhs, ToAddress(rhs), ToAddress(falseExpr),
+                            trueExprAndDest);
+    }
+  }
+}
+
 void CodeGenerator::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir) {
   MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
   MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);

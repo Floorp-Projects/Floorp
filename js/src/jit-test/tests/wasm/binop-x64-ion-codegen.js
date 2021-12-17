@@ -233,3 +233,103 @@ for ( [imm, expect1, expect2] of
      b8 d2 04 00 00      mov \\$0x4D2, %eax`
    );
 }
+
+// For integer comparison followed by select, check that the comparison result
+// isn't materialised into a register, for specific types.
+
+function cmpSel32vs64(cmpTy, selTy) {
+    return `(module
+              (func (export "f")
+                    (param $p1 ${cmpTy}) (param $p2 ${cmpTy})
+                    (param $p3 ${selTy}) (param $p4 ${selTy})
+                    (result ${selTy})
+                (select (local.get $p3)
+                        (local.get $p4)
+                        (${cmpTy}.eq (local.get $p1) (local.get $p2)))
+              )
+            )`;
+}
+if (getBuildConfiguration().windows) {
+    for ( [cmpTy, selTy, insn1, insn2, insn3] of
+          [ ['i32', 'i32',  '8b c3        mov %ebx, %eax',
+                            '3b ca        cmp %edx, %ecx',
+                            '41 0f 45 c1  cmovnz %r9d, %eax'],
+            ['i32', 'i64',  '48 8b c3     mov %rbx, %rax',
+                            '3b ca        cmp %edx, %ecx',
+                            '49 0f 45 c1  cmovnz %r9, %rax'],
+            ['i64', 'i32',  '8b c3        mov %ebx, %eax',
+                            '48 3b ca     cmp %rdx, %rcx',
+                            '41 0f 45 c1  cmovnz %r9d, %eax'],
+            ['i64', 'i64',  '48 8b c3     mov %rbx, %rax',
+                            '48 3b ca     cmp %rdx, %rcx',
+                            '49 0f 45 c1  cmovnz %r9, %rax']
+          ] ) {
+        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, selTy), 'f',
+          `4. 8b d8   mov %r8.*, %.bx
+           ${insn1}
+           ${insn2}
+           ${insn3}`
+        );
+    }
+} else {
+    for ( [cmpTy, selTy, insn1, insn2, insn3] of
+          [ ['i32', 'i32',  '8b c2        mov %edx, %eax',
+                            '3b fe        cmp %esi, %edi',
+                            '0f 45 c1     cmovnz %ecx, %eax'],
+            ['i32', 'i64',  '48 8b c2     mov %rdx, %rax',
+                            '3b fe        cmp %esi, %edi',
+                            '48 0f 45 c1  cmovnz %rcx, %rax'],
+            ['i64', 'i32',  '8b c2        mov %edx, %eax',
+                            '48 3b fe     cmp %rsi, %rdi',
+                            '0f 45 c1     cmovnz %ecx, %eax'],
+            ['i64', 'i64',  '48 8b c2     mov %rdx, %rax',
+                            '48 3b fe     cmp %rsi, %rdi',
+                            '48 0f 45 c1  cmovnz %rcx, %rax']
+          ] ) {
+        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, selTy), 'f',
+          `${insn1}
+           ${insn2}
+           ${insn3}`
+        );
+    }
+}
+
+// For integer comparison followed by select, check correct use of operands in
+// registers vs memory.  At least for the 64-bit-cmp/64-bit-sel case.
+
+for ( [pAnyCmp, pAnySel, cmpBytes, cmpArgL, cmovBytes, cmovArgL ] of
+      [ // r, r
+        ['$pReg1', '$pReg2',
+         '4. .. ..', '%r.+',  '4. .. .. ..', '%r.+'],
+        // r, m
+        ['$pReg1', '$pMem2',
+         '4. .. ..', '%r.+',  '4. .. .. .. ..', '0x..\\(%rbp\\)'],
+        // m, r
+        ['$pMem1', '$pReg2',
+         '4. .. .. ..', '0x..\\(%rbp\\)', '4. .. .. ..', '%r.+'],
+        // m, m
+        ['$pMem1', '$pMem2',
+         '4. .. .. ..', '0x..\\(%rbp\\)', '4. .. .. .. ..', '0x..\\(%rbp\\)']
+      ] ) {
+   codegenTestX64_adhoc(
+    `(module
+       (func (export "f")
+             (param $p1 i64)    (param $p2 i64)     ;; in regs for both ABIs
+             (param $pReg1 i64) (param $pReg2 i64)  ;; in regs for both ABIs
+             (param i64)        (param i64)         ;; ignored
+             (param $pMem1 i64) (param $pMem2 i64)  ;; in mem for both ABIs
+             (result i64)
+         (select (local.get $p1)
+                 (local.get ${pAnySel})
+                 (i64.eq (local.get $p2) (local.get ${pAnyCmp})))
+       )
+    )`,
+    'f',
+    // On Linux we have an extra move
+    (getBuildConfiguration().windows ? '' : '48 8b ..       mov %r.+, %r.+\n') +
+    // 'q*' because the disassembler shows 'q' only for the memory cases
+    `48 8b ..       mov %r.+, %r.+
+     ${cmpBytes}    cmpq*    ${cmpArgL}, %r.+
+     ${cmovBytes}   cmovnzq* ${cmovArgL}, %r.+`
+   );
+}
