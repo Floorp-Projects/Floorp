@@ -213,6 +213,30 @@ namespace IOUtils {
    * @return A promise that resolves to whether or not the given file exists.
    */
   Promise<boolean> exists(DOMString path);
+
+#if defined(XP_WIN)
+  /**
+   * Return the Windows-specific file attributes of the file at the given path.
+   *
+   * @param path An absolute file path.
+   *
+   * @return A promise that resolves to the Windows-specific file attributes.
+   */
+  Promise<WindowsFileAttributes> getWindowsAttributes(DOMString path);
+
+  /**
+   * Set the Windows-specific file attributes of the file at the given path.
+   *
+   * @param path An absolute file path.
+   * @param attrs The attributes to set. Attributes will only be set if they are
+   *              |true| or |false| (i.e., |undefined| attributes are not
+   *              changed).
+   *
+   * @return A promise that resolves is the attributes were set successfully.
+   */
+  Promise<void> setWindowsAttributes(DOMString path, optional WindowsFileAttributes attrs = {});
+#endif
+
 };
 
 [Exposed=Window]
@@ -468,3 +492,23 @@ dictionary FileInfo {
    */
   unsigned long permissions;
 };
+
+#ifdef XP_WIN
+/**
+ * Windows-specific file attributes.
+ */
+dictionary WindowsFileAttributes {
+  /**
+   * Whether or not the file is read-only.
+   */
+  boolean readOnly;
+  /**
+   * Whether or not the file is hidden.
+   */
+  boolean hidden;
+  /**
+   * Whether or not the file is classified as a system file.
+   */
+  boolean system;
+};
+#endif

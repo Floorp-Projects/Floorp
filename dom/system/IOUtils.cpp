@@ -53,8 +53,12 @@
 #include "prtime.h"
 #include "prtypes.h"
 
-#ifndef ANDROID
+#if defined(XP_UNIX) && !defined(ANDROID)
 #  include "nsSystemInfo.h"
+#endif
+
+#if defined(XP_WIN)
+#  include "nsILocalFileWin.h"
 #endif
 
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
@@ -699,6 +703,81 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
         [file = std::move(file)]() { return ExistsSync(file); });
   });
 }
+
+#if defined(XP_WIN)
+
+/* static */
+already_AddRefed<Promise> IOUtils::GetWindowsAttributes(
+    GlobalObject& aGlobal, const nsAString& aPath) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    state->mEventQueue
+        ->template Dispatch<uint32_t>([file = std::move(file)]() {
+          return GetWindowsAttributesSync(file);
+        })
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise = RefPtr{promise}](const uint32_t aAttrs) {
+              WindowsFileAttributes attrs;
+
+              attrs.mReadOnly.Construct(aAttrs & FILE_ATTRIBUTE_READONLY);
+              attrs.mHidden.Construct(aAttrs & FILE_ATTRIBUTE_HIDDEN);
+              attrs.mSystem.Construct(aAttrs & FILE_ATTRIBUTE_SYSTEM);
+
+              promise->MaybeResolve(attrs);
+            },
+            [promise = RefPtr{promise}](const IOError& aErr) {
+              RejectJSPromise(promise, aErr);
+            });
+  });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const WindowsFileAttributes& aAttrs) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    uint32_t setAttrs = 0;
+    uint32_t clearAttrs = 0;
+
+    if (aAttrs.mReadOnly.WasPassed()) {
+      if (aAttrs.mReadOnly.Value()) {
+        setAttrs |= FILE_ATTRIBUTE_READONLY;
+      } else {
+        clearAttrs |= FILE_ATTRIBUTE_READONLY;
+      }
+    }
+
+    if (aAttrs.mHidden.WasPassed()) {
+      if (aAttrs.mHidden.Value()) {
+        setAttrs |= FILE_ATTRIBUTE_HIDDEN;
+      } else {
+        clearAttrs |= FILE_ATTRIBUTE_HIDDEN;
+      }
+    }
+
+    if (aAttrs.mSystem.WasPassed()) {
+      if (aAttrs.mSystem.Value()) {
+        setAttrs |= FILE_ATTRIBUTE_SYSTEM;
+      } else {
+        clearAttrs |= FILE_ATTRIBUTE_SYSTEM;
+      }
+    }
+
+    DispatchAndResolve<Ok>(state->mEventQueue, promise,
+                           [file = std::move(file), setAttrs, clearAttrs]() {
+                             return SetWindowsAttributesSync(file, setAttrs,
+                                                             clearAttrs);
+                           });
+  });
+}
+
+#endif
 
 /* static */
 already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
@@ -1422,6 +1501,44 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
 
   return exists;
 }
+
+#if defined(XP_WIN)
+
+Result<uint32_t, IOUtils::IOError> IOUtils::GetWindowsAttributesSync(
+    nsIFile* aFile) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  uint32_t attrs = 0;
+
+  nsCOMPtr<nsILocalFileWin> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  if (nsresult rv = file->GetWindowsFileAttributes(&attrs); NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage(
+        "Could not get Windows file attributes for the file at `%s'",
+        aFile->HumanReadablePath().get()));
+  }
+  return attrs;
+}
+
+Result<Ok, IOUtils::IOError> IOUtils::SetWindowsAttributesSync(
+    nsIFile* aFile, const uint32_t aSetAttrs, const uint32_t aClearAttrs) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsILocalFileWin> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  if (nsresult rv = file->SetWindowsFileAttributes(aSetAttrs, aClearAttrs);
+      NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage(
+        "Could not set Windows file attributes for the file at `%s'",
+        aFile->HumanReadablePath().get()));
+  }
+
+  return Ok{};
+}
+
+#endif  // XP_WIN
 
 /* static */
 void IOUtils::GetProfileBeforeChange(GlobalObject& aGlobal,
