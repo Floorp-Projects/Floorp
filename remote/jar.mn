@@ -38,6 +38,7 @@ remote.jar:
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm)
+  content/shared/messagehandler/transports/FrameContextUtils.jsm (shared/messagehandler/transports/FrameContextUtils.jsm)
   content/shared/messagehandler/transports/FrameTransport.jsm (shared/messagehandler/transports/FrameTransport.jsm)
 
   # shared modules (WebDriver HTTP / BiDi only)
