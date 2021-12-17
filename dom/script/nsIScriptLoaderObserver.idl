@@ -41,6 +41,7 @@ interface nsIScriptLoaderObserver : nsISupports {
    * @param aElement The element being processed.
    * @param aIsInline Is this an inline script or externally loaded?
    */
+  [can_run_script]
   void scriptEvaluated(in nsresult aResult,
                        in nsIScriptElement aElement,
                        in boolean aIsInline);

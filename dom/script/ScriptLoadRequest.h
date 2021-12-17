@@ -111,8 +111,10 @@ class ScriptLoadRequest
     GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
                                         isInlineClassicScript, mURI, mLineNo);
   }
-  void FireScriptEvaluated(nsresult aResult) {
-    GetScriptElement()->ScriptEvaluated(aResult, GetScriptElement(), mIsInline);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireScriptEvaluated(nsresult aResult) {
+    RefPtr<nsIScriptElement> scriptElement = GetScriptElement();
+    scriptElement->ScriptEvaluated(aResult, scriptElement, mIsInline);
   }
 
   bool IsPreload() const {

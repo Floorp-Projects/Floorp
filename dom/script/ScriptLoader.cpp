@@ -2099,8 +2099,8 @@ void ScriptLoader::FireScriptEvaluated(nsresult aResult,
                                        ScriptLoadRequest* aRequest) {
   for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
-    obs->ScriptEvaluated(aResult, aRequest->GetScriptElement(),
-                         aRequest->mIsInline);
+    RefPtr<nsIScriptElement> scriptElement = aRequest->GetScriptElement();
+    obs->ScriptEvaluated(aResult, scriptElement, aRequest->mIsInline);
   }
 
   aRequest->FireScriptEvaluated(aResult);
