@@ -852,7 +852,7 @@ NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aName, const nsString& aID,
-                         const nsString& aGroupID, const nsString& aRawID)
+                         const nsString& aGroupID)
     : mSource(aSource),
       mSinkInfo(nullptr),
       mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
@@ -865,14 +865,12 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
       mName(aName),
       mID(aID),
       mGroupID(aGroupID),
-      mRawID(aRawID),
       mRawName(aName) {
   MOZ_ASSERT(mSource);
 }
 
 MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                         const nsString& aID, const nsString& aGroupID,
-                         const nsString& aRawID)
+                         const nsString& aID, const nsString& aGroupID)
     : mSource(nullptr),
       mSinkInfo(aAudioDeviceInfo),
       mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT
@@ -885,7 +883,6 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
       mName(mSinkInfo->Name()),
       mID(aID),
       mGroupID(aGroupID),
-      mRawID(aRawID),
       mRawName(mSinkInfo->Name()) {
   // For now this ctor is used only for Audiooutput.
   // It could be used for Audioinput and Videoinput

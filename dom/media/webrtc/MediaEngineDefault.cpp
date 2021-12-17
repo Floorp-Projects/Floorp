@@ -534,7 +534,7 @@ void MediaEngineDefault::EnumerateDevices(
       aDevices->AppendElement(
           MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
                                   NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId(), u""_ns));
+                                  newSource->GetGroupId()));
       return;
     }
     case MediaSourceEnum::Microphone: {
@@ -542,7 +542,7 @@ void MediaEngineDefault::EnumerateDevices(
       aDevices->AppendElement(
           MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
                                   NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId(), u""_ns));
+                                  newSource->GetGroupId()));
       return;
     }
     default:

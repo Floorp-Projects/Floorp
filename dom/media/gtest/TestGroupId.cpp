@@ -60,7 +60,7 @@ RefPtr<MediaDevice> MakeCameraDevice(const nsString& aName,
   EXPECT_CALL(*v, GetMediaSource())
       .WillRepeatedly(Return(dom::MediaSourceEnum::Camera));
 
-  return MakeRefPtr<MediaDevice>(v, aName, u""_ns, aGroupId, u""_ns);
+  return MakeRefPtr<MediaDevice>(v, aName, u""_ns, aGroupId);
 }
 
 RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
@@ -69,13 +69,13 @@ RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
   EXPECT_CALL(*a, GetMediaSource())
       .WillRepeatedly(Return(dom::MediaSourceEnum::Microphone));
 
-  return MakeRefPtr<MediaDevice>(a, aName, u""_ns, aGroupId, u""_ns);
+  return MakeRefPtr<MediaDevice>(a, aName, u""_ns, aGroupId);
 }
 
 RefPtr<MediaDevice> MakeSpeakerDevice(const nsString& aName,
                                       const nsString& aGroupId) {
-  return MakeRefPtr<MediaDevice>(MakeAudioDeviceInfo(aName), u"ID"_ns, aGroupId,
-                                 u"RawID"_ns);
+  return MakeRefPtr<MediaDevice>(MakeAudioDeviceInfo(aName), u"ID"_ns,
+                                 aGroupId);
 }
 
 /* Verify that when an audio input device name contains the video input device

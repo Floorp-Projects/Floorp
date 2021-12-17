@@ -70,12 +70,10 @@ class MediaDevice : public nsIMediaDevice {
   NS_DECL_NSIMEDIADEVICE
 
   MediaDevice(const RefPtr<MediaEngineSource>& aSource, const nsString& aName,
-              const nsString& aID, const nsString& aGroupID,
-              const nsString& aRawID);
+              const nsString& aID, const nsString& aGroupID);
 
   MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-              const nsString& aID, const nsString& aGroupID,
-              const nsString& aRawID = u""_ns);
+              const nsString& aID, const nsString& aGroupID);
 
   MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
               const nsString& aGroupID, const nsString& aRawID,
