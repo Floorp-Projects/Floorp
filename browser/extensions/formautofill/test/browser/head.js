@@ -3,7 +3,10 @@
             TEST_ADDRESS_IE_1,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, TEST_CREDIT_CARD_4, TEST_CREDIT_CARD_5,
             FORM_URL, CREDITCARD_FORM_URL, CREDITCARD_FORM_IFRAME_URL
-            FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
+            FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF,
+            AUTOFILL_ADDRESSES_AVAILABLE_PREF,
+            ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF, 
+            ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
             sleep, expectPopupOpen, openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
@@ -47,6 +50,10 @@ const ENABLED_AUTOFILL_ADDRESSES_PREF =
   "extensions.formautofill.addresses.enabled";
 const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF =
   "extensions.formautofill.addresses.capture.enabled";
+const AUTOFILL_ADDRESSES_AVAILABLE_PREF =
+  "extensions.formautofill.addresses.available";
+const ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF =
+  "extensions.formautofill.addresses.supportedCountries";
 const AUTOFILL_CREDITCARDS_AVAILABLE_PREF =
   "extensions.formautofill.creditCards.available";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF =
@@ -520,12 +527,9 @@ async function removeAllRecords() {
   if (addresses.length) {
     await removeAddresses(addresses.map(address => address.guid));
   }
-
-  if (Services.prefs.getBoolPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF)) {
-    let creditCards = await getCreditCards();
-    if (creditCards.length) {
-      await removeCreditCards(creditCards.map(cc => cc.guid));
-    }
+  let creditCards = await getCreditCards();
+  if (creditCards.length) {
+    await removeCreditCards(creditCards.map(cc => cc.guid));
   }
 }
 
