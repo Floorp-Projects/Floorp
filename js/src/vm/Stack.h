@@ -220,6 +220,8 @@ class AbstractFramePtr {
   inline bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
                                  ArrayObject* dest) const;
 
+  inline bool hasCachedSavedFrame() const;
+
   inline unsigned numActualArgs() const;
   inline unsigned numFormalArgs() const;
 
