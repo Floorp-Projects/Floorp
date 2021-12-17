@@ -33,6 +33,7 @@
           "screenshots",
           "seqstyle",
           "stackwalk",
+          "threads",
           "jstracer",
           "jsallocations",
           "nostacksampling",
