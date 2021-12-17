@@ -1441,7 +1441,7 @@ void MacroAssembler::permuteInt32x4(const uint32_t lanes[4], FloatRegister src,
 void MacroAssembler::concatAndRightShiftSimd128(FloatRegister rhs,
                                                 FloatRegister lhsDest,
                                                 uint32_t shift) {
-  vpalignr(Operand(rhs), lhsDest, shift);
+  vpalignr(Operand(rhs), lhsDest, lhsDest, shift);
 }
 
 void MacroAssembler::leftShiftSimd128(Imm32 count, FloatRegister src,
@@ -2902,7 +2902,7 @@ void MacroAssembler::widenLowInt8x16(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::widenHighInt8x16(FloatRegister src, FloatRegister dest) {
-  vpalignr(Operand(src), dest, 8);
+  vpalignr(Operand(src), dest, dest, 8);
   vpmovsxbw(Operand(dest), dest);
 }
 
@@ -2913,7 +2913,7 @@ void MacroAssembler::unsignedWidenLowInt8x16(FloatRegister src,
 
 void MacroAssembler::unsignedWidenHighInt8x16(FloatRegister src,
                                               FloatRegister dest) {
-  vpalignr(Operand(src), dest, 8);
+  vpalignr(Operand(src), dest, dest, 8);
   vpmovzxbw(Operand(dest), dest);
 }
 
@@ -2922,7 +2922,7 @@ void MacroAssembler::widenLowInt16x8(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::widenHighInt16x8(FloatRegister src, FloatRegister dest) {
-  vpalignr(Operand(src), dest, 8);
+  vpalignr(Operand(src), dest, dest, 8);
   vpmovsxwd(Operand(dest), dest);
 }
 
@@ -2933,7 +2933,7 @@ void MacroAssembler::unsignedWidenLowInt16x8(FloatRegister src,
 
 void MacroAssembler::unsignedWidenHighInt16x8(FloatRegister src,
                                               FloatRegister dest) {
-  vpalignr(Operand(src), dest, 8);
+  vpalignr(Operand(src), dest, dest, 8);
   vpmovzxwd(Operand(dest), dest);
 }
 

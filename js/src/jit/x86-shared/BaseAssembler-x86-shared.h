@@ -4204,10 +4204,11 @@ class BaseAssembler : public GenericAssembler {
                     base, index, scale, invalid_xmm, dst);
   }
 
-  void vpalignr_irr(unsigned imm, XMMRegisterID src, XMMRegisterID dst) {
+  void vpalignr_irr(unsigned imm, XMMRegisterID src1, XMMRegisterID src0,
+                    XMMRegisterID dst) {
     MOZ_ASSERT(imm < 32);
     threeByteOpImmSimd("vpalignr", VEX_PD, OP3_PALIGNR_VdqWdqIb, ESCAPE_3A, imm,
-                       src, invalid_xmm, dst);
+                       src1, src0, dst);
   }
 
   void vpunpcklbw_rr(XMMRegisterID src1, XMMRegisterID src0,

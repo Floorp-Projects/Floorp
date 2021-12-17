@@ -88,7 +88,7 @@ void MacroAssemblerX86Shared::extractLaneFloat64x2(FloatRegister input,
       moveDouble(input, output);
     }
   } else {
-    vpalignr(Operand(input), output, 8);
+    vpalignr(Operand(input), output, output, 8);
   }
 }
 
@@ -907,7 +907,7 @@ void MacroAssemblerX86Shared::packedShiftByScalarInt8x16(
   vmovd(count, scratch);
 
   // High bytes
-  vpalignr(Operand(in), xtmp, 8);
+  vpalignr(Operand(in), xtmp, xtmp, 8);
   (this->*extend)(Operand(xtmp), xtmp);
   (this->*shift)(scratch, xtmp, xtmp);
 
