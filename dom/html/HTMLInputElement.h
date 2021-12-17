@@ -958,8 +958,9 @@ class HTMLInputElement final : public TextControlElement,
 
   /**
    * Dispatch a select event.
+   * XXX: This dispatches select event synchronously, see bug 1679474.
    */
-  void DispatchSelectEvent(nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT void DispatchSelectEvent(nsPresContext* aPresContext);
 
   void SelectAll(nsPresContext* aPresContext);
   bool IsImage() const {
