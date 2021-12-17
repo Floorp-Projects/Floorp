@@ -91,7 +91,13 @@ def old_configure_options(*options):
 @old_configure_options(
     "--cache-file",
     "--datadir",
+    "--enable-extensions",
+    "--enable-libproxy",
+    "--enable-logrefcnt",
+    "--enable-negotiateauth",
     "--enable-official-branding",
+    "--enable-parental-controls",
+    "--enable-sandbox",
     "--enable-system-extension-dirs",
     "--enable-system-pixman",
     "--enable-universalchardet",

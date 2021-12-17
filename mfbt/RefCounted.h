@@ -27,7 +27,8 @@
 #  include "nsXPCOM.h"
 #endif
 
-#if defined(MOZILLA_INTERNAL_API) && defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(MOZILLA_INTERNAL_API) && \
+    (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
 #  define MOZ_REFCOUNTED_LEAK_CHECKING
 #endif
 
