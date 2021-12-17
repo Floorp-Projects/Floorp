@@ -54,7 +54,7 @@ class VideoConduitTest : public Test {
         mControl(GetCurrentSerialEventTarget()) {
     NSS_NoDB_Init(nullptr);
 
-    mVideoConduit->InitCall();
+    EXPECT_EQ(mVideoConduit->Init(), kMediaConduitNoError);
     mVideoConduit->InitControl(&mControl);
     mControl.Update([](auto& aControl) {
       aControl.mLocalSsrcs = {42};
@@ -63,7 +63,7 @@ class VideoConduitTest : public Test {
   }
 
   ~VideoConduitTest() override {
-    mVideoConduit->Shutdown();
+    mozilla::Unused << WaitFor(mVideoConduit->Shutdown());
     mCallWrapper->Destroy();
   }
 

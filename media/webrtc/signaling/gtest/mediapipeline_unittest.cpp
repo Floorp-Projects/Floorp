@@ -328,7 +328,7 @@ class TestAgent {
       audio_pipeline_->Shutdown();
     }
     if (audio_conduit_) {
-      audio_conduit_->Shutdown();
+      Unused << WaitFor(audio_conduit_->Shutdown());
     }
     if (call_) {
       call_->Destroy();

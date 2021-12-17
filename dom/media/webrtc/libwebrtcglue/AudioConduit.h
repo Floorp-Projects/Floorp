@@ -131,7 +131,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   void DeliverPacket(rtc::CopyOnWriteBuffer packet, PacketType type) override;
 
-  void Shutdown() override;
+  RefPtr<GenericPromise> Shutdown() override;
 
   WebrtcAudioConduit(RefPtr<WebrtcCallWrapper> aCall,
                      nsCOMPtr<nsISerialEventTarget> aStsThread);
