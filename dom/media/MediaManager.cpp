@@ -995,11 +995,9 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   return std::min<uint64_t>(distance, UINT32_MAX);
 }
 
-NS_IMETHODIMP
-MediaDevice::GetName(nsAString& aName) {
+void MediaDevice::GetName(nsAString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
   aName.Assign(mName);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1016,11 +1014,9 @@ MediaDevice::GetType(nsAString& aType) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-MediaDevice::GetId(nsAString& aID) {
+void MediaDevice::GetId(nsAString& aID) {
   MOZ_ASSERT(NS_IsMainThread());
   aID.Assign(mID);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1030,18 +1026,9 @@ MediaDevice::GetRawId(nsAString& aID) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-MediaDevice::GetGroupId(nsAString& aGroupID) {
+void MediaDevice::GetGroupId(nsAString& aGroupID) {
   MOZ_ASSERT(NS_IsMainThread());
   aGroupID.Assign(mGroupID);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MediaDevice::GetRawGroupId(nsAString& aRawGroupID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aRawGroupID.Assign(mRawGroupID);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
