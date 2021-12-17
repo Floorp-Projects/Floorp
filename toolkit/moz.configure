@@ -2734,3 +2734,15 @@ set_define(
     ),
 )
 set_define("MOZ_LAYERS_HAVE_LOG", True, when="--enable-dump-painting")
+
+
+# libproxy support
+# ==============================================================
+with only_when(toolkit_gtk):
+    system_lib_option("--enable-libproxy", help="Enable libproxy support")
+
+    with only_when("--enable-libproxy"):
+        pkg_check_modules("MOZ_LIBPROXY", "libproxy-1.0")
+
+        set_config("MOZ_ENABLE_LIBPROXY", True)
+        set_define("MOZ_ENABLE_LIBPROXY", True)
