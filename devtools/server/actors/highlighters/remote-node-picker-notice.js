@@ -8,11 +8,10 @@ const {
   CanvasFrameAnonymousContentHelper,
 } = require("devtools/server/actors/highlighters/utils/markup");
 
-loader.lazyGetter(this, "L10N", () => {
-  const { LocalizationHelper } = require("devtools/shared/l10n");
-  const STRINGS_URI = "devtools/shared/locales/highlighters.properties";
-  return new LocalizationHelper(STRINGS_URI);
+loader.lazyGetter(this, "HighlightersBundle", () => {
+  return new Localization(["devtools/shared/highlighters.ftl"], true);
 });
+
 loader.lazyGetter(this, "isAndroid", () => {
   const Services = require("Services");
   return Services.appinfo.OS === "Android";
@@ -75,7 +74,7 @@ class RemoteNodePickerNotice {
       },
     });
 
-    const actionStr = L10N.getStr(
+    const actionStr = HighlightersBundle.formatValueSync(
       isAndroid
         ? "remote-node-picker-notice-action-touch"
         : "remote-node-picker-notice-action-desktop"
@@ -84,7 +83,9 @@ class RemoteNodePickerNotice {
     this.markup.createNode({
       nodeType: "span",
       parent: toolbar,
-      text: L10N.getFormatStr("remote-node-picker-notice", actionStr),
+      text: HighlightersBundle.formatValueSync("remote-node-picker-notice", {
+        action: actionStr,
+      }),
       attributes: {
         id: this.infoNoticeElementId,
       },
@@ -93,7 +94,9 @@ class RemoteNodePickerNotice {
     this.markup.createNode({
       nodeType: "button",
       parent: toolbar,
-      text: L10N.getStr("remote-node-picker-notice-hide-button"),
+      text: HighlightersBundle.formatValueSync(
+        "remote-node-picker-notice-hide-button"
+      ),
       attributes: {
         id: this.hideButtonId,
       },

@@ -24,9 +24,9 @@ const {
   getNodeGridFlexType,
 } = require("devtools/server/actors/inspector/utils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/shared/locales/highlighters.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
+loader.lazyGetter(this, "HighlightersBundle", () => {
+  return new Localization(["devtools/shared/highlighters.ftl"], true);
+});
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
@@ -810,8 +810,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       parseFloat((height / zoom).toPrecision(6));
 
     const { grid: gridType, flex: flexType } = getNodeGridFlexType(node);
-    const gridLayoutTextType = this._getLayoutTextType("gridType", gridType);
-    const flexLayoutTextType = this._getLayoutTextType("flexType", flexType);
+    const gridLayoutTextType = this._getLayoutTextType("gridtype", gridType);
+    const flexLayoutTextType = this._getLayoutTextType("flextype", flexType);
 
     this.getElement("infobar-tagname").setTextContent(displayName);
     this.getElement("infobar-id").setTextContent(id);
@@ -829,12 +829,12 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       return "";
     }
     if (isContainer && !isItem) {
-      return L10N.getStr(`${layoutTypeKey}.container`);
+      return HighlightersBundle.formatValueSync(`${layoutTypeKey}-container`);
     }
     if (!isContainer && isItem) {
-      return L10N.getStr(`${layoutTypeKey}.item`);
+      return HighlightersBundle.formatValueSync(`${layoutTypeKey}-item`);
     }
-    return L10N.getStr(`${layoutTypeKey}.dual`);
+    return HighlightersBundle.formatValueSync(`${layoutTypeKey}-dual`);
   }
 
   _getPseudoClasses(node) {
