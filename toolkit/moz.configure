@@ -2786,3 +2786,28 @@ set_define(
     True,
     when=depends("--enable-parental-controls")(lambda x: not x),
 )
+
+
+# Sandboxing support
+# ==============================================================
+@depends(target, tsan, asan)
+def sandbox_default(target, tsan, asan):
+    # Only enable the sandbox by default on Linux, OpenBSD, macOS, and Windows
+    if target.kernel == "Linux":
+        # Bug 1182565: TSan conflicts with sandboxing on Linux.
+        # Bug 1287971: LSan also conflicts with sandboxing on Linux.
+        if tsan or asan:
+            return False
+        # Linux sandbox is only available on x86{,_64} and arm{,64}.
+        return target.cpu in ("x86", "x86_64", "arm", "aarch64")
+    return target.kernel in ("WINNT", "Darwin", "OpenBSD")
+
+
+option(
+    "--enable-sandbox",
+    default=sandbox_default,
+    help="{Enable|Disable} sandboxing support",
+)
+
+set_config("MOZ_SANDBOX", True, when="--enable-sandbox")
+set_define("MOZ_SANDBOX", True, when="--enable-sandbox")
