@@ -1044,14 +1044,9 @@ void TransceiverImpl::Stop() {
   }
 
   if (mCallWrapper) {
-    InvokeAsync(mCallWrapper->mCallThread, __func__,
-                [conduit = std::move(mConduit)]() mutable {
-                  if (conduit) {
-                    conduit->Shutdown();
-                  }
-                  return GenericPromise::CreateAndResolve(
-                      true, "TransceiverImpl conduit stopped");
-                })
+    auto conduit = std::move(mConduit);
+    (conduit ? conduit->Shutdown()
+             : GenericPromise::CreateAndResolve(true, __func__))
         ->Then(mMainThread, __func__,
                [pipeline = mTransmitPipeline, receiver = mReceiver]() mutable {
                  // Shutdown pipelines when conduits are guaranteed shut down,
