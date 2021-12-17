@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
+StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMutex;
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
                                                 AVCodecID aCodecID)
@@ -69,6 +69,8 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::AllocateExtraData() {
   return NS_OK;
 }
 
+// Note: This doesn't run on the ffmpeg TaskQueue, it runs on some other media
+// taskqueue
 MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
@@ -78,7 +80,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
                        RESULT_DETAIL("Couldn't find ffmpeg decoder"));
   }
 
-  StaticMutexAutoLock mon(sMonitor);
+  StaticMutexAutoLock mon(sMutex);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
@@ -133,6 +135,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Decode(
 
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   bool gotFrame = false;
   DecodedData results;
   MediaResult rv = DoDecode(aSample, &gotFrame, results);
@@ -145,6 +148,8 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample) {
 MediaResult FFmpegDataDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, bool* aGotFrame,
     MediaDataDecoder::DecodedData& aResults) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
 
@@ -194,6 +199,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Drain() {
 
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   RefPtr<MediaRawData> empty(new MediaRawData());
   empty->mTimecode = mLastInputDts;
   bool gotFrame = false;
@@ -220,7 +226,8 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
 }
 
 void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
-  StaticMutexAutoLock mon(sMonitor);
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  StaticMutexAutoLock mon(sMutex);
 
   if (mCodecContext) {
     if (mCodecContext->extradata) {
