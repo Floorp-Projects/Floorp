@@ -46,7 +46,7 @@ class HistoryMetadataGroupAdapter(
 
     internal object DiffCallback : DiffUtil.ItemCallback<History.Metadata>() {
         override fun areContentsTheSame(oldItem: History.Metadata, newItem: History.Metadata): Boolean =
-            oldItem.id == newItem.id
+            oldItem.position == newItem.position
 
         override fun areItemsTheSame(oldItem: History.Metadata, newItem: History.Metadata): Boolean =
             oldItem == newItem

@@ -17,7 +17,7 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
  * Class representing a history entry.
  */
 sealed class History : Parcelable {
-    abstract val id: Int
+    abstract val position: Int?
     abstract val title: String
     abstract val visitedAt: Long
     abstract val selected: Boolean
@@ -32,7 +32,7 @@ sealed class History : Parcelable {
      * @property selected Whether or not the history item is selected.
      */
     @Parcelize data class Regular(
-        override val id: Int,
+        override val position: Int? = null,
         override val title: String,
         val url: String,
         override val visitedAt: Long,
@@ -52,7 +52,7 @@ sealed class History : Parcelable {
      * @property selected Whether or not the history metadata item is selected.
      */
     @Parcelize data class Metadata(
-        override val id: Int,
+        override val position: Int? = null,
         override val title: String,
         val url: String,
         override val visitedAt: Long,
@@ -71,7 +71,7 @@ sealed class History : Parcelable {
      * @property selected Whether or not the history group is selected.
      */
     @Parcelize data class Group(
-        override val id: Int,
+        override val position: Int? = null,
         override val title: String,
         override val visitedAt: Long,
         val items: List<Metadata>,
@@ -82,9 +82,9 @@ sealed class History : Parcelable {
 /**
  * Extension function for converting a [HistoryMetadata] into a [History.Metadata].
  */
-fun HistoryMetadata.toHistoryMetadata(): History.Metadata {
+fun HistoryMetadata.toHistoryMetadata(position: Int? = null): History.Metadata {
     return History.Metadata(
-        id = createdAt.toInt(),
+        position = position,
         title = title?.takeIf(String::isNotEmpty)
             ?: key.url.tryGetHostFromUrl(),
         url = key.url,

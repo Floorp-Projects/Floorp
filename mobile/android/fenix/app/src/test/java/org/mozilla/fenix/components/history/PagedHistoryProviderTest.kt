@@ -93,7 +93,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3)
 
         var actualResults: List<History>? = null
-        provider.getHistory(10L, 5) {
+        provider.getHistory(10, 5) {
             actualResults = it
         }
 
@@ -115,13 +115,11 @@ class PagedHistoryProviderTest {
 
         val results = listOf(
             History.Group(
-                id = historyEntry1.createdAt.toInt(),
                 title = historyEntry1.key.searchTerm!!,
                 visitedAt = historyEntry1.createdAt,
                 // Results are de-duped by URL and sorted descending by createdAt/visitedAt
                 items = listOf(
                     History.Metadata(
-                        id = historyEntry1.createdAt.toInt(),
                         title = historyEntry1.title!!,
                         url = historyEntry1.key.url,
                         visitedAt = historyEntry1.createdAt,
@@ -129,7 +127,6 @@ class PagedHistoryProviderTest {
                         historyMetadataKey = historyMetadataKey1
                     ),
                     History.Metadata(
-                        id = historyEntry3.createdAt.toInt(),
                         title = historyEntry3.title!!,
                         url = historyEntry3.key.url,
                         visitedAt = historyEntry3.createdAt,
@@ -139,7 +136,6 @@ class PagedHistoryProviderTest {
                 )
             ),
             History.Regular(
-                id = 12,
                 title = visitInfo3.title!!,
                 url = visitInfo3.url,
                 visitedAt = visitInfo3.visitTime
@@ -180,7 +176,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
         var actualResults: List<History>? = null
-        provider.getHistory(0L, 5) {
+        provider.getHistory(0, 5) {
             actualResults = it
         }
 
@@ -202,13 +198,11 @@ class PagedHistoryProviderTest {
 
         val results = listOf(
             History.Group(
-                id = historyEntry1.createdAt.toInt(),
                 title = historyEntry1.key.searchTerm!!,
                 visitedAt = historyEntry1.createdAt,
                 // Results are de-duped by URL and sorted descending by createdAt/visitedAt
                 items = listOf(
                     History.Metadata(
-                        id = historyEntry1.createdAt.toInt(),
                         title = historyEntry1.title!!,
                         url = historyEntry1.key.url,
                         visitedAt = historyEntry1.createdAt,
@@ -254,7 +248,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
         var actualResults: List<History>? = null
-        provider.getHistory(0L, 5) {
+        provider.getHistory(0, 5) {
             actualResults = it
         }
 
@@ -276,13 +270,11 @@ class PagedHistoryProviderTest {
 
         val results = listOf(
             History.Group(
-                id = historyEntry1.createdAt.toInt(),
                 title = historyEntry1.key.searchTerm!!,
                 visitedAt = historyEntry1.createdAt,
                 // Results are de-duped by URL and sorted descending by createdAt/visitedAt
                 items = listOf(
                     History.Metadata(
-                        id = historyEntry1.createdAt.toInt(),
                         title = historyEntry1.title!!,
                         url = historyEntry1.key.url,
                         visitedAt = historyEntry1.createdAt,
@@ -405,7 +397,7 @@ class PagedHistoryProviderTest {
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3, historyEntry4)
 
         var actualResults: List<History>? = null
-        provider.getHistory(10L, 5) {
+        provider.getHistory(10, 5) {
             actualResults = it
         }
 
@@ -427,12 +419,10 @@ class PagedHistoryProviderTest {
 
         val results = listOf(
             History.Group(
-                id = historyEntry2.createdAt.toInt(),
                 title = historyEntry2.key.searchTerm!!,
                 visitedAt = historyEntry2.createdAt,
                 items = listOf(
                     History.Metadata(
-                        id = historyEntry2.createdAt.toInt(),
                         title = historyEntry2.title!!,
                         url = historyEntry2.key.url,
                         visitedAt = historyEntry2.createdAt,
@@ -440,7 +430,6 @@ class PagedHistoryProviderTest {
                         historyMetadataKey = historyMetadataKey2
                     ),
                     History.Metadata(
-                        id = historyEntry1.createdAt.toInt(),
                         title = historyEntry1.title!!,
                         url = historyEntry1.key.url,
                         visitedAt = historyEntry1.createdAt,
@@ -457,37 +446,31 @@ class PagedHistoryProviderTest {
     fun `WHEN removeConsecutiveDuplicates is called THEN all consecutive duplicates must be removed`() {
         val results = listOf(
             History.Group(
-                id = 1,
                 title = "Group 1",
                 visitedAt = 0,
                 items = emptyList()
             ),
             History.Regular(
-                id = 2,
                 title = "No duplicate item",
                 url = "url",
                 visitedAt = 0
             ),
             History.Regular(
-                id = 3,
                 title = "Duplicate item 1",
                 url = "url",
                 visitedAt = 0
             ),
             History.Regular(
-                id = 4,
                 title = "Duplicate item 2",
                 url = "url",
                 visitedAt = 0
             ),
             History.Group(
-                id = 5,
                 title = "Group 5",
                 visitedAt = 0,
                 items = emptyList()
             ),
             History.Regular(
-                id = 6,
                 title = "No duplicate item",
                 url = "url",
                 visitedAt = 0
@@ -496,25 +479,21 @@ class PagedHistoryProviderTest {
 
         val expectedList = listOf(
             History.Group(
-                id = 1,
                 title = "Group 1",
                 visitedAt = 0,
                 items = emptyList()
             ),
             History.Regular(
-                id = 2,
                 title = "No duplicate item",
                 url = "url",
                 visitedAt = 0
             ),
             History.Group(
-                id = 5,
                 title = "Group 5",
                 visitedAt = 0,
                 items = emptyList()
             ),
             History.Regular(
-                id = 6,
                 title = "No duplicate item",
                 url = "url",
                 visitedAt = 0

@@ -28,7 +28,7 @@ interface PagedHistoryProvider {
      * @param numberOfItems How many items to fetch
      * @param onComplete A callback that returns the list of [History]
      */
-    fun getHistory(offset: Long, numberOfItems: Long, onComplete: (List<History>) -> Unit)
+    fun getHistory(offset: Int, numberOfItems: Int, onComplete: (List<History>) -> Unit)
 }
 
 /**
@@ -63,8 +63,8 @@ class DefaultPagedHistoryProvider(
 
     @Suppress("LongMethod")
     override fun getHistory(
-        offset: Long,
-        numberOfItems: Long,
+        offset: Int,
+        numberOfItems: Int,
         onComplete: (List<History>) -> Unit,
     ) {
         // A PagedList DataSource runs on a background thread automatically.
@@ -75,14 +75,13 @@ class DefaultPagedHistoryProvider(
             if (showHistorySearchGroups) {
                 // We need to re-fetch all the history metadata if the offset resets back at 0
                 // in the case of a pull to refresh.
-                if (historyGroups == null || offset == 0L) {
+                if (historyGroups == null || offset == 0) {
                     historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
                         .sortedByDescending { it.createdAt }
                         .filter { it.key.searchTerm != null }
                         .groupBy { it.key.searchTerm!! }
                         .map { (searchTerm, items) ->
                             History.Group(
-                                id = items.first().createdAt.toInt(),
                                 title = searchTerm,
                                 visitedAt = items.first().createdAt,
                                 items = items.map { it.toHistoryMetadata() }
@@ -94,11 +93,11 @@ class DefaultPagedHistoryProvider(
             } else {
                 history = historyStorage
                     .getVisitsPaginated(
-                        offset,
-                        numberOfItems,
+                        offset.toLong(),
+                        numberOfItems.toLong(),
                         excludeTypes = excludedVisitTypes
                     )
-                    .mapIndexed(transformVisitInfoToHistoryItem(offset.toInt()))
+                    .map { transformVisitInfoToHistoryItem(it) }
             }
 
             onComplete(history)
@@ -142,17 +141,17 @@ class DefaultPagedHistoryProvider(
 
     @Suppress("MagicNumber")
     private suspend fun getHistoryAndSearchGroups(
-        offset: Long,
-        numberOfItems: Long,
+        offset: Int,
+        numberOfItems: Int,
     ): List<History> {
         val result = mutableListOf<History>()
         val history: List<History.Regular> = historyStorage
             .getVisitsPaginated(
-                offset,
-                numberOfItems,
+                offset.toLong(),
+                numberOfItems.toLong(),
                 excludeTypes = excludedVisitTypes
             )
-            .mapIndexed(transformVisitInfoToHistoryItem(offset.toInt()))
+            .map { transformVisitInfoToHistoryItem(it) }
 
         // We'll use this list to filter out redirects from metadata groups below.
         val redirectsInThePage = if (history.isNotEmpty()) {
@@ -173,7 +172,7 @@ class DefaultPagedHistoryProvider(
         // History metadata items are recorded after their associated visited info, we add an
         // additional buffer time to the most recent visit to account for a history group
         // appearing as the most recent item.
-        val visitedAtBuffer = if (offset == 0L) BUFFER_TIME else 0
+        val visitedAtBuffer = if (offset == 0) BUFFER_TIME else 0
 
         // Get the history groups that fit within the range of visited times in the current history
         // items.
@@ -208,19 +207,16 @@ class DefaultPagedHistoryProvider(
             .sortedByDescending { it.visitedAt }
     }
 
-    private fun transformVisitInfoToHistoryItem(offset: Int): (id: Int, visit: VisitInfo) -> History.Regular {
-        return { id, visit ->
-            val title = visit.title
-                ?.takeIf(String::isNotEmpty)
-                ?: visit.url.tryGetHostFromUrl()
+    private fun transformVisitInfoToHistoryItem(visit: VisitInfo): History.Regular {
+        val title = visit.title
+            ?.takeIf(String::isNotEmpty)
+            ?: visit.url.tryGetHostFromUrl()
 
-            History.Regular(
-                id = offset + id,
-                title = title,
-                url = visit.url,
-                visitedAt = visit.visitTime
-            )
-        }
+        return History.Regular(
+            title = title,
+            url = visit.url,
+            visitedAt = visit.visitTime
+        )
     }
 }
 
