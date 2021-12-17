@@ -29,16 +29,8 @@ import "./SearchBar.css";
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");
 
-function getShortcuts() {
-  const searchAgainKey = L10N.getStr("sourceSearch.search.again.key3");
-  const searchAgainPrevKey = L10N.getStr("sourceSearch.search.againPrev.key3");
-  const searchKey = L10N.getStr("sourceSearch.search.key2");
-
-  return {
-    shiftSearchAgainShortcut: searchAgainPrevKey,
-    searchAgainShortcut: searchAgainKey,
-    searchShortcut: searchKey,
-  };
+function getSearchShortcut() {
+  return L10N.getStr("sourceSearch.search.key2");
 }
 
 class SearchBar extends Component {
@@ -55,16 +47,10 @@ class SearchBar extends Component {
 
   componentWillUnmount() {
     const { shortcuts } = this.context;
-    const {
-      searchShortcut,
-      searchAgainShortcut,
-      shiftSearchAgainShortcut,
-    } = getShortcuts();
 
-    shortcuts.off(searchShortcut);
-    shortcuts.off("Escape");
-    shortcuts.off(searchAgainShortcut);
-    shortcuts.off(shiftSearchAgainShortcut);
+    shortcuts.off(getSearchShortcut(), this.toggleSearch);
+    shortcuts.off("Escape", this.onEscape);
+
     this.doSearch.cancel();
   }
 
@@ -73,18 +59,9 @@ class SearchBar extends Component {
     // reduce frequency of queries
     this.doSearch = debounce(this.doSearch, 100);
     const { shortcuts } = this.context;
-    const {
-      searchShortcut,
-      searchAgainShortcut,
-      shiftSearchAgainShortcut,
-    } = getShortcuts();
 
-    shortcuts.on(searchShortcut, this.toggleSearch);
+    shortcuts.on(getSearchShortcut(), this.toggleSearch);
     shortcuts.on("Escape", this.onEscape);
-
-    shortcuts.on(shiftSearchAgainShortcut, e => this.traverseResults(e, true));
-
-    shortcuts.on(searchAgainShortcut, e => this.traverseResults(e, false));
   }
 
   componentDidUpdate(prevProps, prevState) {
