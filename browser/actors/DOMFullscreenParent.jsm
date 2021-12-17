@@ -9,7 +9,19 @@ var EXPORTED_SYMBOLS = ["DOMFullscreenParent"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class DOMFullscreenParent extends JSWindowActorParent {
-  waitingForChildFullscreen = false;
+  // These properties get set by browser-fullScreenAndPointerLock.js.
+  // TODO: Bug 1743703 - Consider moving the messaging component of
+  //       browser-fullScreenAndPointerLock.js into the actor
+  waitingForChildEnterFullscreen = false;
+  waitingForChildExitFullscreen = false;
+  // Cache the next message recipient actor and in-process browsing context that
+  // is computed by _getNextMsgRecipientActor() of
+  // browser-fullScreenAndPointerLock.js, this is used to ensure the fullscreen
+  // cleanup messages goes the same route as fullscreen request, especially for
+  // the cleanup that happens after actor is destroyed.
+  // TODO: Bug 1743703 - Consider moving the messaging component of
+  //       browser-fullScreenAndPointerLock.js into the actor
+  nextMsgRecipient = null;
 
   updateFullscreenWindowReference(aWindow) {
     if (aWindow.document.documentElement.hasAttribute("inDOMFullscreen")) {
@@ -19,35 +31,71 @@ class DOMFullscreenParent extends JSWindowActorParent {
     }
   }
 
-  didDestroy() {
-    let window = this._fullscreenWindow;
-    if (!window) {
+  cleanupDomFullscreen(aWindow) {
+    if (!aWindow.FullScreen) {
       return;
     }
 
-    if (this.waitingForChildFullscreen) {
-      // We were killed while waiting for our DOMFullscreenChild
-      // to transition to fullscreen so we abort the entire
-      // fullscreen transition to prevent getting stuck in a
-      // partial fullscreen state. We need to go through the
-      // document since window.Fullscreen could be undefined
-      // at this point.
-      //
-      // This could reject if we're not currently in fullscreen
-      // so just ignore rejection.
-      window.document.exitFullscreen().catch(() => {});
+    // If we don't need to wait for child reply, i.e. cleanupDomFullscreen
+    // doesn't message to child, and we've exit the fullscreen, there won't be
+    // DOMFullscreen:Painted message from child and it is possible that no more
+    // paint would be triggered, so just notify fullscreen-painted observer.
+    if (
+      !aWindow.FullScreen.cleanupDomFullscreen(this) &&
+      !aWindow.document.fullscreen
+    ) {
+      Services.obs.notifyObservers(aWindow, "fullscreen-painted");
+    }
+  }
+
+  didDestroy() {
+    this._didDestroy = true;
+
+    let window = this._fullscreenWindow;
+    if (!window) {
+      if (this.waitingForChildExitFullscreen) {
+        this.waitingForChildExitFullscreen = false;
+        // We were destroyed while waiting for our DOMFullscreenChild to exit
+        // and have exited fullscreen, run cleanup steps anyway.
+        let topBrowsingContext = this.browsingContext.top;
+        let browser = topBrowsingContext.embedderElement;
+        if (browser) {
+          this.cleanupDomFullscreen(browser.ownerGlobal);
+        }
+      }
       return;
+    }
+
+    if (this.waitingForChildEnterFullscreen) {
+      this.waitingForChildEnterFullscreen = false;
+      if (window.document.fullscreen) {
+        // We were destroyed while waiting for our DOMFullscreenChild
+        // to transition to fullscreen so we abort the entire
+        // fullscreen transition to prevent getting stuck in a
+        // partial fullscreen state. We need to go through the
+        // document since window.Fullscreen could be undefined
+        // at this point.
+        //
+        // This could reject if we're not currently in fullscreen
+        // so just ignore rejection.
+        window.document.exitFullscreen().catch(() => {});
+        return;
+      }
+      this.cleanupDomFullscreen(window);
     }
 
     // Need to resume Chrome UI if the window is still in fullscreen UI
     // to avoid the window stays in fullscreen problem. (See Bug 1620341)
     if (window.document.documentElement.hasAttribute("inDOMFullscreen")) {
-      if (window.FullScreen) {
-        window.FullScreen.cleanupDomFullscreen(this);
-      }
+      this.cleanupDomFullscreen(window);
       if (window.windowUtils) {
         window.windowUtils.remoteFrameFullscreenReverted();
       }
+    } else if (this.waitingForChildExitFullscreen) {
+      this.waitingForChildExitFullscreen = false;
+      // We were destroyed while waiting for our DOMFullscreenChild to exit and
+      // have exited fullscreen, run cleanup steps anyway.
+      this.cleanupDomFullscreen(window);
     }
     this.updateFullscreenWindowReference(window);
   }
@@ -65,6 +113,8 @@ class DOMFullscreenParent extends JSWindowActorParent {
     let window = browser.ownerGlobal;
     switch (aMessage.name) {
       case "DOMFullscreen:Request": {
+        this.waitingForChildExitFullscreen = false;
+        this.nextMsgRecipient = null;
         this.requestOrigin = this;
         this.addListeners(window);
         window.windowUtils.remoteFrameFullscreenChanged(browser);
@@ -77,24 +127,29 @@ class DOMFullscreenParent extends JSWindowActorParent {
             aMessage.data.originNoSuffix
           );
         }
+        this.updateFullscreenWindowReference(window);
         break;
       }
       case "DOMFullscreen:Entered": {
-        this.waitingForChildFullscreen = false;
+        this.nextMsgRecipient = null;
+        this.waitingForChildEnterFullscreen = false;
         window.FullScreen.enterDomFullscreen(browser, this);
         this.updateFullscreenWindowReference(window);
         break;
       }
       case "DOMFullscreen:Exit": {
+        this.waitingForChildEnterFullscreen = false;
         window.windowUtils.remoteFrameFullscreenReverted();
         break;
       }
       case "DOMFullscreen:Exited": {
-        window.FullScreen.cleanupDomFullscreen(this);
+        this.waitingForChildExitFullscreen = false;
+        this.cleanupDomFullscreen(window);
         this.updateFullscreenWindowReference(window);
         break;
       }
       case "DOMFullscreen:Painted": {
+        this.waitingForChildExitFullscreen = false;
         Services.obs.notifyObservers(window, "fullscreen-painted");
         this.sendAsyncMessage("DOMFullscreen:Painted", {});
         TelemetryStopwatch.finish("FULLSCREEN_CHANGE_MS");
@@ -143,7 +198,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
         if (!this.hasBeenDestroyed() && !this.requestOrigin) {
           this.requestOrigin = this;
         }
-        window.FullScreen.cleanupDomFullscreen(this);
+        this.cleanupDomFullscreen(window);
         this.updateFullscreenWindowReference(window);
         this.removeListeners(window);
         break;
@@ -197,6 +252,10 @@ class DOMFullscreenParent extends JSWindowActorParent {
   }
 
   hasBeenDestroyed() {
+    if (this._didDestroy) {
+      return true;
+    }
+
     // The 'didDestroy' callback is not always getting called.
     // So we can't rely on it here. Instead, we will try to access
     // the browsing context to judge wether the actor has
