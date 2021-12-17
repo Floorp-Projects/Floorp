@@ -82,5 +82,19 @@ interface nsILocalFileWin : nsIFile
     */
     [noscript] PRFileDescStar openNSPRFileDescShareDelete(in long flags,
                                                           in long mode);
+
+    /**
+     * Return the Windows-specific file attributes of this file.
+     */
+    [noscript] unsigned long getWindowsFileAttributes();
+
+    /**
+     * Set or clear the Windows specific file attributes of this file.
+     *
+     * @param aSetAttrs   Attribute to set on the file.
+     * @param aClearAttrs Attributes to clear on the file.
+     */
+    [noscript] void setWindowsFileAttributes(in unsigned long aSetAttrs,
+                                             in unsigned long aClearAttrs);
 };
 
