@@ -1609,26 +1609,6 @@ AC_SUBST_LIST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST_LIST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST_LIST(MOZ_PGO_OPTIMIZE_FLAGS)
 
-dnl ========================================================
-dnl = Enable runtime logging
-dnl ========================================================
-AC_DEFINE(MOZ_LOGGING)
-AC_DEFINE(FORCE_PR_LOG)
-
-dnl ========================================================
-dnl = This will enable logging of addref, release, ctor, dtor.
-dnl ========================================================
-_ENABLE_LOGREFCNT=42
-MOZ_ARG_ENABLE_BOOL(logrefcnt,
-[  --enable-logrefcnt      Enable logging of refcounts (default=debug) ],
-    _ENABLE_LOGREFCNT=1,
-    _ENABLE_LOGREFCNT= )
-if test "$_ENABLE_LOGREFCNT" = "1"; then
-    AC_DEFINE(FORCE_BUILD_REFCNT_LOGGING)
-elif test -z "$_ENABLE_LOGREFCNT"; then
-    AC_DEFINE(NO_BUILD_REFCNT_LOGGING)
-fi
-
 case "${OS_TARGET}" in
 Android|WINNT|Darwin)
   MOZ_GLUE_IN_PROGRAM=
