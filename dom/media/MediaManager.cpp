@@ -892,10 +892,12 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
   MOZ_ASSERT(mSinkInfo);
 }
 
-MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-                         const nsString& aGroupID, const nsString& aRawID,
-                         const nsString& aRawGroupID)
-    : MediaDevice(aOther, aID, aGroupID, aRawID, aRawGroupID, aOther->mName) {}
+/* static */
+RefPtr<MediaDevice> MediaDevice::CopyWithNewGroupId(
+    const RefPtr<MediaDevice>& aOther, const nsString& aGroupID) {
+  return new MediaDevice(aOther, aOther->mID, aGroupID, aOther->mRawID,
+                         aOther->mRawGroupID, aOther->mName);
+}
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
                          const nsString& aGroupID, const nsString& aRawID,
@@ -1750,8 +1752,7 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
       }
     }
     if (updateGroupId) {
-      aVideo = new MediaDevice(aVideo, aVideo->mID, newVideoGroupID,
-                               aVideo->mRawID, aVideo->mRawGroupID);
+      aVideo = MediaDevice::CopyWithNewGroupId(aVideo, newVideoGroupID);
       return true;
     }
     return false;

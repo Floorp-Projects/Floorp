@@ -75,9 +75,8 @@ class MediaDevice : public nsIMediaDevice {
   MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
               const nsString& aID, const nsString& aGroupID);
 
-  MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-              const nsString& aGroupID, const nsString& aRawID,
-              const nsString& aRawGroupID);
+  static RefPtr<MediaDevice> CopyWithNewGroupId(
+      const RefPtr<MediaDevice>& aOther, const nsString& aGroupID);
 
   MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
               const nsString& aGroupID, const nsString& aRawID,
