@@ -15965,6 +15965,17 @@
     "description": "The amount of async paint tasks queued to the paint thread during a layer transaction.",
     "bug_numbers": [1483245]
   },
+  "GFX_MACOS_VIDEO_LOW_POWER": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["bwerth@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1737682],
+    "description": "MacOS video low power state achieved when enqueueing a video frame.",
+    "kind": "categorical",
+    "labels": ["None", "FailNotVideo", "Active", "FailPref", "Fail10_13", "FailFullscreen", "FailIsoMouse", "FailIsoTopVideo", "FailIsoSize", "FailIsoCenter", "FailIsoOneVideo", "FailSurface", "FailEnqueue"]
+  },
   "PERMISSION_REQUEST_ORIGIN_SCHEME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
