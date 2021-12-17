@@ -12,6 +12,7 @@
 
 namespace mozilla {
 class GmpPluginNotifierInterface {
+  virtual void DisconnectAll() = 0;
   virtual MediaEventSource<uint64_t>& CreatedGmpPluginEvent() = 0;
   virtual MediaEventSource<uint64_t>& ReleasedGmpPluginEvent() = 0;
 };
@@ -23,18 +24,19 @@ class GmpPluginNotifier : public GmpPluginNotifierInterface {
         mCreatedGmpPluginEvent(mOwningThread),
         mReleasedGmpPluginEvent(mOwningThread) {}
 
-  ~GmpPluginNotifier() {
+  ~GmpPluginNotifier() = default;
+
+  void DisconnectAll() override {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
     mCreatedGmpPluginEvent.DisconnectAll();
     mReleasedGmpPluginEvent.DisconnectAll();
   }
 
   MediaEventSource<uint64_t>& CreatedGmpPluginEvent() override {
-    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
     return mCreatedGmpPluginEvent;
   }
 
   MediaEventSource<uint64_t>& ReleasedGmpPluginEvent() override {
-    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
     return mReleasedGmpPluginEvent;
   }
 
@@ -101,6 +103,8 @@ class WebrtcVideoEncoderFactory : public GmpPluginNotifierInterface,
 
   std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
       const webrtc::SdpVideoFormat& aFormat) override;
+
+  void DisconnectAll() override { mInternalFactory->DisconnectAll(); }
 
   MediaEventSource<uint64_t>& CreatedGmpPluginEvent() override {
     return mInternalFactory->CreatedGmpPluginEvent();
