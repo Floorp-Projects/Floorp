@@ -45,15 +45,15 @@ function createDummyXULButton(id, label, win = window) {
 
 var gAddedToolbars = new Set();
 
-function createToolbarWithPlacements(id, placements = []) {
+function createToolbarWithPlacements(id, placements = [], properties = {}) {
   gAddedToolbars.add(id);
   let tb = document.createXULElement("toolbar");
   tb.id = id;
   tb.setAttribute("customizable", "true");
-  CustomizableUI.registerArea(id, {
-    type: CustomizableUI.TYPE_TOOLBAR,
-    defaultPlacements: placements,
-  });
+
+  properties.type = CustomizableUI.TYPE_TOOLBAR;
+  properties.defaultPlacements = placements;
+  CustomizableUI.registerArea(id, properties);
   gNavToolbox.appendChild(tb);
   CustomizableUI.registerToolbarNode(tb);
   return tb;
