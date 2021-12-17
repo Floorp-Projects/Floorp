@@ -1193,6 +1193,10 @@ impl Compositor for SwCompositor {
             let mut tile = SwTile::new(id.x, id.y);
             tile.color_id = self.gl.gen_textures(1)[0];
             tile.fbo_id = self.gl.gen_framebuffers(1)[0];
+            let mut prev_fbo = [0];
+            unsafe {
+                self.gl.get_integer_v(gl::DRAW_FRAMEBUFFER_BINDING, &mut prev_fbo);
+            }
             self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, tile.fbo_id);
             self.gl.framebuffer_texture_2d(
                 gl::DRAW_FRAMEBUFFER,
@@ -1208,7 +1212,7 @@ impl Compositor for SwCompositor {
                 self.depth_id,
                 0,
             );
-            self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
+            self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, prev_fbo[0] as gl::GLuint);
 
             surface.tiles.push(tile);
         }
