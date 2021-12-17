@@ -181,5 +181,24 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     addSharedLibrary(info.header, info.path.c_str(), sharedLibraryInfo);
   }
 
+  // Add the entry for dyld itself.
+  // We only support macOS 10.12+, which corresponds to dyld version 15+.
+  // dyld version 15 added the dyldPath property.
+  task_dyld_info_data_t task_dyld_info;
+  mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+  if (task_info(mach_task_self(), TASK_DYLD_INFO, (task_info_t)&task_dyld_info,
+                &count) != KERN_SUCCESS) {
+    return sharedLibraryInfo;
+  }
+
+  struct dyld_all_image_infos* aii =
+      (struct dyld_all_image_infos*)task_dyld_info.all_image_info_addr;
+  if (aii->version >= 15) {
+    const platform_mach_header* header =
+        reinterpret_cast<const platform_mach_header*>(
+            aii->dyldImageLoadAddress);
+    addSharedLibrary(header, aii->dyldPath, sharedLibraryInfo);
+  }
+
   return sharedLibraryInfo;
 }
