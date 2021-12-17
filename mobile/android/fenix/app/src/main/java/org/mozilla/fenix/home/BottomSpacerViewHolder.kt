@@ -5,24 +5,13 @@
 package org.mozilla.fenix.home
 
 import android.view.View
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.R
 
-class BottomSpacerViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView) {
-    init {
-        composeView.setContent {
-            FirefoxTheme {
-                Spacer(modifier = Modifier.height(88.dp))
-            }
-        }
-    }
-
+class BottomSpacerViewHolder(
+    view: View,
+) : RecyclerView.ViewHolder(view) {
     companion object {
-        val LAYOUT_ID = View.generateViewId()
+        val LAYOUT_ID = R.layout.bottom_spacer
     }
 }

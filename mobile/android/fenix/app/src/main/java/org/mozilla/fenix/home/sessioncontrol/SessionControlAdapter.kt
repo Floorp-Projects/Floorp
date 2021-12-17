@@ -235,9 +235,6 @@ class SessionControlAdapter(
                 interactor = interactor,
                 metrics = components.analytics.metrics
             )
-            BottomSpacerViewHolder.LAYOUT_ID -> return BottomSpacerViewHolder(
-                composeView = ComposeView(parent.context)
-            )
         }
 
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -284,6 +281,7 @@ class SessionControlAdapter(
                 view,
                 interactor
             )
+            BottomSpacerViewHolder.LAYOUT_ID -> BottomSpacerViewHolder(view)
             else -> throw IllegalStateException()
         }
     }

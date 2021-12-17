@@ -142,7 +142,8 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     items.addAll(
         listOf(
             AdapterItem.OnboardingPrivacyNotice,
-            AdapterItem.OnboardingFinish
+            AdapterItem.OnboardingFinish,
+            AdapterItem.BottomSpacer
         )
     )
 
