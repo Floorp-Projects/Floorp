@@ -5,6 +5,7 @@
 #include "mozilla/dom/MediaDevices.h"
 
 #include "AudioDeviceInfo.h"
+#include "MediaEngine.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaStreamBinding.h"
@@ -25,6 +26,7 @@
 
 namespace mozilla::dom {
 
+using EnumerationFlag = MediaManager::EnumerationFlag;
 using DeviceEnumerationType = MediaManager::DeviceEnumerationType;
 
 MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
@@ -456,9 +458,9 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
   auto devices = MakeRefPtr<MediaManager::MediaDeviceSetRefCnt>();
   return MediaManager::Get()
       ->EnumerateDevicesImpl(GetOwner(), MediaSourceEnum::Other, audioInputType,
-                             MediaSinkEnum::Speaker,
                              DeviceEnumerationType::Normal,
-                             DeviceEnumerationType::Normal, true, devices)
+                             DeviceEnumerationType::Normal,
+                             EnumerationFlag::EnumerateAudioOutputs, devices)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [aDeviceId, isExposed, devices](bool) mutable {
