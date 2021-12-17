@@ -6994,7 +6994,7 @@
 # Whether @layer is enabled
 - name: layout.css.cascade-layers.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
