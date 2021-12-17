@@ -89,7 +89,9 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvSetEmbeddedDocAccessibleCOMProxy(
       const IDispatchHolder& aCOMProxy);
 
-  mozilla::ipc::IPCResult RecvMaybeFireEmbedderLoadEvents(
+  // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult
+  RecvMaybeFireEmbedderLoadEvents(
       EmbedderElementEventType aFireEventAtEmbeddingElement);
 
   mozilla::ipc::IPCResult RecvIntrinsicSizeOrRatioChanged(
