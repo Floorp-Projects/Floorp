@@ -9,6 +9,7 @@
 #include "Layers.h"
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
+#include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/RefPtr.h"
