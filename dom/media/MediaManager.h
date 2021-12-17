@@ -85,6 +85,10 @@ class MediaDevice : public nsIMediaDevice {
               const nsString& aGroupID, const nsString& aRawID,
               const nsString& aRawGroupID, const nsString& aName);
 
+  void GetName(nsAString& aName);
+  void GetId(nsAString& aID);
+  void GetGroupId(nsAString& aGroupID);
+
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       dom::CallerType aCallerType);
