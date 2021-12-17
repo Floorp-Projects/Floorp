@@ -378,7 +378,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveTabsAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
+    fun `WHEN RemoveTabsAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -389,21 +389,27 @@ class DownloadMiddlewareTest {
             )
         )
         val store = BrowserStore(
-            initialState = BrowserState(),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
+                )
+            ),
             middleware = listOf(downloadMiddleware)
         )
 
-        store.dispatch(TabListAction.RemoveTabsAction(listOf("tab1"))).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab3"))).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
-        verify(downloadMiddleware, times(1)).removePrivateNotifications(any(), any())
+        verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
         reset(downloadMiddleware)
     }
 
     @Test
-    fun `WHEN RemoveTabAction is received THEN removePrivateNotifications must be called`() = runBlockingTest {
+    fun `WHEN RemoveTabsAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -414,16 +420,83 @@ class DownloadMiddlewareTest {
             )
         )
         val store = BrowserStore(
-            initialState = BrowserState(),
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
+                )
+            ),
             middleware = listOf(downloadMiddleware)
         )
 
-        store.dispatch(TabListAction.RemoveTabAction("tab1")).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab2"))).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
-        verify(downloadMiddleware, times(1)).removePrivateNotifications(any(), any())
+        verify(downloadMiddleware, times(0)).removePrivateNotifications(any())
+        reset(downloadMiddleware)
+    }
+
+    @Test
+    fun `WHEN RemoveTabAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3")
+                )
+            ),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
+    }
+
+    @Test
+    fun `WHEN RemoveTabAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runBlockingTest {
+        val applicationContext: Context = mock()
+        val downloadMiddleware = spy(
+            DownloadMiddleware(
+                applicationContext,
+                AbstractFetchDownloadService::class.java,
+                coroutineContext = dispatcher,
+                downloadStorage = mock()
+            )
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-tab1"),
+                    createTab("https://www.firefox.com", private = true, id = "test-tab2"),
+                    createTab("https://www.wikipedia.com", private = true, id = "test-tab3"),
+                )
+            ),
+            middleware = listOf(downloadMiddleware)
+        )
+
+        store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
+
+        dispatcher.advanceUntilIdle()
+        store.waitUntilIdle()
+
+        verify(downloadMiddleware, times(0)).removePrivateNotifications(any())
     }
 
     @Test
@@ -472,7 +545,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download in the tabIds list`() = runBlockingTest {
+    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called for all private downloads`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -492,9 +565,9 @@ class DownloadMiddlewareTest {
             middleware = listOf(downloadMiddleware)
         )
 
-        downloadMiddleware.removePrivateNotifications(store, listOf("tab2"))
+        downloadMiddleware.removePrivateNotifications(store)
 
-        verify(downloadMiddleware, times(1)).removeStatusBarNotification(any(), any())
+        verify(downloadMiddleware, times(2)).removeStatusBarNotification(any(), any())
     }
 
     @Test

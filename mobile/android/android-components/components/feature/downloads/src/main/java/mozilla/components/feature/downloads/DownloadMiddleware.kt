@@ -17,6 +17,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
@@ -74,8 +75,13 @@ class DownloadMiddleware(
         when (action) {
             is TabListAction.RemoveAllTabsAction,
             is TabListAction.RemoveAllPrivateTabsAction -> removePrivateNotifications(context.store)
-            is TabListAction.RemoveTabsAction -> removePrivateNotifications(context.store, action.tabIds)
-            is TabListAction.RemoveTabAction -> removePrivateNotifications(context.store, listOf(action.tabId))
+            is TabListAction.RemoveTabsAction,
+            is TabListAction.RemoveTabAction -> {
+                val privateTabs = context.store.state.getNormalOrPrivateTabs(private = true)
+                if (privateTabs.isEmpty()) {
+                    removePrivateNotifications(context.store)
+                }
+            }
             is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
             is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
         }
@@ -167,12 +173,6 @@ class DownloadMiddleware(
     @VisibleForTesting
     internal fun removePrivateNotifications(store: Store<BrowserState, BrowserAction>) {
         val privateDownloads = store.state.downloads.filterValues { it.private }
-        privateDownloads.forEach { removeStatusBarNotification(store, it.value) }
-    }
-
-    @VisibleForTesting
-    internal fun removePrivateNotifications(store: Store<BrowserState, BrowserAction>, tabIds: List<String>) {
-        val privateDownloads = store.state.downloads.filterValues { it.sessionId in tabIds && it.private }
         privateDownloads.forEach { removeStatusBarNotification(store, it.value) }
     }
 }
