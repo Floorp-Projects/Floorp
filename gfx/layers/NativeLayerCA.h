@@ -42,6 +42,31 @@ namespace layers {
 class NativeLayerRootSnapshotterCA;
 class SurfacePoolHandleCA;
 
+enum class SpecializeType {
+  // Order here is important. Later enums will dominate earlier enums.
+  // These are ordered so that we can start with None, then progress to a
+  // soft failure state indicating that no further processing is needed.
+  // Success is followed by increasingly interesting failure states. Any
+  // state that starts with "Fail" is a failure state.
+  // These must be kept synchronized with the telemetry histogram enums.
+
+  None,          // Never emitted as telemetry. A baseline value.
+  FailNotVideo,  // Never emitted as telemetry. No video is visible. We
+                 // treat this as a failure state to prevent further
+                 // processing of the layers.
+  Success,
+  FailPref,
+  Fail10_13,
+  FailFullscreen,
+  FailIsoMouse,     // "FailIso" series denote a failure of isolation.
+  FailIsoTopVideo,  // Abbreviating these enums keeps them below the
+  FailIsoSize,      // 20-character limit for telemetry enums, which we want
+  FailIsoCenter,    // to match exactly.
+  FailIsoOneVideo,
+  FailSurface,
+  FailEnqueue,
+};
+
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer - this CALayer is the root of the
@@ -129,14 +154,16 @@ class NativeLayerRootCA : public NativeLayerRoot {
   struct Representation {
     explicit Representation(CALayer* aRootCALayer);
     ~Representation();
-    void Commit(WhichRepresentation aRepresentation,
-                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
-                bool aWindowIsFullscreen, bool aMouseMovedRecently);
+    SpecializeType Commit(WhichRepresentation aRepresentation,
+                          const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+                          bool aWindowIsFullscreen, bool aMouseMovedRecently);
     CALayer* FindVideoLayerToIsolate(
         WhichRepresentation aRepresentation,
-        const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
+        const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+        SpecializeType& aSpecialize  // out param
+    );
     CALayer* mRootCALayer = nullptr;  // strong
-    bool mIsIsolatingVideo = false;
+    SpecializeType mIsIsolatingVideo = SpecializeType::FailNotVideo;
     bool mMutatedLayerStructure = false;
     bool mMutatedMouseMovedRecently = false;
   };
@@ -175,6 +202,12 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   // Has the mouse recently moved?
   bool mMouseMovedRecently = false;
+
+  // How many times have we committed since the last time we emitted
+  // telemetry?
+  unsigned int mTelemetryCommitCount = 0;
+  static const unsigned int TELEMETRY_COMMIT_PERIOD =
+      600;  // 10 seconds at 60fps
 };
 
 class RenderSourceNLRS;
@@ -283,7 +316,8 @@ class NativeLayerCA : public NativeLayer {
 
   UpdateType HasUpdate(WhichRepresentation aRepresentation);
   bool WillUpdateAffectLayers(WhichRepresentation aRepresentation);
-  bool ApplyChanges(WhichRepresentation aRepresentation, UpdateType aUpdate);
+  SpecializeType ApplyChanges(WhichRepresentation aRepresentation,
+                              UpdateType aUpdate);
 
   void SetBackingScale(float aBackingScale);
 
@@ -318,7 +352,8 @@ class NativeLayerCA : public NativeLayer {
 
   bool IsVideo();
   bool IsVideoAndLocked(const MutexAutoLock& aProofOfLock);
-  bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
+
+  SpecializeType CanSpecializeVideo(const MutexAutoLock& aProofOfLock);
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
@@ -338,15 +373,15 @@ class NativeLayerCA : public NativeLayer {
     // a partial update, the return value will indicate if all the needed
     // changes were able to be applied under these restrictions. A false return
     // value indicates an All update is necessary.
-    bool ApplyChanges(UpdateType aUpdate, const gfx::IntSize& aSize,
-                      bool aIsOpaque, const gfx::IntPoint& aPosition,
-                      const gfx::Matrix4x4& aTransform,
-                      const gfx::IntRect& aDisplayRect,
-                      const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
-                      bool aSurfaceIsFlipped,
-                      gfx::SamplingFilter aSamplingFilter,
-                      bool aSpecializeVideo,
-                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
+    SpecializeType ApplyChanges(UpdateType aUpdate, const gfx::IntSize& aSize,
+                                bool aIsOpaque, const gfx::IntPoint& aPosition,
+                                const gfx::Matrix4x4& aTransform,
+                                const gfx::IntRect& aDisplayRect,
+                                const Maybe<gfx::IntRect>& aClipRect,
+                                float aBackingScale, bool aSurfaceIsFlipped,
+                                gfx::SamplingFilter aSamplingFilter,
+                                SpecializeType aSpecializeVideo,
+                                CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
 
     // Return whether any aspects of this layer representation have been mutated
     // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
@@ -449,7 +484,7 @@ class NativeLayerCA : public NativeLayer {
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
-  bool mSpecializeVideo = false;
+  SpecializeType mSpecializeVideo = SpecializeType::None;
 };
 
 }  // namespace layers
