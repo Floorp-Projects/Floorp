@@ -3216,6 +3216,36 @@ nsLocalFile::Reveal() {
 }
 
 NS_IMETHODIMP
+nsLocalFile::GetWindowsFileAttributes(uint32_t* aAttrs) {
+  NS_ENSURE_ARG_POINTER(aAttrs);
+
+  DWORD dwAttrs = ::GetFileAttributesW(mWorkingPath.get());
+  if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
+    return ConvertWinError(GetLastError());
+  }
+
+  *aAttrs = dwAttrs;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetWindowsFileAttributes(uint32_t aSetAttrs,
+                                      uint32_t aClearAttrs) {
+  DWORD dwAttrs = ::GetFileAttributesW(mWorkingPath.get());
+  if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
+    return ConvertWinError(GetLastError());
+  }
+
+  dwAttrs = (dwAttrs & ~aClearAttrs) | aSetAttrs;
+
+  if (::SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0) {
+    return ConvertWinError(GetLastError());
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLocalFile::Launch() {
   // This API should be main thread only
   MOZ_ASSERT(NS_IsMainThread());
