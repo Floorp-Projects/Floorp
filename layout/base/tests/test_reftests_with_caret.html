@@ -171,8 +171,10 @@ var tests = [
     [ 'input-password-remask.html', 'input-password-remask-ref.html' ],
 
     // The following hash means language.
+    function() {SpecialPowers.pushPrefEnv({'set': [['editor.password.mask_delay', 0]]}, nextTest);} ,
     [ 'input-password-RTL-input.html#arabic', 'input-password-RTL-input-ref.html'],
     [ 'input-password-RTL-input.html#hebrew', 'input-password-RTL-input-ref.html'],
+    function() {SpecialPowers.pushPrefEnv({'clear': [['editor.password.mask_delay']]}, nextTest);} ,
 
     // The following hash means "text ('_' is a space)" - unmarsk start - unmask end - selection start - selection end[ - text-transform].
     [ 'input-password-unmask.html#abc_def-0-7-7-7', 'input-password-unmask-ref.html#abc_def-0-7-7-7'],
@@ -195,6 +197,19 @@ var tests = [
     [ 'input-password-unmask-around-emoji.html#1-4-4-4', 'input-password-unmask-around-emoji-ref.html#1-4-4-4'],
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.forms.input-type-show-password-button.enabled']]}, nextTest);} ,
 
+    // The following tests something in editable elements so that we need to disable zoom to focused editor.
+    function() {SpecialPowers.pushPrefEnv({'set': [['apz.zoom-to-focused-input.enabled', false]]}, nextTest);} ,
+    [ 'bug956530-1.html' , 'bug956530-1-ref.html' ] ,    // Clicks an <input> element
+    [ 'bug1097242-1.html', 'bug1097242-1-ref.html'] ,    // Clicks non-editable and non-selectable element in an editing host
+    [ 'bug1423331-1.html' , 'bug1423331-1-ref.html' ] ,  // Clicks in an editing host
+    [ 'bug1423331-2.html' , 'bug1423331-2-ref.html' ] ,  // Clicks in an editing host
+    [ 'bug1506547-4.html' , 'bug1506547-4-ref.html' ] ,  // Clicks in an editing host
+    [ 'bug1506547-5.html' , 'bug1506547-5-ref.html' ] ,  // Clicks in an editing host
+    [ 'bug1506547-6.html' , 'bug1506547-5-ref.html' ] ,  // Clicks in an editing host (reference)
+    [ 'bug1518339-1.html' , 'bug1518339-1-ref.html' ] ,  // Clicks in an editing host
+    [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,  // Clicks in an editing host
+    function() {SpecialPowers.pushPrefEnv({'clear': [['apz.zoom-to-focused-input.enabled']]}, nextTest);} ,
+
     [ 'input-stoppropagation.html', 'input-stoppropagation-ref.html'] ,
     [ 'textarea-maxlength-valid-before-change.html', 'textarea-valid-ref.html'] ,
     [ 'textarea-maxlength-valid-change.html', 'textarea-valid-ref.html'] ,
@@ -214,14 +229,17 @@ var tests = [
     [ 'bug682712-1.html' , 'bug682712-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['bidi.browser.ui']]}, nextTest);} ,
     [ 'bug746993-1.html' , 'bug746993-1-ref.html' ] ,
-    [ 'bug956530-1.html' , 'bug956530-1-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);} ,
+    [ 'bug966992-1.html' , 'bug966992-1-ref.html' ] ,
+    [ 'bug966992-2.html' , 'bug966992-2-ref.html' ] ,
+    [ 'bug966992-3.html' , 'bug966992-3-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);} ,
     [ 'bug989012-1.html' , 'bug989012-1-ref.html' ] ,
     [ 'bug989012-2.html' , 'bug989012-2-ref.html' ] ,
     [ 'bug989012-3.html' , 'bug989012-3-ref.html' ] ,
     [ 'bug1007065-1.html' , 'bug1007065-1-ref.html' ] ,
     [ 'bug1007067-1.html' , 'bug1007067-1-ref.html' ] ,
     [ 'bug1061468.html'  , 'bug1061468-ref.html'  ] ,
-    [ 'bug1097242-1.html', 'bug1097242-1-ref.html'] ,
     [ 'bug1109968-1.html', 'bug1109968-1-ref.html'] ,
     [ 'bug1109968-2.html', 'bug1109968-2-ref.html'] ,
     // [ 'bug1123067-1.html' , 'bug1123067-ref.html'  ] , TODO: bug 1129205
@@ -230,6 +248,7 @@ var tests = [
     [ 'bug1132768-1.html' , 'bug1132768-1-ref.html'] ,
     [ 'bug1237236-1.html' , 'bug1237236-1-ref.html' ] ,
     [ 'bug1237236-2.html' , 'bug1237236-2-ref.html' ] ,
+    [ 'bug1258308-1.html' , 'bug1258308-1-ref.html' ] ,
     [ 'bug1258308-2.html' , 'bug1258308-2-ref.html' ] ,
     [ 'bug1259949-1.html' , 'bug1259949-1-ref.html'] ,
     [ 'bug1259949-2.html' , 'bug1259949-2-ref.html'] ,
@@ -247,23 +266,15 @@ var tests = [
     [ 'bug1354478-6.html' , 'bug1354478-6-ref.html'] ,
     [ 'bug1359411.html'   , 'bug1359411-ref.html' ] ,
     [ 'bug1415416.html'   , 'bug1415416-ref.html' ] ,
-    [ 'bug1423331-1.html' , 'bug1423331-1-ref.html' ] ,
-    [ 'bug1423331-2.html' , 'bug1423331-2-ref.html' ] ,
     // FIXME(bug 1434949): These two fail in some platforms.
     // [ 'bug1423331-3.html' , 'bug1423331-1-ref.html' ] ,
     // [ 'bug1423331-4.html' , 'bug1423331-2-ref.html' ] ,
     [ 'bug1484094-1.html' , 'bug1484094-1-ref.html' ] ,
     [ 'bug1484094-2.html' , 'bug1484094-2-ref.html' ] ,
-    [ 'bug1496118.html'   , 'bug1496118-ref.html' ] ,
     [ 'bug1506547-1.html' , 'bug1506547-2.html' ] ,
     [ 'bug1506547-2.html' , 'bug1506547-3.html' ] ,
-    [ 'bug1506547-4.html' , 'bug1506547-4-ref.html' ] ,
-    [ 'bug1506547-5.html' , 'bug1506547-5-ref.html' ] ,
-    [ 'bug1506547-6.html' , 'bug1506547-5-ref.html' ] ,
     [ 'bug1510942-1.html' , 'bug1510942-1-ref.html' ] ,
     [ 'bug1510942-2.html' , 'bug1510942-2-ref.html' ] ,
-    [ 'bug1518339-1.html' , 'bug1518339-1-ref.html' ] ,
-    [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,
     [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
     // Checks that the caret isn't occluded by children background content.
     [ 'bug1591282-1.html' , 'bug1591282-1-ref.html' ] ,
@@ -292,20 +303,15 @@ var tests = [
 ];
 
 if (!navigator.appVersion.includes("Android")) {
-  tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
-  tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
-  tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
-  tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);});
-  tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
-  tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
-  tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
-  tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);});
-  tests.push([ 'bug1258308-1.html' , 'bug1258308-1-ref.html' ]); // maybe VK_END doesn't work on Android?
+  tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);  // Tests spellchecker
+  tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);  // Tests spellchecker
+  tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);  // Tests spellchecker
+  tests.push([ 'bug1496118.html'  , 'bug1496118-ref.html' ]);   // Tests DnD
 } else {
   is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platform or this if..else check removed");
 }
 
-if (navigator.platform.includes("Linux")) {
+if (navigator.platform.includes("Linux") && !navigator.appVersion.includes("Android")) {
   tests = tests.concat([
     // Turn off accessiblecaret to prevent it from interfering with the
     // multi-range selection.
