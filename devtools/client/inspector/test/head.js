@@ -67,6 +67,16 @@ var startPicker = async function(toolbox, skipFocus) {
 };
 
 /**
+ * Stop the element picker using the Escape keyboard shortcut
+ * @param {Toolbox} toolbox
+ */
+var stopPickerWithEscapeKey = async function(toolbox) {
+  const onPickerStopped = toolbox.nodePicker.once("picker-node-canceled");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, toolbox.win);
+  await onPickerStopped;
+};
+
+/**
  * Start the eye dropper tool.
  * @param {Toolbox} toolbox
  */
