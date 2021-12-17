@@ -195,11 +195,7 @@ class NodePicker {
       return;
     }
 
-    this._stopPickerListeners();
-    this._isPicking = false;
-    if (this.#remoteNodePickerNoticeHighlighter) {
-      this.#remoteNodePickerNoticeHighlighter.hide();
-    }
+    this._stopPicking();
 
     if (!this._currentNode) {
       this._currentNode = this._findAndAttachElement(event);
@@ -386,18 +382,22 @@ class NodePicker {
     }
   }
 
+  _stopPicking() {
+    this._stopPickerListeners();
+    this._isPicking = false;
+    this._hoveredNode = null;
+    if (this.#remoteNodePickerNoticeHighlighter) {
+      this.#remoteNodePickerNoticeHighlighter.hide();
+    }
+  }
+
   cancelPick() {
     if (this._targetActor.threadActor) {
       this._targetActor.threadActor.showOverlay();
     }
 
     if (this._isPicking) {
-      this._stopPickerListeners();
-      this._isPicking = false;
-      this._hoveredNode = null;
-      if (this.#remoteNodePickerNoticeHighlighter) {
-        this.#remoteNodePickerNoticeHighlighter.hide();
-      }
+      this._stopPicking();
     }
   }
 
