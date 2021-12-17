@@ -72,29 +72,62 @@ function ensureCssLoaded(domWindow) {
   );
 }
 
-function isAvailable() {
-  let availablePref = Services.prefs.getCharPref(
-    "extensions.formautofill.available"
-  );
-  if (availablePref == "on") {
-    return true;
-  } else if (availablePref == "detect") {
-    let region = Services.prefs.getCharPref("browser.search.region", "");
-    let supportedCountries = Services.prefs
-      .getCharPref("extensions.formautofill.supportedCountries")
-      .split(",");
-    if (
-      !Services.prefs.getBoolPref("extensions.formautofill.supportRTL") &&
-      Services.locale.isAppLocaleRTL
-    ) {
-      return false;
-    }
-    return supportedCountries.includes(region);
-  }
-  return false;
-}
-
 this.formautofill = class extends ExtensionAPI {
+  /**
+   * Adjusts and checks form autofill preferences during startup.
+   *
+   * @param {boolean} addressAutofillAvailable
+   * @param {boolean} creditCardAutofillAvailable
+   */
+  adjustAndCheckFormAutofillPrefs(
+    addressAutofillAvailable,
+    creditCardAutofillAvailable
+  ) {
+    // Reset the sync prefs in case the features were previously available
+    // but aren't now.
+    if (!creditCardAutofillAvailable) {
+      Services.prefs.clearUserPref(
+        "services.sync.engine.creditcards.available"
+      );
+    }
+    if (!addressAutofillAvailable) {
+      Services.prefs.clearUserPref("services.sync.engine.addresses.available");
+    }
+
+    if (!addressAutofillAvailable && !creditCardAutofillAvailable) {
+      Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
+      Services.telemetry.scalarSet("formautofill.availability", false);
+      return;
+    }
+
+    // This pref is used for web contents to detect the autocomplete feature.
+    // When it's true, "element.autocomplete" will return tokens we currently
+    // support -- otherwise it'll return an empty string.
+    Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
+    Services.telemetry.scalarSet("formautofill.availability", true);
+
+    // These "*.available" prefs determines whether the "addresses"/"creditcards" sync engine is
+    // available (ie, whether it is shown in any UI etc) - it *does not* determine
+    // whether the engine is actually enabled or not.
+    if (FormAutofill.isAutofillAddressesEnabled) {
+      Services.prefs.setBoolPref(
+        "services.sync.engine.addresses.available",
+        true
+      );
+    } else {
+      Services.prefs.clearUserPref("services.sync.engine.addresses.available");
+    }
+    if (FormAutofill.isAutofillCreditCardsAvailable) {
+      Services.prefs.setBoolPref(
+        "services.sync.engine.creditcards.available",
+        true
+      );
+    } else {
+      Services.prefs.clearUserPref(
+        "services.sync.engine.creditcards.available"
+      );
+    }
+  }
   onStartup() {
     // We have to do this before actually determining if we're enabled, since
     // there are scripts inside of the core browser code that depend on the
@@ -132,43 +165,16 @@ this.formautofill = class extends ExtensionAPI {
         "Cannot find formautofill chrome.manifest for registring translated strings"
       );
     }
-
-    if (!isAvailable()) {
-      Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
-      // reset the sync related prefs incase the feature was previously available
-      // but isn't now.
-      Services.prefs.clearUserPref("services.sync.engine.addresses.available");
-      Services.prefs.clearUserPref(
-        "services.sync.engine.creditcards.available"
-      );
-      Services.telemetry.scalarSet("formautofill.availability", false);
+    let addressAutofillAvailable = FormAutofill.isAutofillAddressesAvailable;
+    let creditCardAutofillAvailable =
+      FormAutofill.isAutofillCreditCardsAvailable;
+    this.adjustAndCheckFormAutofillPrefs(
+      addressAutofillAvailable,
+      creditCardAutofillAvailable
+    );
+    if (!creditCardAutofillAvailable && !addressAutofillAvailable) {
       return;
     }
-
-    // This pref is used for web contents to detect the autocomplete feature.
-    // When it's true, "element.autocomplete" will return tokens we currently
-    // support -- otherwise it'll return an empty string.
-    Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
-    Services.telemetry.scalarSet("formautofill.availability", true);
-
-    // This pref determines whether the "addresses"/"creditcards" sync engine is
-    // available (ie, whether it is shown in any UI etc) - it *does not* determine
-    // whether the engine is actually enabled or not.
-    Services.prefs.setBoolPref(
-      "services.sync.engine.addresses.available",
-      true
-    );
-    if (FormAutofill.isAutofillCreditCardsAvailable) {
-      Services.prefs.setBoolPref(
-        "services.sync.engine.creditcards.available",
-        true
-      );
-    } else {
-      Services.prefs.clearUserPref(
-        "services.sync.engine.creditcards.available"
-      );
-    }
-
     // Listen for the autocomplete popup message
     // or the form submitted message (which may trigger a
     // doorhanger) to lazily append our stylesheets related
