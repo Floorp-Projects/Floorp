@@ -146,19 +146,6 @@ exports[`ShortcutsModal renders when enabled 1`] = `
         </li>
         <li>
           <span>
-            Find next
-          </span>
-          <span>
-            <span
-              className="keystroke"
-              key="Cmd+G"
-            >
-              Cmd+G
-            </span>
-          </span>
-        </li>
-        <li>
-          <span>
             Find in files
           </span>
           <span>

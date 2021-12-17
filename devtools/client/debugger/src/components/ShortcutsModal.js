@@ -71,10 +71,6 @@ export class ShortcutsModal extends Component {
           formatKeyShortcut(L10N.getStr("sources.search.key2"))
         )}
         {this.renderShorcutItem(
-          L10N.getStr("shortcuts.searchAgain2"),
-          formatKeyShortcut(L10N.getStr("sourceSearch.search.again.key3"))
-        )}
-        {this.renderShorcutItem(
           L10N.getStr("shortcuts.projectSearch2"),
           formatKeyShortcut(L10N.getStr("projectTextSearch.key"))
         )}
