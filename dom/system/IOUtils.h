@@ -124,6 +124,15 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
+#if defined(XP_WIN)
+  static already_AddRefed<Promise> GetWindowsAttributes(GlobalObject& aGlobal,
+                                                        const nsAString& aPath);
+
+  static already_AddRefed<Promise> SetWindowsAttributes(
+      GlobalObject& aGlobal, const nsAString& aPath,
+      const mozilla::dom::WindowsFileAttributes& aAttrs);
+#endif
+
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
@@ -371,6 +380,28 @@ class IOUtils final {
    * @return Whether or not the file exists.
    */
   static Result<bool, IOError> ExistsSync(nsIFile* aFile);
+
+#if defined(XP_WIN)
+  /**
+   * Return the Windows-specific attributes of the file.
+   *
+   * @param aFile The location of the file.
+   *
+   * @return The Windows-specific attributes of the file.
+   */
+  static Result<uint32_t, IOError> GetWindowsAttributesSync(nsIFile* aFile);
+
+  /**
+   * Set the Windows-specific attributes of the file.
+   *
+   * @param aFile  The location of the file.
+   * @param aAttrs The attributes to set on the file.
+   *
+   * @return |Ok| if the attributes were successfully set, or an error.
+   */
+  static Result<Ok, IOError> SetWindowsAttributesSync(
+      nsIFile* aFile, const uint32_t aSetAttrs, const uint32_t aClearAttrs);
+#endif
 
   enum class EventQueueStatus {
     Uninitialized,
