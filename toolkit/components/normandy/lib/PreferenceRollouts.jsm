@@ -125,7 +125,7 @@ var PreferenceRollouts = {
   STATE_ROLLED_BACK: "rolled-back",
   STATE_GRADUATED: "graduated",
 
-  // A set of rollout slugs that are obsolete based the code in this build of
+  // A set of rollout slugs that are obsolete based on the code in this build of
   // Firefox. This may include things like the preference no longer being
   // applicable, or the feature changing in such a way that Normandy's automatic
   // graduation system cannot detect that the rollout should hand off to the
@@ -138,6 +138,7 @@ var PreferenceRollouts = {
     "rollout-doh-us-staged-rollout-to-all-us-desktop-users-release-73-77-bug-1586331",
     "bug-1648229-rollout-comcast-steering-rollout-release-78-80",
     "bug-1732206-rollout-fission-release-rollout-release-94-95",
+    "bug-1745237-rollout-fission-beta-96-97-rollout-beta-96-97",
   ]),
 
   /**
