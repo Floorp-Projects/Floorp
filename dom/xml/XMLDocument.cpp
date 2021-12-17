@@ -309,7 +309,8 @@ void XMLDocument::EndLoad() {
     // document was loaded as pure data without any presentation
     // attached to it.
     WidgetEvent event(true, eLoad);
-    EventDispatcher::Dispatch(ToSupports(this), nullptr, &event);
+    // TODO: Bug 1506441
+    EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(this)), nullptr, &event);
   }
 }
 
