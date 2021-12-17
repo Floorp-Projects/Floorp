@@ -3727,11 +3727,12 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
-  void vpalignr(const Operand& src, FloatRegister dest, uint8_t shift) {
+  void vpalignr(const Operand& src1, FloatRegister src0, FloatRegister dest,
+                uint8_t shift) {
     MOZ_ASSERT(HasSSE3());
-    switch (src.kind()) {
+    switch (src1.kind()) {
       case Operand::FPREG:
-        masm.vpalignr_irr(shift, src.fpu(), dest.encoding());
+        masm.vpalignr_irr(shift, src1.fpu(), src0.encoding(), dest.encoding());
         break;
       default:
         MOZ_CRASH("unexpected operand kind");
