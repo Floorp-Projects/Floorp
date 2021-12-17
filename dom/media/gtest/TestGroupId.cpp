@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "nsTArray.h"
 #include "webrtc/MediaEngineSource.h"
 

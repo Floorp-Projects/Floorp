@@ -5,7 +5,6 @@
 #ifndef MOZILLA_MEDIAMANAGER_H
 #define MOZILLA_MEDIAMANAGER_H
 
-#include "MediaEngine.h"
 #include "MediaEnginePrefs.h"
 #include "MediaEventSource.h"
 #include "mozilla/dom/GetUserMediaRequest.h"
@@ -38,16 +37,20 @@
 #  include "transport/runnable_utils.h"
 #endif
 
+class AudioDeviceInfo;
 class nsIPrefBranch;
 
 namespace mozilla {
+class MediaEngine;
 class TaskQueue;
 class MediaTimer;
+class MediaTrack;
 namespace dom {
 struct AudioOutputOptions;
 struct MediaStreamConstraints;
 struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
+struct MediaTrackSettings;
 enum class CallerType : uint32_t;
 enum class MediaDeviceKind : uint8_t;
 }  // namespace dom
@@ -90,7 +93,7 @@ class MediaDevice : public nsIMediaDevice {
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowId,
                     const char** aOutBadConstraint);
   void SetTrack(const RefPtr<MediaTrack>& aTrack,
-                const PrincipalHandle& aPrincipal);
+                const nsMainThreadPtrHandle<nsIPrincipal>& aPrincipal);
   nsresult Start();
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
@@ -240,11 +243,13 @@ class MediaManager final : public nsIMediaManagerService,
     Loopback /* Enumeration should return loopback device(s) (possibly in
              addition to normal devices) */
   };
+  enum class EnumerationFlag { AllowPermissionRequest, EnumerateAudioOutputs };
+  using EnumerationFlags = EnumSet<EnumerationFlag>;
   RefPtr<MgrPromise> EnumerateDevicesImpl(
       nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
+      dom::MediaSourceEnum aAudioInputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
       const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<DevicePromise> SelectAudioOutput(
@@ -286,9 +291,9 @@ class MediaManager final : public nsIMediaManagerService,
  private:
   RefPtr<MgrPromise> EnumerateRawDevices(
       dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
+      dom::MediaSourceEnum aAudioInputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
       const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<BadConstraintsPromise> SelectSettings(
