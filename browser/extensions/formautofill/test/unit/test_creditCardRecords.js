@@ -864,9 +864,9 @@ add_task(async function test_creditCardFillDisabled() {
 });
 
 add_task(async function test_creditCardFillUnavailable() {
-  Services.prefs.setCharPref(
+  Services.prefs.setBoolPref(
     "extensions.formautofill.creditCards.available",
-    "off"
+    false
   );
 
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
@@ -884,5 +884,8 @@ add_task(async function test_creditCardFillUnavailable() {
     );
   }
 
-  Services.prefs.clearUserPref("extensions.formautofill.creditCards.available");
+  Services.prefs.setBoolPref(
+    "extensions.formautofill.creditCards.available",
+    true
+  );
 });

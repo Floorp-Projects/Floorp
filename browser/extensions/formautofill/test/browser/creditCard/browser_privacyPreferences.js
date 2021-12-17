@@ -13,10 +13,6 @@ const SELECTORS = {
   reauthCheckbox: "#creditCardReauthenticate checkbox",
 };
 
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
-
 // Visibility of form autofill group should be hidden when opening
 // preferences page.
 add_task(async function test_aboutPreferences() {
@@ -251,7 +247,7 @@ add_task(async function test_creditCardHiddenUI() {
 
 add_task(async function test_reauth() {
   await SpecialPowers.pushPrefEnv({
-    set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"]],
+    set: [[AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true]],
   });
   let { OSKeyStore } = ChromeUtils.import(
     "resource://gre/modules/OSKeyStore.jsm"
@@ -278,159 +274,4 @@ add_task(async function test_reauth() {
       );
     }
   );
-});
-
-add_task(async function test_addressAutofillNotAvailable() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[AUTOFILL_ADDRESSES_AVAILABLE_PREF, "off"]],
-  });
-
-  let autofillAddressEnabledValue = Services.prefs.getBoolPref(
-    ENABLED_AUTOFILL_ADDRESSES_PREF
-  );
-  let finalPrefPaneLoaded = TestUtils.topicObserved(
-    "sync-pane-loaded",
-    () => true
-  );
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
-      await finalPrefPaneLoaded;
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        is(
-          content.document.querySelector(selectors.group).hidden,
-          false,
-          "Form Autofill group should be visible"
-        );
-        is(
-          content.document.querySelector(selectors.addressAutofillCheckbox),
-          null,
-          "Address checkbox should not exist when address autofill is not enabled"
-        );
-        is(
-          content.document.querySelector(selectors.creditCardAutofillCheckbox)
-            .checked,
-          true,
-          "Checkbox should be checked when Autofill Credit Cards is enabled"
-        );
-      });
-      info("test toggling the credit card autofill checkbox");
-
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        content.document
-          .querySelector(selectors.creditCardAutofillCheckbox)
-          .scrollIntoView({ block: "center", behavior: "instant" });
-      });
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        SELECTORS.creditCardAutofillCheckbox,
-        {},
-        browser
-      );
-      is(
-        Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF),
-        false,
-        "Check credit card autofill is now disabled"
-      );
-      is(
-        Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF),
-        autofillAddressEnabledValue,
-        "Address autofill enabled's value should not change due to credit card checkbox interaction"
-      );
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        is(
-          content.document.querySelector(selectors.addressAutofillCheckbox),
-          null,
-          "Address checkbox should exist due to interaction with credit card checkbox"
-        );
-      });
-    }
-  );
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async function test_addressAutofillNotAvailableViaRegion() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.formautofill.addresses.available", "detect"],
-      ["extensions.formautofill.creditCards.enabled", true],
-      ["browser.search.region", "FR"],
-      [ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF, "US,CA"],
-    ],
-  });
-
-  const addressAutofillEnabledPrefValue = Services.prefs.getBoolPref(
-    ENABLED_AUTOFILL_ADDRESSES_PREF
-  );
-  const addressAutofillAvailablePrefValue = Services.prefs.getCharPref(
-    AUTOFILL_ADDRESSES_AVAILABLE_PREF
-  );
-  is(
-    FormAutofill.isAutofillAddressesAvailable,
-    false,
-    "Address autofill should not be available due to unsupported region"
-  );
-  let finalPrefPaneLoaded = TestUtils.topicObserved(
-    "sync-pane-loaded",
-    () => true
-  );
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: PAGE_PRIVACY },
-    async function(browser) {
-      await finalPrefPaneLoaded;
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        is(
-          content.document.querySelector(selectors.group).hidden,
-          false,
-          "Form Autofill group should be visible"
-        );
-        is(
-          content.document.querySelector(selectors.addressAutofillCheckbox),
-          null,
-          "Address checkbox should not exist due to address autofill not being available"
-        );
-        is(
-          content.document.querySelector(selectors.creditCardAutofillCheckbox)
-            .checked,
-          true,
-          "Checkbox should be checked when Autofill Credit Cards is enabled"
-        );
-      });
-      info("test toggling the credit card autofill checkbox");
-
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        content.document
-          .querySelector(selectors.creditCardAutofillCheckbox)
-          .scrollIntoView({ block: "center", behavior: "instant" });
-      });
-      await BrowserTestUtils.synthesizeMouseAtCenter(
-        SELECTORS.creditCardAutofillCheckbox,
-        {},
-        browser
-      );
-      is(
-        Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF),
-        false,
-        "Check credit card autofill is now disabled"
-      );
-      is(
-        Services.prefs.getCharPref(AUTOFILL_ADDRESSES_AVAILABLE_PREF),
-        addressAutofillAvailablePrefValue,
-        "Address autofill availability should not change due to interaction with credit card checkbox"
-      );
-      is(
-        addressAutofillEnabledPrefValue,
-        Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF),
-        "Address autofill enabled pref should not change due to credit card checkbox"
-      );
-      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
-        is(
-          content.document.querySelector(selectors.addressAutofillCheckbox),
-          null,
-          "Address checkbox should not exist due to address autofill not being available"
-        );
-      });
-    }
-  );
-
-  await SpecialPowers.popPrefEnv();
 });

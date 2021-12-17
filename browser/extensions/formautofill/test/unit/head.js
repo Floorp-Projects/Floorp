@@ -297,7 +297,16 @@ function objectMatches(object, fields) {
 }
 
 add_task(async function head_initialize() {
+  Services.prefs.setStringPref("extensions.formautofill.available", "on");
   Services.prefs.setBoolPref("extensions.experiments.enabled", true);
+  Services.prefs.setBoolPref(
+    "extensions.formautofill.creditCards.available",
+    true
+  );
+  Services.prefs.setBoolPref(
+    "extensions.formautofill.creditCards.enabled",
+    true
+  );
   Services.prefs.setBoolPref(
     "extensions.formautofill.heuristics.enabled",
     true
@@ -305,32 +314,17 @@ add_task(async function head_initialize() {
   Services.prefs.setBoolPref("extensions.formautofill.section.enabled", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
-  Services.prefs.setCharPref(
-    "extensions.formautofill.addresses.available",
-    "on"
-  );
-  Services.prefs.setCharPref(
-    "extensions.formautofill.creditCards.available",
-    "on"
-  );
-  Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
-  Services.prefs.setBoolPref(
-    "extensions.formautofill.creditCards.enabled",
-    true
-  );
-
   // Clean up after every test.
   registerCleanupFunction(function head_cleanup() {
+    Services.prefs.clearUserPref("extensions.formautofill.available");
     Services.prefs.clearUserPref("extensions.experiments.enabled");
-    Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
-    Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
-    Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
-    Services.prefs.clearUserPref("extensions.formautofill.addresses.available");
-    Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
     Services.prefs.clearUserPref(
       "extensions.formautofill.creditCards.available"
     );
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
+    Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
+    Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
+    Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
   });
 
   await loadExtension();

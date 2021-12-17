@@ -123,7 +123,10 @@ async function useCreditCard(idx) {
 
 add_task(async function test_popup_opened() {
   await SpecialPowers.pushPrefEnv({
-    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
+    set: [
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+    ],
   });
 
   Services.telemetry.clearEvents();
@@ -162,6 +165,7 @@ add_task(async function test_popup_opened() {
     "formautofill.creditCards.submitted_sections_count"
   );
 
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
 });
 
@@ -175,6 +179,7 @@ add_task(async function test_submit_creditCard_new() {
     await SpecialPowers.pushPrefEnv({
       set: [
         [CREDITCARDS_USED_STATUS_PREF, 0],
+        [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
         [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
       ],
     });
@@ -220,6 +225,7 @@ add_task(async function test_submit_creditCard_new() {
 
     SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
     SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+    SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
     assertHistogram(CC_NUM_USES_HISTOGRAM, useCount);
 
@@ -294,6 +300,7 @@ add_task(async function test_submit_creditCard_autofill() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [CREDITCARDS_USED_STATUS_PREF, 0],
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
       [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
     ],
   });
@@ -310,6 +317,7 @@ add_task(async function test_submit_creditCard_autofill() {
 
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
   await removeAllRecords();
 
@@ -352,6 +360,7 @@ add_task(async function test_submit_creditCard_update() {
     await SpecialPowers.pushPrefEnv({
       set: [
         [CREDITCARDS_USED_STATUS_PREF, 0],
+        [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
         [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
       ],
     });
@@ -406,6 +415,7 @@ add_task(async function test_submit_creditCard_update() {
 
     SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
     SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+    SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
     await removeAllRecords();
   }
@@ -464,7 +474,10 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
-    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
+    set: [
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+    ],
   });
 
   await saveCreditCard(TEST_CREDIT_CARD_1);
@@ -492,6 +505,7 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
   ]);
 
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
   await removeAllRecords();
 });
@@ -501,7 +515,10 @@ add_task(async function test_saveCreditCard() {
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
-    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
+    set: [
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+    ],
   });
 
   await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
@@ -530,6 +547,7 @@ add_task(async function test_saveCreditCard() {
   });
 
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
   await removeAllRecords();
 
@@ -541,7 +559,10 @@ add_task(async function test_editCreditCard() {
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
   await SpecialPowers.pushPrefEnv({
-    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
+    set: [
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+    ],
   });
 
   await saveCreditCard(TEST_CREDIT_CARD_1);
@@ -565,6 +586,7 @@ add_task(async function test_editCreditCard() {
   );
 
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
   await removeAllRecords();
   await assertTelemetry(undefined, [
@@ -583,7 +605,10 @@ add_task(async function test_histogram() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
+    set: [
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+    ],
   });
 
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
@@ -631,6 +656,7 @@ add_task(async function test_histogram() {
   });
 
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
 
   await removeAllRecords();
 
@@ -649,6 +675,7 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [CREDITCARDS_USED_STATUS_PREF, 0],
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, true],
       [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
       [AUTOFILL_CREDITCARDS_HIDE_UI_PREF, true],
     ],
@@ -699,6 +726,7 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
 
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   SpecialPowers.clearUserPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF);
   SpecialPowers.clearUserPref(AUTOFILL_CREDITCARDS_HIDE_UI_PREF);
 
   assertHistogram(CC_NUM_USES_HISTOGRAM, { 0: 1 });
