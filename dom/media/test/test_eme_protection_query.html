@@ -233,13 +233,12 @@ async function testProtectionQueryWithCaptureStartingBeforeVideo() {
 }
 
 add_task(async function setupEnvironment() {
-  // Need test key systems for test key system. Need relaxed navigator
-  // permissions and fake streams for getDisplayMedia.
   await SpecialPowers.pushPrefEnv({
     set: [
+      // Need test key systems for test key system.
       ["media.clearkey.test-key-systems.enabled", true],
+      // Need relaxed navigator permissions for getDisplayMedia.
       ["media.navigator.permission.disabled", true],
-      ["media.navigator.streams.fake", true],
     ],
   });
 });
