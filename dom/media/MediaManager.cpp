@@ -2846,31 +2846,30 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
                                     const nsACString& aOriginKey,
                                     const uint64_t aWindowId) {
-  if (!aOriginKey.IsEmpty()) {
-    for (RefPtr<MediaDevice>& device : aDevices) {
-      nsString id;
-      device->GetId(id);
-      nsString rawId(id);
-      AnonymizeId(id, aOriginKey);
+  MOZ_ASSERT(!aOriginKey.IsEmpty());
+  for (RefPtr<MediaDevice>& device : aDevices) {
+    nsString id;
+    device->GetId(id);
+    nsString rawId(id);
+    AnonymizeId(id, aOriginKey);
 
-      nsString groupId;
-      device->GetGroupId(groupId);
-      nsString rawGroupId = groupId;
-      // Use window id to salt group id in order to make it session based as
-      // required by the spec. This does not provide unique group ids through
-      // out a browser restart. However, this is not agaist the spec.
-      // Furtermore, since device ids are the same after a browser restart the
-      // fingerprint is not bigger.
-      groupId.AppendInt(aWindowId);
-      AnonymizeId(groupId, aOriginKey);
+    nsString groupId;
+    device->GetGroupId(groupId);
+    nsString rawGroupId = groupId;
+    // Use window id to salt group id in order to make it session based as
+    // required by the spec. This does not provide unique group ids through
+    // out a browser restart. However, this is not agaist the spec.
+    // Furtermore, since device ids are the same after a browser restart the
+    // fingerprint is not bigger.
+    groupId.AppendInt(aWindowId);
+    AnonymizeId(groupId, aOriginKey);
 
-      nsString name;
-      device->GetName(name);
-      if (name.Find(u"AirPods"_ns) != -1) {
-        name = u"AirPods"_ns;
-      }
-      device = new MediaDevice(device, id, groupId, rawId, rawGroupId, name);
+    nsString name;
+    device->GetName(name);
+    if (name.Find(u"AirPods"_ns) != -1) {
+      name = u"AirPods"_ns;
     }
+    device = new MediaDevice(device, id, groupId, rawId, rawGroupId, name);
   }
 }
 
