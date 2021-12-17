@@ -34,7 +34,7 @@ runTest(async () => {
   ok(devices.length, "Found one or more windows.");
   devices = Array.prototype.filter.call(devices, d => d.scary);
   ok(devices.length, "Found one or more scary windows (our own counts).");
-  devices.filter(d => d.name.includes("MochiTest"));
+  devices = devices.filter(d => d.name.includes("MochiTest"));
   ok(devices.length,
      "Our own window is among the scary: " + devices.map(d => `"${d.name}"`));
 
