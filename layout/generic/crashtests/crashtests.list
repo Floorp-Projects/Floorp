@@ -483,7 +483,7 @@ load 765409.html
 asserts(0-200) load 765621.html # bug 703550
 asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
 load 769120.html
-asserts(0-2) load 769303-1.html # bug 1123979
+load 769303-1.html
 load 769303-2.html
 load 777838.html
 load 783228.html
