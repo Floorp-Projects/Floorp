@@ -1,0 +1,213 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option(
+    env="MOZ_FETCHES_DIR",
+    nargs=1,
+    when="MOZ_AUTOMATION",
+    help="Directory containing fetched artifacts",
+)
+
+
+@depends("MOZ_FETCHES_DIR", when="MOZ_AUTOMATION")
+def moz_fetches_dir(value):
+    if value:
+        return value[0]
+
+
+@depends(vcs_checkout_type, milestone.is_nightly, "MOZ_AUTOMATION")
+def bootstrap_default(vcs_checkout_type, is_nightly, automation):
+    if automation:
+        return False
+    # We only enable if building off a VCS checkout of central.
+    if is_nightly and vcs_checkout_type:
+        return True
+
+
+option(
+    "--enable-bootstrap",
+    default=bootstrap_default,
+    help="{Automatically bootstrap or update some toolchains|Disable bootstrap or update of toolchains}",
+)
+
+
+@depends(developer_options, "--enable-bootstrap", moz_fetches_dir)
+def bootstrap_search_path_order(developer_options, bootstrap, moz_fetches_dir):
+    if moz_fetches_dir:
+        log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
+        return "prepend"
+
+    if bootstrap:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain paths because "
+            "bootstrap mode is enabled."
+        )
+        return "prepend"
+
+    if developer_options:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain paths because "
+            "you are not building in release mode."
+        )
+        return "prepend"
+
+    log.debug(
+        "Prioritizing system over mozbuild state dir in "
+        "toolchain paths because you are building in "
+        "release mode."
+    )
+    return "append"
+
+
+toolchains_base_dir = moz_fetches_dir | mozbuild_state_path
+
+
+@dependable
+@imports("os")
+@imports(_from="os", _import="environ")
+def original_path():
+    return environ["PATH"].split(os.pathsep)
+
+
+@depends(host, when="--enable-bootstrap")
+@imports("os")
+@imports("traceback")
+@imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
+@imports(_from="__builtin__", _import="Exception")
+def bootstrap_toolchain_tasks(host):
+    prefix = {
+        ("x86_64", "GNU", "Linux"): "linux64",
+        ("x86_64", "OSX", "Darwin"): "macosx64",
+        ("aarch64", "OSX", "Darwin"): "macosx64-aarch64",
+        ("x86_64", "WINNT", "WINNT"): "win64",
+    }.get((host.cpu, host.os, host.kernel))
+    try:
+        return namespace(prefix=prefix, tasks=toolchain_task_definitions())
+    except Exception as e:
+        message = traceback.format_exc()
+        log.warning(str(e))
+        log.debug(message)
+        return None
+
+
+@template
+def bootstrap_path(path, **kwargs):
+    when = kwargs.pop("when", None)
+    if kwargs:
+        configure_error("bootstrap_path only takes `when` as a keyword argument")
+
+    @depends(
+        "--enable-bootstrap",
+        toolchains_base_dir,
+        bootstrap_toolchain_tasks,
+        shell,
+        check_build_environment,
+        dependable(path),
+        when=when,
+    )
+    @imports("os")
+    @imports("subprocess")
+    @imports(_from="mozbuild.util", _import="ensureParentDir")
+    @imports(_from="__builtin__", _import="open")
+    @imports(_from="__builtin__", _import="Exception")
+    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, shell, build_env, path):
+        path_parts = path.split("/")
+
+        def try_bootstrap(exists):
+            if not tasks:
+                return False
+            prefixes = [""]
+            if tasks.prefix:
+                prefixes.insert(0, "{}-".format(tasks.prefix))
+            for prefix in prefixes:
+                label = "toolchain-{}{}".format(prefix, path_parts[0])
+                task = tasks.tasks.get(label)
+                if task:
+                    break
+            log.debug("Trying to bootstrap %s", label)
+            if not task:
+                return False
+            task_index = task.optimization.get("index-search")
+            if not task_index:
+                return False
+            log.debug("Resolved %s to %s", label, task_index[0])
+            task_index = task_index[0].split(".")[-1]
+            artifact = task.attributes["toolchain-artifact"]
+            # `mach artifact toolchain` doesn't support authentication for
+            # private artifacts.
+            if not artifact.startswith("public/"):
+                log.debug("Cannot bootstrap %s: not a public artifact", label)
+                return False
+            index_file = os.path.join(toolchains_base_dir, "indices", path_parts[0])
+            try:
+                with open(index_file) as fh:
+                    index = fh.read().strip()
+            except Exception:
+                index = None
+            if index == task_index and exists:
+                log.debug("%s is up-to-date", label)
+                return True
+            log.info(
+                "%s bootstrapped toolchain in %s",
+                "Updating" if exists else "Installing",
+                os.path.join(toolchains_base_dir, path_parts[0]),
+            )
+            os.makedirs(toolchains_base_dir, exist_ok=True)
+            subprocess.run(
+                [
+                    shell,
+                    os.path.join(build_env.topsrcdir, "mach"),
+                    "--log-no-times",
+                    "artifact",
+                    "toolchain",
+                    "--from-build",
+                    label,
+                ],
+                cwd=toolchains_base_dir,
+                check=True,
+            )
+            ensureParentDir(index_file)
+            with open(index_file, "w") as fh:
+                fh.write(task_index)
+            return True
+
+        path = os.path.join(toolchains_base_dir, *path_parts)
+        if bootstrap:
+            try:
+                if not try_bootstrap(os.path.exists(path)):
+                    # If there aren't toolchain artifacts to use for this build,
+                    # don't return a path.
+                    return None
+            except Exception as e:
+                log.error("%s", e)
+                die("If you can't fix the above, retry with --disable-bootstrap.")
+        # We re-test whether the path exists because it may have been created by
+        # try_bootstrap. Automation will not have gone through the bootstrap
+        # process, but we want to return the path if it exists.
+        if os.path.exists(path):
+            return path
+
+    return bootstrap_path
+
+
+@template
+def bootstrap_search_path(path, paths=original_path, **kwargs):
+    @depends(
+        bootstrap_path(path, **kwargs),
+        bootstrap_search_path_order,
+        paths,
+        original_path,
+    )
+    def bootstrap_search_path(path, order, paths, original_path):
+        if paths is None:
+            paths = original_path
+        if not path:
+            return paths
+        if order == "prepend":
+            return [path] + paths
+        return paths + [path]
+
+    return bootstrap_search_path
