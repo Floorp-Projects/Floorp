@@ -14,6 +14,9 @@
 #include "prlink.h"
 
 namespace mozilla {
+
+class ChildProfilerController;
+
 namespace gmp {
 
 class GMPContentChild;
@@ -61,6 +64,9 @@ class GMPChild : public PGMPChild {
   mozilla::ipc::IPCResult RecvInitGMPContentChild(
       Endpoint<PGMPContentChild>&& aEndpoint);
 
+  mozilla::ipc::IPCResult RecvInitProfiler(
+      Endpoint<mozilla::PProfilerChild>&& aEndpoint);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
 
@@ -73,6 +79,8 @@ class GMPChild : public PGMPChild {
 
   RefPtr<GMPTimerChild> mTimerChild;
   RefPtr<GMPStorageChild> mStorage;
+
+  RefPtr<ChildProfilerController> mProfilerController;
 
   MessageLoop* mGMPMessageLoop;
   nsString mPluginPath;
