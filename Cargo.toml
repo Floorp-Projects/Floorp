@@ -78,6 +78,13 @@ opt-level = 2
 opt-level = 2
 
 [patch.crates-io]
+# The build system doesn't want those to be used, but they are pulled anyways (because
+# dependencies can't be disabled based on features), but remain unused. We ensure they
+# stay unused by overriding them with crates that contain enough to build the current
+# code and will fail the build in unwanted cases.
+cmake = { path = "build/rust/cmake" }
+vcpkg = { path = "build/rust/vcpkg" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
