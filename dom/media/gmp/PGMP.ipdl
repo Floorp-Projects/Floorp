@@ -6,6 +6,7 @@
 include protocol PGMPContent;
 include protocol PGMPTimer;
 include protocol PGMPStorage;
+include protocol PProfiler;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 
@@ -32,6 +33,7 @@ child:
   async PreloadLibs(nsCString libs);
   async CloseActive();
   async InitGMPContentChild(Endpoint<PGMPContentChild> endpoint);
+  async InitProfiler(Endpoint<PProfilerChild> endpoint);
 };
 
 } // namespace gmp
