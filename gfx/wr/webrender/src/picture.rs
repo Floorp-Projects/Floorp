@@ -2962,7 +2962,6 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
         gpu_cache: &mut GpuCache,
         is_root_tile_cache: bool,
-        surfaces: &mut [SurfaceInfo],
     ) {
         // This primitive exists on the last element on the current surface stack.
         profile_scope!("update_prim_dependencies");
@@ -2984,10 +2983,12 @@ impl TileCacheInstance {
             // surface stack, mapping the primitive rect into each surface space, including
             // the inflation factor from each intermediate surface.
             let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect;
-            let mut current_spatial_node_index = surfaces[prim_surface_index.0].surface_spatial_node_index;
+            let mut current_spatial_node_index = frame_context
+                .surfaces[prim_surface_index.0]
+                .surface_spatial_node_index;
 
             for surface_index in surface_stack.iter().rev() {
-                let surface = &surfaces[surface_index.0];
+                let surface = &frame_context.surfaces[surface_index.0];
 
                 let map_local_to_surface = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
@@ -3325,38 +3326,6 @@ impl TileCacheInstance {
         let sub_slice = &mut self.sub_slices[sub_slice_index];
 
         if let Some(mut backdrop_candidate) = backdrop_candidate {
-
-            // Update whether the surface that this primitive exists on
-            // can be considered opaque. Any backdrop kind other than
-            // a clear primitive (e.g. color, gradient, image) can be
-            // considered.
-            match backdrop_candidate.kind {
-                Some(BackdropKind::Color { .. }) | None => {
-                    let surface = &mut surfaces[prim_surface_index.0];
-
-                    let is_same_coord_system = frame_context.spatial_tree.is_matching_coord_system(
-                        prim_spatial_node_index,
-                        surface.surface_spatial_node_index,
-                    );
-
-                    // To be an opaque backdrop, it must:
-                    // - Be the same coordinate system (axis-aligned)
-                    // - Have no clip mask
-                    // - Have a rect that covers the surface local rect
-                    if is_same_coord_system &&
-                       !prim_clip_chain.needs_mask &&
-                       prim_clip_chain.pic_clip_rect.contains_box(&surface.rect)
-                    {
-                        // Note that we use `prim_clip_chain.pic_clip_rect` here rather
-                        // than `backdrop_candidate.opaque_rect`. The former is in the
-                        // local space of the surface, the latter is in the local space
-                        // of the top level tile-cache.
-                        surface.is_opaque = true;
-                    }
-                }
-                Some(BackdropKind::Clear) => {}
-            }
-
             let is_suitable_backdrop = match backdrop_candidate.kind {
                 Some(BackdropKind::Clear) => {
                     // Clear prims are special - they always end up in their own slice,
@@ -3373,10 +3342,15 @@ impl TileCacheInstance {
                     // Specifically, we currently require:
                     //  - The primitive is on the main picture cache surface.
                     //  - Same coord system as picture cache (ensures rects are axis-aligned).
-                    let same_coord_system = frame_context.spatial_tree.is_matching_coord_system(
-                        prim_spatial_node_index,
-                        self.spatial_node_index,
-                    );
+                    //  - No clip masks exist.
+                    let same_coord_system = {
+                        let prim_spatial_node = frame_context.spatial_tree
+                            .get_spatial_node(prim_spatial_node_index);
+                        let surface_spatial_node = &frame_context.spatial_tree
+                            .get_spatial_node(self.spatial_node_index);
+
+                        prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
+                    };
 
                     same_coord_system && on_picture_surface
                 }
@@ -3715,9 +3689,8 @@ pub struct SurfaceInfo {
     /// A local rect defining the size of this surface, in the
     /// coordinate system of the surface itself.
     pub rect: PictureRect,
-    /// If true, we have determined during the visibility pass
-    /// that this surface is opaque.
-    pub is_opaque: bool,
+    /// Part of the surface that we know to be opaque.
+    pub opaque_rect: PictureRect,
     /// Helper structs for mapping local rects in different
     /// coordinate systems into the surface coordinates.
     pub map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
@@ -3765,7 +3738,7 @@ impl SurfaceInfo {
 
         SurfaceInfo {
             rect: PictureRect::zero(),
-            is_opaque: false,
+            opaque_rect: PictureRect::zero(),
             map_local_to_surface,
             render_tasks: None,
             raster_spatial_node_index,
@@ -3971,6 +3944,10 @@ pub struct PrimitiveCluster {
     /// during the first picture traversal, which is needed for local scale
     /// determination, and render task size calculations.
     bounding_rect: LayoutRect,
+    /// a part of the cluster that we know to be opaque if any. Does not always
+    /// describe the entire opaque region, but all content within that rect must
+    /// be opaque.
+    pub opaque_rect: LayoutRect,
     /// The range of primitive instance indices associated with this cluster.
     pub prim_range: Range<usize>,
     /// Various flags / state for this cluster.
@@ -3986,6 +3963,7 @@ impl PrimitiveCluster {
     ) -> Self {
         PrimitiveCluster {
             bounding_rect: LayoutRect::zero(),
+            opaque_rect: LayoutRect::zero(),
             spatial_node_index,
             flags,
             prim_range: first_instance_index..first_instance_index
