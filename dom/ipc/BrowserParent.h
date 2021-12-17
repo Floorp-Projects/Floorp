@@ -272,9 +272,12 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvEvent(const RemoteDOMEvent& aEvent);
 
-  mozilla::ipc::IPCResult RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent);
+  // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvReplyKeyEvent(
+      const WidgetKeyboardEvent& aEvent);
 
-  mozilla::ipc::IPCResult RecvAccessKeyNotHandled(
+  // TODO: Use MOZ_CAN_RUN_SCRIPT when it gains IPDL support (bug 1539864)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvAccessKeyNotHandled(
       const WidgetKeyboardEvent& aEvent);
 
   mozilla::ipc::IPCResult RecvRegisterProtocolHandler(const nsString& aScheme,
