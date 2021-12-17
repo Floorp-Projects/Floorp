@@ -552,7 +552,9 @@ class ScriptLoader final : public ScriptLoaderInterface {
   nsresult ProcessRequest(ScriptLoadRequest* aRequest) override;
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
-  void FireScriptEvaluated(nsresult aResult, ScriptLoadRequest* aRequest);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireScriptEvaluated(
+      nsresult aResult, ScriptLoadRequest* aRequest);
 
   // Implements https://html.spec.whatwg.org/#execute-the-script-block
   nsresult EvaluateScriptElement(ScriptLoadRequest* aRequest);
