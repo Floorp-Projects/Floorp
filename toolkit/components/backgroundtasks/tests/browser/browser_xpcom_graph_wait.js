@@ -35,10 +35,6 @@ const backgroundtaskPhases = {
         "resource://gre/modules/AppConstants.jsm",
         "resource://gre/modules/AsyncShutdown.jsm",
         "resource://gre/modules/BackgroundTasksManager.jsm",
-        {
-          name: "resource://gre/modules/Console.jsm",
-          condition: WIN,
-        },
         "resource://gre/modules/EnterprisePolicies.jsm",
         "resource://gre/modules/EnterprisePoliciesParent.jsm",
         "resource://gre/modules/PromiseUtils.jsm",
@@ -113,7 +109,6 @@ const backgroundtaskPhases = {
         "resource:///modules/backgroundtasks/BackgroundTask_wait.jsm",
         {
           name: "resource://gre/modules/Console.jsm",
-          condition: !WIN,
         },
         "resource://gre/modules/ConsoleAPIStorage.jsm",
         "resource://gre/modules/Timer.jsm",
