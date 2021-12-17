@@ -379,3 +379,29 @@ for ( [imm, expect1, expect2] of
      52809a40  mov     w0, #0x4d2`
    );
 }
+
+// For integer comparison followed by select, check that the comparison result
+// isn't materialised into a register, for specific types.
+
+for ( [cmpTy, selTy, cmpRegPfx, cselRegPfx] of
+      [ ['i32', 'i32',  'w', 'w'],
+        ['i32', 'i64',  'w', 'x'],
+        ['i64', 'i32',  'x', 'w'],
+        ['i64', 'i64',  'x', 'x'],
+      ] ) {
+   codegenTestARM64_adhoc(
+    `(module
+       (func (export "f")
+             (param $p1 ${cmpTy}) (param $p2 ${cmpTy})
+             (param $p3 ${selTy}) (param $p4 ${selTy})
+             (result ${selTy})
+         (select (local.get $p3)
+                 (local.get $p4)
+                 (${cmpTy}.eq (local.get $p1) (local.get $p2)))
+       )
+    )`,
+    'f',
+    `.b01001f  cmp  ${cmpRegPfx}0, ${cmpRegPfx}1
+     .a830040  csel ${cselRegPfx}0, ${cselRegPfx}2, ${cselRegPfx}3, eq`
+   );
+}

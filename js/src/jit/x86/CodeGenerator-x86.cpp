@@ -1282,6 +1282,47 @@ void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {
   masm.bind(&done);
 }
 
+// We expect to handle only the case where compare is {U,}Int32 and select is
+// {U,}Int32.  Some values may be stack allocated, and the "true" input is
+// reused for the output.
+void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
+  bool cmpIs32bit = ins->compareType() == MCompare::Compare_Int32 ||
+                    ins->compareType() == MCompare::Compare_UInt32;
+  bool selIs32bit = ins->mir()->type() == MIRType::Int32;
+
+  MOZ_RELEASE_ASSERT(
+      cmpIs32bit && selIs32bit,
+      "CodeGenerator::visitWasmCompareAndSelect: unexpected types");
+
+  Register trueExprAndDest = ToRegister(ins->output());
+  MOZ_ASSERT(ToRegister(ins->ifTrueExpr()) == trueExprAndDest,
+             "true expr input is reused for output");
+
+  Assembler::Condition cond = Assembler::InvertCondition(
+      JSOpToCondition(ins->compareType(), ins->jsop()));
+  const LAllocation* rhs = ins->rightExpr();
+  const LAllocation* falseExpr = ins->ifFalseExpr();
+  Register lhs = ToRegister(ins->leftExpr());
+
+  if (rhs->isRegister()) {
+    if (falseExpr->isRegister()) {
+      masm.cmp32Move32(cond, lhs, ToRegister(rhs), ToRegister(falseExpr),
+                       trueExprAndDest);
+    } else {
+      masm.cmp32Load32(cond, lhs, ToRegister(rhs), ToAddress(falseExpr),
+                       trueExprAndDest);
+    }
+  } else {
+    if (falseExpr->isRegister()) {
+      masm.cmp32Move32(cond, lhs, ToAddress(rhs), ToRegister(falseExpr),
+                       trueExprAndDest);
+    } else {
+      masm.cmp32Load32(cond, lhs, ToAddress(rhs), ToAddress(falseExpr),
+                       trueExprAndDest);
+    }
+  }
+}
+
 void CodeGenerator::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir) {
   MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
   MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
