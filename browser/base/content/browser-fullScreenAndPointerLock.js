@@ -478,10 +478,10 @@ var FullScreen = {
         remoteFrameBC: inProcessBC,
       });
 
-      // Record that the actor is waiting for its child to enter
-      // fullscreen so that if it dies we can abort.
-      targetActor.waitingForChildFullscreen = true;
       if (inProcessBC) {
+        // Record that the actor is waiting for its child to enter
+        // fullscreen so that if it dies we can abort.
+        targetActor.waitingForChildEnterFullscreen = true;
         // We aren't messaging the request origin yet, skip this time.
         return;
       }
@@ -557,13 +557,20 @@ var FullScreen = {
    * the cleanup.
    */
   cleanupDomFullscreen(aActor) {
+    let needToWaitForChildExit = false;
     let [target, inProcessBC] = this._getNextMsgRecipientActor(aActor);
     if (target) {
-      target.sendAsyncMessage("DOMFullscreen:CleanUp", {
-        remoteFrameBC: inProcessBC,
-      });
+      needToWaitForChildExit = true;
+      if (!target.waitingForChildExitFullscreen) {
+        // Record that the actor is waiting for its child to exit fullscreen so
+        // that if it dies we can continue cleanup.
+        target.waitingForChildExitFullscreen = true;
+        target.sendAsyncMessage("DOMFullscreen:CleanUp", {
+          remoteFrameBC: inProcessBC,
+        });
+      }
       if (inProcessBC) {
-        return;
+        return needToWaitForChildExit;
       }
     }
 
@@ -580,12 +587,17 @@ var FullScreen = {
     );
 
     document.documentElement.removeAttribute("inDOMFullscreen");
+
+    return needToWaitForChildExit;
   },
 
   _abortEnterFullscreen() {
     // This function is called synchronously in fullscreen change, so
     // we have to avoid calling exitFullscreen synchronously here.
-    setTimeout(() => document.exitFullscreen(), 0);
+    //
+    // This could reject if we're not currently in fullscreen
+    // so just ignore rejection.
+    setTimeout(() => document.exitFullscreen().catch(() => {}), 0);
     if (TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS")) {
       // Cancel the stopwatch for any fullscreen change to avoid
       // errors if it is started again.
@@ -607,9 +619,27 @@ var FullScreen = {
    *         in process browsing context which is its child. Will be
    *         [null, null] if there is no OOP parent actor and request origin
    *         is unset. [null, null] is also returned if the intended actor or
-   *         the calling actor has been destroyed.
+   *         the calling actor has been destroyed or its associated
+   *         WindowContext is in BFCache.
    */
   _getNextMsgRecipientActor(aActor) {
+    // Walk up the cached nextMsgRecipient to find the next available actor if
+    // any.
+    if (aActor.nextMsgRecipient) {
+      let nextMsgRecipient = aActor.nextMsgRecipient;
+      while (nextMsgRecipient) {
+        let [actor] = nextMsgRecipient;
+        if (
+          !actor.hasBeenDestroyed() &&
+          actor.windowContext &&
+          !actor.windowContext.isInBFCache
+        ) {
+          return nextMsgRecipient;
+        }
+        nextMsgRecipient = actor.nextMsgRecipient;
+      }
+    }
+
     if (aActor.hasBeenDestroyed()) {
       return [null, null];
     }
@@ -640,11 +670,16 @@ var FullScreen = {
     if (parentBC && parentBC.currentWindowGlobal) {
       target = parentBC.currentWindowGlobal.getActor("DOMFullscreen");
       inProcessBC = childBC;
+      aActor.nextMsgRecipient = [target, inProcessBC];
     } else {
       target = aActor.requestOrigin;
     }
 
-    if (!target || target.hasBeenDestroyed()) {
+    if (
+      !target ||
+      target.hasBeenDestroyed() ||
+      target.windowContext?.isInBFCache
+    ) {
       return [null, null];
     }
     return [target, inProcessBC];
