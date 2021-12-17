@@ -2189,7 +2189,7 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
 Result<bool, nsresult> nsGenericHTMLElement::PerformAccesskey(
     bool aKeyCausesActivation, bool aIsTrustedEvent) {
-  nsPresContext* presContext = GetPresContext(eForComposedDoc);
+  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
   if (!presContext) {
     return Err(NS_ERROR_UNEXPECTED);
   }
@@ -2264,8 +2264,8 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
     return;
   }
 
-  DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
-                         aVisitor.mPresContext);
+  RefPtr<nsPresContext> presContext = aVisitor.mPresContext;
+  DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(), presContext);
   aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
 }
 
@@ -2276,7 +2276,9 @@ nsresult nsGenericHTMLElement::DispatchSimulatedClick(
                          WidgetMouseEvent::eReal);
   event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   event.mFlags.mIsPositionless = true;
-  return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
+  // TODO: Bug 1506441
+  return EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(aElement)),
+                                   aPresContext, &event);
 }
 
 already_AddRefed<EditorBase> nsGenericHTMLElement::GetAssociatedEditor() {
