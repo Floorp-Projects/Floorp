@@ -30,6 +30,8 @@
     <string name="default_top_site_pdd">PDD</string>
     <!-- Default title for pinned 58 top site that links to 58 home page  -->
     <string name="default_top_site_tc">58</string>
+    <!-- Default title for pinned meituan top site that links to 58 home page  -->
+    <string name="default_top_site_meituan">meituan</string>
 
     <!-- FxA server switch-->
     <!-- Switch Preference for domestic China/global fxa server -->

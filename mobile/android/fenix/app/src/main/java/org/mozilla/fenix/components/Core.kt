@@ -365,6 +365,13 @@ class Core(
                             SupportUtils.TC_URL
                         )
                     )
+
+                    defaultTopSites.add(
+                        Pair(
+                            context.getString(R.string.default_top_site_meituan),
+                            SupportUtils.MEITUAN_URL
+                        )
+                    )
                 } else {
                     defaultTopSites.add(
                         Pair(
