@@ -859,6 +859,7 @@ def host_variables(host):
 set_config("HOST_CPU_ARCH", host.cpu)
 set_config("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
 add_old_configure_assignment("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
+set_config("HOST_ALIAS", host.alias)
 
 
 @depends(target)

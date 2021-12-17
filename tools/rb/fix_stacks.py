@@ -22,6 +22,29 @@ line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 fix_stacks = None
 
 
+def autobootstrap():
+    from mozbuild.configure import ConfigureSandbox
+    import buildconfig
+
+    sandbox = ConfigureSandbox(
+        {},
+        argv=[
+            "configure",
+            "--help",
+            "--host={}".format(buildconfig.substs["HOST_ALIAS"]),
+        ],
+    )
+    moz_configure = os.path.join(buildconfig.topsrcdir, "build", "moz.configure")
+    sandbox.include_file(os.path.join(moz_configure, "init.configure"))
+    # bootstrap_search_path_order has a dependency on developer_options, which
+    # is not defined in init.configure. Its value doesn't matter for us, though.
+    sandbox["developer_options"] = sandbox["always"]
+    sandbox.include_file(os.path.join(moz_configure, "bootstrap.configure"))
+    # Expand the `bootstrap_path` template for "fix-stacks", and execute the
+    # expanded function via `_value_for`, which will trigger autobootstrap.
+    sandbox._value_for(sandbox["bootstrap_path"]("fix-stacks"))
+
+
 def initFixStacks(jsonMode, slowWarning, breakpadSymsDir, hide_errors):
     # Look in MOZ_FETCHES_DIR (for automation), then in MOZBUILD_STATE_PATH
     # (for a local build where the user has that set), then in ~/.mozbuild
@@ -33,6 +56,14 @@ def initFixStacks(jsonMode, slowWarning, breakpadSymsDir, hide_errors):
     fix_stacks_exe = base + "/fix-stacks/fix-stacks"
     if platform.system() == "Windows":
         fix_stacks_exe = fix_stacks_exe + ".exe"
+
+    if not (os.path.isfile(fix_stacks_exe) and os.access(fix_stacks_exe, os.X_OK)):
+        try:
+            autobootstrap()
+        except ImportError:
+            # We're out-of-tree (e.g. tests tasks on CI) and can't autobootstrap
+            # (we shouldn't anyways).
+            pass
 
     if not (os.path.isfile(fix_stacks_exe) and os.access(fix_stacks_exe, os.X_OK)):
         raise Exception("cannot find `fix-stacks`; please run `./mach bootstrap`")
