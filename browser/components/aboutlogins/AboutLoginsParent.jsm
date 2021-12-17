@@ -90,6 +90,7 @@ class AboutLoginsParent extends JSWindowActorParent {
     if (!this.browsingContext.embedderElement) {
       return;
     }
+
     // Only respond to messages sent from a privlegedabout process. Ideally
     // we would also check the contentPrincipal.originNoSuffix but this
     // check has been removed due to bug 1576722.
@@ -104,365 +105,411 @@ class AboutLoginsParent extends JSWindowActorParent {
 
     AboutLogins._subscribers.add(this.browsingContext);
 
-    let ownerGlobal = this.browsingContext.embedderElement.ownerGlobal;
     switch (message.name) {
       case "AboutLogins:CreateLogin": {
-        if (!Services.policies.isAllowed("removeMasterPassword")) {
-          if (!LoginHelper.isMasterPasswordSet()) {
-            ownerGlobal.openDialog(
-              "chrome://mozapps/content/preferences/changemp.xhtml",
-              "",
-              "centerscreen,chrome,modal,titlebar"
-            );
-            if (!LoginHelper.isMasterPasswordSet()) {
-              return;
-            }
-          }
-        }
-        let newLogin = message.data.login;
-        // Remove the path from the origin, if it was provided.
-        let origin = LoginHelper.getLoginOrigin(newLogin.origin);
-        if (!origin) {
-          Cu.reportError(
-            "AboutLogins:CreateLogin: Unable to get an origin from the login details."
-          );
-          return;
-        }
-        newLogin.origin = origin;
-        Object.assign(newLogin, {
-          formActionOrigin: "",
-          usernameField: "",
-          passwordField: "",
-        });
-        newLogin = LoginHelper.vanillaObjectToLogin(newLogin);
-        try {
-          Services.logins.addLogin(newLogin);
-        } catch (error) {
-          this.handleLoginStorageErrors(newLogin, error, message);
-        }
+        this.#createLogin(message.data.login);
         break;
       }
       case "AboutLogins:DeleteLogin": {
-        let login = LoginHelper.vanillaObjectToLogin(message.data.login);
-        Services.logins.removeLogin(login);
+        this.#deleteLogin(message.data.login);
         break;
       }
       case "AboutLogins:SortChanged": {
-        Services.prefs.setCharPref("signon.management.page.sort", message.data);
+        this.#sortChanged(message.data);
         break;
       }
       case "AboutLogins:SyncEnable": {
-        ownerGlobal.gSync.openFxAEmailFirstPage("password-manager");
+        this.#syncEnable();
         break;
       }
       case "AboutLogins:SyncOptions": {
-        ownerGlobal.gSync.openFxAManagePage("password-manager");
+        this.#syncOptions();
         break;
       }
       case "AboutLogins:ImportFromBrowser": {
-        try {
-          MigrationUtils.showMigrationWizard(ownerGlobal, [
-            MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
-          ]);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
+        this.#importFromBrowser();
         break;
       }
-
       case "AboutLogins:ImportReportInit": {
-        let reportData = LoginCSVImport.lastImportReport;
-        this.sendAsyncMessage("AboutLogins:ImportReportData", reportData);
+        this.#importReportInit();
         break;
       }
-
       case "AboutLogins:GetHelp": {
-        const SUPPORT_URL =
-          Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          "password-manager-remember-delete-edit-logins";
-        ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
-          relatedToCurrent: true,
-        });
+        this.#getHelp();
         break;
       }
       case "AboutLogins:OpenPreferences": {
-        ownerGlobal.openPreferences("privacy-logins");
+        this.#openPreferences();
         break;
       }
-      case "AboutLogins:MasterPasswordRequest": {
-        let messageId = message.data;
-        if (!messageId) {
-          throw new Error(
-            "AboutLogins:MasterPasswordRequest: Message ID required for MasterPasswordRequest."
-          );
-        }
-        let messageText = { value: "NOT SUPPORTED" };
-        let captionText = { value: "" };
-
-        // This feature is only supported on Windows and macOS
-        // but we still call in to OSKeyStore on Linux to get
-        // the proper auth_details for Telemetry.
-        // See bug 1614874 for Linux support.
-        if (OS_AUTH_ENABLED && OSKeyStore.canReauth()) {
-          messageId += "-" + AppConstants.platform;
-          [messageText, captionText] = await AboutLoginsL10n.formatMessages([
-            {
-              id: messageId,
-            },
-            {
-              id: "about-logins-os-auth-dialog-caption",
-            },
-          ]);
-        }
-
-        let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
-          this.browsingContext.embedderElement,
-          OS_AUTH_ENABLED,
-          AboutLogins._authExpirationTime,
-          messageText.value,
-          captionText.value
-        );
-        this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
-          result: isAuthorized,
-          telemetryEvent,
-        });
-        if (isAuthorized) {
-          AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
-          const remaskPasswords = () => {
-            this.sendAsyncMessage("AboutLogins:RemaskPassword");
-          };
-          clearTimeout(_gPasswordRemaskTimeout);
-          _gPasswordRemaskTimeout = setTimeout(
-            remaskPasswords,
-            AUTH_TIMEOUT_MS
-          );
-        }
+      case "AboutLogins:PrimaryPasswordRequest": {
+        await this.#primaryPasswordRequest(message.data);
         break;
       }
       case "AboutLogins:Subscribe": {
-        AboutLogins._authExpirationTime = Number.NEGATIVE_INFINITY;
-        if (!AboutLogins._observersAdded) {
-          Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-login");
-          Services.obs.addObserver(
-            AboutLogins,
-            "passwordmgr-crypto-loginCanceled"
-          );
-          Services.obs.addObserver(AboutLogins, "passwordmgr-storage-changed");
-          Services.obs.addObserver(AboutLogins, UIState.ON_UPDATE);
-          AboutLogins._observersAdded = true;
-        }
-
-        const logins = await AboutLogins.getAllLogins();
-        try {
-          let syncState = AboutLogins.getSyncState();
-
-          let selectedSort = Services.prefs.getCharPref(
-            "signon.management.page.sort",
-            "name"
-          );
-          if (selectedSort == "breached") {
-            // The "breached" value was used since Firefox 70 and
-            // replaced with "alerts" in Firefox 76.
-            selectedSort = "alerts";
-          }
-          this.sendAsyncMessage("AboutLogins:Setup", {
-            logins,
-            selectedSort,
-            syncState,
-            masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
-            passwordRevealVisible: Services.policies.isAllowed(
-              "passwordReveal"
-            ),
-            importVisible:
-              Services.policies.isAllowed("profileImport") &&
-              AppConstants.platform != "linux",
-          });
-
-          await AboutLogins._sendAllLoginRelatedObjects(
-            logins,
-            this.browsingContext
-          );
-        } catch (ex) {
-          if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
-            throw ex;
-          }
-
-          // The message manager may be destroyed before the replies can be sent.
-          log.debug(
-            "AboutLogins:Subscribe: exception when replying with logins",
-            ex
-          );
-        }
+        await this.#subscribe();
         break;
       }
       case "AboutLogins:UpdateLogin": {
-        let loginUpdates = message.data.login;
-        let logins = LoginHelper.searchLoginsWithObject({
-          guid: loginUpdates.guid,
-        });
-        if (logins.length != 1) {
-          log.warn(
-            `AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`
-          );
-          return;
-        }
-
-        let modifiedLogin = logins[0].clone();
-        if (loginUpdates.hasOwnProperty("username")) {
-          modifiedLogin.username = loginUpdates.username;
-        }
-        if (loginUpdates.hasOwnProperty("password")) {
-          modifiedLogin.password = loginUpdates.password;
-        }
-        try {
-          Services.logins.modifyLogin(logins[0], modifiedLogin);
-        } catch (error) {
-          this.handleLoginStorageErrors(modifiedLogin, error, message);
-        }
+        this.#updateLogin(message.data.login);
         break;
       }
       case "AboutLogins:ExportPasswords": {
-        let messageText = { value: "NOT SUPPORTED" };
-        let captionText = { value: "" };
-
-        // This feature is only supported on Windows and macOS
-        // but we still call in to OSKeyStore on Linux to get
-        // the proper auth_details for Telemetry.
-        // See bug 1614874 for Linux support.
-        if (OSKeyStore.canReauth()) {
-          let messageId =
-            "about-logins-export-password-os-auth-dialog-message-" +
-            AppConstants.platform;
-          [messageText, captionText] = await AboutLoginsL10n.formatMessages([
-            {
-              id: messageId,
-            },
-            {
-              id: "about-logins-os-auth-dialog-caption",
-            },
-          ]);
-        }
-
-        let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
-          this.browsingContext.embedderElement,
-          true,
-          null, // Prompt regardless of a recent prompt
-          messageText.value,
-          captionText.value
-        );
-
-        let { method, object, extra = {}, value = null } = telemetryEvent;
-        Services.telemetry.recordEvent("pwmgr", method, object, value, extra);
-
-        if (!isAuthorized) {
-          return;
-        }
-
-        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
-          Ci.nsIFilePicker
-        );
-        function fpCallback(aResult) {
-          if (aResult != Ci.nsIFilePicker.returnCancel) {
-            LoginExport.exportAsCSV(fp.file.path);
-            Services.telemetry.recordEvent(
-              "pwmgr",
-              "mgmt_menu_item_used",
-              "export_complete"
-            );
-          }
-        }
-        let [
-          title,
-          defaultFilename,
-          okButtonLabel,
-          csvFilterTitle,
-        ] = await AboutLoginsL10n.formatValues([
-          {
-            id: "about-logins-export-file-picker-title",
-          },
-          {
-            id: "about-logins-export-file-picker-default-filename",
-          },
-          {
-            id: "about-logins-export-file-picker-export-button",
-          },
-          {
-            id: "about-logins-export-file-picker-csv-filter-title",
-          },
-        ]);
-
-        fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeSave);
-        fp.appendFilter(csvFilterTitle, "*.csv");
-        fp.appendFilters(Ci.nsIFilePicker.filterAll);
-        fp.defaultString = defaultFilename;
-        fp.defaultExtension = "csv";
-        fp.okButtonLabel = okButtonLabel;
-        fp.open(fpCallback);
+        await this.#exportPasswords();
         break;
       }
       case "AboutLogins:ImportFromFile": {
-        let [
-          title,
-          okButtonLabel,
-          csvFilterTitle,
-          tsvFilterTitle,
-        ] = await AboutLoginsL10n.formatValues([
-          {
-            id: "about-logins-import-file-picker-title",
-          },
-          {
-            id: "about-logins-import-file-picker-import-button",
-          },
-          {
-            id: "about-logins-import-file-picker-csv-filter-title",
-          },
-          {
-            id: "about-logins-import-file-picker-tsv-filter-title",
-          },
-        ]);
-        let { result, path } = await this.openFilePickerDialog(
-          title,
-          okButtonLabel,
-          [
-            {
-              title: csvFilterTitle,
-              extensionPattern: "*.csv",
-            },
-            {
-              title: tsvFilterTitle,
-              extensionPattern: "*.tsv",
-            },
-          ],
-          ownerGlobal
-        );
-
-        if (result != Ci.nsIFilePicker.returnCancel) {
-          let summary;
-          try {
-            summary = await LoginCSVImport.importFromCSV(path);
-          } catch (e) {
-            Cu.reportError(e);
-            this.sendAsyncMessage(
-              "AboutLogins:ImportPasswordsErrorDialog",
-              e.errorType
-            );
-          }
-          if (summary) {
-            this.sendAsyncMessage("AboutLogins:ImportPasswordsDialog", summary);
-            Services.telemetry.recordEvent(
-              "pwmgr",
-              "mgmt_menu_item_used",
-              "import_csv_complete"
-            );
-          }
-        }
+        await this.#importFromFile();
         break;
       }
       case "AboutLogins:RemoveAllLogins": {
-        Services.logins.removeAllUserFacingLogins();
+        this.#removeAllLogins();
         break;
       }
     }
+  }
+
+  get #ownerGlobal() {
+    return this.browsingContext.embedderElement.ownerGlobal;
+  }
+
+  #createLogin(newLogin) {
+    if (!Services.policies.isAllowed("removeMasterPassword")) {
+      if (!LoginHelper.isMasterPasswordSet()) {
+        this.#ownerGlobal.openDialog(
+          "chrome://mozapps/content/preferences/changemp.xhtml",
+          "",
+          "centerscreen,chrome,modal,titlebar"
+        );
+        if (!LoginHelper.isMasterPasswordSet()) {
+          return;
+        }
+      }
+    }
+    // Remove the path from the origin, if it was provided.
+    let origin = LoginHelper.getLoginOrigin(newLogin.origin);
+    if (!origin) {
+      Cu.reportError(
+        "AboutLogins:CreateLogin: Unable to get an origin from the login details."
+      );
+      return;
+    }
+    newLogin.origin = origin;
+    Object.assign(newLogin, {
+      formActionOrigin: "",
+      usernameField: "",
+      passwordField: "",
+    });
+    newLogin = LoginHelper.vanillaObjectToLogin(newLogin);
+    try {
+      Services.logins.addLogin(newLogin);
+    } catch (error) {
+      this.handleLoginStorageErrors(newLogin, error);
+    }
+  }
+
+  #deleteLogin(loginObject) {
+    let login = LoginHelper.vanillaObjectToLogin(loginObject);
+    Services.logins.removeLogin(login);
+  }
+
+  #sortChanged(sort) {
+    Services.prefs.setCharPref("signon.management.page.sort", sort);
+  }
+
+  #syncEnable() {
+    this.#ownerGlobal.gSync.openFxAEmailFirstPage("password-manager");
+  }
+
+  #syncOptions() {
+    this.#ownerGlobal.gSync.openFxAManagePage("password-manager");
+  }
+
+  #importFromBrowser() {
+    try {
+      MigrationUtils.showMigrationWizard(this.#ownerGlobal, [
+        MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
+      ]);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  }
+
+  #importReportInit() {
+    let reportData = LoginCSVImport.lastImportReport;
+    this.sendAsyncMessage("AboutLogins:ImportReportData", reportData);
+  }
+
+  #getHelp() {
+    const SUPPORT_URL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "password-manager-remember-delete-edit-logins";
+    this.#ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
+      relatedToCurrent: true,
+    });
+  }
+
+  #openPreferences() {
+    this.#ownerGlobal.openPreferences("privacy-logins");
+  }
+
+  async #primaryPasswordRequest(messageId) {
+    if (!messageId) {
+      throw new Error("AboutLogins:PrimaryPasswordRequest: no messageId.");
+    }
+    let messageText = { value: "NOT SUPPORTED" };
+    let captionText = { value: "" };
+
+    // This feature is only supported on Windows and macOS
+    // but we still call in to OSKeyStore on Linux to get
+    // the proper auth_details for Telemetry.
+    // See bug 1614874 for Linux support.
+    if (OS_AUTH_ENABLED && OSKeyStore.canReauth()) {
+      messageId += "-" + AppConstants.platform;
+      [messageText, captionText] = await AboutLoginsL10n.formatMessages([
+        {
+          id: messageId,
+        },
+        {
+          id: "about-logins-os-auth-dialog-caption",
+        },
+      ]);
+    }
+
+    let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
+      this.browsingContext.embedderElement,
+      OS_AUTH_ENABLED,
+      AboutLogins._authExpirationTime,
+      messageText.value,
+      captionText.value
+    );
+    this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
+      result: isAuthorized,
+      telemetryEvent,
+    });
+    if (isAuthorized) {
+      AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
+      const remaskPasswords = () => {
+        this.sendAsyncMessage("AboutLogins:RemaskPassword");
+      };
+      clearTimeout(_gPasswordRemaskTimeout);
+      _gPasswordRemaskTimeout = setTimeout(remaskPasswords, AUTH_TIMEOUT_MS);
+    }
+  }
+
+  async #subscribe() {
+    AboutLogins._authExpirationTime = Number.NEGATIVE_INFINITY;
+    if (!AboutLogins._observersAdded) {
+      Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-login");
+      Services.obs.addObserver(AboutLogins, "passwordmgr-crypto-loginCanceled");
+      Services.obs.addObserver(AboutLogins, "passwordmgr-storage-changed");
+      Services.obs.addObserver(AboutLogins, UIState.ON_UPDATE);
+      AboutLogins._observersAdded = true;
+    }
+
+    const logins = await AboutLogins.getAllLogins();
+    try {
+      let syncState = AboutLogins.getSyncState();
+
+      let selectedSort = Services.prefs.getCharPref(
+        "signon.management.page.sort",
+        "name"
+      );
+      if (selectedSort == "breached") {
+        // The "breached" value was used since Firefox 70 and
+        // replaced with "alerts" in Firefox 76.
+        selectedSort = "alerts";
+      }
+      this.sendAsyncMessage("AboutLogins:Setup", {
+        logins,
+        selectedSort,
+        syncState,
+        masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
+        passwordRevealVisible: Services.policies.isAllowed("passwordReveal"),
+        importVisible:
+          Services.policies.isAllowed("profileImport") &&
+          AppConstants.platform != "linux",
+      });
+
+      await AboutLogins._sendAllLoginRelatedObjects(
+        logins,
+        this.browsingContext
+      );
+    } catch (ex) {
+      if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
+        throw ex;
+      }
+
+      // The message manager may be destroyed before the replies can be sent.
+      log.debug(
+        "AboutLogins:Subscribe: exception when replying with logins",
+        ex
+      );
+    }
+  }
+
+  #updateLogin(loginUpdates) {
+    let logins = LoginHelper.searchLoginsWithObject({
+      guid: loginUpdates.guid,
+    });
+    if (logins.length != 1) {
+      log.warn(
+        `AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`
+      );
+      return;
+    }
+
+    let modifiedLogin = logins[0].clone();
+    if (loginUpdates.hasOwnProperty("username")) {
+      modifiedLogin.username = loginUpdates.username;
+    }
+    if (loginUpdates.hasOwnProperty("password")) {
+      modifiedLogin.password = loginUpdates.password;
+    }
+    try {
+      Services.logins.modifyLogin(logins[0], modifiedLogin);
+    } catch (error) {
+      this.handleLoginStorageErrors(modifiedLogin, error);
+    }
+  }
+
+  async #exportPasswords() {
+    let messageText = { value: "NOT SUPPORTED" };
+    let captionText = { value: "" };
+
+    // This feature is only supported on Windows and macOS
+    // but we still call in to OSKeyStore on Linux to get
+    // the proper auth_details for Telemetry.
+    // See bug 1614874 for Linux support.
+    if (OSKeyStore.canReauth()) {
+      let messageId =
+        "about-logins-export-password-os-auth-dialog-message-" +
+        AppConstants.platform;
+      [messageText, captionText] = await AboutLoginsL10n.formatMessages([
+        {
+          id: messageId,
+        },
+        {
+          id: "about-logins-os-auth-dialog-caption",
+        },
+      ]);
+    }
+
+    let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
+      this.browsingContext.embedderElement,
+      true,
+      null, // Prompt regardless of a recent prompt
+      messageText.value,
+      captionText.value
+    );
+
+    let { method, object, extra = {}, value = null } = telemetryEvent;
+    Services.telemetry.recordEvent("pwmgr", method, object, value, extra);
+
+    if (!isAuthorized) {
+      return;
+    }
+
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    function fpCallback(aResult) {
+      if (aResult != Ci.nsIFilePicker.returnCancel) {
+        LoginExport.exportAsCSV(fp.file.path);
+        Services.telemetry.recordEvent(
+          "pwmgr",
+          "mgmt_menu_item_used",
+          "export_complete"
+        );
+      }
+    }
+    let [
+      title,
+      defaultFilename,
+      okButtonLabel,
+      csvFilterTitle,
+    ] = await AboutLoginsL10n.formatValues([
+      {
+        id: "about-logins-export-file-picker-title",
+      },
+      {
+        id: "about-logins-export-file-picker-default-filename",
+      },
+      {
+        id: "about-logins-export-file-picker-export-button",
+      },
+      {
+        id: "about-logins-export-file-picker-csv-filter-title",
+      },
+    ]);
+
+    fp.init(this.#ownerGlobal, title, Ci.nsIFilePicker.modeSave);
+    fp.appendFilter(csvFilterTitle, "*.csv");
+    fp.appendFilters(Ci.nsIFilePicker.filterAll);
+    fp.defaultString = defaultFilename;
+    fp.defaultExtension = "csv";
+    fp.okButtonLabel = okButtonLabel;
+    fp.open(fpCallback);
+  }
+
+  async #importFromFile() {
+    let [
+      title,
+      okButtonLabel,
+      csvFilterTitle,
+      tsvFilterTitle,
+    ] = await AboutLoginsL10n.formatValues([
+      {
+        id: "about-logins-import-file-picker-title",
+      },
+      {
+        id: "about-logins-import-file-picker-import-button",
+      },
+      {
+        id: "about-logins-import-file-picker-csv-filter-title",
+      },
+      {
+        id: "about-logins-import-file-picker-tsv-filter-title",
+      },
+    ]);
+    let { result, path } = await this.openFilePickerDialog(
+      title,
+      okButtonLabel,
+      [
+        {
+          title: csvFilterTitle,
+          extensionPattern: "*.csv",
+        },
+        {
+          title: tsvFilterTitle,
+          extensionPattern: "*.tsv",
+        },
+      ],
+      this.#ownerGlobal
+    );
+
+    if (result != Ci.nsIFilePicker.returnCancel) {
+      let summary;
+      try {
+        summary = await LoginCSVImport.importFromCSV(path);
+      } catch (e) {
+        Cu.reportError(e);
+        this.sendAsyncMessage(
+          "AboutLogins:ImportPasswordsErrorDialog",
+          e.errorType
+        );
+      }
+      if (summary) {
+        this.sendAsyncMessage("AboutLogins:ImportPasswordsDialog", summary);
+        Services.telemetry.recordEvent(
+          "pwmgr",
+          "mgmt_menu_item_used",
+          "import_csv_complete"
+        );
+      }
+    }
+  }
+
+  #removeAllLogins() {
+    Services.logins.removeAllUserFacingLogins();
   }
 
   handleLoginStorageErrors(login, error) {
