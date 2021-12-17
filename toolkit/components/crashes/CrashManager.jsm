@@ -20,7 +20,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryController: "resource://gre/modules/TelemetryController.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["CrashManager", "getCrashManager"];
+var EXPORTED_SYMBOLS = [
+  "CrashManager",
+  "getCrashManager",
+  // The following are exported for tests only.
+  "CrashStore",
+  "dateToDays",
+  "getCrashManagerNoCreate",
+];
 
 /**
  * How long to wait after application startup before crash event files are
@@ -1567,4 +1574,13 @@ XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function() {
 
 function getCrashManager() {
   return CrashManager.Singleton;
+}
+
+/**
+ * Used for tests to check the crash manager is created on profile creation.
+ *
+ * @returns {CrashManager}
+ */
+function getCrashManagerNoCreate() {
+  return gCrashManager;
 }

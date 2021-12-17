@@ -3,18 +3,18 @@
 
 "use strict";
 
-var { CrashStore, CrashManager } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm",
-  null
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
 );
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-
-ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
-ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm",
-  this
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
+);
+const { configureLogging, getManager, sleep } = ChromeUtils.import(
+  "resource://testing-common/CrashManagerTest.jsm"
+);
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
@@ -258,7 +258,6 @@ add_task(async function test_schedule_maintenance() {
 });
 
 const crashId = "3cb67eba-0dc7-6f78-6a569a0e-172287ec";
-const crashPingUuid = "103dbdf2-339b-4b9c-a7cc-5f9506ea9d08";
 const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const sha256Hash =
@@ -451,7 +450,7 @@ add_task(async function test_high_water_mark() {
   }
 
   let count = await m.aggregateEventsFiles();
-  Assert.equal(count, CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(count, store.HIGH_WATER_DAILY_THRESHOLD + 1);
 
   // Need to fetch again in case the first one was garbage collected.
   store = await m._getStore();
