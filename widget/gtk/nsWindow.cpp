@@ -2870,6 +2870,7 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
 
   if (!gFocusWindow || gFocusWindow->IsDestroyed()) {
     LOGW("  missing gFocusWindow, quit.");
+    return;
   }
 
   RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
