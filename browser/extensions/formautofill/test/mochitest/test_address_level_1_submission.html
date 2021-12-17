@@ -28,9 +28,9 @@ const TEST_ADDRESSES = [{
 add_task(async function test_DE_is_valid_testcase() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["extensions.formautofill.addresses.enabled", true],
       ["extensions.formautofill.addresses.capture.enabled", true],
-      ["extensions.formautofill.supportedCountries", "US,CA,DE"],
+      ["extensions.formautofill.addresses.supportedCountries", "US,CA,DE"],
+      ["extensions.formautofill.creditCards.supportedCountries", "US,CA,DE"],
     ],
   });
   let chromeScript = SpecialPowers.loadChromeScript(function test_country_data() {
@@ -57,9 +57,11 @@ add_task(async function test_form_will_submit_without_sub_keys() {
       ["browser.search.region", "DE"],
       // We already verified the first time use case in browser test
       ["extensions.formautofill.firstTimeUse", false],
+      ["extensions.formautofill.addresses.capture.enabled", true],
+      ["extensions.formautofill.addresses.supportedCountries", "US,CA,DE"],
+      ["extensions.formautofill.addresses.available", "detect"]
     ],
   });
-
   // Click a field to get the form handler created
   await focusAndWaitForFieldsIdentified("input[autocomplete='organization']");
 
@@ -69,7 +71,6 @@ add_task(async function test_form_will_submit_without_sub_keys() {
   });
 
   clickOnElement("input[type=submit]");
-
   await onStorageChanged("add");
   // Check if timesUsed is set correctly
   let matching = await checkAddresses(TEST_ADDRESSES);
