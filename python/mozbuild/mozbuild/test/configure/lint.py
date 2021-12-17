@@ -29,6 +29,7 @@ class LintMeta(type):
 
         for project in (
             "browser",
+            "extensions",
             "js",
             "memory",
             "mobile/android",
