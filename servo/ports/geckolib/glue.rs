@@ -3765,7 +3765,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
                 Origin::User => CascadeLevel::UserNormal,
                 Origin::Author => CascadeLevel::same_tree_author_normal(),
             };
-            for rule in data.pages.iter() {
+            for &(ref rule, _layer_id) in data.pages.iter() {
                 extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
                     rule.read_with(level.guard(&guards)).block.clone(),
                     level,
@@ -6333,7 +6333,7 @@ pub extern "C" fn Servo_StyleSet_GetFontFaceRules(
         .flat_map(|(d, o)| d.font_faces.iter().zip(iter::repeat(o)));
 
     unsafe { rules.set_len(len) };
-    for ((rule, origin), dest) in font_face_iter.zip(rules.iter_mut()) {
+    for ((&(ref rule, _), origin), dest) in font_face_iter.zip(rules.iter_mut()) {
         dest.mRule.set_arc_leaky(rule.clone());
         dest.mOrigin = origin;
     }
@@ -6397,7 +6397,7 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
         .flat_map(|(d, _)| d.font_feature_values.iter());
 
     let set = unsafe { Gecko_ConstructFontFeatureValueSet() };
-    for src in font_feature_values_iter {
+    for &(ref src, _) in font_feature_values_iter {
         let rule = src.read_with(&guard);
         rule.set_at_rules(set);
     }
