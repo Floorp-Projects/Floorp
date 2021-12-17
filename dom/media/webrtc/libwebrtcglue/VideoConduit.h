@@ -128,7 +128,7 @@ class WebrtcVideoConduit
 
   bool HasCodecPluginID(uint64_t aPluginID) const override;
 
-  void Shutdown() override;
+  RefPtr<GenericPromise> Shutdown() override;
 
   bool Denoising() const { return mDenoising; }
 
@@ -151,8 +151,6 @@ class WebrtcVideoConduit
 
   // Necessary Init steps on main thread.
   MediaConduitErrorCode Init();
-  // Necessary Init steps on the Call thread.
-  void InitCall();
 
   Ssrcs GetLocalSSRCs() const override;
   Maybe<Ssrc> GetRemoteSSRC() const override;
@@ -478,7 +476,7 @@ class WebrtcVideoConduit
   // Main thread only
   nsTArray<uint64_t> mRecvCodecPluginIDs;
 
-  // Call thread only
+  // Main thread only
   MediaEventListener mSendPluginCreated;
   MediaEventListener mSendPluginReleased;
   MediaEventListener mRecvPluginCreated;

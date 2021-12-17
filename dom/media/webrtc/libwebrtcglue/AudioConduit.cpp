@@ -74,25 +74,34 @@ WebrtcAudioConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
       INIT_MIRROR(mRecvCodecs, std::vector<AudioCodecConfig>()) {}
 #undef INIT_MIRROR
 
-void WebrtcAudioConduit::Shutdown() {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mControl.mReceiving.DisconnectIfConnected();
-  mControl.mTransmitting.DisconnectIfConnected();
-  mControl.mLocalSsrcs.DisconnectIfConnected();
-  mControl.mLocalCname.DisconnectIfConnected();
-  mControl.mLocalMid.DisconnectIfConnected();
-  mControl.mRemoteSsrc.DisconnectIfConnected();
-  mControl.mSyncGroup.DisconnectIfConnected();
-  mControl.mLocalRecvRtpExtensions.DisconnectIfConnected();
-  mControl.mLocalSendRtpExtensions.DisconnectIfConnected();
-  mControl.mSendCodec.DisconnectIfConnected();
-  mControl.mRecvCodecs.DisconnectIfConnected();
-  mControl.mOnDtmfEventListener.DisconnectIfExists();
-  mWatchManager.Shutdown();
+RefPtr<GenericPromise> WebrtcAudioConduit::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  AutoWriteLock lock(mLock);
-  DeleteSendStream();
-  DeleteRecvStream();
+  return InvokeAsync(mCallThread, "WebrtcAudioConduit::Shutdown (main thread)",
+                     [this, self = RefPtr<WebrtcAudioConduit>(this)] {
+                       mControl.mReceiving.DisconnectIfConnected();
+                       mControl.mTransmitting.DisconnectIfConnected();
+                       mControl.mLocalSsrcs.DisconnectIfConnected();
+                       mControl.mLocalCname.DisconnectIfConnected();
+                       mControl.mLocalMid.DisconnectIfConnected();
+                       mControl.mRemoteSsrc.DisconnectIfConnected();
+                       mControl.mSyncGroup.DisconnectIfConnected();
+                       mControl.mLocalRecvRtpExtensions.DisconnectIfConnected();
+                       mControl.mLocalSendRtpExtensions.DisconnectIfConnected();
+                       mControl.mSendCodec.DisconnectIfConnected();
+                       mControl.mRecvCodecs.DisconnectIfConnected();
+                       mControl.mOnDtmfEventListener.DisconnectIfExists();
+                       mWatchManager.Shutdown();
+
+                       {
+                         AutoWriteLock lock(mLock);
+                         DeleteSendStream();
+                         DeleteRecvStream();
+                       }
+
+                       return GenericPromise::CreateAndResolve(
+                           true, "WebrtcAudioConduit::Shutdown (call thread)");
+                     });
 }
 
 WebrtcAudioConduit::WebrtcAudioConduit(

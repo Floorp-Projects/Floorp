@@ -14,6 +14,7 @@
 #include "jsapi/RTCStatsReport.h"
 #include "MediaConduitErrors.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/MozPromise.h"
 #include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
 #include "nsTArray.h"
@@ -157,7 +158,7 @@ class MediaSessionConduit {
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
                              PacketType type) = 0;
 
-  virtual void Shutdown() = 0;
+  virtual RefPtr<GenericPromise> Shutdown() = 0;
 
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;

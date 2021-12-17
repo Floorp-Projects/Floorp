@@ -1147,16 +1147,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
   }
 #endif  // MOZ_WIDGET_ANDROID
 
-  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(
-      NewRunnableMethod(__func__, this, &WebrtcVideoConduit::InitCall)));
-
-  CSFLogDebug(LOGTAG, "%s Initialization Done", __FUNCTION__);
-  return kMediaConduitNoError;
-}
-
-void WebrtcVideoConduit::InitCall() {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mCall->RegisterConduit(this);
   mSendPluginCreated = mEncoderFactory->CreatedGmpPluginEvent().Connect(
       GetMainThreadSerialEventTarget(),
       [self = detail::RawPtr(this)](uint64_t aPluginID) {
@@ -1177,70 +1167,90 @@ void WebrtcVideoConduit::InitCall() {
       [self = detail::RawPtr(this)](uint64_t aPluginID) {
         self.get()->mRecvCodecPluginIDs.RemoveElement(aPluginID);
       });
+
+  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [this, self = RefPtr<WebrtcVideoConduit>(this)] {
+        mCall->RegisterConduit(this);
+      })));
+
+  CSFLogDebug(LOGTAG, "%s Initialization Done", __FUNCTION__);
+  return kMediaConduitNoError;
 }
 
-void WebrtcVideoConduit::Shutdown() {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+RefPtr<GenericPromise> WebrtcVideoConduit::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
 
-  using namespace Telemetry;
-  if (mSendBitrate.NumDataValues() > 0) {
-    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
-               static_cast<unsigned>(mSendBitrate.Mean() / 1000));
-    Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-               static_cast<unsigned>(mSendBitrate.StandardDeviation() / 1000));
-    mSendBitrate.Clear();
-  }
-  if (mSendFramerate.NumDataValues() > 0) {
-    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
-               static_cast<unsigned>(mSendFramerate.Mean()));
-    Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-               static_cast<unsigned>(mSendFramerate.StandardDeviation() * 10));
-    mSendFramerate.Clear();
-  }
+  mSendPluginCreated.DisconnectIfExists();
+  mSendPluginReleased.DisconnectIfExists();
+  mRecvPluginCreated.DisconnectIfExists();
+  mRecvPluginReleased.DisconnectIfExists();
 
-  if (mRecvBitrate.NumDataValues() > 0) {
-    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
-               static_cast<unsigned>(mRecvBitrate.Mean() / 1000));
-    Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-               static_cast<unsigned>(mRecvBitrate.StandardDeviation() / 1000));
-    mRecvBitrate.Clear();
-  }
-  if (mRecvFramerate.NumDataValues() > 0) {
-    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
-               static_cast<unsigned>(mRecvFramerate.Mean()));
-    Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-               static_cast<unsigned>(mRecvFramerate.StandardDeviation() * 10));
-    mRecvFramerate.Clear();
-  }
+  return InvokeAsync(
+      mCallThread, __func__, [this, self = RefPtr<WebrtcVideoConduit>(this)] {
+        using namespace Telemetry;
+        if (mSendBitrate.NumDataValues() > 0) {
+          Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
+                     static_cast<unsigned>(mSendBitrate.Mean() / 1000));
+          Accumulate(
+              WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+              static_cast<unsigned>(mSendBitrate.StandardDeviation() / 1000));
+          mSendBitrate.Clear();
+        }
+        if (mSendFramerate.NumDataValues() > 0) {
+          Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
+                     static_cast<unsigned>(mSendFramerate.Mean()));
+          Accumulate(
+              WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+              static_cast<unsigned>(mSendFramerate.StandardDeviation() * 10));
+          mSendFramerate.Clear();
+        }
 
-  mControl.mReceiving.DisconnectIfConnected();
-  mControl.mTransmitting.DisconnectIfConnected();
-  mControl.mLocalSsrcs.DisconnectIfConnected();
-  mControl.mLocalRtxSsrcs.DisconnectIfConnected();
-  mControl.mLocalCname.DisconnectIfConnected();
-  mControl.mLocalMid.DisconnectIfConnected();
-  mControl.mRemoteSsrc.DisconnectIfConnected();
-  mControl.mRemoteRtxSsrc.DisconnectIfConnected();
-  mControl.mSyncGroup.DisconnectIfConnected();
-  mControl.mLocalRecvRtpExtensions.DisconnectIfConnected();
-  mControl.mLocalSendRtpExtensions.DisconnectIfConnected();
-  mControl.mSendCodec.DisconnectIfConnected();
-  mControl.mSendRtpRtcpConfig.DisconnectIfConnected();
-  mControl.mRecvCodecs.DisconnectIfConnected();
-  mControl.mRecvRtpRtcpConfig.DisconnectIfConnected();
-  mControl.mCodecMode.DisconnectIfConnected();
-  mWatchManager.Shutdown();
+        if (mRecvBitrate.NumDataValues() > 0) {
+          Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+                     static_cast<unsigned>(mRecvBitrate.Mean() / 1000));
+          Accumulate(
+              WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+              static_cast<unsigned>(mRecvBitrate.StandardDeviation() / 1000));
+          mRecvBitrate.Clear();
+        }
+        if (mRecvFramerate.NumDataValues() > 0) {
+          Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+                     static_cast<unsigned>(mRecvFramerate.Mean()));
+          Accumulate(
+              WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+              static_cast<unsigned>(mRecvFramerate.StandardDeviation() * 10));
+          mRecvFramerate.Clear();
+        }
 
-  mCall->UnregisterConduit(this);
-  mSendPluginCreated.Disconnect();
-  mSendPluginReleased.Disconnect();
-  mRecvPluginCreated.Disconnect();
-  mRecvPluginReleased.Disconnect();
-  {
-    MutexAutoLock lock(mMutex);
-    DeleteSendStream();
-    DeleteRecvStream();
-  }
+        mControl.mReceiving.DisconnectIfConnected();
+        mControl.mTransmitting.DisconnectIfConnected();
+        mControl.mLocalSsrcs.DisconnectIfConnected();
+        mControl.mLocalRtxSsrcs.DisconnectIfConnected();
+        mControl.mLocalCname.DisconnectIfConnected();
+        mControl.mLocalMid.DisconnectIfConnected();
+        mControl.mRemoteSsrc.DisconnectIfConnected();
+        mControl.mRemoteRtxSsrc.DisconnectIfConnected();
+        mControl.mSyncGroup.DisconnectIfConnected();
+        mControl.mLocalRecvRtpExtensions.DisconnectIfConnected();
+        mControl.mLocalSendRtpExtensions.DisconnectIfConnected();
+        mControl.mSendCodec.DisconnectIfConnected();
+        mControl.mSendRtpRtcpConfig.DisconnectIfConnected();
+        mControl.mRecvCodecs.DisconnectIfConnected();
+        mControl.mRecvRtpRtcpConfig.DisconnectIfConnected();
+        mControl.mCodecMode.DisconnectIfConnected();
+        mWatchManager.Shutdown();
+
+        mCall->UnregisterConduit(this);
+        mDecoderFactory->DisconnectAll();
+        mEncoderFactory->DisconnectAll();
+        {
+          MutexAutoLock lock(mMutex);
+          DeleteSendStream();
+          DeleteRecvStream();
+        }
+
+        return GenericPromise::CreateAndResolve(true, __func__);
+      });
 }
 
 webrtc::VideoCodecMode WebrtcVideoConduit::CodecMode() const {
