@@ -1217,7 +1217,6 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_UNIVERSALCHARDET=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
-MOZ_SANDBOX=1
 MOZ_BINARY_EXTENSIONS=
 MOZ_DEVTOOLS=server
 
@@ -1459,50 +1458,6 @@ if test -n "$MOZ_NO_SMART_CARDS"; then
     AC_DEFINE(MOZ_NO_SMART_CARDS)
 fi
 AC_SUBST(MOZ_NO_SMART_CARDS)
-
-dnl ========================================================
-dnl = Sandboxing support
-dnl ========================================================
-if test -n "$MOZ_TSAN" -o -n "$MOZ_ASAN"; then
-    # Bug 1182565: TSan conflicts with sandboxing on Linux.
-    # Bug 1287971: LSan also conflicts with sandboxing on Linux.
-    case $OS_TARGET in
-    Linux|Android)
-        MOZ_SANDBOX=
-        ;;
-    esac
-fi
-
-MOZ_ARG_DISABLE_BOOL(sandbox,
-[  --disable-sandbox        Disable sandboxing support],
-    MOZ_SANDBOX=,
-    MOZ_SANDBOX=1)
-
-case "$OS_TARGET" in
-WINNT|Darwin|OpenBSD)
-;;
-Linux)
-    case $CPU_ARCH in
-        x86_64|x86|arm|aarch64)
-        ;;
-        # Linux sandbox is only available on x86{,_64} and arm{,64}.
-        *)
-            MOZ_SANDBOX=
-        ;;
-    esac
-    ;;
-*)
-    # Only enable the sandbox by default on Linux, OpenBSD, macOS, and Windows
-    MOZ_SANDBOX=
-;;
-esac
-
-if test -n "$MOZ_SANDBOX"; then
-    AC_DEFINE(MOZ_SANDBOX)
-fi
-
-AC_SUBST(MOZ_SANDBOX)
-
 
 dnl ========================================================
 dnl =
