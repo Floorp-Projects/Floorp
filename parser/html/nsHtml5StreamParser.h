@@ -643,7 +643,7 @@ class nsHtml5StreamParser final : public nsISupports {
   /**
    * Number of times speculation has failed for this parser.
    */
-  uint32_t mSpeculationFailureCount;
+  mozilla::Atomic<uint32_t> mSpeculationFailureCount;
 
   /**
    * Number of bytes already buffered into mBufferedBytes.
