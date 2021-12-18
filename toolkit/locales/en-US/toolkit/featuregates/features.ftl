@@ -10,12 +10,6 @@ experimental-features-css-masonry-description = Enables support for the experime
 
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
-experimental-features-css-cascade-layers =
-    .label = CSS: Cascade Layers
-experimental-features-css-cascade-layers-description = Enables support for CSS Cascade Layers. See the <a data-l10n-name="spec">in-progress specification</a> for details. File bugs blocking <a data-l10n-name="bugzilla">bug 1699215</a> for bugs related to this feature.
-
-# The title of the experiment should be kept in English as it may be referenced
-# by various online articles and is technical in nature.
 experimental-features-web-gpu2 =
     .label = Web API: WebGPU
 experimental-features-web-gpu-description2 = This new API provides low-level support for performing computation and graphics rendering using the <a data-l10n-name="wikipedia">Graphics Processing Unit (GPU)</a> of the user’s device or computer. The <a data-l10n-name="spec">specification</a> is still a work-in-progress. See <a data-l10n-name="bugzilla">bug 1602129</a> for more details.
