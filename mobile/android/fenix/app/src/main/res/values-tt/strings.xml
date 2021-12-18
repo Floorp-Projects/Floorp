@@ -286,6 +286,17 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Firefox-тагы яңалыклар</string>
 
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Шәхсән Сезгә яраклаштырылга Firefox баш бите</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Ачык табларыгызга, кыстыргычларга, гизү тарихына күчегез.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Пөхтә, бер тәртипкә салынган таблар</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Соңгы эзләүләр</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Соңгы эзләүләрегезне баш биттән һәм табларыгыздан кабатлап була.</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Яңа Firefox табын ачу</string>
@@ -344,6 +355,8 @@
     <string name="preferences_open_links_in_a_private_tab">Сылтаманы xосусый биттә ачу</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Хосусый гизү режимында скриншотларны рөхсәт итү</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Рөхсәт ителсә, берничә кушымта ачык булганда хосусый таблар да күренәчәк</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Хосусый гизү ярлыгын өстәү</string>
     <!-- Preference for accessibility -->
@@ -362,6 +375,8 @@
     <string name="preferences_toolbar">Кораллар панеле</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Баш бит</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Ишарәләр</string>
     <!-- Preference for settings related to visual options -->
@@ -428,12 +443,20 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Җыентык иясе (Кулланучы ID)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Кушымчалар җыентыгы үзгәртелгән. Үзгәртүләрне гамәлгә ашыру өчен кушымтадан чыгу…</string>
+
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Кире кайту</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Соңгы кыстыргычлар</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Соңгы каралганнар</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Соңгы эзләүләр</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -646,6 +669,10 @@
     <string name="tab_view_list">Исемлек</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Челтәр</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Эзләү төркемнәре</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Бәйле сайтларны бергә төркемләү</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Табларны ябу</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -658,6 +685,18 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Бер айдан соң</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Ачык табларны автматик рәвештә оябу</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Башлангыч экран</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Баш бит</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Соңгы таб</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Дүрт сәгать хәрәкәтсезлектән соң баш бит</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Кулдан ябу</string>
 
@@ -667,6 +706,30 @@
     <string name="close_tabs_after_one_week_summary">Бер атнадан соң ябу</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Бер айдан соң ябу</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Иске табларны актив булмаганга күчерү</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Ике атна эчендә каралмаган таблар актив булмаган бүлеккә күчереләчәк.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Бетерү</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Актив</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox ара-тирә тикшеренүләр урнаштырырга һәм үткәрергә мөмкин.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Күбрәк белү</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Үзгәртүләрне гамәлгә ашыру өчен кушымта ябылачак</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ОК</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Баш тарту</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Үзгәртүләрне гамәлгә ашыру өчен кушымтадан чыгу…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -697,6 +760,8 @@
     <string name="tab_tray_menu_item_share">Барлык табларны уртаклашу</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Күптән түгел ябылган таблар</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Күптән түгел ябылган</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Хисап көйләүләре</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -765,6 +830,9 @@
     <string name="pwa_site_controls_title_private">%1$s (Хосусый режим)</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Саклау</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Башка таблар</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -972,6 +1040,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Сүнгән</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Кабынган</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Сүнгән</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Җыентыклар</string>
@@ -1071,6 +1144,16 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Киләсегә нигезләнгән:</string>
 
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Маркетинг</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s тиз һәм приват</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">%1$s-ны төп браузерыгыз итү</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Җыентык бетерелде</string>
@@ -1113,6 +1196,10 @@
     <string name="qr_scanner_dialog_positive">РӨXCӘT ИТҮ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">КИРЕ КАГУ</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Веб-адрес хаталы.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">ОК</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">%1$s җыентыгын бетерүне раслыйсызмы?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1133,6 +1220,9 @@
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Автоматик шрифт үлчәме</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Шрифт үлчәме сезнең Android көйләүләренә туры киләчәк. Шрифт үлчәмен монда үзгәртү өчен сүндерегез.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Гизү мәгълүматларын бетерү</string>
@@ -1167,6 +1257,8 @@
     <string name="preferences_delete_browsing_data_button">Гизү мәгълүматларын бетерү</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Чыкканда гизү мәгълүматларын бетерү</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Төп менюда &quot;Чыгу&quot; дигәнгә басканда, гизү мәгълүматларын автоматик рәвештә чистарта</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Чыгу</string>
 
