@@ -61,6 +61,60 @@ void AudioSegment::ResampleChunks(nsAutoRef<SpeexResamplerState>& aResampler,
   }
 }
 
+size_t AudioSegment::WriteToInterleavedBuffer(nsTArray<AudioDataValue>& aBuffer,
+                                              uint32_t aChannels) const {
+  size_t offset = 0;
+  if (GetDuration() <= 0) {
+    MOZ_ASSERT(GetDuration() == 0);
+    return offset;
+  }
+
+  // Calculate how many samples in this segment
+  size_t frames = static_cast<size_t>(GetDuration());
+  CheckedInt<size_t> samples(frames);
+  samples *= static_cast<size_t>(aChannels);
+  MOZ_ASSERT(samples.isValid());
+  if (!samples.isValid()) {
+    return offset;
+  }
+
+  // Enlarge buffer space if needed
+  if (samples.value() > aBuffer.Capacity()) {
+    aBuffer.SetCapacity(samples.value());
+  }
+  aBuffer.SetLengthAndRetainStorage(samples.value());
+  aBuffer.ClearAndRetainStorage();
+
+  // Convert the de-interleaved chunks into an interleaved buffer. Note that
+  // we may upmix or downmix the audio data if the channel in the chunks
+  // mismatch with aChannels
+  for (ConstChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
+    const AudioChunk& c = *ci;
+    size_t samplesInChunk = static_cast<size_t>(c.mDuration) * aChannels;
+    switch (c.mBufferFormat) {
+      case AUDIO_FORMAT_S16:
+        WriteChunk<int16_t>(c, aChannels, c.mVolume,
+                            aBuffer.Elements() + offset);
+        break;
+      case AUDIO_FORMAT_FLOAT32:
+        WriteChunk<float>(c, aChannels, c.mVolume, aBuffer.Elements() + offset);
+        break;
+      case AUDIO_FORMAT_SILENCE:
+        PodZero(aBuffer.Elements() + offset, samplesInChunk);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown format");
+        PodZero(aBuffer.Elements() + offset, samplesInChunk);
+        break;
+    }
+    offset += samplesInChunk;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(samples.value() == offset,
+                        "Segment's duration is incorrect");
+  aBuffer.SetLengthAndRetainStorage(offset);
+  return offset;
+}
+
 // This helps to to safely get a pointer to the position we want to start
 // writing a planar audio buffer, depending on the channel and the offset in the
 // buffer.

@@ -422,6 +422,12 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
     MOZ_ASSERT(aChannels == channels.Length());
     AppendFrames(buffer.forget(), channels, aFrames, aPrincipalHandle);
   }
+  // Write the segement data into an interleaved buffer. Do mixing if the
+  // AudioChunk's channel count in the segment is different from aChannels.
+  // Returns sample count of the converted audio data. The converted data will
+  // be stored into aBuffer.
+  size_t WriteToInterleavedBuffer(nsTArray<AudioDataValue>& aBuffer,
+                                  uint32_t aChannels) const;
   // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
   // in the segment.
   AudioChunk* AppendAndConsumeChunk(AudioChunk&& aChunk) {
@@ -486,8 +492,8 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
 };
 
 template <typename SrcT>
-void WriteChunk(AudioChunk& aChunk, uint32_t aOutputChannels, float aVolume,
-                AudioDataValue* aOutputBuffer) {
+void WriteChunk(const AudioChunk& aChunk, uint32_t aOutputChannels,
+                float aVolume, AudioDataValue* aOutputBuffer) {
   AutoTArray<const SrcT*, GUESS_AUDIO_CHANNELS> channelData;
 
   channelData = aChunk.ChannelData<SrcT>().Clone();
