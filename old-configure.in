@@ -1214,7 +1214,6 @@ MOZ_ARG_HEADER(Application)
 ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
-MOZ_AUTH_EXTENSION=1
 MOZ_UNIVERSALCHARDET=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
@@ -1388,18 +1387,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl NegotiateAuth
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(negotiateauth,
-[  --disable-negotiateauth Disable GSS-API negotiation ],
-    MOZ_AUTH_EXTENSION=,
-    MOZ_AUTH_EXTENSION=1 )
-if test "$MOZ_AUTH_EXTENSION"; then
-  AC_DEFINE(MOZ_AUTH_EXTENSION)
-fi
 
 dnl ========================================================
 dnl Searching of system directories for extensions.
@@ -1866,7 +1853,6 @@ dnl =
 dnl ========================================================
 
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 
