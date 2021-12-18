@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="310.57089mm"
+   height="310.57089mm"
+   viewBox="0 0 310.57089 310.57089"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="star.svg"
+   inkscape:export-filename="/home/psi/g/lu/avif-sample-images/star.png"
+   inkscape:export-xdpi="13.0048"
+   inkscape:export-ydpi="13.0048">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-377.14283"
+     inkscape:cy="435.7143"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="2560"
+     inkscape:window-y="1474"
+     inkscape:window-maximized="1"
+     inkscape:snap-others="true" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="レイヤー 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(7.4768269e-6,13.570917)">
+    <path
+       sodipodi:type="star"
+       style="fill:#ffeeaa;stroke-width:0.26458332"
+       id="path10"
+       sodipodi:sides="5"
+       sodipodi:cx="155.28574"
+       sodipodi:cy="141.64303"
+       sodipodi:r1="154.21428"
+       sodipodi:r2="77.10714"
+       sodipodi:arg1="-1.5707963"
+       sodipodi:arg2="-0.9424778"
+       inkscape:flatsided="false"
+       inkscape:rounded="0.05"
+       inkscape:randomized="0"
+       d="m 155.28574,-12.571243 c 5.12042,0 41.17993,88.823585 45.32244,91.833292 4.1425,3.009707 99.76176,9.85635 101.34405,14.726158 1.5823,4.869808 -71.75095,66.612433 -73.33325,71.482243 -1.58229,4.86981 21.45414,97.92485 17.31163,100.93456 -4.1425,3.00971 -85.52445,-47.65483 -90.64487,-47.65483 -5.12042,0 -86.50238,50.66453 -90.644886,47.65483 C 60.498348,263.3953 83.534785,170.34026 81.952489,165.47045 80.370192,160.60064 7.0369457,98.858007 8.6192422,93.988199 10.201539,89.118391 105.82079,82.271756 109.9633,79.26205 c 4.1425,-3.009707 40.20202,-91.833293 45.32244,-91.833293 z"
+       inkscape:export-xdpi="13.0048"
+       inkscape:export-ydpi="13.0048"
+       inkscape:transform-center-y="-14.661668" />
+  </g>
+</svg>

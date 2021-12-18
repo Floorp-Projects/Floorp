@@ -1,0 +1,146 @@
+name: Encode all images and decode them again weekly.
+
+on:
+  push:
+  schedule:
+    - cron:  '0 20 * * 0' # https://crontab.guru/#0_2_*_*_0
+
+jobs:
+  check-on-ubuntu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        include:
+          - os: ubuntu-18.04
+            codename: 'bionic'
+            cavif-flag: ''
+          - os: ubuntu-20.04
+            codename: 'focal'
+            cavif-flag: ''
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install required tools
+      run: sudo apt install -y curl jq unzip coreutils imagemagick
+    - name: Download latest cavif
+      shell: bash
+      run: |
+        runId=$(curl https://api.github.com/repos/link-u/cavif/actions/workflows/${WORKFLOW_ID}/runs | jq '[.workflow_runs[] | select( .conclusion == "success")][0].id')
+        artifactId=$(curl https://api.github.com/repos/link-u/cavif/actions/runs/${runId}/artifacts | jq '[.artifacts[] | select( .name == "${{ matrix.codename }}")][0].id')
+        curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -o cavif.zip -L https://api.github.com/repos/link-u/cavif/actions/artifacts/${artifactId}/zip
+        unzip cavif.zip
+      env:
+        #id of https://github.com/link-u/cavif/actions?query=workflow%3A%22Build+debian+package+on+push+or+release-tags.%22
+        # curl https://api.github.com/repos/link-u/cavif/actions/workflows
+        WORKFLOW_ID: '4521995'
+    - name: Download latest davif
+      shell: bash
+      run: |
+        runId=$(curl https://api.github.com/repos/link-u/davif/actions/workflows/${WORKFLOW_ID}/runs | jq '[.workflow_runs[] | select( .conclusion == "success")][0].id')
+        artifactId=$(curl https://api.github.com/repos/link-u/davif/actions/runs/${runId}/artifacts | jq '[.artifacts[] | select( .name == "${{ matrix.codename }}")][0].id')
+        curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -o davif.zip -L https://api.github.com/repos/link-u/davif/actions/artifacts/${artifactId}/zip
+        unzip davif.zip
+      env:
+        #id of https://github.com/link-u/davif/actions?query=workflow%3A%22Build+debian+package+on+push+or+release-tags.%22
+        # curl https://api.github.com/repos/link-u/davif/actions/workflows
+        WORKFLOW_ID: '452394'
+    - name: Install davif and cavif
+      run: sudo dpkg -i *.deb
+    - name: Use installed cavif and davif
+      run: |
+        sed -i -e 's/^CAVIF=.*$/CAVIF=cavif ${{ matrix.cavif-flag }}/' Makefile
+        sed -i -e 's/^DAVIF=.*$/DAVIF=davif/' Makefile
+    - name: Clean all images.
+      run: make clean
+    - name: Encode them all.
+      run: make all -j $(nproc)
+    - name: Decode them all.
+      run: make decode -j $(nproc)
+    - name: Copy images to upload.
+      run: |
+        mkdir -p ${{ matrix.codename }}/decoded
+        mkdir -p ${{ matrix.codename }}/encoded
+        cp decoded/* ${{ matrix.codename }}/decoded
+        cp *.avif ${{ matrix.codename }}/encoded
+    - name: Upload result
+      uses: actions/upload-artifact@v1
+      with:
+        name: ${{ matrix.codename }}
+        path: ${{ matrix.codename }}
+    - name: Compare the result
+      run: make compare -j $(nproc)
+  check-on-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          path-type: inherit
+      - name: Install dependencies
+        shell: msys2 {0}
+        run: |
+          set -eux
+          pacman --noconfirm -S make
+          pacman --noconfirm -S bc
+          pacman --noconfirm -S mingw-w64-x86_64-imagemagick
+          pacman --noconfirm -S mingw-w64-x86_64-curl
+          pacman --noconfirm -S mingw-w64-x86_64-jq
+          make --version
+          echo '2+2' | bc
+          magick -version
+      - name: Download latest cavif
+        shell: bash
+        run: |
+          runId=$(curl https://api.github.com/repos/link-u/cavif/actions/workflows/${WORKFLOW_ID}/runs | jq '[.workflow_runs[] | select( .conclusion == "success")][0].id')
+          artifactId=$(curl https://api.github.com/repos/link-u/cavif/actions/runs/${runId}/artifacts | jq '[.artifacts[] | select( .name == "cavif-win64")][0].id')
+          curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -o cavif.zip -L https://api.github.com/repos/link-u/cavif/actions/artifacts/${artifactId}/zip
+          unzip cavif.zip
+          rm cavif.zip
+          ./cavif.exe -h
+        env:
+          WORKFLOW_ID: '4517759'
+      - name: Download latest davif
+        shell: bash
+        run: |
+          runId=$(curl https://api.github.com/repos/link-u/davif/actions/workflows/${WORKFLOW_ID}/runs | jq '[.workflow_runs[] | select( .conclusion == "success")][0].id')
+          artifactId=$(curl https://api.github.com/repos/link-u/davif/actions/runs/${runId}/artifacts | jq '[.artifacts[] | select( .name == "davif-win64")][0].id')
+          curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -o davif.zip -L https://api.github.com/repos/link-u/davif/actions/artifacts/${artifactId}/zip
+          unzip davif.zip
+          rm davif.zip
+          ./davif.exe -h
+        env:
+          WORKFLOW_ID: '4521970'
+      - name: Rewrite Makefile to installed cavif and davif
+        shell: msys2 {0}
+        run: |
+          sed -i -e 's/^CAVIF=.*$/CAVIF=.\/cavif.exe/' Makefile
+          sed -i -e 's/^DAVIF=.*$/DAVIF=.\/davif.exe/' Makefile
+      - name: Clean all images.
+        shell: msys2 {0}
+        run: make clean
+      - name: Encode them all
+        shell: msys2 {0}
+        run: make all -j $(nproc)
+      - name: Decode them all
+        shell: msys2 {0}
+        run: make decode -j $(nproc)
+      - name: Copy images to upload.
+        shell: msys2 {0}
+        run: |
+          mkdir -p win64/decoded
+          mkdir -p win64/encoded
+          cp decoded/* win64/decoded
+          cp *.avif win64/encoded
+      - name: Upload result
+        uses: actions/upload-artifact@v1
+        with:
+          name: win64
+          path: win64
+      - name: Compare the result
+        shell: msys2 {0}
+        run: |
+          export PATH="/mingw64/bin:${PATH}"
+          make compare -j $(nproc)

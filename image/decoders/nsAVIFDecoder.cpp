@@ -27,17 +27,26 @@ namespace mozilla {
 
 namespace image {
 
+using Telemetry::LABELS_AVIF_A1LX;
+using Telemetry::LABELS_AVIF_A1OP;
 using Telemetry::LABELS_AVIF_ALPHA;
 using Telemetry::LABELS_AVIF_AOM_DECODE_ERROR;
 using Telemetry::LABELS_AVIF_BIT_DEPTH;
 using Telemetry::LABELS_AVIF_CICP_CP;
 using Telemetry::LABELS_AVIF_CICP_MC;
 using Telemetry::LABELS_AVIF_CICP_TC;
+using Telemetry::LABELS_AVIF_CLAP;
 using Telemetry::LABELS_AVIF_COLR;
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
+using Telemetry::LABELS_AVIF_GRID;
+using Telemetry::LABELS_AVIF_IPRO;
 using Telemetry::LABELS_AVIF_ISPE;
+using Telemetry::LABELS_AVIF_LSEL;
+using Telemetry::LABELS_AVIF_MAJOR_BRAND;
+using Telemetry::LABELS_AVIF_PASP;
 using Telemetry::LABELS_AVIF_PIXI;
+using Telemetry::LABELS_AVIF_SEQUENCE;
 using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
@@ -53,12 +62,15 @@ static const LABELS_AVIF_YUV_COLOR_SPACE gColorSpaceLabel[] = {
 static MaybeIntSize GetImageSize(const Mp4parseAvifImage& image) {
   // Note this does not take cropping via CleanAperture (clap) into account
   const struct Mp4parseImageSpatialExtents* ispe = image.spatial_extents;
-  // Decoder::PostSize takes int32_t, but ispe contains uint32_t
-  CheckedInt<int32_t> width = ispe->image_width;
-  CheckedInt<int32_t> height = ispe->image_height;
 
-  if (width.isValid() && height.isValid()) {
-    return Some(IntSize{width.value(), height.value()});
+  if (ispe) {
+    // Decoder::PostSize takes int32_t, but ispe contains uint32_t
+    CheckedInt<int32_t> width = ispe->image_width;
+    CheckedInt<int32_t> height = ispe->image_height;
+
+    if (width.isValid() && height.isValid()) {
+      return Some(IntSize{width.value(), height.value()});
+    }
   }
 
   return Nothing();
@@ -1241,6 +1253,51 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
         ("[this=%p] colr type ICC: %zu bytes %p", this, icc.length, icc.data));
   }
 
+  if (IsMetadataDecode()) {
+    // Only record metadata telemetry on the metadata decode call, or else it
+    // would be double-counted
+
+    if (parsedImg.pixel_aspect_ratio) {
+      const uint32_t& h_spacing = parsedImg.pixel_aspect_ratio->h_spacing;
+      const uint32_t& v_spacing = parsedImg.pixel_aspect_ratio->v_spacing;
+
+      if (h_spacing == 0 || v_spacing == 0) {
+        AccumulateCategorical(LABELS_AVIF_PASP::invalid);
+      } else if (h_spacing == v_spacing) {
+        AccumulateCategorical(LABELS_AVIF_PASP::square);
+      } else {
+        AccumulateCategorical(LABELS_AVIF_PASP::nonsquare);
+      }
+    } else {
+      AccumulateCategorical(LABELS_AVIF_PASP::absent);
+    }
+
+    const auto& major_brand = parsedImg.major_brand;
+    if (!memcmp(major_brand, "avif", sizeof(major_brand))) {
+      AccumulateCategorical(LABELS_AVIF_MAJOR_BRAND::avif);
+    } else if (!memcmp(major_brand, "avis", sizeof(major_brand))) {
+      AccumulateCategorical(LABELS_AVIF_MAJOR_BRAND::avis);
+    } else {
+      AccumulateCategorical(LABELS_AVIF_MAJOR_BRAND::other);
+    }
+
+    AccumulateCategorical(parsedImg.has_sequence
+                              ? LABELS_AVIF_SEQUENCE::present
+                              : LABELS_AVIF_SEQUENCE::absent);
+
+#define FEATURE_TELEMETRY(fourcc)                                  \
+  AccumulateCategorical((parsedImg.unsupported_features_bitfield & \
+                         (1 << MP4PARSE_FEATURE_##fourcc))         \
+                            ? LABELS_AVIF_##fourcc::present        \
+                            : LABELS_AVIF_##fourcc::absent)
+    FEATURE_TELEMETRY(A1LX);
+    FEATURE_TELEMETRY(A1OP);
+    FEATURE_TELEMETRY(CLAP);
+    FEATURE_TELEMETRY(GRID);
+    FEATURE_TELEMETRY(IPRO);
+    FEATURE_TELEMETRY(LSEL);
+  }
+
   if (parsedImg.nclx_colour_information) {
     const auto& nclx = *parsedImg.nclx_colour_information;
     MOZ_LOG(
@@ -1358,8 +1415,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     return AsVariant(NonDecoderResult::MetadataOk);
   }
 
+  // The following telemetry may depend on the results of decoding.
   // These data must be recorded after metadata has been decoded
   // (IsMetadataDecode()=false) or else they would be double-counted.
+
   AccumulateCategorical(
       gColorSpaceLabel[static_cast<size_t>(decodedData.mYUVColorSpace)]);
   AccumulateCategorical(
@@ -1615,75 +1674,105 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
       case MP4PARSE_STATUS_OK:
         MOZ_ASSERT_UNREACHABLE(
             "Expect NonDecoderResult, Dav1dResult or AOMResult");
-        break;
-      case MP4PARSE_STATUS_OOM:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::out_of_memory);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_A1LX:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_a1lx);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_A1OP:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_a1op);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_CLAP:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_clap);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_GRID:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_grid);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_IPRO:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_ipro);
-        break;
-      case MP4PARSE_STATUS_UNSUPPORTED_LSEL:
-        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::unsupported_lsel);
-        break;
-      default:
-        MOZ_FALLTHROUGH_ASSERT("unexpected Mp4parseStatus value");
+        return;
       case MP4PARSE_STATUS_BAD_ARG:
       case MP4PARSE_STATUS_INVALID:
       case MP4PARSE_STATUS_UNSUPPORTED:
       case MP4PARSE_STATUS_EOF:
       case MP4PARSE_STATUS_IO:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::parse_error);
-        break;
+        return;
+      case MP4PARSE_STATUS_OOM:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::out_of_memory);
+        return;
+      case MP4PARSE_STATUS_MISSING_BRAND:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::missing_brand);
+        return;
+      case MP4PARSE_STATUS_FTYP_NOT_FIRST:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::ftyp_not_first);
+        return;
+      case MP4PARSE_STATUS_NO_IMAGE:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_image);
+        return;
+      case MP4PARSE_STATUS_MULTIPLE_MOOV:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::multiple_moov);
+        return;
+      case MP4PARSE_STATUS_NO_MOOV:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_moov);
+        return;
+      case MP4PARSE_STATUS_LSEL_NO_ESSENTIAL:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::lsel_no_essential);
+        return;
+      case MP4PARSE_STATUS_A1OP_NO_ESSENTIAL:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::a1op_no_essential);
+        return;
+      case MP4PARSE_STATUS_A1LX_ESSENTIAL:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::a1lx_essential);
+        return;
+      case MP4PARSE_STATUS_TXFORM_NO_ESSENTIAL:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::txform_no_essential);
+        return;
+      case MP4PARSE_STATUS_NO_PRIMARY_ITEM:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_primary_item);
+        return;
+      case MP4PARSE_STATUS_IMAGE_ITEM_TYPE:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::image_item_type);
+        return;
+      case MP4PARSE_STATUS_ITEM_TYPE_MISSING:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::item_type_missing);
+        return;
+      case MP4PARSE_STATUS_CONSTRUCTION_METHOD:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::construction_method);
+        return;
+      case MP4PARSE_STATUS_ITEM_LOC_NOT_FOUND:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::item_loc_not_found);
+        return;
+      case MP4PARSE_STATUS_NO_ITEM_DATA_BOX:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_item_data_box);
+        return;
     }
+
+    MOZ_LOG(sAVIFLog, LogLevel::Error,
+            ("[this=%p] unexpected Mp4parseStatus value: %d", this,
+             aResult.as<Mp4parseStatus>()));
+    MOZ_ASSERT(false, "unexpected Mp4parseStatus value");
+    AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::invalid_parse_status);
+
   } else if (aResult.is<NonDecoderResult>()) {
     switch (aResult.as<NonDecoderResult>()) {
       case NonDecoderResult::NeedMoreData:
-        break;
+        return;
       case NonDecoderResult::MetadataOk:
-        break;
+        return;
       case NonDecoderResult::NoPrimaryItem:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::no_primary_item);
-        break;
+        return;
       case NonDecoderResult::SizeOverflow:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::size_overflow);
-        break;
+        return;
       case NonDecoderResult::OutOfMemory:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::out_of_memory);
-        break;
+        return;
       case NonDecoderResult::PipeInitError:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::pipe_init_error);
-        break;
+        return;
       case NonDecoderResult::WriteBufferError:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::write_buffer_error);
-        break;
+        return;
       case NonDecoderResult::AlphaYSizeMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::alpha_y_sz_mismatch);
-        break;
+        return;
       case NonDecoderResult::AlphaYColorDepthMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::alpha_y_bpc_mismatch);
-        break;
+        return;
       case NonDecoderResult::MetadataImageSizeMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::ispe_mismatch);
-        break;
+        return;
       case NonDecoderResult::InvalidCICP:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::invalid_cicp);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("unknown NonDecoderResult");
-        break;
+        return;
     }
+    MOZ_ASSERT_UNREACHABLE("unknown NonDecoderResult");
   } else {
     MOZ_ASSERT(aResult.is<Dav1dResult>() || aResult.is<AOMResult>());
     AccumulateCategorical(aResult.is<Dav1dResult>() ? LABELS_AVIF_DECODER::dav1d
