@@ -192,10 +192,10 @@ class AudioInputProcessing : public AudioDataListener {
   const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
   // Packetizer to be able to feed 10ms packets to the input side of
   // mAudioProcessing. Not used if the processing is bypassed.
-  UniquePtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
+  Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
   // Packetizer to be able to feed 10ms packets to the output side of
   // mAudioProcessing. Not used if the processing is bypassed.
-  UniquePtr<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
+  Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
   // The number of channels asked for by content, after clamping to the range of
   // legal channel count for this particular device. This is the number of
   // channels of the input buffer passed as parameter in NotifyInputData.
