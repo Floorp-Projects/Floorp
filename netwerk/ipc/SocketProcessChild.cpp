@@ -168,7 +168,15 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   // Initialize DNS Service here, since it needs to be done in main thread.
   nsCOMPtr<nsIDNSService> dns =
       do_GetService("@mozilla.org/network/dns-service;1", &rv);
-  return NS_SUCCEEDED(rv);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (!EnsureNSSInitializedChromeOrContent()) {
+    return false;
+  }
+
+  return true;
 }
 
 void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
@@ -221,6 +229,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInit(
   if (aAttributes.mInitSandbox()) {
     Unused << RecvInitLinuxSandbox(aAttributes.mSandboxBroker());
   }
+
   return IPC_OK();
 }
 
@@ -479,9 +488,7 @@ SocketProcessChild::GetAndRemoveDataBridge(uint64_t aChannelId) {
 }
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvClearSessionCache() {
-  if (EnsureNSSInitializedChromeOrContent()) {
-    nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
-  }
+  nsNSSComponent::DoClearSSLExternalAndInternalSessionCache();
   return IPC_OK();
 }
 

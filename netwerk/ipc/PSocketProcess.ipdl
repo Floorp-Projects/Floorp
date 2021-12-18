@@ -130,7 +130,7 @@ parent:
                         ByteArray aServerCert,
                         ByteArray? aClientCert,
                         ByteArray[] aCollectedCANames)
-    returns (bool aSucceeded, ByteArray aOutCert, ByteArray aOutKey, ByteArray[] aBuiltChain);
+    returns (bool aSucceeded, ByteArray aOutCert, ByteArray[] aBuiltChain);
   async PProxyConfigLookup(nsIURI aUri, uint32_t aFlags);
   async CachePushCheck(nsIURI aPushedURL,
                        OriginAttributes aOriginAttributes,

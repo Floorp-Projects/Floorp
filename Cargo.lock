@@ -2498,6 +2498,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ipcclientcerts-static"
+version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "once_cell",
+ "pkcs11",
+ "rsclientcerts",
+ "sha2",
+]
+
+[[package]]
 name = "itertools"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
