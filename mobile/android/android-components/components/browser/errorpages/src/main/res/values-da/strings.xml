@@ -278,4 +278,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Webstedet %1$s er blevet anmeldt som et vildledende websted og er blevet blokeret som følge af dine sikkerhedsindstillinger .</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Sikkert websted er ikke tilgængeligt</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Du har aktiveret tilstanden kun-HTTPS for at øge sikkerheden, og en HTTPS-version af <em>%1$s</em> er ikke tilgængelig.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Fortsæt til HTTP-websted</string>
 </resources>
