@@ -2770,3 +2770,19 @@ option("--disable-negotiateauth", help="Disable GSS-API negotiation")
 
 set_config("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
 set_define("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
+
+
+# Parental control
+# ==============================================================
+option("--disable-parental-controls", help="Do not build parental controls")
+
+set_config(
+    "MOZ_DISABLE_PARENTAL_CONTROLS",
+    True,
+    when=depends("--enable-parental-controls")(lambda x: not x),
+)
+set_define(
+    "MOZ_DISABLE_PARENTAL_CONTROLS",
+    True,
+    when=depends("--enable-parental-controls")(lambda x: not x),
+)
