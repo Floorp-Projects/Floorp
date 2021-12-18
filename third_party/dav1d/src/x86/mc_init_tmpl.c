@@ -263,7 +263,17 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL))
         return;
 
-#if HAVE_AVX512ICL && BITDEPTH == 8
+    init_mc_fn (FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   avx512icl);
+    init_mc_fn (FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx512icl);
+    init_mc_fn (FILTER_2D_BILINEAR,            bilin,               avx512icl);
+
     init_mct_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        avx512icl);
     init_mct_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, avx512icl);
     init_mct_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  avx512icl);
@@ -281,6 +291,10 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->w_mask[0] = BF(dav1d_w_mask_444, avx512icl);
     c->w_mask[1] = BF(dav1d_w_mask_422, avx512icl);
     c->w_mask[2] = BF(dav1d_w_mask_420, avx512icl);
-#endif
+    c->blend = BF(dav1d_blend, avx512icl);
+    c->blend_v = BF(dav1d_blend_v, avx512icl);
+    c->blend_h = BF(dav1d_blend_h, avx512icl);
+    c->warp8x8  = BF(dav1d_warp_affine_8x8, avx512icl);
+    c->warp8x8t = BF(dav1d_warp_affine_8x8t, avx512icl);
 #endif
 }

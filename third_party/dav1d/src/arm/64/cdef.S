@@ -30,12 +30,12 @@
 #include "cdef_tmpl.S"
 
 .macro pad_top_bottom s1, s2, w, stride, rn, rw, ret
-        tst             w6,  #1 // CDEF_HAVE_LEFT
+        tst             w7,  #1 // CDEF_HAVE_LEFT
         b.eq            2f
         // CDEF_HAVE_LEFT
         sub             \s1,  \s1,  #2
         sub             \s2,  \s2,  #2
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         ldr             \rn\()0, [\s1]
@@ -84,7 +84,7 @@
 
 2:
         // !CDEF_HAVE_LEFT
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         ldr             \rn\()0, [\s1]
@@ -140,17 +140,18 @@
 
 // void dav1d_cdef_paddingX_8bpc_neon(uint16_t *tmp, const pixel *src,
 //                                    ptrdiff_t src_stride, const pixel (*left)[2],
-//                                    const pixel *const top, int h,
+//                                    const pixel *const top,
+//                                    const pixel *const bottom, int h,
 //                                    enum CdefEdgeFlags edges);
 
 .macro padding_func w, stride, rn, rw
 function cdef_padding\w\()_8bpc_neon, export=1
-        cmp             w6,  #0xf // fully edged
+        cmp             w7,  #0xf // fully edged
         b.eq            cdef_padding\w\()_edged_8bpc_neon
         movi            v30.8h,  #0x80, lsl #8
         mov             v31.16b, v30.16b
         sub             x0,  x0,  #2*(2*\stride+2)
-        tst             w6,  #4 // CDEF_HAVE_TOP
+        tst             w7,  #4 // CDEF_HAVE_TOP
         b.ne            1f
         // !CDEF_HAVE_TOP
         st1             {v30.8h, v31.8h}, [x0], #32
@@ -165,17 +166,17 @@ function cdef_padding\w\()_8bpc_neon, export=1
 
         // Middle section
 3:
-        tst             w6,  #1 // CDEF_HAVE_LEFT
+        tst             w7,  #1 // CDEF_HAVE_LEFT
         b.eq            2f
         // CDEF_HAVE_LEFT
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ld1             {v0.h}[0], [x3], #2
         ldr             h2,      [x1, #\w]
         load_n_incr     v1,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
         uxtl            v2.8h,  v2.8b
@@ -189,7 +190,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
         // CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         ld1             {v0.h}[0], [x3], #2
         load_n_incr     v1,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
         str             s0,      [x0]
@@ -199,13 +200,13 @@ function cdef_padding\w\()_8bpc_neon, export=1
         b.gt            1b
         b               3f
 2:
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ldr             h1,      [x1, #\w]
         load_n_incr     v0,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
         str             s31,     [x0]
@@ -217,7 +218,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
 1:
         // !CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         load_n_incr     v0,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         uxtl            v0.8h,  v0.8b
         str             s31,     [x0]
         stur            \rw\()0, [x0, #4]
@@ -226,7 +227,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
         b.gt            1b
 
 3:
-        tst             w6,  #8 // CDEF_HAVE_BOTTOM
+        tst             w7,  #8 // CDEF_HAVE_BOTTOM
         b.ne            1f
         // !CDEF_HAVE_BOTTOM
         st1             {v30.8h, v31.8h}, [x0], #32
@@ -236,8 +237,8 @@ function cdef_padding\w\()_8bpc_neon, export=1
         ret
 1:
         // CDEF_HAVE_BOTTOM
-        add             x9,  x1,  x2
-        pad_top_bottom  x1,  x9, \w, \stride, \rn, \rw, 1
+        add             x9,  x5,  x2
+        pad_top_bottom  x5,  x9, \w, \stride, \rn, \rw, 1
 endfunc
 .endm
 
@@ -246,12 +247,14 @@ padding_func 4, 8,  s, d
 
 // void cdef_paddingX_edged_8bpc_neon(uint8_t *tmp, const pixel *src,
 //                                    ptrdiff_t src_stride, const pixel (*left)[2],
-//                                    const pixel *const top, int h,
+//                                    const pixel *const top,
+//                                    const pixel *const bottom, int h,
 //                                    enum CdefEdgeFlags edges);
 
 .macro padding_func_edged w, stride, reg
 function cdef_padding\w\()_edged_8bpc_neon, export=1
         sub             x4,  x4,  #2
+        sub             x5,  x5,  #2
         sub             x0,  x0,  #(2*\stride+2)
 
 .if \w == 4
@@ -275,22 +278,21 @@ function cdef_padding\w\()_edged_8bpc_neon, export=1
         ld1             {v0.h}[0], [x3], #2
         ldr             h2,      [x1, #\w]
         load_n_incr     v1,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         str             h0,      [x0]
         stur            \reg\()1, [x0, #2]
         str             h2,      [x0, #2+\w]
         add             x0,  x0,  #\stride
         b.gt            0b
 
-        sub             x1,  x1,  #2
 .if \w == 4
-        ldr             d0, [x1]
-        ldr             d1, [x1, x2]
+        ldr             d0, [x5]
+        ldr             d1, [x5, x2]
         st1             {v0.8b, v1.8b}, [x0], #16
 .else
-        add             x9,  x1,  x2
-        ldr             d0, [x1]
-        ldr             s1, [x1, #8]
+        add             x9,  x5,  x2
+        ldr             d0, [x5]
+        ldr             s1, [x5, #8]
         ldr             d2, [x9]
         ldr             s3, [x9, #8]
         str             d0, [x0]
@@ -473,7 +475,7 @@ function cdef_filter\w\suffix\()_edged_8bpc_neon
         // To handle the offset for negative values, use both halving w/ and w/o rounding.
         srhadd          v5.16b,  v1.16b,  v2.16b    // sum >> 1
         shadd           v6.16b,  v1.16b,  v2.16b    // (sum - 1) >> 1
-        sshr            v1.16b,  v5.16b,  #7        // sum < 0
+        cmlt            v1.16b,  v5.16b,  #0        // sum < 0
         bsl             v1.16b,  v6.16b,  v5.16b    // (sum - (sum < 0)) >> 1
 
         srshr           v1.16b,  v1.16b,  #3        // (8 + sum - (sum < 0)) >> 4
