@@ -1129,9 +1129,9 @@ def _get_desktop_run_parser():
         help="Run the program with the crash reporter enabled.",
     )
     group.add_argument(
-        "--enable-fission",
+        "--disable-fission",
         action="store_true",
-        help="Run the program with Fission (site isolation) enabled.",
+        help="Run the program with Fission (site isolation) disabled.",
     )
     group.add_argument(
         "--setpref",
@@ -1635,7 +1635,7 @@ def _run_desktop(
     noprofile,
     disable_e10s,
     enable_crash_reporter,
-    enable_fission,
+    disable_fission,
     setpref,
     temp_profile,
     macos_open,
@@ -1778,9 +1778,7 @@ def _run_desktop(
         f = open(version_file, "r")
         extra_env["MOZ_FORCE_DISABLE_E10S"] = f.read().strip()
 
-    if enable_fission:
-        extra_env["MOZ_FORCE_ENABLE_FISSION"] = "1"
-    else:
+    if disable_fission:
         extra_env["MOZ_FORCE_DISABLE_FISSION"] = "1"
 
     if some_debugging_option:
