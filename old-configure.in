@@ -1453,20 +1453,6 @@ if test -n "$MOZ_UPDATER"; then
 fi
 
 dnl ========================================================
-dnl parental controls (for Windows Vista)
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(parental-controls,
-[  --disable-parental-controls
-                          Do not build parental controls],
-   MOZ_DISABLE_PARENTAL_CONTROLS=1,
-   MOZ_DISABLE_PARENTAL_CONTROLS=)
-if test -n "$MOZ_DISABLE_PARENTAL_CONTROLS"; then
-    AC_DEFINE(MOZ_DISABLE_PARENTAL_CONTROLS)
-fi
-
-AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
-
-dnl ========================================================
 dnl = Disable smartcard support
 dnl ========================================================
 if test -n "$MOZ_NO_SMART_CARDS"; then
