@@ -1369,27 +1369,6 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
-dnl ========================================================
-dnl = libproxy support
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK"
-then
-    MOZ_ENABLE_LIBPROXY=
-
-    MOZ_ARG_ENABLE_BOOL(libproxy,
-    [  --enable-libproxy         Enable libproxy support ],
-    MOZ_ENABLE_LIBPROXY=1,
-    MOZ_ENABLE_LIBPROXY=)
-
-    if test "$MOZ_ENABLE_LIBPROXY"
-    then
-        PKG_CHECK_MODULES(MOZ_LIBPROXY, libproxy-1.0)
-        AC_DEFINE(MOZ_ENABLE_LIBPROXY)
-    fi
-fi
-AC_SUBST(MOZ_ENABLE_LIBPROXY)
-
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
                [ struct ethtool_cmd cmd; cmd.speed_hi = 0; ],
                MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI=1)
