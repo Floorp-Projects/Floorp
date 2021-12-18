@@ -1208,6 +1208,10 @@ void MediaTrackGraphImpl::DeviceChanged() {
   AppendMessage(MakeUnique<Message>(this));
 }
 
+static const char* GetAudioInputTypeString(const AudioInputType& aType) {
+  return aType == AudioInputType::Voice ? "Voice" : "Unknown";
+}
+
 void MediaTrackGraphImpl::ReevaluateInputDevice() {
   MOZ_ASSERT(OnGraphThread());
   bool needToSwitch = false;
@@ -1216,10 +1220,23 @@ void MediaTrackGraphImpl::ReevaluateInputDevice() {
     AudioCallbackDriver* audioCallbackDriver =
         CurrentDriver()->AsAudioCallbackDriver();
     if (audioCallbackDriver->InputChannelCount() != AudioInputChannelCount()) {
+      LOG(LogLevel::Debug,
+          ("%p: ReevaluateInputDevice: %u-channel AudioCallbackDriver %p is "
+           "re-configured to %d-channel",
+           this, audioCallbackDriver->InputChannelCount(), audioCallbackDriver,
+           AudioInputChannelCount()));
       needToSwitch = true;
     }
     if (audioCallbackDriver->InputDevicePreference() !=
         AudioInputDevicePreference()) {
+      LOG(LogLevel::Debug,
+          ("%p: ReevaluateInputDevice: %s-type AudioCallbackDriver %p is "
+           "re-configured to %s-type",
+           this,
+           GetAudioInputTypeString(
+               audioCallbackDriver->InputDevicePreference()),
+           audioCallbackDriver,
+           GetAudioInputTypeString(AudioInputDevicePreference())));
       needToSwitch = true;
     }
   } else {
