@@ -12,7 +12,7 @@
   <meta content="Bikeshed version dfbc2b297, updated Thu Nov 11 15:52:32 2021 -0800" name="generator">
   <link href="https://matspalmgren.github.io/css-gap-decorations/Overview.html" rel="canonical">
   <link href="https://drafts.csswg.org/csslogo.ico" rel="icon">
-  <meta content="277b3facc9955090e33b0dc0af17266e29f3f34b" name="document-revision">
+  <meta content="0978a49f760a6618d883efc621c36673a0720e2a" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -717,7 +717,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#ED">Editor’s Draft</a>, <time class="dt-updated" datetime="2021-11-18">18 November 2021</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#ED">Editor’s Draft</a>, <time class="dt-updated" datetime="2021-12-18">18 December 2021</time></p>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -1217,6 +1217,20 @@ on screen, on paper, etc.
    </table>
    <p>These properties sets the lateral start/end offset of the rule in the column and row axis, respectively.
     A positive value moves the position inward and a negative value outward from the corresponding <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑤">rule containing rectangle’s</a> edge.</p>
+   <aside class="example" id="example-2ebfce9b">
+    <a class="self-link" href="#example-2ebfce9b"></a> This <a href="examples/grid-lateral-002.html">example</a> demonstrates aligning a rule at the start of the gap. 
+    <figure>
+      <img height="170" src="media/grid-lateral-002.png" width="941"> 
+     <figcaption> Examples of aligning a rule at the start of the gap with a lateral start offset. </figcaption>
+    </figure>
+   </aside>
+   <aside class="example" id="example-c7a1d008">
+    <a class="self-link" href="#example-c7a1d008"></a> This <a href="examples/grid-lateral-003.html">example</a> demonstrates aligning a rule at the end of the gap. 
+    <figure>
+      <img height="170" src="media/grid-lateral-003.png" width="928"> 
+     <figcaption> Examples of aligning a rule at the end of the gap with a lateral end offset. </figcaption>
+    </figure>
+   </aside>
    <p class="note" role="note"><span>NOTE:</span> The <span class="css">column-rule-lateral-inset</span> and <span class="css">column-rule-width</span> <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value②">used values</a> are calculated in a similar way to how <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-left" id="ref-for-propdef-left">left</a>/<a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-right" id="ref-for-propdef-right">right</a> and <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-sizing-3/#propdef-width" id="ref-for-propdef-width">width</a> are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
     box.  The precise algorithm is described next.</p>
    <h3 class="heading settled" data-level="3.4" id="resolving-position-and-size-algo"><span class="secno">3.4. </span><span class="content">Resolving a rule’s position and size</span><a class="self-link" href="#resolving-position-and-size-algo"></a></h3>
@@ -1349,6 +1363,13 @@ on screen, on paper, etc.
     and row axis, respectively. They are only used on a rule’s edges that are interior.
     The <a href="#column-rule-longitudinal-edge-inset-start">*-rule-longitudinal-edge-inset</a> properties are used for rule edges that are on the outer edges of an axis.
     The <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value③">used values</a> are calculated the same as for the lateral properties above.</p>
+   <aside class="example" id="example-7f768fba">
+    <a class="self-link" href="#example-7f768fba"></a> This <a href="examples/grid-lateral-004.html">example</a> shows the default rule alignment and size in both axes. 
+    <figure>
+      <img height="280" src="media/grid-lateral-004.png" width="514"> 
+     <figcaption> Example of a rule with default rule alignment and size in both axes. </figcaption>
+    </figure>
+   </aside>
    <p class="note" role="note"><span>Note:</span> These have a different initial value than the lateral inset properties, meaning the rule will stretch to fill the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑨">rule containing rectangle</a> in this axis.  The initial values as specified above are backward compatible with how column rules are sized and positioned in legacy <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-layout" id="ref-for-multi-column-layout">multi-column layout</a>.</p>
    <aside class="example" id="example-156ca2f0">
     <a class="self-link" href="#example-156ca2f0"></a> Here’s a few simple <a href="examples/grid-longitudinal-001.html">examples</a> of
