@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "AudioConverter.h"
+#include "DeviceInputTrack.h"
 #include "MediaManager.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackConstraints.h"
