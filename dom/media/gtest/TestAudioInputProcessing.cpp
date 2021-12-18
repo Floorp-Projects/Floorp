@@ -201,8 +201,6 @@ TEST(TestAudioInputProcessing, InputDataCapture)
     EXPECT_EQ(aip->NumBufferedFrames(graph), bufferedFrames);
   }
 
-  // TODO: Add a similar test for aip->SetPassThrough(true)
-
   graph->Destroy();
 }
 
