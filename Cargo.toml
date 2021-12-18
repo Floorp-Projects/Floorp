@@ -9,6 +9,7 @@ members = [
   "js/src/rust",
   "js/src/wasm/cranelift",
   "netwerk/test/http3server",
+  "security/manager/ssl/ipcclientcerts",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust_minidump_writer_linux",
