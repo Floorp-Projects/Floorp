@@ -508,7 +508,10 @@ AudioCallbackDriver::AudioCallbackDriver(
       mAudioStreamState(AudioStreamState::None),
       mFallback("AudioCallbackDriver::mFallback"),
       mSandboxed(CubebUtils::SandboxEnabled()) {
-  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver ctor", Graph()));
+  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver %p ctor - input: device %p, "
+                        "channel %d, output: device %p, channel %d",
+                        Graph(), this, mInputDeviceID, mInputChannelCount,
+                        mOutputDeviceID, mOutputChannelCount));
 
   NS_WARNING_ASSERTION(mOutputChannelCount != 0,
                        "Invalid output channel count");
