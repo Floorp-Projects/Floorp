@@ -55,7 +55,6 @@ use crate::gecko_bindings::structs::{nsAtom, nsIContent, nsINode_BooleanFlag};
 use crate::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeckoElement};
 use crate::gecko_bindings::sugar::ownership::{HasArcFFI, HasSimpleFFI};
 use crate::global_style_data::GLOBAL_STYLE_DATA;
-use crate::hash::FxHashMap;
 use crate::invalidation::element::restyle_hints::RestyleHint;
 use crate::media_queries::Device;
 use crate::properties::animated_properties::{AnimationValue, AnimationValueMap};
@@ -73,6 +72,7 @@ use crate::values::{AtomIdent, AtomString};
 use crate::CaseSensitivityExt;
 use crate::LocalName;
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
+use fxhash::FxHashMap;
 use selectors::attr::{AttrSelectorOperation, AttrSelectorOperator};
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
 use selectors::matching::VisitedHandlingMode;
@@ -991,8 +991,12 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
         };
 
         let vertical_metrics = match orientation {
-            FontMetricsOrientation::MatchContextPreferHorizontal => wm.is_vertical() && wm.is_upright(),
-            FontMetricsOrientation::MatchContextPreferVertical => wm.is_vertical() && !wm.is_sideways(),
+            FontMetricsOrientation::MatchContextPreferHorizontal => {
+                wm.is_vertical() && wm.is_upright()
+            },
+            FontMetricsOrientation::MatchContextPreferVertical => {
+                wm.is_vertical() && !wm.is_sideways()
+            },
             FontMetricsOrientation::Horizontal => false,
         };
         let gecko_metrics = unsafe {

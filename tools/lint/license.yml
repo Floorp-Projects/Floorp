@@ -50,8 +50,6 @@ license:
         - security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
         - security/mac/hardenedruntime/plugin-container.production.entitlements.xml
         - security/mac/hardenedruntime/production.entitlements.xml
-        - servo/components/hashglobe/src/alloc.rs
-        - servo/components/hashglobe/src/shim.rs
         - testing/marionette/harness/marionette_harness/www/
         # Browsertime can't handle this script when there's a comment at the top
         - testing/raptor/browsertime/browsertime_benchmark.js

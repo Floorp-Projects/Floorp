@@ -221,8 +221,11 @@ impl FontRelativeLength {
                 //     measure of a glyph is its advance width or height,
                 //     whichever is in the inline axis of the element.)
                 //
-                let metrics =
-                    query_font_metrics(context, base_size, FontMetricsOrientation::MatchContextPreferHorizontal);
+                let metrics = query_font_metrics(
+                    context,
+                    base_size,
+                    FontMetricsOrientation::MatchContextPreferHorizontal,
+                );
                 let reference_size = metrics.zero_advance_measure.unwrap_or_else(|| {
                     // https://drafts.csswg.org/css-values/#ch
                     //
@@ -265,8 +268,11 @@ impl FontRelativeLength {
                     context.rule_cache_conditions.borrow_mut().set_uncacheable();
                 }
                 context.builder.add_flags(font_metrics_flag);
-                let metrics =
-                    query_font_metrics(context, base_size, FontMetricsOrientation::MatchContextPreferVertical);
+                let metrics = query_font_metrics(
+                    context,
+                    base_size,
+                    FontMetricsOrientation::MatchContextPreferVertical,
+                );
                 let reference_size = metrics.ic_width.unwrap_or_else(|| {
                     // https://drafts.csswg.org/css-values/#ic
                     //

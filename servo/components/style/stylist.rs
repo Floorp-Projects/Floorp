@@ -41,10 +41,9 @@ use crate::stylesheets::{
 };
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::thread_state::{self, ThreadState};
+use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, WeakAtom};
-use fallible::FallibleVec;
 use fxhash::FxHashMap;
-use hashglobe::FailedAllocationError;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
@@ -114,7 +113,7 @@ trait CascadeDataCacheEntry: Sized {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old_entry: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static;
     /// Measures heap memory usage.
@@ -151,7 +150,7 @@ where
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old_entry: &Entry,
-    ) -> Result<Option<Arc<Entry>>, FailedAllocationError>
+    ) -> Result<Option<Arc<Entry>>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -270,7 +269,7 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         _old: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -386,7 +385,7 @@ impl DocumentCascadeData {
         quirks_mode: QuirksMode,
         mut flusher: DocumentStylesheetFlusher<'a, S>,
         guards: &StylesheetGuards,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -599,7 +598,7 @@ impl Stylist {
         old_data: &CascadeData,
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<Option<Arc<CascadeData>>, FailedAllocationError>
+    ) -> Result<Option<Arc<CascadeData>>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -1584,7 +1583,8 @@ impl<T: 'static> LayerOrderedVec<T> {
         self.0.push((v, id));
     }
     fn sort(&mut self, layers: &[CascadeLayer]) {
-        self.0.sort_by_key(|&(_, ref id)| layers[id.0 as usize].order)
+        self.0
+            .sort_by_key(|&(_, ref id)| layers[id.0 as usize].order)
     }
 }
 
@@ -1592,17 +1592,24 @@ impl<T: 'static> LayerOrderedMap<T> {
     fn clear(&mut self) {
         self.0.clear();
     }
-    fn try_insert(&mut self, name: Atom, v: T, id: LayerId) -> Result<(), FailedAllocationError> {
+    fn try_insert(&mut self, name: Atom, v: T, id: LayerId) -> Result<(), AllocErr> {
         self.try_insert_with(name, v, id, |_, _| Ordering::Equal)
     }
-    fn try_insert_with(&mut self, name: Atom, v: T, id: LayerId, cmp: impl Fn(&T, &T) -> Ordering) -> Result<(), FailedAllocationError> {
-        let vec = self.0.try_entry(name)?.or_insert_with(Default::default);
+    fn try_insert_with(
+        &mut self,
+        name: Atom,
+        v: T,
+        id: LayerId,
+        cmp: impl Fn(&T, &T) -> Ordering,
+    ) -> Result<(), AllocErr> {
+        self.0.try_reserve(1)?;
+        let vec = self.0.entry(name).or_default();
         if let Some(&mut (ref mut val, ref last_id)) = vec.last_mut() {
             if *last_id == id {
                 if cmp(&val, &v) != Ordering::Greater {
                     *val = v;
                 }
-                return Ok(())
+                return Ok(());
             }
         }
         vec.push((v, id));
@@ -1661,7 +1668,11 @@ impl ExtraStyleData {
     }
 
     /// Add the given @font-feature-values rule.
-    fn add_font_feature_values(&mut self, rule: &Arc<Locked<FontFeatureValuesRule>>, layer: LayerId) {
+    fn add_font_feature_values(
+        &mut self,
+        rule: &Arc<Locked<FontFeatureValuesRule>>,
+        layer: LayerId,
+    ) {
         self.font_feature_values.push(rule.clone(), layer);
     }
 
@@ -1671,7 +1682,7 @@ impl ExtraStyleData {
         guard: &SharedRwLockReadGuard,
         rule: &Arc<Locked<CounterStyleRule>>,
         layer: LayerId,
-    ) -> Result<(), FailedAllocationError> {
+    ) -> Result<(), AllocErr> {
         let name = rule.read_with(guard).name().0.clone();
         self.counter_styles.try_insert(name, rule.clone(), layer)
     }
@@ -1687,7 +1698,7 @@ impl ExtraStyleData {
         guard: &SharedRwLockReadGuard,
         rule: &Arc<Locked<ScrollTimelineRule>>,
         layer: LayerId,
-    ) -> Result<(), FailedAllocationError> {
+    ) -> Result<(), AllocErr> {
         let name = rule.read_with(guard).name.as_atom().clone();
         self.scroll_timelines.try_insert(name, rule.clone(), layer)
     }
@@ -2145,7 +2156,7 @@ impl CascadeData {
         quirks_mode: QuirksMode,
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -2281,7 +2292,8 @@ impl CascadeData {
             }
         }
         self.extra_data.sort_by_layer(&self.layers);
-        self.animations.sort_with(&self.layers, compare_keyframes_in_same_layer);
+        self.animations
+            .sort_with(&self.layers, compare_keyframes_in_same_layer);
     }
 
     /// Collects all the applicable media query results into `results`.
@@ -2342,7 +2354,7 @@ impl CascadeData {
         mut current_layer: &mut LayerName,
         current_layer_id: LayerId,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + 'static,
     {
@@ -2428,12 +2440,14 @@ impl CascadeData {
                             // We choose the last one quite arbitrarily,
                             // expecting it's slightly more likely to be more
                             // specific.
-                            self.part_rules
+                            let map = self
+                                .part_rules
                                 .get_or_insert_with(|| Box::new(Default::default()))
-                                .for_insertion(pseudo_element)
-                                .try_entry(parts.last().unwrap().clone().0)?
-                                .or_insert_with(SmallVec::new)
-                                .try_push(rule)?;
+                                .for_insertion(pseudo_element);
+                            map.try_reserve(1)?;
+                            let vec = map.entry(parts.last().unwrap().clone().0).or_default();
+                            vec.try_reserve(1)?;
+                            vec.push(rule);
                         } else {
                             // NOTE(emilio): It's fine to look at :host and then at
                             // ::slotted(..), since :host::slotted(..) could never
@@ -2463,13 +2477,19 @@ impl CascadeData {
                         keyframes_rule.vendor_prefix.clone(),
                         guard,
                     );
-                    self.animations.try_insert_with(name, animation, current_layer_id, compare_keyframes_in_same_layer)?;
+                    self.animations.try_insert_with(
+                        name,
+                        animation,
+                        current_layer_id,
+                        compare_keyframes_in_same_layer,
+                    )?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::ScrollTimeline(ref rule) => {
                     // Note: Bug 1733260: we may drop @scroll-timeline rule once this spec issue
                     // https://github.com/w3c/csswg-drafts/issues/6674 gets landed.
-                    self.extra_data.add_scroll_timeline(guard, rule, current_layer_id)?;
+                    self.extra_data
+                        .add_scroll_timeline(guard, rule, current_layer_id)?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {
@@ -2477,11 +2497,13 @@ impl CascadeData {
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFeatureValues(ref rule) => {
-                    self.extra_data.add_font_feature_values(rule, current_layer_id);
+                    self.extra_data
+                        .add_font_feature_values(rule, current_layer_id);
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::CounterStyle(ref rule) => {
-                    self.extra_data.add_counter_style(guard, rule, current_layer_id)?;
+                    self.extra_data
+                        .add_counter_style(guard, rule, current_layer_id)?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::Page(ref rule) => {
@@ -2659,7 +2681,7 @@ impl CascadeData {
         guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + 'static,
     {
@@ -2836,7 +2858,7 @@ impl CascadeDataCacheEntry for CascadeData {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
