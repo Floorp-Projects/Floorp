@@ -431,8 +431,6 @@ var TabCrashHandler = {
         label: messageFragment,
         image: TABCRASHED_ICON_URI,
         priority: notificationBox.PRIORITY_INFO_MEDIUM,
-        telemetry: "notificationbar.crash_subframe_ui",
-        telemetryFilter: ["shown"],
         eventCallback: eventName => {
           if (eventName == "disconnected") {
             let existingItem = this.notificationsMap.get(childID);
@@ -686,15 +684,6 @@ var TabCrashHandler = {
     let index = this.unseenCrashedChildIDs.indexOf(childID);
     if (index != -1) {
       this.unseenCrashedChildIDs.splice(index, 1);
-    }
-
-    // Add telemetry for each time the user has been shown a tab crash page. The
-    // tab crashed page should only appear in foreground tabs, but verify this.
-    if (browser.getTabBrowser().selectedBrowser == browser) {
-      Services.telemetry.scalarAdd(
-        "dom.contentprocess.crash_tab_ui_presented",
-        1
-      );
     }
 
     let dumpID = this.getDumpID(browser);
@@ -1108,11 +1097,6 @@ var UnsubmittedCrashHandler = {
         }
       }
     };
-
-    Services.telemetry.scalarAdd(
-      "dom.contentprocess.unsubmitted_ui_presented",
-      1
-    );
 
     return chromeWin.gNotificationBox.appendNotification(
       notificationID,
