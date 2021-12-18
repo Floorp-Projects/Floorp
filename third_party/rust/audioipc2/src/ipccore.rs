@@ -111,7 +111,7 @@ impl EventLoopHandle {
     }
 
     // Signal EventLoop to shutdown.  Causes EventLoop::poll to return Ok(false).
-    pub fn shutdown(&self) -> Result<()> {
+    fn shutdown(&self) -> Result<()> {
         self.requests_tx
             .send(Request::Shutdown)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
@@ -813,9 +813,8 @@ mod test {
     fn dead_server() {
         init();
         let (server, _client, client_proxy) = setup();
-        server.handle().shutdown().unwrap();
-        // XXX: Need an explicit server drop here, otherwise the test below is racy.
         drop(server);
+
         let response = client_proxy.call(TestServerMessage::TestRequest);
         response.wait().expect_err("sending on closed channel");
     }
@@ -824,7 +823,7 @@ mod test {
     fn dead_client() {
         init();
         let (_server, client, client_proxy) = setup();
-        client.handle().shutdown().unwrap();
+        drop(client);
 
         let response = client_proxy.call(TestServerMessage::TestRequest);
         response.wait().expect_err("sending on a closed channel");
@@ -859,8 +858,7 @@ mod test {
 
         start_rx.recv().expect("after_start callback done");
 
-        // Explicit shutdown.
-        elt.handle().shutdown().expect("shutdown");
+        drop(elt);
 
         stop_rx.recv().expect("before_stop callback done");
     }
