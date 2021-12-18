@@ -9,17 +9,6 @@ bug-numbers = [1607954]
 is-public = true
 default-value = {default = false, nightly = true}
 
-[css-cascade-layers]
-title = "experimental-features-css-cascade-layers"
-description = "experimental-features-css-cascade-layers-description"
-description-links = {spec = "https://drafts.csswg.org/css-cascade-5/#layering", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1699215"}
-restart-required = false
-preference = "layout.css.cascade-layers.enabled"
-type = "boolean"
-bug-numbers = [1699215]
-is-public = true
-default-value = {default = false, nightly = true}
-
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
 description = "experimental-features-web-gpu-description2"
