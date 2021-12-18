@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><!-- TODO: insert title here --></title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    async function runTest() {
+      let frame = document.getElementById("frame");
+      let loaded = new Promise((resolve) => {
+        frame.addEventListener("load", () => {
+          let failed = JSON.parse(frame.contentDocument.title);
+          ok(failed instanceof Array, "Frame's title is expected to be a JSON representation of the array of failed conditions.");
+          is(failed.length, 0, "No scripts should run in sandboxed iframe document created by XSLT.");
+          for (desc of failed) {
+            info(desc);
+          }
+          resolve();
+        }, { once: true });
+      });
+      frame.src = "file_bug1729517.xml";
+      await loaded;
+
+      let results = new Promise((resolve) => {
+        addEventListener("message", ({ data }) => {
+          resolve(data);
+        }, { once: true });
+      });
+
+      let win = window.open(`https://example.com/tests/dom/xslt/tests/mochitest/file_bug1729517_2.xml`);
+      for (const [header, result] of await results) {
+        is(result, "PASS", `${header} of the source document should apply to document created by XSLT.`);
+      }
+      win.close();
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<iframe sandbox="allow-same-origin" id="frame"></iframe>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
