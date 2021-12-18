@@ -2762,3 +2762,11 @@ option(
 )
 
 set_define("NS_BUILD_REFCNT_LOGGING", True, when="--enable-logrefcnt")
+
+
+# NegotiateAuth
+# ==============================================================
+option("--disable-negotiateauth", help="Disable GSS-API negotiation")
+
+set_config("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
+set_define("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
