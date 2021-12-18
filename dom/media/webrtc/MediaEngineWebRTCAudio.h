@@ -126,10 +126,8 @@ class AudioInputProcessing : public AudioDataListener {
  public:
   AudioInputProcessing(uint32_t aMaxChannelCount,
                        const PrincipalHandle& aPrincipalHandle);
-
-  void Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
-            GraphTime aTrackEnd, AudioSegment* aSegment,
-            bool aLastPullThisIteration, bool* aEnded);
+  void Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
+               AudioSegment* aInput, AudioSegment* aOutput);
 
   void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
                         size_t aFrames, TrackRate aRate,
@@ -146,8 +144,8 @@ class AudioInputProcessing : public AudioDataListener {
     return !PassThrough(aGraph);
   }
 
-  void Start();
-  void Stop();
+  void Start(MediaTrackGraphImpl* aGraph);
+  void Stop(MediaTrackGraphImpl* aGraph);
 
   void DeviceChanged(MediaTrackGraphImpl* aGraph) override;
 
@@ -157,12 +155,8 @@ class AudioInputProcessing : public AudioDataListener {
 
   void Disconnect(MediaTrackGraphImpl* aGraph) override;
 
-  // aSegment stores the unprocessed non-interleaved audio input data from mic
-  void ProcessInput(MediaTrackGraphImpl* aGraph, const AudioSegment* aSegment);
-
   void PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
-                           const AudioDataValue* aBuffer, size_t aFrames,
-                           TrackRate aRate, uint32_t aChannels);
+                           const AudioSegment& aSegment);
 
   void SetPassThrough(MediaTrackGraphImpl* aGraph, bool aPassThrough);
   uint32_t GetRequestedInputChannelCount();
@@ -182,8 +176,19 @@ class AudioInputProcessing : public AudioDataListener {
 
   TrackTime NumBufferedFrames(MediaTrackGraphImpl* aGraph) const;
 
+  // The packet size contains samples in 10ms. The unit of aRate is hz.
+  constexpr static uint32_t GetPacketSize(TrackRate aRate) {
+    return static_cast<uint32_t>(aRate) / 100u;
+  }
+
+  bool IsEnded() const { return mEnded; }
+
+  const PrincipalHandle& GetPrincipalHandle() const { return mPrincipal; }
+
  private:
   ~AudioInputProcessing() = default;
+  void EnsureAudioProcessing(MediaTrackGraphImpl* aGraph, uint32_t aChannels);
+  void ResetAudioProcessing(MediaTrackGraphImpl* aGraph);
   // This implements the processing algoritm to apply to the input (e.g. a
   // microphone). If all algorithms are disabled, this class in not used. This
   // class only accepts audio chunks of 10ms. It has two inputs and one output:
@@ -215,13 +220,6 @@ class AudioInputProcessing : public AudioDataListener {
   AlignedFloatBuffer mInputDownmixBuffer;
   // Stores data waiting to be pulled.
   AudioSegment mSegment;
-  // Set to Nothing() by Start(). Once live frames have been appended from the
-  // audio callback, this is the number of frames appended as pre-buffer for
-  // that data, to avoid underruns. Buffering in the track might be needed
-  // because of the AUDIO_BLOCK interval at which we run the graph, the
-  // packetizer keeping some input data. Care must be taken when turning on and
-  // off the packetizer.
-  Maybe<TrackTime> mLiveBufferingAppended;
   // Principal for the data that flows through this class.
   const PrincipalHandle mPrincipal;
   // Whether or not this MediaEngine is enabled. If it's not enabled, it
@@ -230,11 +228,15 @@ class AudioInputProcessing : public AudioDataListener {
   bool mEnabled;
   // Whether or not we've ended and removed the AudioInputTrack.
   bool mEnded;
-  // Store the unprocessed interleaved audio input data
-  AudioInputSamples mPendingData;
   // When processing is enabled, the number of packets received by this
   // instance, to implement periodic logging.
   uint64_t mPacketCount;
+  // A storage holding the interleaved audio data converted the AudioSegment.
+  // This will be used as an input parameter for PacketizeAndProcess. This
+  // should be removed once bug 1729041 is done.
+  AutoTArray<AudioDataValue,
+             SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS>
+      mInterleavedBuffer;
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
@@ -283,6 +285,12 @@ class AudioInputTrack : public ProcessedMediaTrack {
         "Must set mInputProcessing before exposing to content");
     return mInputProcessing->GetRequestedInputChannelCount();
   }
+  // Get the data in [aFrom, aTo) from aPort->GetSource() to aOutput. aOutput
+  // needs to be empty.
+  void GetInputSourceData(AudioSegment& aOutput,
+                          const PrincipalHandle& aPrincipal,
+                          const MediaInputPort* aPort, GraphTime aFrom,
+                          GraphTime aTo) const;
 
   // Any thread
   AudioInputTrack* AsAudioInputTrack() override { return this; }

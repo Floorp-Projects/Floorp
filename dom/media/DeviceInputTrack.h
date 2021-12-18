@@ -17,7 +17,8 @@ class NativeInputTrack : public ProcessedMediaTrack {
   ~NativeInputTrack() = default;
   explicit NativeInputTrack(TrackRate aSampleRate)
       : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
-                            new AudioSegment()) {}
+                            new AudioSegment()),
+        mIsBufferingAppended(false) {}
 
  public:
   // Main Thread API
@@ -49,9 +50,13 @@ class NativeInputTrack : public ProcessedMediaTrack {
   nsTArray<RefPtr<AudioDataListener>> mDataUsers;
 
  private:
+  // Indicate whether we append extra frames in mPendingData. The extra number
+  // of frames is in [0, WEBAUDIO_BLOCK_SIZE] range.
+  bool mIsBufferingAppended;
+
   // Queue the audio input data coming from NotifyInputData. Used in graph
   // thread only.
-  AudioInputSamples mInputData;
+  AudioSegment mPendingData;
 
   // Only accessed on the graph thread.
   uint32_t mInputChannels = 0;

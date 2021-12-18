@@ -11,11 +11,45 @@
 
 namespace mozilla {
 
+#ifdef LOG_INTERNAL
+#  undef LOG_INTERNAL
+#endif  // LOG_INTERNAL
+#define LOG_INTERNAL(level, msg, ...) \
+  MOZ_LOG(gMediaTrackGraphLog, LogLevel::level, (msg, ##__VA_ARGS__))
+
+#ifdef LOG
+#  undef LOG
+#endif  // LOG
+#define LOG(msg, ...) LOG_INTERNAL(Debug, msg, ##__VA_ARGS__)
+
+// This can only be called in graph thread since mGraph->CurrentDriver() is
+// graph thread only
+#ifdef TRACK_GRAPH_LOG_INTERNAL
+#  undef TRACK_GRAPH_LOG_INTERNAL
+#endif  // TRACK_GRAPH_LOG_INTERNAL
+#define TRACK_GRAPH_LOG_INTERNAL(level, msg, ...)                        \
+  LOG_INTERNAL(level, "(Graph %p, Driver %p) NativeInputTrack %p, " msg, \
+               this->mGraph, this->mGraph->CurrentDriver(), this,        \
+               ##__VA_ARGS__)
+
+#ifdef TRACK_GRAPH_LOG
+#  undef TRACK_GRAPH_LOG
+#endif  // TRACK_GRAPH_LOG
+#define TRACK_GRAPH_LOG(msg, ...) \
+  TRACK_GRAPH_LOG_INTERNAL(Debug, msg, ##__VA_ARGS__)
+
+#ifdef TRACK_GRAPH_LOGV
+#  undef TRACK_GRAPH_LOGV
+#endif  // TRACK_GRAPH_LOGV
+#define TRACK_GRAPH_LOGV(msg, ...) \
+  TRACK_GRAPH_LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
+
 /* static */
 NativeInputTrack* NativeInputTrack::Create(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NativeInputTrack* track = new NativeInputTrack(aGraph->GraphRate());
+  LOG("Create NativeInputTrack %p in MTG %p", track, aGraph);
   aGraph->AddTrack(track);
   return track;
 }
@@ -35,7 +69,7 @@ size_t NativeInputTrack::RemoveUser() {
 
 void NativeInputTrack::DestroyImpl() {
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
-  mInputData.Clear();
+  mPendingData.Clear();
   ProcessedMediaTrack::DestroyImpl();
 }
 
@@ -44,23 +78,27 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
   TRACE_COMMENT("NativeInputTrack::ProcessInput", "%p", this);
 
-  if (mInputData.IsEmpty()) {
+  TRACK_GRAPH_LOGV("ProcessInput from %" PRId64 " to %" PRId64
+                   ", needs %" PRId64 " frames",
+                   aFrom, aTo, aTo - aFrom);
+
+  TrackTime from = GraphTimeToTrackTime(aFrom);
+  TrackTime to = GraphTimeToTrackTime(aTo);
+  if (from >= to) {
     return;
   }
 
-  // The number of NotifyInputData and ProcessInput calls could be different. We
-  // always process the input data from NotifyInputData in the first
-  // ProcessInput after the NotifyInputData
+  MOZ_ASSERT_IF(!mIsBufferingAppended, mPendingData.IsEmpty());
 
-  // The mSegment will be the de-interleaved audio data converted from
-  // mInputData
+  TrackTime need = to - from;
+  TrackTime dataNeed = std::min(mPendingData.GetDuration(), need);
+  TrackTime silenceNeed = std::max(need - dataNeed, (TrackTime)0);
 
-  GetData<AudioSegment>()->Clear();
-  GetData<AudioSegment>()->AppendFromInterleavedBuffer(
-      mInputData.Data(), mInputData.FrameCount(), mInputData.Channels(),
-      PRINCIPAL_HANDLE_NONE);
+  MOZ_ASSERT_IF(dataNeed > 0, silenceNeed == 0);
 
-  mInputData.Clear();
+  GetData<AudioSegment>()->AppendSlice(mPendingData, 0, dataNeed);
+  mPendingData.RemoveLeading(dataNeed);
+  GetData<AudioSegment>()->AppendNullData(silenceNeed);
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
@@ -82,8 +120,10 @@ void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph,
              "Receive input stopped signal from another graph");
+  TRACK_GRAPH_LOG("NotifyInputStopped");
   mInputChannels = 0;
-  mInputData.Clear();
+  mIsBufferingAppended = false;
+  mPendingData.Clear();
   for (auto& listener : mDataUsers) {
     listener->NotifyInputStopped(aGraph);
   }
@@ -96,12 +136,30 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                        uint32_t aAlreadyBuffered) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph, "Receive input data from another graph");
+  TRACK_GRAPH_LOGV(
+      "NotifyInputData: frames=%zu, rate=%d, channel=%u, alreadyBuffered=%u",
+      aFrames, aRate, aChannels, aAlreadyBuffered);
+
+  if (!mIsBufferingAppended) {
+    // First time we see live frames getting added. Use what's already buffered
+    // in the driver's scratch buffer as a starting point.
+    MOZ_ASSERT(mPendingData.IsEmpty());
+    constexpr TrackTime buffering = WEBAUDIO_BLOCK_SIZE;
+    const TrackTime remaining =
+        buffering - static_cast<TrackTime>(aAlreadyBuffered);
+    mPendingData.AppendNullData(remaining);
+    mIsBufferingAppended = true;
+    TRACK_GRAPH_LOG("Set mIsBufferingAppended by appending %" PRId64 " frames.",
+                    remaining);
+  }
 
   MOZ_ASSERT(aChannels);
   if (!mInputChannels) {
     mInputChannels = aChannels;
   }
-  mInputData.Push(aBuffer, aFrames, aRate, aChannels);
+  mPendingData.AppendFromInterleavedBuffer(aBuffer, aFrames, aChannels,
+                                           PRINCIPAL_HANDLE_NONE);
+
   for (auto& listener : mDataUsers) {
     listener->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels,
                               aAlreadyBuffered);
@@ -112,10 +170,16 @@ void NativeInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph,
              "Receive device changed signal from another graph");
-  mInputData.Clear();
+  TRACK_GRAPH_LOG("DeviceChanged");
   for (auto& listener : mDataUsers) {
     listener->DeviceChanged(aGraph);
   }
 }
+
+#undef LOG_INTERNAL
+#undef LOG
+#undef TRACK_GRAPH_LOG_INTERNAL
+#undef TRACK_GRAPH_LOG
+#undef TRACK_GRAPH_LOGV
 
 }  // namespace mozilla
