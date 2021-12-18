@@ -251,7 +251,6 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mNumBytesBuffered(0),
       mTerminated(false),
       mInterrupted(false),
-      mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex"),
       mEventTarget(nsHtml5Module::GetStreamParserThread()->SerialEventTarget()),
       mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor)),
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
@@ -2446,6 +2445,12 @@ void nsHtml5StreamParser::ContinueAfterScriptsOrEncodingCommitment(
       // We've got a failed speculation :-(
       MaybeDisableFutureSpeculation();
       Interrupt();  // Make the parser thread release the tokenizer mutex sooner
+      // Note that the interrupted state continues across possible intervening
+      // Necko events until the nsHtml5StreamParserContinuation posted at the
+      // end of this method runs. Therefore, this thread is guaranteed to
+      // acquire mTokenizerMutex soon even if an intervening Necko event grabbed
+      // it between now and the acquisition below.
+
       // now fall out of the speculationAutoLock into the tokenizerAutoLock
       // block
     } else {
@@ -2466,6 +2471,11 @@ void nsHtml5StreamParser::ContinueAfterScriptsOrEncodingCommitment(
       }
       // else
       Interrupt();  // Make the parser thread release the tokenizer mutex sooner
+      // Note that the interrupted state continues across possible intervening
+      // Necko events until the nsHtml5StreamParserContinuation posted at the
+      // end of this method runs. Therefore, this thread is guaranteed to
+      // acquire mTokenizerMutex soon even if an intervening Necko event grabbed
+      // it between now and the acquisition below.
 
       // now fall through
       // the first speculation is the current speculation. Need to
