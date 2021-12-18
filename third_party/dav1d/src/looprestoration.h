@@ -64,8 +64,8 @@ typedef union LooprestorationParams {
 #define decl_lr_filter_fn(name) \
 void (name)(pixel *dst, ptrdiff_t dst_stride, \
             const_left_pixel_row left, \
-            const pixel *lpf, ptrdiff_t lpf_stride, \
-            int w, int h, const LooprestorationParams *params, \
+            const pixel *lpf, int w, int h, \
+            const LooprestorationParams *params, \
             enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 typedef decl_lr_filter_fn(*looprestorationfilter_fn);
 
