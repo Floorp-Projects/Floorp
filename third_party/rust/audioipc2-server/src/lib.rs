@@ -121,16 +121,16 @@ fn init_threads(
         device_collection_name.to_string(),
         None,
         move || {
-            trace!("Starting {} thread", rpc_name);
+            trace!("Starting {} thread", device_collection_name);
             register_thread(thread_create_callback);
         },
         move || {
             unregister_thread(thread_destroy_callback);
-            trace!("Stopping {} thread", rpc_name);
+            trace!("Stopping {} thread", device_collection_name);
         },
     )
     .map_err(|e| {
-        debug!("Failed to start {} thread: {:?}", rpc_name, e);
+        debug!("Failed to start {} thread: {:?}", device_collection_name, e);
         e
     })?;
 

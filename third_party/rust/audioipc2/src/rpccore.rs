@@ -4,6 +4,7 @@
 // accompanying file LICENSE for details
 
 use std::io::{self, Result};
+use std::mem::ManuallyDrop;
 use std::{collections::VecDeque, sync::mpsc};
 
 use mio::Token;
@@ -71,7 +72,7 @@ impl<Response> ProxyResponse<Response> {
 #[derive(Debug)]
 pub struct Proxy<Request, Response> {
     handle: Option<(EventLoopHandle, Token)>,
-    tx: mpsc::Sender<ProxyRequest<Request, Response>>,
+    tx: ManuallyDrop<mpsc::Sender<ProxyRequest<Request, Response>>>,
 }
 
 impl<Request, Response> Proxy<Request, Response> {
@@ -109,6 +110,9 @@ impl<Request, Response> Clone for Proxy<Request, Response> {
 impl<Request, Response> Drop for Proxy<Request, Response> {
     fn drop(&mut self) {
         trace!("Proxy drop, waking EventLoop");
+        // Must drop Sender before waking the connection, otherwise
+        // the wake may be processed before Sender is closed.
+        unsafe { ManuallyDrop::drop(&mut self.tx) }
         self.wake_connection();
     }
 }
@@ -180,7 +184,10 @@ pub(crate) fn make_client<C: Client>(
     // type system noticing.
     #[allow(clippy::redundant_clone)]
     let tx = tx.clone();
-    let proxy = Proxy { handle: None, tx };
+    let proxy = Proxy {
+        handle: None,
+        tx: ManuallyDrop::new(tx),
+    };
 
     (handler, proxy)
 }
