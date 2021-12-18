@@ -3350,8 +3350,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::FilterNodeLightingSoftware(
     const char* aTypeName)
     : mLock("FilterNodeLightingSoftware"),
       mSurfaceScale(0)
-#if defined(MOZILLA_INTERNAL_API) && \
-    (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
+#if defined(MOZILLA_INTERNAL_API) && defined(NS_BUILD_REFCNT_LOGGING)
       ,
       mTypeName(aTypeName)
 #endif
