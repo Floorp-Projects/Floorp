@@ -2449,35 +2449,6 @@ dom.contentprocess:
       - 'fennec'
     record_in_processes:
       - 'main'
-  crash_tab_ui_presented:
-    bug_numbers:
-      - 1676943
-    description: >
-      The number of times the tab crashed page has been shown.
-    expires: "98"
-    kind: uint
-    notification_emails:
-      - nlayzell@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-  # Note that the unsubmitted notification is currently only enabled on Nightly builds
-  unsubmitted_ui_presented:
-    bug_numbers:
-      - 1676943
-    description: >
-      The number of times the notification has been shown that indicates
-      that there are unsubmitted crash reports.
-    expires: "98"
-    kind: uint
-    notification_emails:
-      - nlayzell@mozilla.com
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
 
 # The following section contains parent process base counters.
 dom.parentprocess:
@@ -4058,25 +4029,8 @@ formautofill.creditCards:
     record_in_processes:
       - 'content'
 
-# This section is for notification bars
+# This section is for notification bars testing
 notificationbar:
-  crash_subframe_ui:
-    bug_numbers:
-      - 1676943
-    description: >
-      Notifications for when the subframe crash UI is shown to the user. This
-      only triggers when a tab containing the subframe is switched to.
-    expires: "98"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - nlayzell@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
   # Used only for testing
   testone:
     bug_numbers:
