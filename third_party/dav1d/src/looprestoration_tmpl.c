@@ -40,9 +40,9 @@
 // TODO Reuse p when no padding is needed (add and remove lpf pixels in p)
 // TODO Chroma only requires 2 rows of padding.
 static NOINLINE void
-padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
-        const pixel (*left)[4], const pixel *lpf, const ptrdiff_t lpf_stride,
-        int unit_w, const int stripe_h, const enum LrEdgeFlags edges)
+padding(pixel *dst, const pixel *p, const ptrdiff_t stride,
+        const pixel (*left)[4], const pixel *lpf, int unit_w,
+        const int stripe_h, const enum LrEdgeFlags edges)
 {
     const int have_left = !!(edges & LR_HAVE_LEFT);
     const int have_right = !!(edges & LR_HAVE_RIGHT);
@@ -56,7 +56,7 @@ padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
     if (edges & LR_HAVE_TOP) {
         // Copy previous loop filtered rows
         const pixel *const above_1 = lpf;
-        const pixel *const above_2 = above_1 + PXSTRIDE(lpf_stride);
+        const pixel *const above_2 = above_1 + PXSTRIDE(stride);
         pixel_copy(dst_l, above_1, unit_w);
         pixel_copy(dst_l + REST_UNIT_STRIDE, above_1, unit_w);
         pixel_copy(dst_l + 2 * REST_UNIT_STRIDE, above_2, unit_w);
@@ -75,14 +75,14 @@ padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
     pixel *dst_tl = dst_l + 3 * REST_UNIT_STRIDE;
     if (edges & LR_HAVE_BOTTOM) {
         // Copy next loop filtered rows
-        const pixel *const below_1 = lpf + 6 * PXSTRIDE(lpf_stride);
-        const pixel *const below_2 = below_1 + PXSTRIDE(lpf_stride);
+        const pixel *const below_1 = lpf + 6 * PXSTRIDE(stride);
+        const pixel *const below_2 = below_1 + PXSTRIDE(stride);
         pixel_copy(dst_tl + stripe_h * REST_UNIT_STRIDE, below_1, unit_w);
         pixel_copy(dst_tl + (stripe_h + 1) * REST_UNIT_STRIDE, below_2, unit_w);
         pixel_copy(dst_tl + (stripe_h + 2) * REST_UNIT_STRIDE, below_2, unit_w);
     } else {
         // Pad with last row
-        const pixel *const src = p + (stripe_h - 1) * PXSTRIDE(p_stride);
+        const pixel *const src = p + (stripe_h - 1) * PXSTRIDE(stride);
         pixel_copy(dst_tl + stripe_h * REST_UNIT_STRIDE, src, unit_w);
         pixel_copy(dst_tl + (stripe_h + 1) * REST_UNIT_STRIDE, src, unit_w);
         pixel_copy(dst_tl + (stripe_h + 2) * REST_UNIT_STRIDE, src, unit_w);
@@ -97,7 +97,7 @@ padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
     for (int j = 0; j < stripe_h; j++) {
         pixel_copy(dst_tl + 3 * have_left, p + 3 * have_left, unit_w - 3 * have_left);
         dst_tl += REST_UNIT_STRIDE;
-        p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(stride);
     }
 
     if (!have_right) {
@@ -131,10 +131,9 @@ padding(pixel *dst, const pixel *p, const ptrdiff_t p_stride,
 // (since first and last tops are always 0 for chroma)
 // FIXME Could implement a version that requires less temporary memory
 // (should be possible to implement with only 6 rows of temp storage)
-static void wiener_c(pixel *p, const ptrdiff_t p_stride,
+static void wiener_c(pixel *p, const ptrdiff_t stride,
                      const pixel (*const left)[4],
-                     const pixel *lpf, const ptrdiff_t lpf_stride,
-                     const int w, const int h,
+                     const pixel *lpf, const int w, const int h,
                      const LooprestorationParams *const params,
                      const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
@@ -143,7 +142,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
     pixel tmp[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
     pixel *tmp_ptr = tmp;
 
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    padding(tmp, p, stride, left, lpf, w, h, edges);
 
     // Values stored between horizontal and vertical filtering don't
     // fit in a uint8_t.
@@ -184,7 +183,7 @@ static void wiener_c(pixel *p, const ptrdiff_t p_stride,
                 sum += hor[(j + k) * REST_UNIT_STRIDE + i] * filter[1][k];
             }
 
-            p[j * PXSTRIDE(p_stride) + i] =
+            p[j * PXSTRIDE(stride) + i] =
                 iclip_pixel((sum + rounding_off_v) >> round_bits_v);
         }
     }
@@ -447,9 +446,9 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
 #undef EIGHT_NEIGHBORS
 }
 
-static void sgr_5x5_c(pixel *p, const ptrdiff_t p_stride,
+static void sgr_5x5_c(pixel *p, const ptrdiff_t stride,
                       const pixel (*const left)[4], const pixel *lpf,
-                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const int w, const int h,
                       const LooprestorationParams *const params,
                       const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
@@ -461,7 +460,7 @@ static void sgr_5x5_c(pixel *p, const ptrdiff_t p_stride,
     // maximum restoration width of 384 (256 * 1.5)
     coef dst[64 * 384];
 
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    padding(tmp, p, stride, left, lpf, w, h, edges);
     selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 25,
                       params->sgr.s0 HIGHBD_TAIL_SUFFIX);
 
@@ -471,20 +470,20 @@ static void sgr_5x5_c(pixel *p, const ptrdiff_t p_stride,
             const int v = w0 * dst[j * 384 + i];
             p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
-        p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(stride);
     }
 }
 
-static void sgr_3x3_c(pixel *p, const ptrdiff_t p_stride,
+static void sgr_3x3_c(pixel *p, const ptrdiff_t stride,
                       const pixel (*const left)[4], const pixel *lpf,
-                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const int w, const int h,
                       const LooprestorationParams *const params,
                       const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     pixel tmp[70 /*(64 + 3 + 3)*/ * REST_UNIT_STRIDE];
     coef dst[64 * 384];
 
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    padding(tmp, p, stride, left, lpf, w, h, edges);
     selfguided_filter(dst, tmp, REST_UNIT_STRIDE, w, h, 9,
                       params->sgr.s1 HIGHBD_TAIL_SUFFIX);
 
@@ -494,13 +493,13 @@ static void sgr_3x3_c(pixel *p, const ptrdiff_t p_stride,
             const int v = w1 * dst[j * 384 + i];
             p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
-        p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(stride);
     }
 }
 
-static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
+static void sgr_mix_c(pixel *p, const ptrdiff_t stride,
                       const pixel (*const left)[4], const pixel *lpf,
-                      const ptrdiff_t lpf_stride, const int w, const int h,
+                      const int w, const int h,
                       const LooprestorationParams *const params,
                       const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
@@ -508,7 +507,7 @@ static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
     coef dst0[64 * 384];
     coef dst1[64 * 384];
 
-    padding(tmp, p, p_stride, left, lpf, lpf_stride, w, h, edges);
+    padding(tmp, p, stride, left, lpf, w, h, edges);
     selfguided_filter(dst0, tmp, REST_UNIT_STRIDE, w, h, 25,
                       params->sgr.s0 HIGHBD_TAIL_SUFFIX);
     selfguided_filter(dst1, tmp, REST_UNIT_STRIDE, w, h,  9,
@@ -521,7 +520,7 @@ static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
             const int v = w0 * dst0[j * 384 + i] + w1 * dst1[j * 384 + i];
             p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
-        p += PXSTRIDE(p_stride);
+        p += PXSTRIDE(stride);
     }
 }
 

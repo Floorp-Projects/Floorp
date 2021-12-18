@@ -430,6 +430,7 @@ cglobal iidentity_4x4_internal_8bpc, 0, 0, 0, dst, stride, coeff, eob, tx2
     paddw                m2, m1                ;low: out3
 %endmacro
 
+INIT_XMM sse2
 cglobal inv_txfm_add_wht_wht_4x4_8bpc, 3, 3, 4, dst, stride, coeff
     mova                 m0, [coeffq+16*0]
     mova                 m1, [coeffq+16*1]
@@ -438,19 +439,14 @@ cglobal inv_txfm_add_wht_wht_4x4_8bpc, 3, 3, 4, dst, stride, coeff
     mova      [coeffq+16*1], m2
     psraw                m0, 2
     psraw                m1, 2
-
     IWHT4_1D_PACKED
-
     punpckhwd            m0, m1
     punpcklwd            m3, m1, m2
     punpckhdq            m1, m0, m3
     punpckldq            m0, m3
-
     IWHT4_1D_PACKED
-
     shufpd               m0, m2, 0x01
     ITX4_END              0, 3, 2, 1, 0
-
 
 %macro IDCT8_1D_PACKED 0
     mova                 m6, [o(pd_2048)]
@@ -566,6 +562,7 @@ cglobal inv_txfm_add_wht_wht_4x4_8bpc, 3, 3, 4, dst, stride, coeff
 %endif
 %endmacro
 
+INIT_XMM ssse3
 INV_TXFM_4X8_FN dct, dct
 INV_TXFM_4X8_FN dct, adst
 INV_TXFM_4X8_FN dct, flipadst
