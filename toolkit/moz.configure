@@ -2746,3 +2746,19 @@ with only_when(toolkit_gtk):
 
         set_config("MOZ_ENABLE_LIBPROXY", True)
         set_define("MOZ_ENABLE_LIBPROXY", True)
+
+
+# Enable runtime logging
+# ==============================================================
+set_define("MOZ_LOGGING", True)
+set_define("FORCE_PR_LOG", True)
+
+# This will enable logging of addref, release, ctor, dtor.
+# ==============================================================
+option(
+    "--enable-logrefcnt",
+    default=moz_debug,
+    help="{Enable|Disable} logging of refcounts",
+)
+
+set_define("NS_BUILD_REFCNT_LOGGING", True, when="--enable-logrefcnt")
