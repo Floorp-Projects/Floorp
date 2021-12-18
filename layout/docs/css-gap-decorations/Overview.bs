@@ -314,6 +314,26 @@ The Rule Lateral Inset Properties {#column-rule-lateral-inset-start}
     These properties sets the lateral start/end offset of the rule in the column and row axis, respectively.
     A positive value moves the position inward and a negative value outward from the corresponding [=rule containing rectangle's=] edge.
 
+    <aside class=example>
+        This <a href="examples/grid-lateral-002.html">example</a> demonstrates aligning a rule at the start of the gap.
+        <figure>
+            <img src="media/grid-lateral-002.png">
+            <figcaption>
+                Examples of aligning a rule at the start of the gap with a lateral start offset.
+            </figcaption>
+        </figure>
+    </aside>
+
+    <aside class=example>
+        This <a href="examples/grid-lateral-003.html">example</a> demonstrates aligning a rule at the end of the gap.
+        <figure>
+            <img src="media/grid-lateral-003.png">
+            <figcaption>
+                Examples of aligning a rule at the end of the gap with a lateral end offset.
+            </figcaption>
+        </figure>
+    </aside>
+
     NOTE: The ''column-rule-lateral-inset'' and ''column-rule-width'' [=used values=] are calculated in a similar way to how 'left'/'right' and
     'width' are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
     box.  The precise algorithm is described next.
@@ -398,6 +418,16 @@ The Rule Longitudinal Inset Properties {#column-rule-longitudinal-inset-start}
     The <a href=#column-rule-longitudinal-edge-inset-start>*-rule-longitudinal-edge-inset</a>
     properties are used for rule edges that are on the outer edges of an axis.
     The [=used values=] are calculated the same as for the lateral properties above.
+
+    <aside class=example>
+        This <a href="examples/grid-lateral-004.html">example</a> shows the default rule alignment and size in both axes.
+        <figure>
+            <img src="media/grid-lateral-004.png">
+            <figcaption>
+                Example of a rule with default rule alignment and size in both axes.
+            </figcaption>
+        </figure>
+    </aside>
 
     Note: These have a different initial value than the lateral inset properties, meaning the rule will stretch to fill the [=rule containing rectangle=] in this axis.  The initial values as specified above are backward compatible with how column rules are sized and positioned in legacy <a spec=css-multicol>multi-column layout</a>.
 
