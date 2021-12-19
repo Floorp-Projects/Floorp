@@ -620,8 +620,18 @@ InplaceEditor.prototype = {
     } else {
       if (type === "rgb" || type === "hsl" || type === "hwb") {
         info = {};
+        const isCSS4Color = !value.includes(",");
+        // In case the value uses the new syntax of the CSS Color 4 specification,
+        // it is split by the spaces and the slash separating the alpha value
+        // between the different color components.
+        // Example: rgb(255 0 0 / 0.5)
+        // Otherwise, the value is represented using the old color syntax and is
+        // split by the commas between the color components.
+        // Example: rgba(255, 0, 0, 0.5)
         const part =
-          value.substring(range.start, selStart).split(",").length - 1;
+          value
+            .substring(range.start, selStart)
+            .split(isCSS4Color ? / ?\/ ?| / : ",").length - 1;
         if (part === 3) {
           // alpha
           info.minValue = 0;

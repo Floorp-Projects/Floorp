@@ -43,6 +43,10 @@ add_task(async function() {
   await testHexIncrements(view);
   await testAlphaHexIncrements(view);
   await testRgbIncrements(view);
+  await testHslIncrements(view);
+  await testRgbCss4Increments(view);
+  await testHslCss4Increments(view);
+  await testHwbIncrements(view);
   await testShorthandIncrements(view);
   await testOddCases(view);
   await testZeroValueIncrements(view);
@@ -158,7 +162,7 @@ async function testAlphaHexIncrements(view) {
 }
 
 async function testRgbIncrements(view) {
-  info("Testing keyboard increments with rgb colors");
+  info("Testing keyboard increments with rgb(a) colors");
 
   const rgbColorPropEditor = getTextProperty(view, 1, {
     "background-color": "#000000",
@@ -191,6 +195,243 @@ async function testRgbIncrements(view) {
       start: "rgb(0,5,0)",
       end: "rgb(0,0,0)",
       selection: [6, 7],
+    },
+    7: {
+      start: "rgba(0,0,0,1)",
+      end: "rgba(0,0,0,1)",
+      selection: [11, 12],
+    },
+    8: {
+      ...getSmallIncrementKey(),
+      start: "rgba(0,0,0,0.5)",
+      end: "rgba(0,0,0,0.6)",
+      selection: [12, 13],
+    },
+    9: {
+      down: true,
+      start: "rgba(0,0,0,0)",
+      end: "rgba(0,0,0,0)",
+      selection: [11, 12],
+    },
+  });
+}
+
+async function testHslIncrements(view) {
+  info("Testing keyboard increments with hsl(a) colors");
+
+  const hslColorPropEditor = getTextProperty(view, 1, {
+    "background-color": "#000000",
+  }).editor;
+
+  await runIncrementTest(hslColorPropEditor, view, {
+    1: { start: "hsl(0,0%,0%)", end: "hsl(0,1%,0%)", selection: [6, 8] },
+    2: {
+      shift: true,
+      start: "hsl(0,0%,0%)",
+      end: "hsl(0,10%,0%)",
+      selection: [6, 8],
+    },
+    3: { start: "hsl(0,100%,0%)", end: "hsl(0,100%,0%)", selection: [6, 10] },
+    4: {
+      shift: true,
+      start: "hsl(0,95%,0%)",
+      end: "hsl(0,100%,0%)",
+      selection: [6, 10],
+    },
+    5: {
+      down: true,
+      start: "hsl(0,0%,0%)",
+      end: "hsl(0,0%,0%)",
+      selection: [6, 8],
+    },
+    6: {
+      down: true,
+      shift: true,
+      start: "hsl(0,5%,0%)",
+      end: "hsl(0,0%,0%)",
+      selection: [6, 8],
+    },
+    7: {
+      start: "hsla(0,0%,0%,1)",
+      end: "hsla(0,0%,0%,1)",
+      selection: [13, 14],
+    },
+    8: {
+      ...getSmallIncrementKey(),
+      start: "hsla(0,0%,0%,0.5)",
+      end: "hsla(0,0%,0%,0.6)",
+      selection: [14, 15],
+    },
+    9: {
+      down: true,
+      start: "hsla(0,0%,0%,0)",
+      end: "hsla(0,0%,0%,0)",
+      selection: [13, 14],
+    },
+  });
+}
+
+async function testRgbCss4Increments(view) {
+  info("Testing keyboard increments with rgb colors using CSS 4 Color syntax");
+
+  const rgbColorPropEditor = getTextProperty(view, 1, {
+    "background-color": "#000000",
+  }).editor;
+
+  await runIncrementTest(rgbColorPropEditor, view, {
+    1: { start: "rgb(0 0 0)", end: "rgb(0 1 0)", selection: [6, 7] },
+    2: {
+      shift: true,
+      start: "rgb(0 0 0)",
+      end: "rgb(0 10 0)",
+      selection: [6, 7],
+    },
+    3: { start: "rgb(0 255 0)", end: "rgb(0 255 0)", selection: [6, 9] },
+    4: {
+      shift: true,
+      start: "rgb(0 250 0)",
+      end: "rgb(0 255 0)",
+      selection: [6, 9],
+    },
+    5: {
+      down: true,
+      start: "rgb(0 0 0)",
+      end: "rgb(0 0 0)",
+      selection: [6, 7],
+    },
+    6: {
+      down: true,
+      shift: true,
+      start: "rgb(0 5 0)",
+      end: "rgb(0 0 0)",
+      selection: [6, 7],
+    },
+    7: {
+      start: "rgb(0 0 0/1)",
+      end: "rgb(0 0 0/1)",
+      selection: [10, 11],
+    },
+    8: {
+      ...getSmallIncrementKey(),
+      start: "rgb(0 0 0/0.5)",
+      end: "rgb(0 0 0/0.6)",
+      selection: [11, 12],
+    },
+    9: {
+      down: true,
+      start: "rgb(0 0 0/0)",
+      end: "rgb(0 0 0/0)",
+      selection: [10, 11],
+    },
+  });
+}
+
+async function testHslCss4Increments(view) {
+  info("Testing keyboard increments with hsl colors using CSS 4 Color syntax");
+
+  const hslColorPropEditor = getTextProperty(view, 1, {
+    "background-color": "#000000",
+  }).editor;
+
+  await runIncrementTest(hslColorPropEditor, view, {
+    1: { start: "hsl(0 0% 0%)", end: "hsl(0 1% 0%)", selection: [6, 8] },
+    2: {
+      shift: true,
+      start: "hsl(0 0% 0%)",
+      end: "hsl(0 10% 0%)",
+      selection: [6, 8],
+    },
+    3: { start: "hsl(0 100% 0%)", end: "hsl(0 100% 0%)", selection: [6, 10] },
+    4: {
+      shift: true,
+      start: "hsl(0 95% 0%)",
+      end: "hsl(0 100% 0%)",
+      selection: [6, 10],
+    },
+    5: {
+      down: true,
+      start: "hsl(0 0% 0%)",
+      end: "hsl(0 0% 0%)",
+      selection: [6, 8],
+    },
+    6: {
+      down: true,
+      shift: true,
+      start: "hsl(0 5% 0%)",
+      end: "hsl(0 0% 0%)",
+      selection: [6, 8],
+    },
+    7: {
+      start: "hsl(0 0% 0%/1)",
+      end: "hsl(0 0% 0%/1)",
+      selection: [12, 13],
+    },
+    8: {
+      ...getSmallIncrementKey(),
+      start: "hsl(0 0% 0%/0.5)",
+      end: "hsl(0 0% 0%/0.6)",
+      selection: [13, 14],
+    },
+    9: {
+      down: true,
+      start: "hsl(0 0% 0%/0)",
+      end: "hsl(0 0% 0%/0)",
+      selection: [12, 13],
+    },
+  });
+}
+
+async function testHwbIncrements(view) {
+  info("Testing keyboard increments with hwb colors");
+
+  const hwbColorPropEditor = getTextProperty(view, 1, {
+    "background-color": "#000000",
+  }).editor;
+
+  await runIncrementTest(hwbColorPropEditor, view, {
+    1: { start: "hwb(0 0% 0%)", end: "hwb(0 1% 0%)", selection: [6, 8] },
+    2: {
+      shift: true,
+      start: "hwb(0 0% 0%)",
+      end: "hwb(0 10% 0%)",
+      selection: [6, 8],
+    },
+    3: { start: "hwb(0 100% 0%)", end: "hwb(0 100% 0%)", selection: [6, 10] },
+    4: {
+      shift: true,
+      start: "hwb(0 95% 0%)",
+      end: "hwb(0 100% 0%)",
+      selection: [6, 10],
+    },
+    5: {
+      down: true,
+      start: "hwb(0 0% 0%)",
+      end: "hwb(0 0% 0%)",
+      selection: [6, 8],
+    },
+    6: {
+      down: true,
+      shift: true,
+      start: "hwb(0 5% 0%)",
+      end: "hwb(0 0% 0%)",
+      selection: [6, 8],
+    },
+    7: {
+      start: "hwb(0 0% 0%/1)",
+      end: "hwb(0 0% 0%/1)",
+      selection: [12, 13],
+    },
+    8: {
+      ...getSmallIncrementKey(),
+      start: "hwb(0 0% 0%/0.5)",
+      end: "hwb(0 0% 0%/0.6)",
+      selection: [13, 14],
+    },
+    9: {
+      down: true,
+      start: "hwb(0 0% 0%/0)",
+      end: "hwb(0 0% 0%/0)",
+      selection: [12, 13],
     },
   });
 }
