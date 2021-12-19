@@ -57,6 +57,10 @@ async function checkColorCycling(view) {
       comment: "Color displayed as an RGB value",
     },
     {
+      value: "hwb(0 0% 0%)",
+      comment: "Color displayed as an HWB value.",
+    },
+    {
       value: "red",
       comment: "Color displayed as a color name",
     },
@@ -91,6 +95,10 @@ async function checkAlphaColorCycling(inspector, view) {
       comment: "Color displayed as an RGBa value",
     },
     {
+      value: "hwb(0 0% 0% / 0.5)",
+      comment: "Color displayed as an HWB value.",
+    },
+    {
       value: "#ff000080",
       comment: "Color displayed as an alpha hex value again",
     },
@@ -122,6 +130,10 @@ async function checkColorCyclingWithDifferentDefaultType(inspector, view) {
     {
       value: "rgb(0, 128, 0)",
       comment: "Color displayed as an RGB value",
+    },
+    {
+      value: "hwb(120 0% 49.8%)",
+      comment: "Color displayed as an HWB value.",
     },
     {
       value: "green",
