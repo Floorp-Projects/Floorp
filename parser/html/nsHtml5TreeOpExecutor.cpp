@@ -411,7 +411,7 @@ nsISupports* nsHtml5TreeOpExecutor::GetTarget() {
 }
 
 nsresult nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason) {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   mBroken = aReason;
   if (mStreamParser) {
     mStreamParser->Terminate();
