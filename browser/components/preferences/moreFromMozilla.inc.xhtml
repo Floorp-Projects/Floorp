@@ -6,7 +6,7 @@
 
 <script src="chrome://browser/content/preferences/moreFromMozilla.js"/>
 <html:template id="template-paneMoreFromMozilla">
-  <vbox id="moreFromMozillaCategory"
+  <vbox id="moreFromMozillaCategory-header"
     class="subcategory"
     data-hidden-from-search="true"
     hidden="true"
@@ -14,9 +14,14 @@
     <html:h1 class="title" data-l10n-id="pane-more-from-mozilla-title" />
     <html:p class="subtitle" data-l10n-id="pane-more-from-mozilla-subtitle" />
   </vbox>
+  <groupbox id="moreFromMozillaCategory"
+    data-category="paneMoreFromMozilla"
+    hidden="true"
+    data-hidden-from-search="true">
+  </groupbox>
 </html:template>
 <html:template id="simple">
-  <vbox class="list-item simple">
+  <html:div class="mozilla-product-item simple">
     <hbox>
       <label>
         <html:h2 class="product-title" />
@@ -36,11 +41,11 @@
       <html:img class="qr-code-box-image" role="presentation" />
       <html:a class="wants-telemetry qr-code-button text-link" target="_blank"/>
     </html:div>
-  </vbox>
+  </html:div>
 </html:template>
 
 <html:template id="advanced">
-  <vbox class="list-item advanced">
+  <vbox class="mozilla-product-item advanced">
     <hbox class="product-img">
       <vbox class="product-info" flex="1">
         <label>

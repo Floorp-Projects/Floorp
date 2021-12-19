@@ -220,6 +220,9 @@ var gMoreFromMozillaPane = {
     document
       .getElementById("moreFromMozillaCategory")
       .removeAttribute("data-hidden-from-search");
+    document
+      .getElementById("moreFromMozillaCategory-header")
+      .removeAttribute("data-hidden-from-search");
 
     this.renderProducts();
   },
