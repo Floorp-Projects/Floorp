@@ -2193,30 +2193,6 @@ var BookmarkingUI = {
     this.updateEmptyToolbarMessage();
   },
 
-  onItemMoved(
-    aItemId,
-    aOldIndex,
-    aNewIndex,
-    aItemType,
-    aGuid,
-    oldParentGuid,
-    newParentGuid
-  ) {
-    let hasMovedToOrOutOfOtherBookmarks =
-      newParentGuid === PlacesUtils.bookmarks.unfiledGuid ||
-      oldParentGuid === PlacesUtils.bookmarks.unfiledGuid;
-    if (hasMovedToOrOutOfOtherBookmarks) {
-      this.maybeShowOtherBookmarksFolder();
-    }
-
-    let hasMovedToToolbar = newParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-    let hasMovedOutOfToolbar =
-      oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-    if (hasMovedToToolbar || hasMovedOutOfToolbar) {
-      this.updateEmptyToolbarMessage();
-    }
-  },
-
   onWidgetUnderflow(aNode, aContainer) {
     let win = aNode.ownerGlobal;
     if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window) {
