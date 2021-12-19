@@ -115,9 +115,9 @@ def _parse_mach_env_requirements(
                         f'Perhaps "{current_requirements_path}:{line_number}" '
                         'should change to start with "vendored:" instead of "pth:".'
                     )
-                if child.name.endswith(".egg-info"):
+                if child.name == "PKG-INFO":
                     raise Exception(
-                        f'The "pth:" pointing to "{path}" has a ".egg-info" file.\n'
+                        f'The "pth:" pointing to "{path}" has a "PKG-INFO" file.\n'
                         f'Perhaps "{current_requirements_path}:{line_number}" '
                         'should change to start with "vendored:" instead of "pth:".'
                     )
