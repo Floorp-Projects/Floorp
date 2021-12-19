@@ -49,7 +49,7 @@ add_task(async function testwhenPrefEnabledWithoutTemplatePref() {
   ok(moreFromMozillaCategory, "The category exists");
   ok(!moreFromMozillaCategory.hidden, "The category is not hidden");
 
-  let productCard = doc.querySelector("vbox.list-item");
+  let productCard = doc.querySelector(".mozilla-product-item");
   ok(productCard, "productCard found");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -115,7 +115,7 @@ add_task(async function test_aboutpreferences_simple_template() {
   moreFromMozillaCategory.click();
   await clickedPromise;
 
-  let productCards = doc.querySelectorAll("vbox.simple");
+  let productCards = doc.querySelectorAll("div.simple");
   Assert.ok(productCards, "The product cards from simple template found");
   Assert.equal(productCards.length, 3, "3 product cards displayed");
 
@@ -193,5 +193,32 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
   Assert.ok(gBrowser.selectedBrowser.documentURI.spec.startsWith(expectedUrl));
 
   BrowserTestUtils.removeTab(openedTab);
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_aboutpreferences_search() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "advanced"],
+    ],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI(null, {
+    leaveOpen: true,
+  });
+
+  await runSearchInput("Rally");
+
+  let doc = gBrowser.contentDocument;
+  let tab = gBrowser.selectedTab;
+
+  let productCards = doc.querySelectorAll(".mozilla-product-item");
+  Assert.equal(productCards.length, 3, "All products in the group are found");
+  let [mobile, vpn, rally] = productCards;
+  Assert.ok(BrowserTestUtils.is_hidden(mobile), "Mobile hidden");
+  Assert.ok(BrowserTestUtils.is_hidden(vpn), "VPN hidden");
+  Assert.ok(BrowserTestUtils.is_visible(rally), "Rally shown");
+
   BrowserTestUtils.removeTab(tab);
 });
