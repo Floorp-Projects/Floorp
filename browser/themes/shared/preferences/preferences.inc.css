@@ -1188,13 +1188,13 @@ richlistitem .text-link:hover {
   margin-inline-start: 6px;
 }
 
-#moreFromMozillaCategory .subtitle {
+#moreFromMozillaCategory-header .subtitle {
   color: var(--in-content-deemphasized-text);
   margin: 4px 0 10px;
   line-height: 1.4em;
 }
 
-#moreFromMozillaCategory .list-item {
+#moreFromMozillaCategory .mozilla-product-item {
   margin-top: 30px;
 }
 
