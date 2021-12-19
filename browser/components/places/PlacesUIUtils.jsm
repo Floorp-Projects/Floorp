@@ -1260,42 +1260,16 @@ var PlacesUIUtils = {
       }
     };
 
-    // This listener is for tracking bookmark moves
-    let placesUtilsBookmarksObserver = {
-      onItemChanged() {},
-      onItemMoved(
-        aItemId,
-        aOldIndex,
-        aNewIndex,
-        aItemType,
-        aGuid,
-        oldParentGuid,
-        newParentGuid
-      ) {
-        let hasMovedToToolbar =
-          newParentGuid == PlacesUtils.bookmarks.toolbarGuid &&
-          oldParentGuid != PlacesUtils.bookmarks.toolbarGuid;
-        if (hasMovedToToolbar) {
-          Services.telemetry.scalarAdd(
-            "browser.engagement.bookmarks_toolbar_bookmark_added",
-            1
-          );
-        }
-      },
-    };
-
     this._bookmarkToolbarTelemetryListening = true;
     PlacesUtils.observers.addListener(
       ["bookmark-added", "bookmark-moved"],
       placesUtilsObserversListener
     );
-    PlacesUtils.bookmarks.addObserver(placesUtilsBookmarksObserver);
     PlacesUtils.registerShutdownFunction(() => {
       PlacesUtils.observers.removeListener(
         ["bookmark-added", "bookmark-moved"],
         placesUtilsObserversListener
       );
-      PlacesUtils.bookmarks.removeObserver(placesUtilsBookmarksObserver);
     });
   },
 
