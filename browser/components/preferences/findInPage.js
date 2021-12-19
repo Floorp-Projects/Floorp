@@ -568,9 +568,14 @@ var gSearchResultsPane = {
         this.listSearchTooltips.add(nodeObject);
       }
 
-      // If this is a node for an experimental feature option, add it to the list
-      // of subitems. The items that don't match the search term will be hidden.
-      if (child instanceof Element && child.classList.contains("featureGate")) {
+      // If this is a node for an experimental feature option or a Mozilla product item,
+      // add it to the list of subitems. The items that don't match the search term
+      // will be hidden.
+      if (
+        child instanceof Element &&
+        (child.classList.contains("featureGate") ||
+          child.classList.contains("mozilla-product-item"))
+      ) {
         this.subItems.set(child, result);
       }
     }
