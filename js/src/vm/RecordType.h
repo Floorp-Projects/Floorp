@@ -7,16 +7,35 @@
 #ifndef vm_RecordType_h
 #define vm_RecordType_h
 
+#include <cstdint>
+#include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
+
+namespace JS {
+class RecordType;
+}
+
+namespace js {
+
+extern JSString* RecordToSource(JSContext* cx, JS::RecordType* rec);
+
+}
 
 namespace JS {
 
 class RecordType final : public js::NativeObject {
+  friend JSString* js::RecordToSource(JSContext* cx, RecordType* rec);
+
+  enum { INITIALIZED_LENGTH_SLOT = 0, SORTED_KEYS_SLOT, SLOT_COUNT };
+
  public:
   static const js::ClassSpec classSpec_;
   static const JSClass class_;
 
-  static RecordType* create(JSContext* cx);
+  static RecordType* createUninitialized(JSContext* cx, uint32_t initialLength);
+  bool initializeNextProperty(JSContext* cx, Handle<PropertyKey> key,
+                              HandleValue value);
+  bool finishInitialization(JSContext* cx);
 
   static bool sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
                             bool* equal);

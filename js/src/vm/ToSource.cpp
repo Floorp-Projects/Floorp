@@ -172,6 +172,9 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
       if (obj->is<TupleType>()) {
         return TupleToSource(cx, &obj->as<TupleType>());
       }
+      if (obj->is<RecordType>()) {
+        return RecordToSource(cx, obj.as<RecordType>());
+      }
       MOZ_CRASH("Unsupported ExtendedPrimitive");
     }
 #endif
