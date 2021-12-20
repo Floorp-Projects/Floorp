@@ -18,6 +18,7 @@
 #include "util/StringBuffer.h"
 #include "vm/ArrayObject.h"
 #include "vm/EqualityOperations.h"
+#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
@@ -78,6 +79,7 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
 
   rec->initFixedSlot(INITIALIZED_LENGTH_SLOT, PrivateUint32Value(0));
   rec->initFixedSlot(SORTED_KEYS_SLOT, ObjectValue(*sortedKeys));
+  rec->initFixedSlot(IS_ATOMIZED_SLOT, BooleanValue(false));
 
   return rec;
 }
@@ -114,12 +116,9 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
 
   // Add the key to the SORTED_KEYS instenal slot
 
-  JSString* keyStr = IdToString(cx, key);
-  if (!keyStr) {
-    return false;
-  }
-  JSLinearString* keyLinearStr = keyStr->ensureLinear(cx);
-  if (!keyLinearStr) {
+  JSAtom* atomKey = key.isString() ? AtomizeString(cx, key.toString())
+                                   : Int32ToAtom(cx, key.toInt());
+  if (!atomKey) {
     return false;
   }
 
@@ -133,7 +132,7 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
     return false;
   }
   sortedKeys->setDenseInitializedLength(initializedLength + 1);
-  sortedKeys->initDenseElement(initializedLength, StringValue(keyLinearStr));
+  sortedKeys->initDenseElement(initializedLength, StringValue(atomKey));
 
   setFixedSlot(INITIALIZED_LENGTH_SLOT,
                PrivateUint32Value(initializedLength + 1));
@@ -189,6 +188,59 @@ bool RecordType::finishInitialization(JSContext* cx) {
   return true;
 }
 
+js::HashNumber RecordType::hash(const RecordType::FieldHasher& hasher) {
+  MOZ_ASSERT(isAtomized());
+
+  ArrayObject& sortedKeys =
+      getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+  uint32_t length = sortedKeys.length();
+
+  js::HashNumber h = mozilla::HashGeneric(length);
+  for (uint32_t i = 0; i < length; i++) {
+    JSAtom& key = sortedKeys.getDenseElement(i).toString()->asAtom();
+
+    mozilla::Maybe<PropertyInfo> prop = lookupPure(AtomToId(&key));
+    MOZ_ASSERT(prop.isSome() && prop.value().hasSlot());
+
+    h = mozilla::AddToHash(h, key.hash(), hasher(getSlot(prop.value().slot())));
+  }
+
+  return h;
+}
+
+bool RecordType::ensureAtomized(JSContext* cx) {
+  if (isAtomized()) {
+    return true;
+  }
+
+  ArrayObject& sortedKeys =
+      getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+  uint32_t length = sortedKeys.length();
+
+  RootedValue child(cx);
+  bool updated;
+  for (uint32_t i = 0; i < length; i++) {
+    JSAtom& key = sortedKeys.getDenseElement(i).toString()->asAtom();
+
+    mozilla::Maybe<PropertyInfo> prop = lookupPure(AtomToId(&key));
+    MOZ_ASSERT(prop.isSome() && prop.value().hasSlot());
+    uint32_t slot = prop.value().slot();
+
+    child.set(getSlot(slot));
+
+    if (!EnsureAtomized(cx, &child, &updated)) {
+      return false;
+    }
+    if (updated) {
+      setSlot(slot, child);
+    }
+  }
+
+  setFixedSlot(IS_ATOMIZED_SLOT, BooleanValue(true));
+
+  return true;
+}
+
 bool RecordType::sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
                                bool* equal) {
   return sameValueWith<SameValueZero>(cx, lhs, rhs, equal);
@@ -197,6 +249,54 @@ bool RecordType::sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
 bool RecordType::sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,
                            bool* equal) {
   return sameValueWith<SameValue>(cx, lhs, rhs, equal);
+}
+
+bool RecordType::sameValueZero(RecordType* lhs, RecordType* rhs) {
+  MOZ_ASSERT(lhs->isAtomized());
+  MOZ_ASSERT(rhs->isAtomized());
+
+  if (lhs == rhs) {
+    return true;
+  }
+
+  ArrayObject& lhsSortedKeys =
+      lhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+  ArrayObject& rhsSortedKeys =
+      rhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+
+  uint32_t length = lhsSortedKeys.length();
+
+  if (rhsSortedKeys.length() != length) {
+    return false;
+  }
+
+  Value v1, v2;
+
+  for (uint32_t index = 0; index < length; index++) {
+    JSAtom* key = &lhsSortedKeys.getDenseElement(index).toString()->asAtom();
+    if (!EqualStrings(
+            key, &rhsSortedKeys.getDenseElement(index).toString()->asAtom())) {
+      return false;
+    }
+
+    {
+      mozilla::Maybe<PropertyInfo> lhsProp = lhs->lookupPure(AtomToId(key));
+      MOZ_ASSERT(lhsProp.isSome() && lhsProp.value().hasSlot());
+      v1 = lhs->getSlot(lhsProp.value().slot());
+    }
+
+    {
+      mozilla::Maybe<PropertyInfo> rhsProp = rhs->lookupPure(AtomToId(key));
+      MOZ_ASSERT(rhsProp.isSome() && rhsProp.value().hasSlot());
+      v2 = rhs->getSlot(rhsProp.value().slot());
+    }
+
+    if (!js::SameValueZeroLinear(v1, v2)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
