@@ -2949,14 +2949,14 @@ JS_PUBLIC_API JSString* JS_NewStringCopyUTF8Z(JSContext* cx,
                                               const JS::ConstUTF8CharsZ s) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewStringCopyUTF8Z<CanGC>(cx, s);
+  return NewStringCopyUTF8Z(cx, s);
 }
 
 JS_PUBLIC_API JSString* JS_NewStringCopyUTF8N(JSContext* cx,
                                               const JS::UTF8Chars s) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewStringCopyUTF8N<CanGC>(cx, s);
+  return NewStringCopyUTF8N(cx, s);
 }
 
 JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str) {

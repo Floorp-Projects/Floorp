@@ -1067,8 +1067,7 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
 }
 
 static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
-  return NewStringCopyUTF8Z<CanGC>(cx,
-                                   JS::ConstUTF8CharsZ(chars, strlen(chars)));
+  return NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
 }
 
 [[nodiscard]] static bool ParseValTypes(JSContext* cx, HandleValue src,
