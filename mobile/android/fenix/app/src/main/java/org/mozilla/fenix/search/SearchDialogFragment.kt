@@ -252,7 +252,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             R.id.browserFragment, R.id.homeFragment -> {
                 binding.searchWrapper.setOnTouchListener { _, _ ->
                     binding.searchWrapper.hideKeyboard()
-                    toolbarView.view.clearFocus()
                     false
                 }
             }
