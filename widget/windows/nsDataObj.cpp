@@ -29,6 +29,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
+#include "nsProxyRelease.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
 #include "nscore.h"
@@ -538,6 +539,12 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv) {
 STDMETHODIMP_(ULONG) nsDataObj::AddRef() {
   ++m_cRef;
   NS_LOG_ADDREF(this, m_cRef, "nsDataObj", sizeof(*this));
+
+  // When the first reference is taken, hold our own internal reference.
+  if (m_cRef == 1) {
+    mKeepAlive = this;
+  }
+
   return m_cRef;
 }
 
@@ -625,6 +632,12 @@ STDMETHODIMP_(ULONG) nsDataObj::Release() {
   --m_cRef;
 
   NS_LOG_RELEASE(this, m_cRef, "nsDataObj");
+
+  // If we hold the last reference, submit release of it to the main thread.
+  if (m_cRef == 1 && mKeepAlive) {
+    NS_ReleaseOnMainThread("nsDataObj release", mKeepAlive.forget(), true);
+  }
+
   if (0 != m_cRef) return m_cRef;
 
   // We have released our last ref on this object and need to delete the
@@ -637,6 +650,10 @@ STDMETHODIMP_(ULONG) nsDataObj::Release() {
     mCachedTempFile = nullptr;
     helper->Attach();
   }
+
+  // In case the destructor ever AddRef/Releases, ensure we don't delete twice
+  // or take mKeepAlive as another reference.
+  m_cRef = 1;
 
   delete this;
 
@@ -659,6 +676,9 @@ BOOL nsDataObj::FormatsMatch(const FORMATETC& source,
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetData(LPFORMATETC aFormat, LPSTGMEDIUM pSTM) {
   if (!mTransferable) return DV_E_FORMATETC;
+
+  // Hold an extra reference in case we end up spinning the event loop.
+  RefPtr<nsDataObj> keepAliveDuringGetData(this);
 
   uint32_t dfInx = 0;
 
