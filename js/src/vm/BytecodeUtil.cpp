@@ -1354,6 +1354,7 @@ static bool PrintShapeProperties(JSContext* cx, Sprinter* sp, Shape* shape) {
     RootedValue keyv(cx, IdToValue(key));
     JSString* str = ToString<NoGC>(cx, keyv);
     if (!str) {
+      ReportOutOfMemory(cx);
       return false;
     }
     if (!sp->putString(str)) {
