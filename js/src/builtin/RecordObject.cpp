@@ -8,13 +8,14 @@
 
 #include "jsapi.h"
 
-#include "js/Class.h"
 #include "vm/ObjectOperations.h"
 #include "vm/RecordType.h"
 
 #include "vm/JSObject-inl.h"
 
 using namespace js;
+
+// Record and Record proposal section 9.2.1
 
 RecordObject* RecordObject::create(JSContext* cx, Handle<RecordType*> record) {
   RecordObject* rec = NewBuiltinClassInstance<RecordObject>(cx);
@@ -31,7 +32,52 @@ RecordType* RecordObject::unbox() const {
               .as<RecordType>();
 }
 
-const JSClass RecordObject::class_ = {
-    "RecordObject",    JSCLASS_HAS_RESERVED_SLOTS(SlotCount),
-    JS_NULL_CLASS_OPS, JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT, JS_NULL_OBJECT_OPS};
+bool rec_resolve(JSContext* cx, HandleObject obj, HandleId id,
+                 bool* resolvedp) {
+  Rooted<RecordType*> rec(cx, obj->as<RecordObject>().unbox());
+
+  PropertyResult prop;
+  if (!NativeLookupOwnProperty<CanGC>(cx, rec, id, &prop)) {
+    return false;
+  }
+  if (prop.isNotFound()) {
+    *resolvedp = false;
+    return true;
+  }
+  MOZ_ASSERT(prop.isNativeProperty() && prop.propertyInfo().isDataProperty());
+
+  RootedValue value(cx);
+  if (prop.isDenseElement()) {
+    value.set(rec->getDenseElement(prop.denseElementIndex()));
+  } else {
+    value.set(rec->getSlot(prop.propertyInfo().slot()));
+  }
+
+  static const unsigned RECORD_PROPERTY_ATTRS =
+      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+  if (!DefineDataProperty(cx, obj, id, value,
+                          RECORD_PROPERTY_ATTRS | JSPROP_RESOLVING)) {
+    return false;
+  }
+
+  *resolvedp = true;
+  return true;
+}
+
+static const JSClassOps RecordObjectClassOps = {
+    nullptr,      // addProperty
+    nullptr,      // delProperty
+    nullptr,      // enumerate
+    nullptr,      // newEnumerate
+    rec_resolve,  // resolve
+    nullptr,      // mayResolve
+    nullptr,      // finalize
+    nullptr,      // call
+    nullptr,      // hasInstance
+    nullptr,      // construct
+    nullptr,      // trace
+};
+
+const JSClass RecordObject::class_ = {"RecordObject",
+                                      JSCLASS_HAS_RESERVED_SLOTS(SlotCount),
+                                      &RecordObjectClassOps};
