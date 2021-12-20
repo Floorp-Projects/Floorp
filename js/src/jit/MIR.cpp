@@ -1342,6 +1342,10 @@ void MTypeOfIs::printOpcode(GenericPrinter& out) const {
     case JSTYPE_BIGINT:
       name = "bigint";
       break;
+#  ifdef ENABLE_RECORD_TUPLE
+    case JSTYPE_RECORD:
+    case JSTYPE_TUPLE:
+#  endif
     case JSTYPE_LIMIT:
       MOZ_CRASH("Unexpected type");
   }
@@ -3832,6 +3836,9 @@ static JSType TypeOfName(JSLinearString* str) {
   static constexpr std::array types = {
       JSTYPE_UNDEFINED, JSTYPE_OBJECT,  JSTYPE_FUNCTION, JSTYPE_STRING,
       JSTYPE_NUMBER,    JSTYPE_BOOLEAN, JSTYPE_SYMBOL,   JSTYPE_BIGINT,
+#ifdef ENABLE_RECORD_TUPLE
+      JSTYPE_RECORD,    JSTYPE_TUPLE,
+#endif
   };
   static_assert(types.size() == JSTYPE_LIMIT);
 
@@ -3941,6 +3948,11 @@ bool MCompare::tryFoldTypeOf(bool* result) {
     case JSTYPE_LIMIT:
       *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
       return true;
+#ifdef ENABLE_RECORD_TUPLE
+    case JSTYPE_RECORD:
+    case JSTYPE_TUPLE:
+      MOZ_CRASH("Records and Tuples are not supported yet.");
+#endif
   }
 
   return false;

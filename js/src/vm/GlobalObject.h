@@ -543,6 +543,24 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_BigInt);
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+  static JSObject* getOrCreateRecordPrototype(JSContext* cx,
+                                              Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_Record)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_Record);
+  }
+
+  static JSObject* getOrCreateTuplePrototype(JSContext* cx,
+                                             Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_Tuple)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_Tuple);
+  }
+#endif
+
   static JSObject* getOrCreatePromisePrototype(JSContext* cx,
                                                Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_Promise)) {

@@ -36,6 +36,10 @@
 #include "vm/StaticStrings.h"   // StaticStrings
 #include "vm/StringType.h"      // NewStringCopy{N,Z}, ToString
 #include "vm/SymbolType.h"      // Symbol
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "vm/JSContext-inl.h"         // JSContext::check
 #include "vm/JSObject-inl.h"          // IsCallable
@@ -161,6 +165,12 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
 
       return ConcatStrings<CanGC>(cx, str, n);
     }
+
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive: {
+      MOZ_CRASH("ExtendedPrimitive is not supported yet");
+    }
+#endif
 
     case JS::ValueType::Object: {
       RootedValue fval(cx);

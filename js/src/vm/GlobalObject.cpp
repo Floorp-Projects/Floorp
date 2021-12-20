@@ -65,6 +65,10 @@
 #include "vm/SelfHosting.h"
 #include "vm/StringObject.h"
 #include "wasm/WasmJS.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "gc/FreeOp-inl.h"
 #include "vm/JSObject-inl.h"
@@ -150,6 +154,10 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_AsyncFunction:
     case JSProto_GeneratorFunction:
     case JSProto_AsyncGeneratorFunction:
+#ifdef ENABLE_RECORD_TUPLE
+    case JSProto_Record:
+    case JSProto_Tuple:
+#endif
       return false;
 
     case JSProto_WebAssembly:
