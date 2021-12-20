@@ -17,6 +17,11 @@ class RecordType final : public js::NativeObject {
   static const JSClass class_;
 
   static RecordType* create(JSContext* cx);
+
+  static bool sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
+                            bool* equal);
+  static bool sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,
+                        bool* equal);
 };
 
 }  // namespace JS

@@ -18,6 +18,7 @@
 #include "gc/Tracer.h"
 #include "js/TypeDecls.h"
 #include "util/StringBuffer.h"
+#include "vm/EqualityOperations.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/RecordType.h"
@@ -112,6 +113,53 @@ void TupleType::finishInitialization(JSContext* cx) {
   header->setNotExtensible();
   header->seal();
   header->freeze();
+}
+
+bool TupleType::sameValueZero(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                              bool* equal) {
+  return sameValueWith<SameValueZero>(cx, lhs, rhs, equal);
+}
+
+bool TupleType::sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                          bool* equal) {
+  return sameValueWith<SameValue>(cx, lhs, rhs, equal);
+}
+
+template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
+bool TupleType::sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                              bool* equal) {
+  MOZ_ASSERT(lhs->getElementsHeader()->isFrozen());
+  MOZ_ASSERT(rhs->getElementsHeader()->isFrozen());
+
+  if (lhs == rhs) {
+    *equal = true;
+    return true;
+  }
+
+  if (lhs->length() != rhs->length()) {
+    *equal = false;
+    return true;
+  }
+
+  *equal = true;
+
+  RootedValue v1(cx);
+  RootedValue v2(cx);
+
+  for (uint32_t index = 0; index < lhs->length(); index++) {
+    v1.set(lhs->getDenseElement(index));
+    v2.set(rhs->getDenseElement(index));
+
+    if (!Comparator(cx, v1, v2, equal)) {
+      return false;
+    }
+
+    if (!*equal) {
+      return true;
+    }
+  }
+
+  return true;
 }
 
 JSString* js::TupleToSource(JSContext* cx, TupleType* tup) {
