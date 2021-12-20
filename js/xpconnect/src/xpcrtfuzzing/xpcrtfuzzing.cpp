@@ -12,7 +12,7 @@
 #include <stdio.h>  // fflush, fprintf, fputs
 
 #include "FuzzingInterface.h"
-#include "jsapi.h"  // JS_SetProperty
+#include "jsapi.h"
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
@@ -20,7 +20,7 @@
 #include "js/ErrorReport.h"               // JS::PrintError
 #include "js/Exception.h"                 // JS::StealPendingExceptionStack
 #include "js/experimental/TypedData.h"  // JS_GetUint8ClampedArrayData, JS_NewUint8ClampedArray
-#include "js/PropertyAndElement.h"  // JS_SetProperty
+#include "js/PropertyAndElement.h"  // JS_SetProperty, JS_HasOwnProperty
 #include "js/RootingAPI.h"          // JS::Rooted
 #include "js/SourceText.h"          // JS::Source{Ownership,Text}
 #include "js/Value.h"               // JS::Value
@@ -49,7 +49,17 @@ int FuzzXPCRuntimeStart(AutoJSAPI* jsapi, int* argc, char*** argv,
     return ret;
   }
 
-  return fuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
+  ret = fuzzerDriver(argc, argv, FuzzXPCRuntimeFuzz);
+  if (!ret) {
+    fprintf(stdout, "Trying to shutdown!\n");
+    int shutdown = FuzzXPCRuntimeShutdown();
+    if (shutdown) {
+      fprintf(stderr, "Fuzzing Interface: Error: Shutdown callback failed\n");
+      return shutdown;
+    }
+  }
+
+  return ret;
 }
 
 int FuzzXPCRuntimeInit() {
@@ -118,4 +128,35 @@ int FuzzXPCRuntimeFuzz(const uint8_t* buf, size_t size) {
   }
 
   return ret;
+}
+
+int FuzzXPCRuntimeShutdown() {
+  JSContext* cx = gJsapi->cx();
+  JS::Rooted<JS::Value> v(cx);
+  JS::CompileOptions opts(cx);
+  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+
+  bool found = false;
+  if (JS_HasOwnProperty(cx, global, "JSFuzzShutdown", &found)) {
+    if (found) {
+      static const char data[] = "JSFuzzShutdown();";
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      if (!srcBuf.init(cx, data, strlen(data), JS::SourceOwnership::Borrowed)) {
+        return 1;
+      }
+
+      if (!JS::Evaluate(cx, opts.setFileAndLine(__FILE__, __LINE__), srcBuf,
+                        &v) &&
+          !JS_IsExceptionPending(cx)) {
+        // A return value of `false` without a pending exception indicates
+        // a timeout as triggered by the `timeout` shell function.
+        return 1;
+      }
+    }
+  }
+
+  // The fuzzing module is required to handle any exceptions
+  CrashOnPendingException();
+
+  return 0;
 }

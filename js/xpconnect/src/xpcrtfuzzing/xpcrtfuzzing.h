@@ -18,7 +18,8 @@ int FuzzXPCRuntimeStart(mozilla::dom::AutoJSAPI* jsapi, int* argc, char*** argv,
 
 // These are the traditional libFuzzer-style functions for initialization
 // and fuzzing iteration.
-int FuzzXPCRuntimeInit(/* int* argc, char*** argv */);
+int FuzzXPCRuntimeInit();
 int FuzzXPCRuntimeFuzz(const uint8_t* buf, size_t size);
+int FuzzXPCRuntimeShutdown();
 
 #endif /* shell_xpcrtfuzzing_h */
