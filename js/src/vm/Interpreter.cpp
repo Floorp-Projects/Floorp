@@ -3986,6 +3986,40 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(InitElemInc)
 
+#ifdef ENABLE_RECORD_TUPLE
+    CASE(InitTuple) {
+      uint32_t length = GET_UINT32(REGS.pc);
+      TupleType* tup = TupleType::createUninitialized(cx, length);
+      if (!tup) {
+        goto error;
+      }
+      PUSH_EXTENDED_PRIMITIVE(*tup);
+    }
+    END_CASE(InitTuple)
+
+    CASE(AddTupleElement) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+
+      ReservedRooted<JSObject*> tup(&rootObject0,
+                                    &REGS.sp[-2].toExtendedPrimitive());
+      HandleValue val = REGS.stackHandleAt(-1);
+
+      if (!tup->as<TupleType>().initializeNextElement(cx, val)) {
+        goto error;
+      }
+
+      REGS.sp--;
+    }
+    END_CASE(AddTupleElement)
+
+    CASE(FinishTuple) {
+      MOZ_ASSERT(REGS.stackDepth() >= 1);
+      TupleType& tup = REGS.sp[-1].toExtendedPrimitive().as<TupleType>();
+      tup.finishInitialization(cx);
+    }
+    END_CASE(FinishTuple)
+#endif
+
     CASE(Gosub) {
       int32_t len = GET_JUMP_OFFSET(REGS.pc);
       ADVANCE_AND_DISPATCH(len);
