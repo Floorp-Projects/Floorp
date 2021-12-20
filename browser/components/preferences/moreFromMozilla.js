@@ -35,11 +35,12 @@ var gMoreFromMozillaPane = {
     return this._option;
   },
 
-  getURL(url, option) {
+  getURL(url, option, hasEmail) {
     const URL_PARAMS = {
       utm_source: "about-prefs",
       utm_campaign: "morefrommozilla",
       utm_medium: "firefox-desktop",
+      entrypoint_experiment: "morefrommozilla-experiment-1846",
     };
     // UTM content param used in analytics to record
     // UI template used to open URL
@@ -53,8 +54,14 @@ var gMoreFromMozillaPane = {
     for (let [key, val] of Object.entries(URL_PARAMS)) {
       pageUrl.searchParams.append(key, val);
     }
+    // Append '-email' to utm_content when URL is opened
+    // from send email link in QRCode box
     if (option) {
-      pageUrl.searchParams.set("utm_content", utm_content[option]);
+      pageUrl.searchParams.set(
+        "utm_content",
+        `${utm_content[option]}${hasEmail ? "-email" : ""}`
+      );
+      pageUrl.searchParams.set("entrypoint_variation", `treatment-${option}`);
     }
     return pageUrl.toString();
   },
@@ -203,7 +210,7 @@ var gMoreFromMozillaPane = {
         );
         qrc_btn.setAttribute(
           "href",
-          this.getURL(product.qrcode.button.actionURL, this.option)
+          this.getURL(product.qrcode.button.actionURL, this.option, true)
         );
       }
 
