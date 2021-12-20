@@ -11,7 +11,7 @@ add_task(async function test_profile_feature_nostacksampling() {
     "The profiler is not currently active"
   );
 
-  startProfiler({ features: ["threads", "js", "nostacksampling"] });
+  startProfiler({ features: ["js", "nostacksampling"] });
 
   const url = BASE_URL + "do_work_500ms.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
@@ -46,7 +46,7 @@ add_task(async function test_profile_feature_nostacksampling() {
 
     // Flush out any straggling allocation markers that may have not been collected
     // yet by starting and stopping the profiler once.
-    startProfiler({ features: ["threads", "js"] });
+    startProfiler({ features: ["js"] });
 
     // Now reload the tab with a clean run.
     gBrowser.reload();
