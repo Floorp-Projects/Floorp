@@ -30,6 +30,7 @@
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
+#  include "builtin/TupleObject.h"
 #endif
 
 #include "gc/Nursery-inl.h"
@@ -2666,7 +2667,8 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
   // properties.
   if (from->getDenseInitializedLength() > 0 || from->isIndexed() ||
       from->is<TypedArrayObject>() ||
-      IF_RECORD_TUPLE(from->is<RecordObject>(), false) ||
+      IF_RECORD_TUPLE(from->is<RecordObject>() || from->is<TupleObject>(),
+                      false) ||
       from->getClass()->getNewEnumerate() || from->getClass()->getEnumerate()) {
     return true;
   }
