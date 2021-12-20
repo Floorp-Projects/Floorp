@@ -63,6 +63,10 @@
 #include "vm/StringType.h"
 #include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 #include "vm/TraceLogging.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
@@ -811,6 +815,10 @@ bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
 }
 
 JSType js::TypeOfObject(JSObject* obj) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*obj));
+#endif
+
   AutoUnsafeCallWithABI unsafe;
   if (EmulatesUndefined(obj)) {
     return JSTYPE_UNDEFINED;
@@ -820,6 +828,20 @@ JSType js::TypeOfObject(JSObject* obj) {
   }
   return JSTYPE_OBJECT;
 }
+
+#ifdef ENABLE_RECORD_TUPLE
+JSType TypeOfExtendedPrimitive(JSObject* obj) {
+  MOZ_ASSERT(js::IsExtendedPrimitive(*obj));
+
+  if (obj->is<RecordType>()) {
+    return JSTYPE_RECORD;
+  }
+  if (obj->is<TupleType>()) {
+    return JSTYPE_TUPLE;
+  }
+  MOZ_CRASH("Unknown ExtendedPrimitive");
+}
+#endif
 
 JSType js::TypeOfValue(const Value& v) {
   switch (v.type()) {
@@ -834,6 +856,10 @@ JSType js::TypeOfValue(const Value& v) {
       return JSTYPE_UNDEFINED;
     case ValueType::Object:
       return TypeOfObject(&v.toObject());
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+      return TypeOfExtendedPrimitive(&v.toExtendedPrimitive());
+#endif
     case ValueType::Boolean:
       return JSTYPE_BOOLEAN;
     case ValueType::BigInt:
@@ -1252,6 +1278,13 @@ again:
     REGS.sp++->setObjectOrNull(obj); \
     cx->debugOnlyCheck(REGS.sp[-1]); \
   } while (0)
+#ifdef ENABLE_RECORD_TUPLE
+#  define PUSH_EXTENDED_PRIMITIVE(obj)      \
+    do {                                    \
+      REGS.sp++->setExtendedPrimitive(obj); \
+      cx->debugOnlyCheck(REGS.sp[-1]);      \
+    } while (0)
+#endif
 #define PUSH_MAGIC(magic) REGS.sp++->setMagic(magic)
 #define POP_COPY_TO(v) (v) = *--REGS.sp
 #define POP_RETURN_VALUE() REGS.fp()->setReturnValue(*--REGS.sp)
@@ -4505,7 +4538,8 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 
   // Optimize common cases like (2).toString() or "foo".valueOf() to not
   // create a wrapper object.
-  if (v.isPrimitive() && !v.isNullOrUndefined()) {
+  if (v.isPrimitive() && !v.isNullOrUndefined() &&
+      IF_RECORD_TUPLE(!v.isExtendedPrimitive(), true)) {
     JSObject* proto;
 
     switch (v.type()) {
@@ -4525,6 +4559,9 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
       case ValueType::BigInt:
         proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
         break;
+#ifdef ENABLE_RECORD_TUPLE
+      case ValueType::ExtendedPrimitive:
+#endif
       case ValueType::Undefined:
       case ValueType::Null:
       case ValueType::Magic:

@@ -63,6 +63,10 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "builtin/Boolean-inl.h"
 #include "gc/Marking-inl.h"
@@ -131,7 +135,10 @@ JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
     case ValueType::BigInt:
       return "bigint";
     case ValueType::Object:
-      return v.toObject().getClass()->name;
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+#endif
+      return v.getObjectPayload().getClass()->name;
     case ValueType::Magic:
       return "magic";
     case ValueType::PrivateGCThing:
@@ -2442,6 +2449,11 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
       RootedBigInt bigInt(cx, v.toBigInt());
       return BigIntObject::create(cx, bigInt);
     }
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive: {
+      MOZ_CRASH("ExtendedPrimitive is not supported yet");
+    }
+#endif
     case ValueType::Undefined:
     case ValueType::Null:
     case ValueType::Magic:
@@ -2470,6 +2482,16 @@ JSProtoKey js::PrimitiveToProtoKey(JSContext* cx, const Value& v) {
       return JSProto_Symbol;
     case ValueType::BigInt:
       return JSProto_BigInt;
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+      if (v.toExtendedPrimitive().is<TupleType>()) {
+        return JSProto_Tuple;
+      }
+      if (v.toExtendedPrimitive().is<RecordType>()) {
+        return JSProto_Null;
+      }
+      MOZ_CRASH("Unsupported ExtendedPrimitive");
+#endif
     case ValueType::Undefined:
     case ValueType::Null:
     case ValueType::Magic:
@@ -2710,6 +2732,13 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
                    (void*)obj);
       }
       break;
+#  ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive: {
+      JSObject* obj = &v.toExtendedPrimitive();
+      out.printf("<%s at %p>", obj->getClass()->name, (void*)obj);
+      break;
+    }
+#  endif
     case ValueType::Boolean:
       if (v.toBoolean()) {
         out.put("true");
