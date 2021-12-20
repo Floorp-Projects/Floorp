@@ -35,8 +35,8 @@
 #include "vm/NativeObject.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/WellKnownAtom.h"  // js_*_str
-
 #ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
 #  include "builtin/TupleObject.h"
 #  include "vm/RecordType.h"
 #endif
@@ -370,11 +370,9 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
         return false;
       }
       vp.setString(str);
-    } else if (cls == ESClass::Boolean) {
-      if (!Unbox(cx, obj, vp)) {
-        return false;
-      }
-    } else if (cls == ESClass::BigInt) {
+    } else if (cls == ESClass::Boolean || cls == ESClass::BigInt ||
+               IF_RECORD_TUPLE(
+                   obj->is<RecordObject>() || obj->is<TupleObject>(), false)) {
       if (!Unbox(cx, obj, vp)) {
         return false;
       }
@@ -426,6 +424,10 @@ class CycleDetector {
   bool appended_;
 };
 
+#ifdef ENABLE_RECORD_TUPLE
+enum class JOType { Record, Object };
+template <JOType type = JOType::Object>
+#endif
 /* ES5 15.12.3 JO. */
 static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   /*
@@ -438,6 +440,16 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
    *     (and in JA as well).
    */
 
+#ifdef ENABLE_RECORD_TUPLE
+  RecordType* rec;
+
+  if constexpr (type == JOType::Record) {
+    MOZ_ASSERT(obj->is<RecordType>());
+    rec = &obj->as<RecordType>();
+  } else {
+    MOZ_ASSERT(!IsExtendedPrimitive(*obj));
+  }
+#endif
   MOZ_ASSERT_IF(scx->maybeSafely, obj->is<PlainObject>());
 
   /* Steps 1-2, 11. */
@@ -502,14 +514,11 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
 #endif  // DEBUG
 
 #ifdef ENABLE_RECORD_TUPLE
-    if (obj->is<RecordType>()) {
-      MOZ_ALWAYS_TRUE(
-          obj->as<RecordType>().getOwnProperty(cx, id, &outputValue));
+    if constexpr (type == JOType::Record) {
+      MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, id, &outputValue));
     } else
 #endif
     {
-      IF_RECORD_TUPLE(MOZ_ASSERT(!IsExtendedPrimitive(*obj)));
-
       RootedValue objValue(cx, ObjectValue(*obj));
       if (!GetProperty(cx, obj, objValue, id, &outputValue)) {
         return false;
@@ -766,22 +775,23 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   auto dec = mozilla::MakeScopeExit([&] { scx->depth--; });
 
 #ifdef ENABLE_RECORD_TUPLE
-  bool isArrayLike = obj->is<TupleType>() || obj->is<TupleObject>();
-  if (!isArrayLike) {
-    if (!IsArray(cx, obj, &isArrayLike)) {
-      return false;
+  if (v.isExtendedPrimitive()) {
+    if (obj->is<RecordType>()) {
+      return JO<JOType::Record>(cx, obj, scx);
     }
+    if (obj->is<TupleType>()) {
+      return JA(cx, obj, scx);
+    }
+    MOZ_CRASH("Unexpected extended primitive - boxes cannot be stringified.");
   }
+#endif
 
-  return isArrayLike ? JA(cx, obj, scx) : JO(cx, obj, scx);
-#else
   bool isArray;
   if (!IsArray(cx, obj, &isArray)) {
     return false;
   }
 
   return isArray ? JA(cx, obj, scx) : JO(cx, obj, scx);
-#endif
 }
 
 /* ES6 24.3.2. */
