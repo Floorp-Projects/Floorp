@@ -1540,66 +1540,8 @@ void CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
 //-----------------------------------------------------
 // CustomElementDefinition
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementDefinition)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementDefinition)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConstructor)
-  tmp->mCallbacks = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
-  mozilla::dom::LifecycleCallbacks* callbacks = tmp->mCallbacks.get();
-
-  if (callbacks->mAttributeChangedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-                                       "mCallbacks->mAttributeChangedCallback");
-    cb.NoteXPCOMChild(callbacks->mAttributeChangedCallback.Value());
-  }
-
-  if (callbacks->mConnectedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mConnectedCallback");
-    cb.NoteXPCOMChild(callbacks->mConnectedCallback.Value());
-  }
-
-  if (callbacks->mDisconnectedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mDisconnectedCallback");
-    cb.NoteXPCOMChild(callbacks->mDisconnectedCallback.Value());
-  }
-
-  if (callbacks->mAdoptedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mAdoptedCallback");
-    cb.NoteXPCOMChild(callbacks->mAdoptedCallback.Value());
-  }
-
-  if (callbacks->mFormAssociatedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-                                       "mCallbacks->mFormAssociatedCallback");
-    cb.NoteXPCOMChild(callbacks->mFormAssociatedCallback.Value());
-  }
-
-  if (callbacks->mFormResetCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mFormResetCallback");
-    cb.NoteXPCOMChild(callbacks->mFormResetCallback.Value());
-  }
-
-  if (callbacks->mFormDisabledCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mFormDisabledCallback");
-    cb.NoteXPCOMChild(callbacks->mFormDisabledCallback.Value());
-  }
-
-  if (callbacks->mGetCustomInterfaceCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-        cb, "mCallbacks->mGetCustomInterfaceCallback");
-    cb.NoteXPCOMChild(callbacks->mGetCustomInterfaceCallback.Value());
-  }
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mConstructor");
-  cb.NoteXPCOMChild(tmp->mConstructor);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CustomElementDefinition)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
+NS_IMPL_CYCLE_COLLECTION(CustomElementDefinition, mConstructor, mCallbacks,
+                         mConstructionStack)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CustomElementDefinition, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
 
