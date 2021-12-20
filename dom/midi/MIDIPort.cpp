@@ -11,8 +11,8 @@
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/MIDITypes.h"
 #include "mozilla/Unused.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
@@ -34,9 +34,16 @@ NS_IMPL_ADDREF_INHERITED(MIDIPort, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MIDIPort, DOMEventTargetHelper)
 
 MIDIPort::MIDIPort(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
-    : DOMEventTargetHelper(aWindow), mMIDIAccessParent(aMIDIAccessParent) {
+    : DOMEventTargetHelper(aWindow),
+      mMIDIAccessParent(aMIDIAccessParent),
+      mKeepAlive(false) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aMIDIAccessParent);
+
+  Document* aDoc = GetOwner()->GetExtantDoc();
+  if (aDoc) {
+    aDoc->DisallowBFCaching();
+  }
 }
 
 MIDIPort::~MIDIPort() {
@@ -156,6 +163,8 @@ void MIDIPort::Notify(const void_t& aVoid) {
 }
 
 void MIDIPort::FireStateChangeEvent() {
+  StateChange();
+
   MOZ_ASSERT(mPort);
   if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
@@ -173,10 +182,20 @@ void MIDIPort::FireStateChangeEvent() {
       mClosingPromise = nullptr;
     }
   }
+
   if (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
     mPort->SendOpen();
   }
+
+  if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
+      (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
+       mPort->ConnectionState() == MIDIPortConnectionState::Pending)) {
+    KeepAliveOnStatechange();
+  } else {
+    DontKeepAliveOnStatechange();
+  }
+
   // Fire MIDIAccess events first so that the port is no longer in the port
   // maps.
   if (mMIDIAccessParent) {
@@ -190,8 +209,31 @@ void MIDIPort::FireStateChangeEvent() {
   DispatchTrustedEvent(event);
 }
 
+void MIDIPort::StateChange() {}
+
 void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
   MOZ_CRASH("We should never get here!");
+}
+
+void MIDIPort::DisconnectFromOwner() {
+  DontKeepAliveOnStatechange();
+  mPort->SendClose();
+
+  DOMEventTargetHelper::DisconnectFromOwner();
+}
+
+void MIDIPort::KeepAliveOnStatechange() {
+  if (!mKeepAlive) {
+    mKeepAlive = true;
+    KeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
+  }
+}
+
+void MIDIPort::DontKeepAliveOnStatechange() {
+  if (mKeepAlive) {
+    IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
+    mKeepAlive = false;
+  }
 }
 
 }  // namespace mozilla::dom
