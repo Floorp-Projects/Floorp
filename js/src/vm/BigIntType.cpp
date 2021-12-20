@@ -1220,12 +1220,17 @@ JSLinearString* BigInt::toStringBasePowerOfTwo(JSContext* cx, HandleBigInt x,
   const size_t charsRequired = CeilDiv(bitLength, bitsPerChar) + sign;
 
   if (charsRequired > JSString::MAX_LENGTH) {
-    ReportOutOfMemory(cx);
+    if constexpr (allowGC) {
+      ReportOutOfMemory(cx);
+    }
     return nullptr;
   }
 
   auto resultChars = cx->make_pod_array<char>(charsRequired);
   if (!resultChars) {
+    if constexpr (!allowGC) {
+      cx->recoverFromOutOfMemory();
+    }
     return nullptr;
   }
 
