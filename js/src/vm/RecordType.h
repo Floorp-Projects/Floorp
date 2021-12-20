@@ -41,6 +41,11 @@ class RecordType final : public js::NativeObject {
                             bool* equal);
   static bool sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,
                         bool* equal);
+
+ private:
+  template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
+  static bool sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
+                            bool* equal);
 };
 
 }  // namespace JS
