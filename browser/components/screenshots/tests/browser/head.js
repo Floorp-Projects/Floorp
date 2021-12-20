@@ -118,9 +118,9 @@ class ScreenshotsHelper {
    * Copied from screenshots extension
    * A helper that returns the size of the image that was just put into the clipboard by the
    * :screenshot command.
-   * @return The {width, height} dimension object.
+   * @return The {width, height, color} dimension and color object.
    */
-  async getImageSizeFromClipboard() {
+  async getImageSizeAndColorFromClipboard() {
     let flavor = "image/png";
     let image = getRawClipboardData(flavor);
     ok(image, "screenshot data exists on the clipboard");
@@ -160,7 +160,6 @@ class ScreenshotsHelper {
       const loaded = new Promise(r => {
         img.addEventListener("load", r, { once: true });
       });
-
       const url = content.URL.createObjectURL(
         new Blob([_buffer], { type: "image/png" })
       );
@@ -171,13 +170,36 @@ class ScreenshotsHelper {
       info("Waiting for the clipboard image to load in the content page");
       await loaded;
 
+      let canvas = content.document.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        "html:canvas"
+      );
+      let context = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      context.drawImage(img, 0, 0);
+      let topLeft = context.getImageData(0, 0, 1, 1);
+      let topRight = context.getImageData(img.width - 1, 0, 1, 1);
+      let bottomLeft = context.getImageData(0, img.height - 1, 1, 1);
+      let bottomRight = context.getImageData(
+        img.width - 1,
+        img.height - 1,
+        1,
+        1
+      );
+
       img.remove();
       content.URL.revokeObjectURL(url);
 
-      // TODO: could get pixel data as well so we can check colors at specific locations
       return {
         width: img.width,
         height: img.height,
+        color: {
+          topLeft: topLeft.data,
+          topRight: topRight.data,
+          bottomLeft: bottomLeft.data,
+          bottomRight: bottomRight.data,
+        },
       };
     });
   }
@@ -198,8 +220,12 @@ function getRawClipboardData(flavor) {
   Services.clipboard.getData(xferable, whichClipboard);
   let data = {};
   try {
-    xferable.getTransferData(flavor, data);
-  } catch (e) {}
+    // xferable.getTransferData(flavor, data);
+    xferable.getAnyTransferData({}, data);
+    info(JSON.stringify(data, null, 2));
+  } catch (e) {
+    info(e);
+  }
   data = data.value || null;
   return data;
 }
