@@ -29,7 +29,28 @@
 
 using namespace js;
 
-TupleType* AllocateTuple(JSContext* cx, uint32_t length) {
+TupleType* TupleType::create(JSContext* cx, uint32_t length,
+                             const Value* elements) {
+  for (uint32_t index = 0; index < length; index++) {
+    if (!elements[index].isPrimitive()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_RECORD_TUPLE_NO_OBJECT);
+      return nullptr;
+    }
+  }
+
+  TupleType* tup = TupleType::createUninitialized(cx, length);
+  if (!tup) {
+    return nullptr;
+  }
+
+  tup->initDenseElements(elements, length);
+  tup->finishInitialization(cx);
+
+  return tup;
+}
+
+TupleType* TupleType::createUninitialized(JSContext* cx, uint32_t length) {
   RootedShape shape(
       cx, SharedShape::getInitialShape(
               cx, &TupleType::class_, cx->realm(), TaggedProto(nullptr),
@@ -65,27 +86,32 @@ TupleType* AllocateTuple(JSContext* cx, uint32_t length) {
   return tup;
 }
 
-TupleType* TupleType::create(JSContext* cx, uint32_t length,
-                             const Value* elements) {
-  for (uint32_t index = 0; index < length; index++) {
-    if (!elements[index].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_RECORD_TUPLE_NO_OBJECT);
-      return nullptr;
-    }
+bool TupleType::initializeNextElement(JSContext* cx, HandleValue elt) {
+  if (!elt.isPrimitive()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_RECORD_TUPLE_NO_OBJECT);
+    return false;
   }
 
-  TupleType* tup = AllocateTuple(cx, length);
-  ObjectElements* header = tup->getElementsHeader();
+  uint32_t length = getDenseInitializedLength();
 
-  tup->initDenseElements(elements, length);
-  tup->shrinkCapacityToInitializedLength(cx);
+  if (!ensureElements(cx, length + 1)) {
+    return false;
+  }
+  setDenseInitializedLength(length + 1);
+  initDenseElement(length, elt);
 
+  return true;
+}
+
+void TupleType::finishInitialization(JSContext* cx) {
+  shrinkCapacityToInitializedLength(cx);
+
+  ObjectElements* header = getElementsHeader();
+  header->length = header->initializedLength;
   header->setNotExtensible();
   header->seal();
   header->freeze();
-
-  return tup;
 }
 
 JSString* js::TupleToSource(JSContext* cx, TupleType* tup) {

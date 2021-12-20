@@ -2052,6 +2052,15 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return write(BuiltinObjectName(kind));
     }
 
+#ifdef ENABLE_RECORD_TUPLE
+    case JSOp::InitTuple:
+      return write("#[]");
+
+    case JSOp::AddTupleElement:
+    case JSOp::FinishTuple:
+      return write("#[...]");
+#endif
+
     default:
       break;
   }

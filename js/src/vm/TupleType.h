@@ -8,6 +8,7 @@
 #define vm_TupleType_h
 
 #include <cstdint>
+#include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
 namespace JS {
@@ -21,6 +22,10 @@ class TupleType final : public js::NativeObject {
  public:
   static TupleType* create(JSContext* cx, uint32_t length,
                            const Value* elements);
+
+  static TupleType* createUninitialized(JSContext* cx, uint32_t initialLength);
+  bool initializeNextElement(JSContext* cx, HandleValue elt);
+  void finishInitialization(JSContext* cx);
 
   inline uint32_t length() const { return getElementsHeader()->length; }
 
