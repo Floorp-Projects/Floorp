@@ -3676,7 +3676,17 @@ JSAtom* js::BigIntToAtom(JSContext* cx, HandleBigInt bi) {
   if (!str) {
     return nullptr;
   }
-  return AtomizeString(cx, str);
+  JSAtom* atom = AtomizeString(cx, str);
+  if (!atom) {
+    if constexpr (!allowGC) {
+      // NOTE: AtomizeString can call ReportAllocationOverflow other than
+      //       ReportOutOfMemory, but ReportAllocationOverflow cannot happen
+      //       because the length is guarded by BigInt::toString.
+      cx->recoverFromOutOfMemory();
+    }
+    return nullptr;
+  }
+  return atom;
 }
 
 template JSAtom* js::BigIntToAtom<js::CanGC>(JSContext* cx, HandleBigInt bi);
