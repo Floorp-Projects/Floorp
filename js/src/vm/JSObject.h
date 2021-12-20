@@ -933,22 +933,22 @@ MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(JSContext* cx,
                                                                HandleValue vp,
                                                                int vpIndex,
                                                                HandleId key) {
-  if (vp.hasObjectPayload()) {
-    return &vp.getObjectPayload();
+  if (vp.isObject()) {
+    return &vp.toObject();
   }
   return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
     JSContext* cx, HandleValue vp, int vpIndex, HandlePropertyName key) {
-  if (vp.hasObjectPayload()) {
-    return &vp.getObjectPayload();
+  if (vp.isObject()) {
+    return &vp.toObject();
   }
   return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }
 MOZ_ALWAYS_INLINE JSObject* ToObjectFromStackForPropertyAccess(
     JSContext* cx, HandleValue vp, int vpIndex, HandleValue key) {
-  if (vp.hasObjectPayload()) {
-    return &vp.getObjectPayload();
+  if (vp.isObject()) {
+    return &vp.toObject();
   }
   return js::ToObjectSlowForPropertyAccess(cx, vp, vpIndex, key);
 }

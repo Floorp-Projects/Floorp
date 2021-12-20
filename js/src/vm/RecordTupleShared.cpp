@@ -9,17 +9,52 @@
 
 #include "vm/RecordTupleShared.h"
 
+#include "NamespaceImports.h"
 #include "builtin/RecordObject.h"
 #include "builtin/TupleObject.h"
+#include "gc/Rooting.h"
+#include "js/Value.h"
+#include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 
-bool IsExtendedPrimitive(JSObject& obj) {
+bool IsExtendedPrimitive(const JSObject& obj) {
   return obj.is<RecordType>() || obj.is<TupleType>();
 }
 
 bool IsExtendedPrimitiveWrapper(const JSObject& obj) {
   return obj.is<RecordObject>() || obj.is<TupleObject>();
+}
+
+bool ExtendedPrimitiveGetProperty(JSContext* cx, HandleObject obj,
+                                  HandleValue receiver, HandleId id,
+                                  MutableHandleValue vp) {
+  MOZ_ASSERT(IsExtendedPrimitive(*obj));
+
+  if (obj->is<RecordType>()) {
+    if (obj->as<RecordType>().getOwnProperty(cx, id, vp)) {
+      return true;
+    }
+    // If records will not have a null prototype, this should use a mehanism
+    // similar to tuples.
+    vp.set(JS::UndefinedValue());
+    return true;
+  }
+
+  MOZ_ASSERT(obj->is<TupleType>());
+  if (obj->as<TupleType>().getOwnProperty(id, vp)) {
+    return true;
+  }
+
+  JSObject* proto = GlobalObject::getOrCreateTuplePrototype(cx, cx->global());
+  if (!proto) {
+    return false;
+  }
+
+  RootedNativeObject rootedProto(cx, &proto->as<NativeObject>());
+  return NativeGetProperty(cx, rootedProto, receiver, id, vp);
 }
 
 }  // namespace js

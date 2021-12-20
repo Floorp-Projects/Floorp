@@ -291,7 +291,9 @@ enum JSWhyMagic {
 
 namespace js {
 static inline JS::Value PoisonedObjectValue(uintptr_t poison);
-extern bool IsExtendedPrimitive(JSObject& obj);
+#ifdef ENABLE_RECORD_TUPLE
+extern bool IsExtendedPrimitive(const JSObject& obj);
+#endif
 }  // namespace js
 
 namespace JS {

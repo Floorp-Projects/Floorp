@@ -31,6 +31,7 @@
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
 #  include "builtin/TupleObject.h"
+#  include "vm/RecordTupleShared.h"
 #endif
 
 #include "gc/Nursery-inl.h"
@@ -2609,6 +2610,10 @@ static bool CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op,
 // ES6 draft rev31 9.1.10 [[Delete]]
 bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
                               HandleId id, ObjectOpResult& result) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*obj));
+#endif
+
   // Steps 2-3.
   PropertyResult prop;
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
