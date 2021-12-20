@@ -2589,21 +2589,21 @@ bool BaselineCodeGen<Handler>::emit_RegExp() {
 }
 
 #ifdef ENABLE_RECORD_TUPLE
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_InitTuple() {
-  MOZ_CRASH("Record and Tuple are not supported by jit");
-  return false;
-}
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_AddTupleElement() {
-  MOZ_CRASH("Record and Tuple are not supported by jit");
-  return false;
-}
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_FinishTuple() {
-  MOZ_CRASH("Record and Tuple are not supported by jit");
-  return false;
-}
+#  define UNSUPPORTED_OPCODE(OP)                              \
+    template <typename Handler>                               \
+    bool BaselineCodeGen<Handler>::emit_##OP() {              \
+      MOZ_CRASH("Record and Tuple are not supported by jit"); \
+      return false;                                           \
+    }
+
+UNSUPPORTED_OPCODE(InitRecord)
+UNSUPPORTED_OPCODE(AddRecordProperty)
+UNSUPPORTED_OPCODE(FinishRecord)
+UNSUPPORTED_OPCODE(InitTuple)
+UNSUPPORTED_OPCODE(AddTupleElement)
+UNSUPPORTED_OPCODE(FinishTuple)
+
+#  undef UNSUPPORTED_OPCODE
 #endif
 
 template <typename Handler>

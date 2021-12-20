@@ -823,6 +823,7 @@ MSG_DEF(JSMSG_NEGATIVE_LIMIT,                            0, JSEXN_RANGEERR, "Ite
 // Record and Tuple
 MSG_DEF(JSMSG_RECORD_TUPLE_NO_OBJECT,                    0, JSEXN_TYPEERR, "Record and Tuple can only contain primitive values")
 MSG_DEF(JSMSG_RECORD_NO_PROTO,                           0, JSEXN_SYNTAXERR, "__proto__ is not a valid literal key in records")
+MSG_DEF(JSMSG_RECORD_NO_SYMBOL_KEY,						 0, JSEXN_TYPEERR, "Symbols cannot be used as record keys")
 MSG_DEF(JSMSG_RECORD_INVALID_DESCRIPTOR,                 0, JSEXN_TYPEERR, "Invalid record property descriptor")
 
 //clang-format on
