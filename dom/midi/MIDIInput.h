@@ -30,20 +30,23 @@ class MIDIInput final : public MIDIPort {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // Since we need to be able to open the port on event handler assignment, we
-  // can't use IMPL_EVENT_HANDLER. We have to implement the event handler
-  // functions ourselves.
+  IMPL_EVENT_HANDLER(midimessage);
 
-  // Getter for the event handler callback
-  EventHandlerNonNull* GetOnmidimessage();
-  // Setter for the event handler callback
-  void SetOnmidimessage(EventHandlerNonNull* aCallback);
+  void StateChange() override;
+  void EventListenerAdded(nsAtom* aType) override;
+  void DisconnectFromOwner() override;
 
  private:
   MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent);
   // Takes an array of IPC MIDIMessage objects and turns them into
   // MIDIMessageEvents, which it then fires.
   void Receive(const nsTArray<MIDIMessage>& aMsgs) override;
+
+  void KeepAliveOnMidimessage();
+  void DontKeepAliveOnMidimessage();
+
+  // If true this object will be kept alive even without direct JS references
+  bool mKeepAlive;
 };
 
 }  // namespace mozilla::dom
