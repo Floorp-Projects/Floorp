@@ -8961,12 +8961,12 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
         strstr(currentDesktop, "LXDE") ||
         strstr(currentDesktop, "openbox") ||
         strstr(currentDesktop, "MATE") ||
+        strstr(currentDesktop, "X-Cinnamon") ||
         strstr(currentDesktop, "Pantheon") ||
         strstr(currentDesktop, "Deepin")) {
       return GTK_DECORATION_CLIENT;
     }
     if (strstr(currentDesktop, "GNOME") ||
-        strstr(currentDesktop, "X-Cinnamon") ||
         strstr(currentDesktop, "LXQt") ||
         strstr(currentDesktop, "Unity")) {
       return GTK_DECORATION_SYSTEM;
