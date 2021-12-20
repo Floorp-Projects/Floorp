@@ -32,6 +32,17 @@ class TupleType final : public js::NativeObject {
   // Methods defined on Tuple.prototype
   [[nodiscard]] static bool lengthAccessor(JSContext* cx, unsigned argc,
                                            Value* vp);
+
+  // Comparison functions
+  static bool sameValueZero(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                            bool* equal);
+  static bool sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                        bool* equal);
+
+ private:
+  template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
+  static bool sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
+                            bool* equal);
 };
 
 }  // namespace JS
@@ -39,7 +50,6 @@ class TupleType final : public js::NativeObject {
 namespace js {
 
 extern JSString* TupleToSource(JSContext* cx, TupleType* tup);
-
 }
 
 #endif
