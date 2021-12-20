@@ -1442,8 +1442,12 @@ class CSPReportSenderRunnable final : public Runnable {
     }
 
     // 4) fire violation event
-    mCSPContext->FireViolationEvent(mTriggeringElement, mCSPEventListener,
-                                    init);
+    // A frame-ancestors violation has occurred, but we should not dispatch the
+    // violation event to a potentially cross-origin ancestor.
+    if (!mViolatedDirective.EqualsLiteral("frame-ancestors")) {
+      mCSPContext->FireViolationEvent(mTriggeringElement, mCSPEventListener,
+                                      init);
+    }
 
     return NS_OK;
   }
