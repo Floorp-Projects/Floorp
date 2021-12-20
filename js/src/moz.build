@@ -472,6 +472,8 @@ SOURCES += [
 
 if CONFIG["ENABLE_RECORD_TUPLE"]:
     UNIFIED_SOURCES += [
+        "builtin/RecordObject.cpp",
+        "builtin/TupleObject.cpp",
         "vm/RecordTupleBoxShared.cpp",
         "vm/RecordType.cpp",
         "vm/TupleType.cpp",

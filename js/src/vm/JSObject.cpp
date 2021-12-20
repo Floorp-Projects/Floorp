@@ -64,6 +64,8 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 #ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
+#  include "builtin/TupleObject.h"
 #  include "vm/RecordType.h"
 #  include "vm/TupleType.h"
 #endif
@@ -2451,7 +2453,18 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
     }
 #ifdef ENABLE_RECORD_TUPLE
     case ValueType::ExtendedPrimitive: {
-      MOZ_CRASH("ExtendedPrimitive is not supported yet");
+      JSObject& obj = v.toExtendedPrimitive();
+
+      if (obj.is<RecordType>()) {
+        Rooted<RecordType*> rec(cx, &obj.as<RecordType>());
+        return RecordObject::create(cx, rec);
+      }
+      if (obj.is<TupleType>()) {
+        Rooted<TupleType*> tuple(cx, &obj.as<TupleType>());
+        return TupleObject::create(cx, tuple);
+      }
+
+      MOZ_CRASH("Unexpected ExtendedPrimitive type.");
     }
 #endif
     case ValueType::Undefined:
