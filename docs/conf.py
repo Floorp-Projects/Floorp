@@ -97,7 +97,7 @@ else:
 
 
 html_static_path = ["_static"]
-htmlhelp_basename = "MozillaTreeDocs"
+htmlhelp_basename = "FirefoxTreeDocs"
 
 moz_project_name = "main"
 
