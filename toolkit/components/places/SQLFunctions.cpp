@@ -20,6 +20,7 @@
 #include "mozilla/Utf8.h"
 #include "nsURLHelper.h"
 #include "nsVariant.h"
+#include "nsICryptoHash.h"
 
 // Maximum number of chars to search through.
 // MatchAutoCompleteFunction won't look for matches over this threshold.
@@ -985,6 +986,59 @@ HashFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   rv = result->SetAsInt64(hash);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  result.forget(_result);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// MD5 Function
+
+/* static */
+nsresult MD5HexFunction::create(mozIStorageConnection* aDBConn) {
+  RefPtr<MD5HexFunction> function = new MD5HexFunction();
+  return aDBConn->CreateFunction("md5hex"_ns, -1, function);
+}
+
+NS_IMPL_ISUPPORTS(MD5HexFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+MD5HexFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                               nsIVariant** _result) {
+  // Must have non-null function arguments.
+  MOZ_ASSERT(aArguments);
+
+  // Fetch arguments.
+  uint32_t numEntries;
+  nsresult rv = aArguments->GetNumEntries(&numEntries);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(numEntries == 1, NS_ERROR_FAILURE);
+  nsDependentCString str = getSharedUTF8String(aArguments, 0);
+
+  nsCOMPtr<nsICryptoHash> hasher =
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // MD5 is not a secure hash function, but it's ok for this use.
+  rv = hasher->Init(nsICryptoHash::MD5);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hasher->Update(reinterpret_cast<const uint8_t*>(str.BeginReading()),
+                      str.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString binaryHash, hashString;
+  rv = hasher->Finish(false, binaryHash);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert to HEX.
+  static const char* const hex = "0123456789abcdef";
+  hashString.SetCapacity(2 * binaryHash.Length());
+  for (size_t i = 0; i < binaryHash.Length(); ++i) {
+    auto c = static_cast<unsigned char>(binaryHash[i]);
+    hashString.Append(hex[(c >> 4) & 0x0F]);
+    hashString.Append(hex[c & 0x0F]);
+  }
+
+  RefPtr<nsVariant> result = new nsVariant();
+  result->SetAsACString(hashString);
   result.forget(_result);
   return NS_OK;
 }
