@@ -4154,8 +4154,7 @@ static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedString toString(cx,
-                        NewStringCopyUTF8Z<CanGC>(cx, report.toStringResult()));
+  RootedString toString(cx, NewStringCopyUTF8Z(cx, report.toStringResult()));
   if (!toString) {
     return false;
   }
