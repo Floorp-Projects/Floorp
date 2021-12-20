@@ -1559,6 +1559,20 @@
      */ \
     IF_RECORD_TUPLE(MACRO(AddRecordProperty, add_record_property, NULL, 1, 3, 1, JOF_BYTE)) \
     /*
+     * Add the last element in the stack to the preceding tuple.
+     *
+     * Implements: [RecordPropertyDefinitionEvaluation][1] for
+     *   RecordPropertyDefinition : ... AssignmentExpression
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-addpropertyintorecordentrieslist
+     *
+     *   Category: Compound primitives
+     *   Type: Record literals
+     *   Operands:
+     *   Stack: record, value => record
+     */ \
+    IF_RECORD_TUPLE(MACRO(AddRecordSpread, add_record_spread, NULL, 1, 2, 1, JOF_BYTE)) \
+    /*
      * Mark a record as "initialized", going from "write-only" mode to
      * "read-only" mode.
      *
@@ -3594,7 +3608,7 @@
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
-  MACRO(234)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   MACRO(235)                                   \
   MACRO(236)                                   \
   MACRO(237)                                   \
