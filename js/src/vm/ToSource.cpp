@@ -168,7 +168,11 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
 
 #ifdef ENABLE_RECORD_TUPLE
     case ValueType::ExtendedPrimitive: {
-      MOZ_CRASH("ExtendedPrimitive is not supported yet");
+      RootedObject obj(cx, &v.toExtendedPrimitive());
+      if (obj->is<TupleType>()) {
+        return TupleToSource(cx, &obj->as<TupleType>());
+      }
+      MOZ_CRASH("Unsupported ExtendedPrimitive");
     }
 #endif
 

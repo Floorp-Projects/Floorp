@@ -6,15 +6,20 @@
 
 #include "builtin/TupleObject.h"
 
+#include "mozilla/Assertions.h"
+
 #include "jsapi.h"
 
-#include "js/Class.h"
+#include "vm/NativeObject.h"
 #include "vm/ObjectOperations.h"
 #include "vm/TupleType.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
+
+// Record and Tuple proposal section 9.2.1
 
 TupleObject* TupleObject::create(JSContext* cx, Handle<TupleType*> tuple) {
   TupleObject* tup = NewBuiltinClassInstance<TupleObject>(cx);
@@ -31,11 +36,58 @@ TupleType* TupleObject::unbox() const {
               .as<TupleType>();
 }
 
+bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
+  // tup_resolve ignores non-integer ids.
+  return JSID_IS_INT(id);
+}
+
+bool tup_resolve(JSContext* cx, HandleObject obj, HandleId id,
+                 bool* resolvedp) {
+  *resolvedp = false;
+
+  if (!id.isInt()) {
+    return true;
+  }
+
+  int32_t index = id.toInt();
+  if (index < 0) {
+    return true;
+  }
+
+  Rooted<TupleType*> tup(cx, obj->as<TupleObject>().unbox());
+  if (uint32_t(index) >= tup->length()) {
+    return true;
+  }
+
+  RootedValue value(cx, tup->getDenseElement(index));
+
+  static const unsigned TUPLE_ELEMENT_ATTRS =
+      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+  if (!DefineDataProperty(cx, obj, id, value,
+                          TUPLE_ELEMENT_ATTRS | JSPROP_RESOLVING)) {
+    return false;
+  }
+
+  *resolvedp = true;
+  return true;
+}
+
+const JSClassOps TupleObjectClassOps = {
+    nullptr,         // addProperty
+    nullptr,         // delProperty
+    nullptr,         // enumerate
+    nullptr,         // newEnumerate
+    tup_resolve,     // resolve
+    tup_mayResolve,  // mayResolve
+    nullptr,         // finalize
+    nullptr,         // call
+    nullptr,         // hasInstance
+    nullptr,         // construct
+    nullptr,         // trace
+};
+
 const JSClass TupleObject::class_ = {
     "TupleObject",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Tuple),
-    JS_NULL_CLASS_OPS,
-    JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT,
-    JS_NULL_OBJECT_OPS};
+    &TupleObjectClassOps};
