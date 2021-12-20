@@ -1596,6 +1596,9 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::ThrowMsg:
     case JSOp::ForceInterpreter:
 #ifdef ENABLE_RECORD_TUPLE
+    case JSOp::InitRecord:
+    case JSOp::AddRecordProperty:
+    case JSOp::FinishRecord:
     case JSOp::InitTuple:
     case JSOp::AddTupleElement:
     case JSOp::FinishTuple:
