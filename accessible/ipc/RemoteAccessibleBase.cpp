@@ -208,9 +208,11 @@ void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::CurValue() const {
-  if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *value;
+  if (mCachedFields) {
+    if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *value;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -218,9 +220,11 @@ double RemoteAccessibleBase<Derived>::CurValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MinValue() const {
-  if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *min;
+  if (mCachedFields) {
+    if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *min;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -228,9 +232,11 @@ double RemoteAccessibleBase<Derived>::MinValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MaxValue() const {
-  if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *max;
+  if (mCachedFields) {
+    if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *max;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -238,9 +244,11 @@ double RemoteAccessibleBase<Derived>::MaxValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::Step() const {
-  if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *step;
+  if (mCachedFields) {
+    if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *step;
+    }
   }
 
   return UnspecifiedNaN<double>();
