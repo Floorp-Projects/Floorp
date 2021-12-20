@@ -70,7 +70,6 @@ using mozilla::PointerRangeSize;
 using mozilla::Some;
 using mozilla::Utf8Unit;
 
-using JS::AutoGCRooter;
 using JS::ReadOnlyCompileOptions;
 using JS::RegExpFlags;
 
@@ -11612,6 +11611,15 @@ GeneralParser<ParseHandler, Unit>::propertyOrMethodName(
   if (tt == TokenKind::LeftParen) {
     anyChars.ungetToken();
 
+#ifdef ENABLE_RECORD_TUPLE
+    if (propertyNameContext == PropertyNameInRecord) {
+      // Record & Tuple proposal, section 7.1.1:
+      // RecordPropertyDefinition doesn't cover methods
+      error(JSMSG_BAD_PROP_ID);
+      return null();
+    }
+#endif
+
     if (isGenerator && isAsync) {
       *propType = PropertyType::AsyncGeneratorMethod;
     } else if (isGenerator) {
@@ -11930,6 +11938,206 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
   return literal;
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+template <class ParseHandler, typename Unit>
+typename ParseHandler::ListNodeType
+GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::HashCurly));
+
+  uint32_t openedPos = pos().begin;
+
+  ListNodeType literal = handler_.newRecordLiteral(pos().begin);
+  if (!literal) {
+    return null();
+  }
+
+  TaggedParserAtomIndex propAtom;
+  for (;;) {
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt)) {
+      return null();
+    }
+    if (tt == TokenKind::RightCurly) {
+      break;
+    }
+
+    if (tt == TokenKind::TripleDot) {
+      tokenStream.consumeKnownToken(TokenKind::TripleDot);
+      uint32_t begin = pos().begin;
+
+      TokenPos innerPos;
+      if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
+        return null();
+      }
+
+      Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+      if (!inner) {
+        return null();
+      }
+
+      if (!handler_.addSpreadProperty(literal, begin, inner)) {
+        return null();
+      }
+    } else {
+      TokenPos namePos = anyChars.nextToken().pos;
+
+      PropertyType propType;
+      Node propName = propertyOrMethodName(yieldHandling, PropertyNameInRecord,
+                                           /* maybeDecl */ Nothing(), literal,
+                                           &propType, &propAtom);
+      if (!propName) {
+        return null();
+      }
+
+      if (propType == PropertyType::Normal) {
+        TokenPos exprPos;
+        if (!tokenStream.peekTokenPos(&exprPos, TokenStream::SlashIsRegExp)) {
+          return null();
+        }
+
+        Node propExpr =
+            assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+        if (!propExpr) {
+          return null();
+        }
+
+        if (propAtom == TaggedParserAtomIndex::WellKnown::proto()) {
+          errorAt(namePos.begin, JSMSG_RECORD_NO_PROTO);
+          return null();
+        }
+
+        BinaryNodeType propDef =
+            handler_.newPropertyDefinition(propName, propExpr);
+        if (!propDef) {
+          return null();
+        }
+
+        handler_.addPropertyDefinition(literal, propDef);
+      } else if (propType == PropertyType::Shorthand) {
+        /*
+         * Support |var o = #{x, y}| as initializer shorthand for
+         * |var o = #{x: x, y: y}|.
+         */
+        TaggedParserAtomIndex name = identifierReference(yieldHandling);
+        if (!name) {
+          return null();
+        }
+
+        NameNodeType nameExpr = identifierReference(name);
+        if (!nameExpr) {
+          return null();
+        }
+
+        if (!handler_.addShorthand(literal, handler_.asName(propName),
+                                   nameExpr)) {
+          return null();
+        }
+      } else {
+        error(JSMSG_BAD_PROP_ID);
+        return null();
+      }
+    }
+
+    bool matched;
+    if (!tokenStream.matchToken(&matched, TokenKind::Comma,
+                                TokenStream::SlashIsInvalid)) {
+      return null();
+    }
+    if (!matched) {
+      break;
+    }
+  }
+
+  if (!mustMatchToken(
+          TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
+            this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                       JSMSG_CURLY_OPENED, openedPos);
+          })) {
+    return null();
+  }
+
+  handler_.setEndPosition(literal, pos().end);
+  return literal;
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::ListNodeType
+GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::HashBracket));
+
+  uint32_t begin = pos().begin;
+  ListNodeType literal = handler_.newTupleLiteral(begin);
+  if (!literal) {
+    return null();
+  }
+
+  for (uint32_t index = 0;; index++) {
+    if (index >= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
+      error(JSMSG_ARRAY_INIT_TOO_BIG);
+      return null();
+    }
+
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
+      return null();
+    }
+    if (tt == TokenKind::RightBracket) {
+      break;
+    }
+
+    if (tt == TokenKind::TripleDot) {
+      tokenStream.consumeKnownToken(TokenKind::TripleDot,
+                                    TokenStream::SlashIsRegExp);
+      uint32_t begin = pos().begin;
+
+      TokenPos innerPos;
+      if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
+        return null();
+      }
+
+      Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+      if (!inner) {
+        return null();
+      }
+
+      if (!handler_.addSpreadElement(literal, begin, inner)) {
+        return null();
+      }
+    } else {
+      TokenPos elementPos;
+      if (!tokenStream.peekTokenPos(&elementPos, TokenStream::SlashIsRegExp)) {
+        return null();
+      }
+
+      Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+      if (!element) {
+        return null();
+      }
+      handler_.addArrayElement(literal, element);
+    }
+
+    bool matched;
+    if (!tokenStream.matchToken(&matched, TokenKind::Comma,
+                                TokenStream::SlashIsRegExp)) {
+      return null();
+    }
+    if (!matched) {
+      break;
+    }
+  }
+
+  if (!mustMatchToken(TokenKind::RightBracket, [this, begin](TokenKind actual) {
+        this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                   JSMSG_BRACKET_OPENED, begin);
+      })) {
+    return null();
+  }
+
+  handler_.setEndPosition(literal, pos().end);
+  return literal;
+}
+#endif
+
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::methodDefinition(
@@ -12163,6 +12371,14 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
 
     case TokenKind::LeftCurly:
       return objectLiteral(yieldHandling, possibleError);
+
+#ifdef ENABLE_RECORD_TUPLE
+    case TokenKind::HashCurly:
+      return recordLiteral(yieldHandling);
+
+    case TokenKind::HashBracket:
+      return tupleLiteral(yieldHandling);
+#endif
 
     case TokenKind::LeftParen: {
       TokenKind next;
