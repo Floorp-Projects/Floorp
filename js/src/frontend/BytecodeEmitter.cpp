@@ -10493,8 +10493,14 @@ bool BytecodeEmitter::emitRecordLiteral(ListNode* record) {
 
   for (ParseNode* propdef : record->contents()) {
     if (propdef->isKind(ParseNodeKind::Spread)) {
-      MOZ_CRASH(
-          "Bytecode emitter for record spread hasn't been implemented yet");
+      if (!emitTree(propdef->as<UnaryNode>().kid())) {
+        //          [stack] RECORD SPREADEE
+        return false;
+      }
+      if (!emit1(JSOp::AddRecordSpread)) {
+        //          [stack] RECORD
+        return false;
+      }
     } else {
       BinaryNode* prop = &propdef->as<BinaryNode>();
 

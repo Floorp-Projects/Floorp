@@ -284,6 +284,39 @@ static bool MaybeCreateThisForConstructor(JSContext* cx, const CallArgs& args) {
   return JSFunction::getOrCreateScript(cx, callee);
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+static bool AddRecordSpreadOperation(JSContext* cx, HandleValue recHandle,
+                                     HandleValue spreadeeHandle) {
+  MOZ_ASSERT(recHandle.toExtendedPrimitive().is<RecordType>());
+  RecordType* rec = &recHandle.toExtendedPrimitive().as<RecordType>();
+
+  RootedObject obj(cx, ToObjectOrGetObjectPayload(cx, spreadeeHandle));
+
+  RootedIdVector keys(cx);
+  if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &keys)) {
+    return false;
+  }
+
+  size_t len = keys.length();
+  RootedId propKey(cx);
+  RootedValue propValue(cx);
+  for (size_t i = 0; i < len; i++) {
+    propKey.set(keys[i]);
+
+    // Step 4.c.ii.1.
+    if (MOZ_UNLIKELY(!GetProperty(cx, obj, obj, propKey, &propValue))) {
+      return false;
+    }
+
+    if (MOZ_UNLIKELY(!rec->initializeNextProperty(cx, propKey, propValue))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
+
 static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
                                                               RunState& state);
 
@@ -4017,6 +4050,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       REGS.sp -= 2;
     }
     END_CASE(AddRecordProperty)
+
+    CASE(AddRecordSpread) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+
+      if (!AddRecordSpreadOperation(cx, REGS.stackHandleAt(-2),
+                                    REGS.stackHandleAt(-1))) {
+        goto error;
+      }
+      REGS.sp--;
+    }
+    END_CASE(AddRecordSpread)
 
     CASE(FinishRecord) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);

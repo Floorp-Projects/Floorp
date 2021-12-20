@@ -69,8 +69,8 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
   rec->initFixedSlots(SLOT_COUNT);
 
   RootedArrayObject sortedKeys(cx,
-                               NewDensePartlyAllocatedArray(cx, initialLength));
-  if (!sortedKeys->ensureElements(cx, initialLength)) {
+                               NewDenseFullyAllocatedArray(cx, initialLength));
+  if (!sortedKeys) {
     return nullptr;
   }
 
@@ -125,7 +125,7 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
       getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
   ArrayObject* sortedKeys =
       &getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
-  MOZ_ASSERT(initializedLength < sortedKeys->length());
+  MOZ_ASSERT(initializedLength == sortedKeys->getDenseInitializedLength());
 
   if (!sortedKeys->ensureElements(cx, initializedLength + 1)) {
     return false;
@@ -147,18 +147,17 @@ bool RecordType::finishInitialization(JSContext* cx) {
   if (!ObjectElements::FreezeOrSeal(cx, obj, IntegrityLevel::Frozen)) {
     return false;
   }
-  if (getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32() == 0) {
-    return true;
-  }
 
+  uint32_t length = getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
   ArrayObject& sortedKeys =
       getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+  MOZ_ASSERT(length == sortedKeys.getDenseInitializedLength());
 
   Rooted<JSLinearString*> tmpKey(cx);
 
   // Sort the keys. This is insertion sort - O(n^2) - but it's ok for now
   // becase records are probably not too big anyway.
-  for (uint32_t i = 1, j; i < sortedKeys.length(); i++) {
+  for (uint32_t i = 1, j; i < length; i++) {
 #define KEY(index) sortedKeys.getDenseElement(index)
 #define KEY_S(index) &KEY(index).toString()->asLinear()
 
@@ -176,6 +175,14 @@ bool RecordType::finishInitialization(JSContext* cx) {
 #undef KEY
 #undef KEY_S
   }
+
+  // We preallocate 1 element for each object spread. If spreads end up
+  // introducing zero elements, we can then shrink the sordedKeys array.
+  sortedKeys.setDenseInitializedLength(length);
+  sortedKeys.setLength(length);
+  sortedKeys.setNonWritableLength(cx);
+
+  MOZ_ASSERT(sortedKeys.length() == length);
 
   return true;
 }
