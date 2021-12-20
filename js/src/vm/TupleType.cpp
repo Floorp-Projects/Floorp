@@ -115,6 +115,40 @@ void TupleType::finishInitialization(JSContext* cx) {
   header->freeze();
 }
 
+js::HashNumber TupleType::hash(const TupleType::ElementHasher& hasher) const {
+  // MOZ_ASSERT(isAtomized());
+
+  js::HashNumber h = mozilla::HashGeneric(length());
+  for (uint32_t i = 0; i < length(); i++) {
+    h = mozilla::AddToHash(h, hasher(getDenseElement(i)));
+  }
+  return h;
+}
+
+bool TupleType::ensureAtomized(JSContext* cx) {
+  if (isAtomized()) {
+    return true;
+  }
+
+  RootedValue child(cx);
+  bool changed;
+
+  for (uint32_t i = 0; i < length(); i++) {
+    child.set(getDenseElement(i));
+    if (!EnsureAtomized(cx, &child, &changed)) {
+      return false;
+    }
+    if (changed) {
+      // We cannot use setDenseElement(), because this object is frozen.
+      elements_[i].set(this, HeapSlot::Element, unshiftedIndex(i), child);
+    }
+  }
+
+  // ToDo: store somewhere that this has been atomized
+
+  return true;
+}
+
 bool TupleType::sameValueZero(JSContext* cx, TupleType* lhs, TupleType* rhs,
                               bool* equal) {
   return sameValueWith<SameValueZero>(cx, lhs, rhs, equal);
@@ -123,6 +157,31 @@ bool TupleType::sameValueZero(JSContext* cx, TupleType* lhs, TupleType* rhs,
 bool TupleType::sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
                           bool* equal) {
   return sameValueWith<SameValue>(cx, lhs, rhs, equal);
+}
+
+bool TupleType::sameValueZero(TupleType* lhs, TupleType* rhs) {
+  // MOZ_ASSERT(lhs->isAtomized());
+  // MOZ_ASSERT(rhs->isAtomized());
+
+  if (lhs == rhs) {
+    return true;
+  }
+  if (lhs->length() != rhs->length()) {
+    return false;
+  }
+
+  Value v1, v2;
+
+  for (uint32_t index = 0; index < lhs->length(); index++) {
+    v1 = lhs->getDenseElement(index);
+    v2 = rhs->getDenseElement(index);
+
+    if (!js::SameValueZeroLinear(v1, v2)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>

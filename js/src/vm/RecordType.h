@@ -8,6 +8,7 @@
 #define vm_RecordType_h
 
 #include <cstdint>
+#include <functional>
 #include "js/TypeDecls.h"
 #include "vm/ArrayObject.h"
 #include "vm/NativeObject.h"
@@ -27,7 +28,12 @@ namespace JS {
 class RecordType final : public js::NativeObject {
   friend JSString* js::RecordToSource(JSContext* cx, RecordType* rec);
 
-  enum { INITIALIZED_LENGTH_SLOT = 0, SORTED_KEYS_SLOT, SLOT_COUNT };
+  enum {
+    INITIALIZED_LENGTH_SLOT = 0,
+    SORTED_KEYS_SLOT,
+    IS_ATOMIZED_SLOT,
+    SLOT_COUNT
+  };
 
  public:
   static const js::ClassSpec classSpec_;
@@ -46,6 +52,15 @@ class RecordType final : public js::NativeObject {
   js::ArrayObject* keys() const {
     return &getFixedSlot(SORTED_KEYS_SLOT).toObject().as<js::ArrayObject>();
   }
+
+  using FieldHasher = std::function<js::HashNumber(const Value& child)>;
+  js::HashNumber hash(const FieldHasher& hasher);
+
+  bool ensureAtomized(JSContext* cx);
+  bool isAtomized() const { return getFixedSlot(IS_ATOMIZED_SLOT).toBoolean(); }
+
+  // This can be used to compare atomized records.
+  static bool sameValueZero(RecordType* lhs, RecordType* rhs);
 
  private:
   template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>

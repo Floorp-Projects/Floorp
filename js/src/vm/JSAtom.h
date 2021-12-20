@@ -79,6 +79,10 @@ extern JSAtom* ToAtom(JSContext* cx,
  */
 extern bool PinAtom(JSContext* cx, JSAtom* atom);
 
+#ifdef ENABLE_RECORD_TUPLE
+extern bool EnsureAtomized(JSContext* cx, MutableHandleValue v, bool* updated);
+#endif
+
 extern JS::Handle<PropertyName*> ClassName(JSProtoKey key, JSContext* cx);
 
 #ifdef DEBUG

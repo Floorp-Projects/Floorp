@@ -8,6 +8,7 @@
 #define vm_TupleType_h
 
 #include <cstdint>
+#include <functional>
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
@@ -38,6 +39,18 @@ class TupleType final : public js::NativeObject {
                             bool* equal);
   static bool sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
                         bool* equal);
+
+  using ElementHasher = std::function<js::HashNumber(const Value& child)>;
+  js::HashNumber hash(const ElementHasher& hasher) const;
+
+  bool ensureAtomized(JSContext* cx);
+  bool isAtomized() const {
+    // ToDo: store somewhere when this is atomized.
+    return false;
+  }
+
+  // This can be used to compare atomized tuples.
+  static bool sameValueZero(TupleType* lhs, TupleType* rhs);
 
  private:
   template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>

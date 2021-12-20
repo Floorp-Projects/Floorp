@@ -29,9 +29,16 @@
 #include "js/Symbol.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/StaticStrings.h"
+#include "vm/StringType.h"
 #include "vm/SymbolType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
+
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSContext-inl.h"
@@ -994,6 +1001,37 @@ JSAtom* js::ToAtom(JSContext* cx,
 template JSAtom* js::ToAtom<CanGC>(JSContext* cx, HandleValue v);
 
 template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
+
+#ifdef ENABLE_RECORD_TUPLE
+bool js::EnsureAtomized(JSContext* cx, MutableHandleValue v, bool* updated) {
+  if (v.isString()) {
+    if (v.toString()->isAtom()) {
+      *updated = false;
+      return true;
+    }
+
+    JSAtom* atom = AtomizeString(cx, v.toString());
+    if (!atom) {
+      return false;
+    }
+    v.setString(atom);
+    *updated = true;
+    return true;
+  }
+
+  *updated = false;
+
+  if (v.isExtendedPrimitive()) {
+    JSObject& obj = v.toExtendedPrimitive();
+    if (obj.is<RecordType>()) {
+      return obj.as<RecordType>().ensureAtomized(cx);
+    }
+    MOZ_ASSERT(obj.is<TupleType>());
+    return obj.as<TupleType>().ensureAtomized(cx);
+  }
+  return true;
+}
+#endif
 
 Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
   return ClassName(key, cx->names());
