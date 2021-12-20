@@ -44,6 +44,7 @@
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
+#  include "builtin/TupleObject.h"
 #endif
 
 #include "vm/Compartment-inl.h"
@@ -271,6 +272,24 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
         }
 
         return true;
+      } else {
+        Rooted<TupleType*> tup(cx);
+        if (TupleObject::maybeUnbox(pobj, &tup)) {
+          RootedId id(cx);
+
+          for (size_t i = 0; i < tup->length(); i++) {
+            if (!JS_IndexToId(cx, i, &id)) {
+              return false;
+            }
+            if (!Enumerate<CheckForDuplicates>(cx, pobj, id,
+                                               /* enumerable = */ true, flags,
+                                               visited, props)) {
+              return false;
+            }
+          }
+
+          return true;
+        }
       }
     }
 #endif
