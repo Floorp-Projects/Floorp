@@ -2038,13 +2038,17 @@ already_AddRefed<EventSource> EventSource::Constructor(
 
     // In workers we have to keep the worker alive using a WorkerRef in order
     // to dispatch messages correctly.
-    if (!eventSource->mESImpl->CreateWorkerRef(workerPrivate)) {
+    // Note, initRunnable->Dispatch may have cleared mESImpl.
+    if (!eventSource->mESImpl ||
+        !eventSource->mESImpl->CreateWorkerRef(workerPrivate)) {
       // The worker is already shutting down. Let's return an already closed
       // object, but marked as Connecting.
-      // mESImpl is nulled by this call such that EventSourceImpl is
-      // released before returning the object, otherwise
-      // it will set EventSource to a CLOSED state in its DTOR..
-      eventSource->mESImpl->Close();
+      if (eventSource->mESImpl) {
+        // mESImpl is nulled by this call such that EventSourceImpl is
+        // released before returning the object, otherwise
+        // it will set EventSource to a CLOSED state in its DTOR..
+        eventSource->mESImpl->Close();
+      }
       eventSource->mReadyState = EventSourceImpl::CONNECTING;
 
       return eventSource.forget();
