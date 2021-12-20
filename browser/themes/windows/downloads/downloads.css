@@ -36,3 +36,16 @@
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }
+
+/*** Progress bars ***/
+
+@media (prefers-contrast) {
+  .downloadProgress {
+    background-color: -moz-Dialog;
+    border: 1px solid ButtonText;
+  }
+
+  .downloadProgress::-moz-progress-bar {
+    --download-progress-fill-color: SelectedItem;
+  }
+}
