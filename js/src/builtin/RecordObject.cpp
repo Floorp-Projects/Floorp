@@ -32,6 +32,18 @@ RecordType* RecordObject::unbox() const {
               .as<RecordType>();
 }
 
+bool RecordObject::maybeUnbox(JSObject* obj, MutableHandle<RecordType*> rrec) {
+  if (obj->is<RecordType>()) {
+    rrec.set(&obj->as<RecordType>());
+    return true;
+  }
+  if (obj->is<RecordObject>()) {
+    rrec.set(obj->as<RecordObject>().unbox());
+    return true;
+  }
+  return false;
+}
+
 bool rec_resolve(JSContext* cx, HandleObject obj, HandleId id,
                  bool* resolvedp) {
   Rooted<RecordType*> rec(cx, obj->as<RecordObject>().unbox());

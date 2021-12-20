@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include "js/TypeDecls.h"
+#include "vm/ArrayObject.h"
 #include "vm/NativeObject.h"
 
 namespace JS {
@@ -41,6 +42,10 @@ class RecordType final : public js::NativeObject {
                             bool* equal);
   static bool sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,
                         bool* equal);
+
+  js::ArrayObject* keys() const {
+    return &getFixedSlot(SORTED_KEYS_SLOT).toObject().as<js::ArrayObject>();
+  }
 
  private:
   template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
