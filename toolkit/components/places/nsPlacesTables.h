@@ -371,4 +371,10 @@
       "DELETE CASCADE "                                                    \
       ") WITHOUT ROWID")
 
+#define CREATE_MOZ_PREVIEWS_TOMBSTONES                        \
+  nsLiteralCString(                                           \
+      "CREATE TABLE IF NOT EXISTS moz_previews_tombstones ( " \
+      "  hash TEXT PRIMARY KEY "                              \
+      ") WITHOUT ROWID")
+
 #endif  // __nsPlacesTables_h__
