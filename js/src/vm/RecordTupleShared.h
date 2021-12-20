@@ -20,6 +20,10 @@ bool ExtendedPrimitiveGetProperty(JSContext* cx, JS::HandleObject obj,
                                   JS::HandleValue receiver, JS::HandleId id,
                                   JS::MutableHandleValue vp);
 
+namespace gc {
+bool MaybeForwardedIsExtendedPrimitive(const JSObject& obj);
+}  // namespace gc
+
 }  // namespace js
 
 #endif
