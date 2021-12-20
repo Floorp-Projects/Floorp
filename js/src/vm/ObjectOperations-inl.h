@@ -36,6 +36,12 @@
 
 namespace js {
 
+#ifdef ENABLE_RECORD_TUPLE
+// Defined in vm/RecordTupleShared.{h,cpp}. We cannot include that file
+// because it causes circular dependencies.
+extern bool IsExtendedPrimitiveWrapper(const JSObject& obj);
+#endif
+
 // The functions below are the fundamental operations on objects. See the
 // comment about "Standard internal methods" in jsapi.h.
 

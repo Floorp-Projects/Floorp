@@ -18,9 +18,6 @@ assertThrowsInstanceOf(
 	"#{ \"a\": 3, \"x\": 1, \"y\": 2 } is not a non-null object"
 );
 
-/*
-TODO: Non-extensibility of record wrappers has not been implemented yet.
-
 assertThrowsInstanceOf(
 	() => Object.defineProperty(recO, "b", {}),
 	TypeError,
@@ -32,7 +29,6 @@ assertThrowsInstanceOf(
 	TypeError,
 	"can't define property \"b\": Record is not extensible"
 );
-*/
 
 assertThrowsInstanceOf(
 	() => Object.defineProperty(recO, "x", { value: 2 }),
