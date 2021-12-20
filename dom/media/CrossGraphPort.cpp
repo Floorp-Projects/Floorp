@@ -8,6 +8,7 @@
 #include "AudioStreamTrack.h"
 #include "MediaTrackGraphImpl.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -159,7 +160,8 @@ CrossGraphReceiver::CrossGraphReceiver(TrackRate aSampleRate,
                                        TrackRate aTransmitterRate)
     : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
                           static_cast<MediaSegment*>(new AudioSegment())),
-      mDriftCorrection(aTransmitterRate, aSampleRate) {}
+      mDriftCorrection(aTransmitterRate, aSampleRate,
+                       Preferences::GetInt("media.clockdrift.buffering", 50)) {}
 
 uint32_t CrossGraphReceiver::NumberOfChannels() const {
   return GetData<AudioSegment>()->MaxChannelCount();
