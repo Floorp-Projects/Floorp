@@ -503,11 +503,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // replaces us.
   RefPtr<ParentChannelListener> mParentChannelListener;
 
-  // The original URI of the current channel. If there are redirects,
-  // then the value on the channel gets overwritten with the original
-  // URI of the first channel in the redirect chain, so we cache the
-  // value we need here.
-  nsCOMPtr<nsIURI> mChannelCreationURI;
+  // Get the channel creation URI for constructing the channel in the content
+  // process. See the function for more details.
+  nsIURI* GetChannelCreationURI() const;
 
   // The original navigation timing information containing various timestamps
   // such as when the original load started.
