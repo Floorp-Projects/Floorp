@@ -1493,7 +1493,12 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
   if (prop.isNotFound()) {
     // Note: We are sharing the property definition machinery with private
     //       fields. Private fields may be added to non-extensible objects.
-    if (!obj->isExtensible() && !id.isPrivateName()) {
+    if (!obj->isExtensible() && !id.isPrivateName() &&
+        // R&T wrappers are non-extensible, but we still want to be able to
+        // lazily resolve their properties. We can special-case them to
+        // allow doing so.
+        IF_RECORD_TUPLE(
+            !(IsExtendedPrimitiveWrapper(*obj) && desc_.resolving()), true)) {
       return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
     }
 
