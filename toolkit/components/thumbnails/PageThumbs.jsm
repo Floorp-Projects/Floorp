@@ -570,7 +570,7 @@ var PageThumbsStorage = {
 
   // Generate an arbitrary revision tag, i.e. one that can't be used to
   // infer URL frecency.
-  _updateRevision(aURL) {
+  updateRevision(aURL) {
     // Initialize with a random value and increment on each update. Wrap around
     // modulo _revisionRange, so that even small values carry no meaning.
     let rev = this._revisionTable[aURL];
@@ -599,7 +599,7 @@ var PageThumbsStorage = {
   getRevision(aURL) {
     let rev = this._revisionTable[aURL];
     if (rev == null) {
-      this._updateRevision(aURL);
+      this.updateRevision(aURL);
       rev = this._revisionTable[aURL];
     }
     return rev;
@@ -636,7 +636,7 @@ var PageThumbsStorage = {
            as OS.Shared.Type.void_t.in_ptr.toMsg uses C-level
            memory tricks to enforce zero-copy*/
     ).then(
-      () => this._updateRevision(aURL),
+      () => this.updateRevision(aURL),
       this._eatNoOverwriteError(aNoOverwrite)
     );
   },
@@ -661,7 +661,7 @@ var PageThumbsStorage = {
       targetFile,
       options,
     ]).then(
-      () => this._updateRevision(aTargetURL),
+      () => this.updateRevision(aTargetURL),
       this._eatNoOverwriteError(aNoOverwrite)
     );
   },
