@@ -17,8 +17,10 @@
 #include "js/Value.h"
 #include "util/StringBuffer.h"
 #include "vm/ArrayObject.h"
+#include "vm/EqualityOperations.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/NativeObject.h"
 #include "vm/ObjectFlags.h"
 #include "vm/PropertyInfo.h"
 #include "vm/PropMap.h"
@@ -189,14 +191,72 @@ bool RecordType::finishInitialization(JSContext* cx) {
 
 bool RecordType::sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
                                bool* equal) {
-  MOZ_CRASH("Unsupported");
-  return false;
+  return sameValueWith<SameValueZero>(cx, lhs, rhs, equal);
 }
 
 bool RecordType::sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,
                            bool* equal) {
-  MOZ_CRASH("Unsupported");
-  return false;
+  return sameValueWith<SameValue>(cx, lhs, rhs, equal);
+}
+
+template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
+bool RecordType::sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
+                               bool* equal) {
+  if (lhs == rhs) {
+    *equal = true;
+    return true;
+  }
+
+  uint32_t length =
+      lhs->getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
+
+  if (rhs->getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32() != length) {
+    *equal = false;
+    return true;
+  }
+
+  *equal = true;
+
+  RootedNativeObject r1(cx, lhs), r2(cx, rhs);
+  RootedValue r1v(cx, ExtendedPrimitiveValue(*lhs)),
+      r2v(cx, ExtendedPrimitiveValue(*lhs));
+  RootedString k1(cx), k2(cx);
+  RootedId id1(cx), id2(cx);
+  RootedValue v1(cx), v2(cx);
+
+  RootedArrayObject sortedKeysLHS(
+      cx, &lhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>());
+  RootedArrayObject sortedKeysRHS(
+      cx, &rhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>());
+
+  for (uint32_t index = 0; index < length; index++) {
+    k1.set(sortedKeysLHS->getDenseElement(index).toString());
+    k2.set(sortedKeysRHS->getDenseElement(index).toString());
+
+    if (!EqualStrings(cx, k1, k2, equal)) {
+      return false;
+    }
+    if (!*equal) {
+      return true;
+    }
+
+    if (!JS_StringToId(cx, k1, &id1) || !JS_StringToId(cx, k2, &id2)) {
+      return false;
+    }
+    if (!NativeGetProperty(cx, r1, r1v, id1, &v1) ||
+        !NativeGetProperty(cx, r2, r2v, id2, &v2)) {
+      return false;
+    }
+
+    if (!Comparator(cx, v1, v2, equal)) {
+      return false;
+    }
+    if (!*equal) {
+      return true;
+    }
+  }
+
+  return true;
 }
 
 // Record and Record proposal section 9.2.1
