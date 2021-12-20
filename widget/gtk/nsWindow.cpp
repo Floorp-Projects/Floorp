@@ -375,44 +375,6 @@ static void UpdateLastInputEventTime(void* aGdkEvent) {
   sLastUserInputTime = timestamp;
 }
 
-void GetWindowOrigin(GdkWindow* aWindow, int* aX, int* aY) {
-  *aX = 0;
-  *aY = 0;
-
-  if (aWindow) {
-    gdk_window_get_origin(aWindow, aX, aY);
-  }
-  // GetWindowOrigin / gdk_window_get_origin is very fast on Wayland as the
-  // window position is cached by Gtk.
-
-  // TODO(bug 1655924): gdk_window_get_origin is can block waiting for the X
-  // server for a long time, we would like to use the implementation below
-  // instead. However, removing the synchronous x server queries causes a race
-  // condition to surface, causing issues such as bug 1652743 and bug 1653711.
-#if 0
-  *aX = 0;
-  *aY = 0;
-  if (!aWindow) {
-    return;
-  }
-
-  GdkWindow* current = aWindow;
-  while (GdkWindow* parent = gdk_window_get_parent(current)) {
-    if (parent == current) {
-      break;
-    }
-
-    int x = 0;
-    int y = 0;
-    gdk_window_get_position(current, &x, &y);
-    *aX += x;
-    *aY += y;
-
-    current = parent;
-  }
-#endif
-}
-
 nsWindow::nsWindow()
     : mIsDestroyed(false),
       mNeedsDispatchResized(false),
@@ -1548,7 +1510,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
       popup->mRelativePopupPosition = popup->mPopupPosition;
     } else {
       int parentX, parentY;
-      GetParentPosition(&parentX, &parentY);
+      WaylandGetParentPosition(&parentX, &parentY);
 
       LOG("  popup [%p] uses transformed coordinates\n", popup);
       LOG("    parent position [%d, %d]\n", parentX, parentY);
@@ -1610,14 +1572,24 @@ bool nsWindow::IsWidgetOverflowWindow() {
   return false;
 }
 
-void nsWindow::GetParentPosition(int* aX, int* aY) {
+void nsWindow::WaylandGetParentPosition(int* aX, int* aY) {
+  // Don't call WaylandGetParentPosition on X11 as it causes X11 roundtrips.
+  // gdk_window_get_origin is very fast on Wayland as the
+  // window position is cached by Gtk.
+  MOZ_DIAGNOSTIC_ASSERT(GdkIsWaylandDisplay());
+
   *aX = *aY = 0;
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
     NS_WARNING("Popup has no parent!");
     return;
   }
-  GetWindowOrigin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)), aX, aY);
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(parentGtkWindow));
+  if (!window) {
+    NS_WARNING("Popup parrent is not mapped!");
+    return;
+  }
+  gdk_window_get_origin(window, aX, aY);
 }
 
 #ifdef MOZ_LOGGING
@@ -1940,7 +1912,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
 
   LayoutDeviceIntRect newBounds(0, 0, 0, 0);
   int parentX, parentY;
-  GetParentPosition(&parentX, &parentY);
+  WaylandGetParentPosition(&parentX, &parentY);
   newBounds.x = GdkCoordToDevicePixels(aFinalSize->x + parentX);
   newBounds.y = GdkCoordToDevicePixels(aFinalSize->y + parentY);
 
@@ -2406,7 +2378,7 @@ void nsWindow::WaylandPopupMove() {
                        1);
   } else if (mWaylandPopupPrev->mWaylandToplevel != nullptr) {
     int parentX, parentY;
-    GetParentPosition(&parentX, &parentY);
+    WaylandGetParentPosition(&parentX, &parentY);
     LOG("  subtract parent position [%d, %d]\n", parentX, parentY);
     anchorRect.x -= parentX;
     anchorRect.y -= parentY;
@@ -3374,10 +3346,40 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
   }
 }
 
+/* TODO(bug 1655924): gdk_window_get_origin is can block waiting for the X
+   server for a long time, we would like to use the implementation below
+   instead. However, removing the synchronous x server queries causes a race
+   condition to surface, causing issues such as bug 1652743 and bug 1653711.
+
+
+   This code can be used instead of gdk_window_get_origin() but it cuases
+   such issues:
+
+    *aX = 0;
+    *aY = 0;
+    if (!aWindow) {
+      return;
+    }
+
+    GdkWindow* current = aWindow;
+    while (GdkWindow* parent = gdk_window_get_parent(current)) {
+      if (parent == current) {
+        break;
+      }
+
+      int x = 0;
+      int y = 0;
+      gdk_window_get_position(current, &x, &y);
+      *aX += x;
+      *aY += y;
+
+      current = parent;
+    }
+*/
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   nsIntPoint origin(0, 0);
   if (mGdkWindow) {
-    GetWindowOrigin(mGdkWindow, &origin.x, &origin.y);
+    gdk_window_get_origin(mGdkWindow, &origin.x, &origin.y);
   }
   return GdkPointToDevicePixels({origin.x, origin.y});
 }
