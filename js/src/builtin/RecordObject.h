@@ -7,6 +7,7 @@
 #ifndef builtin_RecordObject_h
 #define builtin_RecordObject_h
 
+#include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 #include "vm/RecordType.h"
 
@@ -21,6 +22,8 @@ class RecordObject : public NativeObject {
   static RecordObject* create(JSContext* cx, Handle<RecordType*> record);
 
   JS::RecordType* unbox() const;
+
+  static bool maybeUnbox(JSObject* obj, MutableHandle<RecordType*> rrec);
 };
 
 }  // namespace js

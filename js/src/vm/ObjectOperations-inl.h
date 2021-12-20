@@ -24,8 +24,9 @@
 #include "js/RootingAPI.h"          // JS::Handle, JS::MutableHandle, JS::Rooted
 #include "js/Value.h"               // JS::ObjectValue, JS::Value
 #include "proxy/Proxy.h"            // js::Proxy
-#include "vm/JSContext.h"           // JSContext
-#include "vm/JSObject.h"            // JSObject
+#include "vm/GlobalObject.h"
+#include "vm/JSContext.h"     // JSContext
+#include "vm/JSObject.h"      // JSObject
 #include "vm/NativeObject.h"  // js::NativeObject, js::Native{Get,Has,Set}Property, js::NativeGetPropertyNoGC, js::Qualified
 #include "vm/ProxyObject.h"   // js::ProxyObject
 #include "vm/StringType.h"    // js::NameToId

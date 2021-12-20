@@ -28,6 +28,10 @@
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/TypedArrayObject.h"
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
+#endif
+
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -2652,14 +2656,18 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
       "CopyDataPropertiesNative should only be called during object literal "
       "construction"
       "which precludes that |target| is the prototype of any other object");
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*target));
+#endif
 
   *optimized = false;
 
   // Don't use the fast path if |from| may have extra indexed or lazy
   // properties.
   if (from->getDenseInitializedLength() > 0 || from->isIndexed() ||
-      from->is<TypedArrayObject>() || from->getClass()->getNewEnumerate() ||
-      from->getClass()->getEnumerate()) {
+      from->is<TypedArrayObject>() ||
+      IF_RECORD_TUPLE(from->is<RecordObject>(), false) ||
+      from->getClass()->getNewEnumerate() || from->getClass()->getEnumerate()) {
     return true;
   }
 

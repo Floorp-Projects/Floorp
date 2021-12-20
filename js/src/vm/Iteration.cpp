@@ -42,6 +42,10 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
+#endif
+
 #include "vm/Compartment-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -246,6 +250,30 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
         }
       }
     }
+#ifdef ENABLE_RECORD_TUPLE
+    else {
+      Rooted<RecordType*> rec(cx);
+      if (RecordObject::maybeUnbox(pobj, &rec)) {
+        RootedArrayObject keys(cx, rec->keys());
+        RootedId id(cx);
+        RootedString key(cx);
+
+        for (size_t i = 0; i < keys->length(); i++) {
+          key.set(keys->getDenseElement(i).toString());
+          if (!JS_StringToId(cx, key, &id)) {
+            return false;
+          }
+          if (!Enumerate<CheckForDuplicates>(cx, pobj, id,
+                                             /* enumerable = */ true, flags,
+                                             visited, props)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+    }
+#endif
 
     // The code below enumerates shape properties (including sparse elements) so
     // if we can ignore those we're done.
