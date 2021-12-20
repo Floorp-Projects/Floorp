@@ -7,9 +7,9 @@
     <link rel="author" title="Mozilla" href="https://www.mozilla.org">
     <link rel="help" href="https://www.w3.org/TR/css-masking-1/#the-clip-path">
     <link rel="match" href="clip-path-geometryBox-1-ref.html">
-    <meta name="assert" content="Test checks whether clip-path border-box works correctly or not. This test is for clip-path applied to an SVG  SVG element.">
-    <style type="text/css">
-      svg {
+    <meta name="assert" content="Test checks whether clip-path border-box works correctly or not. This test is for clip-path applied to an HTML element.">
+    <style>
+      div {
         position: absolute;
         left: 50px;
         top: 50px;
@@ -23,8 +23,6 @@
     </style>
   </head>
   <body>
-    <svg width="200" height="200">
-      <rect x="0" y="0" width="200" height="200" fill="blue"/>
-    </svg>
+    <div></div>
   </body>
 </html>
