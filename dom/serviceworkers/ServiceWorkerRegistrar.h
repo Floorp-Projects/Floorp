@@ -109,7 +109,7 @@ class ServiceWorkerRegistrar : public nsIObserver,
   uint32_t mFileGeneration;
   uint32_t mRetryCount;
   bool mShuttingDown;
-  bool mRunnableDispatched;
+  bool mSaveDataRunnableDispatched;
 };
 
 }  // namespace mozilla::dom
