@@ -1007,6 +1007,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                OptionalEmitter& oe);
 
 #ifdef ENABLE_RECORD_TUPLE
+  [[nodiscard]] bool emitRecordLiteral(ListNode* record);
   [[nodiscard]] bool emitTupleLiteral(ListNode* tuple);
 #endif
 

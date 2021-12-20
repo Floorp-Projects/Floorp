@@ -56,6 +56,9 @@ namespace jit {
   /* Non-syntactic scope */              \
   _(NonSyntacticGlobalThis)              \
   /* Records and Tuples */               \
+  IF_RECORD_TUPLE(_(InitRecord))         \
+  IF_RECORD_TUPLE(_(AddRecordProperty))  \
+  IF_RECORD_TUPLE(_(FinishRecord))       \
   IF_RECORD_TUPLE(_(InitTuple))          \
   IF_RECORD_TUPLE(_(AddTupleElement))    \
   IF_RECORD_TUPLE(_(FinishTuple))        \

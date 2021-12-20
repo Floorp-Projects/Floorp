@@ -82,7 +82,11 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
 
 bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
                                         HandleValue value) {
-  MOZ_ASSERT(!key.isSymbol());
+  if (key.isSymbol()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_RECORD_NO_SYMBOL_KEY);
+    return false;
+  }
 
   if (!value.isPrimitive()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

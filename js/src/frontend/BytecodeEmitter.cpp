@@ -10485,13 +10485,71 @@ bool BytecodeEmitter::emitSpreadIntoArray(UnaryNode* elem) {
 }
 
 #ifdef ENABLE_RECORD_TUPLE
+bool BytecodeEmitter::emitRecordLiteral(ListNode* record) {
+  if (!emitUint32Operand(JSOp::InitRecord, record->count())) {
+    //              [stack] RECORD
+    return false;
+  }
+
+  for (ParseNode* propdef : record->contents()) {
+    if (propdef->isKind(ParseNodeKind::Spread)) {
+      MOZ_CRASH(
+          "Bytecode emitter for record spread hasn't been implemented yet");
+    } else {
+      BinaryNode* prop = &propdef->as<BinaryNode>();
+
+      ParseNode* key = prop->left();
+      ParseNode* value = prop->right();
+
+      switch (key->getKind()) {
+        case ParseNodeKind::ObjectPropertyName:
+          if (!emitStringOp(JSOp::String, key->as<NameNode>().atom())) {
+            return false;
+          }
+          break;
+        case ParseNodeKind::ComputedName:
+          if (!emitTree(key->as<UnaryNode>().kid())) {
+            return false;
+          }
+          break;
+        default:
+          MOZ_ASSERT(key->isKind(ParseNodeKind::StringExpr) ||
+                     key->isKind(ParseNodeKind::NumberExpr) ||
+                     key->isKind(ParseNodeKind::BigIntExpr));
+          if (!emitTree(key)) {
+            return false;
+          }
+          break;
+      }
+      //            [stack] RECORD KEY
+
+      if (!emitTree(value)) {
+        //          [stack] RECORD KEY VALUE
+        return false;
+      }
+
+      if (!emit1(JSOp::AddRecordProperty)) {
+        //          [stack] RECORD
+        return false;
+      }
+    }
+  }
+
+  if (!emit1(JSOp::FinishRecord)) {
+    //              [stack] RECORD
+    return false;
+  }
+
+  return true;
+}
+
 bool BytecodeEmitter::emitTupleLiteral(ListNode* tuple) {
   if (!emitUint32Operand(JSOp::InitTuple, tuple->count())) {
     //              [stack] TUPLE
     return false;
   }
 
-  for (ParseNode* elt = tuple->head(); elt; elt = elt->pn_next) {
+  for (ParseNode* elt : tuple->contents()) {
     if (elt->isKind(ParseNodeKind::Spread)) {
       ParseNode* expr = elt->as<UnaryNode>().kid();
 
@@ -11746,7 +11804,10 @@ bool BytecodeEmitter::emitTree(
 
 #ifdef ENABLE_RECORD_TUPLE
     case ParseNodeKind::RecordExpr:
-      MOZ_CRASH("records are not supported yet by BytecodeEmitter::emitTree");
+      if (!emitRecordLiteral(&pn->as<ListNode>())) {
+        return false;
+      }
+      break;
 
     case ParseNodeKind::TupleExpr:
       if (!emitTupleLiteral(&pn->as<ListNode>())) {

@@ -3987,6 +3987,46 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(InitElemInc)
 
 #ifdef ENABLE_RECORD_TUPLE
+    CASE(InitRecord) {
+      uint32_t length = GET_UINT32(REGS.pc);
+      RecordType* rec = RecordType::createUninitialized(cx, length);
+      if (!rec) {
+        goto error;
+      }
+      PUSH_EXTENDED_PRIMITIVE(*rec);
+    }
+    END_CASE(InitRecord)
+
+    CASE(AddRecordProperty) {
+      MOZ_ASSERT(REGS.stackDepth() >= 3);
+
+      ReservedRooted<JSObject*> rec(&rootObject0,
+                                    &REGS.sp[-3].toExtendedPrimitive());
+      MOZ_ASSERT(rec->is<RecordType>());
+
+      ReservedRooted<Value> key(&rootValue0, REGS.sp[-2]);
+      ReservedRooted<jsid> id(&rootId0);
+      if (!JS_ValueToId(cx, key, &id)) {
+        goto error;
+      }
+      if (!rec->as<RecordType>().initializeNextProperty(
+              cx, id, REGS.stackHandleAt(-1))) {
+        goto error;
+      }
+
+      REGS.sp -= 2;
+    }
+    END_CASE(AddRecordProperty)
+
+    CASE(FinishRecord) {
+      MOZ_ASSERT(REGS.stackDepth() >= 1);
+      RecordType* rec = &REGS.sp[-1].toExtendedPrimitive().as<RecordType>();
+      if (!rec->finishInitialization(cx)) {
+        goto error;
+      }
+    }
+    END_CASE(FinishRecord)
+
     CASE(InitTuple) {
       uint32_t length = GET_UINT32(REGS.pc);
       TupleType* tup = TupleType::createUninitialized(cx, length);
