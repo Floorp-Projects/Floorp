@@ -307,7 +307,9 @@ class FullParseHandler {
 
   [[nodiscard]] bool addSpreadElement(ListNodeType literal, uint32_t begin,
                                       Node inner) {
-    MOZ_ASSERT(literal->isKind(ParseNodeKind::ArrayExpr));
+    MOZ_ASSERT(
+        literal->isKind(ParseNodeKind::ArrayExpr) ||
+        IF_RECORD_TUPLE(literal->isKind(ParseNodeKind::TupleExpr), false));
 
     UnaryNodeType spread = newSpread(begin, inner);
     if (!spread) {
@@ -319,6 +321,10 @@ class FullParseHandler {
   }
 
   void addArrayElement(ListNodeType literal, Node element) {
+    MOZ_ASSERT(
+        literal->isKind(ParseNodeKind::ArrayExpr) ||
+        literal->isKind(ParseNodeKind::CallSiteObj) ||
+        IF_RECORD_TUPLE(literal->isKind(ParseNodeKind::TupleExpr), false));
     if (!element->isConstant()) {
       literal->setHasNonConstInitializer();
     }
@@ -352,6 +358,17 @@ class FullParseHandler {
     return new_<ListNode>(ParseNodeKind::ObjectExpr,
                           TokenPos(begin, begin + 1));
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  ListNodeType newRecordLiteral(uint32_t begin) {
+    return new_<ListNode>(ParseNodeKind::RecordExpr,
+                          TokenPos(begin, begin + 1));
+  }
+
+  ListNodeType newTupleLiteral(uint32_t begin) {
+    return new_<ListNode>(ParseNodeKind::TupleExpr, TokenPos(begin, begin + 1));
+  }
+#endif
 
   ClassNodeType newClass(Node name, Node heritage,
                          LexicalScopeNodeType memberBlock,
@@ -399,7 +416,9 @@ class FullParseHandler {
   }
 
   void addPropertyDefinition(ListNodeType literal, BinaryNodeType propdef) {
-    MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
+    MOZ_ASSERT(
+        literal->isKind(ParseNodeKind::ObjectExpr) ||
+        IF_RECORD_TUPLE(literal->isKind(ParseNodeKind::RecordExpr), false));
     MOZ_ASSERT(propdef->isKind(ParseNodeKind::PropertyDefinition));
 
     if (!propdef->right()->isConstant()) {
@@ -421,7 +440,9 @@ class FullParseHandler {
 
   [[nodiscard]] bool addShorthand(ListNodeType literal, NameNodeType name,
                                   NameNodeType expr) {
-    MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
+    MOZ_ASSERT(
+        literal->isKind(ParseNodeKind::ObjectExpr) ||
+        IF_RECORD_TUPLE(literal->isKind(ParseNodeKind::RecordExpr), false));
     MOZ_ASSERT(name->isKind(ParseNodeKind::ObjectPropertyName));
     MOZ_ASSERT(expr->isKind(ParseNodeKind::Name));
     MOZ_ASSERT(name->atom() == expr->atom());
@@ -437,7 +458,9 @@ class FullParseHandler {
 
   [[nodiscard]] bool addSpreadProperty(ListNodeType literal, uint32_t begin,
                                        Node inner) {
-    MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
+    MOZ_ASSERT(
+        literal->isKind(ParseNodeKind::ObjectExpr) ||
+        IF_RECORD_TUPLE(literal->isKind(ParseNodeKind::RecordExpr), false));
 
     literal->setHasNonConstInitializer();
     ParseNode* spread = newSpread(begin, inner);
