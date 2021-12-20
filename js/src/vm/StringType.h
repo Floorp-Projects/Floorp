@@ -355,6 +355,9 @@ class JSString : public js::gc::CellWithLengthAndFlags {
    */
   static inline bool validateLength(JSContext* maybecx, size_t length);
 
+  template <js::AllowGC allowGC>
+  static inline bool validateLengthInternal(JSContext* maybecx, size_t length);
+
   static constexpr size_t offsetOfFlags() { return offsetOfHeaderFlags(); }
   static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
 
