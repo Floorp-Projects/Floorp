@@ -18,10 +18,17 @@
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 
+#include "gc/Marking-inl.h"
+
 namespace js {
 
 bool IsExtendedPrimitive(const JSObject& obj) {
   return obj.is<RecordType>() || obj.is<TupleType>();
+}
+
+bool gc::MaybeForwardedIsExtendedPrimitive(const JSObject& obj) {
+  return MaybeForwardedObjectIs<RecordType>(&obj) ||
+         MaybeForwardedObjectIs<TupleType>(&obj);
 }
 
 bool IsExtendedPrimitiveWrapper(const JSObject& obj) {

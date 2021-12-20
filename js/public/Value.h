@@ -292,7 +292,12 @@ enum JSWhyMagic {
 namespace js {
 static inline JS::Value PoisonedObjectValue(uintptr_t poison);
 #ifdef ENABLE_RECORD_TUPLE
-extern bool IsExtendedPrimitive(const JSObject& obj);
+// Re-defined in vm/RecordTupleBoxShared.h. We cannot include that
+// file because it circularly includes this one.
+bool IsExtendedPrimitive(const JSObject& obj);
+namespace gc {
+bool MaybeForwardedIsExtendedPrimitive(const JSObject& obj);
+}  // namespace gc
 #endif
 }  // namespace js
 
@@ -510,7 +515,7 @@ class alignas(8) Value {
   void setObject(JSObject& obj) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
 #ifdef ENABLE_RECORD_TUPLE
-    MOZ_ASSERT(!js::IsExtendedPrimitive(obj));
+    MOZ_ASSERT(!js::gc::MaybeForwardedIsExtendedPrimitive(obj));
 #endif
     setObjectNoCheck(&obj);
     MOZ_ASSERT(&toObject() == &obj);
@@ -519,7 +524,7 @@ class alignas(8) Value {
 #ifdef ENABLE_RECORD_TUPLE
   void setExtendedPrimitive(JSObject& obj) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
-    MOZ_ASSERT(js::IsExtendedPrimitive(obj));
+    MOZ_ASSERT(js::gc::MaybeForwardedIsExtendedPrimitive(obj));
     asBits_ =
         bitsFromTagAndPayload(JSVAL_TAG_EXTENDED_PRIMITIVE, PayloadType(&obj));
     MOZ_ASSERT(&toExtendedPrimitive() == &obj);

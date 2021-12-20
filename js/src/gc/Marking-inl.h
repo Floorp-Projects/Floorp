@@ -36,7 +36,7 @@ struct TaggedPtr<JS::Value> {
       return JS::NullValue();
     }
 #ifdef ENABLE_RECORD_TUPLE
-    if (IsExtendedPrimitive(*obj)) {
+    if (MaybeForwardedIsExtendedPrimitive(*obj)) {
       return JS::ExtendedPrimitiveValue(*obj);
     }
 #endif
@@ -115,7 +115,7 @@ inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj) {
 }
 
 template <typename T>
-inline bool MaybeForwardedObjectIs(JSObject* obj) {
+inline bool MaybeForwardedObjectIs(const JSObject* obj) {
   MOZ_ASSERT(!obj->isForwarded());
   return MaybeForwardedObjectClass(obj) == &T::class_;
 }
