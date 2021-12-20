@@ -578,6 +578,16 @@ TRRLoadInfo::SetResultPrincipalURI(nsIURI* aURI) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetChannelCreationOriginalURI(nsIURI** aURI) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetChannelCreationOriginalURI(nsIURI* aURI) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::SetRequestBlockingReason(uint32_t aReason) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
