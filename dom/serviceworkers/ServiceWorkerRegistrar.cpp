@@ -178,12 +178,12 @@ ServiceWorkerRegistrar::ServiceWorkerRegistrar()
       mFileGeneration(kInvalidGeneration),
       mRetryCount(0),
       mShuttingDown(false),
-      mRunnableDispatched(false) {
+      mSaveDataRunnableDispatched(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 ServiceWorkerRegistrar::~ServiceWorkerRegistrar() {
-  MOZ_ASSERT(!mRunnableDispatched);
+  MOZ_ASSERT(!mSaveDataRunnableDispatched);
 }
 
 void ServiceWorkerRegistrar::GetRegistrations(
@@ -994,7 +994,7 @@ void ServiceWorkerRegistrar::MaybeScheduleSaveData() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mShuttingDown);
 
-  if (mShuttingDown || mRunnableDispatched ||
+  if (mShuttingDown || mSaveDataRunnableDispatched ||
       mDataGeneration <= mFileGeneration) {
     return;
   }
@@ -1017,7 +1017,7 @@ void ServiceWorkerRegistrar::MaybeScheduleSaveData() {
   nsresult rv = target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  mRunnableDispatched = true;
+  mSaveDataRunnableDispatched = true;
 }
 
 void ServiceWorkerRegistrar::ShutdownCompleted() {
@@ -1044,9 +1044,9 @@ nsresult ServiceWorkerRegistrar::SaveData(
 
 void ServiceWorkerRegistrar::DataSaved(uint32_t aFileGeneration) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mRunnableDispatched);
+  MOZ_ASSERT(mSaveDataRunnableDispatched);
 
-  mRunnableDispatched = false;
+  mSaveDataRunnableDispatched = false;
 
   // Check for shutdown before possibly triggering any more saves
   // runnables.
@@ -1088,7 +1088,7 @@ void ServiceWorkerRegistrar::DataSaved(uint32_t aFileGeneration) {
 void ServiceWorkerRegistrar::MaybeScheduleShutdownCompleted() {
   AssertIsOnBackgroundThread();
 
-  if (mRunnableDispatched || !mShuttingDown) {
+  if (mSaveDataRunnableDispatched || !mShuttingDown) {
     return;
   }
 
@@ -1326,10 +1326,10 @@ void ServiceWorkerRegistrar::ProfileStopped() {
     //   can't get to.
     // - All Shutdown() does is set mShuttingDown=true (essential for
     //   invariants) and invoke MaybeScheduleShutdownCompleted().
-    // - Since there is no PBackground thread, mRunnableDispatched must be false
-    //   because only MaybeScheduleSaveData() set it and it only runs on the
-    //   background thread, so it cannot have run.  And so we would expect
-    //   MaybeScheduleShutdownCompleted() to schedule an invocation of
+    // - Since there is no PBackground thread, mSaveDataRunnableDispatched must
+    //   be false because only MaybeScheduleSaveData() set it and it only runs
+    //   on the background thread, so it cannot have run.  And so we would
+    //   expect MaybeScheduleShutdownCompleted() to schedule an invocation of
     //   ShutdownCompleted on the main thread.
     //
     // So it's appropriate for us to set mShuttingDown=true (as Shutdown would
@@ -1340,7 +1340,11 @@ void ServiceWorkerRegistrar::ProfileStopped() {
     return;
   }
 
-  child->SendShutdownServiceWorkerRegistrar();
+  if (!child->SendShutdownServiceWorkerRegistrar()) {
+    // If we get here, the PBackground thread has probably gone nuts and we
+    // want to know it. We could try to mitigate as above for xpcshell.
+    MOZ_CRASH("Unable to send the ShutdownServiceWorkerRegistrar message.");
+  }
 }
 
 // Async shutdown blocker methods
@@ -1365,7 +1369,7 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
   MOZ_TRY(propertyBag->SetPropertyAsBool(u"shuttingDown"_ns, mShuttingDown));
 
   MOZ_TRY(propertyBag->SetPropertyAsBool(u"saveDataRunnableDispatched"_ns,
-                                         mRunnableDispatched));
+                                         mSaveDataRunnableDispatched));
 
   propertyBag.forget(aBagOut);
 
