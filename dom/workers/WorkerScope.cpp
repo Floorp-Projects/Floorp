@@ -309,7 +309,7 @@ void WorkerGlobalScopeBase::ReportError(JSContext* aCx,
                                         CallerType, ErrorResult& aRv) {
   JS::ErrorReportBuilder jsReport(aCx);
   JS::ExceptionStack exnStack(aCx, aError, nullptr);
-  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::NoSideEffects)) {
     return aRv.NoteJSContextException(aCx);
   }
 
