@@ -154,7 +154,9 @@ def display_push_estimates(try_task_config):
             durations["dependency_duration"] + durations["selected_duration"]
         )
     )
-    print("estimates: In the {}% percentile".format(durations["quantile"]))
+    print(
+        "estimates: In the top {}% of durations".format(100 - durations["percentile"])
+    )
     print(
         "estimates: Should take about {} (Finished around {})".format(
             durations["wall_duration_seconds"],

@@ -59,19 +59,19 @@ def find_longest_path(graph, tasklist, duration_data):
         return 0
 
 
-def determine_quantile(quantiles_file, duration):
+def determine_percentile(quantiles_file, duration):
 
     duration = duration.total_seconds()
 
     with open(quantiles_file) as f:
         f.readline()  # skip header
         boundaries = [float(l.strip()) for l in f.readlines()]
-        boundaries.sort()
 
+    boundaries.sort()
     for i, v in enumerate(boundaries):
         if duration < v:
             break
-    # In case we weren't given 100 elements
+    # Estimate percentile from len(boundaries)-quantile
     return int(100 * i / len(boundaries))
 
 
@@ -107,14 +107,14 @@ def duration_summary(graph_cache_file, tasklist, cache_dir):
     output["dependency_count"] = len(dependencies)
     output["selected_count"] = len(tasklist)
 
-    quantile = None
+    percentile = None
     graph_quantile_cache = os.path.join(cache_dir, GRAPH_QUANTILE_CACHE)
     if os.path.isfile(graph_quantile_cache):
-        quantile = 100 - determine_quantile(
+        percentile = determine_percentile(
             graph_quantile_cache, total_dependency_duration + total_requested_duration
         )
-    if quantile:
-        output["quantile"] = quantile
+    if percentile:
+        output["percentile"] = percentile
 
     output["wall_duration_seconds"] = timedelta(seconds=int(longest_path))
     output["eta_datetime"] = datetime.now() + timedelta(seconds=longest_path)
