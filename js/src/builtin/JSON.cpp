@@ -24,6 +24,8 @@
 #include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
+#include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
@@ -32,6 +34,10 @@
 #include "vm/JSONParser.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/WellKnownAtom.h"  // js_*_str
+
+#ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/TupleObject.h"
+#endif
 
 #include "builtin/Array-inl.h"
 #include "builtin/Boolean-inl.h"
@@ -492,7 +498,12 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
                  prop.propertyInfo().isDataDescriptor());
     }
 #endif  // DEBUG
-    if (!GetProperty(cx, obj, obj, id, &outputValue)) {
+
+    RootedValue objValue(cx, IF_RECORD_TUPLE(IsExtendedPrimitive(*obj)
+                                                 ? ExtendedPrimitiveValue(*obj)
+                                                 : ObjectValue(*obj),
+                                             ObjectValue(*obj)));
+    if (!GetProperty(cx, obj, objValue, id, &outputValue)) {
       return false;
     }
     if (!PreprocessValue(cx, obj, HandleId(id), &outputValue, scx)) {
@@ -534,13 +545,19 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
 // For JSON.stringify and JSON.parse with a reviver function, we need to know
 // the length of an object for which JS::IsArray returned true. This must be
 // either an ArrayObject or a proxy wrapping one.
-static MOZ_ALWAYS_INLINE bool GetLengthPropertyForArray(JSContext* cx,
-                                                        HandleObject obj,
-                                                        uint32_t* lengthp) {
+static MOZ_ALWAYS_INLINE bool GetLengthPropertyForArrayLike(JSContext* cx,
+                                                            HandleObject obj,
+                                                            uint32_t* lengthp) {
   if (MOZ_LIKELY(obj->is<ArrayObject>())) {
     *lengthp = obj->as<ArrayObject>().length();
     return true;
   }
+#ifdef ENABLE_RECORD_TUPLE
+  if (obj->is<TupleType>()) {
+    *lengthp = obj->as<TupleType>().length();
+    return true;
+  }
+#endif
 
   MOZ_ASSERT(obj->is<ProxyObject>());
 
@@ -587,7 +604,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
 
   /* Step 6. */
   uint32_t length;
-  if (!GetLengthPropertyForArray(cx, obj, &length)) {
+  if (!GetLengthPropertyForArrayLike(cx, obj, &length)) {
     return false;
   }
 
@@ -728,8 +745,8 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   }
 
   /* Step 10. */
-  MOZ_ASSERT(v.isObject());
-  RootedObject obj(cx, &v.toObject());
+  MOZ_ASSERT(v.hasObjectPayload());
+  RootedObject obj(cx, &v.getObjectPayload());
 
   MOZ_ASSERT(
       !scx->maybeSafely || obj->is<PlainObject>() || obj->is<ArrayObject>(),
@@ -739,12 +756,23 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   scx->depth++;
   auto dec = mozilla::MakeScopeExit([&] { scx->depth--; });
 
+#ifdef ENABLE_RECORD_TUPLE
+  bool isArrayLike = obj->is<TupleType>() || obj->is<TupleObject>();
+  if (!isArrayLike) {
+    if (!IsArray(cx, obj, &isArrayLike)) {
+      return false;
+    }
+  }
+
+  return isArrayLike ? JA(cx, obj, scx) : JO(cx, obj, scx);
+#else
   bool isArray;
   if (!IsArray(cx, obj, &isArray)) {
     return false;
   }
 
   return isArray ? JA(cx, obj, scx) : JO(cx, obj, scx);
+#endif
 }
 
 /* ES6 24.3.2. */
@@ -780,7 +808,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 
       /* Step 4b(iii)(2-3). */
       uint32_t len;
-      if (!GetLengthPropertyForArray(cx, replacer, &len)) {
+      if (!GetLengthPropertyForArrayLike(cx, replacer, &len)) {
         return false;
       }
 
@@ -951,7 +979,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
     if (isArray) {
       /* Step 2a(ii). */
       uint32_t length;
-      if (!GetLengthPropertyForArray(cx, obj, &length)) {
+      if (!GetLengthPropertyForArrayLike(cx, obj, &length)) {
         return false;
       }
 
