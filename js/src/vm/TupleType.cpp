@@ -115,6 +115,20 @@ void TupleType::finishInitialization(JSContext* cx) {
   header->freeze();
 }
 
+bool TupleType::getOwnProperty(HandleId id, MutableHandleValue vp) const {
+  if (!id.isInt()) {
+    return false;
+  }
+
+  int32_t index = id.toInt();
+  if (index < 0 || uint32_t(index) >= length()) {
+    return false;
+  }
+
+  vp.set(getDenseElement(index));
+  return true;
+}
+
 js::HashNumber TupleType::hash(const TupleType::ElementHasher& hasher) const {
   // MOZ_ASSERT(isAtomized());
 
@@ -279,44 +293,6 @@ bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-NativeObject* tuplePrototype(JSContext* cx) {
-  JSObject* proto = GlobalObject::getOrCreateTuplePrototype(cx, cx->global());
-  if (!proto) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(proto->is<NativeObject>());
-  return &proto->as<NativeObject>();
-}
-
-bool Tuple_getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
-                       HandleId id, MutableHandleValue vp) {
-  MOZ_ASSERT(obj->is<TupleType>());
-
-  if (id.isInt()) {
-    int32_t index = id.toInt();
-    TupleType& tup = obj->as<TupleType>();
-    if (index >= 0 && uint32_t(index) < tup.length()) {
-      vp.set(tup.getDenseElement(index));
-      return true;
-    }
-    return false;
-  }
-
-  // We resolve the prototype dynamically because, since tuples are primitives,
-  // it's realm-specific and not instance-specific.
-  RootedNativeObject proto(cx, tuplePrototype(cx));
-  if (!proto) return false;
-
-  return NativeGetProperty(cx, proto, receiver, id, vp);
-}
-
-bool Tuple_setProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       HandleValue v, HandleValue receiver,
-                       ObjectOpResult& result) {
-  return result.failReadOnly();
-}
-
 /*===========================================================================*\
                        BEGIN: Tuple.prototype methods
 \*===========================================================================*/
@@ -351,21 +327,8 @@ bool TupleType::lengthAccessor(JSContext* cx, unsigned argc, Value* vp) {
                          END: Tuple.prototype methods
 \*===========================================================================*/
 
-const ObjectOps TupleTypeObjectOps = {
-    /* lookupProperty */ nullptr,
-    /* defineProperty */ nullptr,
-    /* hasProperty */ nullptr,
-    Tuple_getProperty,
-    Tuple_setProperty,
-    /* getOwnPropertyDescriptor */ nullptr,
-    /* deleteProperty */ nullptr,
-    /* getElements */ nullptr,
-    /* getElements */ nullptr,
-};
-
-const JSClass TupleType::class_ = {"tuple",           0,
-                                   JS_NULL_CLASS_OPS, &TupleType::classSpec_,
-                                   JS_NULL_CLASS_EXT, &TupleTypeObjectOps};
+const JSClass TupleType::class_ = {"tuple", 0, JS_NULL_CLASS_OPS,
+                                   &TupleType::classSpec_};
 
 const JSClass TupleType::protoClass_ = {
     "Tuple.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Tuple),

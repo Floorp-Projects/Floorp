@@ -46,33 +46,16 @@ bool RecordObject::maybeUnbox(JSObject* obj, MutableHandle<RecordType*> rrec) {
 
 bool rec_resolve(JSContext* cx, HandleObject obj, HandleId id,
                  bool* resolvedp) {
-  Rooted<RecordType*> rec(cx, obj->as<RecordObject>().unbox());
-
-  PropertyResult prop;
-  if (!NativeLookupOwnProperty<CanGC>(cx, rec, id, &prop)) {
-    return false;
-  }
-  if (prop.isNotFound()) {
-    *resolvedp = false;
-    return true;
-  }
-  MOZ_ASSERT(prop.isNativeProperty() && prop.propertyInfo().isDataProperty());
-
   RootedValue value(cx);
-  if (prop.isDenseElement()) {
-    value.set(rec->getDenseElement(prop.denseElementIndex()));
-  } else {
-    value.set(rec->getSlot(prop.propertyInfo().slot()));
+  *resolvedp = obj->as<RecordObject>().unbox()->getOwnProperty(cx, id, &value);
+
+  if (*resolvedp) {
+    static const unsigned RECORD_PROPERTY_ATTRS =
+        JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+    return DefineDataProperty(cx, obj, id, value,
+                              RECORD_PROPERTY_ATTRS | JSPROP_RESOLVING);
   }
 
-  static const unsigned RECORD_PROPERTY_ATTRS =
-      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-  if (!DefineDataProperty(cx, obj, id, value,
-                          RECORD_PROPERTY_ATTRS | JSPROP_RESOLVING)) {
-    return false;
-  }
-
-  *resolvedp = true;
   return true;
 }
 

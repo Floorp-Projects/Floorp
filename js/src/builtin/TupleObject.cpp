@@ -50,37 +50,21 @@ bool TupleObject::maybeUnbox(JSObject* obj, MutableHandle<TupleType*> tupp) {
 
 bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
   // tup_resolve ignores non-integer ids.
-  return JSID_IS_INT(id);
+  return id.isInt();
 }
 
 bool tup_resolve(JSContext* cx, HandleObject obj, HandleId id,
                  bool* resolvedp) {
-  *resolvedp = false;
+  RootedValue value(cx);
+  *resolvedp = obj->as<TupleObject>().unbox()->getOwnProperty(id, &value);
 
-  if (!id.isInt()) {
-    return true;
+  if (*resolvedp) {
+    static const unsigned TUPLE_ELEMENT_ATTRS =
+        JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+    return DefineDataProperty(cx, obj, id, value,
+                              TUPLE_ELEMENT_ATTRS | JSPROP_RESOLVING);
   }
 
-  int32_t index = id.toInt();
-  if (index < 0) {
-    return true;
-  }
-
-  Rooted<TupleType*> tup(cx, obj->as<TupleObject>().unbox());
-  if (uint32_t(index) >= tup->length()) {
-    return true;
-  }
-
-  RootedValue value(cx, tup->getDenseElement(index));
-
-  static const unsigned TUPLE_ELEMENT_ATTRS =
-      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-  if (!DefineDataProperty(cx, obj, id, value,
-                          TUPLE_ELEMENT_ATTRS | JSPROP_RESOLVING)) {
-    return false;
-  }
-
-  *resolvedp = true;
   return true;
 }
 

@@ -501,12 +501,19 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
     }
 #endif  // DEBUG
 
-    RootedValue objValue(cx, IF_RECORD_TUPLE(IsExtendedPrimitive(*obj)
-                                                 ? ExtendedPrimitiveValue(*obj)
-                                                 : ObjectValue(*obj),
-                                             ObjectValue(*obj)));
-    if (!GetProperty(cx, obj, objValue, id, &outputValue)) {
-      return false;
+#ifdef ENABLE_RECORD_TUPLE
+    if (obj->is<RecordType>()) {
+      MOZ_ALWAYS_TRUE(
+          obj->as<RecordType>().getOwnProperty(cx, id, &outputValue));
+    } else
+#endif
+    {
+      IF_RECORD_TUPLE(MOZ_ASSERT(!IsExtendedPrimitive(*obj)));
+
+      RootedValue objValue(cx, ObjectValue(*obj));
+      if (!GetProperty(cx, obj, objValue, id, &outputValue)) {
+        return false;
+      }
     }
     if (!PreprocessValue(cx, obj, HandleId(id), &outputValue, scx)) {
       return false;

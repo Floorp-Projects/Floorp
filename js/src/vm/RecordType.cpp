@@ -188,6 +188,34 @@ bool RecordType::finishInitialization(JSContext* cx) {
   return true;
 }
 
+bool RecordType::getOwnProperty(JSContext* cx, HandleId id,
+                                MutableHandleValue vp) const {
+  if (id.isSymbol()) {
+    return false;
+  }
+
+  uint32_t index;
+
+  // Check for a native dense element.
+  if (id.isInt()) {
+    index = id.toInt();
+    if (containsDenseElement(index)) {
+      vp.set(getDenseElement(index));
+      return true;
+    }
+  }
+
+  // Check for a native property.
+  if (PropMap* map = shape()->lookup(cx, id, &index)) {
+    PropertyInfo info = map->getPropertyInfo(index);
+    MOZ_ASSERT(info.isDataProperty());
+    vp.set(getSlot(info.slot()));
+    return true;
+  }
+
+  return false;
+}
+
 js::HashNumber RecordType::hash(const RecordType::FieldHasher& hasher) {
   MOZ_ASSERT(isAtomized());
 
@@ -317,11 +345,8 @@ bool RecordType::sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
 
   *equal = true;
 
-  RootedNativeObject r1(cx, lhs), r2(cx, rhs);
-  RootedValue r1v(cx, ExtendedPrimitiveValue(*lhs)),
-      r2v(cx, ExtendedPrimitiveValue(*lhs));
   RootedString k1(cx), k2(cx);
-  RootedId id1(cx), id2(cx);
+  RootedId id(cx);
   RootedValue v1(cx), v2(cx);
 
   RootedArrayObject sortedKeysLHS(
@@ -340,13 +365,14 @@ bool RecordType::sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
       return true;
     }
 
-    if (!JS_StringToId(cx, k1, &id1) || !JS_StringToId(cx, k2, &id2)) {
+    if (!JS_StringToId(cx, k1, &id)) {
       return false;
     }
-    if (!NativeGetProperty(cx, r1, r1v, id1, &v1) ||
-        !NativeGetProperty(cx, r2, r2v, id2, &v2)) {
-      return false;
-    }
+
+    // We already know that this is an own property of both records, so both
+    // calls must return true.
+    MOZ_ALWAYS_TRUE(lhs->getOwnProperty(cx, id, &v1));
+    MOZ_ALWAYS_TRUE(rhs->getOwnProperty(cx, id, &v2));
 
     if (!Comparator(cx, v1, v2, equal)) {
       return false;
@@ -427,7 +453,6 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
   uint32_t length = sortedKeys.length();
 
   Rooted<RecordType*> rootedRec(cx, rec);
-  RootedValue recValue(cx, ExtendedPrimitiveValue(*rec));
   RootedValue value(cx);
   RootedString keyStr(cx);
   RootedId key(cx);
@@ -453,9 +478,7 @@ JSString* js::RecordToSource(JSContext* cx, RecordType* rec) {
       return nullptr;
     }
 
-    if (!GetProperty(cx, rootedRec, recValue, key, &value)) {
-      return nullptr;
-    }
+    MOZ_ALWAYS_TRUE(rootedRec->getOwnProperty(cx, key, &value));
 
     str = ValueToSource(cx, value);
     if (!str) {

@@ -28,6 +28,7 @@ class TupleType final : public js::NativeObject {
   bool initializeNextElement(JSContext* cx, HandleValue elt);
   void finishInitialization(JSContext* cx);
 
+  bool getOwnProperty(HandleId id, MutableHandleValue vp) const;
   inline uint32_t length() const { return getElementsHeader()->length; }
 
   // Methods defined on Tuple.prototype

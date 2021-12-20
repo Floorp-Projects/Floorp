@@ -584,7 +584,7 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(idx < getDenseInitializedLength());
     return elements_[idx];
   }
-  bool containsDenseElement(uint32_t idx) {
+  bool containsDenseElement(uint32_t idx) const {
     return idx < getDenseInitializedLength() &&
            !elements_[idx].isMagic(JS_ELEMENTS_HOLE);
   }
