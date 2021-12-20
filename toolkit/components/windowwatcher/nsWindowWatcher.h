@@ -105,9 +105,10 @@ class nsWindowWatcher : public nsIWindowWatcher,
       const mozilla::Maybe<float>& aOpenerFullZoom = mozilla::Nothing());
 
  private:
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CreateChromeWindow(
-      nsIWebBrowserChrome* aParentChrome, uint32_t aChromeFlags,
-      nsIOpenWindowInfo* aOpenWindowInfo, nsIWebBrowserChrome** aResult);
+  nsresult CreateChromeWindow(nsIWebBrowserChrome* aParentChrome,
+                              uint32_t aChromeFlags,
+                              nsIOpenWindowInfo* aOpenWindowInfo,
+                              nsIWebBrowserChrome** aResult);
 
   void MaybeDisablePersistence(const SizeSpec& sizeSpec,
                                nsIDocShellTreeOwner* aTreeOwner);
