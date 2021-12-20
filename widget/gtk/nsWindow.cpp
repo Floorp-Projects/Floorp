@@ -483,13 +483,6 @@ nsWindow::nsWindow()
       ,
       mRootAccessible(nullptr)
 #endif
-#ifdef MOZ_X11
-      ,
-      mXWindow(X11None),
-      mXVisual(nullptr),
-      mXDepth(0),
-      mIsShaped(false)
-#endif
 #ifdef MOZ_WAYLAND
       ,
       mNativePointerLockCenter(LayoutDeviceIntPoint()),
@@ -5224,7 +5217,8 @@ void nsWindow::EnableRenderingToWindow() {
   LOG("nsWindow::EnableRenderingToWindow()");
 
   if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->EnableRendering(mXWindow, mIsShaped);
+    mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                               GetShapedState());
   }
 
   if (GdkIsWaylandDisplay()) {
@@ -5253,23 +5247,35 @@ void nsWindow::DisableRenderingToWindow() {
   }
 }
 
+Window nsWindow::GetX11Window() {
+  return GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : X11None;
+}
+
+void nsWindow::EnsureGdkWindow() {
+  if (!mGdkWindow) {
+    mGdkWindow = gtk_widget_get_window(mDrawToContainer ? GTK_WIDGET(mContainer)
+                                                        : mShell);
+    g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
+  }
+  MOZ_DIAGNOSTIC_ASSERT(mGdkWindow, "We're missing GdkWindow!");
+}
+
+bool nsWindow::GetShapedState() {
+  return mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar;
+}
+
 void nsWindow::ConfigureGdkWindow() {
   LOG("nsWindow::ConfigureGdkWindow() [%p]", this);
 
-  mGdkWindow =
-      gtk_widget_get_window(mDrawToContainer ? GTK_WIDGET(mContainer) : mShell);
-  g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
+  EnsureGdkWindow();
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
-    mXWindow = gdk_x11_window_get_xid(mGdkWindow);
-
     GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
-    mXVisual = gdk_x11_visual_get_xvisual(gdkVisual);
-    mXDepth = gdk_visual_get_depth(gdkVisual);
-    mIsShaped =
-        mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar;
-    mSurfaceProvider.Initialize(mXWindow, mXVisual, mXDepth, mIsShaped);
+    Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
+    int depth = gdk_visual_get_depth(gdkVisual);
+    mSurfaceProvider.Initialize(GetX11Window(), visual, depth,
+                                GetShapedState());
 
     // Set window manager hint to keep fullscreen windows composited.
     //
@@ -5346,15 +5352,6 @@ void nsWindow::ReleaseGdkWindow() {
   }
 
   mSurfaceProvider.CleanupResources();
-
-#ifdef MOZ_X11
-  if (GdkIsX11Display()) {
-    mXWindow = X11None;
-    mXVisual = nullptr;
-    mXDepth = 0;
-    mIsShaped = false;
-  }
-#endif
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
@@ -9012,17 +9009,14 @@ void nsWindow::GetCompositorWidgetInitData(
   nsCString displayName;
 
   LOG("nsWindow::GetCompositorWidgetInitData");
+  EnsureGdkWindow();
+
+  *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
+      GetX11Window(), displayName, GetShapedState(), GdkIsX11Display(),
+      GetClientSize());
+
 #ifdef MOZ_X11
-  if (GdkIsX11Display() && !mGdkWindow) {
-    LOG("  create mGdkWindow/mXWindow\n");
-    mGdkWindow = gtk_widget_get_window(mDrawToContainer ? GTK_WIDGET(mContainer)
-                                                        : mShell);
-    if (mGdkWindow) {
-      g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
-      mXWindow = gdk_x11_window_get_xid(mGdkWindow);
-    }
-  }
-  if (GdkIsX11Display() && mXWindow != X11None) {
+  if (GdkIsX11Display()) {
     // Make sure the window XID is propagated to X server, we can fail otherwise
     // in GPU process (Bug 1401634).
     Display* display = DefaultXDisplay();
@@ -9030,9 +9024,6 @@ void nsWindow::GetCompositorWidgetInitData(
     displayName = nsCString(XDisplayString(display));
   }
 #endif
-  *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-      (mXWindow != X11None) ? mXWindow : (uintptr_t) nullptr, displayName,
-      mIsShaped, GdkIsX11Display(), GetClientSize());
 }
 
 #ifdef MOZ_X11
