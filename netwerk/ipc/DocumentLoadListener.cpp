@@ -748,8 +748,10 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   // after opening the document channel we have to kick off countermeasures.
   nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(this);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  loadInfo->SetChannelCreationOriginalURI(aLoadState->URI());
+
   mContentParent = aContentParent;
-  mChannelCreationURI = aLoadState->URI();
   mLoadStateExternalLoadFlags = aLoadState->LoadFlags();
   mLoadStateInternalLoadFlags = aLoadState->InternalLoadFlags();
   mLoadStateLoadType = aLoadState->LoadType();
@@ -1385,13 +1387,7 @@ void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
     ContentParent* aParent) const {
-  // Use the original URI of the current channel, as this is what
-  // we'll use to construct the channel in the content process.
-  aArgs.uri() = mChannelCreationURI;
-  if (!aArgs.uri()) {
-    mChannel->GetOriginalURI(getter_AddRefs(aArgs.uri()));
-  }
-
+  aArgs.uri() = GetChannelCreationURI();
   aArgs.loadIdentifier() = mLoadIdentifier;
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
@@ -1581,9 +1577,9 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
 
   MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
-          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s, "
+          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s"
            "browserid=%" PRIx64 "]",
-           this, mChannelCreationURI->GetSpecOrDefault().get(),
+           this, GetChannelCreationURI()->GetSpecOrDefault().get(),
            GetLoadingBrowsingContext()->Top()->BrowserId()));
 
   // If we're doing an <object>/<embed> load, we may be doing a document load at
@@ -1638,7 +1634,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   }
 
   auto optionsResult = IsolationOptionsForNavigation(
-      browsingContext->Top(), parentWindow, mChannelCreationURI, mChannel,
+      browsingContext->Top(), parentWindow, GetChannelCreationURI(), mChannel,
       currentRemoteType, HasCrossOriginOpenerPolicyMismatch(),
       mLoadStateLoadType, mDocumentChannelId, mRemoteTypeOverride);
   if (optionsResult.isErr()) {
@@ -2056,7 +2052,7 @@ bool DocumentLoadListener::DocShellWillDisplayContent(nsresult aStatus) {
             ("Skipping process switch, as DocShell will not display content "
              "(status: %s) %s",
              GetStaticErrorName(aStatus),
-             mChannelCreationURI->GetSpecOrDefault().get()));
+             GetChannelCreationURI()->GetSpecOrDefault().get()));
   }
 
   // If filtering returned a failure code, then an error page will
@@ -2477,6 +2473,17 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // so just update our channel and tell the callback that we're good to go.
   mChannel = aNewChannel;
 
+  // We need the original URI of the current channel to use to open the real
+  // channel in the content process. Unfortunately we overwrite the original
+  // uri of the new channel with the original pre-redirect URI, so grab
+  // a copy of it now and save it on the loadInfo corresponding to the
+  // new channel.
+  nsCOMPtr<nsILoadInfo> loadInfoFromChannel = mChannel->LoadInfo();
+  MOZ_ASSERT(loadInfoFromChannel);
+  nsCOMPtr<nsIURI> uri;
+  mChannel->GetOriginalURI(getter_AddRefs(uri));
+  loadInfoFromChannel->SetChannelCreationOriginalURI(uri);
+
   // Since we're redirecting away from aOldChannel, we should check if it
   // had a COOP mismatch, since we want the final result for this to
   // include the state of all channels we redirected through.
@@ -2524,12 +2531,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
       ("DocumentLoadListener AsyncOnChannelRedirect [this=%p] "
        "mHaveVisibleRedirect=%c",
        this, mHaveVisibleRedirect ? 'T' : 'F'));
-
-  // We need the original URI of the current channel to use to open the real
-  // channel in the content process. Unfortunately we overwrite the original
-  // uri of the new channel with the original pre-redirect URI, so grab
-  // a copy of it now.
-  aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
   // Clear out our nsIParentChannel functions, since a normal parent
   // channel would actually redirect and not have those values on the new one.
@@ -2579,6 +2580,23 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     aCallback->OnRedirectVerifyCallback(NS_OK);
   }
   return NS_OK;
+}
+
+nsIURI* DocumentLoadListener::GetChannelCreationURI() const {
+  nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
+
+  nsCOMPtr<nsIURI> uri;
+  channelLoadInfo->GetChannelCreationOriginalURI(getter_AddRefs(uri));
+  if (uri) {
+    // See channelCreationOriginalURI for more info. We use this instead of the
+    // originalURI of the channel to help us avoid the situation when we use
+    // the URI of a redirect that has failed to happen.
+    return uri;
+  }
+
+  // Otherwise, get the original URI from the channel.
+  mChannel->GetOriginalURI(getter_AddRefs(uri));
+  return uri;
 }
 
 // This method returns the cached result of running the Cross-Origin-Opener
