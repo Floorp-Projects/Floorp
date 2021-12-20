@@ -4,19 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_RecordTupleBoxShared_h
-#define vm_RecordTupleBoxShared_h
+#ifndef vm_RecordTupleShared_h
+#define vm_RecordTupleShared_h
 
-#include "vm/RecordTupleBoxShared.h"
-
-#include "vm/RecordType.h"
-#include "vm/TupleType.h"
+#include "js/ErrorReport.h"
+#include "js/TypeDecls.h"
 
 namespace js {
 
-bool IsExtendedPrimitive(JSObject& obj) {
-  return obj.is<RecordType>() || obj.is<TupleType>();
-}
+bool IsExtendedPrimitive(JSObject& obj);
+bool IsExtendedPrimitiveWrapper(const JSObject& obj);
 
 }  // namespace js
 

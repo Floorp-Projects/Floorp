@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Record"))
+// |reftest| skip-if(!this.hasOwnProperty("Tuple"))
 
 var tup = Tuple(1, 2, 3);
 var tupO = Object(tup);
@@ -19,10 +19,6 @@ assertThrowsInstanceOf(
   "#[1, 2, 3] is not a non-null object"
 );
 
-/*
-TODO: Tuple wrappers should be non-extensible, but it has not been implemented
-yet.
-
 assertThrowsInstanceOf(
   () => Object.defineProperty(tupO, "b", {}),
   TypeError,
@@ -40,7 +36,6 @@ assertThrowsInstanceOf(
   TypeError,
   'can\'t define property "Symbol()": tuple is not extensible'
 );
-*/
 
 assertThrowsInstanceOf(
   () => Object.defineProperty(tupO, "0", { value: 2 }),
