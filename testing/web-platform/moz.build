@@ -24,9 +24,6 @@ with Files("**"):
 with Files("moz.build"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("README.md"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
 with Files("wptrunner.ini"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
