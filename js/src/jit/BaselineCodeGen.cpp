@@ -2588,6 +2588,24 @@ bool BaselineCodeGen<Handler>::emit_RegExp() {
   return true;
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_InitTuple() {
+  MOZ_CRASH("Record and Tuple are not supported by jit");
+  return false;
+}
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_AddTupleElement() {
+  MOZ_CRASH("Record and Tuple are not supported by jit");
+  return false;
+}
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_FinishTuple() {
+  MOZ_CRASH("Record and Tuple are not supported by jit");
+  return false;
+}
+#endif
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Lambda() {
   prepareVMCall();
