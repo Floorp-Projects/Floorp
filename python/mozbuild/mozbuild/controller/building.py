@@ -1661,7 +1661,7 @@ class BuildDriver(MozbuildObject):
 
         build_site = CommandSiteManager.from_environment(
             self.topsrcdir,
-            get_state_dir(specific_to_topsrcdir=True, topsrcdir=self.topsrcdir),
+            lambda: get_state_dir(specific_to_topsrcdir=True, topsrcdir=self.topsrcdir),
             "build",
             os.path.join(self.topobjdir, "_virtualenvs"),
         )

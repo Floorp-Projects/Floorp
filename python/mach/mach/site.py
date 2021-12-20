@@ -228,7 +228,7 @@ class MachSiteManager:
         """
         Args:
             topsrcdir: The path to the Firefox repo
-            get_state_dir: A function that resolve the path to the checkout-scoped
+            get_state_dir: A function that resolves the path to the checkout-scoped
                 state_dir, generally ~/.mozbuild/srcdirs/<checkout-based-dir>/
         """
 
@@ -440,15 +440,15 @@ class CommandSiteManager:
     def from_environment(
         cls,
         topsrcdir: str,
-        checkout_scoped_state_dir: Optional[str],
+        get_state_dir: Callable[[], Optional[str]],
         site_name: str,
         command_virtualenvs_dir: str,
     ):
         """
         Args:
             topsrcdir: The path to the Firefox repo
-            checkout_scoped_state_dir: The path to the checkout-scoped state_dir,
-                generally ~/.mozbuild/srcdirs/<checkout-based-dir>/
+            get_state_dir: A function that resolves the path to the checkout-scoped
+                state_dir, generally ~/.mozbuild/srcdirs/<checkout-based-dir>/
             site_name: The name of this site, such as "build"
             command_virtualenvs_dir: The location under which this site's virtualenv
             should be created
@@ -478,6 +478,12 @@ class CommandSiteManager:
                 )
                 else SitePackagesSource.NONE
             )
+
+        checkout_scoped_state_dir = (
+            get_state_dir()
+            if active_metadata.mach_site_packages_source == SitePackagesSource.VENV
+            else None
+        )
 
         return cls(
             topsrcdir,
