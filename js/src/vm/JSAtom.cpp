@@ -965,11 +965,7 @@ static JSAtom* ToAtomSlow(
   }
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
-    JSAtom* atom = BigIntToAtom<allowGC>(cx, i);
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
-    }
-    return atom;
+    return BigIntToAtom<allowGC>(cx, i);
   }
   MOZ_ASSERT(v.isUndefined());
   return cx->names().undefined;
