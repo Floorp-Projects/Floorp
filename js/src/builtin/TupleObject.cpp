@@ -36,6 +36,18 @@ TupleType* TupleObject::unbox() const {
               .as<TupleType>();
 }
 
+bool TupleObject::maybeUnbox(JSObject* obj, MutableHandle<TupleType*> tupp) {
+  if (obj->is<TupleType>()) {
+    tupp.set(&obj->as<TupleType>());
+    return true;
+  }
+  if (obj->is<TupleObject>()) {
+    tupp.set(obj->as<TupleObject>().unbox());
+    return true;
+  }
+  return false;
+}
+
 bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
   // tup_resolve ignores non-integer ids.
   return JSID_IS_INT(id);
