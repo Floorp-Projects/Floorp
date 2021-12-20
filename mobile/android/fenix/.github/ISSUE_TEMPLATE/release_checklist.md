@@ -31,13 +31,13 @@ There are two releases this covers: the current sprint that is going out to Beta
     - [ ] Create a branch off of main (DO NOT PUSH YET) for the *current* milestone of format `releases_v85.0.0`. After that, anything landing in main will be part of the next release.
        - ⚠️ Please **do not** use `/` in branch names anymore: Taskcluster silently ignores them and doesn't output tasks at the right index.
     - [ ] Bump `version.txt` to match the new version number
-    - [ ] Grant [mozilla-release-automation-bot](https://github.com/mozilla-release-automation-bot) write access to this branch.
+    - [ ] Grant [moz-releng-automation2](https://github.com/moz-releng-automation2) write access to this branch. (Probably by adding the `mozilla-mobile/bots` team)
     - [ ] On the new Beta branch, pin the AC version to the stable version ([example](https://github.com/mozilla-mobile/fenix/commit/e413da29f6a7a7d4a765817a9cd5687abbf27619)) with commit message "Issue #`<this releng issue>`: Pin to stable AC `<version>` for release v85"
         - [ ] Update the title to include this AC version "Releng for v[release] with AC [version]"
     - Note: You will need code review to make changes to the release branch after this point, because it is a protected branch.
         - [ ] Push the branch.
 
-    - [ ] Tell Release Management the first beta is ready to be shipped. They'll use https://shipit.mozilla-releng.net/new to kick off a new release. This replaces the process that involved GitHub releases. Now Github releases are automatically created by [mozilla-release-automation-bot](https://github.com/mozilla-release-automation-bot)
+    - [ ] Tell Release Management the first beta is ready to be shipped. They'll use https://shipit.mozilla-releng.net/new to kick off a new release. This replaces the process that involved GitHub releases. Now Github releases are automatically created by [moz-releng-automation2](https://github.com/moz-releng-automation2)
     - [ ] Send an email to QA at mozilla-mobile-qa@softvision.com with a link to the Taskcluster build (subdirectory of the [Fenix CI](https://firefox-ci-tc.services.mozilla.com/tasks/index/mobile.v2.fenix.beta))
 
 ### Bugfix uplifts / Beta Product Integrity (Beta Release until PI green signoff)
