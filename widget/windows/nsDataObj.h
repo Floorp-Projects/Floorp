@@ -174,6 +174,7 @@ class nsDataObj : public IDataObject, public IDataObjectAsyncCapability {
 
  private:
   nsCOMPtr<nsIFile> mCachedTempFile;
+  RefPtr<nsDataObj> mKeepAlive;
 
   BOOL mIsAsyncMode;
   BOOL mIsInOperation;
