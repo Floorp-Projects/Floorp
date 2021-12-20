@@ -382,7 +382,7 @@ async function startGeckoProfiling() {
   );
   const features = geckoFeatures
     ? geckoFeatures.split(",")
-    : ["js", "leaf", "stackwalk", "cpu", "threads", "responsiveness"];
+    : ["js", "leaf", "stackwalk", "cpu", "responsiveness"];
   await ext.geckoProfiler.start({
     bufferSize: geckoEntries,
     interval: geckoInterval,
