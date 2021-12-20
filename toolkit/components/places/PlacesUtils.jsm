@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyGetter(this, "MOZ_ACTION_REGEX", () => {
   return /^moz-action:([^,]+),(.*)$/;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gCryptoHash", () => {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where
 // we really just want "\n". On other platforms, the transferable system
 // converts "\r\n" to "\n".
@@ -1916,6 +1920,37 @@ var PlacesUtils = {
     let startIndex = 0;
     while (startIndex < array.length) {
       yield array.slice(startIndex, (startIndex += chunkLength));
+    }
+  },
+
+  /**
+   * Run some text through md5 and return the hash.
+   * @param {string} data The string to hash.
+   * @param {string} [format] Which format of the hash to return:
+   *   - "ascii" for ascii format.
+   *   - "hex" for hex format.
+   * @returns {string} md5 hash of the input string in the required format.
+   */
+  md5(data, { format = "ascii" } = {}) {
+    gCryptoHash.init(gCryptoHash.MD5);
+
+    // Convert the data to a byte array for hashing
+    gCryptoHash.update(
+      data.split("").map(c => c.charCodeAt(0)),
+      data.length
+    );
+    switch (format) {
+      case "hex":
+        let hash = gCryptoHash.finish(false);
+        return Array.from(hash, (c, i) =>
+          hash
+            .charCodeAt(i)
+            .toString(16)
+            .padStart(2, "0")
+        ).join("");
+      case "ascii":
+      default:
+        return gCryptoHash.finish(true);
     }
   },
 };
