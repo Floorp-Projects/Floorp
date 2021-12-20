@@ -1,6 +1,240 @@
 {
   "data": [
     {
+      "schema": 1639839910323,
+      "derHash": "TzXGucEAkF/yW7AcCiDr4zW87vJJzp/6HhHgYu1m/NE=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9b316d7bf93b9d342bdd4df71094c0e97165fde2c9cd97a6beca3f212dac4054",
+        "size": 2479,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/e43a7840-9ea4-4b76-93c0-ab636088bcb6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "7f65139b-c66f-48be-9e43-38f9d4c05309",
+      "last_modified": 1639850274850
+    },
+    {
+      "schema": 1639839012816,
+      "derHash": "TzXGucEAkF/yW7AcCiDr4zW87vJJzp/6HhHgYu1m/NE=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9b316d7bf93b9d342bdd4df71094c0e97165fde2c9cd97a6beca3f212dac4054",
+        "size": 2479,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/3784123e-47c0-449e-a944-a3c098106179.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "d7056525-3689-4f09-8017-71e76770f63f",
+      "last_modified": 1639850274840
+    },
+    {
+      "schema": 1639847460886,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/0ee86d74-2264-4445-9962-37cb38e10eba.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "a9f072d9-3743-4e76-9581-7daa6e4c9924",
+      "last_modified": 1639850274830
+    },
+    {
+      "schema": 1639846841875,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/a9ae902f-c3a6-4b83-90e4-199315549754.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "dec7c55c-37b6-4edb-856a-c7ae338ed11a",
+      "last_modified": 1639850274820
+    },
+    {
+      "schema": 1639847110652,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/ab705e32-dc6c-492b-9e2c-763659d12983.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "5591bbc0-7f18-46f1-bdba-4df95d6fb21d",
+      "last_modified": 1639850274810
+    },
+    {
+      "schema": 1639846612264,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/1b2ce0c0-8b69-4cd8-a707-b8838518c6d5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "279b3d2e-a19b-40b6-8fe7-fdff13629538",
+      "last_modified": 1639850274800
+    },
+    {
+      "schema": 1639843497821,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/d1efd85e-3ff0-45b0-985a-ccc72cf22681.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "af5fb685-91ca-4eeb-9727-2fe866e55cb9",
+      "last_modified": 1639850274790
+    },
+    {
+      "schema": 1639843000205,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/8ea5a23d-47e9-4a6a-b770-e8279ded08dc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "1bf0c81c-7645-408b-adc6-ac2a360f86c4",
+      "last_modified": 1639850274779
+    },
+    {
+      "schema": 1639839411806,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/ac8b73dd-ac40-47b4-a020-54af6476b3e0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "dcb05816-c538-4fb0-bb71-c3bdd6629af7",
+      "last_modified": 1639850274769
+    },
+    {
+      "schema": 1639839012505,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/5eb3ad80-1144-42a3-af11-434720be7e64.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "77285945-8f8a-4cf5-9eff-fbcdaac02c21",
+      "last_modified": 1639850274759
+    },
+    {
+      "schema": 1639839910004,
+      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
+      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
+        "size": 2418,
+        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
+        "location": "security-state-staging/intermediates/0fb3109a-8d8c-4357-9997-0046e1101a8b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
+      "crlite_enrolled": true,
+      "id": "23bba698-1641-49af-9cba-fce5c45d6eca",
+      "last_modified": 1639850274749
+    },
+    {
+      "schema": 1639836958226,
+      "derHash": "d4xRba7HAO5Ys1geQR5cDdR4ZjpRY6KYlTQVB9bpZN0=",
+      "subject": "CN=SHECA DV Server CA G5,O=UniTrust,C=CN",
+      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgRFYgU2VydmVyIENBIEc1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4153674bf85308618da92043981bdd2d2f7ca5a4ed109d39c822cdd2408d1775",
+        "size": 2008,
+        "filename": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=.pem",
+        "location": "security-state-staging/intermediates/616b8c10-5e1d-4a6f-9d4b-0e50a8fd9dc5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=",
+      "crlite_enrolled": true,
+      "id": "0b34f843-08b5-4719-befd-242cfb5b537c",
+      "last_modified": 1639850274739
+    },
+    {
+      "schema": 1639839640888,
+      "derHash": "d4xRba7HAO5Ys1geQR5cDdR4ZjpRY6KYlTQVB9bpZN0=",
+      "subject": "CN=SHECA DV Server CA G5,O=UniTrust,C=CN",
+      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgRFYgU2VydmVyIENBIEc1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4153674bf85308618da92043981bdd2d2f7ca5a4ed109d39c822cdd2408d1775",
+        "size": 2008,
+        "filename": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=.pem",
+        "location": "security-state-staging/intermediates/9e707aa9-a13b-417d-ac93-377ab92b3136.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=",
+      "crlite_enrolled": true,
+      "id": "3884a378-6d9c-42ab-a578-6a20d7e609a8",
+      "last_modified": 1639850274728
+    },
+    {
       "schema": 1639564007635,
       "derHash": "F4zizkHm0pkmyJNy7PAbESCte22YCtKYNUwu/TFB4Sk=",
       "subject": "CN=GIAG4,O=Google Trust Services LLC,C=US",
@@ -3923,42 +4157,6 @@
       "crlite_enrolled": true,
       "id": "317681eb-a6d1-4ecd-bf18-a7af01dde81d",
       "last_modified": 1634947049294
-    },
-    {
-      "schema": 1634309428400,
-      "derHash": "d4xRba7HAO5Ys1geQR5cDdR4ZjpRY6KYlTQVB9bpZN0=",
-      "subject": "CN=SHECA DV Server CA G5,O=UniTrust,C=CN",
-      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgRFYgU2VydmVyIENBIEc1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4153674bf85308618da92043981bdd2d2f7ca5a4ed109d39c822cdd2408d1775",
-        "size": 2008,
-        "filename": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=.pem",
-        "location": "security-state-staging/intermediates/9e707aa9-a13b-417d-ac93-377ab92b3136.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=",
-      "crlite_enrolled": false,
-      "id": "3884a378-6d9c-42ab-a578-6a20d7e609a8",
-      "last_modified": 1634309862974
-    },
-    {
-      "schema": 1634309626145,
-      "derHash": "d4xRba7HAO5Ys1geQR5cDdR4ZjpRY6KYlTQVB9bpZN0=",
-      "subject": "CN=SHECA DV Server CA G5,O=UniTrust,C=CN",
-      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgRFYgU2VydmVyIENBIEc1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4153674bf85308618da92043981bdd2d2f7ca5a4ed109d39c822cdd2408d1775",
-        "size": 2008,
-        "filename": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=.pem",
-        "location": "security-state-staging/intermediates/616b8c10-5e1d-4a6f-9d4b-0e50a8fd9dc5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "LSv8B00n0rDwNaioIz0qIgnC9J7YkSK9NS35qVjVZK4=",
-      "crlite_enrolled": false,
-      "id": "0b34f843-08b5-4719-befd-242cfb5b537c",
-      "last_modified": 1634309862951
     },
     {
       "schema": 1634309425878,
@@ -12853,24 +13051,6 @@
       "last_modified": 1617163036770
     },
     {
-      "schema": 1617155860649,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/0fb3109a-8d8c-4357-9997-0046e1101a8b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "23bba698-1641-49af-9cba-fce5c45d6eca",
-      "last_modified": 1617163036758
-    },
-    {
       "schema": 1617155863898,
       "derHash": "SV5mJKFTQMTHSrhgN3SK1i0e9PFOfIGrfNtim+FAR1c=",
       "subject": "CN=DigiCert High Assurance TLS RSA SHA256 2020 CA1,O=DigiCert\\, Inc.,C=US",
@@ -13031,24 +13211,6 @@
       "crlite_enrolled": true,
       "id": "e463efe9-9f25-4792-bdf1-72093edba525",
       "last_modified": 1617163036610
-    },
-    {
-      "schema": 1617156050645,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/5eb3ad80-1144-42a3-af11-434720be7e64.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "77285945-8f8a-4cf5-9eff-fbcdaac02c21",
-      "last_modified": 1617163036598
     },
     {
       "schema": 1617156052176,
@@ -13357,24 +13519,6 @@
       "last_modified": 1617163036377
     },
     {
-      "schema": 1617156267376,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/ac8b73dd-ac40-47b4-a020-54af6476b3e0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "dcb05816-c538-4fb0-bb71-c3bdd6629af7",
-      "last_modified": 1617163036363
-    },
-    {
       "schema": 1617156268912,
       "derHash": "yAJfn8Zf38lbPKjMeGe5pYe1J3lzlXkXRj/IE9C2Jak=",
       "subject": "CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1,O=DigiCert Inc,C=US",
@@ -13609,24 +13753,6 @@
       "last_modified": 1617163036180
     },
     {
-      "schema": 1617156486812,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/8ea5a23d-47e9-4a6a-b770-e8279ded08dc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "1bf0c81c-7645-408b-adc6-ac2a360f86c4",
-      "last_modified": 1617163036156
-    },
-    {
       "schema": 1617156488360,
       "derHash": "XScMtO/1h61s0Xyytg2QhKFT130qp5oss9sd25BGhPU=",
       "subject": "CN=DigiCert High Assurance TLS Hybrid ECC SHA256 2020 CA1,O=DigiCert\\, Inc.,C=US",
@@ -13771,24 +13897,6 @@
       "last_modified": 1617163036022
     },
     {
-      "schema": 1617156711308,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/d1efd85e-3ff0-45b0-985a-ccc72cf22681.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "af5fb685-91ca-4eeb-9727-2fe866e55cb9",
-      "last_modified": 1617163036010
-    },
-    {
       "schema": 1617156712805,
       "derHash": "ntHt6pWqW3K1E6PkGhug0u+xTOyIiR400ASVyVVWYFw=",
       "subject": "CN=CrowdStrike Global EV CA G2,O=CrowdStrike\\, Inc.,C=US",
@@ -13877,24 +13985,6 @@
       "crlite_enrolled": true,
       "id": "41ce7398-6f2c-433d-9ca1-ada98cb944a3",
       "last_modified": 1617163035948
-    },
-    {
-      "schema": 1617156967856,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/1b2ce0c0-8b69-4cd8-a707-b8838518c6d5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "279b3d2e-a19b-40b6-8fe7-fdff13629538",
-      "last_modified": 1617163035936
     },
     {
       "schema": 1617156969489,
@@ -14257,24 +14347,6 @@
       "last_modified": 1617163035638
     },
     {
-      "schema": 1617159009044,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/ab705e32-dc6c-492b-9e2c-763659d12983.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "5591bbc0-7f18-46f1-bdba-4df95d6fb21d",
-      "last_modified": 1617163035626
-    },
-    {
       "schema": 1617159010636,
       "derHash": "aZ7WW909XnkHdtFl6noyW3rq9BlkeSGpL/KLsGgNcro=",
       "subject": "CN=DigiCert Global G3 TLS ECC SHA384 2020 CA1,O=DigiCert Inc,C=US",
@@ -14345,24 +14417,6 @@
       "crlite_enrolled": true,
       "id": "dc4bfe72-9052-445d-b9ce-94ec35886cbf",
       "last_modified": 1617163035552
-    },
-    {
-      "schema": 1617159184166,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/a9ae902f-c3a6-4b83-90e4-199315549754.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "dec7c55c-37b6-4edb-856a-c7ae338ed11a",
-      "last_modified": 1617163035540
     },
     {
       "schema": 1617159185752,
@@ -14633,24 +14687,6 @@
       "crlite_enrolled": false,
       "id": "b592d3fc-7403-4c84-b2ce-83c905ad6887",
       "last_modified": 1617163035279
-    },
-    {
-      "schema": 1617159408116,
-      "derHash": "HilpD5V/ZLqcNlijEFV1GqzUtECpWJ36HXgP4HBp21I=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2e8510d320f88c97a1376323998a78ee6b2ee8797c8465ca06754b2f331b95e6",
-        "size": 2418,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/0ee86d74-2264-4445-9962-37cb38e10eba.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "a9f072d9-3743-4e76-9581-7daa6e4c9924",
-      "last_modified": 1617163035264
     },
     {
       "schema": 1617159409656,
@@ -21619,24 +21655,6 @@
       "last_modified": 1601517446331
     },
     {
-      "schema": 1601376514564,
-      "derHash": "TzXGucEAkF/yW7AcCiDr4zW87vJJzp/6HhHgYu1m/NE=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9b316d7bf93b9d342bdd4df71094c0e97165fde2c9cd97a6beca3f212dac4054",
-        "size": 2479,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/3784123e-47c0-449e-a944-a3c098106179.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "d7056525-3689-4f09-8017-71e76770f63f",
-      "last_modified": 1601517446320
-    },
-    {
       "schema": 1601376511612,
       "derHash": "GKvW6cqQe7NnVNDARuu1Ddm5XVJ4JNlYGjG3UPz9uu8=",
       "subject": "CN=Trustwave Global ECDSA P-256 Organization Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
@@ -23111,24 +23129,6 @@
       "crlite_enrolled": true,
       "id": "07b39017-e019-4285-8987-c74c020ff536",
       "last_modified": 1601517444930
-    },
-    {
-      "schema": 1601372959354,
-      "derHash": "TzXGucEAkF/yW7AcCiDr4zW87vJJzp/6HhHgYu1m/NE=",
-      "subject": "CN=DigiCert Trusted G4 TLS RSA SHA384 2020 CA1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxNDAyBgNVBAMTK0RpZ2lDZXJ0IFRydXN0ZWQgRzQgVExTIFJTQSBTSEEzODQgMjAyMCBDQTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9b316d7bf93b9d342bdd4df71094c0e97165fde2c9cd97a6beca3f212dac4054",
-        "size": 2479,
-        "filename": "rjm2hHKNhSnI_7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=.pem",
-        "location": "security-state-staging/intermediates/e43a7840-9ea4-4b76-93c0-ab636088bcb6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rjm2hHKNhSnI/7YDoWFLmDSpnIwnr9n9bbNU0dhDiJg=",
-      "crlite_enrolled": false,
-      "id": "7f65139b-c66f-48be-9e43-38f9d4c05309",
-      "last_modified": 1601517444919
     },
     {
       "schema": 1601372956559,
