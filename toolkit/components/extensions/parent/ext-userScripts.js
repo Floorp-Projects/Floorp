@@ -113,6 +113,7 @@ this.userScripts = class extends ExtensionAPI {
           const { scriptId } = userScript;
 
           this.userScriptsMap.set(scriptId, userScript);
+          registeredScriptIds.add(scriptId);
 
           const scriptOptions = userScript.serialize();
 
