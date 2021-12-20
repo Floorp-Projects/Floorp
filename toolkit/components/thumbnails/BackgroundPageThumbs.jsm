@@ -62,16 +62,6 @@ const BackgroundPageThumbs = {
    *                 detected and rendered as such anyway, but this will ensure it.
    * @opt targetWidth The target width when capturing an image.
    * @opt backgroundColor The background colour when capturing an image.
-   * @opt dontStore  If set to true, the image blob won't be stored to disk, an
-   *                 object will instead be passed as third argument to onDone:
-   *                 {
-   *                   data: an ArrayBuffer containing the data
-   *                   contentType: the data content-type
-   *                   originalUrl: the originally requested url
-   *                   currentUrl: the final url after redirects
-   *                 }
-   * @opt contentType can be set to an image contentType for the capture,
-   *                  defaults to PageThumbs.contentType.
    */
   capture(url, options = {}) {
     if (!PageThumbs._prefEnabled()) {
@@ -670,13 +660,10 @@ Capture.prototype = {
 
     let canvasDrawTime = new Date() - canvasDrawStartTime;
 
-    let contentType =
-      (this.options.dontStore && this.options.contentType) ||
-      PageThumbs.contentType;
     let imageData = await new Promise(resolve => {
       canvas.toBlob(blob => {
-        resolve(blob, contentType);
-      }, contentType);
+        resolve(blob, this.contentType);
+      });
     });
 
     this._done(aBrowser, imageData, TEL_CAPTURE_DONE_OK, {
@@ -728,11 +715,11 @@ Capture.prototype = {
       }
     }
 
-    let done = (info = null) => {
+    let done = () => {
       captureCallback(this, reason);
       for (let callback of doneCallbacks) {
         try {
-          callback.call(options, this.url, reason, info);
+          callback.call(options, this.url, reason);
         } catch (err) {
           Cu.reportError(err);
         }
@@ -757,19 +744,10 @@ Capture.prototype = {
     }
 
     this.readBlob(imageData).then(buffer => {
-      if (options.dontStore) {
-        done({
-          data: buffer,
-          originalUrl: this.url,
-          finalUrl: browser.currentURI.spec,
-          contentType: options.contentType || PageThumbs.contentType,
-        });
-      } else {
-        PageThumbs._store(this.url, browser.currentURI.spec, buffer, true).then(
-          done,
-          done
-        );
-      }
+      PageThumbs._store(this.url, browser.currentURI.spec, buffer, true).then(
+        done,
+        done
+      );
     });
   },
 };
