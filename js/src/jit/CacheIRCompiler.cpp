@@ -1908,6 +1908,9 @@ bool CacheIRCompiler::emitGuardNonDoubleType(ValOperandId inputId,
     case ValueType::Magic:
     case ValueType::PrivateGCThing:
     case ValueType::Object:
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+#endif
       MOZ_CRASH("unexpected type");
   }
 

@@ -265,7 +265,7 @@ bool AtomMarkingRuntime::valueIsMarked(Zone* zone, const Value& value) {
     return atomIsMarked(zone, value.toSymbol());
   }
 
-  MOZ_ASSERT_IF(value.isGCThing(), value.isObject() ||
+  MOZ_ASSERT_IF(value.isGCThing(), value.hasObjectPayload() ||
                                        value.isPrivateGCThing() ||
                                        value.isBigInt());
   return true;

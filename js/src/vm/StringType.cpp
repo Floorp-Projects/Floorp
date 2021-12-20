@@ -45,6 +45,10 @@
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 using namespace js;
 
@@ -2109,7 +2113,13 @@ JSString* js::ToStringSlow(
     }
     RootedBigInt i(cx, v.toBigInt());
     str = BigInt::toString<CanGC>(cx, i, 10);
-  } else {
+  }
+#ifdef ENABLE_RECORD_TUPLE
+  else if (arg.isExtendedPrimitive()) {
+    MOZ_CRASH("Records and Tuples are not supported yet.");
+  }
+#endif
+  else {
     MOZ_ASSERT(v.isUndefined());
     str = cx->names().undefined;
   }

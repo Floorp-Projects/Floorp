@@ -40,6 +40,10 @@ enum JSType {
   JSTYPE_BOOLEAN,   /* boolean */
   JSTYPE_SYMBOL,    /* symbol */
   JSTYPE_BIGINT,    /* BigInt */
+#ifdef ENABLE_RECORD_TUPLE
+  JSTYPE_RECORD, /* record */
+  JSTYPE_TUPLE,  /* tuple */
+#endif
   JSTYPE_LIMIT
 };
 

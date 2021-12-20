@@ -470,6 +470,13 @@ SOURCES += [
     "vm/ProfilingStack.cpp",
 ]
 
+if CONFIG["ENABLE_RECORD_TUPLE"]:
+    UNIFIED_SOURCES += [
+        "vm/RecordTupleBoxShared.cpp",
+        "vm/RecordType.cpp",
+        "vm/TupleType.cpp",
+    ]
+
 if CONFIG["JS_HAS_INTL_API"]:
     UNIFIED_SOURCES += [
         "builtin/intl/Collator.cpp",

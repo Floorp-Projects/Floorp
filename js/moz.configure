@@ -133,10 +133,30 @@ def static_js(value):
 set_define("MOZ_STATIC_JS", static_js)
 
 
+# Enable records and tuples
+# ===================================================
+option(
+    "--enable-record-tuple",
+    default=False,
+    help="Enable records and tuples (and disables JIT)",
+)
+
+
+@depends("--enable-record-tuple")
+def enable_record_tuple(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_RECORD_TUPLE", enable_record_tuple)
+set_define("ENABLE_RECORD_TUPLE", enable_record_tuple)
+
 # JIT support
 # =======================================================
-@depends(target)
-def jit_default(target):
+@depends(target, "--enable-record-tuple")
+def jit_default(target, enable_record_tuple):
+    if enable_record_tuple:
+        return False
     if target.cpu in ("x86", "x86_64", "arm", "aarch64", "mips32", "mips64"):
         return True
     return False

@@ -52,6 +52,9 @@ enum JSValueType : uint8_t {
   JSVAL_TYPE_SYMBOL = 0x07,
   JSVAL_TYPE_PRIVATE_GCTHING = 0x08,
   JSVAL_TYPE_BIGINT = 0x09,
+#ifdef ENABLE_RECORD_TUPLE
+  JSVAL_TYPE_EXTENDED_PRIMITIVE = 0x0b,
+#endif
   JSVAL_TYPE_OBJECT = 0x0c,
 
   // This type never appears in a Value; it's only an out-of-band value.
@@ -70,9 +73,12 @@ enum class ValueType : uint8_t {
   Symbol = JSVAL_TYPE_SYMBOL,
   PrivateGCThing = JSVAL_TYPE_PRIVATE_GCTHING,
   BigInt = JSVAL_TYPE_BIGINT,
+#ifdef ENABLE_RECORD_TUPLE
+  ExtendedPrimitive = JSVAL_TYPE_EXTENDED_PRIMITIVE,
+#endif
   Object = JSVAL_TYPE_OBJECT,
 };
-}
+}  // namespace JS
 
 static_assert(sizeof(JSValueType) == 1,
               "compiler typed enum support is apparently buggy");
@@ -90,6 +96,10 @@ enum JSValueTag : uint32_t {
   JSVAL_TAG_SYMBOL = JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL,
   JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING,
   JSVAL_TAG_BIGINT = JSVAL_TAG_CLEAR | JSVAL_TYPE_BIGINT,
+#  ifdef ENABLE_RECORD_TUPLE
+  JSVAL_TAG_EXTENDED_PRIMITIVE =
+      JSVAL_TAG_CLEAR | JSVAL_TYPE_EXTENDED_PRIMITIVE,
+#  endif
   JSVAL_TAG_OBJECT = JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT
 };
 
@@ -109,6 +119,10 @@ enum JSValueTag : uint32_t {
   JSVAL_TAG_SYMBOL = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL,
   JSVAL_TAG_PRIVATE_GCTHING = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_PRIVATE_GCTHING,
   JSVAL_TAG_BIGINT = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BIGINT,
+#  ifdef ENABLE_RECORD_TUPLE
+  JSVAL_TAG_EXTENDED_PRIMITIVE =
+      JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_EXTENDED_PRIMITIVE,
+#  endif
   JSVAL_TAG_OBJECT = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT
 };
 
@@ -130,6 +144,10 @@ enum JSValueShiftedTag : uint64_t {
   JSVAL_SHIFTED_TAG_PRIVATE_GCTHING =
       (uint64_t(JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT),
   JSVAL_SHIFTED_TAG_BIGINT = (uint64_t(JSVAL_TAG_BIGINT) << JSVAL_TAG_SHIFT),
+#  ifdef ENABLE_RECORD_TUPLE
+  JSVAL_SHIFTED_TAG_EXTENDED_PRIMITIVE =
+      (uint64_t(JSVAL_TYPE_EXTENDED_PRIMITIVE) << JSVAL_TAG_SHIFT),
+#  endif
   JSVAL_SHIFTED_TAG_OBJECT = (uint64_t(JSVAL_TAG_OBJECT) << JSVAL_TAG_SHIFT)
 };
 
@@ -273,6 +291,7 @@ enum JSWhyMagic {
 
 namespace js {
 static inline JS::Value PoisonedObjectValue(uintptr_t poison);
+extern bool IsExtendedPrimitive(JSObject& obj);
 }  // namespace js
 
 namespace JS {
@@ -488,9 +507,22 @@ class alignas(8) Value {
 
   void setObject(JSObject& obj) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
+#ifdef ENABLE_RECORD_TUPLE
+    MOZ_ASSERT(!js::IsExtendedPrimitive(obj));
+#endif
     setObjectNoCheck(&obj);
     MOZ_ASSERT(&toObject() == &obj);
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  void setExtendedPrimitive(JSObject& obj) {
+    MOZ_ASSERT(js::gc::IsCellPointerValid(&obj));
+    MOZ_ASSERT(js::IsExtendedPrimitive(obj));
+    asBits_ =
+        bitsFromTagAndPayload(JSVAL_TAG_EXTENDED_PRIMITIVE, PayloadType(&obj));
+    MOZ_ASSERT(&toExtendedPrimitive() == &obj);
+  }
+#endif
 
  private:
   void setObjectNoCheck(JSObject* obj) {
@@ -668,6 +700,16 @@ class alignas(8) Value {
 #endif
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+  bool isExtendedPrimitive() const {
+    return toTag() == JSVAL_TAG_EXTENDED_PRIMITIVE;
+  }
+#endif
+
+  bool hasObjectPayload() const {
+    return isObject() || IF_RECORD_TUPLE(isExtendedPrimitive(), false);
+  }
+
   bool isPrimitive() const {
 #if defined(JS_NUNBOX32)
     return uint32_t(toTag()) < uint32_t(detail::ValueUpperExclPrimitiveTag);
@@ -794,6 +836,24 @@ class alignas(8) Value {
         (asBits_ ^ JSVAL_SHIFTED_TAG_OBJECT) & ~detail::ValueObjectOrNullBit;
     MOZ_ASSERT((ptrBits & 0x7) == 0);
     return reinterpret_cast<JSObject*>(ptrBits);
+#endif
+  }
+
+#ifdef ENABLE_RECORD_TUPLE
+  JSObject& toExtendedPrimitive() const {
+    MOZ_ASSERT(isExtendedPrimitive());
+#  if defined(JS_PUNBOX64)
+    MOZ_ASSERT((asBits_ & detail::ValueGCThingPayloadMask) != 0);
+#  endif
+    return *unboxGCPointer<JSObject, JSVAL_TAG_EXTENDED_PRIMITIVE>();
+  }
+#endif
+
+  JSObject& getObjectPayload() const {
+#ifdef ENABLE_RECORD_TUPLE
+    return isExtendedPrimitive() ? toExtendedPrimitive() : toObject();
+#else
+    return toObject();
 #endif
   }
 
@@ -1005,6 +1065,14 @@ static inline Value ObjectValue(JSObject& obj) {
   return v;
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+static inline Value ExtendedPrimitiveValue(JSObject& obj) {
+  Value v;
+  v.setExtendedPrimitive(obj);
+  return v;
+}
+#endif
+
 static inline Value MagicValue(JSWhyMagic why) {
   Value v;
   v.setMagic(why);
@@ -1143,6 +1211,10 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
   bool isSymbol() const { return value().isSymbol(); }
   bool isBigInt() const { return value().isBigInt(); }
   bool isObject() const { return value().isObject(); }
+#ifdef ENABLE_RECORD_TUPLE
+  bool isExtendedPrimitive() const { return value().isExtendedPrimitive(); }
+#endif
+  bool hasObjectPayload() const { return value().hasObjectPayload(); }
   bool isMagic() const { return value().isMagic(); }
   bool isMagic(JSWhyMagic why) const { return value().isMagic(why); }
   bool isGCThing() const { return value().isGCThing(); }
@@ -1162,6 +1234,12 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
   JS::BigInt* toBigInt() const { return value().toBigInt(); }
   JSObject& toObject() const { return value().toObject(); }
   JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
+#ifdef ENABLE_RECORD_TUPLE
+  JSObject& toExtendedPrimitive() const {
+    return value().toExtendedPrimitive();
+  }
+#endif
+  JSObject& getObjectPayload() const { return value().getObjectPayload(); }
   JS::GCCellPtr toGCCellPtr() const { return value().toGCCellPtr(); }
   gc::Cell* toGCThing() const { return value().toGCThing(); }
   JS::TraceKind traceKind() const { return value().traceKind(); }
@@ -1211,6 +1289,11 @@ class MutableWrappedPtrOperations<JS::Value, Wrapper>
   void setBigInt(JS::BigInt* bi) { set(JS::BigIntValue(bi)); }
   void setObject(JSObject& obj) { set(JS::ObjectValue(obj)); }
   void setObjectOrNull(JSObject* arg) { set(JS::ObjectOrNullValue(arg)); }
+#ifdef ENABLE_RECORD_TUPLE
+  void setExtendedPrimitive(JSObject& obj) {
+    return set(JS::ExtendedPrimitiveValue(obj));
+  }
+#endif
   void setPrivate(void* ptr) { set(JS::PrivateValue(ptr)); }
   void setPrivateUint32(uint32_t ui) { set(JS::PrivateUint32Value(ui)); }
   void setPrivateGCThing(js::gc::Cell* cell) {
@@ -1239,8 +1322,11 @@ auto MapGCThingTyped(const JS::Value& val, F&& f) {
       MOZ_ASSERT(gc::IsCellPointerValid(str));
       return mozilla::Some(f(str));
     }
+#ifdef ENABLE_RECORD_TUPLE
+    case JS::ValueType::ExtendedPrimitive:
+#endif
     case JS::ValueType::Object: {
-      JSObject* obj = &val.toObject();
+      JSObject* obj = &val.getObjectPayload();
       MOZ_ASSERT(gc::IsCellPointerValid(obj));
       return mozilla::Some(f(obj));
     }
