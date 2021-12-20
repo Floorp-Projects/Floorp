@@ -78,23 +78,23 @@ class PrivacySecuritySettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        recordTelemetry(key, sharedPreferences.all[key] as Boolean)
+        recordTelemetry(key, sharedPreferences.all[key])
         updateStealthToggleAvailability()
     }
 
-    private fun recordTelemetry(key: String, newValue: Boolean) {
+    private fun recordTelemetry(key: String, newValue: Any?) {
         when (key) {
             getString(R.string.pref_key_telemetry) -> PrivacySettings.telemetrySettingChanged.record(
-                PrivacySettings.TelemetrySettingChangedExtra(newValue)
+                PrivacySettings.TelemetrySettingChangedExtra(newValue as? Boolean)
             )
             getString(R.string.pref_key_safe_browsing) -> PrivacySettings.safeBrowsingSettingChanged.record(
-                PrivacySettings.SafeBrowsingSettingChangedExtra(newValue)
+                PrivacySettings.SafeBrowsingSettingChangedExtra(newValue as? Boolean)
             )
             getString(R.string.pref_key_biometric) -> PrivacySettings.unlockSettingChanged.record(
-                PrivacySettings.UnlockSettingChangedExtra(newValue)
+                PrivacySettings.UnlockSettingChangedExtra(newValue as? Boolean)
             )
             getString(R.string.pref_key_secure) -> PrivacySettings.stealthSettingChanged.record(
-                PrivacySettings.StealthSettingChangedExtra(newValue)
+                PrivacySettings.StealthSettingChangedExtra(newValue as? Boolean)
             )
             else -> {
                 // Telemetry for the change is recorded elsewhere.
