@@ -3488,6 +3488,12 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
     vp.setSymbol(obj->as<SymbolObject>().unbox());
   } else if (obj->is<BigIntObject>()) {
     vp.setBigInt(obj->as<BigIntObject>().unbox());
+#ifdef ENABLE_RECORD_TUPLE
+  } else if (obj->is<RecordObject>()) {
+    vp.setExtendedPrimitive(*obj->as<RecordObject>().unbox());
+  } else if (obj->is<TupleObject>()) {
+    vp.setExtendedPrimitive(*obj->as<TupleObject>().unbox());
+#endif
   } else {
     vp.setUndefined();
   }
