@@ -32,11 +32,13 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSONParser.h"
+#include "vm/NativeObject.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/TupleObject.h"
+#  include "vm/RecordType.h"
 #endif
 
 #include "builtin/Array-inl.h"
@@ -1085,13 +1087,19 @@ static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
 }
 
 template <typename CharT>
+bool ParseJSON(JSContext* cx, const mozilla::Range<const CharT> chars,
+               MutableHandleValue vp) {
+  Rooted<JSONParser<CharT>> parser(
+      cx, JSONParser<CharT>(cx, chars, JSONParserBase::ParseType::JSONParse));
+  return parser.parse(vp);
+}
+
+template <typename CharT>
 bool js::ParseJSONWithReviver(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
                               HandleValue reviver, MutableHandleValue vp) {
   /* 15.12.2 steps 2-3. */
-  Rooted<JSONParser<CharT>> parser(
-      cx, JSONParser<CharT>(cx, chars, JSONParserBase::ParseType::JSONParse));
-  if (!parser.parse(vp)) {
+  if (!ParseJSON(cx, chars, vp)) {
     return false;
   }
 
@@ -1147,6 +1155,162 @@ static bool json_parse(JSContext* cx, unsigned argc, Value* vp) {
                                     args.rval());
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+bool BuildImmutableProperty(JSContext* cx, HandleValue value, HandleId name,
+                            HandleValue reviver,
+                            MutableHandleValue immutableRes) {
+  MOZ_ASSERT(!name.isSymbol());
+
+  // Step 1
+  if (value.isObject()) {
+    RootedValue childValue(cx), newElement(cx);
+    RootedId childName(cx);
+
+    // Step 1.a-1.b
+    if (value.toObject().is<ArrayObject>()) {
+      RootedArrayObject arr(cx, &value.toObject().as<ArrayObject>());
+
+      // Step 1.b.iii
+      uint32_t len = arr->length();
+
+      TupleType* tup = TupleType::createUninitialized(cx, len);
+      if (!tup) {
+        return false;
+      }
+      immutableRes.setExtendedPrimitive(*tup);
+
+      // Step 1.b.iv
+      for (uint32_t i = 0; i < len; i++) {
+        // Step 1.b.iv.1
+        childName.set(INT_TO_JSID(i));
+
+        // Step 1.b.iv.2
+        if (!GetProperty(cx, arr, value, childName, &childValue)) {
+          return false;
+        }
+
+        // Step 1.b.iv.3
+        if (!BuildImmutableProperty(cx, childValue, childName, reviver,
+                                    &newElement)) {
+          return false;
+        }
+        MOZ_ASSERT(newElement.isPrimitive());
+
+        // Step 1.b.iv.5
+        if (!tup->initializeNextElement(cx, newElement)) {
+          return false;
+        }
+      }
+
+      // Step 1.b.v
+      tup->finishInitialization(cx);
+    } else {
+      RootedObject obj(cx, &value.toObject());
+
+      // Step 1.c.i - We only get the property keys rather than the
+      // entries, but the difference is not observable from user code
+      // because `obj` is a plan object not exposed externally
+      RootedIdVector props(cx);
+      if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &props)) {
+        return false;
+      }
+
+      RecordType* rec = RecordType::createUninitialized(cx, props.length());
+      if (!rec) {
+        return false;
+      }
+      immutableRes.setExtendedPrimitive(*rec);
+
+      for (uint32_t i = 0; i < props.length(); i++) {
+        // Step 1.c.iii.1
+        childName.set(props[i]);
+
+        // Step 1.c.iii.2
+        if (!GetProperty(cx, obj, value, childName, &childValue)) {
+          return false;
+        }
+
+        // Step 1.c.iii.3
+        if (!BuildImmutableProperty(cx, childValue, childName, reviver,
+                                    &newElement)) {
+          return false;
+        }
+        MOZ_ASSERT(newElement.isPrimitive());
+
+        // Step 1.c.iii.5
+        if (!newElement.isUndefined()) {
+          // Step 1.c.iii.5.a-b
+          rec->initializeNextProperty(cx, childName, newElement);
+        }
+      }
+
+      // Step 1.c.iv
+      rec->finishInitialization(cx);
+    }
+  } else {
+    // Step 2.a
+    immutableRes.set(value);
+  }
+
+  // Step 3
+  if (IsCallable(reviver)) {
+    RootedValue keyVal(cx, StringValue(IdToString(cx, name)));
+
+    // Step 3.a
+    if (!Call(cx, reviver, UndefinedHandleValue, keyVal, immutableRes,
+              immutableRes)) {
+      return false;
+    }
+
+    // Step 3.b
+    if (!immutableRes.isPrimitive()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_RECORD_TUPLE_NO_OBJECT);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  /* Step 1. */
+  JSString* str = (args.length() >= 1) ? ToString<CanGC>(cx, args[0])
+                                       : cx->names().undefined;
+  if (!str) {
+    return false;
+  }
+
+  JSLinearString* linear = str->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.init(cx, linear)) {
+    return false;
+  }
+
+  HandleValue reviver = args.get(1);
+  RootedValue unfiltered(cx);
+
+  if (linearChars.isLatin1()) {
+    if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered)) {
+      return false;
+    }
+  } else {
+    if (!ParseJSON(cx, linearChars.twoByteRange(), &unfiltered)) {
+      return false;
+    }
+  }
+
+  RootedId id(cx, NameToId(cx->names().empty));
+  return BuildImmutableProperty(cx, unfiltered, id, reviver, args.rval());
+}
+#endif
+
 /* ES6 24.3.2. */
 bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1180,6 +1344,9 @@ bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec json_static_methods[] = {
     JS_FN(js_toSource_str, json_toSource, 0, 0),
     JS_FN("parse", json_parse, 2, 0), JS_FN("stringify", json_stringify, 3, 0),
+#ifdef ENABLE_RECORD_TUPLE
+    JS_FN("parseImmutable", json_parseImmutable, 2, 0),
+#endif
     JS_FS_END};
 
 static const JSPropertySpec json_static_properties[] = {
