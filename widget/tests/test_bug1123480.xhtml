@@ -70,12 +70,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     return count;
   }
 
-  function RunTest() {
+  async function RunTest() {
+    SimpleTest.waitForExplicitFinish();
     const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Sanitize environment
     gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     var initialFdCount = getClipboardCacheFDCount();
 
@@ -90,6 +92,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
 
     // Sanitize environment again.
     gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     is(getClipboardCacheFDCount(), initialFdCount, "should have cleared the clipboard data");
 
     // Repeat procedure of plain text selection with private browsing
@@ -130,11 +134,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       Suppstr = nsSupportsString();
       Suppstr.data = SHORT_STRING_NO_CACHE;
       Transfer.setTransferData("text/unicode", Suppstr);
+      await new Promise(resolve => setTimeout(resolve, 0));
       is(getClipboardCacheFDCount(), initialFdCount, "should drop the cache file, if any.");
 
       Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);
       is(getClipboardCacheFDCount(), initialFdCount, "should postsanitize the environment");
     }
+
+    SimpleTest.finish();
   }
   ]]>
   </script>
