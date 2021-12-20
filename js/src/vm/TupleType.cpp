@@ -130,7 +130,7 @@ bool TupleType::getOwnProperty(HandleId id, MutableHandleValue vp) const {
 }
 
 js::HashNumber TupleType::hash(const TupleType::ElementHasher& hasher) const {
-  // MOZ_ASSERT(isAtomized());
+  MOZ_ASSERT(isAtomized());
 
   js::HashNumber h = mozilla::HashGeneric(length());
   for (uint32_t i = 0; i < length(); i++) {
@@ -158,7 +158,7 @@ bool TupleType::ensureAtomized(JSContext* cx) {
     }
   }
 
-  // ToDo: store somewhere that this has been atomized
+  getElementsHeader()->setTupleIsAtomized();
 
   return true;
 }
@@ -174,8 +174,8 @@ bool TupleType::sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
 }
 
 bool TupleType::sameValueZero(TupleType* lhs, TupleType* rhs) {
-  // MOZ_ASSERT(lhs->isAtomized());
-  // MOZ_ASSERT(rhs->isAtomized());
+  MOZ_ASSERT(lhs->isAtomized());
+  MOZ_ASSERT(rhs->isAtomized());
 
   if (lhs == rhs) {
     return true;

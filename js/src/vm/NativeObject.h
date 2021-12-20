@@ -194,7 +194,12 @@ class ObjectElements {
     // non-writable length; never present for non-arrays.
     NONWRITABLE_ARRAY_LENGTH = 0x2,
 
-    // (0x4 is unused)
+#ifdef ENABLE_RECORD_TUPLE
+    // Records, Tuples and Boxes must be atomized before being hashed. We store
+    // the "is atomized" flag here for tuples, and in fixed slots for records
+    // and boxes.
+    TUPLE_IS_ATOMIZED = 0x4,
+#endif
 
     // For TypedArrays only: this TypedArray's storage is mapping shared
     // memory.  This is a static property of the TypedArray, set when it
@@ -283,6 +288,12 @@ class ObjectElements {
     MOZ_ASSERT(numShiftedElements() == 0);
     flags |= NONWRITABLE_ARRAY_LENGTH;
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  void setTupleIsAtomized() { flags |= TUPLE_IS_ATOMIZED; }
+
+  bool tupleIsAtomized() const { return flags & TUPLE_IS_ATOMIZED; }
+#endif
 
   void addShiftedElements(uint32_t count) {
     MOZ_ASSERT(count < capacity);
