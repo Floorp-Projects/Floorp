@@ -619,6 +619,21 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1746883",
+    platform: "all",
+    domain: "zoom.us",
+    bug: "1746883",
+    contentScripts: {
+      matches: ["*://*.zoom.us/*"],
+      js: [
+        {
+          file: "injections/js/bug1746883-zoom.us-OffscreenCanvas.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
