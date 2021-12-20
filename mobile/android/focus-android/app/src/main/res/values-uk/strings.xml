@@ -73,7 +73,7 @@
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Блокування вмісту</string>
     <!-- This is the subtitle content blocking toggle -->
-    <string name="menu_content_blocking_subtitle">Вимкнути для вирішення проблем з деякими сайтами</string>
+    <string name="menu_content_blocking_subtitle">Вимкнути для усунення проблем з деякими сайтами</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106

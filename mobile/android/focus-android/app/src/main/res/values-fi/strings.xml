@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -194,8 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Ykkössivustoille</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Ota käyttöön, jotta %s voi täydentää automaattisesti yli 450 suosittua osoitetta osoitepalkkiin.</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Lisäämillesi sivustoille</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Ota käyttöön, jotta %s voi täydentää automaattisesti suosikkiosoitteesi.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Hallitse sivustoja</string>
@@ -282,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Estä vain kolmannen osapuolen seurantaevästeet</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Estä vain kolmannen osapuolen evästeet</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Estä sivustorajat ylittävät evästeet</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Kyllä kiitos</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -739,12 +748,15 @@
     <string name="preference_open_new_tab">Siirry välilehteen heti linkin avaamisen jälkeen</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Suojattu selaus</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Suojattu selaus</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Estä mahdollisesti vaaralliset ja petolliset sivustot</string>
 
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Estä ilmoitetut petolliset ja hyökkäävät sivustot, haittaohjelmasivustot ja ei-toivottuja ohjelmia tarjoavat sivustot.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Vain HTTPS -tila</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Poikkeukset</string>
@@ -806,6 +818,9 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Poista</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Nimeä uudelleen</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1$sin historian</string>
@@ -822,4 +837,8 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Sulje välilehti</string>
 </resources>
