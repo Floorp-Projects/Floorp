@@ -2598,6 +2598,7 @@ bool BaselineCodeGen<Handler>::emit_RegExp() {
 
 UNSUPPORTED_OPCODE(InitRecord)
 UNSUPPORTED_OPCODE(AddRecordProperty)
+UNSUPPORTED_OPCODE(AddRecordSpread)
 UNSUPPORTED_OPCODE(FinishRecord)
 UNSUPPORTED_OPCODE(InitTuple)
 UNSUPPORTED_OPCODE(AddTupleElement)
