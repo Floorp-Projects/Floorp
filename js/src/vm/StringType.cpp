@@ -2116,7 +2116,12 @@ JSString* js::ToStringSlow(
   }
 #ifdef ENABLE_RECORD_TUPLE
   else if (arg.isExtendedPrimitive()) {
-    MOZ_CRASH("Records and Tuples are not supported yet.");
+    if (arg.toExtendedPrimitive().template is<TupleType>()) {
+      str = js::TupleToSource(
+          cx, &arg.toExtendedPrimitive().template as<TupleType>());
+    } else {
+      MOZ_CRASH("Unsupported ExtendedPrimitive type");
+    }
   }
 #endif
   else {

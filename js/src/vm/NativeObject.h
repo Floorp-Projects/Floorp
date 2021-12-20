@@ -238,6 +238,9 @@ class ObjectElements {
   friend class ArrayObject;
   friend class NativeObject;
   friend class TenuringTracer;
+#ifdef ENABLE_RECORD_TUPLE
+  friend class TupleType;
+#endif
 
   friend bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
                                     IntegrityLevel level);

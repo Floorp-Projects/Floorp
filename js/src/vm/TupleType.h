@@ -7,6 +7,7 @@
 #ifndef vm_TupleType_h
 #define vm_TupleType_h
 
+#include <cstdint>
 #include "vm/NativeObject.h"
 
 namespace JS {
@@ -17,9 +18,23 @@ class TupleType final : public js::NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  static TupleType* create(JSContext* cx);
+ public:
+  static TupleType* create(JSContext* cx, uint32_t length,
+                           const Value* elements);
+
+  inline uint32_t length() const { return getElementsHeader()->length; }
+
+  // Methods defined on Tuple.prototype
+  [[nodiscard]] static bool lengthAccessor(JSContext* cx, unsigned argc,
+                                           Value* vp);
 };
 
 }  // namespace JS
+
+namespace js {
+
+extern JSString* TupleToSource(JSContext* cx, TupleType* tup);
+
+}
 
 #endif
