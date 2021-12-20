@@ -541,7 +541,8 @@
   /* Width accounts for all color formats (hsl being the longest) */
   --label-width: 160px;
   --label-height: 23px;
-  --color: #e0e0e0;
+  --background-color: #e0e0e0;
+  color: #333;
 
   position: fixed;
   /* Tool start position. This should match the X/Y defines in JS */
@@ -570,12 +571,12 @@
   width: var(--magnifier-width);
   height: var(--magnifier-height);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px var(--color);
+  box-shadow: 0 0 0 3px var(--background-color);
   display: block;
 }
 
 :-moz-native-anonymous .eye-dropper-color-container {
-  background-color: var(--color);
+  background-color: var(--background-color);
   border-radius: 2px;
   width: var(--label-width);
   height: var(--label-height);
