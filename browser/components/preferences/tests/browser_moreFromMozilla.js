@@ -189,8 +189,40 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
   let vpnButton = doc.getElementById("simple-mozillaVPN");
   vpnButton.doCommand();
   let openedTab = await tabOpened;
-
   Assert.ok(gBrowser.selectedBrowser.documentURI.spec.startsWith(expectedUrl));
+
+  let searchParams = new URL(gBrowser.selectedBrowser.documentURI.spec)
+    .searchParams;
+  Assert.equal(
+    searchParams.get("utm_source"),
+    "about-prefs",
+    "expected utm_source sent"
+  );
+  Assert.equal(
+    searchParams.get("utm_campaign"),
+    "morefrommozilla",
+    "utm_campaign set"
+  );
+  Assert.equal(
+    searchParams.get("utm_medium"),
+    "firefox-desktop",
+    "utm_medium set"
+  );
+  Assert.equal(
+    searchParams.get("entrypoint_experiment"),
+    "morefrommozilla-experiment-1846",
+    "entrypoint_experiment set"
+  );
+  Assert.equal(
+    searchParams.get("utm_content"),
+    "fxvt-113-a-na",
+    "utm_content set"
+  );
+  Assert.equal(
+    searchParams.get("entrypoint_variation"),
+    "treatment-simple",
+    "entrypoint_variation set"
+  );
 
   BrowserTestUtils.removeTab(openedTab);
   BrowserTestUtils.removeTab(tab);
