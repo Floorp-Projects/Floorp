@@ -106,6 +106,7 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define EGL_RED_SIZE 0x3024
 #define EGL_NONE 0x3038
 #define EGL_VENDOR 0x3053
+#define EGL_EXTENSIONS 0x3055
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #define EGL_OPENGL_API 0x30A2
 #define EGL_DEVICE_EXT 0x322C
@@ -456,7 +457,8 @@ static bool get_gles_status(EGLDisplay dpy,
       cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
           eglGetProcAddress("eglQueryDisplayAttribEXT"));
 
-  if (!eglChooseConfig || !eglCreateContext || !eglMakeCurrent) {
+  if (!eglChooseConfig || !eglCreateContext || !eglMakeCurrent ||
+      !eglQueryDeviceStringEXT) {
     record_warning("libEGL missing methods for GL test");
     return false;
   }
@@ -530,22 +532,21 @@ static bool get_gles_status(EGLDisplay dpy,
     return false;
   }
 
-  if (eglQueryDeviceStringEXT) {
-    EGLDeviceEXT device = nullptr;
-
-    if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
-        EGL_TRUE) {
+  EGLDeviceEXT device;
+  if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
+      EGL_TRUE) {
+    const char* deviceExtensions =
+        eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
+    if (strstr(deviceExtensions, "EGL_MESA_device_software")) {
+      record_value("MESA_ACCELERATED\nFALSE\n");
+    } else {
+#ifdef MOZ_WAYLAND
       const char* deviceString =
           eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
       if (deviceString) {
-        record_value("MESA_ACCELERATED\nTRUE\n");
-
-#ifdef MOZ_WAYLAND
         get_render_name(deviceString);
-#endif
-      } else {
-        record_value("MESA_ACCELERATED\nFALSE\n");
       }
+#endif
     }
   }
 
