@@ -4656,8 +4656,7 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 
   // Optimize common cases like (2).toString() or "foo".valueOf() to not
   // create a wrapper object.
-  if (v.isPrimitive() && !v.isNullOrUndefined() &&
-      IF_RECORD_TUPLE(!v.isExtendedPrimitive(), true)) {
+  if (v.isPrimitive() && !v.isNullOrUndefined()) {
     JSObject* proto;
 
     switch (v.type()) {
@@ -4678,7 +4677,11 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
         proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
         break;
 #ifdef ENABLE_RECORD_TUPLE
-      case ValueType::ExtendedPrimitive:
+      case ValueType::ExtendedPrimitive: {
+        RootedObject obj(cx, &v.toExtendedPrimitive());
+        RootedId id(cx, NameToId(name));
+        return ExtendedPrimitiveGetProperty(cx, obj, v, id, vp);
+      }
 #endif
       case ValueType::Undefined:
       case ValueType::Null:

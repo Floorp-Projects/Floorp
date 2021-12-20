@@ -1552,7 +1552,6 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 #ifdef ENABLE_RECORD_TUPLE
   else if (obj->is<RecordType>()) {
     RecordType* rec = &obj->as<RecordType>();
-    RootedValue recVal(cx, ExtendedPrimitiveValue(*rec));
     RootedArrayObject keys(cx, rec->keys());
     RootedId keyId(cx);
     RootedString keyStr(cx);
@@ -1573,9 +1572,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         if (!JS_StringToId(cx, keyStr, &keyId)) {
           return false;
         }
-        if (!GetProperty(cx, obj, recVal, keyId, &value)) {
-          return false;
-        }
+        MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, keyId, &value));
       } else {
         MOZ_ASSERT(kind == EnumerableOwnPropertiesKind::KeysAndValues);
 
@@ -1585,9 +1582,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         if (!JS_StringToId(cx, keyStr, &keyId)) {
           return false;
         }
-        if (!GetProperty(cx, obj, recVal, keyId, &value)) {
-          return false;
-        }
+        MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, keyId, &value));
 
         if (!NewValuePair(cx, key, value, &value)) {
           return false;

@@ -44,6 +44,8 @@ class RecordType final : public js::NativeObject {
                               HandleValue value);
   bool finishInitialization(JSContext* cx);
 
+  bool getOwnProperty(JSContext* cx, HandleId id, MutableHandleValue vp) const;
+
   static bool sameValueZero(JSContext* cx, RecordType* lhs, RecordType* rhs,
                             bool* equal);
   static bool sameValue(JSContext* cx, RecordType* lhs, RecordType* rhs,

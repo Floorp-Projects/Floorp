@@ -7,13 +7,18 @@
 #ifndef vm_RecordTupleShared_h
 #define vm_RecordTupleShared_h
 
+#include "NamespaceImports.h"
+
 #include "js/ErrorReport.h"
 #include "js/TypeDecls.h"
 
 namespace js {
 
-bool IsExtendedPrimitive(JSObject& obj);
+bool IsExtendedPrimitive(const JSObject& obj);
 bool IsExtendedPrimitiveWrapper(const JSObject& obj);
+bool ExtendedPrimitiveGetProperty(JSContext* cx, JS::HandleObject obj,
+                                  JS::HandleValue receiver, JS::HandleId id,
+                                  JS::MutableHandleValue vp);
 
 }  // namespace js
 
