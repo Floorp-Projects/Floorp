@@ -9906,7 +9906,7 @@
 
 - name: network.proxy.parse_pac_on_socket_process
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: network.proxy.detect_system_proxy_changes
