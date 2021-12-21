@@ -58,7 +58,21 @@ function generateLocalThrows(types, baseThrow) {
          (then ${baseThrow})
          (else ${baseThrow}))`;
 
-  let basicThrows = [catchlessTryThrow, blockThrow, conditionalThrow];
+  // Including try-delegate.
+  let baseDelegate =
+      `(try (param ${types})
+         (do ${baseThrow})
+         (delegate 0))`;
+
+  // Delegate just outside the block.
+  let nestedDelegate1InBlock =
+      `(block $label1 (param ${types})
+         (try (param ${types})
+           (do ${baseThrow})
+           (delegate $label1)))`;
+
+  let basicThrows = [catchlessTryThrow, blockThrow, conditionalThrow,
+                     baseDelegate, nestedDelegate1InBlock];
 
   // Secondary throws (will end up inside a catch block).
 

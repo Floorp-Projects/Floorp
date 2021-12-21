@@ -2707,6 +2707,12 @@ class FunctionCompiler {
     return builtinInstanceMethodCall(callee, lineOrBytecode, args, tagIndex);
   }
 
+  bool addPadPatch(MControlInstruction* ins, size_t relativeTryDepth) {
+    Control& tryControl = iter().controlItem(relativeTryDepth);
+    ControlInstructionVector& padPatches = tryControl.tryPadPatches;
+    return padPatches.emplaceBack(ins);
+  }
+
   bool endWithPadPatch(MBasicBlock* block, MDefinition* exn,
                        MDefinition* tagIndex, uint32_t relativeTryDepth) {
     MOZ_ASSERT(iter().controlKind(relativeTryDepth) == LabelKind::Try);
@@ -2726,10 +2732,7 @@ class FunctionCompiler {
     MGoto* insToPatch = MGoto::New(alloc());
     block->end(insToPatch);
 
-    // Add pad patch to the control item's tryPadPatches.
-    Control& tryControl = iter().controlItem(relativeTryDepth);
-    ControlInstructionVector& padPatches = tryControl.tryPadPatches;
-    return padPatches.emplaceBack(insToPatch);
+    return addPadPatch(insToPatch, relativeTryDepth);
   }
 
   bool checkPendingExceptionAndBranch(uint32_t relativeTryDepth) {
@@ -2995,6 +2998,28 @@ class FunctionCompiler {
       }
     }
     iter().setResults(count, loadedValues);
+    return true;
+  }
+
+  bool delegatePadPatches(const ControlInstructionVector& delegatePadPatches,
+                          uint32_t relativeDepth) {
+    if (delegatePadPatches.empty()) {
+      return true;
+    }
+
+    // Find where we are delegating the pad patches to.
+    uint32_t targetRelativeDepth;
+    if (!iter().controlFindInnermostFrom(LabelKind::Try, relativeDepth,
+                                         &targetRelativeDepth)) {
+      MOZ_ASSERT(relativeDepth <= blockDepth_ - 1);
+      targetRelativeDepth = blockDepth_ - 1;
+    }
+    // Append the delegate's pad patches to the target's.
+    for (MControlInstruction* ins : delegatePadPatches) {
+      if (!addPadPatch(ins, targetRelativeDepth)) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -3539,6 +3564,11 @@ static bool EmitEnd(FunctionCompiler& f) {
   switch (kind) {
     case LabelKind::Body:
       MOZ_ASSERT(f.iter().controlStackEmpty());
+#ifdef ENABLE_WASM_EXCEPTIONS
+      if (!f.finishCatchlessTry(control)) {
+        return false;
+      }
+#endif
       if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
@@ -3706,8 +3736,9 @@ static bool EmitCatch(FunctionCompiler& f) {
   }
 
   // Pushing the results of the previous block, to properly join control flow
-  // after the try and after each handler, before we switch to a new catch
-  // block. This is similar to what is done for if-then-else control flow.
+  // after the try and after each handler, as well as potential control flow
+  // patches from other instrunctions. This is similar to what is done for
+  // if-then-else control flow and for most other control control flow joins.
   if (!f.pushDefs(tryValues)) {
     return false;
   }
@@ -3724,9 +3755,8 @@ static bool EmitCatchAll(FunctionCompiler& f) {
   }
 
   // Pushing the results of the previous block, to properly join control flow
-  // after the try and after each handler, before we switch to the catch_all
-  // block. This is similar to what is done for the catches and for
-  // if-then-else control flow.
+  // after the try and after each handler, as well as potential control flow
+  // patches from other instrunctions.
   if (!f.pushDefs(tryValues)) {
     return false;
   }
@@ -3741,9 +3771,34 @@ static bool EmitDelegate(FunctionCompiler& f) {
   if (!f.iter().readDelegate(&relativeDepth, &resultType, &tryValues)) {
     return false;
   }
+
+  Control& control = f.iter().controlItem();
+  MBasicBlock* block = control.block;
+
+  // Unless the entire try-delegate is dead code, delegate any pad-patches from
+  // this try to the next try-block above relativeDepth.
+  if (block) {
+    ControlInstructionVector& delegatePadPatches = control.tryPadPatches;
+    if (!f.delegatePadPatches(delegatePadPatches, relativeDepth)) {
+      return false;
+    }
+  }
   f.iter().popDelegate();
 
-  MOZ_CRASH("NYI");
+  // Push the results of the previous block, and join control flow with
+  // potential control flow patches from other instrunctions in the try code.
+  // This is similar to what is done for EmitEnd.
+  if (!f.pushDefs(tryValues)) {
+    return false;
+  }
+  DefVector postJoinDefs;
+  if (!f.finishBlock(&postJoinDefs)) {
+    return false;
+  }
+  MOZ_ASSERT_IF(!f.inDeadCode(), postJoinDefs.length() == resultType.length());
+  f.iter().setResults(postJoinDefs.length(), postJoinDefs);
+
+  return true;
 }
 
 static bool EmitThrow(FunctionCompiler& f) {
