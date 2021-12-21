@@ -12,7 +12,12 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const { handleInternally, useHelperApp, useSystemDefault } = Ci.nsIHandlerInfo;
+const {
+  handleInternally,
+  useHelperApp,
+  useSystemDefault,
+  saveToDisk,
+} = Ci.nsIHandlerInfo;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
@@ -37,15 +42,16 @@ add_task(async function setup() {
 });
 
 // This test ensures that a "Save as..." filepicker dialog is shown for a file
-// if useDownloadDir ("Always ask where to save files") is set to false
-add_task(async function aDownloadLaunchedWithAppPromptsForFolder() {
+// if useDownloadDir ("Always ask where to save files") is set to false and
+// the filetype is set to save to disk.
+add_task(async function aDownloadSavedToDiskPromptsForFolder() {
   let publicList = await Downloads.getList(Downloads.PUBLIC);
+  ensureMIMEState({ preferredAction: saveToDisk });
   registerCleanupFunction(async () => {
     await publicList.removeFinished();
   });
-  let filePickerShown = new Promise(resolve => {
+  let filePickerShownPromise = new Promise(resolve => {
     MockFilePicker.showCallback = function(fp) {
-      ok(true, "filepicker should have been shown");
       setTimeout(resolve, 0);
       return Ci.nsIFilePicker.returnCancel;
     };
@@ -58,18 +64,35 @@ add_task(async function aDownloadLaunchedWithAppPromptsForFolder() {
     waitForStateStop: true,
   });
 
-  await filePickerShown;
+  info("Waiting on filepicker.");
+  await filePickerShownPromise;
+  ok(true, "filepicker should have been shown");
 
   BrowserTestUtils.removeTab(loadingTab);
 });
 
 // This test ensures that downloads configured to open internally create only
-// one file destination when saved via the filepicker.
+// one file destination when saved via the filepicker, and don't prompt.
 add_task(async function testFilesHandledInternally() {
   let dir = await setupFilePickerDirectory();
 
   ensureMIMEState({ preferredAction: handleInternally });
 
+  let filePickerShown = false;
+  MockFilePicker.showCallback = function(fp) {
+    filePickerShown = true;
+    return Ci.nsIFilePicker.returnCancel;
+  };
+
+  let thirdTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    url => {
+      info("Got load for " + url);
+      return url.endsWith("file_image_svgxml.svg") && url.startsWith("file:");
+    },
+    true,
+    true
+  );
   let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_PATH + "file_image_svgxml.svg",
@@ -77,26 +100,28 @@ add_task(async function testFilesHandledInternally() {
     waitForStateStop: true,
   });
 
-  await TestUtils.waitForCondition(() => {
-    return (
-      gBrowser.tabs.length === 3 &&
-      gBrowser?.tabs[2]?.label.endsWith("file_image_svgxml.svg")
-    );
-  }, "A new tab for the downloaded svg wasn't open.");
+  let openedTab = await thirdTabPromise;
+  ok(!filePickerShown, "file picker should not have shown up.");
 
   assertCorrectFile(dir, "file_image_svgxml.svg");
 
   // Cleanup
   BrowserTestUtils.removeTab(loadingTab);
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  BrowserTestUtils.removeTab(openedTab);
 });
 
 // This test ensures that downloads configured to open with a system default
-// app create only one file destination when saved via the filepicker.
+// app create only one file destination and don't open the filepicker.
 add_task(async function testFilesHandledBySystemDefaultApp() {
   let dir = await setupFilePickerDirectory();
 
   ensureMIMEState({ preferredAction: useSystemDefault });
+
+  let filePickerShown = false;
+  MockFilePicker.showCallback = function(fp) {
+    filePickerShown = true;
+    return Ci.nsIFilePicker.returnCancel;
+  };
 
   let oldLaunchFile = DownloadIntegration.launchFile;
   let launchFileCalled = new Promise(resolve => {
@@ -118,6 +143,7 @@ add_task(async function testFilesHandledBySystemDefaultApp() {
   });
 
   await launchFileCalled;
+  ok(!filePickerShown, "file picker should not have shown up.");
 
   assertCorrectFile(dir, "file_pdf_application_pdf.pdf");
 
@@ -148,6 +174,12 @@ add_task(async function testFilesHandledByHelperApp() {
     preferredAction: useHelperApp,
     preferredHandlerApp: appHandler,
   });
+
+  let filePickerShown = false;
+  MockFilePicker.showCallback = function(fp) {
+    filePickerShown = true;
+    return Ci.nsIFilePicker.returnCancel;
+  };
 
   let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
   let downloadFinishedPromise = new Promise(resolve => {
@@ -185,6 +217,7 @@ add_task(async function testFilesHandledByHelperApp() {
 
   await downloadFinishedPromise;
   await launchFileCalled;
+  ok(!filePickerShown, "file picker should not have shown up.");
   assertCorrectFile(dir, "file_pdf_application_pdf.pdf");
 
   // Cleanup
@@ -208,8 +241,30 @@ async function setupFilePickerDirectory() {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.download.dir");
     Services.prefs.clearUserPref("browser.download.folderList");
+    let publicList = await Downloads.getList(Downloads.PUBLIC);
+    let unfinishedDownloads = new Set(
+      (await publicList.getAll()).filter(dl => !dl.succeeded && !dl.error)
+    );
+    if (unfinishedDownloads.size) {
+      info(`Have ${unfinishedDownloads.size} unfinished downloads, waiting.`);
+      await new Promise(resolve => {
+        let view = {
+          onChanged(dl) {
+            if (unfinishedDownloads.has(dl) && (dl.succeeded || dl.error)) {
+              unfinishedDownloads.delete(dl);
+              info(`Removed another download.`);
+              if (!unfinishedDownloads.size) {
+                publicList.removeView(view);
+                resolve();
+              }
+            }
+          },
+        };
+        publicList.addView(view);
+      });
+    }
     try {
-      await IOUtils.remove(saveDir, { recursive: true });
+      await IOUtils.remove(saveDir.path, { recursive: true });
     } catch (e) {
       Cu.reportError(e);
     }
@@ -238,5 +293,6 @@ function ensureMIMEState({ preferredAction, preferredHandlerApp = null }) {
   const mimeInfo = gMimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
   mimeInfo.preferredAction = preferredAction;
   mimeInfo.preferredApplicationHandler = preferredHandlerApp;
+  mimeInfo.alwaysAskBeforeHandling = false;
   gHandlerSvc.store(mimeInfo);
 }
