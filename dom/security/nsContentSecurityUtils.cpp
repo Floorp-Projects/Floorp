@@ -11,8 +11,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
@@ -33,8 +31,7 @@
 #include "js/ContextOptions.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/RegExp.h"
-#include "js/RegExpFlags.h"           // JS::RegExpFlags
-#include "js/friend/ErrorMessages.h"  // JSMSG_UNSAFE_FILENAME
+#include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -1192,8 +1189,8 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
 #endif
 
 /* static */
-bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
-                                                    const char* aFilename) {
+bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
+                                                    bool aIsSystemRealm) {
   // If the pref is permissive, allow everything
   if (StaticPrefs::security_allow_parent_unrestricted_js_loads()) {
     return true;
@@ -1264,6 +1261,11 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
     return true;
   }
 
+  auto kAllowedExtensionScriptFilenames = {
+      u"/experiment-apis/translateUi/TranslationBrowserChromeUi.js"_ns,
+      u"/experiment-apis/translateUi/TranslationBrowserChromeUiManager.js"_ns,
+      u"/experiment-apis/translateUi/content/translation-notification.js"_ns};
+
   if (StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
@@ -1273,21 +1275,22 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
           ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
 
       if (policy && policy->IsPrivileged()) {
-        MOZ_LOG(sCSMLog, LogLevel::Debug,
-                ("Allowing a javascript load of %s because the web extension "
-                 "it is associated with is privileged.",
-                 aFilename));
-        return true;
+        bool matchedAnAllowlist = false;
+        for (auto allowedFilename : kAllowedExtensionScriptFilenames) {
+          if (StringBeginsWith(url.FilePath(), allowedFilename)) {
+            matchedAnAllowlist = true;
+          }
+        }
+
+        if (matchedAnAllowlist) {
+          MOZ_LOG(sCSMLog, LogLevel::Debug,
+                  ("Allowing a javascript load of %s because the web extension "
+                   "it is "
+                   "associated with is privileged.",
+                   aFilename));
+          return true;
+        }
       }
-    }
-  } else if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-    if (workerPrivate && workerPrivate->IsPrivilegedAddonGlobal()) {
-      MOZ_LOG(sCSMLog, LogLevel::Debug,
-              ("Allowing a javascript load of %s because the web extension "
-               "it is associated with is privileged.",
-               aFilename));
-      return true;
     }
   }
 
@@ -1317,7 +1320,8 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
 
   // Log to MOZ_LOG
   MOZ_LOG(sCSMLog, LogLevel::Error,
-          ("ValidateScriptFilename Failed: %s\n", aFilename));
+          ("ValidateScriptFilename System:%i %s\n", (aIsSystemRealm ? 1 : 0),
+           aFilename));
 
   // Send Telemetry
   FilenameTypeAndDetails fileNameTypeAndDetails =
@@ -1356,22 +1360,10 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
 #elif defined(FUZZING)
   auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
       aFilename,
-      fileNameTypeAndDetails.second.isSome()
-          ? NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get()
-          : "(None)",
+      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get(),
       "Blocking a script load %s from file %s");
   MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
-
-  // If we got here we are going to return false, so set the error context
-  const char* utf8Filename;
-  if (mozilla::IsUtf8(mozilla::MakeStringSpan(aFilename))) {
-    utf8Filename = aFilename;
-  } else {
-    utf8Filename = "(invalid UTF-8 filename)";
-  }
-  JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                           JSMSG_UNSAFE_FILENAME, utf8Filename);
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug
