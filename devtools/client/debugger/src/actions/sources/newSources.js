@@ -9,7 +9,6 @@
 
 import { flatten } from "lodash";
 
-import { stringToSourceActorId } from "../../reducers/source-actors";
 import { insertSourceActors } from "../../actions/source-actors";
 import { makeSourceId } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
@@ -282,14 +281,14 @@ export function newGeneratedSources(sourceInfo) {
         };
       }
 
-      const actorId = stringToSourceActorId(sourceFront.actor);
+      const actorId = sourceFront.actor;
 
       // We are sometimes notified about a new source multiple times if we
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
         newSourceActors.push({
           id: actorId,
-          actor: sourceFront.actor,
+          actor: actorId,
           thread,
           source: newId,
           sourceMapBaseURL: sourceFront.sourceMapBaseURL,

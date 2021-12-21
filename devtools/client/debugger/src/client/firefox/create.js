@@ -6,7 +6,6 @@
 
 import { clientCommands } from "./commands";
 import { hasSourceActor, getSourceActor } from "../../selectors";
-import { stringToSourceActorId } from "../../reducers/source-actors";
 
 let store;
 
@@ -60,8 +59,7 @@ export async function createFrame(thread, frame, index = 0) {
  * @param {String} sourceActor
  *                 Actor ID of the source to be waiting for.
  */
-async function waitForSourceActorToBeRegisteredInStore(sourceActorIdString) {
-  const sourceActorId = stringToSourceActorId(sourceActorIdString);
+async function waitForSourceActorToBeRegisteredInStore(sourceActorId) {
   if (!hasSourceActor(store.getState(), sourceActorId)) {
     await new Promise(resolve => {
       const unsubscribe = store.subscribe(check);
