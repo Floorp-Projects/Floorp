@@ -17,6 +17,7 @@
 #include "txStylesheet.h"
 #include "txXPathTreeWalker.h"
 #include "nsTArray.h"
+#include "mozilla/Result.h"
 
 class txAOutputHandlerFactory;
 class txAXMLEventHandler;
@@ -115,13 +116,14 @@ class txExecutionState : public txIMatchContext {
   }
 
   // state-modification functions
-  txInstruction* getNextInstruction();
+  mozilla::Result<txInstruction*, nsresult> getNextInstruction();
   nsresult runTemplate(txInstruction* aInstruction);
   nsresult runTemplate(txInstruction* aInstruction, txInstruction* aReturnTo);
   void gotoInstruction(txInstruction* aNext);
   void returnFromTemplate();
   nsresult bindVariable(const txExpandedName& aName, txAExprResult* aValue);
   void removeVariable(const txExpandedName& aName);
+  void stopProcessing() { mStopProcessing = true; }
 
   txAXMLEventHandler* mOutputHandler;
   txAXMLEventHandler* mResultHandler;
@@ -156,6 +158,7 @@ class txExecutionState : public txIMatchContext {
   txKeyHash mKeyHash;
   RefPtr<txResultRecycler> mRecycler;
   bool mDisableLoads;
+  bool mStopProcessing = false;
 
   static const int32_t kMaxRecursionDepth;
 };
