@@ -795,12 +795,8 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(CubebUtils::AudioDeviceID aID,
   NativeInputTrack* track = result.Data();
   MOZ_ASSERT(track == aInputTrack);
   nsTArray<RefPtr<AudioDataListener>>& listeners = track->mDataUsers;
-  bool wasPresent = listeners.RemoveElement(aListener);
+  DebugOnly<bool> wasPresent = listeners.RemoveElement(aListener);
   MOZ_ASSERT(wasPresent);
-
-  if (wasPresent) {
-    aListener->NotifyInputStopped(this);
-  }
 
   // Breaks the cycle between the MTG and the listener.
   aListener->Disconnect(this);
