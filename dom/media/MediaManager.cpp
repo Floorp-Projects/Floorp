@@ -855,13 +855,13 @@ NS_IMPL_ISUPPORTS(LocalMediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aRawName, const nsString& aRawID,
-                         const nsString& aRawGroupID)
+                         const nsString& aRawGroupID, IsScary aIsScary)
     : mSource(aSource),
       mSinkInfo(nullptr),
       mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
                 ? MediaDeviceKind::Videoinput
                 : MediaDeviceKind::Audioinput),
-      mScary(mSource->GetScary()),
+      mScary(aIsScary == IsScary::Yes),
       mIsFake(mSource->IsFake()),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
@@ -898,7 +898,7 @@ RefPtr<MediaDevice> MediaDevice::CopyWithNewRawGroupId(
     const RefPtr<MediaDevice>& aOther, const nsString& aRawGroupID) {
   MOZ_ASSERT(!aOther->mSinkInfo, "device not supported");
   return new MediaDevice(aOther->mSource, aOther->mRawName, aOther->mRawID,
-                         aRawGroupID);
+                         aRawGroupID, IsScary(aOther->mScary));
 }
 
 MediaDevice::~MediaDevice() = default;

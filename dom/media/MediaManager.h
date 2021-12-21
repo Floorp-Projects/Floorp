@@ -71,9 +71,13 @@ class MediaDevice final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDevice)
 
+  /**
+   * Whether source device does end-run around cross origin restrictions.
+   */
+  enum class IsScary { No, Yes };
   MediaDevice(const RefPtr<MediaEngineSource>& aSource,
               const nsString& aRawName, const nsString& aRawID,
-              const nsString& aRawGroupID);
+              const nsString& aRawGroupID, IsScary aIsScary);
 
   MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
               const nsString& aRawID, const nsString& aRawGroupID);
