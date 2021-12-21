@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "fluent-bundle"
-version = "0.15.1"
+version = "0.15.2"
 authors = ["Zibi Braniecki <gandalf@mozilla.com>", "Staś Małolepszy <stas@mozilla.com>"]
 include = ["src/**/*", "benches/*.rs", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A localization system designed to unleash the entire expressive power of\nnatural language translations.\n"
@@ -43,11 +42,11 @@ version = "0.5"
 [dependencies.intl_pluralrules]
 version = "7.0.1"
 
-[dependencies.ouroboros]
-version = "0.9"
-
 [dependencies.rustc-hash]
 version = "1"
+
+[dependencies.self_cell]
+version = "0.10"
 
 [dependencies.smallvec]
 version = "1"
