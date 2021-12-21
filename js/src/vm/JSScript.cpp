@@ -763,19 +763,7 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
     return true;
   }
 
-  if (gFilenameValidationCallback(filename, cx->realm()->isSystem())) {
-    return true;
-  }
-
-  const char* utf8Filename;
-  if (mozilla::IsUtf8(mozilla::MakeStringSpan(filename))) {
-    utf8Filename = filename;
-  } else {
-    utf8Filename = "(invalid UTF-8 filename)";
-  }
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNSAFE_FILENAME,
-                           utf8Filename);
-  return false;
+  return gFilenameValidationCallback(cx, filename);
 }
 
 /* static */
