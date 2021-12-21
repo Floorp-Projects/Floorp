@@ -185,7 +185,6 @@ NonBlockingAsyncInputStream::Available(uint64_t* aLength) {
 
   // Nothing more to read. Let's close the stream now.
   if (*aLength == 0) {
-    MutexAutoLock lock(mLock);
     mInputStream->Close();
     mClosed = true;
     return NS_BASE_STREAM_CLOSED;
