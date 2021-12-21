@@ -61,7 +61,6 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
-  nsresult GetThreadLocked(nsIThread** aThread) REQUIRES(mMutex);
   NS_IMETHOD GetGMPVideoDecoder(
       GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
       const nsACString& aNodeId,
@@ -85,13 +84,6 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
  protected:
   GeckoMediaPluginService();
   virtual ~GeckoMediaPluginService();
-
-  void AssertOnGMPThread() {
-#ifdef DEBUG
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
-#endif
-  }
 
   virtual void InitializePlugins(nsISerialEventTarget* aGMPThread) = 0;
 
