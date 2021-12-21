@@ -1214,7 +1214,6 @@ MOZ_ARG_HEADER(Application)
 
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
-MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 MOZ_BINARY_EXTENSIONS=
 MOZ_DEVTOOLS=server
@@ -1442,15 +1441,6 @@ dnl === SQLite fdatasync check ===
 dnl ==============================
 dnl Check to see if fdatasync is available and make use of it
 AC_CHECK_FUNC(fdatasync)
-
-dnl ========================================================
-dnl = Disable zipwriter
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(zipwriter,
-[  --disable-zipwriter     Disable zipwriter component],
-    MOZ_ZIPWRITER=,
-    MOZ_ZIPWRITER=1 )
-AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
 dnl =
