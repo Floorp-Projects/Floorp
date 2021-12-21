@@ -2690,8 +2690,10 @@ GeckoDriver.prototype.quit = async function(cmd) {
 
       mode |= Ci.nsIAppStartup[k];
     }
-  } else {
-    mode = Ci.nsIAppStartup.eAttemptQuit;
+  }
+
+  if (!quitSeen) {
+    mode |= Ci.nsIAppStartup.eAttemptQuit;
   }
 
   this._server.acceptConnections = false;
