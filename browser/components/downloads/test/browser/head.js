@@ -37,9 +37,13 @@ ChromeUtils.defineModuleGetter(
 
 var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
 gTestTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+Services.prefs.setIntPref("security.dialog_enable_delay", 0);
 
 // The file may have been already deleted when removing a paused download.
+// Also clear security.dialog_enable_delay pref.
 registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("security.dialog_enable_delay");
+
   if (await IOUtils.exists(gTestTargetFile.path)) {
     info("removing " + gTestTargetFile.path);
     if (Services.appinfo.OS === "WINNT") {
@@ -187,6 +191,12 @@ async function task_resetState() {
     await publicList.remove(download);
     if (await IOUtils.exists(download.target.path)) {
       await download.finalize(true);
+      info("removing " + download.target.path);
+      if (Services.appinfo.OS === "WINNT") {
+        // We need to make the file writable to delete it on Windows.
+        await IOUtils.setPermissions(download.target.path, 0o600);
+      }
+      await IOUtils.remove(download.target.path);
     }
   }
 
