@@ -11,6 +11,8 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
@@ -1282,11 +1284,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
     return true;
   }
 
-  auto kAllowedExtensionScriptFilenames = {
-      u"/experiment-apis/translateUi/TranslationBrowserChromeUi.js"_ns,
-      u"/experiment-apis/translateUi/TranslationBrowserChromeUiManager.js"_ns,
-      u"/experiment-apis/translateUi/content/translation-notification.js"_ns};
-
   if (StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
@@ -1296,22 +1293,21 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
           ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
 
       if (policy && policy->IsPrivileged()) {
-        bool matchedAnAllowlist = false;
-        for (auto allowedFilename : kAllowedExtensionScriptFilenames) {
-          if (StringBeginsWith(url.FilePath(), allowedFilename)) {
-            matchedAnAllowlist = true;
-          }
-        }
-
-        if (matchedAnAllowlist) {
-          MOZ_LOG(sCSMLog, LogLevel::Debug,
-                  ("Allowing a javascript load of %s because the web extension "
-                   "it is "
-                   "associated with is privileged.",
-                   aFilename));
-          return true;
-        }
+        MOZ_LOG(sCSMLog, LogLevel::Debug,
+                ("Allowing a javascript load of %s because the web extension "
+                 "it is associated with is privileged.",
+                 aFilename));
+        return true;
       }
+    }
+  } else if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+    if (workerPrivate && workerPrivate->IsPrivilegedAddonGlobal()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing a javascript load of %s because the web extension "
+               "it is associated with is privileged.",
+               aFilename));
+      return true;
     }
   }
 
