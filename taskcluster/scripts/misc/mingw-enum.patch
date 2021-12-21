@@ -1,0 +1,22 @@
+diff --git a/mingw-w64-headers/include/windows.foundation.h b/mingw-w64-headers/include/windows.foundation.h
+index 423d8fd30..a5a61eb76 100644
+--- a/mingw-w64-headers/include/windows.foundation.h
++++ b/mingw-w64-headers/include/windows.foundation.h
+@@ -72,7 +72,7 @@ extern "C" {
+ namespace ABI {
+     namespace Windows {
+         namespace Foundation {
+-            typedef enum PropertyType PropertyType;
++            typedef enum PropertyType : int PropertyType;
+         }
+     }
+ }
+@@ -146,7 +146,7 @@ typedef struct __x_ABI_CWindows_CFoundation_CTimeSpan __x_ABI_CWindows_CFoundati
+ namespace ABI {
+     namespace Windows {
+         namespace Foundation {
+-            enum PropertyType {
++            enum PropertyType : int {
+                 PropertyType_Empty = 0,
+                 PropertyType_UInt8 = 1,
+                 PropertyType_Int16 = 2,
