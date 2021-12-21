@@ -5835,6 +5835,17 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 #endif
+#ifdef MOZ_WAYLAND
+  // Initialize the window specific VsyncSource early in order to avoid races
+  // with BrowserParent::UpdateVsyncParentVsyncSource().
+  // Only use for toplevel windows for now, see bug 1619246.
+  if (GdkIsWaylandDisplay() &&
+      StaticPrefs::widget_wayland_vsync_enabled_AtStartup() &&
+      mWindowType == eWindowType_toplevel) {
+    mWaylandVsyncSource = new WaylandVsyncSource();
+    MOZ_RELEASE_ASSERT(mWaylandVsyncSource);
+  }
+#endif
 
   // We create input contexts for all containers, except for
   // toplevel popup windows
@@ -6142,18 +6153,11 @@ void nsWindow::ResumeCompositorFromCompositorThread() {
 
 void nsWindow::WaylandStartVsync() {
 #ifdef MOZ_WAYLAND
-  // only use for toplevel windows for now - see bug 1619246
-  if (!GdkIsWaylandDisplay() ||
-      !StaticPrefs::widget_wayland_vsync_enabled_AtStartup() ||
-      mWindowType != eWindowType_toplevel) {
+  if (!mWaylandVsyncSource) {
     return;
   }
 
   LOG("nsWindow::WaylandStartVsync()");
-
-  if (!mWaylandVsyncSource) {
-    mWaylandVsyncSource = new WaylandVsyncSource();
-  }
 
   WaylandVsyncSource::WaylandDisplay& display =
       static_cast<WaylandVsyncSource::WaylandDisplay&>(

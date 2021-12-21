@@ -2120,10 +2120,6 @@ toolbar#nav-bar {
             "gfx.font_rendering.fallback.async": False,
         }
 
-        # Ideally we should set this in a manifest, but a11y tests do not run by manifest.
-        if options.flavor == "a11y":
-            prefs["plugin.load_flash_only"] = False
-
         if options.flavor == "browser" and options.timeout:
             prefs["testing.browserTestHarness.timeout"] = options.timeout
 

@@ -87,8 +87,14 @@ class RenderPassEncoder final : public ObjectBase,
   void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
   void SetBlendConstant(const dom::DoubleSequenceOrGPUColorDict& color);
   void SetStencilReference(uint32_t reference);
+
+  void PushDebugGroup(const nsAString& aString);
+  void PopDebugGroup();
+  void InsertDebugMarker(const nsAString& aString);
+
   void ExecuteBundles(
       const dom::Sequence<OwningNonNull<RenderBundle>>& aBundles);
+
   void EndPass(ErrorResult& aRv);
 };
 

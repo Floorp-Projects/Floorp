@@ -9,7 +9,6 @@
 
 import { flatten } from "lodash";
 
-import { stringToSourceActorId } from "../../reducers/source-actors";
 import { insertSourceActors } from "../../actions/source-actors";
 import { makeSourceId } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
@@ -48,12 +47,7 @@ function loadSourceMaps(cx, sources) {
           const originalSources = await dispatch(
             loadSourceMap(cx, sourceActor)
           );
-          sourceQueue.queueSources(
-            originalSources.map(data => ({
-              type: "original",
-              data,
-            }))
-          );
+          sourceQueue.queueOriginalSources(originalSources);
           return originalSources;
         })
       );
@@ -200,33 +194,14 @@ function restoreBlackBoxedSources(cx, sources) {
   };
 }
 
-export function newQueuedSources(sourceInfo) {
-  return async ({ dispatch }) => {
-    const generated = [];
-    const original = [];
-    for (const source of sourceInfo) {
-      if (source.type === "generated") {
-        generated.push(source.data);
-      } else {
-        original.push(source.data);
-      }
-    }
-
-    if (generated.length > 0) {
-      await dispatch(newGeneratedSources(generated));
-    }
-    if (original.length > 0) {
-      await dispatch(newOriginalSources(original));
-    }
-  };
-}
-
+// Wrapper around newOriginalSources, only used by tests
 export function newOriginalSource(sourceInfo) {
   return async ({ dispatch }) => {
     const sources = await dispatch(newOriginalSources([sourceInfo]));
     return sources[0];
   };
 }
+
 export function newOriginalSources(sourceInfo) {
   return async ({ dispatch, getState }) => {
     const state = getState();
@@ -274,9 +249,9 @@ export function newGeneratedSource(sourceInfo) {
   };
 }
 
-export function newGeneratedSources(sourceInfo) {
+export function newGeneratedSources(sourceResources) {
   return async ({ dispatch, getState, client }) => {
-    if (sourceInfo.length == 0) {
+    if (sourceResources.length == 0) {
       return [];
     }
 
@@ -284,46 +259,53 @@ export function newGeneratedSources(sourceInfo) {
     const newSourcesObj = {};
     const newSourceActors = [];
 
-    // `sourceInfo` is an array of objects returned by `prepareSourceActorPayload` (in production)
-    // and `makeSource` (in jest tests)
-    for (const { thread, sourceFront, id } of sourceInfo) {
-      // Only jest test pass an `id` to avoid having to call makeSourceId.
-      // i.e. production code will always call makeSourceId.
-      const newId = id || makeSourceId(sourceFront, thread);
+    for (const sourceResource of sourceResources) {
+      // By the time we process the sources, the related target
+      // might already have been destroyed. It means that the sources
+      // are also about to be destroyed, so ignore them.
+      // (This is covered by browser_toolbox_backward_forward_navigation.js)
+      if (sourceResource.targetFront.isDestroyed()) {
+        continue;
+      }
+      const id = makeSourceId(sourceResource);
 
-      if (!getSource(getState(), newId) && !newSourcesObj[newId]) {
-        newSourcesObj[newId] = {
-          id: newId,
-          url: sourceFront.url,
-          relativeUrl: sourceFront.url,
+      if (!getSource(getState(), id) && !newSourcesObj[id]) {
+        newSourcesObj[id] = {
+          id,
+          url: sourceResource.url,
+          relativeUrl: sourceResource.url,
           isPrettyPrinted: false,
-          extensionName: sourceFront.extensionName,
+          extensionName: sourceResource.extensionName,
           isBlackBoxed: false,
-          isWasm: !!features.wasm && sourceFront.introductionType === "wasm",
+          isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
           isExtension:
-            (sourceFront.url && isUrlExtension(sourceFront.url)) || false,
+            (sourceResource.url && isUrlExtension(sourceResource.url)) || false,
           isOriginal: false,
         };
       }
 
-      const actorId = stringToSourceActorId(sourceFront.actor);
+      const actorId = sourceResource.actor;
+      // As sourceResource is only SourceActor's form and not the SourceFront,
+      // we have to go through the target to retrieve the related ThreadActor's ID.
+      const threadActorID = sourceResource.targetFront.getCachedFront("thread")
+        .actorID;
 
       // We are sometimes notified about a new source multiple times if we
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
         newSourceActors.push({
           id: actorId,
-          actor: sourceFront.actor,
-          thread,
-          source: newId,
-          sourceMapBaseURL: sourceFront.sourceMapBaseURL,
-          sourceMapURL: sourceFront.sourceMapURL,
-          url: sourceFront.url,
-          introductionType: sourceFront.introductionType,
+          actor: actorId,
+          thread: threadActorID,
+          source: id,
+          sourceMapBaseURL: sourceResource.sourceMapBaseURL,
+          sourceMapURL: sourceResource.sourceMapURL,
+          url: sourceResource.url,
+          introductionType: sourceResource.introductionType,
         });
       }
 
-      resultIds.push(newId);
+      resultIds.push(id);
     }
 
     const newSources = Object.values(newSourcesObj);

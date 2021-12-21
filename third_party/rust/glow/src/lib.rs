@@ -10,18 +10,19 @@ use core::hash::Hash;
 use std::collections::HashSet;
 
 mod version;
+pub use version::Version;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "emscripten"))]
 mod native;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "emscripten"))]
 pub use native::*;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "emscripten"))]
 mod gl46;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 #[path = "web_sys.rs"]
 mod web;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 pub use web::*;
 
 pub type Shader = <Context as HasContext>::Shader;
@@ -96,6 +97,8 @@ pub trait HasContext {
     fn supported_extensions(&self) -> &HashSet<String>;
 
     fn supports_debug(&self) -> bool;
+
+    fn version(&self) -> &Version;
 
     unsafe fn create_framebuffer(&self) -> Result<Self::Framebuffer, String>;
 
@@ -480,7 +483,7 @@ pub trait HasContext {
         program: Self::Program,
         uniform_block_index: u32,
         parameter: u32,
-        out: &mut [i32]
+        out: &mut [i32],
     );
 
     unsafe fn get_active_uniform_block_name(
@@ -1508,6 +1511,62 @@ pub const COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT: u32 = 0x8C4D;
 pub const COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT: u32 = 0x8C4E;
 
 pub const COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT: u32 = 0x8C4F;
+
+pub const COMPRESSED_RGBA_ASTC_4x4_KHR: u32 = 0x93B0;
+
+pub const COMPRESSED_RGBA_ASTC_5x4_KHR: u32 = 0x93B1;
+
+pub const COMPRESSED_RGBA_ASTC_5x5_KHR: u32 = 0x93B2;
+
+pub const COMPRESSED_RGBA_ASTC_6x5_KHR: u32 = 0x93B3;
+
+pub const COMPRESSED_RGBA_ASTC_6x6_KHR: u32 = 0x93B4;
+
+pub const COMPRESSED_RGBA_ASTC_8x5_KHR: u32 = 0x93B5;
+
+pub const COMPRESSED_RGBA_ASTC_8x6_KHR: u32 = 0x93B6;
+
+pub const COMPRESSED_RGBA_ASTC_8x8_KHR: u32 = 0x93B7;
+
+pub const COMPRESSED_RGBA_ASTC_10x5_KHR: u32 = 0x93B8;
+
+pub const COMPRESSED_RGBA_ASTC_10x6_KHR: u32 = 0x93B9;
+
+pub const COMPRESSED_RGBA_ASTC_10x8_KHR: u32 = 0x93BA;
+
+pub const COMPRESSED_RGBA_ASTC_10x10_KHR: u32 = 0x93BB;
+
+pub const COMPRESSED_RGBA_ASTC_12x10_KHR: u32 = 0x93BC;
+
+pub const COMPRESSED_RGBA_ASTC_12x12_KHR: u32 = 0x93BD;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR: u32 = 0x93D0;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR: u32 = 0x93D1;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR: u32 = 0x93D2;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR: u32 = 0x93D3;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR: u32 = 0x93D4;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR: u32 = 0x93D5;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR: u32 = 0x93D6;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR: u32 = 0x93D7;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR: u32 = 0x93D8;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR: u32 = 0x93D9;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR: u32 = 0x93DA;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR: u32 = 0x93DB;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR: u32 = 0x93DC;
+
+pub const COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR: u32 = 0x93DD;
 
 pub const COMPRESSED_TEXTURE_FORMATS: u32 = 0x86A3;
 

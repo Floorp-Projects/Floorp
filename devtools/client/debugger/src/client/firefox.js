@@ -149,28 +149,7 @@ function onTargetDestroyed({ targetFront }) {
 }
 
 async function onSourceAvailable(sources) {
-  const sourceInfo = await Promise.all(
-    sources
-      .filter(sourceFront => {
-        return !sourceFront.targetFront.isDestroyed();
-      })
-      .map(async sourceFront => {
-        const threadFront = await sourceFront.targetFront.getFront("thread");
-        // Maintain backward-compat with servers that only return introductionUrl and
-        // not sourceMapBaseURL.
-        if (
-          typeof sourceFront.sourceMapBaseURL === "undefined" &&
-          typeof sourceFront.introductionUrl !== "undefined"
-        ) {
-          sourceFront.sourceMapBaseURL =
-            sourceFront.url || sourceFront.introductionUrl || null;
-          delete sourceFront.introductionUrl;
-        }
-
-        return { thread: threadFront.actor, sourceFront };
-      })
-  );
-  await actions.newGeneratedSources(sourceInfo);
+  await actions.newGeneratedSources(sources);
 }
 
 async function onThreadStateAvailable(resources) {
