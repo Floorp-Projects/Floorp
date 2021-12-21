@@ -144,10 +144,10 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 
     RefPtr<MediaEngineSource> vSource = new MediaEngineRemoteVideoSource(
         NS_ConvertUTF8toUTF16(deviceName), nsDependentCString(uniqueId),
-        aCapEngine, scaryKind || scarySource);
+        aCapEngine);
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
-        vSource->GetGroupId()));
+        vSource->GetGroupId(), MediaDevice::IsScary(scaryKind || scarySource)));
   }
 }
 
@@ -178,7 +178,7 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
           devices[i]->MaxChannels());
       RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
           source, source->GetName(), NS_ConvertUTF8toUTF16(source->GetUUID()),
-          source->GetGroupId());
+          source->GetGroupId(), MediaDevice::IsScary::No);
       if (devices[i]->Preferred()) {
 #ifdef DEBUG
         if (!foundPreferredDevice) {
@@ -272,7 +272,7 @@ void MediaEngineWebRTC::EnumerateDevices(
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         audioCaptureSource, audioCaptureSource->GetName(),
         NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID()),
-        audioCaptureSource->GetGroupId()));
+        audioCaptureSource->GetGroupId(), MediaDevice::IsScary::No));
   } else if (aMediaSource == dom::MediaSourceEnum::Microphone) {
     EnumerateMicrophoneDevices(aDevices);
   }
