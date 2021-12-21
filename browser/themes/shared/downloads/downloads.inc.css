@@ -20,6 +20,18 @@
   margin: 0;
 }
 
+@media not (prefers-contrast) {
+  #downloadsListBox[disabled] {
+    opacity: var(--downloads-item-disabled-opacity) !important;
+  }
+}
+
+@media (prefers-contrast) {
+  #downloadsListBox[disabled] {
+    color: GrayText;
+  }
+}
+
 #emptyDownloads {
   padding: 1.5em 8px 2.1em;
   margin: 0;
