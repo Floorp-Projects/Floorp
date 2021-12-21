@@ -972,7 +972,7 @@ uint32_t LocalMediaDevice::GetBestFitnessDistance(
   MOZ_ASSERT(GetMediaSource() != MediaSourceEnum::Other);
 
   bool isChrome = aCallerType == CallerType::System;
-  const nsString& id = isChrome ? mRawDevice->mRawID : mID;
+  const nsString& id = isChrome ? RawID() : mID;
   auto type = GetMediaSource();
   uint64_t distance = 0;
   if (!aConstraintSets.IsEmpty()) {
@@ -1010,7 +1010,7 @@ LocalMediaDevice::GetType(nsAString& aType) {
 NS_IMETHODIMP
 LocalMediaDevice::GetRawId(nsAString& aID) {
   MOZ_ASSERT(NS_IsMainThread());
-  aID.Assign(mRawDevice->mRawID);
+  aID.Assign(RawID());
   return NS_OK;
 }
 
@@ -2238,30 +2238,36 @@ void MediaManager::DeviceListChanged() {
               return;
             }
 
-            MediaManager::DeviceIdSet deviceIDs;
+            nsTHashSet<nsString> deviceIDs;
             for (auto& device : *aDevices) {
-              MOZ_ALWAYS_TRUE(deviceIDs.put(device->mRawID));
+              deviceIDs.Insert(device->mRawID);
             }
-            // For any real removed cameras, microphones or speakers, notify
-            // their listeners cleanly that the source has stopped, so JS knows
-            // and usage indicators update.
-            for (auto iter = mDeviceIDs.iter(); !iter.done(); iter.next()) {
-              const auto& id = iter.get();
-              if (deviceIDs.has(id)) {
-                // Device has not been removed
-                continue;
-              }
-              // Stop the corresponding DeviceListener. In order to do that
-              // first collect the listeners in an array and stop them after
-              // the loop. The StopRawID method modify indirectly the
-              // mActiveWindows and will assert-crash since the iterator is
-              // active and the table is being enumerated.
-              const auto listeners = ToArray(mActiveWindows.Values());
-              for (const auto& l : listeners) {
-                l->StopRawID(id);
+            // For any real removed cameras or microphones, notify their
+            // listeners cleanly that the source has stopped, so JS knows and
+            // usage indicators update.
+            // First collect the listeners in an array to stop them after
+            // iterating the hashtable. The StopRawID() method indirectly
+            // modifies the mActiveWindows and would assert-crash if the
+            // iterator were active while the table is being enumerated.
+            const auto windowListeners = ToArray(mActiveWindows.Values());
+            for (const RefPtr<GetUserMediaWindowListener>& l :
+                 windowListeners) {
+              const auto activeDevices = l->GetDevices();
+              for (const RefPtr<LocalMediaDevice>& device : *activeDevices) {
+                if (device->IsFake()) {
+                  continue;
+                }
+                MediaSourceEnum mediaSource = device->GetMediaSource();
+                if (mediaSource != MediaSourceEnum::Microphone &&
+                    mediaSource != MediaSourceEnum::Camera) {
+                  continue;
+                }
+                if (!deviceIDs.Contains(device->RawID())) {
+                  // Device has been removed
+                  l->StopRawID(device->RawID());
+                }
               }
             }
-            mDeviceIDs = std::move(deviceIDs);
           },
           [](RefPtr<MediaMgrError>&& reason) {});
 }
@@ -2966,8 +2972,8 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
           })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [windowId, placeholderListener, originKey, aVideoInputEnumType,
-           aAudioInputEnumType](RefPtr<MediaDeviceSetRefCnt> aDevices) {
+          [windowId, placeholderListener,
+           originKey](RefPtr<MediaDeviceSetRefCnt> aDevices) {
             // Only run if window is still on our active list.
             MediaManager* mgr = MediaManager::GetIfExists();
             if (!mgr || placeholderListener->Stopped()) {
@@ -2979,18 +2985,6 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
             }
             MOZ_ASSERT(mgr->IsWindowStillActive(windowId));
             placeholderListener->Stop();
-
-            for (auto& device : *aDevices) {
-              if (device->mKind == MediaDeviceKind::Audiooutput ||
-                  (device->mKind == MediaDeviceKind::Audioinput &&
-                   aAudioInputEnumType != DeviceEnumerationType::Fake &&
-                   device->GetMediaSource() == MediaSourceEnum::Microphone) ||
-                  (device->mKind == MediaDeviceKind::Videoinput &&
-                   aVideoInputEnumType != DeviceEnumerationType::Fake &&
-                   device->GetMediaSource() == MediaSourceEnum::Camera)) {
-                MOZ_ALWAYS_TRUE(mgr->mDeviceIDs.put(device->mRawID));
-              }
-            }
             return LocalDeviceSetPromise::CreateAndResolve(
                 AnonymizeDevices(*aDevices, *originKey, windowId), __func__);
           },
@@ -3461,7 +3455,6 @@ void MediaManager::Shutdown() {
   mActiveCallbacks.Clear();
   mCallIds.Clear();
   mPendingGUMRequest.Clear();
-  mDeviceIDs.clear();
 #ifdef MOZ_WEBRTC
   StopWebRtcLog();
 #endif
@@ -3754,11 +3747,6 @@ MediaManager::CollectReports(nsIHandleReportCallback* aHandleReport,
   // GetUserMediaRequest pointees of mPendingGUMRequest do not have support
   // for memory accounting.  mPendingGUMRequest logic should probably be moved
   // to the front end (bug 1691625).
-  amount += mDeviceIDs.shallowSizeOfExcludingThis(MallocSizeOf);
-  for (auto iter = mDeviceIDs.iter(); !iter.done(); iter.next()) {
-    const nsString deviceID = iter.get();
-    amount += deviceID.SizeOfExcludingThisEvenIfShared(MallocSizeOf);
-  }
   MOZ_COLLECT_REPORT("explicit/media/media-manager-aggregates", KIND_HEAP,
                      UNITS_BYTES, amount,
                      "Memory used by MediaManager variable length members.");
@@ -4483,9 +4471,7 @@ void GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   for (auto& l : mActiveListeners.Clone()) {
-    nsString id;
-    l->GetDevice()->GetRawId(id);
-    if (removedDeviceID.Equals(id)) {
+    if (removedDeviceID.Equals(l->GetDevice()->RawID())) {
       l->Stop();
     }
   }
