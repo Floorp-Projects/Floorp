@@ -300,7 +300,7 @@ var PlacesUIUtils = {
       throw new Error("Method must be used to only obfuscate place: uris!");
     }
     let urlNoProtocol = url.substring(url.indexOf(":") + 1);
-    let hashedURL = md5Hash(urlNoProtocol);
+    let hashedURL = PlacesUtils.md5(urlNoProtocol);
 
     return `place:${hashedURL}`;
   },
@@ -1853,31 +1853,4 @@ function getBrowserWindow(aWindow) {
       "navigator:browser"
     ? aWindow
     : BrowserWindowTracker.getTopWindow();
-}
-
-// Keep a hasher for repeated hashings
-let gCryptoHash = null;
-
-/**
- * Run some text through md5 and return the base64 result.
- * @param {string} data The string to hash.
- * @returns {string} md5 hash of the input string.
- */
-function md5Hash(data) {
-  // Lazily create a reusable hasher
-  if (gCryptoHash === null) {
-    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
-      Ci.nsICryptoHash
-    );
-  }
-
-  gCryptoHash.init(gCryptoHash.MD5);
-
-  // Convert the data to a byte array for hashing
-  gCryptoHash.update(
-    data.split("").map(c => c.charCodeAt(0)),
-    data.length
-  );
-  // Request the has result as ASCII base64
-  return gCryptoHash.finish(true);
 }

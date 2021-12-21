@@ -3,6 +3,7 @@ clippy:
     description: Lint rust
     include:
         - build/workspace-hack/
+        - dom/midi/midir_impl/
         - dom/media/gtest/
         - dom/webauthn/libudev-sys/
         - gfx/webrender_bindings/

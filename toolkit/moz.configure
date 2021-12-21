@@ -171,12 +171,23 @@ imply_option("--enable-replace-malloc", dmd, when=compile_environment)
 
 # ALSA cubeb backend
 # ==============================================================
-system_lib_option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
+@depends(target)
+def alsa_default_check(target):
+    return target.kernel == "Linux" and target.os != "Android"
 
-alsa = pkg_check_modules("MOZ_ALSA", "alsa", when="--enable-alsa")
 
-set_config("MOZ_ALSA", depends_if(alsa)(lambda _: True))
-set_define("MOZ_ALSA", depends_if(alsa)(lambda _: True))
+option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
+
+
+@depends("--enable-alsa", alsa_default_check)
+def enable_alsa_or_alsa_default_check(alsa_enabled, alsa_default_check):
+    return alsa_enabled or alsa_default_check
+
+
+pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_alsa_default_check)
+
+set_config("MOZ_ALSA", True, when="--enable-alsa")
+set_define("MOZ_ALSA", True, when="--enable-alsa")
 
 # JACK cubeb backend
 # ==============================================================

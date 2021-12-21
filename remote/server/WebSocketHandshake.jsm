@@ -115,7 +115,7 @@ function processRequest({ requestLine, headers }) {
   const isTestOrigin = origin === "null" && nullOriginAllowed;
   if (headers.has("origin") && !isTestOrigin) {
     throw new Error(
-      `The handshake request has incorrect Host header ${origin}`
+      `The handshake request has incorrect Origin header ${origin}`
     );
   }
 

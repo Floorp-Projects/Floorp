@@ -355,23 +355,7 @@ async function setEventListenerBreakpoints(ids) {
 }
 
 async function getEventListenerBreakpointTypes() {
-  let categories;
-  try {
-    categories = await currentThreadFront().getAvailableEventBreakpoints();
-
-    if (!Array.isArray(categories)) {
-      // When connecting to older browser that had our placeholder
-      // implementation of the 'getAvailableEventBreakpoints' endpoint, we
-      // actually get back an object with a 'value' property containing
-      // the categories. Since that endpoint wasn't actually backed with a
-      // functional implementation, we just bail here instead of storing the
-      // 'value' property into the categories.
-      categories = null;
-    }
-  } catch (err) {
-    // Event bps aren't supported on this firefox version.
-  }
-  return categories || [];
+  return currentThreadFront().getAvailableEventBreakpoints();
 }
 
 function pauseGrip(thread, func) {
@@ -407,24 +391,14 @@ async function getSourceActorBreakpointPositions({ thread, actor }, range) {
 }
 
 async function getSourceActorBreakableLines({ thread, actor }) {
-  let sourceFront;
   let actorLines = [];
   try {
     const sourceThreadFront = lookupThreadFront(thread);
-    sourceFront = sourceThreadFront.source({ actor });
+    const sourceFront = sourceThreadFront.source({ actor });
     actorLines = await sourceFront.getBreakableLines();
   } catch (e) {
-    // Handle backward compatibility
-    if (
-      e.message &&
-      e.message.match(/does not recognize the packet type getBreakableLines/)
-    ) {
-      const pos = await sourceFront.getBreakpointPositionsCompressed();
-      actorLines = Object.keys(pos).map(line => Number(line));
-    } else {
-      // Other exceptions could be due to the target thread being shut down.
-      console.warn(`getSourceActorBreakableLines failed: ${e}`);
-    }
+    // Exceptions could be due to the target thread being shut down.
+    console.warn(`getSourceActorBreakableLines failed: ${e}`);
   }
 
   return actorLines;
