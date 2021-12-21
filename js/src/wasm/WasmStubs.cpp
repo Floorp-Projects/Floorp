@@ -2931,7 +2931,8 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
 // should only be called after the caller has reported an error.
 static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
                               Offsets* offsets) {
-  Register scratch = ABINonArgReturnReg0;
+  Register scratch1 = ABINonArgReturnReg0;
+  Register scratch2 = ABINonArgReturnReg1;
 
   AssertExpectedSP(masm);
   masm.haltingAlign(CodeAlignment);
@@ -2950,7 +2951,7 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   // Allocate space for exception or regular resume information.
   masm.reserveStack(sizeof(jit::ResumeFromException));
-  masm.moveStackPtrTo(scratch);
+  masm.moveStackPtrTo(scratch1);
 
   MIRTypeVector handleThrowTypes;
   MOZ_ALWAYS_TRUE(handleThrowTypes.append(MIRType::Pointer));
@@ -2963,9 +2964,9 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   ABIArgMIRTypeIter i(handleThrowTypes);
   if (i->kind() == ABIArg::GPR) {
-    masm.movePtr(scratch, i->gpr());
+    masm.movePtr(scratch1, i->gpr());
   } else {
-    masm.storePtr(scratch,
+    masm.storePtr(scratch1,
                   Address(masm.getStackPointer(), i->offsetFromArgBase()));
   }
   i++;
@@ -2982,35 +2983,40 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   Label resumeCatch, leaveWasm;
 
   masm.load32(Address(ReturnReg, offsetof(jit::ResumeFromException, kind)),
-              scratch);
+              scratch1);
 
-  masm.branch32(Assembler::Equal, scratch,
+  masm.branch32(Assembler::Equal, scratch1,
                 Imm32(jit::ResumeFromException::RESUME_WASM_CATCH),
                 &resumeCatch);
-  masm.branch32(Assembler::Equal, scratch,
+  masm.branch32(Assembler::Equal, scratch1,
                 Imm32(jit::ResumeFromException::RESUME_WASM), &leaveWasm);
 
   masm.breakpoint();
 
   // The case where a Wasm catch handler was found while unwinding the stack.
   masm.bind(&resumeCatch);
+  masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, tlsData)),
+               WasmTlsReg);
+  masm.loadWasmPinnedRegsFromTls();
+  masm.switchToWasmTlsRealm(scratch1, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
-               scratch);
+               scratch1);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
                FramePointer);
   masm.loadStackPtr(
       Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
-  masm.jump(scratch);
+  MoveSPForJitABI(masm);
+  masm.jump(scratch1);
 
   // No catch handler was found, so we will just return out.
   masm.bind(&leaveWasm);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
                FramePointer);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, stackPointer)),
-               scratch);
-  masm.moveToStackPtr(scratch);
+               scratch1);
+  masm.moveToStackPtr(scratch1);
 #ifdef JS_CODEGEN_ARM64
-  masm.loadPtr(Address(scratch, 0), lr);
+  masm.loadPtr(Address(scratch1, 0), lr);
   masm.addToStackPtr(Imm32(8));
   masm.abiret();
 #else
