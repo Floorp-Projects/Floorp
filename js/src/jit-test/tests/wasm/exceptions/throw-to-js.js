@@ -152,9 +152,6 @@ assertThrowsValue(
   42
 );
 
-if (wasmCompileMode() === "baseline") {
-  // Rethrow NYI in Ion.
-
 // Like previous test, but using a rethrow instruction instead.
 assertThrowsValue(
   () =>
@@ -177,7 +174,6 @@ assertThrowsValue(
     ).exports.f(),
   42
 );
-}
 
 // Test for throwing to JS and then back to Wasm.
 {
