@@ -1,0 +1,45 @@
+language: rust
+
+rust:
+  - stable
+  - beta
+  - nightly
+
+matrix:
+  allow_failures:
+    - rust: nightly
+
+os:
+  - osx
+
+cache: cargo
+
+before_script:
+  - ./ci/update-version.sh
+
+before_deploy:
+  - ./ci/build-docs.sh
+
+deploy:
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GH_TOKEN
+    local_dir: target/doc
+    on:
+      tags: true
+      rust: stable
+  - provider: script
+    skip_cleanup: true
+    script: ./ci/publish.sh
+    on:
+      tags: true
+      rust: stable
+
+notifications:
+  email:
+    on_success: never
+
+env:
+  global:
+    - secure: "bJonMOXVCuSpIR+UnzLiitJAfhJFQn6JcTLacFzzEPa6hknrQo6SM96Mi91fvqu4S7OXevo9bIyUL+kQIfuU1VOggFxAroyF3Jw2UN+h0S9GgQnSOthnBcNi76QpZRDJWhOtoYPTq1Yp3UZjbh/OkVUfLNtfICJgAV3dM0cF4dpGPSA2d7eoXvx2wBaAa1pIuzPXvVlWPtQ9lcX8EhZgn3jp+ci2Cae5TQr9hGP7KdTAuuU2VqJYL9+JNnNpQasMiNgvqk7p2o/LIPcZIp8RbJSxkkBt+KAwMjuSEqfxv+2rL4oW7KkB7FwmY3GjJRmSXrElJZUKAJiLEUwlugr3gJ0vRJ5GsFg7qUthJ3Y/yf05iK8K6fQ5EuTqdFv8e2/CdJZBSIfhfHg6To/wu0oKPawGVZr/jAFU1MUVF8YpFHFpo4c/cdGUbwC9Qup2bQVLaxVbuaBhy3bcu7n8Aij/5W+V2lytyo5LbCDoyJwLOn7Xm4FupaAbNcdX5iT8K7WBSHk3N2ZIrSZyWrx96o450EdSWoabSEzVDx5mO2juU1Yt1iyEFI/kQwCWBVhsFx9HqN+FB0d+j06tq+OmlVqYqB24qfRFIFJGfMaYUtNM0eWFQ36aF/oKm/n3lGh+SF6q3hgKwdu8eXShkU2bS8EW0eOPIaPxQlTJFnQgjrkxGtE=" # GH_TOKEN
+    - secure: "Z4MoTWguJiRwyKV0crXje5nwezs4CzCzDgRjD+Dyia3y+XDDHJCii00V0TJhnWabc0W6Ym/+1iRdFCUqEewGY5/0tbkZI+pW4a6DsmMAfWKk5guXaS5QpvYCjGo4j+uXxSqLAaTbu6KxYb8YNjQ0lsGoR4yyvvB89ap+wmyjgBY/+TFZQ1g4RsAczXLvvpXgy0ELo7jR8aa1X3wS0kPwHkJ6X1/M0VydIO4/07bC2b95kJTrmnGgvPy2AtRi8jvTNJ/hRKw6WEC+qAinhAfVjvNE8GFRcvve0TWSxBX2yXBuTGmvasOYE3FT7o4A6AoiARh+pGKV8dgZGR7VwEkE7hmcykUF05NFHSb/7a4i+Ps7QJwWrb5QnX37i7eCVxo+u6GPpIJtWiN4Qftb6muhir7r0cfUTN+EyLEva5glI+MaH0+f5LDxLlfl+6tukoU96kNBdbCrvcM87DERU8pLnidL8NyyOEqALCPFCBeiSIqz1d+322MxHB5uMdQYDgxdCAsqGSBnQiuiWRzaffHt0DIL+q0UEyJp9n9lWcyV+Ie7L+IAqyxR4X9Yt9NzTOsCSNuKkEXDq31qApje2V7AVQiFVbcwiB3pxtLj6SnEAq8DEHAH1cETupEp+n+xUeyHGHaUWBUJm7v4wEC79dKOkpY14/dj0O+SXjSuZnBBDfU=" # CRATES_TOKEN
