@@ -1535,10 +1535,20 @@ try_compile(
 def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
     if compiler_info.type == "clang-cl":
-        return "-Z7"
-    elif target.kernel == "WINNT" and compiler_info.type == "clang":
-        return "-g -gcodeview"
-    return "-g"
+        flags = " -Z7"
+    else:
+        flags = " -g"
+
+    if target.kernel == "WINNT" and compiler_info.type == "clang":
+        flags += " -gcodeview"
+
+    # Bug 1739321 - clang 13+ only emits debuginfo for classes that are actually
+    # constructed, and we cheat in a number of cases. The flag exists at least
+    # back to clang 4.
+    if compiler_info.type == "clang":
+        flags += " -fstandalone-debug"
+
+    return flags
 
 
 option(env="MOZ_DEBUG_FLAGS", nargs=1, help="Debug compiler flags")
