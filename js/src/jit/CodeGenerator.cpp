@@ -16517,6 +16517,38 @@ void CodeGenerator::visitWasmExceptionDataPointer(
   masm.loadPtr(Address(dataPtr, dataOffset), dataPtr);
 }
 
+// Unboxes the array object of a Wasm exception, for loading exception reference
+// or rtt values from the exception.
+void CodeGenerator::visitWasmExceptionRefsPointer(
+    LWasmExceptionRefsPointer* lir) {
+  Register exn = ToRegister(lir->exn());
+  Register refsPtr = ToRegister(lir->output());
+  masm.unboxObject(Address(exn, WasmExceptionObject::offsetOfRefs()), refsPtr);
+
+#ifdef DEBUG
+  Label ok;
+  Register scratch = ToRegister(lir->temp());
+  uint32_t refCount = lir->mir()->refCount();
+  masm.load32(Address(refsPtr, NativeObject::offsetOfFixedElements() +
+                                   ObjectElements::offsetOfLength()),
+              scratch);
+  masm.branch32(Assembler::Equal, scratch, Imm32(refCount), &ok);
+  masm.assumeUnreachable("Array length should be equal to exn ref count.");
+  masm.bind(&ok);
+#endif
+  masm.loadPtr(Address(refsPtr, NativeObject::offsetOfElements()), refsPtr);
+}
+
+void CodeGenerator::visitWasmLoadExceptionRefsValue(
+    LWasmLoadExceptionRefsValue* lir) {
+  Register output = ToRegister(lir->output());
+  int32_t offset = lir->mir()->offset();
+  Register refsPtr = ToRegister(lir->refsPtr());
+
+  ASSERT_ANYREF_IS_JSOBJECT;
+  masm.unboxObjectOrNull(Address(refsPtr, offset), output);
+}
+
 // End Wasm Exception Handling
 
 static_assert(!std::is_polymorphic_v<CodeGenerator>,

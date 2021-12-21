@@ -3968,6 +3968,37 @@ class LWasmExceptionDataPointer : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+class LWasmExceptionRefsPointer : public LInstructionHelper<1, 1, 1> {
+ public:
+  LIR_HEADER(WasmExceptionRefsPointer);
+
+  LWasmExceptionRefsPointer(const LAllocation& exn, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, exn);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* exn() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+  MWasmExceptionRefsPointer* mir() const {
+    return mir_->toWasmExceptionRefsPointer();
+  }
+};
+
+class LWasmLoadExceptionRefsValue : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmLoadExceptionRefsValue);
+  explicit LWasmLoadExceptionRefsValue(const LAllocation& refsPtr)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, refsPtr);
+  }
+
+  const LAllocation* refsPtr() { return getOperand(0); }
+  MWasmLoadExceptionRefsValue* mir() const {
+    return mir_->toWasmLoadExceptionRefsValue();
+  }
+};
+
 // End Wasm Exception Handling
 
 }  // namespace jit
