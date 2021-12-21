@@ -217,8 +217,6 @@ AC_SUBST(WRAP_STL_INCLUDES)
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-MOZ_USER_DIR=".mozilla"
-
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
 dnl Configure platform-specific CPU architecture compiler options.
@@ -684,7 +682,6 @@ case "$target" in
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
     BIN_SUFFIX='.exe'
-    MOZ_USER_DIR="Mozilla"
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -1272,7 +1269,6 @@ cocoa)
     TK_CFLAGS=""
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    MOZ_USER_DIR="Mozilla"
     ;;
 
 uikit)
@@ -1281,7 +1277,6 @@ uikit)
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    MOZ_USER_DIR="Mozilla"
     ;;
 
 esac
@@ -1581,20 +1576,6 @@ dnl = Misc. Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
-
-dnl ========================================================
-dnl = Location of the mozilla user directory (default is ~/.mozilla).],
-dnl ========================================================
-MOZ_ARG_WITH_STRING(user-appdir,
-[  --with-user-appdir=DIR  Set user-specific appdir (default=.mozilla)],
-[ val=`echo $withval`
-if echo "$val" | grep "\/" >/dev/null; then
-    AC_MSG_ERROR("Homedir must be single relative path.")
-else
-    MOZ_USER_DIR="$val"
-fi])
-
-AC_DEFINE_UNQUOTED(MOZ_USER_DIR,"$MOZ_USER_DIR")
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
