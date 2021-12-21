@@ -82,6 +82,9 @@ extern crate viaduct;
 #[cfg(not(target_os = "android"))]
 extern crate midir;
 
+#[cfg(not(target_os = "android"))]
+extern crate midir_impl;
+
 extern crate gecko_logger;
 
 #[cfg(feature = "oxidized_breakpad")]
