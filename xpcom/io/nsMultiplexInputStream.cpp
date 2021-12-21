@@ -132,9 +132,9 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
 
-  bool IsSeekable() const;
-  bool IsIPCSerializable() const;
-  bool IsCloneable() const;
+  bool IsSeekable();
+  bool IsIPCSerializable();
+  bool IsCloneable();
   bool IsAsyncInputStream() const;
   bool IsInputStreamLength() const;
   bool IsAsyncInputStreamLength() const;
@@ -158,9 +158,9 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
   uint32_t mSeekableStreams;
   uint32_t mIPCSerializableStreams;
   uint32_t mCloneableStreams;
-  uint32_t mAsyncInputStreams;
-  uint32_t mInputStreamLengths;
-  uint32_t mAsyncInputStreamLengths;
+  Atomic<uint32_t, Relaxed> mAsyncInputStreams;
+  Atomic<uint32_t, Relaxed> mInputStreamLengths;
+  Atomic<uint32_t, Relaxed> mAsyncInputStreamLengths;
 };
 
 NS_IMPL_ADDREF(nsMultiplexInputStream)
@@ -866,9 +866,9 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
     asyncWaitFlags = mAsyncWaitFlags;
     asyncWaitRequestedCount = mAsyncWaitRequestedCount;
     asyncWaitEventTarget = mAsyncWaitEventTarget;
-  }
 
-  MOZ_ASSERT_IF(stream, NS_SUCCEEDED(mStatus));
+    MOZ_ASSERT_IF(stream, NS_SUCCEEDED(mStatus));
+  }
 
   // If we are here it's because we are already closed, or if the current stream
   // is not async. In both case we have to execute the callback.
@@ -1035,6 +1035,7 @@ bool nsMultiplexInputStream::Deserialize(
     }
   }
 
+  MutexAutoLock lock(mLock);
   mCurrentStream = params.currentStream();
   mStatus = params.status();
   mStartedReadingCurrent = params.startedReadingCurrent();
@@ -1420,15 +1421,18 @@ void nsMultiplexInputStream::UpdateQIMap(StreamData& aStream) {
 
 #undef MAYBE_UPDATE_VALUE
 
-bool nsMultiplexInputStream::IsSeekable() const {
+bool nsMultiplexInputStream::IsSeekable() {
+  MutexAutoLock lock(mLock);
   return mStreams.Length() == mSeekableStreams;
 }
 
-bool nsMultiplexInputStream::IsIPCSerializable() const {
+bool nsMultiplexInputStream::IsIPCSerializable() {
+  MutexAutoLock lock(mLock);
   return mStreams.Length() == mIPCSerializableStreams;
 }
 
-bool nsMultiplexInputStream::IsCloneable() const {
+bool nsMultiplexInputStream::IsCloneable() {
+  MutexAutoLock lock(mLock);
   return mStreams.Length() == mCloneableStreams;
 }
 
