@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    ".",
+    "examples/browser",
+]
+
+[package]
+name = "midir"
+version = "0.7.0"
+authors = ["Patrick Reisert"]
+description = "A cross-platform, realtime MIDI processing library, inspired by RtMidi."
+repository = "https://github.com/Boddlnagg/midir"
+readme = "README.md"
+keywords = ["midi", "audio", "music", "sound"]
+categories = ["multimedia::audio", "api-bindings"]
+license = "MIT"
+
+[features]
+default = []
+avoid_timestamping = []
+jack = ["jack-sys", "libc"]
+
+[dependencies]
+bitflags = "1.2"
+memalloc = "0.1.0"
+jack-sys = { version = "0.1.0", optional = true }
+libc = { version = "0.2.21", optional = true }
+winrt = { version = "0.7.0", optional = true}
+
+[target.'cfg(target_os = "linux")'.dependencies]
+alsa = "0.4.3"
+nix = "0.15"
+libc = "0.2.21"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+coremidi = { git = "https://github.com/chris-zen/coremidi.git", rev = "753163a8e5aeb8d69d2e0558301fd34a3d04327a" }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["mmsystem", "mmeapi"] }

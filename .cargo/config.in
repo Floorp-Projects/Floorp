@@ -17,6 +17,11 @@ git = "https://github.com/mozilla/mp4parse-rust"
 replace-with = "vendored-sources"
 rev = "3bfc47d9a571d0842676043ba60716318e946c06"
 
+[source."https://github.com/mozilla/midir.git"]
+git = "https://github.com/mozilla/midir.git"
+replace-with = "vendored-sources"
+rev = "dc87afbd4361ae5ec192e1fab0a6409dd13d4011"
+
 [source."https://github.com/mozilla/l10nregistry-rs"]
 git = "https://github.com/mozilla/l10nregistry-rs"
 replace-with = "vendored-sources"
@@ -90,6 +95,11 @@ rev = "28ba9d8"
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
 rev = "29571cc"
+
+[source."https://github.com/chris-zen/coremidi.git"]
+git = "https://github.com/chris-zen/coremidi.git"
+replace-with = "vendored-sources"
+rev = "753163a8e5aeb8d69d2e0558301fd34a3d04327a"
 
 [source.crates-io]
 replace-with = "vendored-sources"

@@ -24,6 +24,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "alsa"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb213f6b3e4b1480a60931ca2035794aa67b73103d254715b1db7b70dcb3c934"
+dependencies = [
+ "alsa-sys",
+ "bitflags",
+ "libc",
+ "nix",
+]
+
+[[package]]
+name = "alsa-sys"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db8fee663d06c4e303404ef5f40488a53e062f89ba8bfed81f42325aafad1527"
+dependencies = [
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "android_log-sys"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -828,6 +850,25 @@ source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=dea28d0c7d9952bb
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
+]
+
+[[package]]
+name = "coremidi"
+version = "0.6.0"
+source = "git+https://github.com/chris-zen/coremidi.git?rev=753163a8e5aeb8d69d2e0558301fd34a3d04327a#753163a8e5aeb8d69d2e0558301fd34a3d04327a"
+dependencies = [
+ "core-foundation",
+ "core-foundation-sys",
+ "coremidi-sys",
+]
+
+[[package]]
+name = "coremidi-sys"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b49674d86f634be42bba110d6b2fa0b047bd5a2bbd02fcba776b56030899f20d"
+dependencies = [
+ "core-foundation-sys",
 ]
 
 [[package]]
@@ -1973,6 +2014,7 @@ dependencies = [
  "log",
  "mapped_hyph",
  "mdns_service",
+ "midir",
  "mozurl",
  "mp4parse_capi",
  "neqo_glue",
@@ -2957,6 +2999,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "memalloc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df39d232f5c40b0891c10216992c2f250c054105cb1e56f0fc9032db6203ecc1"
+
+[[package]]
 name = "memchr"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3010,6 +3058,20 @@ dependencies = [
  "foreign-types",
  "log",
  "objc",
+]
+
+[[package]]
+name = "midir"
+version = "0.7.0"
+source = "git+https://github.com/mozilla/midir.git?rev=dc87afbd4361ae5ec192e1fab0a6409dd13d4011#dc87afbd4361ae5ec192e1fab0a6409dd13d4011"
+dependencies = [
+ "alsa",
+ "bitflags",
+ "coremidi",
+ "libc",
+ "memalloc",
+ "nix",
+ "winapi",
 ]
 
 [[package]]

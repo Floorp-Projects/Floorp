@@ -79,6 +79,9 @@ extern crate localization_ffi;
 #[cfg(not(target_os = "android"))]
 extern crate viaduct;
 
+#[cfg(not(target_os = "android"))]
+extern crate midir;
+
 extern crate gecko_logger;
 
 #[cfg(feature = "oxidized_breakpad")]
