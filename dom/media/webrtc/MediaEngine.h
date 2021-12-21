@@ -21,6 +21,7 @@ class Blob;
 }  // namespace dom
 
 class AllocationHandle;
+class MediaDevice;
 class MediaEngineSource;
 
 enum MediaSinkEnum {
