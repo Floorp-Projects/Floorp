@@ -2015,6 +2015,7 @@ dependencies = [
  "mapped_hyph",
  "mdns_service",
  "midir",
+ "midir_impl",
  "mozurl",
  "mp4parse_capi",
  "neqo_glue",
@@ -3072,6 +3073,16 @@ dependencies = [
  "memalloc",
  "nix",
  "winapi",
+]
+
+[[package]]
+name = "midir_impl"
+version = "0.1.0"
+dependencies = [
+ "midir",
+ "nsstring",
+ "thin-vec",
+ "uuid",
 ]
 
 [[package]]
