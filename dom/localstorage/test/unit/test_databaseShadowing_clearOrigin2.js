@@ -15,5 +15,5 @@ async function testSteps() {
     return;
   }
 
-  verifyData([1]);
+  verifyData([1], /* migrated */ true);
 }
