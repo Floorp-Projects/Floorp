@@ -3744,16 +3744,6 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
     fr.setStackHeight(block.stackHeight);
     masm.bind(&block.otherLabel);
 
-    // Try-delegate does not restore the TlsData on throw, so it needs to be
-    // done here as is done in endTryCatch().
-    fr.loadTlsPtr(WasmTlsReg);
-    masm.loadWasmPinnedRegsFromTls();
-    RegRef scratch = needRef();
-    RegRef scratch2 = needRef();
-    masm.switchToWasmTlsRealm(scratch, scratch2);
-    freeRef(scratch);
-    freeRef(scratch2);
-
     // Try-delegate keeps the pending exception in the TlsData, so we extract
     // it here rather than relying on an ABI register.
     RegRef exn = needRef();
@@ -3818,6 +3808,11 @@ bool BaseCompiler::emitDelegate() {
   tryNote.end = masm.currentOffset();
   tryNote.entryPoint = tryNote.end;
   tryNote.framePushed = masm.framePushed();
+
+  // Store the TlsData that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's TlsData but with the exception filled in
+  // TlsData::pendingException.
+  fr.storeTlsPtr(WasmTlsReg);
 
   // If the target block is a non-try block, skip over it and find the next
   // try block or the very last block (to re-throw out of the function).
@@ -3902,14 +3897,10 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     tryNote.end = tryNote.entryPoint;
   }
 
-  // Explicitly restore the TlsData in case the throw was across instances.
-  fr.loadTlsPtr(WasmTlsReg);
-  masm.loadWasmPinnedRegsFromTls();
-  RegRef scratch = needRef();
-  RegRef scratch2 = needRef();
-  masm.switchToWasmTlsRealm(scratch, scratch2);
-  freeRef(scratch);
-  freeRef(scratch2);
+  // Store the TlsData that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's TlsData but with the exception filled in
+  // TlsData::pendingException.
+  fr.storeTlsPtr(WasmTlsReg);
 
   // Load exception pointer from TlsData and make sure that it is
   // saved before the following call will clear it.

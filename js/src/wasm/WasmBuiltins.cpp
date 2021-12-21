@@ -567,8 +567,16 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
+        rfe->tlsData = iter.instance()->tlsData();
+
+        size_t offsetAdjustment = 0;
+        if (iter.frame()->callerIsTrampolineFP()) {
+          offsetAdjustment = FrameWithTls::sizeWithoutFrame() +
+                             IndirectStubAdditionalAlignment;
+        }
         rfe->stackPointer =
-            (uint8_t*)(rfe->framePointer - tryNote->framePushed);
+            (uint8_t*)(rfe->framePointer -
+                       (tryNote->framePushed + offsetAdjustment));
         rfe->target = iter.instance()->codeBase(tier) + tryNote->entryPoint;
 
         // Make sure to clear trapping state if we got here due to a trap.
