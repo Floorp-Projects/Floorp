@@ -46,9 +46,6 @@ assertWasmThrowsExn(() =>
   ).exports.f()
 );
 
-if (wasmCompileMode() === "baseline") {
-  // Delegate NYI in Ion.
-
 assertWasmThrowsExn(() =>
   wasmEvalText(
     `(module
@@ -114,7 +111,6 @@ assertWasmThrowsExn(() =>
          end))`
   ).exports.f()
 );
-}
 
 // Test throwing simple empty exceptions to JS.
 assertWasmThrowsExn(() =>
@@ -316,9 +312,6 @@ assertEq(
   );
 }
 
-if (wasmCompileMode() === "baseline") {
-  // Delegate NYI in Ion.
-
 // Test delegate throwing out of function.
 assertWasmThrowsExn(() =>
   wasmEvalText(
@@ -348,4 +341,3 @@ assertWasmThrowsExn(() =>
          delegate 0))`
   ).exports.f()
 );
-}

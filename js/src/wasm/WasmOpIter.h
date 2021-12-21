@@ -721,16 +721,23 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // end of the function body.
   bool controlStackEmpty() const { return controlStack_.empty(); }
 
-  // Find the innermost control item of a specific kind, returning true if
-  // found. The relative depth of the item is returned through a parameter.
-  bool controlFindInnermost(LabelKind kind, uint32_t* relativeDepth) {
-    for (int32_t i = controlStack_.length() - 1; i >= 0; i--) {
+  // Find the innermost control item of a specific kind, starting to search from
+  // a certain relative depth, and returning true if such innermost control item
+  // is found. The relative depth of the found item is returned via a parameter.
+  bool controlFindInnermostFrom(LabelKind kind, uint32_t fromRelativeDepth,
+                                uint32_t* foundRelativeDepth) {
+    int32_t fromAbsoluteDepth = controlStack_.length() - fromRelativeDepth - 1;
+    for (int32_t i = fromAbsoluteDepth; i >= 0; i--) {
       if (controlStack_[i].kind() == kind) {
-        *relativeDepth = controlStack_.length() - 1 - i;
+        *foundRelativeDepth = controlStack_.length() - 1 - i;
         return true;
       }
     }
     return false;
+  }
+
+  bool controlFindInnermost(LabelKind kind, uint32_t* foundRelativeDepth) {
+    return controlFindInnermostFrom(kind, 0, foundRelativeDepth);
   }
 };
 
