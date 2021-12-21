@@ -69,22 +69,19 @@ class MediaDevice : public nsIMediaDevice {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  MediaDevice(const RefPtr<MediaEngineSource>& aSource, const nsString& aName,
-              const nsString& aID, const nsString& aGroupID);
+  MediaDevice(const RefPtr<MediaEngineSource>& aSource,
+              const nsString& aRawName, const nsString& aRawID,
+              const nsString& aRawGroupID);
 
   MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-              const nsString& aID, const nsString& aGroupID);
+              const nsString& aRawID, const nsString& aRawGroupID);
 
-  static RefPtr<MediaDevice> CopyWithNewGroupId(
-      const RefPtr<MediaDevice>& aOther, const nsString& aGroupID);
+  static RefPtr<MediaDevice> CopyWithNewRawGroupId(
+      const RefPtr<MediaDevice>& aOther, const nsString& aRawGroupID);
 
   MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
               const nsString& aGroupID, const nsString& aRawID,
               const nsString& aRawGroupID, const nsString& aName);
-
-  void GetName(nsAString& aName);
-  void GetId(nsAString& aID);
-  void GetGroupId(nsAString& aGroupID);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
