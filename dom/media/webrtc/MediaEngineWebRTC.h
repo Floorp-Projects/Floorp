@@ -41,8 +41,6 @@
 namespace mozilla {
 
 class MediaEngineWebRTC : public MediaEngine {
-  typedef MediaEngine Super;
-
  public:
   MediaEngineWebRTC();
 
@@ -53,9 +51,6 @@ class MediaEngineWebRTC : public MediaEngine {
   // Clients should ensure to clean-up sources video/audio sources
   // before invoking Shutdown on this class.
   void Shutdown() override;
-
-  // Returns whether the host supports duplex audio track.
-  bool SupportsDuplex();
 
   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
@@ -75,9 +70,6 @@ class MediaEngineWebRTC : public MediaEngine {
 
   static void FakeDeviceChangeEventTimerTick(nsITimer* aTimer, void* aClosure);
 
-  // This also is set in the ctor and then never changed, but we can't make it
-  // const because we pass it to a function that takes bool* in the ctor.
-  bool mHasTabVideoSource;
   MediaEventListener mCameraListChangeListener;
   MediaEventListener mMicrophoneListChangeListener;
   MediaEventListener mSpeakerListChangeListener;
