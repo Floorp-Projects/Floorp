@@ -2204,18 +2204,33 @@ void MediaManager::DeviceListChanged() {
   //    if a device with both audio input and output is attached or removed.
   //    We want to react & fire a devicechange event only once in that case.
 
+  // The wait is extended if another hardware device-list-changed notification
+  // is received to provide the full 200ms for EnumerateRawDevices().
   if (mDeviceChangeTimer) {
     mDeviceChangeTimer->Cancel();
   } else {
     mDeviceChangeTimer = MakeRefPtr<MediaTimer>();
   }
+  // However, if this would cause a delay of over 1000ms in handling the
+  // oldest unhandled event, then respond now and set the timer to run
+  // EnumerateRawDevices() again in 200ms.
+  auto now = TimeStamp::NowLoRes();
+  auto enumerateDelay = TimeDuration::FromMilliseconds(200);
+  auto coalescenceLimit = TimeDuration::FromMilliseconds(1000) - enumerateDelay;
+  if (!mUnhandledDeviceChangeTime) {
+    mUnhandledDeviceChangeTime = now;
+  } else if (now - mUnhandledDeviceChangeTime > coalescenceLimit) {
+    HandleDeviceListChanged();
+    mUnhandledDeviceChangeTime = now;
+  }
   RefPtr<MediaManager> self = this;
-  mDeviceChangeTimer->WaitFor(TimeDuration::FromMilliseconds(200), __func__)
+  mDeviceChangeTimer->WaitFor(enumerateDelay, __func__)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, this] {
             MOZ_ASSERT(MediaManager::GetIfExists(),
                        "Timer is cancelled on Shutdown()");
+            mUnhandledDeviceChangeTime = TimeStamp();
             HandleDeviceListChanged();
           },
           [] { /* Timer was canceled by us, or we're in shutdown. */ });

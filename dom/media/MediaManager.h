@@ -375,6 +375,7 @@ class MediaManager final : public nsIMediaManagerService,
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
+  TimeStamp mUnhandledDeviceChangeTime;
   RefPtr<MediaTimer> mDeviceChangeTimer;
   bool mCamerasMuted = false;
   bool mMicrophonesMuted = false;
