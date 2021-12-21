@@ -6485,6 +6485,46 @@ void LIRGenerator::visitWasmFence(MWasmFence* ins) {
   add(new (alloc()) LWasmFence, ins);
 }
 
+// Wasm Exception Handling
+
+void LIRGenerator::visitWasmExceptionDataPointer(
+    MWasmExceptionDataPointer* ins) {
+  MOZ_ASSERT(ins->type() == MIRType::Pointer);
+  auto* lir = new (alloc()) LWasmExceptionDataPointer(useRegister(ins->exn()));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitWasmLoadExceptionDataValue(
+    MWasmLoadExceptionDataValue* ins) {
+  size_t offs = ins->offset();
+  MDefinition* exnDataPtr = ins->exnDataPtr();
+  LAllocation dataPtr = useRegister(exnDataPtr);
+
+  if (ins->type() == MIRType::Int64) {
+    defineInt64(new (alloc()) LWasmLoadSlotI64(dataPtr, offs), ins);
+  } else {
+    define(new (alloc()) LWasmLoadSlot(dataPtr, offs, ins->type()), ins);
+  }
+}
+
+void LIRGenerator::visitWasmStoreExceptionDataValue(
+    MWasmStoreExceptionDataValue* ins) {
+  MDefinition* exnDataPtr = ins->exnDataPtr();
+  MDefinition* value = ins->value();
+  size_t offs = ins->offset();
+  LInstruction* lir;
+
+  if (value->type() == MIRType::Int64) {
+    lir = new (alloc()) LWasmStoreSlotI64(useInt64Register(value),
+                                          useRegister(exnDataPtr), offs);
+  } else {
+    lir = new (alloc()) LWasmStoreSlot(
+        useRegister(value), useRegister(exnDataPtr), offs, value->type());
+  }
+  add(lir, ins);
+}
+// End Wasm Exception Handling
+
 static_assert(!std::is_polymorphic_v<LIRGenerator>,
               "LIRGenerator should not have any virtual methods");
 

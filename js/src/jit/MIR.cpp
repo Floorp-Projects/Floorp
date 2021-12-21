@@ -5394,10 +5394,10 @@ MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
 
 MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee, const Args& args,
-                          uint32_t stackArgAreaSizeUnaligned,
+                          uint32_t stackArgAreaSizeUnaligned, bool inTry,
                           MDefinition* tableIndex) {
   MWasmCall* call =
-      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned);
+      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned, inTry);
 
   if (!call->argRegs_.init(alloc, args.length())) {
     return nullptr;
@@ -5428,7 +5428,7 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
   MWasmCall* call = MWasmCall::New(alloc, desc, callee, args,
-                                   stackArgAreaSizeUnaligned, nullptr);
+                                   stackArgAreaSizeUnaligned, false, nullptr);
   if (!call) {
     return nullptr;
   }

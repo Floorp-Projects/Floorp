@@ -53,9 +53,6 @@ struct CatchInfo {
   uint32_t tagIndex;        // Index for the associated exception.
   NonAssertingLabel label;  // The entry label for the handler.
 
-  static const uint32_t CATCH_ALL_INDEX = UINT32_MAX;
-  static_assert(CATCH_ALL_INDEX > MaxTags);
-
   explicit CatchInfo(uint32_t tagIndex_) : tagIndex(tagIndex_) {}
 };
 

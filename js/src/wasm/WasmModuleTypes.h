@@ -300,6 +300,8 @@ struct TagType {
         bufferSize(0),
         refCount(0) {}
 
+  ResultType resultType() const { return ResultType::Vector(argTypes); }
+
   [[nodiscard]] bool computeLayout();
 
   [[nodiscard]] bool clone(const TagType& src) {
@@ -323,8 +325,6 @@ struct TagDesc {
 
   TagDesc(TagKind kind, TagType&& type, bool isExport = false)
       : kind(kind), type(std::move(type)), isExport(isExport) {}
-
-  ResultType resultType() const { return ResultType::Vector(type.argTypes); }
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;

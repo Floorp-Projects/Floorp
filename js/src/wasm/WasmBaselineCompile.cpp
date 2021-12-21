@@ -1412,12 +1412,7 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
   pushRef(exn);
 
   // ThrowException invokes a trap, and the rest is dead code.
-  if (!emitInstanceCall(lineOrBytecode, SASigThrowException)) {
-    return false;
-  }
-  freeRef(popRef());
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigThrowException);
 }
 
 void BaseCompiler::loadPendingException(Register dest) {
@@ -3714,7 +3709,7 @@ bool BaseCompiler::emitCatchAll() {
     return true;
   }
 
-  CatchInfo catchInfo(CatchInfo::CATCH_ALL_INDEX);
+  CatchInfo catchInfo(CatchAllIndex);
   if (!tryCatch.catchInfos.emplaceBack(catchInfo)) {
     return false;
   }
@@ -3926,7 +3921,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 
   bool hasCatchAll = false;
   for (CatchInfo& info : tryCatch.catchInfos) {
-    if (info.tagIndex != CatchInfo::CATCH_ALL_INDEX) {
+    if (info.tagIndex != CatchAllIndex) {
       MOZ_ASSERT(!hasCatchAll);
       masm.branch32(Assembler::Equal, index, Imm32(info.tagIndex), &info.label);
     } else {
@@ -3974,7 +3969,7 @@ bool BaseCompiler::emitThrow() {
   }
 
   const TagDesc& tagDesc = moduleEnv_.tags[exnIndex];
-  const ResultType& params = tagDesc.resultType();
+  const ResultType& params = tagDesc.type.resultType();
   const TagOffsetVector& offsets = tagDesc.type.argOffsets;
 
   // Create the new exception object that we will throw.
