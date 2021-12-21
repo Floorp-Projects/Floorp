@@ -51,6 +51,7 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 #include "mozilla/dom/ClientManagerService.h"
 #include "mozilla/dom/FlippedOnce.h"
@@ -172,7 +173,7 @@ using ArchivedOriginHashtable =
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 4;
+const uint32_t kMajorSchemaVersion = 5;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -355,6 +356,18 @@ nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
   return aOriginSuffix + ":"_ns + aOriginNoSuffix;
 }
 
+nsresult CreateDataTable(mozIStorageConnection* aConnection) {
+  return aConnection->ExecuteSimpleSQL(
+      "CREATE TABLE data"
+      "( key TEXT PRIMARY KEY"
+      ", utf16_length INTEGER NOT NULL"
+      ", conversion_type INTEGER NOT NULL"
+      ", compression_type INTEGER NOT NULL"
+      ", last_access_time INTEGER NOT NULL DEFAULT 0"
+      ", value BLOB NOT NULL"
+      ");"_ns);
+}
+
 nsresult CreateTables(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
   MOZ_ASSERT(aConnection);
@@ -370,14 +383,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
       ");"_ns)));
 
   // Table `data`
-  QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
-      "CREATE TABLE data"
-      "( key TEXT PRIMARY KEY"
-      ", value TEXT NOT NULL"
-      ", utf16Length INTEGER NOT NULL DEFAULT 0"
-      ", compressed INTEGER NOT NULL DEFAULT 0"
-      ", lastAccessTime INTEGER NOT NULL DEFAULT 0"
-      ");"_ns)));
+  QM_TRY(MOZ_TO_RESULT(CreateDataTable(aConnection)));
 
   QM_TRY(MOZ_TO_RESULT(aConnection->SetSchemaVersion(kSQLiteSchemaVersion)));
 
@@ -421,6 +427,34 @@ nsresult UpgradeSchemaFrom3_0To4_0(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(aConnection);
 
   QM_TRY(MOZ_TO_RESULT(aConnection->SetSchemaVersion(MakeSchemaVersion(4, 0))));
+
+  return NS_OK;
+}
+
+nsresult UpgradeSchemaFrom4_0To5_0(mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  // Rename old data
+  QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
+      "ALTER TABLE data RENAME TO legacy_data;"_ns)));
+
+  // Recreate data table in new format
+  QM_TRY(MOZ_TO_RESULT(CreateDataTable(aConnection)));
+
+  // Reinsert old data, all legacy data is UTF8
+  static_assert(1u ==
+                static_cast<uint8_t>(LSValue::ConversionType::UTF16_UTF8));
+  QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
+      "INSERT INTO data (key, utf16_length, conversion_type, compression_type, "
+      "last_access_time, value) "
+      "SELECT key, utf16Length, 1, compressed, lastAccessTime, value "
+      "FROM legacy_data;"_ns)));
+
+  QM_TRY(MOZ_TO_RESULT(
+      aConnection->ExecuteSimpleSQL("DROP TABLE legacy_data;"_ns)));
+
+  QM_TRY(MOZ_TO_RESULT(aConnection->SetSchemaVersion(MakeSchemaVersion(5, 0))));
 
   return NS_OK;
 }
@@ -541,6 +575,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
           )));
     }
 
+    bool vacuumNeeded = false;
+
     mozStorageTransaction transaction(
         connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
@@ -571,7 +607,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
       QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((4 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((5 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -581,6 +617,9 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
           QM_TRY(MOZ_TO_RESULT(UpgradeSchemaFrom2_0To3_0(connection)));
         } else if (schemaVersion == MakeSchemaVersion(3, 0)) {
           QM_TRY(MOZ_TO_RESULT(UpgradeSchemaFrom3_0To4_0(connection)));
+        } else if (schemaVersion == MakeSchemaVersion(4, 0)) {
+          QM_TRY(MOZ_TO_RESULT(UpgradeSchemaFrom4_0To5_0(connection)));
+          vacuumNeeded = true;
         } else {
           LS_WARNING(
               "Unable to open LocalStorage database, no upgrade path is "
@@ -596,6 +635,10 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
     }
 
     QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
+
+    if (vacuumNeeded) {
+      QM_TRY(MOZ_TO_RESULT(connection->ExecuteSimpleSQL("VACUUM;"_ns)));
+    }
 
     if (newDatabase) {
       // Windows caches the file size, let's force it to stat the file again.
@@ -2108,7 +2151,7 @@ class PrepareDatastoreOp
   class LoadDataOp;
 
   class CompressFunction;
-  class CompressibleFunction;
+  class CompressionTypeFunction;
 
   enum class NestedState {
     // The nesting has not yet taken place. Next step is
@@ -2305,10 +2348,10 @@ class PrepareDatastoreOp::CompressFunction final : public mozIStorageFunction {
   NS_DECL_MOZISTORAGEFUNCTION
 };
 
-class PrepareDatastoreOp::CompressibleFunction final
+class PrepareDatastoreOp::CompressionTypeFunction final
     : public mozIStorageFunction {
  private:
-  ~CompressibleFunction() = default;
+  ~CompressionTypeFunction() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -3602,15 +3645,21 @@ nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
   MOZ_ASSERT(aConnection);
 
   QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteCachedStatement(
-      "INSERT OR REPLACE INTO data (key, value, utf16Length, compressed) "
-      "VALUES(:key, :value, :utf16Length, :compressed)"_ns,
+      "INSERT OR REPLACE INTO data (key, utf16_length, conversion_type, "
+      "compression_type, value) "
+      "VALUES(:key, :utf16_length, :conversion_type, :compression_type, :value)"_ns,
       [&aKey, &aValue](auto& stmt) -> Result<Ok, nsresult> {
         QM_TRY(MOZ_TO_RESULT(stmt.BindStringByName("key"_ns, aKey)));
-        QM_TRY(MOZ_TO_RESULT(stmt.BindUTF8StringByName("value"_ns, aValue)));
         QM_TRY(MOZ_TO_RESULT(
-            stmt.BindInt32ByName("utf16Length"_ns, aValue.UTF16Length())));
+            stmt.BindInt32ByName("utf16_length"_ns, aValue.UTF16Length())));
+        QM_TRY(MOZ_TO_RESULT(stmt.BindInt32ByName(
+            "conversion_type"_ns,
+            static_cast<int32_t>(aValue.GetConversionType()))));
+        QM_TRY(MOZ_TO_RESULT(stmt.BindInt32ByName(
+            "compression_type"_ns,
+            static_cast<int32_t>(aValue.GetCompressionType()))));
         QM_TRY(MOZ_TO_RESULT(
-            stmt.BindInt32ByName("compressed"_ns, aValue.IsCompressed())));
+            stmt.BindUTF8StringAsBlobByName("value"_ns, aValue.AsCString())));
 
         return Ok{};
       })));
@@ -3624,6 +3673,9 @@ nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
       "(originAttributes, originKey, scope, key, value) "
       "VALUES (:originAttributes, :originKey, :scope, :key, :value) "_ns,
       [&aConnection, &aKey, &aValue](auto& stmt) -> Result<Ok, nsresult> {
+        using ConversionType = LSValue::ConversionType;
+        using CompressionType = LSValue::CompressionType;
+
         const ArchivedOriginScope* const archivedOriginScope =
             aConnection->GetArchivedOriginScope();
 
@@ -3635,13 +3687,33 @@ nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
 
         QM_TRY(MOZ_TO_RESULT(stmt.BindStringByName("key"_ns, aKey)));
 
-        if (aValue.IsCompressed()) {
-          nsCString value;
-          QM_TRY(OkIf(SnappyUncompress(aValue, value)), Err(NS_ERROR_FAILURE));
-          QM_TRY(MOZ_TO_RESULT(stmt.BindUTF8StringByName("value"_ns, value)));
-        } else {
-          QM_TRY(MOZ_TO_RESULT(stmt.BindUTF8StringByName("value"_ns, aValue)));
+        bool isCompressed =
+            CompressionType::UNCOMPRESSED != aValue.GetCompressionType();
+        bool isAlreadyConverted =
+            ConversionType::NONE != aValue.GetConversionType();
+
+        nsCString buffer;
+        const nsCString& valueBlob = aValue.AsCString();
+        if (isCompressed) {
+          QM_TRY(OkIf(SnappyUncompress(valueBlob, buffer)),
+                 Err(NS_ERROR_FAILURE));
         }
+        const nsCString& value = isCompressed ? buffer : valueBlob;
+
+        // For shadow writes, we undo buffer swap and convert destructively
+        nsCString unconverted;
+        if (!isAlreadyConverted) {
+          nsString converted;
+          QM_TRY(OkIf(PutCStringBytesToString(value, converted)),
+                 Err(NS_ERROR_OUT_OF_MEMORY));
+          QM_TRY(OkIf(CopyUTF16toUTF8(converted, unconverted, fallible)),
+                 Err(NS_ERROR_OUT_OF_MEMORY));  // Corrupt invalid data
+        }
+        const nsCString& untransformed =
+            (!isAlreadyConverted) ? unconverted : value;
+
+        QM_TRY(MOZ_TO_RESULT(
+            stmt.BindUTF8StringByName("value"_ns, untransformed)));
 
         return Ok{};
       })));
@@ -6932,21 +7004,26 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
           QM_TRY(MOZ_TO_RESULT(
               connection->CreateFunction("compress"_ns, 1, function)));
 
-          function = new CompressibleFunction();
+          function = new CompressionTypeFunction();
 
           QM_TRY(MOZ_TO_RESULT(
-              connection->CreateFunction("compressible"_ns, 1, function)));
+              connection->CreateFunction("compressionType"_ns, 1, function)));
 
           QM_TRY_INSPECT(
               const auto& stmt,
               MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                   nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-                  "INSERT INTO data (key, value, utf16Length, compressed) "
-                  "SELECT key, compress(value), utf16Length(value), "
-                  "compressible(value) "
+                  "INSERT INTO data (key, utf16_length, conversion_type, "
+                  "compression_type, value) "
+                  "SELECT key, utf16Length(value), :conversionType, "
+                  "compressionType(value), compress(value)"
                   "FROM webappsstore2 "
                   "WHERE originKey = :originKey "
                   "AND originAttributes = :originAttributes;"_ns));
+
+          QM_TRY(MOZ_TO_RESULT(stmt->BindInt32ByName(
+              "conversionType"_ns,
+              static_cast<int32_t>(LSValue::ConversionType::UTF16_UTF8))));
 
           QM_TRY(MOZ_TO_RESULT(mArchivedOriginScope->BindToStatement(stmt)));
 
@@ -6954,7 +7031,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
           QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compress"_ns)));
 
-          QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compressible"_ns)));
+          QM_TRY(
+              MOZ_TO_RESULT(connection->RemoveFunction("compressionType"_ns)));
         }
 
         {
@@ -7492,10 +7570,11 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     return NS_ERROR_ABORT;
   }
 
-  QM_TRY_INSPECT(const auto& stmt,
-                 mConnection->BorrowCachedStatement(
-                     "SELECT key, value, utf16Length, compressed "
-                     "FROM data;"_ns));
+  QM_TRY_INSPECT(
+      const auto& stmt,
+      mConnection->BorrowCachedStatement(
+          "SELECT key, utf16_length, conversion_type, compression_type, value "
+          "FROM data;"_ns));
 
   QM_TRY(quota::CollectWhileHasResult(
       *stmt, [this](auto& stmt) -> mozilla::Result<Ok, nsresult> {
@@ -7583,19 +7662,22 @@ PrepareDatastoreOp::CompressFunction::OnFunctionCall(
                      nsCString, aFunctionArguments, GetUTF8String, 0));
 
   nsCString compressed;
-  QM_TRY(OkIf(SnappyCompress(value, compressed)), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(SnappyCompress(value, compressed)), NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIVariant> result =
-      new storage::UTF8TextVariant(compressed.IsVoid() ? value : compressed);
+  const nsCString& buffer = compressed.IsVoid() ? value : compressed;
+
+  nsCOMPtr<nsIVariant> result = new storage::BlobVariant(std::make_pair(
+      static_cast<const void*>(buffer.get()), int(buffer.Length())));
 
   result.forget(aResult);
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(PrepareDatastoreOp::CompressibleFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS(PrepareDatastoreOp::CompressionTypeFunction,
+                  mozIStorageFunction)
 
 NS_IMETHODIMP
-PrepareDatastoreOp::CompressibleFunction::OnFunctionCall(
+PrepareDatastoreOp::CompressionTypeFunction::OnFunctionCall(
     mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFunctionArguments);
@@ -7618,11 +7700,13 @@ PrepareDatastoreOp::CompressibleFunction::OnFunctionCall(
                      nsCString, aFunctionArguments, GetUTF8String, 0));
 
   nsCString compressed;
-  QM_TRY(OkIf(SnappyCompress(value, compressed)), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(SnappyCompress(value, compressed)), NS_ERROR_OUT_OF_MEMORY);
 
-  const bool compressible = !compressed.IsVoid();
+  const int32_t compression = static_cast<int32_t>(
+      compressed.IsVoid() ? LSValue::CompressionType::UNCOMPRESSED
+                          : LSValue::CompressionType::SNAPPY);
 
-  nsCOMPtr<nsIVariant> result = new storage::IntegerVariant(compressible);
+  nsCOMPtr<nsIVariant> result = new storage::IntegerVariant(compression);
 
   result.forget(aResult);
   return NS_OK;
