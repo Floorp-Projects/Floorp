@@ -78,9 +78,8 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
  public:
   MediaEngineDefaultVideoSource();
 
-  nsString GetName() const override;
-  nsCString GetUUID() const override;
-  nsString GetGroupId() const override;
+  static nsString GetUUID();
+  static nsString GetGroupId();
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
@@ -100,10 +99,6 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
   bool IsFake() const override { return true; }
-
-  dom::MediaSourceEnum GetMediaSource() const override {
-    return dom::MediaSourceEnum::Camera;
-  }
 
  protected:
   ~MediaEngineDefaultVideoSource() = default;
@@ -129,15 +124,11 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
 
   // Main thread only.
   const RefPtr<media::Refcountable<dom::MediaTrackSettings>> mSettings;
-
- private:
-  const nsString mName;
 };
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
     : mTimer(nullptr),
-      mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()),
-      mName(DefaultVideoName()) {
+      mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()) {
   mSettings->mWidth.Construct(
       int32_t(MediaEnginePrefs::DEFAULT_43_VIDEO_WIDTH));
   mSettings->mHeight.Construct(
@@ -149,13 +140,11 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
                                      .value));
 }
 
-nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
-
-nsCString MediaEngineDefaultVideoSource::GetUUID() const {
-  return "1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"_ns;
+nsString MediaEngineDefaultVideoSource::GetUUID() {
+  return u"1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"_ns;
 }
 
-nsString MediaEngineDefaultVideoSource::GetGroupId() const {
+nsString MediaEngineDefaultVideoSource::GetGroupId() {
   return u"Default Video Group"_ns;
 }
 
@@ -450,9 +439,8 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
  public:
   MediaEngineDefaultAudioSource() = default;
 
-  nsString GetName() const override;
-  nsCString GetUUID() const override;
-  nsString GetGroupId() const override;
+  static nsString GetUUID();
+  static nsString GetGroupId();
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
@@ -468,10 +456,6 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
 
   bool IsFake() const override { return true; }
 
-  dom::MediaSourceEnum GetMediaSource() const override {
-    return dom::MediaSourceEnum::Microphone;
-  }
-
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
  protected:
@@ -485,15 +469,11 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
   RefPtr<AudioSourcePullListener> mPullListener;
 };
 
-nsString MediaEngineDefaultAudioSource::GetName() const {
-  return u"Default Audio Device"_ns;
+nsString MediaEngineDefaultAudioSource::GetUUID() {
+  return u"B7CBD7C1-53EF-42F9-8353-73F61C70C092"_ns;
 }
 
-nsCString MediaEngineDefaultAudioSource::GetUUID() const {
-  return "B7CBD7C1-53EF-42F9-8353-73F61C70C092"_ns;
-}
-
-nsString MediaEngineDefaultAudioSource::GetGroupId() const {
+nsString MediaEngineDefaultAudioSource::GetGroupId() {
   return u"Default Audio Group"_ns;
 }
 
@@ -632,26 +612,36 @@ void MediaEngineDefault::EnumerateDevices(
   }
 
   switch (aMediaSource) {
-    case MediaSourceEnum::Camera: {
+    case MediaSourceEnum::Camera:
       // Only supports camera video sources. See Bug 1038241.
-      auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
-      aDevices->AppendElement(
-          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
-                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId(), IsScary::No));
+      aDevices->EmplaceBack(new MediaDevice(
+          this, aMediaSource, DefaultVideoName(),
+          MediaEngineDefaultVideoSource::GetUUID(),
+          MediaEngineDefaultVideoSource::GetGroupId(), IsScary::No));
       return;
-    }
-    case MediaSourceEnum::Microphone: {
-      auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
-      aDevices->AppendElement(
-          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
-                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId(), IsScary::No));
+    case MediaSourceEnum::Microphone:
+      aDevices->EmplaceBack(new MediaDevice(
+          this, aMediaSource, u"Default Audio Device"_ns,
+          MediaEngineDefaultAudioSource::GetUUID(),
+          MediaEngineDefaultAudioSource::GetGroupId(), IsScary::No));
       return;
-    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported source type");
       return;
+  }
+}
+
+RefPtr<MediaEngineSource> MediaEngineDefault::CreateSource(
+    const MediaDevice* aMediaDevice) {
+  MOZ_ASSERT(aMediaDevice->mEngine == this);
+  switch (aMediaDevice->mMediaSource) {
+    case MediaSourceEnum::Camera:
+      return new MediaEngineDefaultVideoSource();
+    case MediaSourceEnum::Microphone:
+      return new MediaEngineDefaultAudioSource();
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported source type");
+      return nullptr;
   }
 }
 

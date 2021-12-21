@@ -34,6 +34,8 @@ using namespace webrtc;
 
 namespace mozilla {
 
+using dom::MediaSourceEnum;
+
 extern LazyLogModule gMediaManagerLog;
 #define LOG(...) MOZ_LOG(gMediaManagerLog, LogLevel::Debug, (__VA_ARGS__))
 #define LOG_FRAME(...) \
@@ -45,15 +47,10 @@ extern LazyLogModule gMediaManagerLog;
  */
 
 MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
-    RefPtr<AudioDeviceInfo> aInfo, const nsString& aDeviceName,
-    const nsCString& aDeviceUUID, const nsString& aDeviceGroup,
-    uint32_t aMaxChannelCount)
+    const MediaDevice* aMediaDevice)
     : mPrincipal(PRINCIPAL_HANDLE_NONE),
-      mDeviceInfo(std::move(aInfo)),
-      mDeviceName(aDeviceName),
-      mDeviceUUID(aDeviceUUID),
-      mDeviceGroup(aDeviceGroup),
-      mDeviceMaxChannelCount(aMaxChannelCount),
+      mDeviceInfo(aMediaDevice->mAudioDeviceInfo),
+      mDeviceMaxChannelCount(mDeviceInfo->MaxChannels()),
       mSettings(new nsMainThreadPtrHolder<
                 media::Refcountable<dom::MediaTrackSettings>>(
           "MediaEngineWebRTCMicrophoneSource::mSettings",
@@ -61,6 +58,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
           // Non-strict means it won't assert main thread for us.
           // It would be great if it did but we're already on the media thread.
           /* aStrict = */ false)) {
+  MOZ_ASSERT(aMediaDevice->mMediaSource == MediaSourceEnum::Microphone);
 #ifndef ANDROID
   MOZ_ASSERT(mDeviceInfo->DeviceID());
 #endif
@@ -72,18 +70,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   mSettings->mChannelCount.Construct(0);
 
   mState = kReleased;
-}
-
-nsString MediaEngineWebRTCMicrophoneSource::GetName() const {
-  return mDeviceName;
-}
-
-nsCString MediaEngineWebRTCMicrophoneSource::GetUUID() const {
-  return mDeviceUUID;
-}
-
-nsString MediaEngineWebRTCMicrophoneSource::GetGroupId() const {
-  return mDeviceGroup;
 }
 
 nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
@@ -356,7 +342,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
 
   mState = kReleased;
   LOG("Mic source %p Audio device %s deallocated", this,
-      NS_ConvertUTF16toUTF8(mDeviceName).get());
+      NS_ConvertUTF16toUTF8(mDeviceInfo->Name()).get());
   return NS_OK;
 }
 
@@ -1318,11 +1304,13 @@ Maybe<CubebUtils::AudioDeviceID> AudioInputTrack::DeviceId() const {
   return mDeviceId;
 }
 
-nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
-  return u"AudioCapture"_ns;
+MediaEngineWebRTCAudioCaptureSource::MediaEngineWebRTCAudioCaptureSource(
+    const MediaDevice* aMediaDevice) {
+  MOZ_ASSERT(aMediaDevice->mMediaSource == MediaSourceEnum::AudioCapture);
 }
 
-nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
+/* static */
+nsString MediaEngineWebRTCAudioCaptureSource::GetUUID() {
   nsID uuid{};
   char uuidBuffer[NSID_LENGTH];
   nsCString asciiString;
@@ -1330,17 +1318,18 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
 
   rv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (rv.Failed()) {
-    return ""_ns;
+    return u""_ns;
   }
 
   uuid.ToProvidedString(uuidBuffer);
   asciiString.AssignASCII(uuidBuffer);
 
   // Remove {} and the null terminator
-  return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
+  return NS_ConvertASCIItoUTF16(Substring(asciiString, 1, NSID_LENGTH - 3));
 }
 
-nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
+/* static */
+nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() {
   return u"AudioCaptureGroup"_ns;
 }
 

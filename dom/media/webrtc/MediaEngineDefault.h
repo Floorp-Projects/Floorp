@@ -23,10 +23,12 @@ class MediaEngineDefault : public MediaEngine {
   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void Shutdown() override {}
+  RefPtr<MediaEngineSource> CreateSource(const MediaDevice* aDevice) override;
 
   MediaEventSource<void>& DeviceListChangeEvent() override {
     return mDeviceListChangeEvent;
   }
+  bool IsFake() const override { return true; }
 
  private:
   ~MediaEngineDefault();

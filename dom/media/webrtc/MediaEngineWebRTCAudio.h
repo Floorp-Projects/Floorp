@@ -29,15 +29,7 @@ class AudioInputTrack;
 //   the Main Thread. It is const.
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
  public:
-  MediaEngineWebRTCMicrophoneSource(RefPtr<AudioDeviceInfo> aInfo,
-                                    const nsString& aDeviceName,
-                                    const nsCString& aDeviceUUID,
-                                    const nsString& aDeviceGroup,
-                                    uint32_t aMaxChannelCount);
-
-  nsString GetName() const override;
-  nsCString GetUUID() const override;
-  nsString GetGroupId() const override;
+  explicit MediaEngineWebRTCMicrophoneSource(const MediaDevice* aMediaDevice);
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
@@ -56,10 +48,6 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
    * Main thread only.
    */
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
-
-  dom::MediaSourceEnum GetMediaSource() const override {
-    return dom::MediaSourceEnum::Microphone;
-  }
 
   nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -89,9 +77,6 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
 
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
-  const nsString mDeviceName;
-  const nsCString mDeviceUUID;
-  const nsString mDeviceGroup;
 
   // The maximum number of channels that this device supports.
   const uint32_t mDeviceMaxChannelCount;
@@ -302,10 +287,9 @@ class AudioInputTrack : public ProcessedMediaTrack {
 
 class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
  public:
-  explicit MediaEngineWebRTCAudioCaptureSource(const char* aUuid) {}
-  nsString GetName() const override;
-  nsCString GetUUID() const override;
-  nsString GetGroupId() const override;
+  explicit MediaEngineWebRTCAudioCaptureSource(const MediaDevice* aMediaDevice);
+  static nsString GetUUID();
+  static nsString GetGroupId();
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
                     const char** aOutBadConstraint) override {
@@ -323,10 +307,6 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const char** aOutBadConstraint) override;
-
-  dom::MediaSourceEnum GetMediaSource() const override {
-    return dom::MediaSourceEnum::AudioCapture;
-  }
 
   nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override {
     return NS_ERROR_NOT_IMPLEMENTED;
