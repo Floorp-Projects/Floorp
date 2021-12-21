@@ -149,6 +149,7 @@ class LocalMediaDevice final : public nsIMediaDevice {
   }
   dom::MediaDeviceKind Kind() const { return mRawDevice->mKind; }
   bool IsFake() const { return mRawDevice->mIsFake; }
+  const nsString& RawID() { return mRawDevice->mRawID; }
 
  private:
   virtual ~LocalMediaDevice() = default;
@@ -368,26 +369,11 @@ class MediaManager final : public nsIMediaManagerService,
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  struct nsStringHasher {
-    using Key = nsString;
-    using Lookup = nsString;
-
-    static HashNumber hash(const Lookup& aLookup) {
-      return HashString(aLookup.get());
-    }
-
-    static bool match(const Key& aKey, const Lookup& aLookup) {
-      return aKey == aLookup;
-    }
-  };
-
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
-  using DeviceIdSet = HashSet<nsString, nsStringHasher, InfallibleAllocPolicy>;
-  DeviceIdSet mDeviceIDs;
   RefPtr<MediaTimer> mDeviceChangeTimer;
   bool mCamerasMuted = false;
   bool mMicrophonesMuted = false;
