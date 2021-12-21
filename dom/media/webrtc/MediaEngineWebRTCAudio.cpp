@@ -1004,25 +1004,6 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   }
 }
 
-void AudioInputProcessing::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
-  // This is called when an AudioCallbackDriver switch has happened for any
-  // reason, including other reasons than starting this audio input stream.
-}
-
-// Called back on GraphDriver thread!
-// Note this can be called back after ::Stop()
-void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
-                                           const AudioDataValue* aBuffer,
-                                           size_t aFrames, TrackRate aRate,
-                                           uint32_t aChannels,
-                                           uint32_t aAlreadyBuffered) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
-  MOZ_ASSERT(aGraph->GraphRate() == aRate);
-  MOZ_ASSERT(mEnabled);
-  TRACE("AudioInputProcessing::NotifyInputData");
-}
-
 void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThread());
 
