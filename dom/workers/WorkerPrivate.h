@@ -554,8 +554,6 @@ class WorkerPrivate final : public RelativeTimeline {
   // Check whether we're running in automation.
   bool IsInAutomation() const { return mIsInAutomation; }
 
-  bool IsPrivilegedAddonGlobal() const { return mIsPrivilegedAddonGlobal; }
-
   TimeStamp CreationTimeStamp() const { return mCreationTimeStamp; }
 
   DOMHighResTimeStamp CreationTime() const { return mCreationTimeHighRes; }
