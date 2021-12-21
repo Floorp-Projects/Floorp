@@ -9,3 +9,5 @@ skip-if(Android) fuzzy(0-31,0-573249) fuzzy-if(appleSilicon,0-37,0-543189) == im
 skip-if(Android) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
 # Set media.dormant-on-pause-timeout-ms to avoid decoders becoming dormant and busting test, skip on android as test is too noisy and unstable
 skip-if(Android) pref(media.dormant-on-pause-timeout-ms,-1) fuzzy(0-20,0-500) == frame_order_mp4.html frame_order_mp4-ref.html
+skip-if(Android) fuzzy(0-20,0-270000) == incorrect_display_in_bytestream_vp8.html incorrect_display_in_bytestream_vp8-ref.html
+skip-if(Android) fuzzy(0-20,0-210000) == incorrect_display_in_bytestream_vp9.html incorrect_display_in_bytestream_vp9-ref.html
