@@ -478,18 +478,17 @@ uint32_t MediaConstraintsHelper::FitnessDistance(
   return "";
 }
 
-/* static */ const char* MediaConstraintsHelper::FindBadConstraint(
+/* static */
+const char* MediaConstraintsHelper::FindBadConstraint(
     const NormalizedConstraints& aConstraints,
-    const RefPtr<MediaEngineSource>& aMediaEngineSource) {
+    const MediaDevice* aMediaDevice) {
   NormalizedConstraints c(aConstraints);
   NormalizedConstraints empty((dom::MediaTrackConstraints()));
   c.mDeviceId = empty.mDeviceId;
   c.mGroupId = empty.mGroupId;
-  RefPtr device =
-      new MediaDevice(aMediaEngineSource, aMediaEngineSource->GetName(), u""_ns,
-                      u""_ns, MediaDevice::IsScary::Yes);
   AutoTArray<RefPtr<LocalMediaDevice>, 1> devices;
-  devices.EmplaceBack(new LocalMediaDevice(device, u""_ns, u""_ns, u""_ns));
+  devices.EmplaceBack(
+      new LocalMediaDevice(aMediaDevice, u""_ns, u""_ns, u""_ns));
   return FindBadConstraint(c, devices);
 }
 

@@ -18,7 +18,7 @@
 namespace mozilla {
 
 class LocalMediaDevice;
-class MediaEngineSource;
+class MediaDevice;
 
 template <class EnumValuesStrings, class Enum>
 static Enum StringToEnum(const EnumValuesStrings& aStrings,
@@ -361,7 +361,7 @@ class MediaConstraintsHelper {
 
   static const char* FindBadConstraint(
       const NormalizedConstraints& aConstraints,
-      const RefPtr<MediaEngineSource>& aMediaEngineSource);
+      const MediaDevice* aMediaDevice);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
 };
