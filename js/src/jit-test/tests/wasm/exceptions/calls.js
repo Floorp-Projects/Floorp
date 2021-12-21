@@ -123,7 +123,7 @@ function generateLocalThrows(types, baseThrow) {
 
 {
   // Some variables to be used in all tests.
-  let typesJS = ["i32", "i64", "f32", "f64"];
+  let typesJS = ["i32", "i64", "f32", "f64", "externref"];
   let types = typesJS.join(" ");
 
   // The following depend on whether simd is enabled or not. We write it like
@@ -156,11 +156,12 @@ function generateLocalThrows(types, baseThrow) {
                (i64.const 3)
                (f32.const 4)
                (f64.const 13.37)
+               (local.get $correctRef)
                ${throwV128}`;
 
   // The last 1 is the result of the test that the v128 value is correct, done
   // in wasm code (if simd is enabled).
-  let correctResultsJS = [2, 3n, 4, 13.37, 1];
+  let correctResultsJS = [2, 3n, 4, 13.37, "foo", 1];
 
   let wrongValues =
       `;; Wrong values
@@ -168,8 +169,8 @@ function generateLocalThrows(types, baseThrow) {
                     (i64.const 6)
                     (f32.const 0.1)
                     (f64.const 0.6437)
+                    (local.get $wrongRef)
                     ${wrongV128}`;
-  let wrongValuesJS = [5, 6n, 0.1, 0.6437];
 
   // The individual tests. -----------------------------------------------------
 
@@ -179,7 +180,7 @@ function generateLocalThrows(types, baseThrow) {
     let throwifTypeInline =
         // The result of the "throwif" function will be used as an argument the
         // second time "throwif" is called.
-        `(param $ifPredicate i32) (result i32)`;
+        `(param $ifPredicate i32) (param $correctRef externref) (result i32)`;
 
     let moduleHeaderThrowif =
         `(module
@@ -196,13 +197,17 @@ function generateLocalThrows(types, baseThrow) {
     let testModuleRest =
         `(tag $notThrownExn)
          (func $doNothing)
-         (func (export "testFunc") (result ${types} i32)
+         (func (export "testFunc") (param $correctRef externref)
+                                   (param $wrongRef externref)
+                                   (result ${types} i32)
                                    (local $ifPredicate i32)
            (local.get $ifPredicate)
            (try (param i32) (result ${exntype})
              (do
+               (local.get $wrongRef)
                (call $throwif) ;; Returns 1.
                (call $doNothing) ;; Does nothing.
+               (local.get $correctRef)
                (call $throwif) ;; Throws $exn.
                (drop)
                ${wrongValues} ;; Won't reach this point.
@@ -217,7 +222,8 @@ function generateLocalThrows(types, baseThrow) {
       let mod = moduleHeaderThrowif + testModuleRest;
       // console.log("DIRECT LOCAL MOD = " + mod);  // Uncomment for debugging.
 
-      assertEqArray(wasmEvalText(mod).exports.testFunc(), correctResultsJS);
+      assertEqArray(wasmEvalText(mod).exports.testFunc("foo", "bar"),
+                    correctResultsJS);
     };
 
     function testDirectImportedCallsThrowing() {
@@ -233,8 +239,9 @@ function generateLocalThrows(types, baseThrow) {
           testModuleRest;
       // console.log("DIRECT IMPORT MOD = " + mod); // Uncomment for debugging.
 
-      assertEqArray(wasmEvalText(mod, { m : exports}).exports.testFunc(),
-                    correctResultsJS);
+      assertEqArray(
+        wasmEvalText(mod, { m : exports}).exports.testFunc("foo", "bar"),
+        correctResultsJS);
     };
 
     testDirectLocalCallsThrowing();
@@ -250,10 +257,13 @@ function generateLocalThrows(types, baseThrow) {
              (local.get 1) ;; i64
              (local.get 2) ;; f32
              (local.get 3) ;; f64
+             (local.get 4) ;; ref
              ;; v128
-             (local.get 4)`;
+             (local.get 5)`;
 
-    let testFunctypeInline = `;; The last i32 result is the v128 check.
+    let testFunctypeInline = `(param $correctRef externref)
+                                     (param $wrongRef externref)
+                                     ;; The last i32 result is the v128 check.
                                      (result ${types} i32)`;
 
     let moduleHeader =
@@ -334,9 +344,10 @@ function generateLocalThrows(types, baseThrow) {
     let indirectThrow = `${throwValues}
                (call_indirect (type $indirectFunctype) (i32.const 2)) ;; returnArgs
                (call_indirect (type $indirectFunctype) (i32.const 0)) ;; throwExn
-               drop ;; Drop v128 to do trivial and irrelevant ops.
+               drop drop ;; Drop v128 and externref to do trivial and irrelevant ops.
                (f64.const 5)
                (f64.add)
+               (local.get $wrongRef)
                ${wrongV128}
                ;; throwEmptyExn
                (call_indirect (type $indirectFunctype) (i32.const 1))
@@ -375,7 +386,8 @@ function generateLocalThrows(types, baseThrow) {
         //console.log("mod = : " + mod); // Uncomment for debugging.
 
         let testFunction = wasmEvalText(mod, { m : exports}).exports.testFunc;
-        assertEqArray(testFunction(), correctResultsJS);
+        assertEqArray(testFunction("foo", "bar"),
+                      correctResultsJS);
       }
     }
   };

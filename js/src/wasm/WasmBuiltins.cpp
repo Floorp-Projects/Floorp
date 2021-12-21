@@ -289,7 +289,7 @@ const SymbolicAddressSignature SASigConsumePendingException = {
     {_PTR, _END}};
 const SymbolicAddressSignature SASigPushRefIntoExn = {
     SymbolicAddress::PushRefIntoExn,
-    _I32,
+    _VOID,
     _FailOnNegI32,
     3,
     {_PTR, _RoN, _RoN, _END}};

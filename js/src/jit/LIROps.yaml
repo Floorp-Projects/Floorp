@@ -3388,6 +3388,12 @@
 - name: WasmExceptionDataPointer
   gen_boilerplate: false
 
+- name: WasmExceptionRefsPointer
+  gen_boilerplate: false
+
+- name: WasmLoadExceptionRefsValue
+  gen_boilerplate: false
+
 #ifdef JS_CODEGEN_X86
 - name: BoxFloatingPoint
   gen_boilerplate: false
