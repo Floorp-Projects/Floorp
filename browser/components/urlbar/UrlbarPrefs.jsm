@@ -194,6 +194,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include switch-to-tab results.
   ["suggest.openpage", true],
 
+  // Whether results will include synced tab results. The syncing of open tabs
+  // must also be enabled, from Sync preferences.
+  ["suggest.remotetab", true],
+
   // Whether results will include non-sponsored quick suggest suggestions.
   ["suggest.quicksuggest.nonsponsored", false],
 
