@@ -112,8 +112,12 @@ const { tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9 } = wasmEvalText(
 new WebAssembly.Exception(tag1, []);
 new WebAssembly.Exception(tag2, [3]);
 new WebAssembly.Exception(tag3, [3, 5.5]);
+
+if (wasmCompileMode() === "baseline") {
+  // Exceptions carrying reftypes NYI in Ion.
 new WebAssembly.Exception(tag4, [3, "foo", 4]);
 new WebAssembly.Exception(tag5, [3, "foo", 4, "bar"]);
+}
 
 assertErrorMessage(
   () => new WebAssembly.Exception(tag2, []),
@@ -127,11 +131,14 @@ assertErrorMessage(
   /can't convert BigInt to number/
 );
 
+if (wasmCompileMode() === "baseline") {
+  // Exceptions carrying reftypes NYI in Ion.
 assertErrorMessage(
   () => new WebAssembly.Exception(tag6, [undefined]),
   TypeError,
   /can only pass WebAssembly exported functions to funcref/
 );
+}
 
 assertErrorMessage(
   () => new WebAssembly.Exception(tag7, [undefined]),
@@ -172,6 +179,8 @@ assertErrorMessage(
 
   assertEq(new WebAssembly.Exception(tag2, [undefined]).getArg(tag2, 0), 0);
 
+if (wasmCompileMode() === "baseline") {
+  // Exceptions carrying reftypes NYI in Ion.
   const exn4 = new WebAssembly.Exception(tag4, [3, "foo", 4]);
   assertEq(exn4.getArg(tag4, 0), 3);
   assertEq(exn4.getArg(tag4, 1), "foo");
@@ -186,6 +195,7 @@ assertErrorMessage(
   const exn9 = new WebAssembly.Exception(tag9, ["foo", funcref]);
   assertEq(exn9.getArg(tag9, 0), "foo");
   assertEq(exn9.getArg(tag9, 1), funcref);
+}
 
   assertErrorMessage(
     () => exn2.getArg(),
@@ -281,6 +291,8 @@ assertEqArray(
   [9999, 9999]
 );
 
+if (wasmCompileMode() === "baseline") {
+  // Exceptions carrying reftypes NYI in Ion.
 assertEqArray(
   wasmEvalText(
     `(module
@@ -359,6 +371,7 @@ assertEqArray(
     ).exports.f(),
     ["foo", funcref]
   );
+}
 }
 
 assertEq(
@@ -462,6 +475,8 @@ assertEq(
   9999
 );
 
+if (wasmCompileMode() === "baseline") {
+  // Exceptions carrying reftypes NYI in Ion.
 assertEqArray(
   (() => {
     try {
@@ -487,3 +502,4 @@ assertEqArray(
   })(),
   [1, "foo", 2, "bar"]
 );
+}

@@ -269,7 +269,6 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool debug = WasmDebuggerActive(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
-  bool exn = WasmExceptionsFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -281,11 +280,8 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
-    if (exn && !Append(reason, "exceptions", &sep)) {
-      return false;
-    }
   }
-  *isDisabled = debug || functionReferences || gc || exn;
+  *isDisabled = debug || functionReferences || gc;
   return true;
 }
 
@@ -570,7 +566,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
         // Checks whether the signature of the imported exception object matches
         // the signature declared in the exception import's TagDesc.
-        if (obj->resultType() != tags[index].resultType()) {
+        if (obj->resultType() != tags[index].type.resultType()) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_TAG_SIG, import.module.get(),
                                    import.field.get());
@@ -1237,7 +1233,6 @@ static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
                                       GenericObject);
 }
 
-#  ifdef ENABLE_WASM_EXCEPTIONS
 static JSObject* TagTypeToObject(JSContext* cx,
                                  const wasm::ValTypeVector& params) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -1253,8 +1248,6 @@ static JSObject* TagTypeToObject(JSContext* cx,
   return NewPlainObjectWithProperties(cx, props.begin(), props.length(),
                                       GenericObject);
 }
-#  endif  // ENABLE_WASM_EXCEPTIONS
-
 #endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
 // ============================================================================

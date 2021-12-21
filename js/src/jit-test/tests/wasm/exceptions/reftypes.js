@@ -1,3 +1,5 @@
+// |jit-test| skip-if: wasmCompileMode() != "baseline"
+
 // Exception tests that use reference types.
 
 load(libdir + "eqArrayHelper.js");

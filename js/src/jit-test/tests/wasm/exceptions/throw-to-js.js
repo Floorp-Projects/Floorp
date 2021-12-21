@@ -46,6 +46,9 @@ assertWasmThrowsExn(() =>
   ).exports.f()
 );
 
+if (wasmCompileMode() === "baseline") {
+  // Delegate NYI in Ion.
+
 assertWasmThrowsExn(() =>
   wasmEvalText(
     `(module
@@ -111,6 +114,7 @@ assertWasmThrowsExn(() =>
          end))`
   ).exports.f()
 );
+}
 
 // Test throwing simple empty exceptions to JS.
 assertWasmThrowsExn(() =>
@@ -148,6 +152,9 @@ assertThrowsValue(
   42
 );
 
+if (wasmCompileMode() === "baseline") {
+  // Rethrow NYI in Ion.
+
 // Like previous test, but using a rethrow instruction instead.
 assertThrowsValue(
   () =>
@@ -170,6 +177,7 @@ assertThrowsValue(
     ).exports.f(),
   42
 );
+}
 
 // Test for throwing to JS and then back to Wasm.
 {
@@ -312,6 +320,9 @@ assertEq(
   );
 }
 
+if (wasmCompileMode() === "baseline") {
+  // Delegate NYI in Ion.
+
 // Test delegate throwing out of function.
 assertWasmThrowsExn(() =>
   wasmEvalText(
@@ -341,3 +352,4 @@ assertWasmThrowsExn(() =>
          delegate 0))`
   ).exports.f()
 );
+}

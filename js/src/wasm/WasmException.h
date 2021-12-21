@@ -47,6 +47,9 @@ using SharedExceptionTag = RefPtr<ExceptionTag>;
 using SharedExceptionTagVector =
     Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
 
+static const uint32_t CatchAllIndex = UINT32_MAX;
+static_assert(CatchAllIndex > MaxTags);
+
 }  // namespace wasm
 }  // namespace js
 
