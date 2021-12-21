@@ -72,9 +72,8 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
 
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     const nsAString& aDeviceName, const nsACString& aDeviceUUID,
-    camera::CaptureEngine aCapEngine, bool aScary)
+    camera::CaptureEngine aCapEngine)
     : mCapEngine(aCapEngine),
-      mScary(aScary),
       mMutex("MediaEngineRemoteVideoSource::mMutex"),
       mRescalingBufferPool(/* zero_initialize */ false,
                            /* max_number_of_buffers */ 1),

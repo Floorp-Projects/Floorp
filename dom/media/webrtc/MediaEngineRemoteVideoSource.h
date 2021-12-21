@@ -101,7 +101,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
  public:
   MediaEngineRemoteVideoSource(const nsAString& aDeviceName,
                                const nsACString& aDeviceUUID,
-                               camera::CaptureEngine aCapEngine, bool aScary);
+                               camera::CaptureEngine aCapEngine);
 
   // ExternalRenderer
   int DeliverFrame(uint8_t* aBuffer,
@@ -133,8 +133,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   nsString GetGroupId() const override;
 
-  bool GetScary() const override { return mScary; }
-
   RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const override {
     return mFirstFramePromise;
   }
@@ -158,7 +156,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   int mCaptureId = -1;
   const camera::CaptureEngine mCapEngine;  // source of media (cam, screen etc)
-  const bool mScary;
 
   // mMutex protects certain members on 3 threads:
   // MediaManager, Cameras IPC and MediaTrackGraph.

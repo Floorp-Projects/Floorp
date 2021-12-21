@@ -522,6 +522,7 @@ void MediaEngineDefault::EnumerateDevices(
     MediaSourceEnum aMediaSource, MediaSinkEnum aMediaSink,
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
+  using IsScary = MediaDevice::IsScary;
 
   if (aMediaSink == MediaSinkEnum::Speaker) {
     NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
@@ -534,7 +535,7 @@ void MediaEngineDefault::EnumerateDevices(
       aDevices->AppendElement(
           MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
                                   NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId()));
+                                  newSource->GetGroupId(), IsScary::No));
       return;
     }
     case MediaSourceEnum::Microphone: {
@@ -542,7 +543,7 @@ void MediaEngineDefault::EnumerateDevices(
       aDevices->AppendElement(
           MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
                                   NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                  newSource->GetGroupId()));
+                                  newSource->GetGroupId(), IsScary::No));
       return;
     }
     default:

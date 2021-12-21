@@ -60,7 +60,8 @@ RefPtr<MediaDevice> MakeCameraDevice(const nsString& aName,
   EXPECT_CALL(*v, GetMediaSource())
       .WillRepeatedly(Return(dom::MediaSourceEnum::Camera));
 
-  return MakeRefPtr<MediaDevice>(v, aName, u""_ns, aGroupId);
+  return MakeRefPtr<MediaDevice>(v, aName, u""_ns, aGroupId,
+                                 MediaDevice::IsScary::No);
 }
 
 RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
@@ -69,7 +70,8 @@ RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
   EXPECT_CALL(*a, GetMediaSource())
       .WillRepeatedly(Return(dom::MediaSourceEnum::Microphone));
 
-  return MakeRefPtr<MediaDevice>(a, aName, u""_ns, aGroupId);
+  return MakeRefPtr<MediaDevice>(a, aName, u""_ns, aGroupId,
+                                 MediaDevice::IsScary::No);
 }
 
 RefPtr<MediaDevice> MakeSpeakerDevice(const nsString& aName,
