@@ -24,6 +24,7 @@ EXPORTS.mozilla.intl = [
     "src/Locale.h",
     "src/LocaleCanonicalizer.h",
     "src/MeasureUnit.h",
+    "src/MeasureUnitGenerated.h",
     "src/NumberFormat.h",
     "src/NumberingSystem.h",
     "src/NumberParser.h",
