@@ -43,12 +43,3 @@ val Context.installedDate: String
         val installTime = this.packageManager.getPackageInfo(this.packageName, 0).firstInstallTime
         return DateFormat.getDateInstance().format(installTime)
     }
-
-/**
- * Get the app last update date.
- */
-val Context.lastUpdateDate: String
-    get() {
-        val lastUpdateDate = this.packageManager.getPackageInfo(this.packageName, 0).lastUpdateTime
-        return DateFormat.getDateInstance().format(lastUpdateDate)
-    }

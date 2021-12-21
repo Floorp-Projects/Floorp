@@ -12,7 +12,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.StringRes
-import androidx.core.view.ViewCompat
 import com.google.android.material.snackbar.Snackbar
 import java.lang.ref.WeakReference
 
@@ -22,17 +21,10 @@ object ViewUtils {
     private const val MENU_ITEM_ALPHA_DISABLED = 130
 
     /**
-     * Flag of imeOptions: used to request that the IME does not update any personalized data such
-     * as typing history and personalized language model based on what the user typed on this text
-     * editing object.
-     */
-    const val IME_FLAG_NO_PERSONALIZED_LEARNING = 0x01000000
-
-    /**
      * Runnable to show the keyboard for a specific view.
      */
     @Suppress("ReturnCount")
-    private class ShowKeyboard internal constructor(view: View?) : Runnable {
+    private class ShowKeyboard(view: View?) : Runnable {
         companion object {
             private const val INTERVAL_MS = 100
             private const val MAX_TRIES = 10
@@ -44,8 +36,8 @@ object ViewUtils {
 
         override fun run() {
             val myView = viewReference.get() ?: return
-            val activity: Activity? = myView.context?.asActivity() ?: return
-            val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
+            val activity: Activity = myView.context?.asActivity() ?: return
+            val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
 
             when {
                 tries <= 0 -> return
@@ -65,7 +57,7 @@ object ViewUtils {
             }
         }
 
-        internal fun post() {
+        fun post() {
             tries--
             handler.postDelayed(this, INTERVAL_MS.toLong())
         }
@@ -91,10 +83,6 @@ object ViewUtils {
         snackbar.setText(context.getString(resId))
 
         view.postDelayed({ snackbar.show() }, delayMillis.toLong())
-    }
-
-    fun isRTL(view: View): Boolean {
-        return ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_RTL
     }
 
     /**

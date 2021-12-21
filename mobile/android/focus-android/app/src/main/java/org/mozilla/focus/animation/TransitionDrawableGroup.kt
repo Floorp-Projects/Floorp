@@ -23,10 +23,4 @@ class TransitionDrawableGroup(private vararg val transitionDrawables: Transition
             transitionDrawable.resetTransition()
         }
     }
-
-    fun transitionImmediately() {
-        for (transitionDrawable in transitionDrawables) {
-            transitionDrawable.startTransition(0)
-        }
-    }
 }

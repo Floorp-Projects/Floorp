@@ -5,14 +5,10 @@
 
 package org.mozilla.focus.utils
 
-import android.annotation.TargetApi
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
@@ -117,16 +113,5 @@ object SupportUtils {
             }
 
         activity.startActivity(openCustomTabActivityIntent)
-    }
-
-    @TargetApi(Build.VERSION_CODES.N)
-    fun openDefaultAppsSettings(context: Context) {
-        try {
-            val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-            context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            // In some cases, a matching Activity may not exist (according to the Android docs).
-            openDefaultBrowserSumoPage(context)
-        }
     }
 }

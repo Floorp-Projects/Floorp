@@ -85,8 +85,6 @@ class SettingsFragment : BaseSettingsFragment() {
     }
 
     companion object {
-        const val TAG = "settings"
-
         fun newInstance(): SettingsFragment {
             return SettingsFragment()
         }

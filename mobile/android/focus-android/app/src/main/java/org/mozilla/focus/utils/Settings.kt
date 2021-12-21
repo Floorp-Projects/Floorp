@@ -157,8 +157,6 @@ class Settings(
     }
 
     private val resources: Resources = context.resources
-    val hasAddedToHomeScreen: Boolean
-        get() = preferences.getBoolean(getPreferenceKey(R.string.has_added_to_home_screen), false)
 
     @Deprecated("This is no longer used. Read search engines from BrowserStore instead")
     val defaultSearchEngineName: String
@@ -177,13 +175,6 @@ class Settings(
                 .putBoolean(getPreferenceKey(R.string.pref_key_studies), value)
                 .commit()
         }
-
-    fun shouldBlockImages(): Boolean =
-        // Not shipping in v1 (#188)
-            /* preferences.getBoolean(
-                    resources.getString(R.string.pref_key_performance_block_images),
-                    false); */
-        false
 
     private var autoplayPrefKey: String? = preferences.getString(
         getPreferenceKey(R.string.pref_key_autoplay),
@@ -312,16 +303,6 @@ class Settings(
 
     fun userHasDismissedNoSuggestionsMessage(): Boolean =
         preferences.getBoolean(SearchSuggestionsPreferences.DISMISSED_NO_SUGGESTIONS_PREF, false)
-
-    fun isDefaultBrowser() = preferences.getBoolean(
-        getPreferenceKey(R.string.pref_key_default_browser),
-        false
-    )
-
-    fun hasOpenedInNewTab() = preferences.getBoolean(
-        getPreferenceKey(R.string.has_opened_new_tab),
-        false
-    )
 
     fun hasRequestedDesktop() = preferences.getBoolean(
         getPreferenceKey(R.string.has_requested_desktop),

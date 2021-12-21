@@ -33,7 +33,7 @@ class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSe
 
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)
-        this.bindEngineCheckboxesToMenu()
+        bindEngineCheckboxesToMenu()
     }
 
     override fun updateDefaultItem(defaultButton: CompoundButton) {

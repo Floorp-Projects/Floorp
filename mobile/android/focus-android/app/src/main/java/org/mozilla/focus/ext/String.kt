@@ -62,24 +62,6 @@ fun String.beautifyUrl(): String {
 }
 
 /**
- * If this string starts with the one or more of the given [prefixes] (in order and ignoring case),
- * returns a copy of this string with the prefixes removed. Otherwise, returns this string.
- */
-fun String.removePrefixesIgnoreCase(vararg prefixes: String): String {
-    var value = this
-    var lower = this.lowercase()
-
-    prefixes.forEach {
-        if (lower.startsWith(it.lowercase())) {
-            value = value.substring(it.length)
-            lower = lower.substring(it.length)
-        }
-    }
-
-    return value
-}
-
-/**
  * Tries to parse and get root domain part if [String] is a valid URL.
  */
 val String.tryGetRootDomain: String

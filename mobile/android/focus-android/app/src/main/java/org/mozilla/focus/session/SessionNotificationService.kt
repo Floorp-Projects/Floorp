@@ -31,7 +31,7 @@ class SessionNotificationService : Service() {
     private var shouldSendTaskRemovedTelemetry = true
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val action = intent.action ?: return Service.START_NOT_STICKY
+        val action = intent.action ?: return START_NOT_STICKY
 
         when (action) {
             ACTION_START -> {
@@ -58,7 +58,7 @@ class SessionNotificationService : Service() {
             else -> throw IllegalStateException("Unknown intent: $intent")
         }
 
-        return Service.START_NOT_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
@@ -170,11 +170,9 @@ class SessionNotificationService : Service() {
             // before it times out. so this is a speculative fix to decrease the time between these two
             // calls by running this after potentially expensive calls in FocusApplication.onCreate and
             // BrowserFragment.inflateView by posting it to the end of the main thread.
-            ThreadUtils.postToMainThread(
-                Runnable {
-                    context.startService(intent)
-                }
-            )
+            ThreadUtils.postToMainThread {
+                context.startService(intent)
+            }
         }
 
         internal fun stop(context: Context) {
@@ -182,11 +180,9 @@ class SessionNotificationService : Service() {
 
             // We want to make sure we always call stop after start. So we're
             // putting these actions on the same sequential run queue.
-            ThreadUtils.postToMainThread(
-                Runnable {
-                    context.stopService(intent)
-                }
-            )
+            ThreadUtils.postToMainThread {
+                context.stopService(intent)
+            }
         }
     }
 }

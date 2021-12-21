@@ -149,26 +149,6 @@ public class UrlUtils {
         return host.substring(start);
     }
 
-    public static String stripScheme(@Nullable String url) {
-        if (url == null) {
-            return null;
-        }
-
-        int start = 0;
-
-        if (url.startsWith("http://")) {
-            start = 7;
-        } else if (url.startsWith("https://")) {
-            start = 8;
-        }
-
-        return url.substring(start);
-    }
-
-    public static String stripSchemeAndSubDomain(String url) {
-        return normalize(stripCommonSubdomains(stripScheme(url)));
-    }
-
     public static boolean isLocalizedContent(@Nullable String url) {
         return url != null &&
             (url.equals(LocalizedContent.URL_ABOUT) || url.equals(LocalizedContent.URL_RIGHTS) || url.equals("about:blank"));

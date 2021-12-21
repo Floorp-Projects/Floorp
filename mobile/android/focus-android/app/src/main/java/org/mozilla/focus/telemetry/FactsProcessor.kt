@@ -53,7 +53,7 @@ object FactsProcessor {
             CustomTabsToolbar.actionButtonTapped.record(NoExtras())
         }
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
-            ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(this.toContextMenuExtraKey()))
+            ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(toContextMenuExtraKey()))
         }
 
         Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
@@ -72,8 +72,8 @@ object FactsProcessor {
  * Extracts an extraKey from a context menu Fact.
  */
 fun Fact.toContextMenuExtraKey() =
-    if (this.component == Component.FEATURE_CONTEXTMENU) {
-        this.metadata?.get("item").toString().removePrefix("mozac.feature.contextmenu.")
+    if (component == Component.FEATURE_CONTEXTMENU) {
+        metadata?.get("item").toString().removePrefix("mozac.feature.contextmenu.")
     } else {
         throw IllegalArgumentException("Fact is not a context menu fact")
     }

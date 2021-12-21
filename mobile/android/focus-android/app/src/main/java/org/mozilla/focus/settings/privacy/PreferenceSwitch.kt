@@ -33,7 +33,7 @@ class PreferenceSwitch(
 
     init {
         setInitialValue()
-        this.setOnCheckedChangeListener(null)
+        setOnCheckedChangeListener(null)
         setOnClickListener {
             togglePreferenceValue(this.isChecked)
             clickListener?.invoke()

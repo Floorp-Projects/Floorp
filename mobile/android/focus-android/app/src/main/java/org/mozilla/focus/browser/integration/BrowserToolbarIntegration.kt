@@ -47,7 +47,7 @@ class BrowserToolbarIntegration(
     private val eraseActionListener: () -> Unit,
     private val tabCounterListener: () -> Unit,
     private val customTabId: String? = null,
-    private val inTesting: Boolean = false
+    inTesting: Boolean = false
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,

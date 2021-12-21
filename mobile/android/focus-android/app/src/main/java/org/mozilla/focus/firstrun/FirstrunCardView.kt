@@ -6,8 +6,6 @@ package org.mozilla.focus.firstrun
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
-import androidx.cardview.widget.CardView
 import org.mozilla.focus.R
 
 class FirstrunCardView @JvmOverloads constructor(
@@ -22,8 +20,8 @@ class FirstrunCardView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // The view is set to match_parent in the layout file. So width and height should be the
         // value needed to fill the whole parent view.
-        val availableWidth = View.MeasureSpec.getSize(widthMeasureSpec)
-        val availableHeight = View.MeasureSpec.getSize(heightMeasureSpec)
+        val availableWidth = MeasureSpec.getSize(widthMeasureSpec)
+        val availableHeight = MeasureSpec.getSize(heightMeasureSpec)
 
         // Now let's use those sizes to measure - but let's not exceed our defined max sizes (We do
         // not want to have gigantic cards on large devices like tablets.)
@@ -31,8 +29,8 @@ class FirstrunCardView @JvmOverloads constructor(
         val measuredHeight = Math.min(availableHeight, maxHeight)
 
         // Let's use the measured values to hand them to the super class to measure the child views etc.
-        val newWidthMeasureSpec = View.MeasureSpec.makeMeasureSpec(measuredWidth, View.MeasureSpec.EXACTLY)
-        val newHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(measuredHeight, View.MeasureSpec.EXACTLY)
+        val newWidthMeasureSpec = MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY)
+        val newHeightMeasureSpec = MeasureSpec.makeMeasureSpec(measuredHeight, MeasureSpec.EXACTLY)
 
         super.onMeasure(newWidthMeasureSpec, newHeightMeasureSpec)
     }

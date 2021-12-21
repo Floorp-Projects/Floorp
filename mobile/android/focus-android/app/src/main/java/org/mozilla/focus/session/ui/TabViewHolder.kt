@@ -23,7 +23,7 @@ class TabViewHolder(
         selectSession: (TabSessionState) -> Unit,
         closeSession: (TabSessionState) -> Unit
     ) {
-        this.tabReference = WeakReference(tab)
+        tabReference = WeakReference(tab)
 
         val drawable = if (isCurrentSession) {
             R.drawable.background_list_item_current_session

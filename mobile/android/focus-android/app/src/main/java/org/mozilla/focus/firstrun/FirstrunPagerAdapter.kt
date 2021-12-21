@@ -29,7 +29,7 @@ class FirstrunPagerAdapter(
 
     init {
         val appName = context.getString(R.string.app_name)
-        this.pages = arrayOf(
+        pages = arrayOf(
             FirstrunPage(
                 context.getString(R.string.firstrun_defaultbrowser_title),
                 context.getString(R.string.firstrun_defaultbrowser_text2),

@@ -35,7 +35,7 @@ object BrowsersCache {
             }
         }
         return Browsers.all(context).also {
-            this.cachedBrowsers = it
+            cachedBrowsers = it
         }
     }
 }
