@@ -853,29 +853,34 @@ class AudioCaptureTrackSource : public LocalTrackSource {
  */
 NS_IMPL_ISUPPORTS(LocalMediaDevice, nsIMediaDevice)
 
-MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
+MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
                          const nsString& aRawName, const nsString& aRawID,
                          const nsString& aRawGroupID, IsScary aIsScary)
-    : mSource(aSource),
-      mSinkInfo(nullptr),
-      mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
+    : mEngine(aEngine),
+      mAudioDeviceInfo(nullptr),
+      mMediaSource(aMediaSource),
+      mKind(MediaEngineSource::IsVideo(aMediaSource)
                 ? MediaDeviceKind::Videoinput
                 : MediaDeviceKind::Audioinput),
       mScary(aIsScary == IsScary::Yes),
-      mIsFake(mSource->IsFake()),
+      mIsFake(mEngine->IsFake()),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mRawID(aRawID),
       mRawGroupID(aRawGroupID),
       mRawName(aRawName) {
-  MOZ_ASSERT(mSource);
+  MOZ_ASSERT(mEngine);
 }
 
-MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                         const nsString& aRawID, const nsString& aRawGroupID)
-    : mSource(nullptr),
-      mSinkInfo(aAudioDeviceInfo),
-      mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT
+MediaDevice::MediaDevice(MediaEngine* aEngine,
+                         const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
+                         const nsString& aRawID)
+    : mEngine(aEngine),
+      mAudioDeviceInfo(aAudioDeviceInfo),
+      mMediaSource(mAudioDeviceInfo->Type() == AudioDeviceInfo::TYPE_INPUT
+                       ? MediaSourceEnum::Microphone
+                       : MediaSourceEnum::Other),
+      mKind(mMediaSource == MediaSourceEnum::Microphone
                 ? MediaDeviceKind::Audioinput
                 : MediaDeviceKind::Audiooutput),
       mScary(false),
@@ -883,22 +888,16 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mRawID(aRawID),
-      mRawGroupID(aRawGroupID),
-      mRawName(mSinkInfo->Name()) {
-  // For now this ctor is used only for Audiooutput.
-  // It could be used for Audioinput and Videoinput
-  // when we do not instantiate a MediaEngineSource
-  // during EnumerateDevices.
-  MOZ_ASSERT(mKind == MediaDeviceKind::Audiooutput);
-  MOZ_ASSERT(mSinkInfo);
-}
+      mRawGroupID(mAudioDeviceInfo->GroupID()),
+      mRawName(mAudioDeviceInfo->Name()) {}
 
 /* static */
 RefPtr<MediaDevice> MediaDevice::CopyWithNewRawGroupId(
     const RefPtr<MediaDevice>& aOther, const nsString& aRawGroupID) {
-  MOZ_ASSERT(!aOther->mSinkInfo, "device not supported");
-  return new MediaDevice(aOther->mSource, aOther->mRawName, aOther->mRawID,
-                         aRawGroupID, IsScary(aOther->mScary));
+  MOZ_ASSERT(!aOther->mAudioDeviceInfo, "device not supported");
+  return new MediaDevice(aOther->mEngine, aOther->mMediaSource,
+                         aOther->mRawName, aOther->mRawID, aRawGroupID,
+                         IsScary(aOther->mScary));
 }
 
 MediaDevice::~MediaDevice() = default;
@@ -967,7 +966,7 @@ uint32_t LocalMediaDevice::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
     CallerType aCallerType) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
+  MOZ_ASSERT(GetMediaSource() != MediaSourceEnum::Other);
 
   bool isChrome = aCallerType == CallerType::System;
   const nsString& id = isChrome ? mRawDevice->mRawID : mID;
@@ -1018,10 +1017,16 @@ LocalMediaDevice::GetScary(bool* aScary) {
   return NS_OK;
 }
 
-void LocalMediaDevice::GetSettings(MediaTrackSettings& aOutSettings) const {
+void LocalMediaDevice::GetSettings(MediaTrackSettings& aOutSettings) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(Source());
   Source()->GetSettings(aOutSettings);
+}
+
+MediaEngineSource* LocalMediaDevice::Source() {
+  if (!mSource) {
+    mSource = mRawDevice->mEngine->CreateSource(mRawDevice);
+  }
+  return mSource;
 }
 
 // Threadsafe since mKind and mSource are const.
@@ -1041,7 +1046,6 @@ nsresult LocalMediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
                                     uint64_t aWindowID,
                                     const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
 
   // Mock failure for automated tests.
   if (IsFake() && aConstraints.mDeviceId.WasPassed() &&
@@ -1056,7 +1060,6 @@ nsresult LocalMediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
 void LocalMediaDevice::SetTrack(const RefPtr<MediaTrack>& aTrack,
                                 const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
   Source()->SetTrack(aTrack, aPrincipalHandle);
 }
 
@@ -1070,7 +1073,6 @@ nsresult LocalMediaDevice::Reconfigure(
     const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
     const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
   auto type = GetMediaSource();
   if (type == MediaSourceEnum::Camera || type == MediaSourceEnum::Microphone) {
     NormalizedConstraints c(aConstraints);
@@ -1090,28 +1092,22 @@ nsresult LocalMediaDevice::Reconfigure(
 
 nsresult LocalMediaDevice::FocusOnSelectedSource() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
   return Source()->FocusOnSelectedSource();
 }
 
 nsresult LocalMediaDevice::Stop() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
-  return Source()->Stop();
+  MOZ_ASSERT(mSource);
+  return mSource->Stop();
 }
 
 nsresult LocalMediaDevice::Deallocate() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
-  MOZ_ASSERT(Source());
-  return Source()->Deallocate();
+  MOZ_ASSERT(mSource);
+  return mSource->Deallocate();
 }
 
-MediaSourceEnum MediaDevice::GetMediaSource() const {
-  // Threadsafe because mSource is const. GetMediaSource() might have other
-  // requirements.
-  MOZ_ASSERT(mSource);
-  return mSource->GetMediaSource();
-}
+MediaSourceEnum MediaDevice::GetMediaSource() const { return mMediaSource; }
 
 static const MediaTrackConstraints& GetInvariant(
     const OwningBooleanOrMediaTrackConstraints& aUnion) {
@@ -4393,7 +4389,7 @@ CaptureState DeviceListener::CapturingSource(MediaSourceEnum aSource) const {
 
   if ((aSource == MediaSourceEnum::Camera ||
        aSource == MediaSourceEnum::Microphone) &&
-      GetDevice()->Source()->IsFake() &&
+      GetDevice()->IsFake() &&
       !Preferences::GetBool("media.navigator.permission.fake")) {
     // Fake Camera and Microphone only count if there is no fake permission
     return CaptureState::Off;

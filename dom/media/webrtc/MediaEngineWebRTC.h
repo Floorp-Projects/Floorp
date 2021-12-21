@@ -7,7 +7,6 @@
 #define MEDIAENGINEWEBRTC_H_
 
 #include "AudioDeviceInfo.h"
-#include "CamerasChild.h"
 #include "CubebUtils.h"
 #include "DOMMediaStream.h"
 #include "MediaEngine.h"
@@ -20,7 +19,6 @@
 #include "VideoUtils.h"
 #include "CubebDeviceEnumerator.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
@@ -54,14 +52,16 @@ class MediaEngineWebRTC : public MediaEngine {
 
   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
+  RefPtr<MediaEngineSource> CreateSource(const MediaDevice* aDevice) override;
 
   MediaEventSource<void>& DeviceListChangeEvent() override {
     return mDeviceListChangeEvent;
   }
+  bool IsFake() const override { return false; }
 
  private:
   ~MediaEngineWebRTC() = default;
-  void EnumerateVideoDevices(camera::CaptureEngine aCapEngine,
+  void EnumerateVideoDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateSpeakerDevices(nsTArray<RefPtr<MediaDevice>>*);

@@ -99,16 +99,13 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
  public:
-  MediaEngineRemoteVideoSource(const nsAString& aDeviceName,
-                               const nsACString& aDeviceUUID,
-                               camera::CaptureEngine aCapEngine);
+  explicit MediaEngineRemoteVideoSource(const MediaDevice* aMediaDevice);
 
   // ExternalRenderer
   int DeliverFrame(uint8_t* aBuffer,
                    const camera::VideoFrameProperties& aProps) override;
 
   // MediaEngineSource
-  dom::MediaSourceEnum GetMediaSource() const override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
                     const char** aOutBadConstraint) override;
@@ -127,15 +124,11 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
       const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
-  nsString GetName() const override;
-
-  nsCString GetUUID() const override;
-
-  nsString GetGroupId() const override;
-
   RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const override {
     return mFirstFramePromise;
   }
+
+  static camera::CaptureEngine CaptureEngine(dom::MediaSourceEnum aMediaSource);
 
  private:
   /**
@@ -230,7 +223,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
    */
   mutable bool mCapabilitiesAreHardcoded = false;
 
-  const nsString mDeviceName;
+  const RefPtr<const MediaDevice> mMediaDevice;
   const nsCString mDeviceUUID;
   Maybe<nsString> mFacingMode;
 };
