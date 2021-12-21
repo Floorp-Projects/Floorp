@@ -72,7 +72,7 @@ const getSurrogateCombinations = () => {
   const upperLead = String.fromCharCode(0xdbff);
   const lowerTrail = String.fromCharCode(0xdc00);
 
-  const regularSlot = ["w", "abcdefghijklmnopqrst", ""];
+  const regularSlot = ["w", "abcdefghijklmnopqrst", "aaaaaaaaaaaaaaaaaaaa", ""];
   const surrogateSlot = [lowerTrail, upperLead];
 
   let samples = [];
