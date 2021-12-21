@@ -64,6 +64,7 @@
 
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
 #include "MediaEngineDefault.h"
+#include "MediaEngineSource.h"
 #if defined(MOZ_WEBRTC)
 #  include "MediaEngineWebRTC.h"
 #  include "MediaEngineWebRTCAudio.h"
