@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A service which returns information about file paths where the
+ * previews for URLs are stored. These previews are used by the
+ * moz-page-thumb protocol
+ */
+
+[scriptable, uuid(bd0a4d3b-ff26-4d4d-9a62-a513e1c1bf92)]
+interface nsIPlacesPreviewsHelperService : nsISupports
+{
+  /**
+   * Returns the full file path containing the screenshot for a given URL
+   */
+  AString getFilePathForURL(in AString aURL);
+};
