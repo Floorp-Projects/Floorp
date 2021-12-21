@@ -1132,7 +1132,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    */
   nsTSubstring(char_type* aData, size_type aLength, DataFlags aDataFlags,
                ClassFlags aClassFlags)
-// XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
 #if defined(NS_BUILD_REFCNT_LOGGING)
 #  define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
       ;
