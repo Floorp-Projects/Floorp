@@ -671,10 +671,12 @@ class GetUserMediaWindowListener {
     return result;
   }
 
-  void GetDevices(const RefPtr<LocalMediaDeviceSetRefCnt>& aOutDevices) {
+  RefPtr<LocalMediaDeviceSetRefCnt> GetDevices() {
+    RefPtr devices = new LocalMediaDeviceSetRefCnt();
     for (auto& l : mActiveListeners) {
-      aOutDevices->AppendElement(l->GetDevice());
+      devices->AppendElement(l->GetDevice());
     }
+    return devices;
   }
 
   uint64_t WindowID() const { return mWindowID; }
@@ -3812,7 +3814,7 @@ MediaManager::MediaCaptureWindowState(
   CaptureState screen = CaptureState::Off;
   CaptureState window = CaptureState::Off;
   CaptureState browser = CaptureState::Off;
-  auto devices = MakeRefPtr<LocalMediaDeviceSetRefCnt>();
+  RefPtr<LocalMediaDeviceSetRefCnt> devices;
 
   nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aCapturedWindow);
   if (piWin) {
@@ -3823,7 +3825,7 @@ MediaManager::MediaCaptureWindowState(
       screen = listener->CapturingSource(MediaSourceEnum::Screen);
       window = listener->CapturingSource(MediaSourceEnum::Window);
       browser = listener->CapturingSource(MediaSourceEnum::Browser);
-      listener->GetDevices(devices);
+      devices = listener->GetDevices();
     }
   }
 
@@ -3832,8 +3834,10 @@ MediaManager::MediaCaptureWindowState(
   *aScreen = FromCaptureState(screen);
   *aWindow = FromCaptureState(window);
   *aBrowser = FromCaptureState(browser);
-  for (auto& device : *devices) {
-    aDevices.AppendElement(device);
+  if (devices) {
+    for (auto& device : *devices) {
+      aDevices.AppendElement(device);
+    }
   }
 
   LOG("%s: window %" PRIu64 " capturing %s %s %s %s %s", __FUNCTION__,
