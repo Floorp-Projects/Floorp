@@ -93,7 +93,6 @@ def old_configure_options(*options):
     "--datadir",
     "--enable-official-branding",
     "--enable-updater",
-    "--enable-zipwriter",
     "--includedir",
     "--libdir",
     "--prefix",
