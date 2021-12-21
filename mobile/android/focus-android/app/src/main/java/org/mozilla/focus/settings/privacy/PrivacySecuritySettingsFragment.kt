@@ -96,6 +96,9 @@ class PrivacySecuritySettingsFragment :
             getString(R.string.pref_key_secure) -> PrivacySettings.stealthSettingChanged.record(
                 PrivacySettings.StealthSettingChangedExtra(newValue as? Boolean)
             )
+            getString(R.string.pref_key_performance_enable_cookies) -> PrivacySettings.blockCookiesChanged.record(
+                PrivacySettings.BlockCookiesChangedExtra(newValue as? String)
+            )
             else -> {
                 // Telemetry for the change is recorded elsewhere.
             }

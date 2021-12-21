@@ -1678,3 +1678,22 @@ privacy_settings:
       is_enabled:
         description: The new setting true for ON, false for OFF
         type: boolean
+  block_cookies_changed:
+    type: event
+    description: |
+      Block cookies setting has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/6097
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/6105
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-12-01"
+    extra_keys:
+      is_enabled:
+        description: |
+          A string containing the new block cookies option the user has chosen:
+          yes, third_party_only, third_party_tracker, cross_site, no
+        type: string
