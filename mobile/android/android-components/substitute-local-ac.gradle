@@ -1,4 +1,18 @@
-logger.lifecycle("[local-ac] adjusting project to use locally published android-components modules")
+
+def version = null
+if (gradle.hasProperty("localProperties.autoPublish.android-components.dir")) {
+  //  We're doing local development using the autoPublish system.  This automatically rebuilds and
+  //  publishes android-components packages whenever the source changes.
+  // This version string will selected the latest build package
+  version = '0.0.1-+'
+} else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
+  //  We're running a branch build.  Here the version is set to the git commit id in
+  //  local.properties
+  version = gradle.getProperty("localProperties.branchBuild.android-components.version")
+} else {
+  throw new Exception("substitute-local-appservices.gradle called from unexpected context")
+}
+logger.lifecycle("[local-ac] adjusting project to use locally published android-components modules (${version})")
 
 // Inject mavenLocal repository. This is where we're expected to publish modules.
 repositories {
@@ -22,7 +36,7 @@ configurations.all { config ->
                     def group = dependency.requested.group
                     if (group == 'org.mozilla.components') {
                         def name = dependency.requested.module
-                        dependency.useTarget([group: group, name: name, version: '0.0.1-+'])
+                        dependency.useTarget([group: group, name: name, version: version])
                     }
                 }
             }

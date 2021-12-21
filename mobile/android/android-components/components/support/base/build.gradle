@@ -26,8 +26,13 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
+        def appServicesVersion = Versions.mozilla_appservices
+        if (gradle.hasProperty("localProperties.branchBuild.application-services.version")) {
+            appServicesVersion = gradle["localProperties.branchBuild.application-services.version"]
+        }
+
         buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
-        buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + Versions.mozilla_appservices + "\"")
+        buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + appServicesVersion + "\"")
         buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + Versions.mozilla_glean + "\"")
         buildConfigField("String", "GIT_HASH", "\"dev build\"")
     }

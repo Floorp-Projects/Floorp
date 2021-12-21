@@ -81,10 +81,11 @@ gradle.projectsLoaded { ->
 
     if (gradle.rootProject.hasProperty("nightlyVersion")) {
         version = gradle.rootProject.nightlyVersion
-    }
+    } else if (gradle.rootProject.hasProperty("local")) {
     // To support local auto-publication workflow, we use a version prefix we wouldn't normally encounter.
-    if (gradle.rootProject.hasProperty("local")) {
         version = "0.0.1"
+    } else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
+        version = gradle.getProperty("localProperties.branchBuild.android-components.version")
     }
     // Wait until root project is "loaded" before we set "config"
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
