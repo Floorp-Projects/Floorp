@@ -124,9 +124,6 @@ void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   mInputChannels = 0;
   mIsBufferingAppended = false;
   mPendingData.Clear();
-  for (auto& listener : mDataUsers) {
-    listener->NotifyInputStopped(aGraph);
-  }
 }
 
 void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
@@ -159,11 +156,6 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
   }
   mPendingData.AppendFromInterleavedBuffer(aBuffer, aFrames, aChannels,
                                            PRINCIPAL_HANDLE_NONE);
-
-  for (auto& listener : mDataUsers) {
-    listener->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels,
-                              aAlreadyBuffered);
-  }
 }
 
 void NativeInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) {

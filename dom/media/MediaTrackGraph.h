@@ -138,21 +138,6 @@ class AudioDataListenerInterface {
   virtual void NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                 AudioDataValue* aBuffer, size_t aFrames,
                                 TrackRate aRate, uint32_t aChannels) = 0;
-  /**
-   * An AudioCallbackDriver with an input stream signaling that it has stopped
-   * for any reason and the AudioDataListener will not be notified of input data
-   * until the driver is restarted or another driver has started.
-   */
-  virtual void NotifyInputStopped(MediaTrackGraphImpl* aGraph) = 0;
-
-  /**
-   * Input data from a microphone (or other audio source.  This is not
-   * guaranteed to be in any particular size chunks.
-   */
-  virtual void NotifyInputData(MediaTrackGraphImpl* aGraph,
-                               const AudioDataValue* aBuffer, size_t aFrames,
-                               TrackRate aRate, uint32_t aChannels,
-                               uint32_t aAlreadyBuffered) = 0;
 
   /**
    * Number of audio input channels.
