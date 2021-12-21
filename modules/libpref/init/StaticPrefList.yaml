@@ -5307,7 +5307,7 @@
 
 - name: gfx.offscreencanvas.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: gfx.omta.background-color

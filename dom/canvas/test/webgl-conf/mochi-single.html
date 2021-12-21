@@ -68,6 +68,9 @@ function runTest() {
 }
 
 SpecialPowers.pushPrefEnv({"set": [
+  // FIXME(aosmond): Until we get a basic canvas 2d running, we will see the
+  // OffscreenCanvas portions of the tests fail. See bug 1746962.
+  ['gfx.offscreencanvas.enabled', false],
   ['webgl.force-enabled', true],
   ['webgl.enable-draft-extensions', true],
 ]}, runTest);
