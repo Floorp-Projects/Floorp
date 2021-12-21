@@ -33,7 +33,7 @@
         android:paddingEnd="8dp"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="16sp"
-        tools:text="@string/cancel_active_downloads_warning_content_title"
+        tools:text="@string/mozac_feature_downloads_cancel_active_downloads_warning_content_title"
         tools:textColor="#000000" />
 
     <TextView
@@ -46,7 +46,7 @@
         android:paddingStart="4dp"
         android:paddingEnd="8dp"
         android:textColor="?android:attr/textColorPrimary"
-        tools:text="@string/cancel_active_private_downloads_warning_content_body" />
+        tools:text="@string/mozac_feature_downloads_cancel_active_private_downloads_warning_content_body" />
 
     <Button
         android:id="@+id/deny_button"
@@ -57,7 +57,7 @@
         android:layout_marginTop="16dp"
         android:layout_toStartOf="@id/accept_button"
         android:textAllCaps="false"
-        tools:text="@string/cancel_active_private_downloads_deny" />
+        tools:text="@string/mozac_feature_downloads_cancel_active_private_downloads_deny" />
 
     <Button
         android:id="@+id/accept_button"
@@ -72,5 +72,5 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:textAllCaps="false"
-        tools:text="@string/cancel_active_downloads_accept" />
+        tools:text="@string/mozac_feature_downloads_cancel_active_downloads_accept" />
 </RelativeLayout>

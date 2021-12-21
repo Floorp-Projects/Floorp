@@ -186,7 +186,6 @@ class DownloadCancelDialogFragment : AppCompatDialogFragment() {
      * Note that for [positiveButtonRadius] to be applied,
      * specifying [positiveButtonBackgroundColor] is necessary.
      */
-
     @Parcelize
     data class PromptStyling(
         val gravity: Int = Gravity.BOTTOM,
@@ -201,16 +200,15 @@ class DownloadCancelDialogFragment : AppCompatDialogFragment() {
     /**
      * The class gives an option to override string resources used by [DownloadCancelDialogFragment].
      */
-
     @Parcelize
     data class PromptText(
         @StringRes
-        val titleText: Int = R.string.cancel_active_downloads_warning_content_title,
+        val titleText: Int = R.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title,
         @StringRes
-        val bodyText: Int = R.string.cancel_active_private_downloads_warning_content_body,
+        val bodyText: Int = R.string.mozac_feature_downloads_cancel_active_private_downloads_warning_content_body,
         @StringRes
-        val acceptText: Int = R.string.cancel_active_downloads_accept,
+        val acceptText: Int = R.string.mozac_feature_downloads_cancel_active_downloads_accept,
         @StringRes
-        val denyText: Int = R.string.cancel_active_private_downloads_deny
+        val denyText: Int = R.string.mozac_feature_downloads_cancel_active_private_downloads_deny
     ) : Parcelable
 }

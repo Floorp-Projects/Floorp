@@ -59,10 +59,10 @@ class DownloadCancelDialogFragmentTest {
     @Test
     fun `WHEN overriding strings are provided to the prompt, THEN they are used by the prompt`() {
         val testText = DownloadCancelDialogFragment.PromptText(
-            titleText = R.string.cancel_active_private_downloads_warning_content_body,
-            bodyText = R.string.cancel_active_downloads_warning_content_title,
-            acceptText = R.string.cancel_active_private_downloads_deny,
-            denyText = R.string.cancel_active_downloads_accept
+            titleText = R.string.mozac_feature_downloads_cancel_active_private_downloads_warning_content_body,
+            bodyText = R.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title,
+            acceptText = R.string.mozac_feature_downloads_cancel_active_private_downloads_deny,
+            denyText = R.string.mozac_feature_downloads_cancel_active_downloads_accept
         )
         spy(
             DownloadCancelDialogFragment.newInstance(
