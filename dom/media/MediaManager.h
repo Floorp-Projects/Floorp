@@ -355,6 +355,7 @@ class MediaManager final : public nsIMediaManagerService,
 
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
+  void HandleDeviceListChanged();
 
   // Returns the number of incomplete tasks associated with this window,
   // including the newly added task.

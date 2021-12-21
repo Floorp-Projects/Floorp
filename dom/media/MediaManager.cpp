@@ -2214,26 +2214,21 @@ void MediaManager::DeviceListChanged() {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, this] {
-            if (!MediaManager::GetIfExists()) {
-              return DeviceSetPromise::CreateAndReject(
-                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
-                                            "In shutdown"),
-                  __func__);
-            }
-            return EnumerateRawDevices(
-                MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
-                DeviceEnumerationType::Normal, DeviceEnumerationType::Normal,
-                EnumerationFlag::EnumerateAudioOutputs);
+            MOZ_ASSERT(MediaManager::GetIfExists(),
+                       "Timer is cancelled on Shutdown()");
+            HandleDeviceListChanged();
           },
-          []() {
-            // Timer was canceled by us, or we're in shutdown.
-            return DeviceSetPromise::CreateAndReject(
-                MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
-                __func__);
-          })
+          [] { /* Timer was canceled by us, or we're in shutdown. */ });
+}
+
+void MediaManager::HandleDeviceListChanged() {
+  EnumerateRawDevices(MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
+                      DeviceEnumerationType::Normal,
+                      DeviceEnumerationType::Normal,
+                      EnumerationFlag::EnumerateAudioOutputs)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, this](RefPtr<MediaDeviceSetRefCnt> aDevices) {
+          [self = RefPtr(this), this](RefPtr<MediaDeviceSetRefCnt> aDevices) {
             if (!MediaManager::GetIfExists()) {
               return;
             }
@@ -2269,7 +2264,9 @@ void MediaManager::DeviceListChanged() {
               }
             }
           },
-          [](RefPtr<MediaMgrError>&& reason) {});
+          [](RefPtr<MediaMgrError>&& reason) {
+            MOZ_ASSERT_UNREACHABLE("EnumerateRawDevices does not reject");
+          });
 }
 
 size_t MediaManager::AddTaskAndGetCount(uint64_t aWindowID,
