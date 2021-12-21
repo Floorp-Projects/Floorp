@@ -14,6 +14,8 @@
     clippy::needless_lifetimes,
     // No need for defaults in the internal types.
     clippy::new_without_default,
+    // Needless updates are more scaleable, easier to play with features.
+    clippy::needless_update,
     // For some reason `rustc` can warn about these in const generics even
     // though they are required.
     unused_braces,
@@ -26,9 +28,6 @@
     // We don't match on a reference, unless required.
     clippy::pattern_type_mismatch,
 )]
-
-#[macro_use]
-mod macros;
 
 pub mod binding_model;
 pub mod command;
@@ -213,6 +212,7 @@ macro_rules! gfx_select {
             //wgt::Backend::Dx11 => $global.$method::<$crate::api::Dx11>( $($param),* ),
             #[cfg(any(
                 all(unix, not(target_os = "macos"), not(target_os = "ios")),
+                feature = "angle",
                 target_arch = "wasm32"
             ))]
             wgt::Backend::Gl => $global.$method::<$crate::api::Gles>( $($param),+ ),

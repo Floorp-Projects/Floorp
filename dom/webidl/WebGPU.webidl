@@ -963,9 +963,9 @@ interface GPUCommandEncoder {
         GPUExtent3D copySize);
     */
 
-    //void pushDebugGroup(USVString groupLabel);
-    //void popDebugGroup();
-    //void insertDebugMarker(USVString markerLabel);
+    void pushDebugGroup(USVString groupLabel);
+    void popDebugGroup();
+    void insertDebugMarker(USVString markerLabel);
 
     [NewObject]
     GPUCommandBuffer finish(optional GPUCommandBufferDescriptor descriptor = {});
@@ -976,9 +976,9 @@ interface mixin GPUProgrammablePassEncoder {
     void setBindGroup(GPUIndex32 index, GPUBindGroup bindGroup,
                       optional sequence<GPUBufferDynamicOffset> dynamicOffsets = []);
 
-    //void pushDebugGroup(USVString groupLabel);
-    //void popDebugGroup();
-    //void insertDebugMarker(USVString markerLabel);
+    void pushDebugGroup(USVString groupLabel);
+    void popDebugGroup();
+    void insertDebugMarker(USVString markerLabel);
 };
 
 // Render Pass

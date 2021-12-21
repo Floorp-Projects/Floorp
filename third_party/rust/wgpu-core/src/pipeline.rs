@@ -29,6 +29,7 @@ pub enum ShaderModuleSource<'a> {
 #[cfg_attr(feature = "replay", derive(serde::Deserialize))]
 pub struct ShaderModuleDescriptor<'a> {
     pub label: Label<'a>,
+    #[cfg_attr(feature = "serde", serde(default))]
     pub shader_bound_checks: wgt::ShaderBoundChecks,
 }
 
@@ -323,8 +324,6 @@ pub enum CreateRenderPipelineError {
         strip_index_format: Option<wgt::IndexFormat>,
         topology: wgt::PrimitiveTopology,
     },
-    #[error("strip index format is None while using the strip topology {topology:?}")]
-    NoStripIndexFormatForStripTopology { topology: wgt::PrimitiveTopology },
     #[error("Conservative Rasterization is only supported for wgt::PolygonMode::Fill")]
     ConservativeRasterizationNonFillPolygonMode,
     #[error(transparent)]

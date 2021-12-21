@@ -263,6 +263,24 @@ void RenderPassEncoder::ExecuteBundles(
   }
 }
 
+void RenderPassEncoder::PushDebugGroup(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_render_pass_push_debug_group(mPass, utf8.get(), 0);
+  }
+}
+void RenderPassEncoder::PopDebugGroup() {
+  if (mValid) {
+    ffi::wgpu_render_pass_pop_debug_group(mPass);
+  }
+}
+void RenderPassEncoder::InsertDebugMarker(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_render_pass_insert_debug_marker(mPass, utf8.get(), 0);
+  }
+}
+
 void RenderPassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
