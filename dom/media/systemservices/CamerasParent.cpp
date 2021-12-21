@@ -721,9 +721,10 @@ mozilla::ipc::IPCResult CamerasParent::RecvAllocateCapture(
         if (!allowed) {
           // Developer preference for turning off permission check.
           if (Preferences::GetBool("media.navigator.permission.disabled",
-                                   false)) {
+                                   false) ||
+              Preferences::GetBool("media.navigator.permission.fake")) {
             allowed = true;
-            LOG("No permission but checks are disabled");
+            LOG("No permission but checks are disabled or fake sources active");
           } else {
             LOG("No camera permission for this origin");
           }
