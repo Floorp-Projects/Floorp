@@ -107,18 +107,30 @@ function createMakeSource() {
     const index = (indicies[name] | 0) + 1;
     indicies[name] = index;
 
+    // Mock a SOURCE Resource, which happens to be the SourceActor's form
+    // with resourceType and targetFront additional attributes
     return {
-      id: name,
-      thread: "FakeThread",
-      sourceFront: {
-        actor: `${name}-${index}-actor`,
-        url: `http://localhost:8000/examples/${name}`,
-        sourceMapBaseURL: props.sourceMapBaseURL || null,
-        sourceMapURL: props.sourceMapURL || null,
-        introductionType: props.introductionType || null,
-        isBlackBoxed: !!props.isBlackBoxed,
-        extensionName: null,
+      resourceType: "source",
+      // Mock the targetFront to support makeSourceId function
+      targetFront: {
+        isDestroyed() {
+          return false;
+        },
+        getCachedFront(typeName) {
+          if (typeName == "thread") {
+            return { actorID: "FakeThread" };
+          }
+        },
       },
+      // Allow to use custom ID's for reducer source objects
+      mockedJestID: name,
+      actor: `${name}-${index}-actor`,
+      url: `http://localhost:8000/examples/${name}`,
+      sourceMapBaseURL: props.sourceMapBaseURL || null,
+      sourceMapURL: props.sourceMapURL || null,
+      introductionType: props.introductionType || null,
+      isBlackBoxed: !!props.isBlackBoxed,
+      extensionName: null,
     };
   };
 }

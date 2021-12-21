@@ -149,17 +149,7 @@ function onTargetDestroyed({ targetFront }) {
 }
 
 async function onSourceAvailable(sources) {
-  const sourceInfo = await Promise.all(
-    sources
-      .filter(sourceFront => {
-        return !sourceFront.targetFront.isDestroyed();
-      })
-      .map(async sourceFront => {
-        const threadFront = await sourceFront.targetFront.getFront("thread");
-        return { thread: threadFront.actor, sourceFront };
-      })
-  );
-  await actions.newGeneratedSources(sourceInfo);
+  await actions.newGeneratedSources(sources);
 }
 
 async function onThreadStateAvailable(resources) {
