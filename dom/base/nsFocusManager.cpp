@@ -462,17 +462,22 @@ nsFocusManager::GetFocusedElement(Element** aFocusedElement) {
   return NS_OK;
 }
 
-uint32_t nsFocusManager::GetLastFocusMethod(nsPIDOMWindowOuter* aWindow) const {
-  nsPIDOMWindowOuter* window = aWindow ? aWindow : mFocusedWindow.get();
-  uint32_t method = window ? window->GetFocusMethod() : 0;
-  NS_ASSERTION((method & METHOD_MASK) == method, "invalid focus method");
-  return method;
-}
-
 NS_IMETHODIMP
 nsFocusManager::GetLastFocusMethod(mozIDOMWindowProxy* aWindow,
                                    uint32_t* aLastFocusMethod) {
-  *aLastFocusMethod = GetLastFocusMethod(nsPIDOMWindowOuter::From(aWindow));
+  // the focus method is stored on the inner window
+  nsCOMPtr<nsPIDOMWindowOuter> window;
+  if (aWindow) {
+    window = nsPIDOMWindowOuter::From(aWindow);
+  }
+  if (!window) {
+    window = mFocusedWindow;
+  }
+
+  *aLastFocusMethod = window ? window->GetFocusMethod() : 0;
+
+  NS_ASSERTION((*aLastFocusMethod & METHOD_MASK) == *aLastFocusMethod,
+               "invalid focus method");
   return NS_OK;
 }
 
