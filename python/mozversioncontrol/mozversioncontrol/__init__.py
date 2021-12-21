@@ -488,7 +488,7 @@ class HgRepository(Repository):
         if _paths_equal(self.path, path):
             raise CannotDeleteFromRootOfRepositoryException()
         self._run("revert", path)
-        for f in self._run("st", "-un", path).split():
+        for f in self._run("st", "-un", path).splitlines():
             if os.path.isfile(f):
                 os.remove(f)
             else:
