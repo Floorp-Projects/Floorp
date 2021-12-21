@@ -28,7 +28,9 @@
  * with the fprintf function family.
  */
 #define __STDC_LIMIT_MACROS
+#if !defined(__STDC_CONSTANT_MACROS)
 #define __STDC_CONSTANT_MACROS
+#endif
 #if !defined(__STDC_FORMAT_MACROS)
 #define __STDC_FORMAT_MACROS
 #endif
