@@ -1159,18 +1159,18 @@ static void GetMediaDevices(MediaEngine* aEngine, MediaSourceEnum aSrcType,
   }
 }
 
-RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
+RefPtr<MediaManager::DeviceSetPromise> MediaManager::SelectSettings(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
-    const RefPtr<MediaDeviceSetRefCnt>& aDevices) {
+    RefPtr<MediaDeviceSetRefCnt> aDevices) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Algorithm accesses device capabilities code and must run on media thread.
   // Modifies passed-in aDevices.
 
-  return MediaManager::Dispatch<BadConstraintsPromise>(
-      __func__, [aConstraints, aDevices,
-                 aCallerType](MozPromiseHolder<BadConstraintsPromise>& holder) {
-        auto& devices = *aDevices;
+  return MediaManager::Dispatch<DeviceSetPromise>(
+      __func__, [aConstraints, devices = std::move(aDevices),
+                 aCallerType](MozPromiseHolder<DeviceSetPromise>& holder) {
+        auto& devicesRef = *devices;
 
         // Since the advanced part of the constraints algorithm needs to know
         // when a candidate set is overconstrained (zero members), we must split
@@ -1180,7 +1180,7 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
         nsTArray<RefPtr<MediaDevice>> videos;
         nsTArray<RefPtr<MediaDevice>> audios;
 
-        for (auto& device : devices) {
+        for (const auto& device : devicesRef) {
           MOZ_ASSERT(device->mKind == MediaDeviceKind::Videoinput ||
                      device->mKind == MediaDeviceKind::Audioinput);
           if (device->mKind == MediaDeviceKind::Videoinput) {
@@ -1189,7 +1189,7 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
             audios.AppendElement(device);
           }
         }
-        devices.Clear();
+        devicesRef.Clear();
         const char* badConstraint = nullptr;
         bool needVideo = IsOn(aConstraints.mVideo);
         bool needAudio = IsOn(aConstraints.mAudio);
@@ -1204,16 +1204,25 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
               NormalizedConstraints(GetInvariant(aConstraints.mAudio)), audios,
               aCallerType);
         }
-        if (!badConstraint && !needVideo == !videos.Length() &&
-            !needAudio == !audios.Length()) {
+        if (badConstraint) {
+          LOG("SelectSettings: bad constraint found! Calling error handler!");
+          nsString constraint;
+          constraint.AssignASCII(badConstraint);
+          holder.Reject(
+              new MediaMgrError(MediaMgrError::Name::OverconstrainedError, "",
+                                constraint),
+              __func__);
+          return;
+        }
+        if (!needVideo == !videos.Length() && !needAudio == !audios.Length()) {
           for (auto& video : videos) {
-            devices.AppendElement(video);
+            devicesRef.AppendElement(video);
           }
           for (auto& audio : audios) {
-            devices.AppendElement(audio);
+            devicesRef.AppendElement(audio);
           }
         }
-        holder.Resolve(badConstraint, __func__);
+        holder.Resolve(devices, __func__);
       });
 }
 
@@ -1757,11 +1766,10 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
  * satisfy passed-in constraints. List contains raw id's.
  */
 
-RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
+RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
     MediaSourceEnum aVideoInputType, MediaSourceEnum aAudioInputType,
     DeviceEnumerationType aVideoInputEnumType,
-    DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
-    const RefPtr<MediaDeviceSetRefCnt>& aOutDevices) {
+    DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aVideoInputType != MediaSourceEnum::Other ||
              aAudioInputType != MediaSourceEnum::Other ||
@@ -1791,8 +1799,8 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       static_cast<uint8_t>(aVideoInputEnumType),
       static_cast<uint8_t>(aAudioInputEnumType));
 
-  MozPromiseHolder<MgrPromise> holder;
-  RefPtr<MgrPromise> promise = holder.Ensure(__func__);
+  MozPromiseHolder<DeviceSetPromise> holder;
+  RefPtr<DeviceSetPromise> promise = holder.Ensure(__func__);
 
   const bool hasVideo = aVideoInputType != MediaSourceEnum::Other;
   const bool hasAudio = aAudioInputType != MediaSourceEnum::Other;
@@ -1818,11 +1826,11 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
     Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
   }
 
-  RefPtr<Runnable> task = NewTaskFrom(
-      [holder = std::move(holder), aVideoInputType, aAudioInputType,
-       aVideoInputEnumType, aAudioInputEnumType, videoLoopDev, audioLoopDev,
-       hasVideo, hasAudio, hasAudioOutput, fakeDeviceRequested,
-       realDeviceRequested, aOutDevices]() mutable {
+  RefPtr<Runnable> task =
+      NewTaskFrom([holder = std::move(holder), aVideoInputType, aAudioInputType,
+                   aVideoInputEnumType, aAudioInputEnumType, videoLoopDev,
+                   audioLoopDev, hasVideo, hasAudio, hasAudioOutput,
+                   fakeDeviceRequested, realDeviceRequested]() mutable {
         // Only enumerate what's asked for, and only fake cams and mics.
         RefPtr<MediaEngine> fakeBackend, realBackend;
         if (fakeDeviceRequested) {
@@ -1838,6 +1846,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
         RefPtr<MediaEngine> audioBackend;
         Maybe<MediaDeviceSet> micsOfVideoBackend;
         Maybe<MediaDeviceSet> speakers;
+        RefPtr devices = new MediaDeviceSetRefCnt();
 
         if (hasVideo) {
           videoBackend = aVideoInputEnumType == DeviceEnumerationType::Fake
@@ -1848,7 +1857,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
               videoBackend == fakeBackend ? "fake" : "real");
           GetMediaDevices(videoBackend, aVideoInputType, videos,
                           videoLoopDev.get());
-          aOutDevices->AppendElements(videos);
+          devices->AppendElements(videos);
         }
         if (hasAudio) {
           audioBackend = aAudioInputEnumType == DeviceEnumerationType::Fake
@@ -1864,7 +1873,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
             micsOfVideoBackend = Some(MediaDeviceSet());
             micsOfVideoBackend->AppendElements(audios);
           }
-          aOutDevices->AppendElements(audios);
+          devices->AppendElements(audios);
         }
         if (hasAudioOutput) {
           MediaDeviceSet outputs;
@@ -1873,7 +1882,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
                                         MediaSinkEnum::Speaker, &outputs);
           speakers = Some(MediaDeviceSet());
           speakers->AppendElements(outputs);
-          aOutDevices->AppendElements(outputs);
+          devices->AppendElements(outputs);
         }
         if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
           MediaDeviceSet audios;
@@ -1905,10 +1914,10 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
                                             MediaSinkEnum::Speaker, &audios);
             }
           }
-          GuessVideoDeviceGroupIDs(*aOutDevices, audios);
+          GuessVideoDeviceGroupIDs(*devices, audios);
         }
 
-        holder.Resolve(false, __func__);
+        holder.Resolve(std::move(devices), __func__);
       });
 
   if (realDeviceRequested &&
@@ -2203,13 +2212,12 @@ void MediaManager::DeviceListChanged() {
     mDeviceChangeTimer = MakeRefPtr<MediaTimer>();
   }
   RefPtr<MediaManager> self = this;
-  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   mDeviceChangeTimer->WaitFor(TimeDuration::FromMilliseconds(200), __func__)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, this, devices] {
+          [self, this] {
             if (!MediaManager::GetIfExists()) {
-              return MgrPromise::CreateAndReject(
+              return DeviceSetPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
                                             "In shutdown"),
                   __func__);
@@ -2217,23 +2225,23 @@ void MediaManager::DeviceListChanged() {
             return EnumerateRawDevices(
                 MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
                 DeviceEnumerationType::Normal, DeviceEnumerationType::Normal,
-                EnumerationFlag::EnumerateAudioOutputs, devices);
+                EnumerationFlag::EnumerateAudioOutputs);
           },
           []() {
             // Timer was canceled by us, or we're in shutdown.
-            return MgrPromise::CreateAndReject(
+            return DeviceSetPromise::CreateAndReject(
                 MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                 __func__);
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, this, devices](bool) {
+          [self, this](RefPtr<MediaDeviceSetRefCnt> aDevices) {
             if (!MediaManager::GetIfExists()) {
               return;
             }
 
             MediaManager::DeviceIdSet deviceIDs;
-            for (auto& device : *devices) {
+            for (auto& device : *aDevices) {
               MOZ_ALWAYS_TRUE(deviceIDs.put(device->mRawID));
             }
             // For any real removed cameras, microphones or speakers, notify
@@ -2680,13 +2688,13 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       askPermission ? "true" : "false");
 
   RefPtr<MediaManager> self = this;
-  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   return EnumerateDevicesImpl(aWindow, videoType, audioType,
                               videoEnumerationType, audioEnumerationType,
-                              EnumerationFlag::AllowPermissionRequest, devices)
+                              EnumerationFlag::AllowPermissionRequest)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, windowID, c, windowListener, aCallerType, devices](bool) {
+          [self, windowID, c, windowListener,
+           aCallerType](RefPtr<MediaDeviceSetRefCnt> aDevices) {
             LOG("GetUserMedia: post enumeration promise success callback "
                 "starting");
             // Ensure that our windowID is still good.
@@ -2696,25 +2704,25 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
               LOG("GetUserMedia: bad window (%" PRIu64
                   ") in post enumeration success callback!",
                   windowID);
-              return BadConstraintsPromise::CreateAndReject(
+              return DeviceSetPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
             // Apply any constraints. This modifies the passed-in list.
-            return self->SelectSettings(c, aCallerType, devices);
+            return self->SelectSettings(c, aCallerType, std::move(aDevices));
           },
           [](RefPtr<MediaMgrError>&& aError) {
             LOG("GetUserMedia: post enumeration EnumerateDevicesImpl "
                 "failure callback called!");
-            return BadConstraintsPromise::CreateAndReject(std::move(aError),
-                                                          __func__);
+            return DeviceSetPromise::CreateAndReject(std::move(aError),
+                                                     __func__);
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, windowID, c, windowListener, placeholderListener, hasAudio,
            hasVideo, askPermission, prefs, isSecure, isHandlingUserInput,
-           callID, principalInfo, aCallerType, devices,
-           resistFingerprinting](const char* badConstraint) mutable {
+           callID, principalInfo, aCallerType, resistFingerprinting](
+              RefPtr<MediaDeviceSetRefCnt> aDevices) mutable {
             LOG("GetUserMedia: starting post enumeration promise2 success "
                 "callback!");
 
@@ -2730,20 +2738,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
-
-            if (badConstraint) {
-              LOG("GetUserMedia: bad constraint found in post enumeration "
-                  "promise2 success callback! Calling error handler!");
-              nsString constraint;
-              constraint.AssignASCII(badConstraint);
-              placeholderListener->Stop();
-              return StreamPromise::CreateAndReject(
-                  MakeRefPtr<MediaMgrError>(
-                      MediaMgrError::Name::OverconstrainedError, "",
-                      constraint),
-                  __func__);
-            }
-            if (!devices->Length()) {
+            if (!aDevices->Length()) {
               LOG("GetUserMedia: no devices found in post enumeration promise2 "
                   "success callback! Calling error handler!");
               placeholderListener->Stop();
@@ -2791,10 +2786,10 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 self->AddTaskAndGetCount(windowID, callID, std::move(task));
 
             if (!askPermission) {
-              self->NotifyAllowed(callID, *devices);
+              self->NotifyAllowed(callID, *aDevices);
             } else {
               auto req = MakeRefPtr<GetUserMediaRequest>(
-                  window, callID, std::move(devices), c, isSecure,
+                  window, callID, std::move(aDevices), c, isSecure,
                   isHandlingUserInput);
               if (!Preferences::GetBool("media.navigator.permission.force") &&
                   taskCount > 1) {
@@ -2894,11 +2889,10 @@ nsresult MediaManager::AnonymizeId(nsAString& aId,
   return NS_OK;
 }
 
-RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
+RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevicesImpl(
     nsPIDOMWindowInner* aWindow, MediaSourceEnum aVideoInputType,
     MediaSourceEnum aAudioInputType, DeviceEnumerationType aVideoInputEnumType,
-    DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
-    const RefPtr<MediaDeviceSetRefCnt>& aOutDevices) {
+    DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 
   uint64_t windowId = aWindow->WindowID();
@@ -2922,7 +2916,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
   ipc::PrincipalInfo principalInfo;
   nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return MgrPromise::CreateAndReject(
+    return DeviceSetPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
         __func__);
   }
@@ -2948,46 +2942,46 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [windowId, aVideoInputType, aAudioInputType, aVideoInputEnumType,
-           aAudioInputEnumType, aFlags, aOutDevices,
+           aAudioInputEnumType, aFlags,
            originKey](const nsCString& aOriginKey) {
             MOZ_ASSERT(NS_IsMainThread());
             originKey->Assign(aOriginKey);
             MediaManager* mgr = MediaManager::GetIfExists();
             MOZ_ASSERT(mgr);
             if (!mgr->IsWindowStillActive(windowId)) {
-              return MgrPromise::CreateAndReject(
+              return DeviceSetPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
-            return mgr->EnumerateRawDevices(
-                aVideoInputType, aAudioInputType, aVideoInputEnumType,
-                aAudioInputEnumType, aFlags, aOutDevices);
+            return mgr->EnumerateRawDevices(aVideoInputType, aAudioInputType,
+                                            aVideoInputEnumType,
+                                            aAudioInputEnumType, aFlags);
           },
           [](nsresult rs) {
             NS_WARNING(
                 "EnumerateDevicesImpl failed to get Principal Key. Enumeration "
                 "will not continue.");
-            return MgrPromise::CreateAndReject(
+            return DeviceSetPromise::CreateAndReject(
                 MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                 __func__);
           })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [windowId, placeholderListener, originKey, aVideoInputEnumType,
-           aAudioInputEnumType, aOutDevices](bool) {
+           aAudioInputEnumType](RefPtr<MediaDeviceSetRefCnt> aDevices) {
             // Only run if window is still on our active list.
             MediaManager* mgr = MediaManager::GetIfExists();
             if (!mgr || placeholderListener->Stopped()) {
               // The listener has already been removed if the window is no
               // longer active.
-              return MgrPromise::CreateAndReject(
+              return DeviceSetPromise::CreateAndReject(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
             MOZ_ASSERT(mgr->IsWindowStillActive(windowId));
             placeholderListener->Stop();
 
-            for (auto& device : *aOutDevices) {
+            for (auto& device : *aDevices) {
               if (device->mKind == MediaDeviceKind::Audiooutput ||
                   (device->mKind == MediaDeviceKind::Audioinput &&
                    aAudioInputEnumType != DeviceEnumerationType::Fake &&
@@ -2998,15 +2992,17 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                 MOZ_ALWAYS_TRUE(mgr->mDeviceIDs.put(device->mRawID));
               }
             }
-            MediaManager::AnonymizeDevices(*aOutDevices, *originKey, windowId);
-            return MgrPromise::CreateAndResolve(false, __func__);
+            MediaManager::AnonymizeDevices(*aDevices, *originKey, windowId);
+            return DeviceSetPromise::CreateAndResolve(std::move(aDevices),
+                                                      __func__);
           },
           [placeholderListener](RefPtr<MediaMgrError>&& aError) {
             // EnumerateDevicesImpl may fail if a new doc has been set, in which
             // case the OnNavigation() method should have removed all previous
             // active listeners.
             MOZ_ASSERT(placeholderListener->Stopped());
-            return MgrPromise::CreateAndReject(std::move(aError), __func__);
+            return DeviceSetPromise::CreateAndReject(std::move(aError),
+                                                     __func__);
           });
 }
 
@@ -3041,10 +3037,10 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
     flags += EnumerationFlag::EnumerateAudioOutputs;
   }
 
-  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   if (audioType == MediaSourceEnum::Other &&
       videoType == MediaSourceEnum::Other && flags.isEmpty()) {
-    return DeviceSetPromise::CreateAndResolve(devices, __func__);
+    return DeviceSetPromise::CreateAndResolve(new MediaDeviceSetRefCnt(),
+                                              __func__);
   }
 
   bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
@@ -3080,17 +3076,8 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
   }
 
   return EnumerateDevicesImpl(aWindow, videoType, audioType,
-                              videoEnumerationType, audioEnumerationType, flags,
-                              devices)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [devices](bool) {
-            return DeviceSetPromise::CreateAndResolve(devices, __func__);
-          },
-          [](RefPtr<MediaMgrError>&& aError) {
-            return DeviceSetPromise::CreateAndReject(std::move(aError),
-                                                     __func__);
-          });
+                              videoEnumerationType, audioEnumerationType,
+                              flags);
 }
 
 RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
@@ -3126,17 +3113,16 @@ RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
         __func__);
   }
   uint64_t windowID = aWindow->WindowID();
-  auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   return EnumerateDevicesImpl(
              aWindow, MediaSourceEnum::Other, MediaSourceEnum::Other,
              DeviceEnumerationType::Normal, DeviceEnumerationType::Normal,
              {EnumerationFlag::EnumerateAudioOutputs,
-              EnumerationFlag::AllowPermissionRequest},
-             devices)
+              EnumerationFlag::AllowPermissionRequest})
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr<MediaManager>(this), windowID, devices, aOptions,
-           aCallerType, isHandlingUserInput, principalInfo](bool) mutable {
+          [self = RefPtr<MediaManager>(this), windowID, aOptions, aCallerType,
+           isHandlingUserInput,
+           principalInfo](RefPtr<MediaDeviceSetRefCnt> aDevices) mutable {
             // Ensure that the window is still good.
             RefPtr<nsPIDOMWindowInner> window =
                 nsGlobalWindowInner::GetInnerWindowWithId(windowID);
@@ -3148,7 +3134,7 @@ RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
                   MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                   __func__);
             }
-            if (devices->IsEmpty()) {
+            if (aDevices->IsEmpty()) {
               LOG("SelectAudioOutput: no devices found");
               auto error = nsContentUtils::ResistFingerprinting(aCallerType)
                                ? MediaMgrError::Name::NotAllowedError
@@ -3169,11 +3155,11 @@ RefPtr<MediaManager::DevicePromise> MediaManager::SelectAudioOutput(
                 !Preferences::GetBool("media.navigator.permission.disabled") ||
                 Preferences::GetBool("media.navigator.permission.force");
             if (!askPermission) {
-              self->NotifyAllowed(callID, *devices);
+              self->NotifyAllowed(callID, *aDevices);
             } else {
               MOZ_ASSERT(window->IsSecureContext());
               auto req = MakeRefPtr<GetUserMediaRequest>(
-                  window, callID, std::move(devices), aOptions, true,
+                  window, callID, std::move(aDevices), aOptions, true,
                   isHandlingUserInput);
               if (taskCount > 1) {
                 // there is at least 1 pending gUM request
