@@ -1212,7 +1212,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_UNIVERSALCHARDET=1
@@ -1385,23 +1384,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl Searching of system directories for extensions.
-dnl Note: this switch is meant to be used for test builds
-dnl whose behavior should not depend on what happens to be
-dnl installed on the local machine.
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(system-extension-dirs,
-[  --disable-system-extension-dirs
-                          Disable searching system- and account-global
-                          directories for extensions of any kind; use
-                          only profile-specific extension directories],
-  ENABLE_SYSTEM_EXTENSION_DIRS=,
-  ENABLE_SYSTEM_EXTENSION_DIRS=1 )
-if test "$ENABLE_SYSTEM_EXTENSION_DIRS"; then
-  AC_DEFINE(ENABLE_SYSTEM_EXTENSION_DIRS)
-fi
 
 dnl ========================================================
 dnl = Universalchardet

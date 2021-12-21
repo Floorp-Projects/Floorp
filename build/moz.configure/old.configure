@@ -92,7 +92,6 @@ def old_configure_options(*options):
     "--cache-file",
     "--datadir",
     "--enable-official-branding",
-    "--enable-system-extension-dirs",
     "--enable-system-pixman",
     "--enable-universalchardet",
     "--enable-updater",
