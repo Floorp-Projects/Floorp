@@ -851,8 +851,8 @@ class AudioCaptureTrackSource : public LocalTrackSource {
 NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
-                         const nsString& aName, const nsString& aID,
-                         const nsString& aGroupID)
+                         const nsString& aRawName, const nsString& aRawID,
+                         const nsString& aRawGroupID)
     : mSource(aSource),
       mSinkInfo(nullptr),
       mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
@@ -862,15 +862,14 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
       mIsFake(mSource->IsFake()),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
-      mName(aName),
-      mID(aID),
-      mGroupID(aGroupID),
-      mRawName(aName) {
+      mRawID(aRawID),
+      mRawGroupID(aRawGroupID),
+      mRawName(aRawName) {
   MOZ_ASSERT(mSource);
 }
 
 MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                         const nsString& aID, const nsString& aGroupID)
+                         const nsString& aRawID, const nsString& aRawGroupID)
     : mSource(nullptr),
       mSinkInfo(aAudioDeviceInfo),
       mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT
@@ -880,9 +879,8 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
       mIsFake(false),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
-      mName(mSinkInfo->Name()),
-      mID(aID),
-      mGroupID(aGroupID),
+      mRawID(aRawID),
+      mRawGroupID(aRawGroupID),
       mRawName(mSinkInfo->Name()) {
   // For now this ctor is used only for Audiooutput.
   // It could be used for Audioinput and Videoinput
@@ -893,10 +891,10 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
 }
 
 /* static */
-RefPtr<MediaDevice> MediaDevice::CopyWithNewGroupId(
-    const RefPtr<MediaDevice>& aOther, const nsString& aGroupID) {
-  return new MediaDevice(aOther, aOther->mID, aGroupID, aOther->mRawID,
-                         aOther->mRawGroupID, aOther->mName);
+RefPtr<MediaDevice> MediaDevice::CopyWithNewRawGroupId(
+    const RefPtr<MediaDevice>& aOther, const nsString& aRawGroupID) {
+  return new MediaDevice(aOther, aOther->mID, aOther->mGroupID, aOther->mRawID,
+                         aRawGroupID, aOther->mName);
 }
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
@@ -994,11 +992,6 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   return std::min<uint64_t>(distance, UINT32_MAX);
 }
 
-void MediaDevice::GetName(nsAString& aName) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aName.Assign(mName);
-}
-
 NS_IMETHODIMP
 MediaDevice::GetRawName(nsAString& aName) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1013,21 +1006,11 @@ MediaDevice::GetType(nsAString& aType) {
   return NS_OK;
 }
 
-void MediaDevice::GetId(nsAString& aID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aID.Assign(mID);
-}
-
 NS_IMETHODIMP
 MediaDevice::GetRawId(nsAString& aID) {
   MOZ_ASSERT(NS_IsMainThread());
   aID.Assign(mRawID);
   return NS_OK;
-}
-
-void MediaDevice::GetGroupId(nsAString& aGroupID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aGroupID.Assign(mGroupID);
 }
 
 NS_IMETHODIMP
@@ -1159,7 +1142,7 @@ static void GetMediaDevices(MediaEngine* aEngine, MediaSourceEnum aSrcType,
    */
   if (aMediaDeviceName && *aMediaDeviceName) {
     for (auto& device : devices) {
-      if (device->mName.EqualsASCII(aMediaDeviceName)) {
+      if (device->mRawName.EqualsASCII(aMediaDeviceName)) {
         aResult.AppendElement(device);
         LOG("%s: found aMediaDeviceName=%s", __func__, aMediaDeviceName);
         break;
@@ -1170,7 +1153,7 @@ static void GetMediaDevices(MediaEngine* aEngine, MediaSourceEnum aSrcType,
     if (MOZ_LOG_TEST(gMediaManagerLog, mozilla::LogLevel::Debug)) {
       for (auto& device : aResult) {
         LOG("%s: appending device=%s", __func__,
-            NS_ConvertUTF16toUTF8(device->mName).get());
+            NS_ConvertUTF16toUTF8(device->mRawName).get());
       }
     }
   }
@@ -1534,8 +1517,7 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
           window, audioCaptureSource->InputTrack(), audioCaptureSource);
       domStream->AddTrackInternal(track);
     } else {
-      nsString audioDeviceName;
-      mAudioDevice->GetName(audioDeviceName);
+      const nsString& audioDeviceName = mAudioDevice->mName;
       RefPtr<MediaTrack> track;
 #ifdef MOZ_WEBRTC
       if (mAudioDevice->mIsFake) {
@@ -1558,8 +1540,7 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
     }
   }
   if (mVideoDevice) {
-    nsString videoDeviceName;
-    mVideoDevice->GetName(videoDeviceName);
+    const nsString& videoDeviceName = mVideoDevice->mName;
     RefPtr<MediaTrack> track = mtg->CreateSourceTrack(MediaSegment::VIDEO);
     videoTrackSource = new LocalTrackSource(
         principal, videoDeviceName, mVideoDeviceListener,
@@ -1735,14 +1716,14 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
       if (dev->mKind != aKind) {
         continue;
       }
-      if (!FindInReadable(aVideo->mName, dev->mName)) {
+      if (!FindInReadable(aVideo->mRawName, dev->mRawName)) {
         continue;
       }
       if (newVideoGroupID.IsEmpty()) {
         // This is only expected on first match. If that's the only match group
         // id will be updated to this one at the end of the loop.
         updateGroupId = true;
-        newVideoGroupID = dev->mGroupID;
+        newVideoGroupID = dev->mRawGroupID;
       } else {
         // More than one device found, it is impossible to know which group id
         // is the correct one.
@@ -1752,7 +1733,7 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
       }
     }
     if (updateGroupId) {
-      aVideo = MediaDevice::CopyWithNewGroupId(aVideo, newVideoGroupID);
+      aVideo = MediaDevice::CopyWithNewRawGroupId(aVideo, newVideoGroupID);
       return true;
     }
     return false;
@@ -2253,9 +2234,7 @@ void MediaManager::DeviceListChanged() {
 
             MediaManager::DeviceIdSet deviceIDs;
             for (auto& device : *devices) {
-              nsString id;
-              device->GetId(id);
-              MOZ_ALWAYS_TRUE(deviceIDs.put(std::move(id)));
+              MOZ_ALWAYS_TRUE(deviceIDs.put(device->mRawID));
             }
             // For any real removed cameras, microphones or speakers, notify
             // their listeners cleanly that the source has stopped, so JS knows
@@ -2848,14 +2827,10 @@ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
                                     const uint64_t aWindowId) {
   MOZ_ASSERT(!aOriginKey.IsEmpty());
   for (RefPtr<MediaDevice>& device : aDevices) {
-    nsString id;
-    device->GetId(id);
-    nsString rawId(id);
+    nsString id = device->mRawID;
     AnonymizeId(id, aOriginKey);
 
-    nsString groupId;
-    device->GetGroupId(groupId);
-    nsString rawGroupId = groupId;
+    nsString groupId = device->mRawGroupID;
     // Use window id to salt group id in order to make it session based as
     // required by the spec. This does not provide unique group ids through
     // out a browser restart. However, this is not agaist the spec.
@@ -2864,12 +2839,12 @@ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
     groupId.AppendInt(aWindowId);
     AnonymizeId(groupId, aOriginKey);
 
-    nsString name;
-    device->GetName(name);
+    nsString name = device->mRawName;
     if (name.Find(u"AirPods"_ns) != -1) {
       name = u"AirPods"_ns;
     }
-    device = new MediaDevice(device, id, groupId, rawId, rawGroupId, name);
+    device = new MediaDevice(device, id, groupId, device->mRawID,
+                             device->mRawGroupID, name);
   }
 }
 
@@ -3020,9 +2995,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                   (device->mKind == MediaDeviceKind::Videoinput &&
                    aVideoInputEnumType != DeviceEnumerationType::Fake &&
                    device->GetMediaSource() == MediaSourceEnum::Camera)) {
-                nsString id;
-                device->GetId(id);
-                MOZ_ALWAYS_TRUE(mgr->mDeviceIDs.put(std::move(id)));
+                MOZ_ALWAYS_TRUE(mgr->mDeviceIDs.put(device->mRawID));
               }
             }
             MediaManager::AnonymizeDevices(*aOutDevices, *originKey, windowId);
