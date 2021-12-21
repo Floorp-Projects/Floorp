@@ -33,7 +33,7 @@ internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?
             .setUploadEnabled(isChecked).isCollectionEnabled = isChecked
     }
 
-    override fun getDescription(): String? {
+    override fun getDescription(): String {
         return context.resources.getString(
             R.string.preference_mozilla_telemetry_summary2,
             context.resources.getString(R.string.app_name)

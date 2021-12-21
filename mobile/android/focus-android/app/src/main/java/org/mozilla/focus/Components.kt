@@ -118,7 +118,7 @@ class Components(
 
     @Suppress("DEPRECATION")
     private val locationService: LocationService by lazy {
-        if (BuildConfig.MLS_TOKEN.isNullOrEmpty()) {
+        if (BuildConfig.MLS_TOKEN.isEmpty()) {
             LocationService.default()
         } else {
             MozillaLocationService(context, client.unwrap(), BuildConfig.MLS_TOKEN)
@@ -203,7 +203,7 @@ class Components(
 private fun createCrashReporter(context: Context): CrashReporter {
     val services = mutableListOf<CrashReporterService>()
 
-    if (!BuildConfig.SENTRY_TOKEN.isNullOrEmpty()) {
+    if (BuildConfig.SENTRY_TOKEN.isNotEmpty()) {
         val sentryService = SentryService(
             context,
             BuildConfig.SENTRY_TOKEN,

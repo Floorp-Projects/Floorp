@@ -16,7 +16,7 @@ import org.mozilla.focus.ext.settings
  * State preference that will show the current state as a summary and a sub screen to configure the behavior.
  */
 class StatePreference(context: Context?, attrs: AttributeSet?) : Preference(context, attrs) {
-    var summaryView: TextView? = null
+    private var summaryView: TextView? = null
 
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)

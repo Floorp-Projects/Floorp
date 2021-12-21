@@ -65,9 +65,8 @@ class IntentProcessor(
 
     @Suppress("ComplexMethod", "ReturnCount")
     private fun createSessionFromIntent(context: Context, intent: SafeIntent): Result {
-        val action = intent.action
 
-        when (action) {
+        when (intent.action) {
             Intent.ACTION_VIEW -> {
                 val dataString = intent.dataString
                 if (TextUtils.isEmpty(dataString)) {

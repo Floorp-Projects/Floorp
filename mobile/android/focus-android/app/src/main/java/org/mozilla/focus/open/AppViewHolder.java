@@ -33,12 +33,9 @@ public class AppViewHolder extends RecyclerView.ViewHolder {
     }
 
     private View.OnClickListener createListenerWrapper(final AppAdapter.App app, final AppAdapter.OnAppSelectedListener listener) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onAppSelected(app);
-                }
+        return v -> {
+            if (listener != null) {
+                listener.onAppSelected(app);
             }
         };
     }

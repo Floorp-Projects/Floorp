@@ -7,6 +7,7 @@ package org.mozilla.focus.firstrun
 import android.content.Context
 import android.util.AttributeSet
 import org.mozilla.focus.R
+import kotlin.math.min
 
 class FirstrunCardView @JvmOverloads constructor(
     context: Context,
@@ -25,8 +26,8 @@ class FirstrunCardView @JvmOverloads constructor(
 
         // Now let's use those sizes to measure - but let's not exceed our defined max sizes (We do
         // not want to have gigantic cards on large devices like tablets.)
-        val measuredWidth = Math.min(availableWidth, maxWidth)
-        val measuredHeight = Math.min(availableHeight, maxHeight)
+        val measuredWidth = min(availableWidth, maxWidth)
+        val measuredHeight = min(availableHeight, maxHeight)
 
         // Let's use the measured values to hand them to the super class to measure the child views etc.
         val newWidthMeasureSpec = MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY)

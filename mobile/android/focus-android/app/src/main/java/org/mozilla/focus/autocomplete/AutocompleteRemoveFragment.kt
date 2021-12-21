@@ -9,10 +9,11 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
@@ -41,10 +42,10 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
         val domains = (binding.domainList.adapter as DomainListAdapter).selection()
         if (domains.isNotEmpty()) {
             launch(Main) {
-                async {
+                withContext(Dispatchers.Default) {
                     CustomDomains.remove(context, domains)
                     Autocomplete.domainRemoved.add()
-                }.await()
+                }
 
                 requireComponents.appStore.dispatch(
                     AppAction.NavigateUp(requireComponents.store.state.selectedTabId)

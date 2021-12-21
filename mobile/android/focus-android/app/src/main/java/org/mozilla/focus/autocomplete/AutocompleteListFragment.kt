@@ -22,11 +22,12 @@ import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
@@ -200,7 +201,10 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
 
         fun refresh(context: Context, body: (() -> Unit)? = null) {
             launch(Main) {
-                val updatedDomains = async { CustomDomains.load(context) }.await()
+                val updatedDomains =
+                    withContext(Dispatchers.Default) {
+                        CustomDomains.load(context)
+                    }
 
                 domains.clear()
                 domains.addAll(updatedDomains)
@@ -226,9 +230,8 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
                     )
                 DomainViewHolder.LAYOUT_ID ->
                     DomainViewHolder(
-                        LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                        { AutocompleteDomainFormatter.format(it) }
-                    )
+                        LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+                    ) { AutocompleteDomainFormatter.format(it) }
                 else -> throw IllegalArgumentException("Unknown view type: $viewType")
             }
 

@@ -38,7 +38,7 @@ fun String.beautifyUrl(): String {
     // Append the truncated path
 
     val truncatedPath = uri.truncatedPath()
-    if (!truncatedPath.isNullOrEmpty()) {
+    if (truncatedPath.isNotEmpty()) {
         beautifulUrl.append(truncatedPath)
     }
 

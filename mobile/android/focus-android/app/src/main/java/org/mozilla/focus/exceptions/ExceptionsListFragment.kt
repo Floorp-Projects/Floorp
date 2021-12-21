@@ -224,9 +224,8 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
             when (viewType) {
                 DomainViewHolder.LAYOUT_ID ->
                     DomainViewHolder(
-                        LayoutInflater.from(parent.context).inflate(viewType, parent, false),
-                        { AutocompleteDomainFormatter.format(it) }
-                    )
+                        LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+                    ) { AutocompleteDomainFormatter.format(it) }
                 else -> throw IllegalArgumentException("Unknown view type: $viewType")
             }
 

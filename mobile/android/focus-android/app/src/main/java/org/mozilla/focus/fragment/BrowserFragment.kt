@@ -738,7 +738,7 @@ class BrowserFragment :
         requireActivity().finish()
     }
 
-    fun setShouldRequestDesktop(enabled: Boolean) {
+    private fun setShouldRequestDesktop(enabled: Boolean) {
         if (enabled) {
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putBoolean(

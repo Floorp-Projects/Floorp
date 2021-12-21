@@ -20,7 +20,7 @@ class SearchSuggestionsPreference(
     override fun getLearnMoreUrl(): String =
         SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
 
-    override fun getDescription(): String? =
+    override fun getDescription(): String =
         context.getString(
             R.string.preference_show_search_suggestions_summary,
             context.getString(R.string.app_name)

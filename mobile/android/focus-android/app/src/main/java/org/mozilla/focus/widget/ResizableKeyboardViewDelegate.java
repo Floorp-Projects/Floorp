@@ -97,12 +97,7 @@ import org.mozilla.focus.R;
         isAnimating = true;
 
         final ValueAnimator animator = ValueAnimator.ofInt(delegateView.getPaddingBottom(), value);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                delegateView.setPadding(0, 0, 0, (int) animation.getAnimatedValue());
-            }
-        });
+        animator.addUpdateListener(animation -> delegateView.setPadding(0, 0, 0, (int) animation.getAnimatedValue()));
         animator.setDuration(200);
         animator.addListener(new AnimatorListenerAdapter() {
             @Override

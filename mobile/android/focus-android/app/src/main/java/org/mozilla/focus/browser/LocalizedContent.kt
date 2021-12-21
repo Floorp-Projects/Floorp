@@ -87,14 +87,16 @@ object LocalizedContent {
     }
 
     private fun putLayoutDirectionIntoMap(substitutionMap: MutableMap<String, String>, context: Context) {
-        val layoutDirection = context.resources.configuration.layoutDirection
-        val direction: String
-        direction = if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
-            "ltr"
-        } else if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-            "rtl"
-        } else {
-            "auto"
+        val direction: String = when (context.resources.configuration.layoutDirection) {
+            View.LAYOUT_DIRECTION_LTR -> {
+                "ltr"
+            }
+            View.LAYOUT_DIRECTION_RTL -> {
+                "rtl"
+            }
+            else -> {
+                "auto"
+            }
         }
         substitutionMap["%dir%"] = direction
     }

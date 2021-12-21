@@ -268,7 +268,7 @@ class Settings(
             true
         )
 
-    fun shouldUseSafeBrowsing() =
+    private fun shouldUseSafeBrowsing() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_safe_browsing),
             true
