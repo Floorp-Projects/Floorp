@@ -92,7 +92,6 @@ def old_configure_options(*options):
     "--cache-file",
     "--datadir",
     "--enable-official-branding",
-    "--enable-universalchardet",
     "--enable-updater",
     "--enable-zipwriter",
     "--includedir",

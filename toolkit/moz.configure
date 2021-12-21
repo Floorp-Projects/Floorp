@@ -2855,3 +2855,11 @@ with only_when(compile_environment):
     # Set MOZ_PIXMAN_CFLAGS to an explicit empty value when --enable-system-pixman is *not* used,
     # for layout/style/extra-bindgen-flags
     set_config("MOZ_PIXMAN_CFLAGS", [], when=in_tree_pixman)
+
+
+# Universalchardet
+# ==============================================================
+with only_when(compile_environment):
+    option("--disable-universalchardet", help="Disable universal encoding detection")
+
+    set_config("MOZ_UNIVERSALCHARDET", True, when="--enable-universalchardet")

@@ -1214,7 +1214,6 @@ MOZ_ARG_HEADER(Application)
 
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
-MOZ_UNIVERSALCHARDET=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 MOZ_BINARY_EXTENSIONS=
@@ -1384,15 +1383,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl = Universalchardet
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(universalchardet,
-[  --disable-universalchardet
-                          Disable universal encoding detection],
-  MOZ_UNIVERSALCHARDET=,
-  MOZ_UNIVERSALCHARDET=1 )
 
 dnl ========================================================
 dnl Gamepad support
@@ -1763,7 +1753,6 @@ AC_SUBST_LIST(ASFLAGS)
 AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 
-AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(MOZ_STUB_INSTALLER)
 AC_SUBST(MOZ_UPDATER)
 
