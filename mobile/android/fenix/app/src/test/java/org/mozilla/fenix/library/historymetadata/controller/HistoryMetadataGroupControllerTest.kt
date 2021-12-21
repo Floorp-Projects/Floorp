@@ -53,6 +53,7 @@ class HistoryMetadataGroupControllerTest {
     private val searchTerm = "mozilla"
     private val historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", searchTerm, null)
     private val mozillaHistoryMetadataItem = History.Metadata(
+        position = 1,
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
@@ -60,6 +61,7 @@ class HistoryMetadataGroupControllerTest {
         historyMetadataKey = historyMetadataKey
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
+        position = 1,
         title = "Firefox",
         url = "firefox.com",
         visitedAt = 0,

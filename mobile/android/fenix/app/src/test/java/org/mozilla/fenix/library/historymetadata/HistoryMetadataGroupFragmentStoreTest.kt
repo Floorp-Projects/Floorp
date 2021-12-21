@@ -19,6 +19,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     private lateinit var store: HistoryMetadataGroupFragmentStore
 
     private val mozillaHistoryMetadataItem = History.Metadata(
+        position = 1,
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
@@ -26,6 +27,7 @@ class HistoryMetadataGroupFragmentStoreTest {
         historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
+        position = 1,
         title = "Firefox",
         url = "firefox.com",
         visitedAt = 0,

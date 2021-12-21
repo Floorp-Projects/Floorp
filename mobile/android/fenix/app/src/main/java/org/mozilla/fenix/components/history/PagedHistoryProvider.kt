@@ -6,29 +6,75 @@ package org.mozilla.fenix.components.history
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.library.history.History
-import org.mozilla.fenix.library.history.toHistoryMetadata
 import org.mozilla.fenix.perf.runBlockingIncrement
 import kotlin.math.abs
 
 private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
 
 /**
- * An Interface for providing a paginated list of [History].
+ * Class representing a history entry.
+ * Contrast this with [History] that's the same, but with an assigned position, for pagination
+ * and display purposes.
+ */
+sealed class HistoryDB {
+    abstract val title: String
+    abstract val visitedAt: Long
+    abstract val selected: Boolean
+
+    data class Regular(
+        override val title: String,
+        val url: String,
+        override val visitedAt: Long,
+        override val selected: Boolean = false
+    ) : HistoryDB()
+
+    data class Metadata(
+        override val title: String,
+        val url: String,
+        override val visitedAt: Long,
+        val totalViewTime: Int,
+        val historyMetadataKey: HistoryMetadataKey,
+        override val selected: Boolean = false
+    ) : HistoryDB()
+
+    data class Group(
+        override val title: String,
+        override val visitedAt: Long,
+        val items: List<Metadata>,
+        override val selected: Boolean = false
+    ) : HistoryDB()
+}
+
+private fun HistoryMetadata.toHistoryDBMetadata(): HistoryDB.Metadata {
+    return HistoryDB.Metadata(
+        title = title?.takeIf(String::isNotEmpty)
+            ?: key.url.tryGetHostFromUrl(),
+        url = key.url,
+        visitedAt = createdAt,
+        totalViewTime = totalViewTime,
+        historyMetadataKey = key
+    )
+}
+
+/**
+ * An Interface for providing a paginated list of [HistoryDB].
  */
 interface PagedHistoryProvider {
     /**
-     * Gets a list of [History].
+     * Gets a list of [HistoryDB].
      *
      * @param offset How much to offset the list by
      * @param numberOfItems How many items to fetch
-     * @param onComplete A callback that returns the list of [History]
+     * @param onComplete A callback that returns the list of [HistoryDB]
      */
-    fun getHistory(offset: Int, numberOfItems: Int, onComplete: (List<History>) -> Unit)
+    fun getHistory(offset: Int, numberOfItems: Int, onComplete: (List<HistoryDB>) -> Unit)
 }
 
 /**
@@ -59,18 +105,18 @@ class DefaultPagedHistoryProvider(
         it == VisitType.REDIRECT_PERMANENT || it == VisitType.REDIRECT_TEMPORARY
     }
 
-    @Volatile private var historyGroups: List<History.Group>? = null
+    @Volatile private var historyGroups: List<HistoryDB.Group>? = null
 
     @Suppress("LongMethod")
     override fun getHistory(
         offset: Int,
         numberOfItems: Int,
-        onComplete: (List<History>) -> Unit,
+        onComplete: (List<HistoryDB>) -> Unit,
     ) {
         // A PagedList DataSource runs on a background thread automatically.
         // If we run this in our own coroutineScope it breaks the PagedList
         runBlockingIncrement {
-            val history: List<History>
+            val history: List<HistoryDB>
 
             if (showHistorySearchGroups) {
                 // We need to re-fetch all the history metadata if the offset resets back at 0
@@ -81,10 +127,10 @@ class DefaultPagedHistoryProvider(
                         .filter { it.key.searchTerm != null }
                         .groupBy { it.key.searchTerm!! }
                         .map { (searchTerm, items) ->
-                            History.Group(
+                            HistoryDB.Group(
                                 title = searchTerm,
                                 visitedAt = items.first().createdAt,
-                                items = items.map { it.toHistoryMetadata() }
+                                items = items.map { it.toHistoryDBMetadata() }
                             )
                         }
                 }
@@ -143,9 +189,9 @@ class DefaultPagedHistoryProvider(
     private suspend fun getHistoryAndSearchGroups(
         offset: Int,
         numberOfItems: Int,
-    ): List<History> {
-        val result = mutableListOf<History>()
-        val history: List<History.Regular> = historyStorage
+    ): List<HistoryDB> {
+        val result = mutableListOf<HistoryDB>()
+        val history: List<HistoryDB.Regular> = historyStorage
             .getVisitsPaginated(
                 offset.toLong(),
                 numberOfItems.toLong(),
@@ -207,12 +253,12 @@ class DefaultPagedHistoryProvider(
             .sortedByDescending { it.visitedAt }
     }
 
-    private fun transformVisitInfoToHistoryItem(visit: VisitInfo): History.Regular {
+    private fun transformVisitInfoToHistoryItem(visit: VisitInfo): HistoryDB.Regular {
         val title = visit.title
             ?.takeIf(String::isNotEmpty)
             ?: visit.url.tryGetHostFromUrl()
 
-        return History.Regular(
+        return HistoryDB.Regular(
             title = title,
             url = visit.url,
             visitedAt = visit.visitTime
@@ -221,11 +267,11 @@ class DefaultPagedHistoryProvider(
 }
 
 @VisibleForTesting
-internal fun List<History>.removeConsecutiveDuplicates(): List<History> {
+internal fun List<HistoryDB>.removeConsecutiveDuplicates(): List<HistoryDB> {
     var previousURL = ""
     return filter {
         var isNotDuplicate = true
-        previousURL = if (it is History.Regular) {
+        previousURL = if (it is HistoryDB.Regular) {
             isNotDuplicate = it.url != previousURL
             it.url
         } else {

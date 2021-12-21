@@ -17,7 +17,7 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
  * Class representing a history entry.
  */
 sealed class History : Parcelable {
-    abstract val position: Int?
+    abstract val position: Int
     abstract val title: String
     abstract val visitedAt: Long
     abstract val selected: Boolean
@@ -25,14 +25,14 @@ sealed class History : Parcelable {
     /**
      * A regular history item.
      *
-     * @property id Unique id of the history item.
+     * @property position Position of this item in a result list of other [History] items.
      * @property title Title of the history item.
      * @property url URL of the history item.
      * @property visitedAt Timestamp of when this history item was visited.
      * @property selected Whether or not the history item is selected.
      */
     @Parcelize data class Regular(
-        override val position: Int? = null,
+        override val position: Int,
         override val title: String,
         val url: String,
         override val visitedAt: Long,
@@ -42,7 +42,7 @@ sealed class History : Parcelable {
     /**
      * A history metadata item.
      *
-     * @property id Unique id of the history metadata item.
+     * @property position Position of this item in a result list of other [History] items.
      * @property title Title of the history metadata item.
      * @property url URL of the history metadata item.
      * @property visitedAt Timestamp of when this history metadata item was visited.
@@ -52,7 +52,7 @@ sealed class History : Parcelable {
      * @property selected Whether or not the history metadata item is selected.
      */
     @Parcelize data class Metadata(
-        override val position: Int? = null,
+        override val position: Int,
         override val title: String,
         val url: String,
         override val visitedAt: Long,
@@ -64,14 +64,14 @@ sealed class History : Parcelable {
     /**
      * A history metadata group.
      *
-     * @property id Unique id of the history metadata group.
+     * @property position Position of this item in a result list of other [History] items.
      * @property title Title of the history metadata group.
      * @property visitedAt Timestamp of when this history metadata group was visited.
      * @property items List of history metadata items associated with the group.
      * @property selected Whether or not the history group is selected.
      */
     @Parcelize data class Group(
-        override val position: Int? = null,
+        override val position: Int,
         override val title: String,
         override val visitedAt: Long,
         val items: List<Metadata>,
@@ -82,7 +82,7 @@ sealed class History : Parcelable {
 /**
  * Extension function for converting a [HistoryMetadata] into a [History.Metadata].
  */
-fun HistoryMetadata.toHistoryMetadata(position: Int? = null): History.Metadata {
+fun HistoryMetadata.toHistoryMetadata(position: Int): History.Metadata {
     return History.Metadata(
         position = position,
         title = title?.takeIf(String::isNotEmpty)

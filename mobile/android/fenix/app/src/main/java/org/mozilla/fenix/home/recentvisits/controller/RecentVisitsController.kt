@@ -96,7 +96,7 @@ class DefaultRecentVisitsController(
             HomeFragmentDirections.actionGlobalHistoryMetadataGroup(
                 title = recentHistoryGroup.title,
                 historyMetadataItems = recentHistoryGroup.historyMetadata
-                    .map { it.toHistoryMetadata() }.toTypedArray()
+                    .mapIndexed { index, item -> item.toHistoryMetadata(index) }.toTypedArray()
             )
         )
     }

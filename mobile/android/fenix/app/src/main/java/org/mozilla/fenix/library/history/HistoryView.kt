@@ -76,7 +76,7 @@ class HistoryView(
             val unselectedItems = oldMode.selectedItems - state.mode.selectedItems
 
             state.mode.selectedItems.union(unselectedItems).forEach { item ->
-                historyAdapter.notifyItemChanged(item.position!!)
+                historyAdapter.notifyItemChanged(item.position)
             }
         }
 

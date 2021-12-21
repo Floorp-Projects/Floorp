@@ -14,6 +14,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with future date THEN item is grouped to today`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() + DateUtils.WEEK_IN_MILLIS
@@ -26,6 +27,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with today's date THEN item is grouped to today`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - DateUtils.MINUTE_IN_MILLIS
@@ -44,6 +46,7 @@ class HistoryAdapterTest {
         }
 
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = calendar.timeInMillis
@@ -62,6 +65,7 @@ class HistoryAdapterTest {
         }
 
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = calendar.timeInMillis - DateUtils.HOUR_IN_MILLIS
@@ -79,6 +83,7 @@ class HistoryAdapterTest {
         calendar.set(Calendar.SECOND, 0)
 
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = calendar.timeInMillis - (DateUtils.HOUR_IN_MILLIS * 23)
@@ -97,6 +102,7 @@ class HistoryAdapterTest {
         }
 
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = calendar.timeInMillis - (DateUtils.HOUR_IN_MILLIS * 25)
@@ -109,6 +115,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with 3 days ago date THEN item is grouped to this week`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - (DateUtils.DAY_IN_MILLIS * 3)
@@ -121,6 +128,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with 6 days ago date THEN item is grouped to this week`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - (DateUtils.DAY_IN_MILLIS * 6)
@@ -133,6 +141,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with 8 days ago date THEN item is grouped to this month`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - (DateUtils.DAY_IN_MILLIS * 8)
@@ -145,6 +154,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with 29 days ago date THEN item is grouped to this month`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - (DateUtils.DAY_IN_MILLIS * 29)
@@ -157,6 +167,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with 31 days ago date THEN item is grouped to older`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = System.currentTimeMillis() - (DateUtils.DAY_IN_MILLIS * 31)
@@ -169,6 +180,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with zero date THEN item is grouped to older`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = 0
@@ -181,6 +193,7 @@ class HistoryAdapterTest {
     @Test
     fun `WHEN grouping history item with negative date THEN item is grouped to older`() {
         val history = History.Regular(
+            position = 1,
             title = "test item",
             url = "url",
             visitedAt = -100

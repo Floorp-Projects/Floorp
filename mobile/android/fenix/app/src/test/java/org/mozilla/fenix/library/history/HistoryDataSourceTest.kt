@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.history
 import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.mozilla.fenix.components.history.HistoryDB
 
 class HistoryDataSourceTest {
     private val testCases = listOf(
@@ -154,10 +155,7 @@ class HistoryDataSourceTest {
         assertEquals(
             "For case $history with offset $offset",
             expectedPositions,
-            HistoryDataSource.assignPositions(
-                offset = offset,
-                history.toHistoryWithoutPositions()
-            ).map { it.position }
+            history.toHistoryDB().positionWithOffset(offset).map { it.position }
         )
     }
 
@@ -169,14 +167,14 @@ class HistoryDataSourceTest {
 
     // For position tests, we just care about the basic tree structure here,
     // the details (view times, timestamps, etc) don't matter.
-    private fun List<TestHistory>.toHistoryWithoutPositions(): List<History> {
+    private fun List<TestHistory>.toHistoryDB(): List<HistoryDB> {
         return this.map {
             when (it) {
                 is TestHistory.Regular -> {
-                    History.Regular(title = it.url, url = it.url, visitedAt = 0)
+                    HistoryDB.Regular(title = it.url, url = it.url, visitedAt = 0)
                 }
                 is TestHistory.Metadata -> {
-                    History.Metadata(
+                    HistoryDB.Metadata(
                         title = it.url,
                         url = it.url,
                         visitedAt = 0,
@@ -185,10 +183,10 @@ class HistoryDataSourceTest {
                     )
                 }
                 is TestHistory.Group -> {
-                    History.Group(
+                    HistoryDB.Group(
                         title = it.title, visitedAt = 0,
                         items = it.items.map { item ->
-                            History.Metadata(
+                            HistoryDB.Metadata(
                                 title = item,
                                 url = item,
                                 visitedAt = 0,

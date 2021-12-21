@@ -29,6 +29,7 @@ class HistoryMetadataGroupItemViewHolderTest {
     private lateinit var selectionHolder: SelectionHolder<History.Metadata>
 
     private val item = History.Metadata(
+        position = 1,
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
