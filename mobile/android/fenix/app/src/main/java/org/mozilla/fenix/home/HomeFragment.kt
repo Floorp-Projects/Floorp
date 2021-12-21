@@ -395,7 +395,7 @@ class HomeFragment : Fragment() {
             MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "HomeFragment.onCreateView",
         )
 
-        if (FeatureFlags.showWallpapers) {
+        if (shouldEnableWallpaper()) {
             val wallpaperManger = requireComponents.wallpaperManager
             wallpaperManger.updateWallpaper(binding.homeLayout, wallpaperManger.currentWallpaper)
         }
@@ -758,7 +758,7 @@ class HomeFragment : Fragment() {
             requireComponents.reviewPromptController.promptReview(requireActivity())
         }
 
-        if (FeatureFlags.showWallpapers) {
+        if (shouldEnableWallpaper()) {
             binding.wordmark.setOnClickListener {
                 val manager = requireComponents.wallpaperManager
                 manager.updateWallpaper(
@@ -1194,6 +1194,9 @@ class HomeFragment : Fragment() {
             emptyList()
         }
     }
+
+    private fun shouldEnableWallpaper() =
+        FeatureFlags.showWallpapers && !(activity as HomeActivity).themeManager.currentTheme.isPrivate
 
     companion object {
         const val ALL_NORMAL_TABS = "all_normal"
