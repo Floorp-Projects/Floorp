@@ -658,10 +658,9 @@ testValidateTryCatch();
 testValidateCatch();
 testValidateCatchAll();
 testValidateExnPayload();
-
+testValidateRethrow();
 
 if (wasmCompileMode() === "baseline") {
-  // Rethrow and try-delegate NYI in Ion.
-testValidateRethrow();
+  // Try-delegate NYI in Ion.
 testValidateDelegate();
 }
