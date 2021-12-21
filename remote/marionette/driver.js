@@ -2655,6 +2655,10 @@ GeckoDriver.prototype.acceptConnections = function(cmd) {
  *     Constant name of masks to pass to |Services.startup.quit|.
  *     If empty or undefined, |nsIAppStartup.eAttemptQuit| is used.
  *
+ * @param {boolean=} safeMode
+ *     Optional flag to indicate that the application has to
+ *     be restarted in safe mode.
+ *
  * @return {Object<string,boolean>}
  *     Dictionary containing information that explains the shutdown reason.
  *     The value for `cause` contains the shutdown kind like "shutdown" or
@@ -2666,11 +2670,16 @@ GeckoDriver.prototype.acceptConnections = function(cmd) {
  *     for example multiple Quit flags.
  */
 GeckoDriver.prototype.quit = async function(cmd) {
+  const { flags = [], safeMode = false } = cmd.parameters;
   const quits = ["eConsiderQuit", "eAttemptQuit", "eForceQuit"];
 
-  let flags = [];
-  if (typeof cmd.parameters.flags != "undefined") {
-    flags = assert.array(cmd.parameters.flags);
+  assert.array(flags, `Expected "flags" to be an array`);
+  assert.boolean(safeMode, `Expected "safeMode" to be a boolean`);
+
+  if (safeMode && !flags.includes("eRestart")) {
+    throw new error.InvalidArgumentError(
+      `"safeMode" only works with restart flag`
+    );
   }
 
   let quitSeen;
@@ -2712,7 +2721,12 @@ GeckoDriver.prototype.quit = async function(cmd) {
 
   // delay response until the application is about to quit
   let quitApplication = waitForObserverTopic("quit-application");
-  Services.startup.quit(mode);
+
+  if (safeMode) {
+    Services.startup.restartInSafeMode(mode);
+  } else {
+    Services.startup.quit(mode);
+  }
 
   return {
     cause: (await quitApplication).data,
