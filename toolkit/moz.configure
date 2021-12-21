@@ -2863,3 +2863,11 @@ with only_when(compile_environment):
     option("--disable-universalchardet", help="Disable universal encoding detection")
 
     set_config("MOZ_UNIVERSALCHARDET", True, when="--enable-universalchardet")
+
+
+# Disable zipwriter
+# ==============================================================
+with only_when(compile_environment):
+    option("--disable-zipwriter", help="Disable zipwriter component")
+
+    set_config("MOZ_ZIPWRITER", True, when="--enable-zipwriter")
