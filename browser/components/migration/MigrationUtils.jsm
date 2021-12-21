@@ -84,7 +84,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chromium-edge-beta",
       "chrome-beta",
       "chromium",
-      "360se",
+      "chromium-360se",
       "canary",
     ];
   }
@@ -778,7 +778,7 @@ var MigrationUtils = Object.seal({
       Chrome: "chrome", // OS X
       Chromium: "chromium", // Windows, OS X
       "Chromium Web Browser": "chromium", // Linux
-      "360\u5b89\u5168\u6d4f\u89c8\u5668": "360se",
+      "360\u5b89\u5168\u6d4f\u89c8\u5668": "chromium-360se",
     };
 
     let key = "";
@@ -1265,7 +1265,7 @@ var MigrationUtils = Object.seal({
     chromium: 6,
     canary: 7,
     safari: 8,
-    "360se": 9,
+    "chromium-360se": 9,
     "chromium-edge": 10,
     "chromium-edge-beta": 10,
     brave: 11,
