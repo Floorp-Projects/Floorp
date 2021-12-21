@@ -63,8 +63,6 @@ assertEq(
   0
 );
 
-if (wasmCompileMode() === "baseline") {
-  // Rethrow NYI in Ion.
 assertEq(
   wasmEvalText(
     `(module
@@ -90,7 +88,6 @@ assertEq(
   ).exports.f(),
   0
 );
-}
 
 // Test trivial try-catch with empty bodies.
 assertEq(
@@ -597,8 +594,6 @@ assertEq(
   2
 );
 
-if (wasmCompileMode() === "baseline") {
-  // Rethrow NYI in Ion.
 assertEq(
   wasmEvalText(
     `(module
@@ -632,7 +627,6 @@ assertEq(
   ).exports.f(),
   2
 );
-}
 
 // Test br branching out of a catch block.
 assertEq(
@@ -1028,9 +1022,6 @@ assertErrorMessage(
   assertEq(safediv(6, 0), 6);
 }
 
-// *************** Instructions NYI in Ion ******************
-
-if (wasmCompileMode() === "baseline") {
 // Test simple rethrow.
 assertEq(
   wasmEvalText(
@@ -1222,10 +1213,33 @@ assertEq(
   13
 );
 
-// Test try-delegate blocks.
 assertEq(
   wasmEvalText(
     `(module
+       (tag (param i32))
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do (try
+                 (do (i32.const 13)
+                     (throw 0))
+                 (catch 0
+                   (i32.const 111)
+                   (rethrow 0)))
+               (i32.const 222))
+           (catch 0))))`
+  ).exports.f(),
+  13
+);
+
+// *************** Instructions NYI in Ion IR ******************
+
+// Test try-delegate blocks.
+
+if (wasmCompileMode() === "baseline") {
+  // Try-delegate NYI in Ion.
+  assertEq(
+    wasmEvalText(
+      `(module
        (tag $exn (param))
        (func (export "f") (result i32)
          i32.const 1

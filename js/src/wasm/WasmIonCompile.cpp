@@ -198,9 +198,13 @@ struct Control {
 //
 // 2. A single catch_all after a try.
 //    - If the first catch after a try is a catch_all, then there won't be
-//      any more catches, and we don't need the exception nor its local tag
-//      index any more. We pop both of them and compile the catch_all-code in
-//      the pad.
+//      any more catches, but we need the exception and its local tag index, in
+//      case the code in a catch_all contains "rethrow" instructions.
+//      - The Wasm instruction "rethrow", gets the exception and tag index to
+//        rethrow from the last two slots of the landing pad which, due to
+//        validation, is the l'th surrounding ControlItem.
+//      - We immediately GoTo to a new block after the pad and pop both the
+//        exception and tag index, as we don't need them anymore in this case.
 //
 // 3. Otherwise, there is one or more catch code blocks following.
 //    - In this case, we leave the pad without a last instruction for now, and
@@ -2901,9 +2905,14 @@ class FunctionCompiler {
       // exception nor its tag index. So we pop these and there's nothing else
       // to do.
       if (tagIndex == CatchAllIndex) {
+        MBasicBlock* catchAllBlock = nullptr;
+        if (!goToNewBlock(curBlock_, &catchAllBlock)) {
+          return false;
+        }
+        control.catchAllBlock = catchAllBlock;
+        curBlock_ = catchAllBlock;
         curBlock_->pop();
         curBlock_->pop();
-        control.catchAllBlock = curBlock_;
         return true;
       }
 
@@ -3036,7 +3045,7 @@ class FunctionCompiler {
     // and we don't create a table switch as we can just fallthrough.
     if (control.tryCatches.empty()) {
       MOZ_ASSERT(kind == LabelKind::CatchAll);
-      MOZ_ASSERT(control.catchAllBlock == padBlock);
+      MOZ_ASSERT(padBlock->hasLastIns());
       return true;
     }
 
@@ -3252,6 +3261,27 @@ class FunctionCompiler {
 
     curBlock_ = nullptr;
     return true;
+  }
+
+  bool rethrow(uint32_t relativeDepth) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    Control& control = iter().controlItem(relativeDepth);
+    MBasicBlock* pad = control.block;
+    MOZ_ASSERT(pad);
+    MOZ_ASSERT(pad->nslots() > 1);
+    MOZ_ASSERT(iter().controlKind(relativeDepth) == LabelKind::Catch ||
+               iter().controlKind(relativeDepth) == LabelKind::CatchAll);
+
+    // The exception will always be the last slot in the landing pad.
+    size_t exnSlotPosition = pad->nslots() - 2;
+    MDefinition* tagIndex = pad->getSlot(exnSlotPosition + 1);
+    MDefinition* exn = pad->getSlot(exnSlotPosition);
+    MOZ_ASSERT(exn->type() == MIRType::RefOrNull &&
+               tagIndex->type() == MIRType::Int32);
+    return throwFrom(exn, tagIndex);
   }
 #endif
 
@@ -3732,7 +3762,7 @@ static bool EmitRethrow(FunctionCompiler& f) {
     return false;
   }
 
-  MOZ_CRASH("NYI");
+  return f.rethrow(relativeDepth);
 }
 #endif
 
