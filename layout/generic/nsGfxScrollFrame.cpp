@@ -351,6 +351,10 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
 
   // === Filled in by ReflowScrolledFrame ===
   OverflowAreas mContentsOverflowAreas;
+  // The scrollbar gutter sizes used in the most recent reflow of
+  // mHelper.mScrolledFrame. The writing-mode is the same as the scroll
+  // container.
+  LogicalMargin mScrollbarGutterFromLastReflow;
   // True if the most recent reflow of mHelper.mScrolledFrame is with the
   // horizontal scrollbar.
   bool mReflowedContentsWithHScrollbar = false;
@@ -410,6 +414,8 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   nsSize mVScrollbarPrefSize;
   nsSize mHScrollbarMinSize;
   nsSize mHScrollbarPrefSize;
+  // The scrollbar gutter sizes resolved from the scrollbar-gutter and
+  // scrollbar-width property.
   nsMargin mScrollbarGutter;
 };
 
@@ -421,7 +427,8 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
       mBoxState(aReflowInput.mFrame->PresContext(),
                 aReflowInput.mRenderingContext),
       mComputedBorder(aReflowInput.ComputedPhysicalBorderPadding() -
-                      aReflowInput.ComputedPhysicalPadding()) {
+                      aReflowInput.ComputedPhysicalPadding()),
+      mScrollbarGutterFromLastReflow(aFrame->GetWritingMode()) {
   ScrollStyles styles = aFrame->GetScrollStyles();
   mHScrollbar = ShouldShowScrollbar(styles.mHorizontal);
   mVScrollbar = ShouldShowScrollbar(styles.mVertical);
@@ -546,23 +553,23 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
     return false;
   }
 
-  const bool assumeVScrollChanged =
-      aAssumeVScroll != aState.mReflowedContentsWithVScrollbar;
-  const bool assumeHScrollChanged =
-      aAssumeHScroll != aState.mReflowedContentsWithHScrollbar;
-  const bool isVertical = GetWritingMode().IsVertical();
+  const auto wm = GetWritingMode();
+  const nsMargin scrollbarGutter = aState.ScrollbarGutter(
+      aAssumeVScroll, aAssumeHScroll, IsScrollbarOnRight());
+  const LogicalMargin logicalScrollbarGutter(wm, scrollbarGutter);
 
-  const bool shouldReflowScolledFrame = [=]() {
-    if (isVertical) {
-      return assumeHScrollChanged ||
-             (assumeVScrollChanged && ScrolledContentDependsOnBSize(aState));
-    }
-    return assumeVScrollChanged ||
-           (assumeHScrollChanged && ScrolledContentDependsOnBSize(aState));
-  }();
+  const bool inlineEndsGutterChanged =
+      aState.mScrollbarGutterFromLastReflow.IStartEnd(wm) !=
+      logicalScrollbarGutter.IStartEnd(wm);
+  const bool blockEndsGutterChanged =
+      aState.mScrollbarGutterFromLastReflow.BStartEnd(wm) !=
+      logicalScrollbarGutter.BStartEnd(wm);
+  const bool shouldReflowScrolledFrame =
+      inlineEndsGutterChanged ||
+      (blockEndsGutterChanged && ScrolledContentDependsOnBSize(aState));
 
-  if (shouldReflowScolledFrame) {
-    if (isVertical ? assumeVScrollChanged : assumeHScrollChanged) {
+  if (shouldReflowScrolledFrame) {
+    if (blockEndsGutterChanged) {
       nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(
           mHelper.mScrolledFrame);
     }
@@ -573,8 +580,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
     ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics);
   }
 
-  const nsMargin scrollbarGutter = aState.ScrollbarGutter(
-      aAssumeVScroll, aAssumeHScroll, IsScrollbarOnRight());
   const nsSize scrollbarGutterSize(scrollbarGutter.LeftRight(),
                                    scrollbarGutter.TopBottom());
 
@@ -644,15 +649,17 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
       ToString(scrollPortSize).c_str());
   nscoord oneDevPixel = aState.mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
+  bool showHScrollbar = aAssumeHScroll;
+  bool showVScrollbar = aAssumeVScroll;
   if (!aForce) {
     nsSize sizeToCompare = visualViewportSize;
     if (gfxPlatform::UseDesktopZoomingScrollbars()) {
       sizeToCompare = scrollPortSize;
     }
 
-    // If the style is HIDDEN then we already know that aAssumeHScroll is false
+    // No need to compute showHScrollbar if we got ShowScrollbar::Never.
     if (aState.mHScrollbar != ShowScrollbar::Never) {
-      bool wantHScrollbar =
+      showHScrollbar =
           aState.mHScrollbar == ShowScrollbar::Always ||
           scrolledRect.XMost() >= sizeToCompare.width + oneDevPixel ||
           scrolledRect.x <= -oneDevPixel;
@@ -660,18 +667,15 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
       // in both axes, for consistency?
       if (aState.mHScrollbar == ShowScrollbar::Auto &&
           scrollPortSize.width < aState.HScrollbarMinWidth()) {
-        wantHScrollbar = false;
+        showHScrollbar = false;
       }
       ROOT_SCROLLBAR_LOG("TryLayout wants H Scrollbar: %d =? %d\n",
-                         wantHScrollbar, aAssumeHScroll);
-      if (wantHScrollbar != aAssumeHScroll) {
-        return false;
-      }
+                         showHScrollbar, aAssumeHScroll);
     }
 
-    // If the style is HIDDEN then we already know that aAssumeVScroll is false
+    // No need to compute showVScrollbar if we got ShowScrollbar::Never.
     if (aState.mVScrollbar != ShowScrollbar::Never) {
-      bool wantVScrollbar =
+      showVScrollbar =
           aState.mVScrollbar == ShowScrollbar::Always ||
           scrolledRect.YMost() >= sizeToCompare.height + oneDevPixel ||
           scrolledRect.y <= -oneDevPixel;
@@ -679,18 +683,27 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
       // in both axes, for consistency?
       if (aState.mVScrollbar == ShowScrollbar::Auto &&
           scrollPortSize.height < aState.VScrollbarMinHeight()) {
-        wantVScrollbar = false;
+        showVScrollbar = false;
       }
       ROOT_SCROLLBAR_LOG("TryLayout wants V Scrollbar: %d =? %d\n",
-                         wantVScrollbar, aAssumeVScroll);
-      if (wantVScrollbar != aAssumeVScroll) {
+                         showVScrollbar, aAssumeVScroll);
+    }
+
+    if (showHScrollbar != aAssumeHScroll || showVScrollbar != aAssumeVScroll) {
+      const nsMargin wantedScrollbarGutter = aState.ScrollbarGutter(
+          showVScrollbar, showHScrollbar, IsScrollbarOnRight());
+      // We report an inconsistent layout only when the desired visibility of
+      // the scrollbars can change the size of the scrollbar gutters.
+      if (scrollbarGutter != wantedScrollbarGutter) {
         return false;
       }
     }
   }
 
-  aState.mShowHScrollbar = aAssumeHScroll;
-  aState.mShowVScrollbar = aAssumeVScroll;
+  // If we reach here, the layout is consistent. Record the desired visibility
+  // of the scrollbars.
+  aState.mShowHScrollbar = showHScrollbar;
+  aState.mShowVScrollbar = showVScrollbar;
   const nsPoint scrollPortOrigin(
       aState.mComputedBorder.left + scrollbarGutter.left,
       aState.mComputedBorder.top + scrollbarGutter.top);
@@ -752,7 +765,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput& aState,
                                             bool aAssumeHScroll,
                                             bool aAssumeVScroll,
                                             ReflowOutput* aMetrics) {
-  WritingMode wm = mHelper.mScrolledFrame->GetWritingMode();
+  const WritingMode wm = GetWritingMode();
 
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
   // be OK
@@ -884,6 +897,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput& aState,
   }
 
   aState.mContentsOverflowAreas = aMetrics->mOverflowAreas;
+  aState.mScrollbarGutterFromLastReflow = scrollbarGutter;
   aState.mReflowedContentsWithHScrollbar = aAssumeHScroll;
   aState.mReflowedContentsWithVScrollbar = aAssumeVScroll;
 }

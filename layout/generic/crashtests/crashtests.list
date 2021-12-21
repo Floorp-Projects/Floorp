@@ -701,7 +701,7 @@ load 1474768.html
 load 1478178.html
 load 1483972.html
 load 1486457.html
-asserts(2-4) load 1488762-1.html # asserts from integer overflow & bogus sizes
+asserts(1-4) load 1488762-1.html # asserts from integer overflow & bogus sizes
 load 1489287.html
 load 1489863.html
 load 1489770.html
@@ -798,5 +798,5 @@ pref(layout.css.aspect-ratio.enabled,true) load 1682032.html
 pref(layout.css.aspect-ratio.enabled,true) load 1699263.html
 pref(layout.css.aspect-ratio.enabled,true) load 1699468.html
 load 1728319.html
-asserts(4-8) load 1730506.html # asserts from integer overflow & bogus sizes
+asserts(2-8) load 1730506.html # asserts from integer overflow & bogus sizes
 asserts(1-4) load 1730570.html # asserts from integer overflow & bogus sizes
