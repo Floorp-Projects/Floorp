@@ -1443,16 +1443,17 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       .forCompiledCode();
 }
 
-/* static */ void* Instance::throwException(Instance* instance, JSObject* exn) {
-  MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNullPtr);
+/* static */ int32_t Instance::throwException(Instance* instance,
+                                              JSObject* exn) {
+  MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNegI32);
 
   JSContext* cx = instance->tlsData()->cx;
   RootedValue exnVal(cx, UnboxAnyRef(AnyRef::fromJSObject(exn)));
   cx->setPendingException(exnVal, nullptr);
 
-  // By always returning a nullptr, we trigger a wasmTrap(Trap::ThrowReported),
+  // By always returning -1, we trigger a wasmTrap(Trap::ThrowReported),
   // and use that to trigger the stack walking for this exception.
-  return nullptr;
+  return -1;
 }
 
 /* static */ uint32_t Instance::consumePendingException(Instance* instance) {

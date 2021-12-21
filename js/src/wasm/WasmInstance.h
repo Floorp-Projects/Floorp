@@ -285,7 +285,7 @@ class Instance {
 #ifdef ENABLE_WASM_EXCEPTIONS
   static void* exceptionNew(Instance* instance, uint32_t exnIndex,
                             uint32_t nbytes);
-  static void* throwException(Instance* instance, JSObject* exn);
+  static int32_t throwException(Instance* instance, JSObject* exn);
   static uint32_t consumePendingException(Instance* instance);
   static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
                                 JSObject* ref);

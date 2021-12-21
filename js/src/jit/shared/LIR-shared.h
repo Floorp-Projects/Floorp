@@ -3951,6 +3951,25 @@ class LWasmStoreLaneSimd128 : public LInstructionHelper<1, 3, 1> {
 
 // End Wasm SIMD
 
+// Wasm Exception Handling
+
+class LWasmExceptionDataPointer : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmExceptionDataPointer);
+
+  explicit LWasmExceptionDataPointer(const LAllocation& exn)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, exn);
+  }
+
+  const LAllocation* exn() { return getOperand(0); }
+  MWasmExceptionDataPointer* mir() const {
+    return mir_->toWasmExceptionDataPointer();
+  }
+};
+
+// End Wasm Exception Handling
+
 }  // namespace jit
 }  // namespace js
 

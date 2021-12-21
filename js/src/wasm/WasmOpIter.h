@@ -720,6 +720,18 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // Test whether the control-stack is empty, meaning we've consumed the final
   // end of the function body.
   bool controlStackEmpty() const { return controlStack_.empty(); }
+
+  // Find the innermost control item of a specific kind, returning true if
+  // found. The relative depth of the item is returned through a parameter.
+  bool controlFindInnermost(LabelKind kind, uint32_t* relativeDepth) {
+    for (int32_t i = controlStack_.length() - 1; i >= 0; i--) {
+      if (controlStack_[i].kind() == kind) {
+        *relativeDepth = controlStack_.length() - 1 - i;
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 template <typename Policy>
@@ -1578,7 +1590,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
     block.switchToCatch();
   }
 
-  return push(env_.tags[*tagIndex].resultType());
+  return push(env_.tags[*tagIndex].type.resultType());
 }
 
 template <typename Policy>
@@ -1652,7 +1664,7 @@ inline bool OpIter<Policy>::readThrow(uint32_t* tagIndex,
     return fail("tag index out of range");
   }
 
-  if (!popWithType(env_.tags[*tagIndex].resultType(), argValues)) {
+  if (!popWithType(env_.tags[*tagIndex].type.resultType(), argValues)) {
     return false;
   }
 

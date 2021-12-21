@@ -277,8 +277,8 @@ const SymbolicAddressSignature SASigExceptionNew = {
     {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigThrowException = {
     SymbolicAddress::ThrowException,
-    _RoN,
-    _FailOnNullPtr,
+    _VOID,
+    _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigConsumePendingException = {
@@ -1296,7 +1296,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
       return FuncCast(Instance::exceptionNew, *abiType);
     case SymbolicAddress::ThrowException:
-      *abiType = Args_General2;
+      *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
     case SymbolicAddress::ConsumePendingException:
