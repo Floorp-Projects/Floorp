@@ -949,45 +949,27 @@ class Marionette(object):
             # Restore the context as used before the restart
             self.set_context(context)
 
-    def _request_in_app_shutdown(self, *shutdown_flags):
+    def _request_in_app_shutdown(self, *flags):
         """Attempt to quit the currently running instance from inside the
-        application.
-
-        Duplicate entries in `shutdown_flags` are removed, and
-        `"eForceQuit"` is added if no other `*Quit` flags are given.
-        This provides backwards compatible behaviour with earlier
-        Firefoxen.
+        application. If shutdown is prevented by some component the quit
+        will be forced.
 
         This method effectively calls `Services.startup.quit` in Gecko.
-        Possible flag values are listed at http://mzl.la/1X0JZsC.
+        Possible flag values are listed at https://bit.ly/3IYcjYi.
 
-        :param shutdown_flags: Optional additional quit masks to include.
-            Duplicates are removed, and `"eForceQuit"` is added if no
-            flags ending with `"Quit"` are present.
-
-        :throws InvalidArgumentException: If there are multiple
-            `shutdown_flags` ending with `"Quit"`.
+        :param flags: Optional additional quit masks to include.
 
         :returns: A dictionary containing details of the application shutdown.
                   The `cause` property reflects the reason, and `forced` indicates
                   that something prevented the shutdown and the application had
                   to be forced to shutdown.
+
+        :throws InvalidArgumentException: If there are multiple
+            `shutdown_flags` ending with `"Quit"`.
         """
-
-        # The vast majority of this function was implemented inside
-        # the quit command as part of bug 1337743, and can be
-        # removed from here in Firefox 55 at the earliest.
-
-        # remove duplicates
-        flags = set(shutdown_flags)
-
-        # add eForceQuit if there are no *Quits
-        if not any(flag.endswith("Quit") for flag in flags):
-            flags = flags | set(("eForceQuit",))
-
-        body = None
+        body = {}
         if len(flags) > 0:
-            body = {"flags": list(flags)}
+            body["flags"] = flags
 
         return self._send_message("Marionette:Quit", body)
 
