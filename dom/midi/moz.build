@@ -55,6 +55,9 @@ UNIFIED_SOURCES = [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
+if CONFIG["OS_TARGET"] == "Linux":
+    UNIFIED_SOURCES += ["AlsaCompatibility.cpp"]
+
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/dom/base",
