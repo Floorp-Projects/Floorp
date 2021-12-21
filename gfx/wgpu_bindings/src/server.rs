@@ -448,8 +448,8 @@ impl GlobalExt for Global {
                     error_buf.init(err);
                 }
             }
-            CommandEncoderAction::FillBuffer { dst, offset, size } => {
-                if let Err(err) = self.command_encoder_fill_buffer::<A>(self_id, dst, offset, size)
+            CommandEncoderAction::ClearBuffer { dst, offset, size } => {
+                if let Err(err) = self.command_encoder_clear_buffer::<A>(self_id, dst, offset, size)
                 {
                     error_buf.init(err);
                 }
@@ -461,6 +461,21 @@ impl GlobalExt for Global {
                 if let Err(err) =
                     self.command_encoder_clear_texture::<A>(self_id, dst, subresource_range)
                 {
+                    error_buf.init(err);
+                }
+            }
+            CommandEncoderAction::PushDebugGroup(marker) => {
+                if let Err(err) = self.command_encoder_push_debug_group::<A>(self_id, &marker) {
+                    error_buf.init(err);
+                }
+            }
+            CommandEncoderAction::PopDebugGroup => {
+                if let Err(err) = self.command_encoder_pop_debug_group::<A>(self_id) {
+                    error_buf.init(err);
+                }
+            }
+            CommandEncoderAction::InsertDebugMarker(marker) => {
+                if let Err(err) = self.command_encoder_insert_debug_marker::<A>(self_id, &marker) {
                     error_buf.init(err);
                 }
             }

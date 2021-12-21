@@ -75,6 +75,24 @@ void ComputePassEncoder::DispatchIndirect(const Buffer& aIndirectBuffer,
   }
 }
 
+void ComputePassEncoder::PushDebugGroup(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_compute_pass_push_debug_group(mPass, utf8.get(), 0);
+  }
+}
+void ComputePassEncoder::PopDebugGroup() {
+  if (mValid) {
+    ffi::wgpu_compute_pass_pop_debug_group(mPass);
+  }
+}
+void ComputePassEncoder::InsertDebugMarker(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_compute_pass_insert_debug_marker(mPass, utf8.get(), 0);
+  }
+}
+
 void ComputePassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;

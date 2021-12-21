@@ -89,6 +89,10 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
                             const dom::GPUImageCopyTexture& aDestination,
                             const dom::GPUExtent3D& aCopySize);
 
+  void PushDebugGroup(const nsAString& aString);
+  void PopDebugGroup();
+  void InsertDebugMarker(const nsAString& aString);
+
   already_AddRefed<ComputePassEncoder> BeginComputePass(
       const dom::GPUComputePassDescriptor& aDesc);
   already_AddRefed<RenderPassEncoder> BeginRenderPass(
