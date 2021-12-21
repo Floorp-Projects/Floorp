@@ -17,10 +17,6 @@ add_task(async function test_popup_conditions() {
     //   * status (defaults to false)
     { features: "location,menubar,resizable,scrollbars,status", popup: false },
     { features: "toolbar,menubar,resizable,scrollbars,status", popup: false },
-    {
-      features: "location,menubar,toolbar,resizable,scrollbars,status",
-      popup: false,
-    },
 
     // resizable defaults to true.
     { features: "location,menubar,scrollbars,status", popup: false },
@@ -31,28 +27,19 @@ add_task(async function test_popup_conditions() {
 
     // If either location or toolbar is true, not popup.
     {
-      features: "location=0,toolbar,menubar,resizable,scrollbars,status",
+      features: "toolbar,menubar,resizable,scrollbars,status",
       popup: false,
     },
     {
-      features: "location,toolbar=0,menubar,resizable,scrollbars,status",
-      popup: false,
-    },
-    {
-      features: "location,toolbar,menubar,resizable,scrollbars,status",
+      features: "location,menubar,resizable,scrollbars,status",
       popup: false,
     },
 
     // If both location and toolbar are false, popup.
-    {
-      features: "location=0,toolbar=0,menubar,resizable,scrollbars,status",
-      popup: true,
-    },
     { features: "menubar,scrollbars,status", popup: true },
 
     // If menubar is false, popup.
     { features: "location,resizable,scrollbars,status", popup: true },
-    { features: "location,menubar=0,resizable,scrollbars,status", popup: true },
 
     // If resizable is true, not popup.
     {
@@ -65,97 +52,30 @@ add_task(async function test_popup_conditions() {
 
     // If scrollbars is false, popup.
     { features: "location,menubar,resizable,status", popup: true },
-    { features: "location,menubar,resizable,scrollbars=0,status", popup: true },
 
     // If status is false, popup.
     { features: "location,menubar,resizable,scrollbars", popup: true },
-    { features: "location,menubar,resizable,scrollbars,status=0", popup: true },
 
-    // width and innerWidth have no effect.
-    { features: "location,menubar,scrollbars,status,width=100", popup: false },
+    // position and size have no effect.
     {
-      features: "location,menubar,scrollbars,status,innerWidth=100",
-      popup: false,
-    },
-
-    // outerWidth has no effect.
-    {
-      features: "location,menubar,scrollbars,status,outerWidth=100",
-      popup: false,
-    },
-
-    // left or screenX alone doesn't make it a popup.
-    {
-      features: "location,menubar,scrollbars,status,left=100",
-      popup: false,
-    },
-    {
-      features: "location,menubar,scrollbars,status,screenX=100",
-      popup: false,
-    },
-
-    // top or screenY alone doesn't make it a popup.
-    {
-      features: "location,menubar,scrollbars,status,top=100",
-      popup: false,
-    },
-    {
-      features: "location,menubar,scrollbars,status,screenY=100",
-      popup: false,
-    },
-
-    // height or innerHeight alone doesn't make it a popup.
-    {
-      features: "location,menubar,scrollbars,status,height=100",
-      popup: false,
-    },
-    {
-      features: "location,menubar,scrollbars,status,innerHeight=100",
-      popup: false,
-    },
-    // outerHeight has no effect.
-    {
-      features: "location,menubar,scrollbars,status,outerHeight=100",
+      features:
+        "location,menubar,scrollbars,status," +
+        "left=100,screenX=100,top=100,screenY=100," +
+        "width=100,innerWidth=100,outerWidth=100," +
+        "height=100,innerHeight=100,outerHeight=100",
       popup: false,
     },
 
     // Most feature defaults to false if the feature is not empty.
     // Specifying only some of them opens a popup.
-    { features: "location", popup: true },
-    { features: "toolbar", popup: true },
-    { features: "location,toolbar", popup: true },
-    { features: "menubar", popup: true },
     { features: "location,toolbar,menubar", popup: true },
-    { features: "resizable", popup: true },
-    { features: "scrollbars", popup: true },
-    { features: "status", popup: true },
-    { features: "left=500", popup: true },
-    { features: "top=500", popup: true },
-    { features: "left=500,top=500", popup: true },
-    { features: "width=500", popup: true },
-    { features: "height=500", popup: true },
-    { features: "width=500, height=500", popup: true },
+    { features: "resizable,scrollbars,status", popup: true },
 
     // Specifying unknown feature makes the feature not empty.
     { features: "someunknownfeature", popup: true },
 
-    // personalbar have no effect.
-    { features: "personalbar=0", popup: true },
-    { features: "personalbar=yes", popup: true },
-    {
-      features: "location,menubar,resizable,scrollbars,status,personalbar=0",
-      popup: false,
-    },
-    {
-      features: "location,menubar,resizable,scrollbars,status,personalbar=yes",
-      popup: false,
-    },
-
-    // noopener is removed before testing if feature is empty.
-    { features: "noopener", popup: false },
-
-    // noreferrer is removed before testing if feature is empty.
-    { features: "noreferrer", popup: false },
+    // noopener and noreferrer are removed before testing if feature is empty.
+    { features: "noopener,noreferrer", popup: false },
   ];
 
   const WINDOW_FLAGS = {
