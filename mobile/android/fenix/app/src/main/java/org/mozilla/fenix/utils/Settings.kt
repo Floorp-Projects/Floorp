@@ -490,7 +490,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         }
     }
 
-    val shouldUseDarkTheme by booleanPreference(
+    var shouldUseDarkTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_dark_theme),
         default = false
     )

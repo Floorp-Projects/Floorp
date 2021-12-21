@@ -4,8 +4,11 @@
 
 package org.mozilla.fenix.wallpapers
 
+import android.content.Context
 import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -30,6 +33,38 @@ class WallpaperManager(private val settings: Settings) {
             wallpaperContainer.setBackgroundResource(newWallpaper.drawable)
         }
         currentWallpaper = newWallpaper
+
+        adjustTheme(wallpaperContainer.context)
+    }
+
+    private fun adjustTheme(context: Context) {
+        val mode = if (currentWallpaper != Wallpaper.NONE) {
+            if (currentWallpaper.isDark) {
+                updateThemePreference(useDarkTheme = true)
+                AppCompatDelegate.MODE_NIGHT_YES
+            } else {
+                updateThemePreference(useLightTheme = true)
+                AppCompatDelegate.MODE_NIGHT_NO
+            }
+        } else {
+            updateThemePreference(followDeviceTheme = true)
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+
+        if (AppCompatDelegate.getDefaultNightMode() != mode) {
+            AppCompatDelegate.setDefaultNightMode(mode)
+            context.asActivity()?.recreate()
+        }
+    }
+
+    private fun updateThemePreference(
+        useDarkTheme: Boolean = false,
+        useLightTheme: Boolean = false,
+        followDeviceTheme: Boolean = false
+    ) {
+        settings.shouldUseDarkTheme = useDarkTheme
+        settings.shouldUseLightTheme = useLightTheme
+        settings.shouldFollowDeviceTheme = followDeviceTheme
     }
 
     /**
