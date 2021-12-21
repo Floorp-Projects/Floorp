@@ -189,8 +189,6 @@ AC_SUBST(GNU_CXX)
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-MOZ_USER_DIR=".mozilla"
-
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
 dnl Configure platform-specific CPU architecture compiler options.
@@ -547,7 +545,6 @@ case "$target" in
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
     BIN_SUFFIX='.exe'
-    MOZ_USER_DIR="Mozilla"
 
     case "$host_os" in
     cygwin*|msvc*|mks*)

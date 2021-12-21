@@ -2871,3 +2871,31 @@ with only_when(compile_environment):
     option("--disable-zipwriter", help="Disable zipwriter component")
 
     set_config("MOZ_ZIPWRITER", True, when="--enable-zipwriter")
+
+
+# Location of the mozilla user directory
+# ==============================================================
+with only_when(compile_environment):
+
+    @depends(target)
+    def default_user_appdir(target):
+        if target.kernel in ("WINNT", "Darwin"):
+            return "Mozilla"
+        return ".mozilla"
+
+    option(
+        "--with-user-appdir",
+        nargs=1,
+        default=default_user_appdir,
+        help="Set user-specific appdir",
+    )
+
+    @depends("--with-user-appdir")
+    def user_appdir(appdir):
+        if not appdir:
+            die("--without-user-appdir is not a valid option.")
+        if "/" in appdir[0]:
+            die("--with-user-appdir must be a single relative path.")
+        return '"{}"'.format(appdir[0])
+
+    set_define("MOZ_USER_DIR", user_appdir)
