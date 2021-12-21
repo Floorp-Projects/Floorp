@@ -225,8 +225,6 @@ class MediaManager final : public nsIMediaManagerService,
   using DeviceSetPromise =
       MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
   using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
-  using BadConstraintsPromise =
-      MozPromise<const char*, RefPtr<MediaMgrError>, true>;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
@@ -243,12 +241,11 @@ class MediaManager final : public nsIMediaManagerService,
   };
   enum class EnumerationFlag { AllowPermissionRequest, EnumerateAudioOutputs };
   using EnumerationFlags = EnumSet<EnumerationFlag>;
-  RefPtr<MgrPromise> EnumerateDevicesImpl(
+  RefPtr<DeviceSetPromise> EnumerateDevicesImpl(
       nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
-      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags);
 
   RefPtr<DevicePromise> SelectAudioOutput(
       nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
@@ -287,17 +284,15 @@ class MediaManager final : public nsIMediaManagerService,
                                        const MediaDeviceSet& aAudios);
 
  private:
-  RefPtr<MgrPromise> EnumerateRawDevices(
+  RefPtr<DeviceSetPromise> EnumerateRawDevices(
       dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType,
       DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags,
-      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+      DeviceEnumerationType aAudioInputEnumType, EnumerationFlags aFlags);
 
-  RefPtr<BadConstraintsPromise> SelectSettings(
+  RefPtr<DeviceSetPromise> SelectSettings(
       const dom::MediaStreamConstraints& aConstraints,
-      dom::CallerType aCallerType,
-      const RefPtr<MediaDeviceSetRefCnt>& aSources);
+      dom::CallerType aCallerType, RefPtr<MediaDeviceSetRefCnt> aDevices);
 
   void GetPref(nsIPrefBranch* aBranch, const char* aPref, const char* aData,
                int32_t* aVal);

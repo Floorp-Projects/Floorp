@@ -455,19 +455,19 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
                                        ? MediaSourceEnum::Other
                                        : MediaSourceEnum::Microphone;
 
-  auto devices = MakeRefPtr<MediaManager::MediaDeviceSetRefCnt>();
   return MediaManager::Get()
       ->EnumerateDevicesImpl(GetOwner(), MediaSourceEnum::Other, audioInputType,
                              DeviceEnumerationType::Normal,
                              DeviceEnumerationType::Normal,
-                             EnumerationFlag::EnumerateAudioOutputs, devices)
+                             EnumerationFlag::EnumerateAudioOutputs)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aDeviceId, isExposed, devices](bool) mutable {
+          [aDeviceId, isExposed](
+              RefPtr<MediaManager::MediaDeviceSetRefCnt> aDevices) mutable {
             RefPtr<AudioDeviceInfo> outputInfo;
             nsString groupId;
             // Check for a matching device.
-            for (const RefPtr<MediaDevice>& device : *devices) {
+            for (const RefPtr<MediaDevice>& device : *aDevices) {
               if (device->mKind != dom::MediaDeviceKind::Audiooutput) {
                 continue;
               }
@@ -485,7 +485,7 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
             if (outputInfo && !isExposed) {
               // Check microphone groups.
               MOZ_ASSERT(!groupId.IsEmpty());
-              for (const RefPtr<MediaDevice>& device : *devices) {
+              for (const RefPtr<MediaDevice>& device : *aDevices) {
                 if (device->mKind != dom::MediaDeviceKind::Audioinput) {
                   continue;
                 }
