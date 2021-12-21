@@ -96,7 +96,7 @@ TEST(TestGroupId, MatchInput_PartOfName)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, devices[1]->mRawGroupID)
       << "Video group id is the same as audio input group id.";
 }
 
@@ -117,7 +117,7 @@ TEST(TestGroupId, MatchInput_FullName)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, devices[1]->mRawGroupID)
       << "Video group id is the same as audio input group id.";
 }
 
@@ -137,9 +137,9 @@ TEST(TestGroupId, NoMatchInput)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
+  EXPECT_EQ(devices[0]->mRawGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_NE(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video group id is different than audio input group id.";
 }
 
@@ -167,11 +167,11 @@ TEST(TestGroupId, NoMatch_TwoIdenticalDevices)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
+  EXPECT_EQ(devices[0]->mRawGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_NE(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video group id is different from audio input group id.";
-  EXPECT_NE(devices[0]->mGroupID, audios[2]->mGroupID)
+  EXPECT_NE(devices[0]->mRawGroupID, audios[2]->mRawGroupID)
       << "Video group id is different from audio output group id.";
 }
 
@@ -198,7 +198,7 @@ TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, audios[2]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, audios[2]->mRawGroupID)
       << "Video group id is the same as audio output group id.";
 }
 
@@ -230,11 +230,11 @@ TEST(TestGroupId, NoMatch_ThreeIdenticalDevices)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
+  EXPECT_EQ(devices[0]->mRawGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_NE(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video group id is different from audio input group id.";
-  EXPECT_NE(devices[0]->mGroupID, audios[3]->mGroupID)
+  EXPECT_NE(devices[0]->mRawGroupID, audios[3]->mRawGroupID)
       << "Video group id is different from audio output group id.";
 }
 
@@ -257,7 +257,7 @@ TEST(TestGroupId, MatchOutput)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, audios[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, audios[1]->mRawGroupID)
       << "Video group id is the same as audio output group id.";
 }
 
@@ -280,7 +280,7 @@ TEST(TestGroupId, InputOutputSameName)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video input group id is the same as audio input group id.";
 }
 
@@ -299,7 +299,7 @@ TEST(TestGroupId, InputEmptyGroupId)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video input group id is the same as audio input group id.";
 }
 
@@ -318,6 +318,6 @@ TEST(TestGroupId, OutputEmptyGroupId)
 
   MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
+  EXPECT_EQ(devices[0]->mRawGroupID, audios[0]->mRawGroupID)
       << "Video input group id is the same as audio output group id.";
 }
