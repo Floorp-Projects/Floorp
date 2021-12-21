@@ -77,7 +77,9 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
+import java.util.Collections
 import java.util.Date
+import java.util.WeakHashMap
 
 @VisibleForTesting(otherwise = PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
@@ -162,6 +164,10 @@ class PromptFeature private constructor(
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var activePrompt: WeakReference<PromptDialogFragment>? = null
+
+    // This set of weak references of fragments is only used for dismissing all prompts on navigation.
+    // For all other code only `activePrompt` is tracked for now.
+    private val activePromptsToDismiss = Collections.newSetFromMap(WeakHashMap<PromptDialogFragment, Boolean>())
 
     constructor(
         activity: Activity,
@@ -303,12 +309,16 @@ class PromptFeature private constructor(
                 dismissSelectPrompts()
 
                 val prompt = activePrompt?.get()
+
                 store.consumeAllSessionPrompts(
                     sessionId = prompt?.sessionId,
                     activePrompt,
                     predicate = { it.shouldDismissOnLoad },
                     consume = { prompt?.dismiss() }
                 )
+
+                // Let's make sure we do not leave anything behind..
+                activePromptsToDismiss.forEach { fragment -> fragment.dismiss() }
             }
         }
 
@@ -747,6 +757,7 @@ class PromptFeature private constructor(
         if (canShowThisPrompt(promptRequest)) {
             dialog.show(fragmentManager, FRAGMENT_TAG)
             activePrompt = WeakReference(dialog)
+            activePromptsToDismiss.add(dialog)
         } else {
             (promptRequest as Dismissible).onDismiss()
             store.dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
