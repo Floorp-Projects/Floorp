@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -101,6 +102,7 @@ class ProviderRemoteTabs extends UrlbarProvider {
     return (
       syncUsernamePref &&
       showRemoteTabsPref &&
+      UrlbarPrefs.get("suggest.remotetab") &&
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.TABS) &&
       weaveXPCService &&
       weaveXPCService.ready &&
