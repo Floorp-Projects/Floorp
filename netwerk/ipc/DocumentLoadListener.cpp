@@ -2204,6 +2204,14 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     return NS_OK;
   }
 
+  // PerformCSPFrameAncestorAndXFOCheck may cancel a moz-extension request that
+  // needs to be handled here. Without this, the resource would be loaded and
+  // not blocked when the real channel is created in the content process.
+  if (status == NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION && !httpChannel) {
+    DisconnectListeners(status, status);
+    return NS_OK;
+  }
+
   // If this was a failed load and we want to try fixing the uri, then
   // this will initiate a new load (and disconnect this one), and we don't
   // need to do anything else.
