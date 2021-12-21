@@ -2971,6 +2971,9 @@ class FunctionCompiler {
     MWasmExceptionDataPointer* exnDataPtr =
         MWasmExceptionDataPointer::New(alloc(), exn);
     curBlock_->add(exnDataPtr);
+    MWasmExceptionRefsPointer* exnRefsPtr =
+        MWasmExceptionRefsPointer::New(alloc(), exn, tagType.refCount);
+    curBlock_->add(exnRefsPtr);
 
     MIRType type;
     size_t count = tagParams.length();
@@ -2994,7 +2997,13 @@ class FunctionCompiler {
       } else {
         MOZ_ASSERT(tagParams[i].kind() == ValType::Rtt ||
                    tagParams[i].kind() == ValType::Ref);
-        MOZ_CRASH("Reftype values in exceptions NYI in Ion");
+        auto* load =
+            MWasmLoadExceptionRefsValue::New(alloc(), exnRefsPtr, offset);
+        if (!load || !loadedValues.append(load)) {
+          return false;
+        }
+        MOZ_ASSERT(load->type() != MIRType::None);
+        curBlock_->add(load);
       }
     }
     iter().setResults(count, loadedValues);
@@ -3230,11 +3239,33 @@ class FunctionCompiler {
 
     for (int32_t i = (int32_t)tagParams.length() - 1; i >= 0; i--) {
       int32_t offset = tagType.argOffsets[i];
-      MOZ_RELEASE_ASSERT(IsNumberType(tagParams[i]) ||
-                         tagParams[i].kind() == ValType::V128);
-      MWasmStoreExceptionDataValue* store = MWasmStoreExceptionDataValue::New(
-          alloc(), exnDataPtr, offset, argValues[i]);
-      curBlock_->add(store);
+      if (IsNumberType(tagParams[i]) || tagParams[i].kind() == ValType::V128) {
+        MWasmStoreExceptionDataValue* store = MWasmStoreExceptionDataValue::New(
+            alloc(), exnDataPtr, offset, argValues[i]);
+        curBlock_->add(store);
+      } else {
+        MOZ_ASSERT(tagParams[i].kind() == ValType::Ref ||
+                   tagParams[i].kind() == ValType::Rtt);
+        MOZ_ASSERT(argValues[i]->type() != MIRType::None);
+
+        const SymbolicAddressSignature& callee = SASigPushRefIntoExn;
+        CallCompileState args;
+        if (!passInstance(callee.argTypes[0], &args)) {
+          return false;
+        }
+        if (!passArg(exn, callee.argTypes[1], &args)) {
+          return false;
+        }
+        if (!passArg(argValues[i], callee.argTypes[2], &args)) {
+          return false;
+        }
+        if (!finishCall(&args)) {
+          return false;
+        }
+        if (!builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
+          return false;
+        }
+      }
     }
 
     // Throw the exception.

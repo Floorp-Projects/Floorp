@@ -4043,10 +4043,6 @@ bool BaseCompiler::emitThrow() {
           return false;
         }
 
-        // The call result is checked by the instance call failure handling,
-        // so we do not need to use the result here.
-        freeI32(popI32());
-
         exn = popRef();
 
         // Restore scratch register contents that got clobbered.

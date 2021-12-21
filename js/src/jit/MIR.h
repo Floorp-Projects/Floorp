@@ -10503,6 +10503,56 @@ class MWasmStoreExceptionDataValue : public MBinaryInstruction,
   }
 };
 
+// Get a pointer to an exception's refs pointer stored in an ArrayObject.
+class MWasmExceptionRefsPointer : public MUnaryInstruction,
+                                  public NoTypePolicy::Data {
+  uint32_t refCount_ = 0;
+
+  MWasmExceptionRefsPointer(MDefinition* exn, uint32_t refCount)
+      : MUnaryInstruction(classOpcode, exn), refCount_(refCount) {
+    setResultType(MIRType::Pointer);
+    // This guard below is crucial in keeping the exception live where this
+    // instruction is being used to load values from the exception's refs array.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmExceptionRefsPointer)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exn))
+
+  uint32_t refCount() const { return refCount_; }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::Any);
+  }
+};
+
+// Load a Wasm reference or rtt value from an MWasmExceptionRefsPointer.
+class MWasmLoadExceptionRefsValue : public MUnaryInstruction,
+                                    public NoTypePolicy::Data {
+  int32_t offset_;
+
+  MWasmLoadExceptionRefsValue(MDefinition* exnRefsPtr, int32_t offset)
+      : MUnaryInstruction(classOpcode, exnRefsPtr), offset_(offset) {
+    setResultType(MIRType::RefOrNull);
+    // This guard below is crucial in keeping this loading instruction in an
+    // area where the MWasmExceptionRefsPointer exnRefsPtr's exn argument is
+    // live.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmLoadExceptionRefsValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exnRefsPtr))
+
+  int32_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
 // End Wasm Exception Handling
 
 #undef INSTRUCTION_HEADER
