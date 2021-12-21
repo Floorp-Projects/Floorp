@@ -1729,21 +1729,8 @@ dnl ========================================================
 AC_SUBST(MOZ_LINUX_32_SSE2_STARTUP_ERROR)
 
 dnl ========================================================
-dnl Check for pixman and cairo
+dnl Check for cairo
 dnl ========================================================
-
-MOZ_TREE_PIXMAN=1
-MOZ_ARG_ENABLE_BOOL(system-pixman,
-[ --enable-system-pixman Use system pixman (located with pkgconfig)],
-MOZ_TREE_PIXMAN=,
-MOZ_TREE_PIXMAN=force,
-MOZ_TREE_PIXMAN=1 )
-
-if test "$MOZ_TREE_PIXMAN"; then
-    AC_DEFINE(MOZ_TREE_PIXMAN)
-else
-    PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.36.0)
-fi
 
 if test "$OS_ARCH" = "WINNT"; then
     # For now we assume that we will have a uint64_t available through
@@ -1765,8 +1752,6 @@ case "$MOZ_WIDGET_TOOLKIT" in
 esac
 AC_SUBST(MOZ_ENABLE_CAIRO_FT)
 AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
-
-AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
 dnl =
