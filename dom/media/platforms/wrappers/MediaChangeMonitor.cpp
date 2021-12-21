@@ -154,7 +154,9 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   explicit VPXChangeMonitor(const VideoInfo& aInfo)
       : mCurrentConfig(aInfo),
         mCodec(VPXDecoder::IsVP8(aInfo.mMimeType) ? VPXDecoder::Codec::VP8
-                                                  : VPXDecoder::Codec::VP9) {
+                                                  : VPXDecoder::Codec::VP9),
+        mDisplayAspectRatioFromContainer((float)(aInfo.mDisplay.Width()) /
+                                         (float)(aInfo.mDisplay.Height())) {
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
   }
 
@@ -209,7 +211,14 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     }
     mInfo = Some(info);
     mCurrentConfig.mImage = info.mImage;
-    mCurrentConfig.mDisplay = info.mDisplay;
+    // For the display information, we choose to trust the container more. From
+    // our experience, the display information contained in byte stream is less
+    // trustworty. Therefore, we will update the display only when the new
+    // display matches the original DAR in the container.
+    if (FuzzyEqualsMultiplicative(info.mDisplayAspectRatio,
+                                  mDisplayAspectRatioFromContainer)) {
+      mCurrentConfig.mDisplay = info.mDisplay;
+    }
     mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
     mCurrentConfig.mColorSpace = Some(info.ColorSpace());
     mCurrentConfig.mColorRange = info.ColorRange();
@@ -237,6 +246,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   Maybe<VPXDecoder::VPXStreamInfo> mInfo;
   uint32_t mStreamID = 0;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
+  const float mDisplayAspectRatioFromContainer;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(
