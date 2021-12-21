@@ -4,9 +4,7 @@
 
 // This module converts Firefox specific types to the generic types
 
-import { clientCommands } from "./commands";
 import { hasSourceActor, getSourceActor } from "../../selectors";
-import { stringToSourceActorId } from "../../reducers/source-actors";
 
 let store;
 
@@ -29,12 +27,12 @@ export async function createFrame(thread, frame, index = 0) {
   }
 
   // Because of throttling, the source may be available a bit late.
-  const source = await waitForSourceActorToBeRegisteredInStore(
+  const sourceActor = await waitForSourceActorToBeRegisteredInStore(
     frame.where.actor
   );
 
   const location = {
-    sourceId: makeSourceId(source, thread),
+    sourceId: sourceActor.source,
     line: frame.where.line,
     column: frame.where.column,
   };
@@ -60,8 +58,7 @@ export async function createFrame(thread, frame, index = 0) {
  * @param {String} sourceActor
  *                 Actor ID of the source to be waiting for.
  */
-async function waitForSourceActorToBeRegisteredInStore(sourceActorIdString) {
-  const sourceActorId = stringToSourceActorId(sourceActorIdString);
+async function waitForSourceActorToBeRegisteredInStore(sourceActorId) {
   if (!hasSourceActor(store.getState(), sourceActorId)) {
     await new Promise(resolve => {
       const unsubscribe = store.subscribe(check);
@@ -83,16 +80,33 @@ async function waitForSourceActorToBeRegisteredInStore(sourceActorIdString) {
   return getSourceActor(store.getState(), sourceActorId);
 }
 
-export function makeSourceId(source, threadActorId) {
+// Compute the reducer's source ID for a given source front/resource.
+//
+// We have four kind of "sources":
+//   * "sources" in sources.js reducer, which map to 1 or many:
+//   * "source actors" in source-actors.js reducer, which map 1 for 1 with:
+//   * "SOURCE" resources coming from ResourceCommand API
+//   * SourceFront, which are retrieved via `ThreadFront.source(sourceResource)`
+//
+// Note that SOURCE resources are actually the "form" of the SourceActor,
+// with the addition of `resourceType` and `targetFront` attributes.
+//
+// Unfortunately, the debugger frontend interacts with these 4 type of objects.
+// The last three actually try to represent the exact same thing.
+// And this method receives the 3rd option as argument.
+export function makeSourceId(sourceResource) {
+  // Allows Jest to use custom, simplier IDs
+  if ("mockedJestID" in sourceResource) {
+    return sourceResource.mockedJestID;
+  }
   // Source actors with the same URL will be given the same source ID and
   // grouped together under the same source in the client. There is an exception
   // for sources from distinct target types, where there may be multiple processes/threads
   // running at the same time which use different versions of the same URL.
-  const target = clientCommands.lookupTarget(threadActorId);
-  if (target.isTopLevel && source.url) {
-    return `source-${source.url}`;
+  if (sourceResource.targetFront.isTopLevel && sourceResource.url) {
+    return `source-${sourceResource.url}`;
   }
-  return `source-${source.actor}`;
+  return `source-${sourceResource.actor}`;
 }
 
 export async function createPause(thread, packet) {

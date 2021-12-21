@@ -1057,6 +1057,34 @@ pub unsafe extern "C" fn wgpu_command_encoder_copy_texture_to_texture(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_push_debug_group(
+    marker: RawString,
+    bb: &mut ByteBuf,
+) {
+    let cstr = std::ffi::CStr::from_ptr(marker);
+    let string = cstr.to_str().unwrap_or_default().to_string();
+    let action = CommandEncoderAction::PushDebugGroup(string);
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_pop_debug_group(bb: &mut ByteBuf) {
+    let action = CommandEncoderAction::PopDebugGroup;
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_insert_debug_marker(
+    marker: RawString,
+    bb: &mut ByteBuf,
+) {
+    let cstr = std::ffi::CStr::from_ptr(marker);
+    let string = cstr.to_str().unwrap_or_default().to_string();
+    let action = CommandEncoderAction::InsertDebugMarker(string);
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wgpu_render_pass_set_index_buffer(
     pass: &mut wgc::command::RenderPass,
     buffer: wgc::id::BufferId,

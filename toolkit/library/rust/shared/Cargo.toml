@@ -72,6 +72,8 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], defau
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
+midir = { git = "https://github.com/mozilla/midir.git", rev = "dc87afbd4361ae5ec192e1fab0a6409dd13d4011" }
+midir_impl = { path = "../../../../dom/midi/midir_impl" }
 
 # https://github.com/mozilla/audioipc-2/commits/master
 [target.'cfg(not(target_os = "macos"))'.dependencies]

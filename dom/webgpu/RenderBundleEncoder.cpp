@@ -148,6 +148,24 @@ void RenderBundleEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
   }
 }
 
+void RenderBundleEncoder::PushDebugGroup(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_render_bundle_push_debug_group(mEncoder, utf8.get());
+  }
+}
+void RenderBundleEncoder::PopDebugGroup() {
+  if (mValid) {
+    ffi::wgpu_render_bundle_pop_debug_group(mEncoder);
+  }
+}
+void RenderBundleEncoder::InsertDebugMarker(const nsAString& aString) {
+  if (mValid) {
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_render_bundle_insert_debug_marker(mEncoder, utf8.get());
+  }
+}
+
 already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
     const dom::GPURenderBundleDescriptor& aDesc) {
   RawId id = 0;

@@ -110,14 +110,6 @@ export function resourceAsSourceActor({
   return sourceActor;
 }
 
-// Because we are using an opaque type for our source actor IDs, these
-// functions are required to convert back and forth in order to get a string
-// version of the IDs. That should be super rarely used, but it means that
-// we can very easily see where we're relying on the string version of IDs.
-export function stringToSourceActorId(s) {
-  return s;
-}
-
 export function hasSourceActor(state, id) {
   return hasResource(state.sourceActors, id);
 }
