@@ -1217,7 +1217,7 @@ richlistitem .text-link:hover {
  * .product-info section to one of them.
  */
 #firefox-mobile-vbox.advanced .product-info {
-  max-width: 200px;
+  min-width: 200px;
 }
 
 #moreFromMozillaCategory .product-img {
@@ -1258,10 +1258,6 @@ richlistitem .text-link:hover {
   margin-block: 20px 10px;
   margin-inline: 2px 0;
   padding: 16px;
-
-  min-width: 725px;
-  max-width: 725px;
-  height: 219px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1271,7 +1267,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .advanced .product-info {
-  min-height: 200px;
+  width: 500px;
 }
 
 #moreFromMozillaCategory .text-link {
@@ -1328,12 +1324,11 @@ richlistitem .text-link:hover {
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
+  border-radius: 4px;
 }
 
 .advanced .qr-code-box {
   align-items: flex-start;
-  max-width: 307px;
-  min-height: 187px;
   margin-inline-start: 12px;
 }
 
@@ -1343,6 +1338,7 @@ richlistitem .text-link:hover {
 
 .advanced .qr-code-top-box {
   align-items: center;
+  width: 310px;
 }
 
 .qr-code-box-image {
@@ -1378,6 +1374,18 @@ richlistitem .text-link:hover {
 
   margin-block: 20px 0;
   margin-inline: 40px;
+}
+
+.simple .qr-code-box-title {
+  width: 302px;
+}
+
+.simple .qr-code-box {
+  padding: 4px 20px 24px;
+}
+
+.simple .qr-code-box-image {
+  padding: 10px;
 }
 
 .advanced .qr-code-box-title {
