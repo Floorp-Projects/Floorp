@@ -2016,14 +2016,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     }
 
 #endif
-    bool alwaysAskWhereToSave =
-        !Preferences::GetBool("browser.download.useDownloadDir") &&
-        StaticPrefs::browser_download_improvements_to_download_panel();
 
-    if ((action == nsIMIMEInfo::useHelperApp ||
-         action == nsIMIMEInfo::useSystemDefault ||
-         shouldAutomaticallyHandleInternally) &&
-        !alwaysAskWhereToSave) {
+    if (action == nsIMIMEInfo::useHelperApp ||
+        action == nsIMIMEInfo::useSystemDefault ||
+        shouldAutomaticallyHandleInternally) {
       // Check if the file is local, in which case just launch it from where it
       // is. Otherwise, set the file to launch once it's finished downloading.
       rv = mIsFileChannel ? LaunchLocalFile()
