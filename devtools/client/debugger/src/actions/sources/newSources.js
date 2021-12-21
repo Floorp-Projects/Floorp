@@ -48,12 +48,7 @@ function loadSourceMaps(cx, sources) {
           const originalSources = await dispatch(
             loadSourceMap(cx, sourceActor)
           );
-          sourceQueue.queueSources(
-            originalSources.map(data => ({
-              type: "original",
-              data,
-            }))
-          );
+          sourceQueue.queueOriginalSources(originalSources);
           return originalSources;
         })
       );
@@ -200,33 +195,14 @@ function restoreBlackBoxedSources(cx, sources) {
   };
 }
 
-export function newQueuedSources(sourceInfo) {
-  return async ({ dispatch }) => {
-    const generated = [];
-    const original = [];
-    for (const source of sourceInfo) {
-      if (source.type === "generated") {
-        generated.push(source.data);
-      } else {
-        original.push(source.data);
-      }
-    }
-
-    if (generated.length > 0) {
-      await dispatch(newGeneratedSources(generated));
-    }
-    if (original.length > 0) {
-      await dispatch(newOriginalSources(original));
-    }
-  };
-}
-
+// Wrapper around newOriginalSources, only used by tests
 export function newOriginalSource(sourceInfo) {
   return async ({ dispatch }) => {
     const sources = await dispatch(newOriginalSources([sourceInfo]));
     return sources[0];
   };
 }
+
 export function newOriginalSources(sourceInfo) {
   return async ({ dispatch, getState }) => {
     const state = getState();
