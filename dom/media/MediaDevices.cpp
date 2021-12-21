@@ -28,6 +28,7 @@ namespace mozilla::dom {
 
 using EnumerationFlag = MediaManager::EnumerationFlag;
 using DeviceEnumerationType = MediaManager::DeviceEnumerationType;
+using LocalMediaDeviceSetRefCnt = MediaManager::LocalMediaDeviceSetRefCnt;
 
 MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow) {}
@@ -175,8 +176,7 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()->EnumerateDevices(window)->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [this, self,
-       aPromise](RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aDevices) {
+      [this, self, aPromise](RefPtr<LocalMediaDeviceSetRefCnt>&& aDevices) {
         nsPIDOMWindowInner* window = GetWindowIfCurrent();
         if (!window) {
           return;  // Leave Promise pending after navigation by design.
@@ -189,8 +189,8 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
         nsTHashSet<nsString> exposedMicrophoneGroupIds;
         for (auto& device : *aDevices) {
           nsString label;
-          MOZ_ASSERT(device->mKind < MediaDeviceKind::EndGuard_);
-          switch (device->mKind) {
+          MOZ_ASSERT(device->Kind() < MediaDeviceKind::EndGuard_);
+          switch (device->Kind()) {
             case MediaDeviceKind::Audioinput:
               if (mCanExposeMicrophoneInfo) {
                 exposedMicrophoneGroupIds.Insert(device->mGroupID);
@@ -221,7 +221,7 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
               // enumerators at compile time.
           }
           infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
-              device->mID, device->mKind, label, device->mGroupID));
+              device->mID, device->Kind(), label, device->mGroupID));
         }
         aPromise->MaybeResolve(std::move(infos));
       },
@@ -388,15 +388,15 @@ already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
       ->SelectAudioOutput(owner, aOptions, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this, self, p](RefPtr<MediaDevice> aDevice) {
+          [this, self, p](RefPtr<LocalMediaDevice> aDevice) {
             nsPIDOMWindowInner* window = GetWindowIfCurrent();
             if (!window) {
               return;  // Leave Promise pending after navigation by design.
             }
-            MOZ_ASSERT(aDevice->mKind == dom::MediaDeviceKind::Audiooutput);
+            MOZ_ASSERT(aDevice->Kind() == dom::MediaDeviceKind::Audiooutput);
             mExplicitlyGrantedAudioOutputIds.Insert(aDevice->mID);
             p->MaybeResolve(
-                MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->mKind,
+                MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->Kind(),
                                             aDevice->mName, aDevice->mGroupID));
           },
           [this, self, p](const RefPtr<MediaMgrError>& error) {
@@ -462,22 +462,23 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
                              EnumerationFlag::EnumerateAudioOutputs)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aDeviceId, isExposed](
-              RefPtr<MediaManager::MediaDeviceSetRefCnt> aDevices) mutable {
+          [aDeviceId,
+           isExposed](RefPtr<LocalMediaDeviceSetRefCnt> aDevices) mutable {
             RefPtr<AudioDeviceInfo> outputInfo;
             nsString groupId;
             // Check for a matching device.
-            for (const RefPtr<MediaDevice>& device : *aDevices) {
-              if (device->mKind != dom::MediaDeviceKind::Audiooutput) {
+            for (const RefPtr<LocalMediaDevice>& device : *aDevices) {
+              if (device->Kind() != dom::MediaDeviceKind::Audiooutput) {
                 continue;
               }
               if (aDeviceId.IsEmpty()) {
-                if (device->mSinkInfo->Preferred()) {
-                  outputInfo = CopyWithNullDeviceId(device->mSinkInfo);
+                if (device->GetAudioDeviceInfo()->Preferred()) {
+                  outputInfo =
+                      CopyWithNullDeviceId(device->GetAudioDeviceInfo());
                   break;
                 }
               } else if (aDeviceId.Equals(device->mID)) {
-                outputInfo = device->mSinkInfo;
+                outputInfo = device->GetAudioDeviceInfo();
                 groupId = device->mGroupID;
                 break;
               }
@@ -485,8 +486,8 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
             if (outputInfo && !isExposed) {
               // Check microphone groups.
               MOZ_ASSERT(!groupId.IsEmpty());
-              for (const RefPtr<MediaDevice>& device : *aDevices) {
-                if (device->mKind != dom::MediaDeviceKind::Audioinput) {
+              for (const RefPtr<LocalMediaDevice>& device : *aDevices) {
+                if (device->Kind() != dom::MediaDeviceKind::Audioinput) {
                   continue;
                 }
                 if (groupId.Equals(device->mGroupID)) {
