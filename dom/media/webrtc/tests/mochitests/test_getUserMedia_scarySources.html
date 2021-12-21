@@ -28,7 +28,6 @@ let getDevices = async constraints => {
 
 runTest(async () => {
   await pushPrefs(["media.navigator.permission.disabled", true],
-                  ["media.navigator.permission.fake", true],
                   ["media.navigator.permission.force", true]);
   let devices = await getDevices({video: { mediaSource: "window" }});
   ok(devices.length, "Found one or more windows.");
