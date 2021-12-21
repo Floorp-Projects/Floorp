@@ -1375,16 +1375,15 @@ class UrlbarView {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         actionSetter = () => {
-          this.document.l10n.setAttributes(
-            action,
-            "urlbar-result-action-switch-tab"
-          );
+          this._setElementL10n(action, {
+            id: "urlbar-result-action-switch-tab",
+          });
         };
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         actionSetter = () => {
-          action.removeAttribute("data-l10n-id");
+          this._removeElementL10n(action);
           action.textContent = result.payload.device;
         };
         setURL = true;
@@ -1393,37 +1392,33 @@ class UrlbarView {
         if (result.payload.inPrivateWindow) {
           if (result.payload.isPrivateEngine) {
             actionSetter = () => {
-              this.document.l10n.setAttributes(
-                action,
-                "urlbar-result-action-search-in-private-w-engine",
-                { engine: result.payload.engine }
-              );
+              this._setElementL10n(action, {
+                id: "urlbar-result-action-search-in-private-w-engine",
+                args: { engine: result.payload.engine },
+              });
             };
           } else {
             actionSetter = () => {
-              this.document.l10n.setAttributes(
-                action,
-                "urlbar-result-action-search-in-private"
-              );
+              this._setElementL10n(action, {
+                id: "urlbar-result-action-search-in-private",
+              });
             };
           }
         } else if (result.providerName == "TabToSearch") {
           actionSetter = () => {
-            this.document.l10n.setAttributes(
-              action,
-              result.payload.isGeneralPurposeEngine
+            this._setElementL10n(action, {
+              id: result.payload.isGeneralPurposeEngine
                 ? "urlbar-result-action-tabtosearch-web"
                 : "urlbar-result-action-tabtosearch-other-engine",
-              { engine: result.payload.engine }
-            );
+              args: { engine: result.payload.engine },
+            });
           };
         } else if (!result.payload.providesSearchMode) {
           actionSetter = () => {
-            this.document.l10n.setAttributes(
-              action,
-              "urlbar-result-action-search-w-engine",
-              { engine: result.payload.engine }
-            );
+            this._setElementL10n(action, {
+              id: "urlbar-result-action-search-w-engine",
+              args: { engine: result.payload.engine },
+            });
           };
         }
         break;
@@ -1432,7 +1427,7 @@ class UrlbarView {
         break;
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         actionSetter = () => {
-          action.removeAttribute("data-l10n-id");
+          this._removeElementL10n(action);
           action.textContent = result.payload.content;
         };
         break;
@@ -1500,7 +1495,9 @@ class UrlbarView {
 
     if (isVisitAction) {
       actionSetter = () => {
-        this.document.l10n.setAttributes(action, "urlbar-result-action-visit");
+        this._setElementL10n(action, {
+          id: "urlbar-result-action-visit",
+        });
       };
       title.setAttribute("isurl", "true");
     } else {
@@ -1513,7 +1510,7 @@ class UrlbarView {
       item.setAttribute("has-action", "true");
     } else {
       item._originalActionSetter = () => {
-        action.removeAttribute("data-l10n-id");
+        this._removeElementL10n(action);
         action.textContent = "";
       };
       item._originalActionSetter();
@@ -1559,11 +1556,8 @@ class UrlbarView {
     title.id = item.id + "-title";
     // Add-ons will provide text, rather than l10n ids.
     if (result.payload.textData) {
-      this.document.l10n.setAttributes(
-        title,
-        result.payload.textData.id,
-        result.payload.textData.args
-      );
+      this._l10nCache.ensureAll([result.payload.textData]);
+      this._setElementL10n(title, result.payload.textData);
     } else {
       title.textContent = result.payload.text;
     }
@@ -1574,11 +1568,8 @@ class UrlbarView {
     tipButton.id = item.id + "-tip-button";
     // Add-ons will provide buttonText, rather than l10n ids.
     if (result.payload.buttonTextData) {
-      this.document.l10n.setAttributes(
-        tipButton,
-        result.payload.buttonTextData.id,
-        result.payload.buttonTextData.args
-      );
+      this._l10nCache.ensureAll([result.payload.buttonTextData]);
+      this._setElementL10n(tipButton, result.payload.buttonTextData);
     } else {
       tipButton.textContent = result.payload.buttonText;
     }
@@ -1651,11 +1642,10 @@ class UrlbarView {
         node.style[styleName] = value;
       }
       if (update.l10n) {
-        this.document.l10n.setAttributes(
-          node,
-          update.l10n.id,
-          update.l10n.args || undefined
-        );
+        this._setElementL10n(node, {
+          id: update.l10n.id,
+          args: update.l10n.args || undefined,
+        });
       } else if (update.textContent) {
         node.textContent = update.textContent;
       }
@@ -2035,15 +2025,14 @@ class UrlbarView {
       // We localize the title instead of using the action text as a title
       // because some keyword offer results use both a title and action text
       // (e.g. tab-to-search).
-      this.document.l10n.setAttributes(
-        titleNode,
-        "urlbar-result-action-search-w-engine",
-        { engine: result.payload.engine }
-      );
+      this._setElementL10n(titleNode, {
+        id: "urlbar-result-action-search-w-engine",
+        args: { engine: result.payload.engine },
+      });
       return;
     }
 
-    titleNode.removeAttribute("data-l10n-id");
+    this._removeElementL10n(titleNode);
     this._addTextContentWithHighlights(
       titleNode,
       result.title,
@@ -2169,20 +2158,42 @@ class UrlbarView {
    *   static values like search engine names.
    */
   async _cacheL10nStrings() {
-    let idArgs = [];
+    let idArgs = [
+      { id: "urlbar-result-action-search-bookmarks" },
+      { id: "urlbar-result-action-search-history" },
+      { id: "urlbar-result-action-search-in-private" },
+      { id: "urlbar-result-action-search-tabs" },
+      { id: "urlbar-result-action-switch-tab" },
+      { id: "urlbar-result-action-visit" },
+    ];
+
+    if (Services.search.defaultPrivateEngine) {
+      idArgs.push({
+        id: "urlbar-result-action-search-in-private-w-engine",
+        args: { engine: Services.search.defaultPrivateEngine.name },
+      });
+    }
+
+    let engineNames = [
+      Services.search.defaultEngine?.name,
+      Services.search.defaultPrivateEngine?.name,
+    ].filter(name => name);
+    let engineStringIDs = [
+      "urlbar-result-action-tabtosearch-web",
+      "urlbar-result-action-tabtosearch-other-engine",
+      "urlbar-result-action-search-w-engine",
+    ];
+    for (let id of engineStringIDs) {
+      idArgs.push(...engineNames.map(name => ({ id, args: { engine: name } })));
+    }
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push(
         { id: "urlbar-group-firefox-suggest" },
-        ...[
-          Services.search.defaultEngine?.name,
-          Services.search.defaultPrivateEngine?.name,
-        ]
-          .filter(engineName => engineName)
-          .map(engineName => ({
-            id: "urlbar-group-search-suggestions",
-            args: { engine: engineName },
-          }))
+        ...engineNames.map(engineName => ({
+          id: "urlbar-group-search-suggestions",
+          args: { engine: engineName },
+        }))
       );
     }
 
@@ -2213,6 +2224,7 @@ class UrlbarView {
   _setElementL10n(element, { id, args = undefined, attribute = undefined }) {
     let message = this._l10nCache.get(id, args);
     if (message) {
+      element.removeAttribute("data-l10n-id");
       if (attribute) {
         element.setAttribute(attribute, message.attributes[attribute]);
       } else {
@@ -2233,7 +2245,7 @@ class UrlbarView {
    * @param {string} [options.attribute]
    *   If you passed an attribute to `_setElementL10n`, then pass it here too.
    */
-  _removeElementL10n(element, { attribute = undefined }) {
+  _removeElementL10n(element, { attribute = undefined } = {}) {
     if (attribute) {
       element.removeAttribute(attribute);
       element.removeAttribute("data-l10n-attrs");
@@ -2348,20 +2360,18 @@ class UrlbarView {
       if (localSearchMode) {
         // Update the result action text for a local one-off.
         let name = UrlbarUtils.getResultSourceName(localSearchMode.source);
-        this.document.l10n.setAttributes(
-          action,
-          `urlbar-result-action-search-${name}`
-        );
+        this._setElementL10n(action, {
+          id: `urlbar-result-action-search-${name}`,
+        });
         if (result.heuristic) {
           item.setAttribute("source", name);
         }
       } else if (engine && !result.payload.inPrivateWindow) {
         // Update the result action text for an engine one-off.
-        this.document.l10n.setAttributes(
-          action,
-          "urlbar-result-action-search-w-engine",
-          { engine: engine.name }
-        );
+        this._setElementL10n(action, {
+          id: "urlbar-result-action-search-w-engine",
+          args: { engine: engine.name },
+        });
       } else {
         // No one-off is selected. If we replaced the action while a one-off
         // button was selected, it should be restored.
