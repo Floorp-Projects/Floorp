@@ -15,9 +15,8 @@ import androidx.core.app.NotificationCompat.BADGE_ICON_NONE
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.state.store.BrowserStore
@@ -32,18 +31,16 @@ class PoweredByNotification(
     private val applicationContext: Context,
     private val store: BrowserStore,
     private val customTabId: String
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         if (store.state.findCustomTab(customTabId)?.config?.externalAppType === ExternalAppType.TRUSTED_WEB_ACTIVITY) {
             NotificationManagerCompat.from(applicationContext)
                 .notify(applicationContext, NOTIFICATION_TAG, buildNotification())
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
         NotificationManagerCompat.from(applicationContext)
             .cancel(applicationContext, NOTIFICATION_TAG)
     }

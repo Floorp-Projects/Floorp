@@ -38,7 +38,7 @@ class StoreProviderFactory<T : Store<*, *>>(
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
-    override fun <VM : ViewModel?> create(modelClass: Class<VM>): VM {
+    override fun <VM : ViewModel> create(modelClass: Class<VM>): VM {
         return StoreProvider(createStore()) as VM
     }
 }

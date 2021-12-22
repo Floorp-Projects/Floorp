@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.telemetry
 
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.android.Clock
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
@@ -22,16 +22,14 @@ import org.mozilla.fenix.GleanMetrics.EngineTab.foregroundMetricsKeys as Metrics
  */
 class TelemetryLifecycleObserver(
     private val store: BrowserStore
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
     private var pausedState: TabState? = null
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
         pausedState = createTabState()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         val lastState = pausedState ?: return
         val currentState = createTabState()
 

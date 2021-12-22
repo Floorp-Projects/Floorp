@@ -5,9 +5,9 @@
 package org.mozilla.fenix.components.metrics
 
 import android.os.Bundle
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import mozilla.components.concept.base.crash.Breadcrumb
@@ -23,15 +23,13 @@ class BreadcrumbsRecorder(
     private val crashReporter: CrashReporter,
     private val navController: NavController,
     private val getBreadcrumbMessage: (NavDestination) -> String
-) : NavController.OnDestinationChangedListener, LifecycleObserver {
+) : NavController.OnDestinationChangedListener, DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
+    override fun onCreate(owner: LifecycleOwner) {
         navController.addOnDestinationChangedListener(this)
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         navController.removeOnDestinationChangedListener(this)
     }
 

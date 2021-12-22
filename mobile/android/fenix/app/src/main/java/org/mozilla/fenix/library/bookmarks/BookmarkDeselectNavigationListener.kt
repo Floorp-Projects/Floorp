@@ -5,9 +5,8 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.os.Bundle
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import org.mozilla.fenix.R
@@ -16,15 +15,13 @@ class BookmarkDeselectNavigationListener(
     private val navController: NavController,
     private val viewModel: BookmarksSharedViewModel,
     private val bookmarkInteractor: BookmarkViewInteractor
-) : NavController.OnDestinationChangedListener, LifecycleObserver {
+) : NavController.OnDestinationChangedListener, DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         navController.addOnDestinationChangedListener(this)
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         navController.removeOnDestinationChangedListener(this)
     }
 

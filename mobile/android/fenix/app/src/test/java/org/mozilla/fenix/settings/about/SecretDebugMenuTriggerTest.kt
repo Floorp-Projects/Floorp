@@ -13,6 +13,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
@@ -78,7 +79,7 @@ class SecretDebugMenuTriggerTest {
         val trigger = SecretDebugMenuTrigger(logoView, settings)
 
         clickListener.captured.onClick(logoView)
-        trigger.clearClickCounter()
+        trigger.onResume(mockk())
 
         clickListener.captured.onClick(logoView)
 

@@ -5,24 +5,19 @@
 package org.mozilla.fenix.settings
 
 import android.content.SharedPreferences
-import androidx.lifecycle.Lifecycle.Event.ON_CREATE
-import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
-import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 
 class OnSharedPreferenceChangeListener(
     private val sharedPreferences: SharedPreferences,
     private val listener: (SharedPreferences, String) -> Unit
-) : SharedPreferences.OnSharedPreferenceChangeListener, LifecycleObserver {
+) : SharedPreferences.OnSharedPreferenceChangeListener, DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(ON_CREATE)
-    fun onCreate() {
+    override fun onCreate(owner: LifecycleOwner) {
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
-    @OnLifecycleEvent(ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 

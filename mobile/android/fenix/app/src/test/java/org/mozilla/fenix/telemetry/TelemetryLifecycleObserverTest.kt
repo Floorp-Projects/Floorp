@@ -47,7 +47,7 @@ class TelemetryLifecycleObserverTest {
     fun `resume without a pause does not record any metrics`() {
         val store = BrowserStore()
         val observer = TelemetryLifecycleObserver(store)
-        observer.onResume()
+        observer.onResume(mockk())
 
         assertFalse(EngineMetrics.foregroundMetrics.testHasValue())
     }
@@ -57,11 +57,11 @@ class TelemetryLifecycleObserverTest {
         val store = BrowserStore()
         val observer = TelemetryLifecycleObserver(store)
 
-        observer.onPause()
+        observer.onPause(mockk())
 
         clock.elapsedTime = 550
 
-        observer.onResume()
+        observer.onResume(mockk())
 
         assertTrue(EngineMetrics.foregroundMetrics.testHasValue())
 
@@ -92,7 +92,7 @@ class TelemetryLifecycleObserverTest {
 
         clock.elapsedTime = 120
 
-        observer.onPause()
+        observer.onPause(mockk())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("theverge")
@@ -104,7 +104,7 @@ class TelemetryLifecycleObserverTest {
 
         clock.elapsedTime = 10340
 
-        observer.onResume()
+        observer.onResume(mockk())
 
         assertTrue(EngineMetrics.foregroundMetrics.testHasValue())
 

@@ -30,7 +30,7 @@ class PoweredByNotificationTest {
         )
 
         val feature = PoweredByNotification(testContext, store, "session-id")
-        feature.onResume()
+        feature.onResume(mockk())
     }
 
     @Test
@@ -45,12 +45,12 @@ class PoweredByNotificationTest {
         )
 
         val feature = PoweredByNotification(testContext, store, "session-id")
-        feature.onResume()
+        feature.onResume(mockk())
     }
 
     @Test
     fun `unregister receiver on pause`() {
         val feature = PoweredByNotification(testContext, mockk(), "session-id")
-        feature.onPause()
+        feature.onPause(mockk())
     }
 }

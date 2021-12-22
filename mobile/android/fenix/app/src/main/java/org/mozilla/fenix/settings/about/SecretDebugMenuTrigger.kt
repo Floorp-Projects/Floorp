@@ -6,9 +6,8 @@ package org.mozilla.fenix.settings.about
 
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
@@ -18,7 +17,7 @@ import org.mozilla.fenix.utils.Settings
 class SecretDebugMenuTrigger(
     logoView: View,
     private val settings: Settings
-) : View.OnClickListener, LifecycleObserver {
+) : View.OnClickListener, DefaultLifecycleObserver {
 
     private var secretDebugMenuClicks = 0
     private var lastDebugMenuToast: Toast? = null
@@ -32,8 +31,7 @@ class SecretDebugMenuTrigger(
     /**
      * Reset the [secretDebugMenuClicks] counter.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun clearClickCounter() {
+    override fun onResume(owner: LifecycleOwner) {
         secretDebugMenuClicks = 0
     }
 
