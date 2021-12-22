@@ -12,8 +12,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """openSUSE experimental bootstrapper."""
 
     SYSTEM_PACKAGES = [
-        "nodejs",
-        "npm",
         "which",
         "rpmconf",
         "libcurl-devel",
