@@ -21,6 +21,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [
+        "-framework CoreFoundation",
         "-framework Security",
     ]
 
