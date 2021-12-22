@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2015 Janne Grunau <janne-libav@jannau.net>
- *
+/**
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -18,33 +16,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVUTIL_AARCH64_TIMER_H
-#define AVUTIL_AARCH64_TIMER_H
+#include "film_grain_params.h"
 
-#include <stdint.h>
-#include "config.h"
-
-#if defined(__APPLE__)
-
-#include <mach/mach_time.h>
-
-#define AV_READ_TIME mach_absolute_time
-
-#elif HAVE_INLINE_ASM
-
-#define AV_READ_TIME read_time
-
-static inline uint64_t read_time(void)
+AVFilmGrainParams *av_film_grain_params_alloc(size_t *size)
 {
-    uint64_t cycle_counter;
-    __asm__ volatile(
-        "isb                   \t\n"
-        "mrs %0, pmccntr_el0       "
-        : "=r"(cycle_counter) :: "memory" );
+    AVFilmGrainParams *params = av_mallocz(sizeof(AVFilmGrainParams));
 
-    return cycle_counter;
+    if (size)
+        *size = sizeof(*params);
+
+    return params;
 }
 
-#endif /* HAVE_INLINE_ASM */
+AVFilmGrainParams *av_film_grain_params_create_side_data(AVFrame *frame)
+{
+    AVFrameSideData *side_data = av_frame_new_side_data(frame,
+                                                        AV_FRAME_DATA_FILM_GRAIN_PARAMS,
+                                                        sizeof(AVFilmGrainParams));
+    if (!side_data)
+        return NULL;
 
-#endif /* AVUTIL_AARCH64_TIMER_H */
+    memset(side_data->data, 0, sizeof(AVFilmGrainParams));
+
+    return (AVFilmGrainParams *)side_data->data;
+}
