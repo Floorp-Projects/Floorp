@@ -111,6 +111,15 @@ double HTMLMeterElement::Value() const {
   return std::min(value, Max());
 }
 
+double HTMLMeterElement::Position() const {
+  const double max = Max();
+  const double min = Min();
+  const double value = Value();
+
+  double range = max - min;
+  return range != 0.0 ? (value - min) / range : 1.0;
+}
+
 double HTMLMeterElement::Low() const {
   /**
    * If the low value is defined, the low value is this value.
