@@ -1606,6 +1606,7 @@ var Policies = {
         "app.update.channel",
         "app.update.lastUpdateTime",
         "app.update.migrated",
+        "browser.vpn_promo.disallowed_regions",
       ];
 
       for (let preference in param) {
