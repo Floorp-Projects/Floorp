@@ -26,17 +26,7 @@ async function promiseDownloadFinished(list) {
  * download sources using the principal (origin) that generated the blob.
  */
 add_task(async function test_check_blob_origin_representation() {
-  // Force prompts for txt files:
-  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
-    Ci.nsIHandlerService
-  );
-  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-
-  let txtHandlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", "txt");
-  txtHandlerInfo.preferredAction = Ci.nsIHandlerInfo.alwaysAsk;
-  txtHandlerInfo.alwaysAskBeforeHandling = true;
-  handlerSvc.store(txtHandlerInfo);
-  registerCleanupFunction(() => handlerSvc.remove(txtHandlerInfo));
+  forcePromptForFiles("text/plain", "txt");
 
   await BrowserTestUtils.withNewTab("https://example.org/1", async browser => {
     // Ensure we wait for the download to finish:
@@ -71,6 +61,9 @@ add_task(async function test_check_blob_origin_representation() {
 
     // Close the dialog
     let closedPromise = BrowserTestUtils.windowClosed(dialogWin);
+    // Ensure we're definitely saving (otherwise this depends on mime service
+    // defaults):
+    dialogWin.document.getElementById("save").click();
     let dialogNode = dialogWin.document.querySelector("dialog");
     dialogNode.getButton("accept").disabled = false;
     dialogNode.acceptDialog();
