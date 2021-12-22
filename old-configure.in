@@ -1359,17 +1359,6 @@ AC_TRY_COMPILE([#include <linux/ethtool.h>],
 AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
 
 dnl ========================================================
-dnl = Apple platform decoder support
-dnl ========================================================
-if test "$COMPILE_ENVIRONMENT"; then
-if test -n "$MOZ_APPLEMEDIA"; then
-  dnl Verify CoreMedia is available.
-  AC_CHECK_HEADERS([CoreMedia/CoreMedia.h VideoToolbox/VideoToolbox.h], [],
-    [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
-fi
-fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
 dnl Gamepad support
 dnl ========================================================
 
