@@ -375,6 +375,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
       maxHelperThreads(TuningDefaults::MaxHelperThreads),
       helperThreadCount(1),
+      createBudgetCallback(nullptr),
       rootsHash(256),
       nextCellUniqueId_(LargestTaggedNullCellPointer +
                         1),  // Ensure disjoint from null tagged pointers.
@@ -1411,16 +1412,21 @@ bool GCRuntime::isCompactingGCEnabled() const {
          rt->mainContextFromOwnThread()->compactingDisabledCount == 0;
 }
 
-SliceBudget::SliceBudget(TimeBudget time, int64_t stepsPerTimeCheckArg)
+JS_PUBLIC_API void JS::SetCreateGCSliceBudgetCallback(
+    JSContext* cx, JS::CreateSliceBudgetCallback cb) {
+  cx->runtime()->gc.createBudgetCallback = cb;
+}
+
+SliceBudget::SliceBudget(TimeBudget time, InterruptRequestFlag* interrupt)
     : budget(TimeBudget(time)),
-      stepsPerTimeCheck(stepsPerTimeCheckArg),
-      counter(stepsPerTimeCheckArg) {
+      interruptRequested(interrupt),
+      counter(StepsPerExpensiveCheck) {
   budget.as<TimeBudget>().deadline =
       ReallyNow() + TimeDuration::FromMilliseconds(timeBudget());
 }
 
 SliceBudget::SliceBudget(WorkBudget work)
-    : budget(work), counter(work.budget) {}
+    : budget(work), interruptRequested(nullptr), counter(work.budget) {}
 
 int SliceBudget::describe(char* buffer, size_t maxlen) const {
   if (isUnlimited()) {
@@ -1428,7 +1434,8 @@ int SliceBudget::describe(char* buffer, size_t maxlen) const {
   } else if (isWorkBudget()) {
     return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
   } else {
-    return snprintf(buffer, maxlen, "%" PRId64 "ms", timeBudget());
+    return snprintf(buffer, maxlen, "%" PRId64 "ms%s", timeBudget(),
+                    interruptRequested ? ", interruptible" : "");
   }
 }
 
@@ -1440,11 +1447,20 @@ bool SliceBudget::checkOverBudget() {
     return true;
   }
 
+  if (interruptRequested && *interruptRequested) {
+    *interruptRequested = false;
+    interrupted = true;
+  }
+
+  if (interrupted) {
+    return true;
+  }
+
   if (ReallyNow() >= budget.as<TimeBudget>().deadline) {
     return true;
   }
 
-  counter = stepsPerTimeCheck;
+  counter = StepsPerExpensiveCheck;
   return false;
 }
 
@@ -3891,6 +3907,9 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 }
 
 SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
+  // millis == 0 means use internal GC scheduling logic to come up with
+  // a duration for the slice budget. This may end up still being zero
+  // based on preferences.
   if (millis == 0) {
     if (reason == JS::GCReason::ALLOC_TRIGGER) {
       millis = defaultSliceBudgetMS();
@@ -3901,6 +3920,13 @@ SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
     }
   }
 
+  // If the embedding has registered a callback for creating SliceBudgets,
+  // then use it.
+  if (createBudgetCallback) {
+    return createBudgetCallback(reason, millis);
+  }
+
+  // Otherwise, the preference can request an unlimited duration slice.
   if (millis == 0) {
     return SliceBudget::unlimited();
   }
