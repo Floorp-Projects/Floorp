@@ -3499,7 +3499,11 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
 
 #ifdef MOZ_WAYLAND
 void nsWindow::CreateCompositorVsyncDispatcher() {
+  LOG_VSYNC("nsWindow::CreateCompositorVsyncDispatcher()");
   if (!mWaylandVsyncSource) {
+    LOG_VSYNC(
+        "  mWaylandVsyncSource is missing, create "
+        "nsBaseWidget::CompositorVsyncDispatcher()");
     nsBaseWidget::CreateCompositorVsyncDispatcher();
     return;
   }
@@ -3511,6 +3515,7 @@ void nsWindow::CreateCompositorVsyncDispatcher() {
     }
     MutexAutoLock lock(*mCompositorVsyncDispatcherLock);
     if (!mCompositorVsyncDispatcher) {
+      LOG_VSYNC("  create CompositorVsyncDispatcher()");
       mCompositorVsyncDispatcher =
           new CompositorVsyncDispatcher(mWaylandVsyncSource);
     }
@@ -5843,6 +5848,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       StaticPrefs::widget_wayland_vsync_enabled_AtStartup() &&
       mWindowType == eWindowType_toplevel) {
     mWaylandVsyncSource = new WaylandVsyncSource();
+    LOG_VSYNC("  created WaylandVsyncSource)");
     MOZ_RELEASE_ASSERT(mWaylandVsyncSource);
   }
 #endif
@@ -5876,8 +5882,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
                    nullptr);
 
-  LOG("nsWindow type %d %s\n", mWindowType, mIsPIPWindow ? "PIP window" : "");
-  LOG("\tmShell %p mContainer %p mGdkWindow %p XID 0x%lx\n", mShell, mContainer,
+  LOG("  nsWindow type %d %s\n", mWindowType, mIsPIPWindow ? "PIP window" : "");
+  LOG("  mShell %p mContainer %p mGdkWindow %p XID 0x%lx\n", mShell, mContainer,
       mGdkWindow,
       (GdkIsX11Display() && mGdkWindow) ? gdk_x11_window_get_xid(mGdkWindow)
                                         : 0);
@@ -6157,7 +6163,7 @@ void nsWindow::WaylandStartVsync() {
     return;
   }
 
-  LOG("nsWindow::WaylandStartVsync()");
+  LOG_VSYNC("nsWindow::WaylandStartVsync");
 
   WaylandVsyncSource::WaylandDisplay& display =
       static_cast<WaylandVsyncSource::WaylandDisplay&>(
@@ -6167,8 +6173,10 @@ void nsWindow::WaylandStartVsync() {
     if (RefPtr<layers::NativeLayerRoot> nativeLayerRoot =
             mCompositorWidgetDelegate->AsGtkCompositorWidget()
                 ->GetNativeLayerRoot()) {
+      LOG_VSYNC("  use source NativeLayerRootWayland");
       display.MaybeUpdateSource(nativeLayerRoot->AsNativeLayerRootWayland());
     } else {
+      LOG_VSYNC("  use source mContainer");
       display.MaybeUpdateSource(mContainer);
     }
   }
@@ -6178,16 +6186,19 @@ void nsWindow::WaylandStartVsync() {
 
 void nsWindow::WaylandStopVsync() {
 #ifdef MOZ_WAYLAND
-  if (mWaylandVsyncSource) {
-    LOG("nsWindow::WaylandStopVsync()");
-    // The widget is going to be hidden, so clear the surface of our
-    // vsync source.
-    WaylandVsyncSource::WaylandDisplay& display =
-        static_cast<WaylandVsyncSource::WaylandDisplay&>(
-            mWaylandVsyncSource->GetGlobalDisplay());
-    display.DisableMonitor();
-    display.MaybeUpdateSource(nullptr);
+  if (!mWaylandVsyncSource) {
+    return;
   }
+
+  LOG_VSYNC("nsWindow::WaylandStopVsync");
+
+  // The widget is going to be hidden, so clear the surface of our
+  // vsync source.
+  WaylandVsyncSource::WaylandDisplay& display =
+      static_cast<WaylandVsyncSource::WaylandDisplay&>(
+          mWaylandVsyncSource->GetGlobalDisplay());
+  display.DisableMonitor();
+  display.MaybeUpdateSource(nullptr);
 #endif
 }
 
