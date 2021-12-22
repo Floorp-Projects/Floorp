@@ -600,7 +600,7 @@ class CalleeDesc {
   }
   uint32_t tableFunctionBaseGlobalDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.globalDataOffset_ + offsetof(TableTls, functionBase);
+    return u.table.globalDataOffset_ + offsetof(TableTls, elements);
   }
   TypeIdDesc wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);

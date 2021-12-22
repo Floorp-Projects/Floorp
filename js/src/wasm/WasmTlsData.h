@@ -166,7 +166,7 @@ struct TableTls {
 
   // Pointer to the array of elements (which can have various representations).
   // For tables of anyref this is null.
-  void* functionBase;
+  void* elements;
 };
 
 // Table element for TableRepr::Func which carries both the code pointer and
