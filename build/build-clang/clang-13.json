@@ -19,6 +19,7 @@
       "llvmorg-14-init-4465-g22ea0cea595e-v2.patch",
       "llvmorg-14-init-6706-g6404f4b5af39.patch",
       "llvmorg-14-init-9105-g3c47c5ca13b8.patch",
-      "llvmorg-14-init-11347-g93a20ecee4b6.patch"
+      "llvmorg-14-init-11347-g93a20ecee4b6.patch",
+      "D116020.patch"
     ]
 }
