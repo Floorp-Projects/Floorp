@@ -1254,5 +1254,7 @@ set_define("MOZJS_MINOR_VERSION", js_version.minor)
 set_config("MOZJS_PATCH_VERSION", depends(js_version.patch)(lambda p: str(p)))
 set_config(
     "MOZJS_ALPHA",
-    depends(js_version)(lambda x: x.version[-2] if str(x.version[-2]) in "ab" else None),
+    depends(js_version)(
+        lambda x: x.version[-2] if str(x.version[-2]) in "ab" else None
+    ),
 )
