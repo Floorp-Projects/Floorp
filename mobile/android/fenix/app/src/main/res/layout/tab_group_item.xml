@@ -17,6 +17,7 @@
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/primary_text_normal_theme"
         app:srcCompat="@drawable/ic_search" />
 
     <TextView
@@ -28,6 +29,7 @@
         android:gravity="start"
         android:maxLines="1"
         android:textAppearance="@style/Header16TextStyle"
+        android:textColor="@color/primary_text_normal_theme"
         app:layout_constraintBottom_toBottomOf="@id/group_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
