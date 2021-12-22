@@ -219,9 +219,16 @@ class nsHtml5StreamParser final : public nsISupports {
 
   void RememberGt(int32_t aPos);
 
-  void PostEncodingCommitter();
-
   // Not from an external interface
+
+  /**
+   * Post a runnable to the main thread to perform the speculative load
+   * operations without performing the tree operations.
+   *
+   * This should be called at the end of each data available or stop
+   * request runnable running on the parser thread.
+   */
+  void PostLoadFlusher();
 
   /**
    * Pass a buffer to chardetng.

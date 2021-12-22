@@ -22,6 +22,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/LinkedList.h"
 #include "nsHtml5DocumentBuilder.h"
+#include "nsCharsetSource.h"
 
 class nsHtml5Parser;
 class nsHtml5StreamParser;
@@ -59,21 +60,6 @@ class nsHtml5TreeOpExecutor final
    * Whether EOF needs to be suppressed
    */
   bool mSuppressEOF;
-
-  /**
-   * Set to true if CommitToInternalEncoding() was unable to flush all
-   * pending operations. In that case, this flag signals to
-   * ContinueInterruptedParsingAsync() that another attempt to call
-   * CommitToInternalEncoding() (from the event loop) is need.
-   *
-   * This may happen in particular when extensions inject scripts
-   * to the document, and the script injection prevents
-   * CommitToInternalEncoding() from completing in one attempt.
-   *
-   * This can also happen as a result of the flush being slow enough
-   * that the flush is interrupted based on time.
-   */
-  bool mPendingEncodingCommitment;
 
   bool mReadingFromStage;
   nsTArray<nsHtml5TreeOperation> mOpQueue;
@@ -194,15 +180,20 @@ class nsHtml5TreeOpExecutor final
 
   void RunFlushLoop();
 
-  void RunFlushLoopOrCommitToInternalEncoding();
-
   nsresult FlushDocumentWrite();
 
   void CommitToInternalEncoding();
 
+  void TakeOpsFromStage();
+
   void MaybeSuspend();
 
   void Start();
+
+  void SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
+                                   nsCharsetSource aCharsetSource);
+
+  void UpdateCharsetSource(nsCharsetSource aCharsetSource);
 
   void NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding, int32_t aSource,
                             uint32_t aLineNumber);
