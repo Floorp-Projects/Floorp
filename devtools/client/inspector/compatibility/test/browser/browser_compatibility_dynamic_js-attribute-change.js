@@ -11,11 +11,11 @@ const {
 
 // Test the behavior rules are dynamically added
 
-const ISSUE_CURSOR = {
+const ISSUE_BINDING = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "cursor",
-  url: "https://developer.mozilla.org/docs/Web/CSS/cursor",
-  deprecated: false,
+  property: "-moz-binding",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
+  deprecated: true,
   experimental: false,
 };
 
@@ -31,7 +31,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .issue {
-      cursor: grab;
+      -moz-binding: none;
     }
   </style>
   <body>
@@ -80,8 +80,8 @@ add_task(async function() {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_HYPHENS, ISSUE_CURSOR],
-    [ISSUE_HYPHENS, ISSUE_CURSOR],
+    [ISSUE_HYPHENS, ISSUE_BINDING],
+    [ISSUE_HYPHENS, ISSUE_BINDING],
     async function() {
       content.document.querySelector(".test").classList.add("issue");
     }
