@@ -80,7 +80,6 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "mozilla/IdleTaskRunner.h"
 #include "nsViewManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/ProfilerLabels.h"
@@ -1924,6 +1923,11 @@ static bool ConsumeStream(JSContext* aCx, JS::HandleObject aObj,
                                        nullptr);
 }
 
+static js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason,
+                                           int64_t aMillis) {
+  return sScheduler.CreateGCSliceBudget(aReason, aMillis);
+}
+
 void nsJSContext::EnsureStatics() {
   if (sIsInitialized) {
     if (!nsContentUtils::XPConnect()) {
@@ -1939,6 +1943,8 @@ void nsJSContext::EnsureStatics() {
   jsapi.Init();
 
   sPrevGCSliceCallback = JS::SetGCSliceCallback(jsapi.cx(), DOMGCSliceCallback);
+
+  JS::SetCreateGCSliceBudgetCallback(jsapi.cx(), CreateGCSliceBudget);
 
   JS::InitDispatchToEventLoop(jsapi.cx(), DispatchToEventLoop, nullptr);
   JS::InitConsumeStreamCallback(jsapi.cx(), ConsumeStream,
