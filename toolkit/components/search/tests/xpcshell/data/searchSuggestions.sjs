@@ -142,11 +142,13 @@ function handleRequest(request, response) {
     response.setStatusLine(request.httpVersion, q.replace("HTTP ", ""), q);
     writeSuggestions(q, [q]);
   } else if (q && q.startsWith("delay")) {
-    // Delay the response by 200 milliseconds (less than the timeout but hopefully enough to abort
-    // before completion).
+    // Delay the response by delayMs milliseconds. 200ms is the default, less
+    // than the timeout but hopefully enough to abort before completion.
+    let match = /^delay([0-9]+)/.exec(q);
+    let delayMs = match ? parseInt(match[1]) : 200;
     response.processAsync();
     writeSuggestions(q, [q]);
-    setTimeout(() => response.finish(), 200);
+    setTimeout(() => response.finish(), delayMs);
   } else if (q && q.startsWith("slow ")) {
     // Delay the response by 10 seconds so the client timeout is reached.
     response.processAsync();

@@ -26,6 +26,8 @@ const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_KEY_PREFIX = "sggt";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
+const SEARCH_TELEMETRY_LATENCY = "SEARCH_SUGGESTIONS_LATENCY_MS";
+
 /**
  * Generates an UUID.
  *
@@ -364,6 +366,37 @@ SearchSuggestionController.prototype = {
   },
 
   /**
+   * Records per-engine telemetry after a search has finished.
+   *
+   * @param {string} engineId
+   * @param {boolean} privateMode
+   *   Whether the search was in a private context.
+   * @param {boolean} [aborted]
+   *   Whether the search was aborted.
+   */
+  _reportTelemetryForEngine(engineId, privateMode, aborted = false) {
+    this._reportBandwidthForEngine(engineId, privateMode);
+
+    // Stop the latency stopwatch.
+    if (this._requestStopwatchToken) {
+      if (aborted) {
+        TelemetryStopwatch.cancelKeyed(
+          SEARCH_TELEMETRY_LATENCY,
+          engineId,
+          this._requestStopwatchToken
+        );
+      } else {
+        TelemetryStopwatch.finishKeyed(
+          SEARCH_TELEMETRY_LATENCY,
+          engineId,
+          this._requestStopwatchToken
+        );
+      }
+      this._requestStopwatchToken = null;
+    }
+  },
+
+  /**
    * Report bandwidth used by search activities. It only reports when it matches
    * search provider information.
    *
@@ -450,13 +483,13 @@ SearchSuggestionController.prototype = {
       this._onRemoteLoaded.bind(this, deferredResponse, engineId, privateMode)
     );
     this._request.addEventListener("error", evt => {
-      this._reportBandwidthForEngine(engineId, privateMode);
+      this._reportTelemetryForEngine(engineId, privateMode);
       deferredResponse.resolve("HTTP error");
     });
     // Reject for an abort assuming it's always from .stop() in which case we shouldn't return local
     // or remote results for existing searches.
     this._request.addEventListener("abort", evt => {
-      this._reportBandwidthForEngine(engineId, privateMode);
+      this._reportTelemetryForEngine(engineId, privateMode, true);
       deferredResponse.reject("HTTP request aborted");
     });
 
@@ -465,6 +498,24 @@ SearchSuggestionController.prototype = {
     } else {
       this._request.send();
     }
+
+    // Start the latency stopwatch, but first cancel the current one if any.
+    // `_requestStopwatchToken` is used to associate a stopwatch with each new
+    // remote fetch. It also keeps track of the engine ID that was used for the
+    // fetch, which is useful since the histogram is keyed on it.
+    if (this._requestStopwatchToken) {
+      TelemetryStopwatch.cancelKeyed(
+        SEARCH_TELEMETRY_LATENCY,
+        this._requestStopwatchToken.engineId,
+        this._requestStopwatchToken
+      );
+    }
+    this._requestStopwatchToken = { engineId };
+    TelemetryStopwatch.startKeyed(
+      SEARCH_TELEMETRY_LATENCY,
+      engineId,
+      this._requestStopwatchToken
+    );
 
     return deferredResponse;
   },
@@ -482,14 +533,14 @@ SearchSuggestionController.prototype = {
    * @private
    */
   _onRemoteLoaded(deferredResponse, engineId, privateMode) {
+    this._reportTelemetryForEngine(engineId, privateMode);
+
     if (!this._request) {
       deferredResponse.resolve(
         "Got HTTP response after the request was cancelled"
       );
       return;
     }
-
-    this._reportBandwidthForEngine(engineId, privateMode);
 
     let status, serverResults;
     try {
@@ -732,6 +783,8 @@ SearchSuggestionController.engineOffersSuggestions = function(engine) {
  * The maximum length of a value to be stored in search history.
  */
 SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH = 255;
+
+SearchSuggestionController.REMOTE_TIMEOUT_DEFAULT = REMOTE_TIMEOUT_DEFAULT;
 
 /**
  * The maximum time (ms) to wait before giving up on a remote suggestions.
