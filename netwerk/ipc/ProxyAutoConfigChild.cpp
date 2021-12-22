@@ -142,10 +142,6 @@ ProxyAutoConfigChild::~ProxyAutoConfigChild() {
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
     const nsCString& aPACURI, const nsCString& aPACScriptData,
     const bool& aIncludePath, const uint32_t& aExtraHeapSize) {
-  if (!mPAC) {
-    return IPC_OK();
-  }
-
   mPAC->ConfigurePAC(aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize,
                      GetMainThreadSerialEventTarget());
   return IPC_OK();
@@ -154,19 +150,10 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
     const nsCString& aTestURI, const nsCString& aTestHost,
     GetProxyForURIResolver&& aResolver) {
-  if (!mPAC) {
-    return IPC_OK();
-  }
-
   RefPtr<ProxyAutoConfigChild> self = this;
   auto callResolver = [self, testURI(aTestURI), testHost(aTestHost),
                        resolver{std::move(aResolver)}]() {
     if (!self->CanSend()) {
-      return;
-    }
-
-    if (!self->mPAC) {
-      MOZ_ASSERT(false, "Should not happen");
       return;
     }
 
@@ -185,17 +172,12 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
 }
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGC() {
-  if (!mPAC) {
-    return IPC_OK();
-  }
-
   mPAC->GC();
   return IPC_OK();
 }
 
 void ProxyAutoConfigChild::ActorDestroy(ActorDestroyReason aWhy) {
-  UniquePtr<ProxyAutoConfig> pac(std::move(mPAC));
-  pac->Shutdown();
+  mPAC->Shutdown();
 
   // To avoid racing with the main thread, we need to dispatch
   // ProxyAutoConfigChild::Destroy again.
