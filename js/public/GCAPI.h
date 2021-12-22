@@ -16,6 +16,7 @@
 
 #include "js/GCAnnotations.h"
 #include "js/shadow/Zone.h"
+#include "js/SliceBudget.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -887,6 +888,20 @@ typedef void (*DoCycleCollectionCallback)(JSContext* cx);
  */
 extern JS_PUBLIC_API DoCycleCollectionCallback
 SetDoCycleCollectionCallback(JSContext* cx, DoCycleCollectionCallback callback);
+
+using CreateSliceBudgetCallback = js::SliceBudget (*)(JS::GCReason reason,
+                                                      int64_t millis);
+
+/**
+ * Called when generating a GC slice budget. It allows the embedding to control
+ * the duration of slices and potentially check an interrupt flag as well. For
+ * internally triggered GCs, the given millis parameter is the JS engine's
+ * internal scheduling decision, which the embedding can choose to ignore.
+ * (Otherwise, it will be the value that was passed to eg
+ * JS::IncrementalGCSlice()).
+ */
+extern JS_PUBLIC_API void SetCreateGCSliceBudgetCallback(
+    JSContext* cx, CreateSliceBudgetCallback cb);
 
 /**
  * Incremental GC defaults to enabled, but may be disabled for testing or in
