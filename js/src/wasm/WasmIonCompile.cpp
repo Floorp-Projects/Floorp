@@ -5442,7 +5442,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigTableGet;
+  const SymbolicAddressSignature& callee = SASigTableGetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5549,7 +5549,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return true;
   }
 
-  const SymbolicAddressSignature& callee = SASigTableSet;
+  const SymbolicAddressSignature& callee = SASigTableSetFunc;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
