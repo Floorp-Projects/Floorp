@@ -27,9 +27,11 @@ def _resolve_command_site_names():
 
 def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_build_env):
     """Convert from parsed requirements object to pip-consumable format"""
-    path = Path(topsrcdir) / "build" / f"{virtualenv_name}_virtualenv_packages.txt"
+    requirements_path = (
+        Path(topsrcdir) / "build" / f"{virtualenv_name}_virtualenv_packages.txt"
+    )
     requirements = MachEnvRequirements.from_requirements_definition(
-        topsrcdir, False, is_mach_or_build_env, path
+        topsrcdir, False, is_mach_or_build_env, requirements_path
     )
 
     lines = []
@@ -40,6 +42,28 @@ def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_bui
 
     for vendored in requirements.vendored_requirements:
         lines.append(str(cache.package_for_vendor_dir(Path(vendored.path))))
+
+    for pth in requirements.pth_requirements:
+        path = Path(pth.path)
+
+        if "third_party" not in (p.name for p in path.parents):
+            continue
+
+        for child in path.iterdir():
+            if child.name.endswith(".dist-info"):
+                raise Exception(
+                    f'In {requirements_path}, the "pth:" pointing to "{path}" has a '
+                    '".dist-info" file.\n'
+                    'Perhaps it should change to start with "vendored:" instead of '
+                    '"pth:".'
+                )
+            if child.name.endswith(".egg-info"):
+                raise Exception(
+                    f'In {requirements_path}, the "pth:" pointing to "{path}" has an '
+                    '".egg-info" file.\n'
+                    'Perhaps it should change to start with "vendored:" instead of '
+                    '"pth:".'
+                )
 
     return "\n".join(lines)
 
