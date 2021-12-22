@@ -295,7 +295,7 @@ rtc_opus_dir = "//third_party/opus"
 
 # Desktop capturer is supported only on Windows, OSX and Linux.
 rtc_desktop_capture_supported =
-    (is_win && current_os != "winuwp") || is_mac ||
+    (is_win && current_os != "winuwp") || is_mac || is_bsd ||
     ((is_linux || is_chromeos) && (rtc_use_x11_extensions || rtc_use_pipewire))
 
 ###############################################################################
