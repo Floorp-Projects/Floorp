@@ -23,6 +23,7 @@ use std::{env, fs, io, path::PathBuf, str::FromStr};
 use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
 use fluent_fallback::{
     generator::{BundleGenerator, FluentBundleResult},
+    types::ResourceId,
     Localization,
 };
 use fluent_langneg::{negotiate_languages, NegotiationStrategy};
@@ -167,7 +168,7 @@ fn collatz(n: isize) -> isize {
 struct BundleIter {
     res_path_scheme: String,
     locales: <Vec<LanguageIdentifier> as IntoIterator>::IntoIter,
-    res_ids: Vec<String>,
+    res_ids: Vec<ResourceId>,
 }
 
 impl Iterator for BundleIter {
@@ -184,7 +185,7 @@ impl Iterator for BundleIter {
         let mut errors = vec![];
 
         for res_id in &self.res_ids {
-            let res_path = res_path_scheme.as_str().replace("{res_id}", res_id);
+            let res_path = res_path_scheme.as_str().replace("{res_id}", &res_id.value);
             let source = fs::read_to_string(res_path).unwrap();
             let res = match FluentResource::try_new(source) {
                 Ok(res) => res,
@@ -221,7 +222,11 @@ impl BundleGenerator for Bundles {
     type Iter = BundleIter;
     type Stream = BundleIter;
 
-    fn bundles_iter(&self, locales: Self::LocalesIter, res_ids: Vec<String>) -> Self::Iter {
+    fn bundles_iter(
+        &self,
+        locales: std::vec::IntoIter<LanguageIdentifier>,
+        res_ids: Vec<ResourceId>,
+    ) -> Self::Iter {
         BundleIter {
             res_path_scheme: self.res_path_scheme.to_string_lossy().to_string(),
             locales,

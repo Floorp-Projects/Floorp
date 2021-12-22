@@ -7,9 +7,9 @@ edition = "2018"
 
 [dependencies]
 async-trait = "0.1"
-fluent-bundle = "0.15"
-fluent-fallback = "0.5"
-fluent-testing = { git = "https://github.com/projectfluent/fluent-rs", optional = true, features = ["sync", "async"] }
+fluent-bundle = "0.15.2"
+fluent-fallback = "0.6.0"
+fluent-testing = { version = "0.0.2", optional = true, features = ["sync", "async"] }
 futures = "0.3"
 pin-project-lite = "0.2"
 unic-langid = "0.9"
@@ -25,48 +25,54 @@ criterion = "0.3"
 [features]
 default = []
 tokio-io = ["tokio"]
+test-fluent = []
 
 [[bench]]
 name = "preferences"
 harness = false
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[bench]]
 name = "localization"
 harness = false
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[bench]]
 name = "source"
 harness = false
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[bench]]
 name = "solver"
 harness = false
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[bench]]
 name = "registry"
 harness = false
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[test]]
 name = "source"
 path = "tests/source.rs"
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[test]]
 name = "registry"
 path = "tests/registry.rs"
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[test]]
 name = "localization"
 path = "tests/localization.rs"
-required-features = ["tokio", "fluent-testing"]
+required-features = ["tokio", "test-fluent"]
 
 [[test]]
-name = "scenarios"
-path = "tests/scenarios.rs"
-required-features = ["tokio", "fluent-testing"]
+name = "scenarios_sync"
+path = "tests/scenarios_sync.rs"
+required-features = ["test-fluent"]
+
+[[test]]
+name = "scenarios_async"
+path = "tests/scenarios_async.rs"
+required-features = ["tokio", "test-fluent"]

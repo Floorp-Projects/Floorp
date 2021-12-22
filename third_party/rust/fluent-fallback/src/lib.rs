@@ -24,7 +24,7 @@
 //! # Example
 //!
 //! ```
-//! use fluent_fallback::Localization;
+//! use fluent_fallback::{Localization, types::{ResourceType, ToResourceId}};
 //! use fluent_resmgr::ResourceManager;
 //! use unic_langid::langid;
 //!
@@ -32,8 +32,8 @@
 //!
 //! let loc = Localization::with_env(
 //!     vec![
-//!         "test.ftl".to_string(),
-//!         "test2.ftl".to_string()
+//!         "test.ftl".into(),
+//!         "test2.ftl".to_resource_id(ResourceType::Optional),
 //!     ],
 //!     true,
 //!     vec![langid!("en-US")],
@@ -58,6 +58,20 @@
 //! In particular, modern software may have needs for both synchronous
 //! and asynchronous I/O. That, in turn has a large impact on what can happen
 //! in case of missing resources, or errors.
+//!
+//! Resource identifiers can refer to resources that are either required or optional.
+//! In the above example, `"test.ftl"` is a required resource (the default using `.into()`),
+//! and `"test2.ftl" is an optional resource, which you can create via the
+//! [`ToResourceId`](fluent_fallback::types::ToResourceId) trait.
+//!
+//! A required resource must be present in order for the a bundle to be considered valid.
+//! If a required resource is missing for a given locale, a bundle will not be generated for that locale.
+//!
+//! A bundle is still considered valid if an optional resource is missing. A bundle will still be generated
+//! and the entries for the missing optional resource will simply be missing from the bundle. This should be
+//! used sparingly in exceptional cases where you do not want `Localization` to fall back to the next
+//! locale if there is a missing resource. Marking all resources as optional will increase the state space
+//! that the solver has to search through, and will have a negative impact on performance.
 //!
 //! Currently, [`Localization`] can be specialized over an implementation of
 //! [`generator::BundleGenerator`] trait which provides a method to generate an

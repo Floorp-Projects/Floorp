@@ -16,7 +16,7 @@ includes = ["nsIStreamLoader.h"]
 
 [parse]
 parse_deps = true
-include = ["fluent-bundle", "l10nregistry"]
+include = ["fluent-bundle", "fluent-fallback", "l10nregistry"]
 
 [enum]
 derive_helper_methods = true

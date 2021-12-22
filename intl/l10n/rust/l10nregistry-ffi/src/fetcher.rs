@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use l10nregistry::source::FileFetcher;
+use l10nregistry::source::{FileFetcher, ResourceId};
 
 use std::{borrow::Cow, io};
 
@@ -30,13 +30,13 @@ fn get_path_for_gecko<'s>(input: &'s str) -> Cow<'s, str> {
 
 #[async_trait::async_trait(?Send)]
 impl FileFetcher for GeckoFileFetcher {
-    fn fetch_sync(&self, path: &str) -> io::Result<String> {
-        let path = get_path_for_gecko(path);
+    fn fetch_sync(&self, resource_id: &ResourceId) -> io::Result<String> {
+        let path = get_path_for_gecko(&resource_id.value);
         crate::load::load_sync(path).and_then(try_string_from_box_u8)
     }
 
-    async fn fetch(&self, path: &str) -> io::Result<String> {
-        let path = get_path_for_gecko(path);
+    async fn fetch(&self, resource_id: &ResourceId) -> io::Result<String> {
+        let path = get_path_for_gecko(&resource_id.value);
         crate::load::load_async(path)
             .await
             .and_then(try_string_from_box_u8)
@@ -55,16 +55,16 @@ impl MockFileFetcher {
 
 #[async_trait::async_trait(?Send)]
 impl FileFetcher for MockFileFetcher {
-    fn fetch_sync(&self, path: &str) -> io::Result<String> {
+    fn fetch_sync(&self, resource_id: &ResourceId) -> io::Result<String> {
         for (p, source) in &self.fs {
-            if p == path {
+            if p == &resource_id.value {
                 return Ok(source.clone());
             }
         }
         Err(io::Error::new(io::ErrorKind::NotFound, "File not found"))
     }
 
-    async fn fetch(&self, path: &str) -> io::Result<String> {
-        self.fetch_sync(path)
+    async fn fetch(&self, resource_id: &ResourceId) -> io::Result<String> {
+        self.fetch_sync(resource_id)
     }
 }

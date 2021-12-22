@@ -6,7 +6,7 @@ use super::fetcher::{GeckoFileFetcher, MockFileFetcher};
 use crate::env::GeckoEnvironment;
 
 use fluent::FluentResource;
-use l10nregistry::source::{FileSource, FileSourceOptions, ResourceStatus};
+use l10nregistry::source::{FileSource, FileSourceOptions, ResourceOption, ResourceStatus, RcResource};
 
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -274,7 +274,7 @@ pub extern "C" fn l10nfilesource_has_file(
     *status = L10nFileSourceStatus::None;
     // To work around Option<bool> we return bool for the option,
     // and the `present` argument is the value of it.
-    if let Some(val) = source.has_file(&locale, &path.to_utf8()) {
+    if let Some(val) = source.has_file(&locale, &path.to_utf8().into()) {
         *present = val;
         true
     } else {
@@ -306,7 +306,9 @@ pub extern "C" fn l10nfilesource_fetch_file_sync(
     //XXX: Bug 1723191 - if we encounter a request for sync load while async load is in progress
     //                   we will discard the async load and force the sync load instead.
     //                   There may be a better option but we haven't had time to explore it.
-    if let Some(res) = source.fetch_file_sync(&locale, &path.to_utf8(), /* overload */ true) {
+    if let ResourceOption::Some(res) =
+        source.fetch_file_sync(&locale, &path.to_utf8().into(), /* overload */ true)
+    {
         Rc::into_raw(res)
     } else {
         std::ptr::null()
@@ -337,15 +339,19 @@ pub unsafe extern "C" fn l10nfilesource_fetch_file(
 
     *status = L10nFileSourceStatus::None;
 
-    let path = path.to_utf8();
+    let path = path.to_utf8().into();
 
     match source.fetch_file(&locale, &path) {
-        ResourceStatus::Missing => callback(promise, None),
+        ResourceStatus::MissingOptional => callback(promise, None),
+        ResourceStatus::MissingRequired => callback(promise, None),
         ResourceStatus::Loaded(res) => callback(promise, Some(&res)),
         res @ ResourceStatus::Loading(_) => {
             let strong_promise = RefPtr::new(promise);
             moz_task::spawn_local("l10nfilesource_fetch_file", async move {
-                callback(&strong_promise, res.await.as_ref().map(|r| &**r));
+                callback(
+                    &strong_promise,
+                    Option::<RcResource>::from(res.await).as_ref().map(|r| &**r),
+                );
             })
             .detach();
         }
