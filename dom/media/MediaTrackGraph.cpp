@@ -1278,10 +1278,6 @@ void MediaTrackGraphImpl::ProduceDataForTracksBlockByBlock(
     for (uint32_t i = aTrackIndex; i < mTracks.Length(); ++i) {
       ProcessedMediaTrack* pt = mTracks[i]->AsProcessedTrack();
       if (pt) {
-        if (pt->AsNativeInputTrack()) {
-          // NativeInputTracks are processed in Process. Skip them.
-          continue;
-        }
         pt->ProcessInput(
             mProcessedTime, next,
             (next == mStateComputedTime) ? ProcessedMediaTrack::ALLOW_END : 0);
@@ -1427,23 +1423,12 @@ void MediaTrackGraphImpl::Process(AudioMixer* aMixer) {
   bool doneAllProducing = false;
   const GraphTime oldProcessedTime = mProcessedTime;
 
-  // Process NativeInputTracks first since they are data source of other tracks
-  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
-    NativeInputTrack* track = mTracks[i]->AsNativeInputTrack();
-    if (track) {
-      track->ProcessInput(mProcessedTime, mStateComputedTime,
-                          ProcessedMediaTrack::ALLOW_END);
-    }
-  }
-
   // Figure out what each track wants to do
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     MediaTrack* track = mTracks[i];
     if (!doneAllProducing) {
       ProcessedMediaTrack* pt = track->AsProcessedTrack();
-      // NativeInputTrack::ProcessInput are called above so we can skip them
-      bool isNativeInputTrack = track->AsNativeInputTrack();
-      if (pt && !isNativeInputTrack) {
+      if (pt) {
         AudioNodeTrack* n = track->AsAudioNodeTrack();
         if (n) {
 #ifdef DEBUG
