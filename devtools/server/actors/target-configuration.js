@@ -101,7 +101,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
   _shouldHandleConfigurationInParentProcess() {
     // Only handle parent process configuration if the watcherActor is tied to a
     // browser element (i.e. we're *not* in the Browser Toolbox)
-    return this.watcherActor.context.type == "browser-element";
+    return this.watcherActor.sessionContext.type == "browser-element";
   },
 
   /**
@@ -123,8 +123,8 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // updates related to other browser elements
     if (
-      this.watcherActor.context.type == "browser-element" &&
-      browsingContext.browserId != this.watcherActor.context.browserId
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      browsingContext.browserId != this.watcherActor.sessionContext.browserId
     ) {
       return;
     }

@@ -49,7 +49,10 @@ class NetworkEventWatcher {
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
     this.listener = new NetworkObserver(
-      { browserId: this.browserId, addonId: watcherActor.context.addonId },
+      {
+        browserId: this.browserId,
+        addonId: watcherActor.sessionContext.addonId,
+      },
       { onNetworkEvent: this.onNetworkEvent.bind(this) }
     );
 
@@ -62,7 +65,7 @@ class NetworkEventWatcher {
   }
 
   get browserId() {
-    return this.watcherActor.context.browserId;
+    return this.watcherActor.sessionContext.browserId;
   }
 
   /**
@@ -155,13 +158,13 @@ class NetworkEventWatcher {
     }
     // If we persist, we will keep all requests allocated.
     // For now, consider that the Browser console and toolbox persist all the requests.
-    if (this.persist || this.watcherActor.context.type == "all") {
+    if (this.persist || this.watcherActor.sessionContext.type == "all") {
       return;
     }
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // windowGlobals related to other browser elements
     if (
-      this.watcherActor.context.type == "browser-element" &&
+      this.watcherActor.sessionContext.type == "browser-element" &&
       windowGlobal.browsingContext.browserId != this.browserId
     ) {
       return;
