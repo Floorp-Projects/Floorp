@@ -58,12 +58,10 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self(["pip", "install", "--upgrade", "pip", "--user"])
         self(["pip", "install", "--upgrade", "Mercurial", "--user"])
 
-    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+    def ensure_clang_static_analysis_package(self):
         from mozboot import static_analysis
 
-        self.install_toolchain_static_analysis(
-            state_dir, checkout_root, static_analysis.LINUX_CLANG_TIDY
-        )
+        self.install_toolchain_static_analysis(static_analysis.LINUX_CLANG_TIDY)
 
     def ensure_browser_group_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
