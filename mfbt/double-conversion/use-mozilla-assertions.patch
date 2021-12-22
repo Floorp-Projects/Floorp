@@ -1,5 +1,4 @@
 diff --git a/mfbt/double-conversion/double-conversion/utils.h b/mfbt/double-conversion/double-conversion/utils.h
-index c72c333f020a1..6022132e2b495 100644
 --- a/mfbt/double-conversion/double-conversion/utils.h
 +++ b/mfbt/double-conversion/double-conversion/utils.h
 @@ -26,38 +26,38 @@
@@ -15,7 +14,7 @@ index c72c333f020a1..6022132e2b495 100644
 +#include "mozilla/Assertions.h"
  #ifndef DOUBLE_CONVERSION_ASSERT
  #define DOUBLE_CONVERSION_ASSERT(condition)         \
--    assert(condition);
+-    assert(condition)
 +    MOZ_ASSERT(condition)
  #endif
  #ifndef DOUBLE_CONVERSION_UNIMPLEMENTED
