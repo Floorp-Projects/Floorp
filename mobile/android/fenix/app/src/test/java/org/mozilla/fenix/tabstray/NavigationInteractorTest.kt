@@ -7,17 +7,21 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import io.mockk.verify
+import io.mockk.coVerify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -118,6 +122,41 @@ class NavigationInteractorTest {
     }
 
     @Test
+    fun `GIVEN active private download WHEN onCloseAllTabsClicked is called for private tabs THEN showCancelledDownloadWarning is called`() {
+        var showCancelledDownloadWarningInvoked = false
+        val mockedStore: BrowserStore = mockk()
+        val controller = spyk(
+            createInteractor(
+                browserStore = mockedStore,
+                showCancelledDownloadWarning = { _, _, _ ->
+                    showCancelledDownloadWarningInvoked = true
+                }
+            )
+        )
+        val tab: TabSessionState = mockk { every { content.private } returns true }
+        every { mockedStore.state } returns mockk()
+        every { mockedStore.state.downloads } returns mapOf(
+            "1" to DownloadState(
+                "https://mozilla.org/download",
+                private = true,
+                destinationDirectory = "Download",
+                status = DownloadState.Status.DOWNLOADING
+            )
+        )
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            every { mockedStore.state.findTab(any()) } returns tab
+            every { mockedStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
+
+            controller.onCloseAllTabsClicked(true)
+
+            assertTrue(showCancelledDownloadWarningInvoked)
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
+    }
+
+    @Test
     fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
         createInteractor().onShareTabsOfTypeClicked(false)
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
@@ -182,15 +221,17 @@ class NavigationInteractorTest {
 
     @Suppress("LongParameterList")
     private fun createInteractor(
+        browserStore: BrowserStore = store,
         dismissTabTray: () -> Unit = { },
         dismissTabTrayAndNavigateHome: (String) -> Unit = { _ -> },
         showCollectionSnackbar: (Int, Boolean, Long?) -> Unit = { _, _, _ -> },
-        showBookmarkSnackbar: (Int) -> Unit = { _ -> }
+        showBookmarkSnackbar: (Int) -> Unit = { _ -> },
+        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> }
     ): NavigationInteractor {
         return DefaultNavigationInteractor(
             context,
             activity,
-            store,
+            browserStore,
             navController,
             metrics,
             dismissTabTray,
@@ -200,6 +241,7 @@ class NavigationInteractorTest {
             collectionStorage,
             showCollectionSnackbar,
             showBookmarkSnackbar,
+            showCancelledDownloadWarning,
             accountManager,
             testDispatcher
         )

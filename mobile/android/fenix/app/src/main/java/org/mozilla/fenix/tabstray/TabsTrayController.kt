@@ -23,6 +23,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
+import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import java.util.concurrent.TimeUnit
 
 interface TabsTrayController {
@@ -46,11 +47,23 @@ interface TabsTrayController {
     fun handleNavigateToBrowser()
 
     /**
-     * Deletes the [TabSessionState] with the specified [tabId].
+     * Deletes the [TabSessionState] with the specified [tabId] or calls [DownloadCancelDialogFragment]
+     * if user tries to close the last private tab while private downloads are active.
+     * Tracks [Event.ClosedExistingTab] in case of deletion.
      *
      * @param tabId The id of the [TabSessionState] to be removed from TabsTray.
+     * @param source app feature from which the tab with [tabId] was closed.
      */
-    fun handleTabDeletion(tabId: String)
+    fun handleTabDeletion(tabId: String, source: String? = null)
+
+    /**
+     * Deletes the [TabSessionState] with the specified [tabId]
+     * Tracks [Event.ClosedExistingTab] in case of deletion.
+     *
+     * @param tabId The id of the [TabSessionState] to be removed from TabsTray.
+     * @param source app feature from which the tab with [tabId] was closed.
+     */
+    fun handleDeleteTabWarningAccepted(tabId: String, source: String? = null)
 
     /**
      * Deletes a list of [tabs].
@@ -104,7 +117,9 @@ class DefaultTabsTrayController(
     private val tabsUseCases: TabsUseCases,
     private val selectTabPosition: (Int, Boolean) -> Unit,
     private val dismissTray: () -> Unit,
-    private val showUndoSnackbarForTab: (Boolean) -> Unit
+    private val showUndoSnackbarForTab: (Boolean) -> Unit,
+    @VisibleForTesting
+    internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
 
 ) : TabsTrayController {
 
@@ -144,18 +159,37 @@ class DefaultTabsTrayController(
      * Deletes the [TabSessionState] with the specified [tabId].
      *
      * @param tabId The id of the [TabSessionState] to be removed from TabsTray.
+     * @param source app feature from which the tab with [tabId] was closed.
      * This method has no effect if the tab does not exist.
      */
-    override fun handleTabDeletion(tabId: String) {
+    override fun handleTabDeletion(tabId: String, source: String?) {
+        deleteTab(tabId, source, isConfirmed = false)
+    }
+
+    override fun handleDeleteTabWarningAccepted(tabId: String, source: String?) {
+        deleteTab(tabId, source, isConfirmed = true)
+    }
+
+    private fun deleteTab(tabId: String, source: String?, isConfirmed: Boolean) {
         val tab = browserStore.state.findTab(tabId)
 
         tab?.let {
-            if (browserStore.state.getNormalOrPrivateTabs(it.content.private).size != 1) {
+            val isLastTab = browserStore.state.getNormalOrPrivateTabs(it.content.private).size == 1
+            if (!isLastTab) {
                 tabsUseCases.removeTab(tabId)
                 showUndoSnackbarForTab(it.content.private)
             } else {
-                dismissTabsTrayAndNavigateHome(tabId)
+                val privateDownloads = browserStore.state.downloads.filter { map ->
+                    map.value.private && map.value.isActiveDownload()
+                }
+                if (!isConfirmed && privateDownloads.isNotEmpty()) {
+                    showCancelledDownloadWarning(privateDownloads.size, tabId, source)
+                    return
+                } else {
+                    dismissTabsTrayAndNavigateHome(tabId)
+                }
             }
+            metrics.track(Event.ClosedExistingTab(source ?: "unknown"))
         }
     }
 

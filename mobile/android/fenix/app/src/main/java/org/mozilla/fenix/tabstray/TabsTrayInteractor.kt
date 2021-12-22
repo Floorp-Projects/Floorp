@@ -22,8 +22,15 @@ interface TabsTrayInteractor {
 
     /**
      * Invoked when a tab is removed from the tabs tray with the given [tabId].
+     * @param source app feature from which the [TabSessionState] with [tabId] was closed.
      */
-    fun onDeleteTab(tabId: String)
+    fun onDeleteTab(tabId: String, source: String? = null)
+
+    /**
+     * Invoked when the user confirmed tab removal that would lead to cancelled private downloads.
+     * @param source is the app feature from which the [TabSessionState] with [tabId] was closed.
+     */
+    fun onDeletePrivateTabWarningAccepted(tabId: String, source: String? = null)
 
     /**
      * Invoked when [TabSessionState]s need to be deleted.
@@ -66,8 +73,12 @@ class DefaultTabsTrayInteractor(
         controller.handleNavigateToBrowser()
     }
 
-    override fun onDeleteTab(tabId: String) {
-        controller.handleTabDeletion(tabId)
+    override fun onDeleteTab(tabId: String, source: String?) {
+        controller.handleTabDeletion(tabId, source)
+    }
+
+    override fun onDeletePrivateTabWarningAccepted(tabId: String, source: String?) {
+        controller.handleDeleteTabWarningAccepted(tabId, source)
     }
 
     override fun onDeleteTabs(tabs: Collection<TabSessionState>) {

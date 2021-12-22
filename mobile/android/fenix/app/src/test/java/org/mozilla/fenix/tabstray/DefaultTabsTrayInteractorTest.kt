@@ -35,6 +35,13 @@ class DefaultTabsTrayInteractorTest {
     }
 
     @Test
+    fun `GIVEN user confirmed downloads cancellation WHEN onDeletePrivateTabWarningAccepted is called THEN the Interactor delegates the controller`() {
+        trayInteractor.onDeletePrivateTabWarningAccepted("testTabId")
+
+        verifySequence { controller.handleDeleteTabWarningAccepted("testTabId") }
+    }
+
+    @Test
     fun `GIVEN user deleted multiple browser tabs WHEN onDeleteTabs is called THEN the Interactor delegates the controller`() {
         val tabsToDelete = listOf<TabSessionState>(mockk(), mockk())
 

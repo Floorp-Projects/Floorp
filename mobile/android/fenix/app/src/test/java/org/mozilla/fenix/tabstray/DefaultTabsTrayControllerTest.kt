@@ -19,6 +19,7 @@ import io.mockk.verifyOrder
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
@@ -120,6 +121,55 @@ class DefaultTabsTrayControllerTest {
         createController().handleOpeningNewTab(false)
 
         verify { metrics.track(Event.NewTabTapped) }
+    }
+
+    @Test
+    fun `WHEN handleTabDeletion is called THEN Event#ClosedExistingTab is added to telemetry`() {
+        val tab: TabSessionState = mockk { every { content.private } returns true }
+        every { browserStore.state } returns mockk()
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            every { browserStore.state.findTab(any()) } returns tab
+            every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
+
+            createController().handleTabDeletion("testTabId", "unknown")
+            verify { metrics.track(Event.ClosedExistingTab("unknown")) }
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
+    }
+
+    @Test
+    fun `GIVEN active private download WHEN handleTabDeletion is called for the last private tab THEN showCancelledDownloadWarning is called`() {
+        var showCancelledDownloadWarningInvoked = false
+        val controller = spyk(
+            createController(
+                showCancelledDownloadWarning = { _, _, _ ->
+                    showCancelledDownloadWarningInvoked = true
+                }
+            )
+        )
+        val tab: TabSessionState = mockk { every { content.private } returns true }
+        every { browserStore.state } returns mockk()
+        every { browserStore.state.downloads } returns mapOf(
+            "1" to DownloadState(
+                "https://mozilla.org/download",
+                private = true,
+                destinationDirectory = "Download",
+                status = DownloadState.Status.DOWNLOADING
+            )
+        )
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            every { browserStore.state.findTab(any()) } returns tab
+            every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
+
+            controller.handleTabDeletion("testTabId", "unknown")
+
+            assertTrue(showCancelledDownloadWarningInvoked)
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
     }
 
     @Test
@@ -447,7 +497,8 @@ class DefaultTabsTrayControllerTest {
         navigateToHomeAndDeleteSession: (String) -> Unit = { },
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },
         dismissTray: () -> Unit = { },
-        showUndoSnackbarForTab: (Boolean) -> Unit = { _ -> }
+        showUndoSnackbarForTab: (Boolean) -> Unit = { _ -> },
+        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> }
     ): DefaultTabsTrayController {
         return DefaultTabsTrayController(
             trayStore,
@@ -461,7 +512,8 @@ class DefaultTabsTrayControllerTest {
             tabsUseCases,
             selectTabPosition,
             dismissTray,
-            showUndoSnackbarForTab
+            showUndoSnackbarForTab,
+            showCancelledDownloadWarning = showCancelledDownloadWarning
         )
     }
 }
