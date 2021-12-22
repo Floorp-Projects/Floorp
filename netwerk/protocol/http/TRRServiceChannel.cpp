@@ -498,7 +498,8 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
 
   if (mLoadFlags & LOAD_FRESH_CONNECTION) {
     Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_TRR_CONNECTION_CYCLE_COUNT, 1);
+        Telemetry::ScalarID::NETWORKING_TRR_CONNECTION_CYCLE_COUNT,
+        NS_ConvertUTF8toUTF16(TRRService::ProviderKey()), 1);
     nsresult rv =
         gHttpHandler->ConnMgr()->DoSingleConnectionCleanup(mConnectionInfo);
     LOG(
