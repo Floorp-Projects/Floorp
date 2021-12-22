@@ -22,10 +22,10 @@ git = "https://github.com/mozilla/midir.git"
 replace-with = "vendored-sources"
 rev = "dc87afbd4361ae5ec192e1fab0a6409dd13d4011"
 
-[source."https://github.com/mozilla/l10nregistry-rs"]
-git = "https://github.com/mozilla/l10nregistry-rs"
+[source."https://github.com/mozilla/l10nregistry-rs.git"]
+git = "https://github.com/mozilla/l10nregistry-rs.git"
 replace-with = "vendored-sources"
-rev = "fd02134161505f978e132114cbabdac057ce3b71"
+rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c"
 
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"

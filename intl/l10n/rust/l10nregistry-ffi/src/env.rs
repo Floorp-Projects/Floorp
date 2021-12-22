@@ -51,12 +51,16 @@ impl ErrorReporter for GeckoEnvironment {
         for error in errors {
             warn!("L10nRegistry error: {}", error);
             let result = match error {
-                L10nRegistryError::FluentError { path, loc, error } => log_simple_console_error(
+                L10nRegistryError::FluentError {
+                    resource_id,
+                    loc,
+                    error,
+                } => log_simple_console_error(
                     &error.to_string(),
                     cstr!("l10n"),
                     false,
                     true,
-                    Some(nsString::from(&path)),
+                    Some(nsString::from(&resource_id.value)),
                     loc.map_or((0, 0), |(l, c)| (l as u32, c as u32)),
                     interfaces::nsIScriptError::errorFlag as u32,
                 ),

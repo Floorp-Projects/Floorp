@@ -3,7 +3,7 @@ use crate::{
     env::LocalesProvider,
     errors::LocalizationError,
     generator::{BundleGenerator, BundleIterator, BundleStream},
-    types::{L10nAttribute, L10nKey, L10nMessage},
+    types::{L10nAttribute, L10nKey, L10nMessage, ResourceId},
 };
 use fluent_bundle::{FluentArgs, FluentBundle, FluentError};
 use std::borrow::Cow;
@@ -50,7 +50,7 @@ impl<G> Bundles<G>
 where
     G: BundleGenerator,
 {
-    pub fn new<P>(sync: bool, res_ids: Vec<String>, generator: &G, provider: &P) -> Self
+    pub fn new<P>(sync: bool, res_ids: Vec<ResourceId>, generator: &G, provider: &P) -> Self
     where
         G: BundleGenerator<LocalesIter = P::Iter>,
         P: LocalesProvider,

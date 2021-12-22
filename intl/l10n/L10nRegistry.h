@@ -12,8 +12,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/L10nRegistryBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/intl/RegistryBindings.h"
 #include "mozilla/intl/FluentBindings.h"
+#include "mozilla/intl/RegistryBindings.h"
 
 class nsIGlobalObject;
 
@@ -95,6 +95,14 @@ class L10nRegistry final : public nsWrapperCache {
   static nsresult LoadSync(const nsACString& aPath, void** aData,
                            uint64_t* aSize);
 
+  static ffi::GeckoResourceId ResourceIdToFFI(const nsCString& aResourceId);
+  static ffi::GeckoResourceId ResourceIdToFFI(
+      const dom::OwningUTF8StringOrResourceId& aResourceId);
+  static nsTArray<ffi::GeckoResourceId> ResourceIdsToFFI(
+      const nsTArray<nsCString>& aResourceIds);
+  static nsTArray<ffi::GeckoResourceId> ResourceIdsToFFI(
+      const nsTArray<dom::OwningUTF8StringOrResourceId>& aResourceIds);
+
   void GetAvailableLocales(nsTArray<nsCString>& aRetVal);
 
   void RegisterSources(
@@ -109,12 +117,20 @@ class L10nRegistry final : public nsWrapperCache {
   void ClearSources();
 
   already_AddRefed<FluentBundleIterator> GenerateBundlesSync(
+      const nsTArray<nsCString>& aLocales,
+      const nsTArray<ffi::GeckoResourceId>& aResourceIds, ErrorResult& aRv);
+  already_AddRefed<FluentBundleIterator> GenerateBundlesSync(
       const dom::Sequence<nsCString>& aLocales,
-      const dom::Sequence<nsCString>& aResourceIds, ErrorResult& aRv);
+      const dom::Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,
+      ErrorResult& aRv);
 
   already_AddRefed<FluentBundleAsyncIterator> GenerateBundles(
+      const nsTArray<nsCString>& aLocales,
+      const nsTArray<ffi::GeckoResourceId>& aResourceIds, ErrorResult& aRv);
+  already_AddRefed<FluentBundleAsyncIterator> GenerateBundles(
       const dom::Sequence<nsCString>& aLocales,
-      const dom::Sequence<nsCString>& aResourceIds, ErrorResult& aRv);
+      const dom::Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,
+      ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
