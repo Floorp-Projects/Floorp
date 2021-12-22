@@ -133,9 +133,9 @@ void Table::trace(JSTracer* trc) {
   }
 }
 
-uint8_t* Table::functionBase() const {
+uint8_t* Table::tlsElements() const {
   if (repr() == TableRepr::Ref) {
-    return nullptr;
+    return (uint8_t*)objects_.begin();
   }
   return (uint8_t*)functions_.get();
 }

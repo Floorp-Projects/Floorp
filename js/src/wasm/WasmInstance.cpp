@@ -1732,7 +1732,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     const TableDesc& td = metadata().tables[i];
     TableTls& table = tableTls(td);
     table.length = tables_[i]->length();
-    table.functionBase = tables_[i]->functionBase();
+    table.elements = tables_[i]->tlsElements();
   }
 
   // Add observer if our memory base may grow
@@ -2601,7 +2601,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
     if (tables_[i] == theTable) {
       TableTls& table = tableTls(metadata().tables[i]);
       table.length = tables_[i]->length();
-      table.functionBase = tables_[i]->functionBase();
+      table.elements = tables_[i]->tlsElements();
     }
   }
 }
