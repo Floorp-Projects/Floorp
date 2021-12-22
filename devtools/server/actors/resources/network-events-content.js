@@ -62,10 +62,6 @@ class NetworkEventContentWatcher {
     return this.targetActor.conn;
   }
 
-  get browserId() {
-    return this.targetActor.browserId;
-  }
-
   httpFailedOpeningRequest(subject, topic) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
@@ -89,7 +85,8 @@ class NetworkEventContentWatcher {
     });
 
     const actor = new NetworkEventActor(
-      this,
+      this.conn,
+      this.targetActor.sessionContext,
       {
         onNetworkEventUpdate: this.onNetworkEventUpdated.bind(this),
         onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
@@ -134,7 +131,8 @@ class NetworkEventContentWatcher {
     });
 
     const actor = new NetworkEventActor(
-      this,
+      this.conn,
+      this.targetActor.sessionContext,
       {
         onNetworkEventUpdate: this.onNetworkEventUpdatedForImageCache.bind(
           this

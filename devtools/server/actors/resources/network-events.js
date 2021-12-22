@@ -61,10 +61,6 @@ class NetworkEventWatcher {
     return this.watcherActor.conn;
   }
 
-  get browserId() {
-    return this.watcherActor.sessionContext.browserId;
-  }
-
   /**
    * Instruct to keep reference to previous document requests or not.
    * If persist is disabled, we will clear all informations about previous document
@@ -162,7 +158,8 @@ class NetworkEventWatcher {
     // windowGlobals related to other browser elements
     if (
       this.watcherActor.sessionContext.type == "browser-element" &&
-      windowGlobal.browsingContext.browserId != this.browserId
+      windowGlobal.browsingContext.browserId !=
+        this.watcherActor.sessionContext.browserId
     ) {
       return;
     }
@@ -212,7 +209,8 @@ class NetworkEventWatcher {
       );
     }
     const actor = new NetworkEventActor(
-      this,
+      this.watcherActor.conn,
+      this.watcherActor.sessionContext,
       {
         onNetworkEventUpdate: this.onNetworkEventUpdate.bind(this),
         onNetworkEventDestroy: this.onNetworkEventDestroy.bind(this),
