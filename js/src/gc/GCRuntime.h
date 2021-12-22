@@ -926,6 +926,12 @@ class GCRuntime {
   // State used for managing atom mark bitmaps in each zone.
   AtomMarkingRuntime atomMarking;
 
+  /*
+   * Pointer to a callback that, if set, will be used to create a
+   * budget for internally-triggered GCs.
+   */
+  MainThreadData<JS::CreateSliceBudgetCallback> createBudgetCallback;
+
  private:
   // Arenas used for permanent things created at startup and shared by child
   // runtimes.
