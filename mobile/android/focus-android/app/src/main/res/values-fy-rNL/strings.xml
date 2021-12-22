@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -771,11 +771,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">Wikselje daliks nei keppeling yn nij ljepblêd</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Feilich sneupe</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Feilich sneupe</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Potinsjeel gefaarlike en misliedende websites blokkearje</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Rapportearre misliedende en oanfals-, malware- en net-winske-software-websites blokkearje.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Allinnich-HTTPS-modus</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS biedt in feilige, fersifere ferbining tusken %1$s en de troch jo besochte websites. De measte websites stypje HTTPS en as de Allinnich-HTTPS-modus ynskeakele is, sil %1$s alle ferbiningen fernije nei HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Utsûnderingen</string>
@@ -839,6 +844,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fuortsmite</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Omneame</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Bewarre en dielde ôfbyldingen &lt;b&gt;wurde net&lt;/b&gt; fuortsmiten as jo skiednis fan %1$s wiskje</string>
@@ -855,4 +863,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Apparaattema folgje</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Ljepblêd slute</string>
 </resources>
