@@ -394,7 +394,8 @@ class Settings(
         autoplayAudible = getAutoplayRules().first,
         autoplayInaudible = getAutoplayRules().second,
         persistentStorage = SitePermissionsRules.Action.BLOCKED,
-        mediaKeySystemAccess = SitePermissionsRules.Action.BLOCKED
+        mediaKeySystemAccess = SitePermissionsRules.Action.BLOCKED,
+        crossOriginStorageAccess = SitePermissionsRules.Action.BLOCKED
     )
 
     private fun getAutoplayRules(): Pair<SitePermissionsRules.AutoplayAction, SitePermissionsRules.AutoplayAction> {
