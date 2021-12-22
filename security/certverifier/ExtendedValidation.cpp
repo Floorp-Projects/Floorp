@@ -1110,6 +1110,17 @@ static const struct EVInfo kEVInfos[] = {
     "GAYDVQQDExF2VHJ1cyBFQ0MgUm9vdCBDQQ==",
     "bmq8WapTvpg5Z6LSa6Q75m0c1to=",
   },
+  {
+    // CN=Autoridad de Certificacion Firmaprofesional CIF A62634068,C=ES
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x57, 0xDE, 0x05, 0x83, 0xEF, 0xD2, 0xB2, 0x6E, 0x03, 0x61, 0xDA,
+      0x99, 0xDA, 0x9D, 0xF4, 0x64, 0x8D, 0xEF, 0x7E, 0xE8, 0x44, 0x1C,
+      0x3B, 0x72, 0x8A, 0xFA, 0x9B, 0xCD, 0xE0, 0xF9, 0xB2, 0x6A },
+    "MFExCzAJBgNVBAYTAkVTMUIwQAYDVQQDDDlBdXRvcmlkYWQgZGUgQ2VydGlmaWNh"
+    "Y2lvbiBGaXJtYXByb2Zlc2lvbmFsIENJRiBBNjI2MzQwNjg=",
+    "G3Dp0v+ubHE=",
+  },
     // clang-format on
 };
 
