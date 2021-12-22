@@ -482,7 +482,6 @@ def applemedia(toolkit):
 
 set_config("MOZ_APPLEMEDIA", applemedia)
 set_define("MOZ_APPLEMEDIA", applemedia)
-add_old_configure_assignment("MOZ_APPLEMEDIA", applemedia)
 
 # Windows Media Foundation support
 # ==============================================================
