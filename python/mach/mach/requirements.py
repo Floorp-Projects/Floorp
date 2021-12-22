@@ -73,7 +73,7 @@ class MachEnvRequirements:
         cls,
         topsrcdir: str,
         is_thunderbird,
-        is_mach_or_build_site,
+        only_strict_requirements,
         requirements_definition,
     ):
         requirements = cls()
@@ -82,7 +82,7 @@ class MachEnvRequirements:
             Path(requirements_definition),
             Path(topsrcdir),
             is_thunderbird,
-            is_mach_or_build_site,
+            only_strict_requirements,
         )
         return requirements
 
@@ -92,7 +92,7 @@ def _parse_mach_env_requirements(
     root_requirements_path: Path,
     topsrcdir: Path,
     is_thunderbird,
-    is_mach_or_build_site,
+    only_strict_requirements,
 ):
     def _parse_requirements_line(
         current_requirements_path: Path, line, line_number, is_thunderbird_packages_txt
@@ -121,7 +121,9 @@ def _parse_mach_env_requirements(
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
 
             requirements_output.pypi_requirements.append(
-                PypiSpecifier(_parse_package_specifier(params, is_mach_or_build_site))
+                PypiSpecifier(
+                    _parse_package_specifier(params, only_strict_requirements)
+                )
             )
         elif action == "pypi-optional":
             if is_thunderbird_packages_txt:
@@ -137,7 +139,7 @@ def _parse_mach_env_requirements(
             requirements_output.pypi_optional_requirements.append(
                 PypiOptionalSpecifier(
                     repercussion,
-                    _parse_package_specifier(raw_requirement, is_mach_or_build_site),
+                    _parse_package_specifier(raw_requirement, only_strict_requirements),
                 )
             )
         elif action == "thunderbird-packages.txt":
@@ -168,14 +170,16 @@ def _parse_mach_env_requirements(
     _parse_requirements_definition_file(root_requirements_path, False)
 
 
-def _parse_package_specifier(raw_requirement, is_mach_or_build_site):
+class UnexpectedFlexibleRequirementException(Exception):
+    def __init__(self, raw_requirement):
+        self.raw_requirement = raw_requirement
+
+
+def _parse_package_specifier(raw_requirement, only_strict_requirements):
     requirement = Requirement(raw_requirement)
 
-    if not is_mach_or_build_site and [
+    if only_strict_requirements and [
         s for s in requirement.specifier if s.operator != "=="
     ]:
-        raise Exception(
-            'All sites except for "mach" and "build" must pin pypi package '
-            f'versions in the format "package==version", found "{raw_requirement}"'
-        )
+        raise UnexpectedFlexibleRequirementException(raw_requirement)
     return requirement
