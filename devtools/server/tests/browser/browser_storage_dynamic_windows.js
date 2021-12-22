@@ -94,6 +94,11 @@ add_task(async function() {
   const allResources = {};
   const onAvailable = resources => {
     for (const resource of resources) {
+      is(
+        resource.targetFront.targetType,
+        commands.targetCommand.TYPES.FRAME,
+        "Each storage resource has a valid 'targetFront' attribute"
+      );
       // Because we have iframes, we have distinct targets, each spawning their own storage resource
       if (allResources[resource.resourceType]) {
         allResources[resource.resourceType].push(resource);
