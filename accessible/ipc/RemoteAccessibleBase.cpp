@@ -145,11 +145,10 @@ LocalAccessible* RemoteAccessibleBase<Derived>::OuterDocOfRemoteBrowser()
 
 template <class Derived>
 void RemoteAccessibleBase<Derived>::SetParent(Derived* aParent) {
-  MOZ_ASSERT(IsDoc(), "we should only reparent documents");
   if (!aParent) {
     mParent = kNoParent;
   } else {
-    MOZ_ASSERT(!aParent->IsDoc());
+    MOZ_ASSERT(!IsDoc() || !aParent->IsDoc());
     mParent = aParent->ID();
   }
 }

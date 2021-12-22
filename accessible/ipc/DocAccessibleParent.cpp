@@ -127,37 +127,41 @@ uint32_t DocAccessibleParent::AddSubtree(
 
   const AccessibleData& newChild = aNewTree[aIdx];
 
-  if (mAccessibles.Contains(newChild.ID())) {
-    NS_ERROR("ID already in use");
-    return 0;
-  }
+  RemoteAccessible* newProxy;
+  if ((newProxy = GetAccessible(newChild.ID()))) {
+    // This is a move. Reuse the Accessible; don't destroy it.
+    MOZ_ASSERT(!newProxy->RemoteParent());
+    aParent->AddChildAt(aIdxInParent, newProxy);
+    newProxy->SetParent(aParent);
+  } else {
+    newProxy = new RemoteAccessible(
+        newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
+        newChild.GenericTypes(), newChild.RoleMapEntryIndex());
 
-  RemoteAccessible* newProxy = new RemoteAccessible(
-      newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
-      newChild.GenericTypes(), newChild.RoleMapEntryIndex());
-
-  aParent->AddChildAt(aIdxInParent, newProxy);
-  mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
-  ProxyCreated(newProxy);
+    aParent->AddChildAt(aIdxInParent, newProxy);
+    mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
+    ProxyCreated(newProxy);
 
 #if defined(XP_WIN)
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    MsaaAccessible::GetFrom(newProxy)->SetID(newChild.MsaaID());
-  }
+    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      MsaaAccessible::GetFrom(newProxy)->SetID(newChild.MsaaID());
+    }
 #endif
 
-  mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
-    MOZ_ASSERT(bridge->GetBrowserParent(),
-               "Pending BrowserBridgeParent should be alive");
-    if (bridge->GetEmbedderAccessibleId() != newChild.ID()) {
-      return false;
-    }
-    MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
-    if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
-      AddChildDoc(childDoc, newChild.ID(), false);
-    }
-    return true;
-  });
+    mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
+      MOZ_ASSERT(bridge->GetBrowserParent(),
+                 "Pending BrowserBridgeParent should be alive");
+      if (bridge->GetEmbedderAccessibleId() != newChild.ID()) {
+        return false;
+      }
+      MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
+      if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
+        AddChildDoc(childDoc, newChild.ID(), false);
+      }
+      return true;
+    });
+  }
+
   DebugOnly<bool> isOuterDoc = newProxy->ChildCount() == 1;
 
   uint32_t accessibles = 1;
@@ -172,6 +176,26 @@ uint32_t DocAccessibleParent::AddSubtree(
   MOZ_ASSERT((isOuterDoc && kids == 0) || newProxy->ChildCount() == kids);
 
   return accessibles;
+}
+
+void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
+  uint64_t id = aAcc->ID();
+  if (!mMovingIDs.Contains(id)) {
+    // This Accessible is being removed.
+    aAcc->Shutdown();
+    return;
+  }
+  // This is a move. Moves are sent as a hide and then a show, but for a move,
+  // we want to keep the Accessible alive for reuse later.
+  aAcc->SetParent(nullptr);
+  mMovingIDs.EnsureRemoved(id);
+  // Some children might be removed. Handle children the same way.
+  for (RemoteAccessible* child : aAcc->mChildren) {
+    ShutdownOrPrepareForMove(child);
+  }
+  // Even if some children are kept, those will be re-attached when we handle
+  // the show event. For now, clear all of them.
+  aAcc->mChildren.Clear();
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
@@ -217,7 +241,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
   }
 
   parent->RemoveChild(root);
-  root->Shutdown();
+  ShutdownOrPrepareForMove(root);
 
   MOZ_ASSERT(CheckDocTree());
 
@@ -507,6 +531,14 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleParent::RecvAccessiblesWillMove(
+    nsTArray<uint64_t>&& aIDs) {
+  for (uint64_t id : aIDs) {
+    mMovingIDs.EnsureInserted(id);
+  }
   return IPC_OK();
 }
 
