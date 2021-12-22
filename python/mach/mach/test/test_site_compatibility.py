@@ -31,7 +31,7 @@ def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_bui
         Path(topsrcdir) / "build" / f"{virtualenv_name}_virtualenv_packages.txt"
     )
     requirements = MachEnvRequirements.from_requirements_definition(
-        topsrcdir, False, is_mach_or_build_env, requirements_path
+        topsrcdir, False, not is_mach_or_build_env, requirements_path
     )
 
     lines = []

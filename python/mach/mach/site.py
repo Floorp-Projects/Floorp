@@ -24,10 +24,15 @@ from typing import Optional, Callable
 
 from mach.requirements import (
     MachEnvRequirements,
+    UnexpectedFlexibleRequirementException,
 )
 
 PTH_FILENAME = "mach.pth"
 METADATA_FILENAME = "moz_virtualenv_metadata.json"
+# The following virtualenvs *may* be used in a context where they aren't allowed to
+# install pip packages over the network. In such a case, they must access unvendored
+# python packages via the system environment.
+PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS = ("mach", "build")
 
 
 class VirtualenvOutOfDateException(Exception):
@@ -459,7 +464,10 @@ class CommandSiteManager:
         ), "A Mach-managed site must be active before doing work with command sites"
 
         requirements = resolve_requirements(topsrcdir, site_name)
-        if not _system_python_env_variable_present() or site_name != "build":
+        if (
+            not _system_python_env_variable_present()
+            or site_name not in PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS
+        ):
             source = SitePackagesSource.VENV
         elif not active_metadata.external_python.has_pip():
             if requirements.pypi_requirements:
@@ -847,12 +855,20 @@ def resolve_requirements(topsrcdir, virtualenv_name):
     is_thunderbird = os.path.exists(thunderbird_dir) and bool(
         os.listdir(thunderbird_dir)
     )
-    return MachEnvRequirements.from_requirements_definition(
-        topsrcdir,
-        is_thunderbird,
-        virtualenv_name in ("mach", "build"),
-        manifest_path,
-    )
+    try:
+        return MachEnvRequirements.from_requirements_definition(
+            topsrcdir,
+            is_thunderbird,
+            virtualenv_name not in PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS,
+            manifest_path,
+        )
+    except UnexpectedFlexibleRequirementException as e:
+        raise Exception(
+            f'The "{virtualenv_name}" virtualenv does not have all pypi packages pinned '
+            f'in the format "package==version" (found "{e.raw_requirement}").\n'
+            f"Only the {PIP_NETWORK_INSTALL_RESTRICTED_VIRTUALENVS} virtualenvs are "
+            "allowed to have unpinned packages."
+        )
 
 
 def _virtualenv_py_path(topsrcdir):
