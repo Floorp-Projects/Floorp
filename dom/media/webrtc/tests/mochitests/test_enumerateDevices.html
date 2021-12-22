@@ -124,7 +124,7 @@ runTest(async () => {
                   ["media.audio_loopback_dev", "none"],
                   ["media.video_loopback_dev", "none"]);
   devices = await navigator.mediaDevices.enumerateDevices();
-  ok(devices.length === 0, "No devices found");
+  is(devices.length, 0, "No devices");
 });
 </script>
 </pre>
