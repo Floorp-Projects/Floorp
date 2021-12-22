@@ -917,7 +917,11 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
 
 #if defined(XP_MACOSX)
     bool quarantined = true;
-    (void)HasXAttr("com.apple.quarantine"_ns, &quarantined);
+    if (getxattr(mPath.get(), "com.apple.quarantine", nullptr, 0, 0, 0) == -1) {
+      if (errno == ENOATTR) {
+        quarantined = false;
+      }
+    }
 #endif
 
     PRFileDesc* oldFD;
@@ -1003,7 +1007,7 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
     else if (!quarantined) {
       // If the original file was not in quarantine, lift the quarantine that
       // file creation added because of LSFileQuarantineEnabled.
-      (void)newFile->DelXAttr("com.apple.quarantine"_ns);
+      removexattr(newPathName.get(), "com.apple.quarantine", 0);
     }
 #endif  // defined(XP_MACOSX)
 
@@ -2276,86 +2280,6 @@ nsresult NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks,
 // nsILocalFileMac
 
 #ifdef MOZ_WIDGET_COCOA
-
-NS_IMETHODIMP
-nsLocalFile::HasXAttr(const nsACString& aAttrName, bool* aHasAttr) {
-  NS_ENSURE_ARG_POINTER(aHasAttr);
-
-  nsAutoCString attrName{aAttrName};
-
-  ssize_t size = getxattr(mPath.get(), attrName.get(), nullptr, 0, 0, 0);
-  if (size == -1) {
-    if (errno == ENOATTR) {
-      *aHasAttr = false;
-    } else {
-      return NS_RESULT_FOR_ERRNO();
-    }
-  }
-
-  *aHasAttr = true;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetXAttr(const nsACString& aAttrName,
-                      nsTArray<uint8_t>& aAttrValue) {
-  aAttrValue.Clear();
-
-  nsAutoCString attrName{aAttrName};
-
-  ssize_t size = getxattr(mPath.get(), attrName.get(), nullptr, 0, 0, 0);
-
-  if (size == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  for (;;) {
-    aAttrValue.SetCapacity(size);
-
-    // The attribute can change between our first call and this call, so we need
-    // to re-check the size and possibly call with a larger buffer.
-    ssize_t newSize = getxattr(mPath.get(), attrName.get(),
-                               aAttrValue.Elements(), size, 0, 0);
-    if (newSize == -1) {
-      return NSRESULT_FOR_ERRNO();
-    }
-
-    if (newSize <= size) {
-      aAttrValue.SetLength(newSize);
-      break;
-    } else {
-      size = newSize;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetXAttr(const nsACString& aAttrName,
-                      const nsTArray<uint8_t>& aAttrValue) {
-  nsAutoCString attrName{aAttrName};
-
-  if (setxattr(mPath.get(), attrName.get(), aAttrValue.Elements(),
-               aAttrValue.Length(), 0, 0) == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::DelXAttr(const nsACString& aAttrName) {
-  nsAutoCString attrName{aAttrName};
-
-  // Ignore removing an attribute that does not exist.
-  if (removexattr(mPath.get(), attrName.get(), 0) == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  return NS_OK;
-}
 
 static nsresult MacErrorMapper(OSErr inErr) {
   nsresult outErr;
