@@ -1121,6 +1121,19 @@ static const struct EVInfo kEVInfos[] = {
     "Y2lvbiBGaXJtYXByb2Zlc2lvbmFsIENJRiBBNjI2MzQwNjg=",
     "G3Dp0v+ubHE=",
   },
+  {
+    // CN=NetLock Arany (Class Gold) Főtanúsítvány,OU=Tanúsítványkiadók (Certification Services),O=NetLock Kft.,L=Budapest,C=HU
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x6C, 0x61, 0xDA, 0xC3, 0xA2, 0xDE, 0xF0, 0x31, 0x50, 0x6B, 0xE0,
+      0x36, 0xD2, 0xA6, 0xFE, 0x40, 0x19, 0x94, 0xFB, 0xD1, 0x3D, 0xF9,
+      0xC8, 0xD4, 0x66, 0x59, 0x92, 0x74, 0xC4, 0x46, 0xEC, 0x98 },
+    "MIGnMQswCQYDVQQGEwJIVTERMA8GA1UEBwwIQnVkYXBlc3QxFTATBgNVBAoMDE5l"
+    "dExvY2sgS2Z0LjE3MDUGA1UECwwuVGFuw7pzw610dsOhbnlraWFkw7NrIChDZXJ0"
+    "aWZpY2F0aW9uIFNlcnZpY2VzKTE1MDMGA1UEAwwsTmV0TG9jayBBcmFueSAoQ2xh"
+    "c3MgR29sZCkgRsWRdGFuw7pzw610dsOhbnk=",
+    "SUEs5AAQ",
+  },
     // clang-format on
 };
 
