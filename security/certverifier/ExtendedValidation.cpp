@@ -1077,6 +1077,17 @@ static const struct EVInfo kEVInfos[] = {
     "QyBSb290IENBIDIwMjE=",
     "Z3SdjXfYO2rbIvT/WeK/zg==",
   },
+  {
+    // CN=HiPKI Root CA - G1,O="Chunghwa Telecom Co., Ltd.",C=TW
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xF0, 0x15, 0xCE, 0x3C, 0xC2, 0x39, 0xBF, 0xEF, 0x06, 0x4B, 0xE9,
+      0xF1, 0xD2, 0xC4, 0x17, 0xE1, 0xA0, 0x26, 0x4A, 0x0A, 0x94, 0xBE,
+      0x1F, 0x0C, 0x8D, 0x12, 0x18, 0x64, 0xEB, 0x69, 0x49, 0xCC },
+    "ME8xCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwg"
+    "THRkLjEbMBkGA1UEAwwSSGlQS0kgUm9vdCBDQSAtIEcx",
+    "Ld2szmKXlKFD6LDNdmpeYA==",
+  },
     // clang-format on
 };
 
