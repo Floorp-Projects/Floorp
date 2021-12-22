@@ -16,8 +16,11 @@ const { LongStringActor } = require("devtools/server/actors/string");
  * Creates an actor for a network event.
  *
  * @constructor
- * @param object networkEventWatcher
- *        The parent NetworkEventWatcher instance for this object.
+ * @param DevToolsServerConnection conn
+ *        The connection into which this Actor will be added.
+ * @param object sessionContext
+ *        WatcherActor's session context. This helps know what is the overall debugged scope.
+ *        See watcher actor constructor for more info.
  * @param object options
  *        Dictionary object with the following attributes:
  *        - onNetworkEventUpdate: optional function
@@ -25,12 +28,13 @@ const { LongStringActor } = require("devtools/server/actors/string");
  */
 const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   initialize(
-    networkEventWatcher,
+    conn,
+    sessionContext,
     { onNetworkEventUpdate, onNetworkEventDestroy },
     networkEvent
   ) {
-    this._networkEventWatcher = networkEventWatcher;
-    this._conn = networkEventWatcher.conn;
+    this._sessionContext = sessionContext;
+    this._conn = conn;
     this._onNetworkEventUpdate = onNetworkEventUpdate;
     this._onNetworkEventDestroy = onNetworkEventDestroy;
 
@@ -98,9 +102,9 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Returns a grip for this actor.
    */
   asResource() {
-    // Ensure that we have a browsing context ID for all requests when debugging a tab (=`browserId` is defined).
-    // Only privileged requests debugged via the Browser Toolbox (=`browserId` null) can be unrelated to any browsing context.
-    if (!this._browsingContextID && this._networkEventWatcher.browserId) {
+    // Ensure that we have a browsing context ID for all requests.
+    // Only privileged requests debugged via the Browser Toolbox (sessionContext.type == "all") can be unrelated to any browsing context.
+    if (!this._browsingContextID && this._sessionContext.type != "all") {
       throw new Error(
         `Got a request ${this._request.url} without a browsingContextID set`
       );
@@ -109,11 +113,11 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // The browsingContextID is used by the ResourceCommand on the client
     // to find the related Target Front.
     //
-    // For now in the browser toolbox (where watcher.browserId is undefined),
-    // do not relate requests to any WindowGlobalTargetActor
+    // For now in the browser and web extension toolboxes, requests
+    // do not relate to any specific WindowGlobalTargetActor
     // as we are still using a unique target (ParentProcessTargetActor) for everything.
     const browsingContextID =
-      this._browsingContextID && this._networkEventWatcher.browserId
+      this._browsingContextID && this._sessionContext.type == "browser-element"
         ? this._browsingContextID
         : -1;
 
@@ -148,13 +152,11 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Releases this actor from the pool.
    */
   destroy(conn) {
-    if (!this._networkEventWatcher) {
+    if (!this._channelId) {
       return;
     }
-    if (this._channelId) {
-      this._onNetworkEventDestroy(this._channelId);
-    }
-    this._networkEventWatcher = null;
+    this._onNetworkEventDestroy(this._channelId);
+    this._channelId = null;
     protocol.Actor.prototype.destroy.call(this, conn);
   },
 
