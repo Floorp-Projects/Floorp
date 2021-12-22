@@ -215,7 +215,7 @@ function getResourceTypeEntry(watcherOrTargetActor, resourceType) {
  *        This actor:
  *          - defines what context to observe (browsing context, process, worker, ...)
  *            Via browsingContextID, windows, docShells attributes for the target actor.
- *            Via browserId or browserElement attributes for the watcher actor.
+ *            Via the `sessionContext` object for the watcher actor.
  *          - exposes `notifyResourceAvailable` method to be notified about the available resources
  * @param Array<String> resourceTypes
  *        List of all type of resource to listen to.

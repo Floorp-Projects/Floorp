@@ -260,10 +260,19 @@ const windowGlobalTargetPrototype = {
    *        - ignoreSubFrames Boolean
    *          If true, the actor will only focus on the passed docShell and not on the whole
    *          docShell tree. This should be enabled when we have targets for all documents.
+   *        - sessionContext Object
+   *          WatcherActor's session context. This helps know what is the overall debugged scope.
+   *          See watcher actor constructor for more info.
    */
   initialize: function(
     connection,
-    { docShell, followWindowGlobalLifeCycle, isTopLevelTarget, ignoreSubFrames }
+    {
+      docShell,
+      followWindowGlobalLifeCycle,
+      isTopLevelTarget,
+      ignoreSubFrames,
+      sessionContext,
+    }
   ) {
     Actor.prototype.initialize.call(this, connection);
 
@@ -280,6 +289,7 @@ const windowGlobalTargetPrototype = {
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
     this.ignoreSubFrames = ignoreSubFrames;
+    this.sessionContext = sessionContext;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
