@@ -553,6 +553,12 @@ if CONFIG["MOZ_VTUNE"]:
 
 DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "util", "wasm"]
 
+# Bug 1739321 - clang 13+ only emits debuginfo for classes that are actually
+# constructed, and we cheat in a number of cases. The flag exists at least
+# back to clang 4.
+if CONFIG["CC_TYPE"] == "clang":
+    CXXFLAGS += ["-fstandalone-debug"]
+
 if CONFIG["JS_JITSPEW"]:
     DIRS += ["zydis"]
 
