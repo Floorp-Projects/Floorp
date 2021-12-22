@@ -86,12 +86,14 @@ class Localization : public nsIObserver,
 
   static already_AddRefed<Localization> Constructor(
       const dom::GlobalObject& aGlobal,
-      const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
-      const dom::Optional<dom::NonNull<L10nRegistry>>& aRegistry,
+      const dom::Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,
+      bool aIsSync, const dom::Optional<dom::NonNull<L10nRegistry>>& aRegistry,
       const dom::Optional<dom::Sequence<nsCString>>& aLocales,
       ErrorResult& aRv);
   static already_AddRefed<Localization> Create(
       const nsTArray<nsCString>& aResourceIds, bool aIsSync);
+  static already_AddRefed<Localization> Create(
+      const nsTArray<ffi::GeckoResourceId>& aResourceIds, bool aIsSync);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -121,16 +123,24 @@ class Localization : public nsIObserver,
       const dom::Sequence<dom::OwningUTF8StringOrL10nIdArgs>& aKeys,
       nsTArray<dom::Nullable<dom::L10nMessage>>& aRetVal, ErrorResult& aRv);
 
-  void AddResourceId(const nsACString& aResourceId);
-  uint32_t RemoveResourceId(const nsACString& aResourceId);
-  void AddResourceIds(const nsTArray<nsCString>& aResourceIds);
-  uint32_t RemoveResourceIds(const nsTArray<nsCString>& aResourceIds);
+  void AddResourceId(const ffi::GeckoResourceId& aResourceId);
+  void AddResourceId(const nsCString& aResourceId);
+  void AddResourceId(const dom::OwningUTF8StringOrResourceId& aResourceId);
+  uint32_t RemoveResourceId(const ffi::GeckoResourceId& aResourceId);
+  uint32_t RemoveResourceId(const nsCString& aResourceId);
+  uint32_t RemoveResourceId(
+      const dom::OwningUTF8StringOrResourceId& aResourceId);
+  void AddResourceIds(
+      const nsTArray<dom::OwningUTF8StringOrResourceId>& aResourceIds);
+  uint32_t RemoveResourceIds(
+      const nsTArray<dom::OwningUTF8StringOrResourceId>& aResourceIds);
 
   void SetAsync();
   bool IsSync();
 
  protected:
   Localization(const nsTArray<nsCString>& aResIds, bool aIsSync);
+  Localization(const nsTArray<ffi::GeckoResourceId>& aResIds, bool aIsSync);
   Localization(nsIGlobalObject* aGlobal, bool aIsSync);
 
   Localization(nsIGlobalObject* aGlobal, const nsTArray<nsCString>& aResIds,

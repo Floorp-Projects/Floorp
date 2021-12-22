@@ -35,7 +35,8 @@ class DOMLocalization : public intl::Localization {
 
   static already_AddRefed<DOMLocalization> Constructor(
       const dom::GlobalObject& aGlobal,
-      const dom::Sequence<nsCString>& aResourceIds, bool aIsSync,
+      const dom::Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,
+      bool aIsSync,
       const dom::Optional<dom::NonNull<intl::L10nRegistry>>& aRegistry,
       const dom::Optional<dom::Sequence<nsCString>>& aLocales,
       ErrorResult& aRv);
