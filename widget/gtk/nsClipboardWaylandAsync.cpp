@@ -136,8 +136,8 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
   }
 }
 
-GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
-                                                    int* aTargetNum) {
+GdkAtom* nsRetrievalContextWaylandAsync::GetTargetsImpl(int32_t aWhichClipboard,
+                                                        int* aTargetNum) {
   LOGCLIP("nsRetrievalContextWaylandAsync::GetTargets()\n");
 
   if (!mMutex.TryLock()) {
