@@ -136,7 +136,6 @@ end:
     return p;
 }
 
-#if FF_API_D2STR
 char *av_d2str(double d)
 {
     char *str = av_malloc(16);
@@ -144,7 +143,6 @@ char *av_d2str(double d)
         snprintf(str, 16, "%f", d);
     return str;
 }
-#endif
 
 #define WHITESPACES " \n\t\r"
 
@@ -259,18 +257,12 @@ char *av_strireplace(const char *str, const char *from, const char *to)
 
 const char *av_basename(const char *path)
 {
-    char *p;
-#if HAVE_DOS_PATHS
-    char *q, *d;
-#endif
+    char *p = strrchr(path, '/');
 
-    if (!path || *path == '\0')
-        return ".";
-
-    p = strrchr(path, '/');
 #if HAVE_DOS_PATHS
-    q = strrchr(path, '\\');
-    d = strchr(path, ':');
+    char *q = strrchr(path, '\\');
+    char *d = strchr(path, ':');
+
     p = FFMAX3(p, q, d);
 #endif
 
@@ -282,11 +274,11 @@ const char *av_basename(const char *path)
 
 const char *av_dirname(char *path)
 {
-    char *p = path ? strrchr(path, '/') : NULL;
+    char *p = strrchr(path, '/');
 
 #if HAVE_DOS_PATHS
-    char *q = path ? strrchr(path, '\\') : NULL;
-    char *d = path ? strchr(path, ':')  : NULL;
+    char *q = strrchr(path, '\\');
+    char *d = strchr(path, ':');
 
     d = d ? d + 1 : d;
 
@@ -336,18 +328,17 @@ int av_escape(char **dst, const char *src, const char *special_chars,
               enum AVEscapeMode mode, int flags)
 {
     AVBPrint dstbuf;
-    int ret;
 
-    av_bprint_init(&dstbuf, 1, INT_MAX); /* (int)dstbuf.len must be >= 0 */
+    av_bprint_init(&dstbuf, 1, AV_BPRINT_SIZE_UNLIMITED);
     av_bprint_escape(&dstbuf, src, special_chars, mode, flags);
 
     if (!av_bprint_is_complete(&dstbuf)) {
         av_bprint_finalize(&dstbuf, NULL);
         return AVERROR(ENOMEM);
+    } else {
+        av_bprint_finalize(&dstbuf, dst);
+        return dstbuf.len;
     }
-    if ((ret = av_bprint_finalize(&dstbuf, dst)) < 0)
-        return ret;
-    return dstbuf.len;
 }
 
 int av_match_name(const char *name, const char *names)
