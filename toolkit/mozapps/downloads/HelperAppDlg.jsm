@@ -507,7 +507,18 @@ nsUnknownContentTypeDialog.prototype = {
       url = url.innermostURI;
     }
     if (url.scheme == "blob") {
-      url = Services.io.newURI(new URL(url.spec).origin);
+      let origin = new URL(url.spec).origin;
+      // Origin can be "null" for blob URIs from a sandbox.
+      if (origin != "null") {
+        // `newURI` can throw (like for null) and throwing here breaks...
+        // a lot of stuff. So let's avoid doing that in case there are other
+        // edgecases we're missing here.
+        try {
+          url = Services.io.newURI(origin);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
     }
 
     var fname = "";
