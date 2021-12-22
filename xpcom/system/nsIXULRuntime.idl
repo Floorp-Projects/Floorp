@@ -288,16 +288,6 @@ interface nsIXULRuntime : nsISupports
   readonly attribute PRTime replacedLockTime;
 
   /**
-   * True if this is RELEASE_OR_BETA.
-   */
-  readonly attribute boolean isReleaseOrBeta;
-
-  /**
-   * True if this build uses official branding (MOZ_OFFICIAL_BRANDING).
-   */
-  readonly attribute boolean isOfficialBranding;
-
-  /**
    * The default update channel (MOZ_UPDATE_CHANNEL).
    */
   readonly attribute AUTF8String defaultUpdateChannel;

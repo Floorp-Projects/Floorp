@@ -1278,26 +1278,6 @@ nsXULAppInfo::GetReplacedLockTime(PRTime* aReplacedLockTime) {
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetIsReleaseOrBeta(bool* aResult) {
-#ifdef RELEASE_OR_BETA
-  *aResult = true;
-#else
-  *aResult = false;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetIsOfficialBranding(bool* aResult) {
-#ifdef MOZ_OFFICIAL_BRANDING
-  *aResult = true;
-#else
-  *aResult = false;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::GetDefaultUpdateChannel(nsACString& aResult) {
   aResult.AssignLiteral(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL));
   return NS_OK;
