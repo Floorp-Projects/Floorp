@@ -48,7 +48,7 @@ nsHtml5Parser::nsHtml5Parser()
       mFirstBuffer(new nsHtml5OwningUTF16Buffer((void*)nullptr)),
       mLastBuffer(mFirstBuffer),
       mExecutor(new nsHtml5TreeOpExecutor()),
-      mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr)),
+      mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr, false)),
       mTokenizer(new nsHtml5Tokenizer(mTreeBuilder.get(), false)),
       mRootContextLineNumber(1),
       mReturnToStreamParserPermitted(false) {
@@ -100,7 +100,8 @@ void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
   MOZ_ASSERT(GetStreamParser(), "Setting charset on a script-only parser.");
   GetStreamParser()->SetDocumentCharset(
       aEncoding, (nsCharsetSource)aCharsetSource, aForceAutoDetection);
-  mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
+  mExecutor->SetDocumentCharsetAndSource(aEncoding,
+                                         (nsCharsetSource)aCharsetSource);
 }
 
 NS_IMETHODIMP
@@ -410,7 +411,7 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       if (!mDocWriteSpeculativeTreeBuilder) {
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
-            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage());
+            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage(), true);
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
         mDocWriteSpeculativeTokenizer = MakeUnique<nsHtml5Tokenizer>(

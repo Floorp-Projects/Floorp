@@ -256,17 +256,14 @@ class nsHtml5SpeculativeLoad {
   }
 
   /**
-   * "Speculative" charset setting isn't truly speculative. If the charset
-   * is set via this operation, we are committed to it unless chardet or
-   * a late meta cause a reload. The reason why a parser
-   * thread-discovered charset gets communicated via the speculative load
-   * queue as opposed to tree operation queue is that the charset change
-   * must get processed before any actual speculative loads such as style
-   * sheets. Thus, encoding decisions by the parser thread have to maintain
-   * the queue order relative to true speculative loads. See bug 675499.
+   * We communicate the encoding change via the speculative operation
+   * queue in order to act upon it as soon as possible and so as not to
+   * have speculative loads generated after an encoding change fail to
+   * make use of the encoding change.
    */
   inline void InitSetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                                     int32_t aCharsetSource) {
+                                     int32_t aCharsetSource,
+                                     bool aCommitEncodingSpeculation) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadSetDocumentCharset;
@@ -274,6 +271,7 @@ class nsHtml5SpeculativeLoad {
     mEncoding = aEncoding;
     mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.Assign(
         (char16_t)aCharsetSource);
+    mCommitEncodingSpeculation = aCommitEncodingSpeculation;
   }
 
   inline void InitMaybeComplainAboutCharset(const char* aMsgId, bool aError,
@@ -345,6 +343,12 @@ class nsHtml5SpeculativeLoad {
    * Whether the charset complaint is an error.
    */
   bool mIsError;
+
+  /**
+   * Whether setting document encoding involves also committing to an encoding
+   * speculation.
+   */
+  bool mCommitEncodingSpeculation;
 
   /* If mOpCode is eSpeculativeLoadPictureSource, this is the value of the
    * "sizes" attribute. If the attribute is not set, this will be a void
