@@ -130,7 +130,12 @@ add_task(async function() {
     parentProcessStorages,
     allStorages,
   });
-  await testRemoveIframe(commands, initialResources, { allStorages });
+
+  await testRemoveIframe(commands, initialResources, {
+    contentProcessStorages,
+    parentProcessStorages,
+    allStorages,
+  });
 
   await clearStorage();
 
@@ -247,20 +252,24 @@ async function testAddIframe(
 ) {
   info("Testing if new iframe addition works properly");
 
-  // If Fission is enabled:
+  // If Fission or EFT is enabled:
   // * we get new resources alongside single-store-update events for content process storages
   // * only single-store-update events for previous resources for parent process storages
   // Otherwise if fission is disables:
   // * we get single-store-update events for all previous resources
   const onResources = waitForNewResourcesAndUpdates(
     commands,
-    isFissionEnabled() ? contentProcessStorages : []
+    isFissionEnabled() || isEveryFrameTargetEnabled()
+      ? contentProcessStorages
+      : []
   );
-  // If fission is enabled, we only get update
-  const onUpdates = waitForResourceUpdates(
-    resources,
-    isFissionEnabled() ? parentProcessStorages : allStorages
-  );
+  // If fission or EFT is enabled, we only get update for parent process storages.
+  // The content process storage resources are notified via brand new resource instances.
+  const storagesWithUpdates =
+    isFissionEnabled() || isEveryFrameTargetEnabled()
+      ? parentProcessStorages
+      : allStorages;
+  const onUpdates = waitForResourceUpdates(resources, storagesWithUpdates);
 
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -280,7 +289,7 @@ async function testAddIframe(
   info("Wait for all updates");
   const previousResourceUpdates = await onUpdates;
 
-  if (isFissionEnabled()) {
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     for (const resourceType of contentProcessStorages) {
       const resource = newResources[resourceType];
       const expected = afterIframeAdded[resourceType];
@@ -308,9 +317,6 @@ async function testAddIframe(
     }
   }
 
-  const storagesWithUpdates = isFissionEnabled()
-    ? parentProcessStorages
-    : allStorages;
   for (const resourceType of storagesWithUpdates) {
     const expected = afterIframeAdded[resourceType];
     const update = previousResourceUpdates[resourceType];
@@ -325,10 +331,21 @@ async function testAddIframe(
   return newResources;
 }
 
-async function testRemoveIframe(commands, resources, { allStorages }) {
+async function testRemoveIframe(
+  commands,
+  resources,
+  { contentProcessStorages, parentProcessStorages, allStorages }
+) {
   info("Testing if iframe removal works properly");
 
-  const onUpdates = waitForResourceUpdates(resources, allStorages);
+  // If fission or EFT is enabled, we only get update for parent process storages.
+  // The content process storage resources are wiped via their related target destruction.
+  const onUpdates = waitForResourceUpdates(
+    resources,
+    isFissionEnabled() || isEveryFrameTargetEnabled()
+      ? parentProcessStorages
+      : allStorages
+  );
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     for (const iframe of content.document.querySelectorAll("iframe")) {
@@ -342,7 +359,11 @@ async function testRemoveIframe(commands, resources, { allStorages }) {
   info("Wait for all updates");
   const previousResourceUpdates = await onUpdates;
 
-  for (const resourceType of allStorages) {
+  const storagesWithUpdates =
+    isFissionEnabled() || isEveryFrameTargetEnabled()
+      ? parentProcessStorages
+      : allStorages;
+  for (const resourceType of storagesWithUpdates) {
     const expected = afterIframeRemoved[resourceType];
     const update = previousResourceUpdates[resourceType];
     const storageKey = resourceTypeToStorageKey(resourceType);
@@ -350,6 +371,24 @@ async function testRemoveIframe(commands, resources, { allStorages }) {
       update.deleted[storageKey],
       expected,
       `We get an update after the resource ${resourceType}, with the host values`
+    );
+  }
+
+  // With Fission or EFT, the iframe target is destroyed,
+  // which ends up destroying the related resources
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
+    const destroyedResourceTypes = [];
+    for (const storageType in resources) {
+      for (const resource of resources[storageType]) {
+        if (resource.isDestroyed()) {
+          destroyedResourceTypes.push(resource.resourceType);
+        }
+      }
+    }
+    Assert.deepEqual(
+      destroyedResourceTypes.sort(),
+      contentProcessStorages.sort(),
+      "Content process storage resources have been destroyed [local and session storages]"
     );
   }
 }
