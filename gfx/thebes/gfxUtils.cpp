@@ -290,10 +290,7 @@ static already_AddRefed<gfxDrawable> CreateSamplingRestrictedDrawable(
   AUTO_PROFILER_LABEL("CreateSamplingRestrictedDrawable", GRAPHICS);
 
   DrawTarget* destDrawTarget = aContext->GetDrawTarget();
-  // We've been not using CreateSamplingRestrictedDrawable in a bunch of places
-  // for a while. Let's disable it everywhere and confirm that it's ok to get rid
-  // of.
-  if (destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1 || true) {
+  if (destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1) {
     return nullptr;
   }
 
