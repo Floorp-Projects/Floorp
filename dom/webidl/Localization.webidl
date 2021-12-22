@@ -73,7 +73,7 @@ interface Localization {
    *    - aLocales             - custom set of locales to be used for this Localization.
    */
   [Throws]
-  constructor(sequence<UTF8String> aResourceIds,
+  constructor(sequence<L10nResourceId> aResourceIds,
               optional boolean aSync = false,
               optional L10nRegistry aRegistry,
               optional sequence<UTF8String> aLocales);
@@ -81,14 +81,14 @@ interface Localization {
   /**
    * A method for adding resources to the localization context.
    */
-  void addResourceIds(sequence<UTF8String> aResourceIds);
+  void addResourceIds(sequence<L10nResourceId> aResourceIds);
 
   /**
    * A method for removing resources from the localization context.
    *
    * Returns a new count of resources used by the context.
    */
-  unsigned long removeResourceIds(sequence<UTF8String> aResourceIds);
+  unsigned long removeResourceIds(sequence<L10nResourceId> aResourceIds);
 
   /**
    * Formats a value of a localization message with a given id.
