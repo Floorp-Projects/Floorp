@@ -55,6 +55,7 @@
 
 @itemFinished@[exists].hoveringMainArea:hover,
 @item@:is(.openWhenFinished).hoveringMainArea:hover,
+@item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover,
 @item@:hover:is(.openWhenFinished),
 .downloadsPanelFooterButton:hover {
@@ -63,6 +64,7 @@
 
 @itemFinished@[exists].hoveringMainArea:hover:active,
 @item@:is(.openWhenFinished).hoveringMainArea:hover:active,
+@item@:not([verdict]) > .downloadButton:hover:active,
 .downloadsPanelFooterButton[open="true"],
 @item@[verdict]:hover:active {
   background-color: var(--panel-item-active-bgcolor);
@@ -174,15 +176,11 @@
   height: 32px;
   margin: 0;
   margin-inline-start: 4px;
-  border: 1px solid transparent;
+  border: none;
   padding: 0;
   background: transparent;
   color: inherit;
   border-radius: 4px;
-  --button-hover-bgcolor: var(--panel-item-hover-bgcolor);
-  --button-hover-color: inherit;
-  --button-active-bgcolor: var(--panel-item-active-bgcolor);
-  --button-active-color: inherit;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -196,28 +194,6 @@
 .downloadButton > .button-box > .button-text {
   margin: 0 !important;
   padding: 0;
-}
-
-@media (prefers-contrast) {
-  .downloadButton {
-    background-color: Button;
-    color: ButtonText;
-    border-color: currentColor;
-    --button-hover-bgcolor: SelectedItem;
-    --button-hover-color: SelectedItemText;
-    --button-active-bgcolor: Button;
-    --button-active-color: ButtonText;
-  }
-}
-
-.downloadButton:hover:not(:active) {
-  background-color: var(--button-hover-bgcolor);
-  color: var(--button-hover-color);
-  border-color: var(--button-hover-bgcolor);
-}
-.downloadButton:hover:active {
-  background-color: var(--button-active-bgcolor);
-  color: var(--button-active-color);
 }
 
 /*** Button icons ***/
