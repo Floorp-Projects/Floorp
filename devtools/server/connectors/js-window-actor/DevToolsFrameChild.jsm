@@ -313,17 +313,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
       "Instantiate WindowGlobalTarget with prefix: " + forwardingPrefix
     );
 
-    // In the case of the browser toolbox, tab's BrowsingContext don't have
-    // any parent BC and shouldn't be considered as top-level.
-    // This is why we check for browserId's.
-    const browsingContext = this.manager.browsingContext;
-    const isTopLevelTarget =
-      !browsingContext.parent &&
-      browsingContext.browserId == sessionData.sessionContext.browserId;
-
     const { connection, targetActor } = this._createConnectionAndActor(
       forwardingPrefix,
-      isTopLevelTarget
+      sessionData
     );
     const form = targetActor.form();
     // Ensure unregistering and destroying the related DevToolsServerConnection+Transport
@@ -388,7 +380,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _createConnectionAndActor(forwardingPrefix, isTopLevelTarget) {
+  _createConnectionAndActor(forwardingPrefix, sessionData) {
     this.useCustomLoader = this.document.nodePrincipal.isSystemPrincipal;
 
     // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
@@ -420,6 +412,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
       forwardingPrefix
     );
 
+    // In the case of the browser toolbox, tab's BrowsingContext don't have
+    // any parent BC and shouldn't be considered as top-level.
+    // This is why we check for browserId's.
+    const browsingContext = this.manager.browsingContext;
+    const isTopLevelTarget =
+      !browsingContext.parent &&
+      browsingContext.browserId == sessionData.sessionContext.browserId;
+
     // Create the actual target actor.
     const targetActor = new WindowGlobalTargetActor(connection, {
       docShell: this.docShell,
@@ -431,6 +431,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       followWindowGlobalLifeCycle: true,
       isTopLevelTarget,
       ignoreSubFrames: isEveryFrameTargetEnabled,
+      sessionContext: sessionData.sessionContext,
     });
     targetActor.manage(targetActor);
     targetActor.createdFromJsWindowActor = true;
