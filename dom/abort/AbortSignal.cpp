@@ -139,6 +139,17 @@ already_AddRefed<AbortSignal> AbortSignal::Abort(GlobalObject& aGlobal,
   return abortSignal.forget();
 }
 
+// https://dom.spec.whatwg.org/#dom-abortsignal-throwifaborted
+void AbortSignal::ThrowIfAborted(JSContext* aCx, ErrorResult& aRv) {
+  aRv.MightThrowJSException();
+
+  if (Aborted()) {
+    JS::Rooted<JS::Value> reason(aCx);
+    GetReason(aCx, &reason);
+    aRv.ThrowJSException(aCx, reason);
+  }
+}
+
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
 void AbortSignal::SignalAbort(JS::Handle<JS::Value> aReason) {
   // Steps 1-4.
