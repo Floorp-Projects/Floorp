@@ -91,7 +91,7 @@ class WindowsBootstrapper(BaseBootstrapper):
             "We do not support building Android on Windows. Sorry!"
         )
 
-    def ensure_mobile_android_packages(self, state_dir, checkout_root):
+    def ensure_mobile_android_packages(self):
         raise NotImplementedError(
             "We do not support building Android on Windows. Sorry!"
         )
@@ -101,14 +101,12 @@ class WindowsBootstrapper(BaseBootstrapper):
             "We do not support building Android on Windows. Sorry!"
         )
 
-    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+    def ensure_clang_static_analysis_package(self):
         from mozboot import static_analysis
 
-        self.install_toolchain_static_analysis(
-            state_dir, checkout_root, static_analysis.WINDOWS_CLANG_TIDY
-        )
+        self.install_toolchain_static_analysis(static_analysis.WINDOWS_CLANG_TIDY)
 
-    def ensure_stylo_packages(self, state_dir, checkout_root):
+    def ensure_stylo_packages(self):
         # On-device artifact builds are supported; on-device desktop builds are not.
         if is_aarch64_host():
             raise Exception(
@@ -120,23 +118,21 @@ class WindowsBootstrapper(BaseBootstrapper):
 
         from mozboot import stylo
 
-        self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CLANG)
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, stylo.WINDOWS_CBINDGEN
-        )
+        self.install_toolchain_artifact(stylo.WINDOWS_CLANG)
+        self.install_toolchain_artifact(stylo.WINDOWS_CBINDGEN)
 
-    def ensure_nasm_packages(self, state_dir, checkout_root):
+    def ensure_nasm_packages(self):
         from mozboot import nasm
 
-        self.install_toolchain_artifact(state_dir, checkout_root, nasm.WINDOWS_NASM)
+        self.install_toolchain_artifact(nasm.WINDOWS_NASM)
 
-    def ensure_node_packages(self, state_dir, checkout_root):
+    def ensure_node_packages(self):
         from mozboot import node
 
         # We don't have native aarch64 node available, but aarch64 windows
         # runs x86 binaries, so just use the x86 packages for such hosts.
         node_artifact = node.WIN32 if is_aarch64_host() else node.WIN64
-        self.install_toolchain_artifact(state_dir, checkout_root, node_artifact)
+        self.install_toolchain_artifact(node_artifact)
 
     def _update_package_manager(self):
         self.pacman_update()
