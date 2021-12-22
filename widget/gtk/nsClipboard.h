@@ -42,12 +42,31 @@ class nsRetrievalContext {
 
   // Get data mime types which can be obtained from clipboard.
   // The returned array has to be released by g_free().
-  virtual GdkAtom* GetTargets(int32_t aWhichClipboard, int* aTargetNum) = 0;
+  GdkAtom* GetTargets(int32_t aWhichClipboard, int* aTargetNum);
+
+  virtual GdkAtom* GetTargetsImpl(int32_t aWhichClipboard, int* aTargetNum) = 0;
 
   virtual bool HasSelectionSupport(void) = 0;
 
+  // Clipboard/Primary selection owner changed. Clear internal cached data.
+  void ClipboardOwnerChanged();
+  void PrimaryOwnerChanged();
+
+  GdkAtom* GetStoredTargets(int32_t aWhichClipboard, int* aTargetNum);
+  void StoreTargets(int32_t aWhichClipboard, GdkAtom* aTargets, int aTargetNum);
+
+  nsRetrievalContext();
+
  protected:
-  virtual ~nsRetrievalContext() = default;
+  virtual ~nsRetrievalContext();
+
+ private:
+  // Cached targets
+  GdkAtom* mTargets = nullptr;
+  int mTargetNum = 0;
+
+  GdkAtom* mTargetsPrimary = nullptr;
+  int mTargetPrimaryNum = 0;
 };
 
 class nsClipboard : public nsIClipboard, public nsIObserver {
