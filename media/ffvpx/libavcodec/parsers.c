@@ -21,6 +21,7 @@
 #include "libavutil/thread.h"
 
 #include "avcodec.h"
+#include "version.h"
 
 extern AVCodecParser ff_aac_parser;
 extern AVCodecParser ff_aac_latm_parser;
@@ -28,12 +29,15 @@ extern AVCodecParser ff_ac3_parser;
 extern AVCodecParser ff_adx_parser;
 extern AVCodecParser ff_av1_parser;
 extern AVCodecParser ff_avs2_parser;
+extern AVCodecParser ff_avs3_parser;
 extern AVCodecParser ff_bmp_parser;
 extern AVCodecParser ff_cavsvideo_parser;
 extern AVCodecParser ff_cook_parser;
+extern AVCodecParser ff_cri_parser;
 extern AVCodecParser ff_dca_parser;
 extern AVCodecParser ff_dirac_parser;
 extern AVCodecParser ff_dnxhd_parser;
+extern AVCodecParser ff_dolby_e_parser;
 extern AVCodecParser ff_dpx_parser;
 extern AVCodecParser ff_dvaudio_parser;
 extern AVCodecParser ff_dvbsub_parser;
@@ -48,6 +52,8 @@ extern AVCodecParser ff_h261_parser;
 extern AVCodecParser ff_h263_parser;
 extern AVCodecParser ff_h264_parser;
 extern AVCodecParser ff_hevc_parser;
+extern AVCodecParser ff_ipu_parser;
+extern AVCodecParser ff_jpeg2000_parser;
 extern AVCodecParser ff_mjpeg_parser;
 extern AVCodecParser ff_mlp_parser;
 extern AVCodecParser ff_mpeg4video_parser;
@@ -66,10 +72,14 @@ extern AVCodecParser ff_vorbis_parser;
 extern AVCodecParser ff_vp3_parser;
 extern AVCodecParser ff_vp8_parser;
 extern AVCodecParser ff_vp9_parser;
+extern AVCodecParser ff_webp_parser;
+extern AVCodecParser ff_xbm_parser;
 extern AVCodecParser ff_xma_parser;
 
 #include "libavcodec/parser_list.c"
 
+#if FF_API_NEXT
+FF_DISABLE_DEPRECATION_WARNINGS
 static AVOnce av_parser_next_init = AV_ONCE_INIT;
 
 static void av_parser_init_next(void)
@@ -93,6 +103,13 @@ AVCodecParser *av_parser_next(const AVCodecParser *p)
         return (AVCodecParser*)parser_list[0];
 }
 
+void av_register_codec_parser(AVCodecParser *parser)
+{
+    ff_thread_once(&av_parser_next_init, av_parser_init_next);
+}
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
 const AVCodecParser *av_parser_iterate(void **opaque)
 {
     uintptr_t i = (uintptr_t)*opaque;
@@ -102,9 +119,4 @@ const AVCodecParser *av_parser_iterate(void **opaque)
         *opaque = (void*)(i + 1);
 
     return p;
-}
-
-void av_register_codec_parser(AVCodecParser *parser)
-{
-    ff_thread_once(&av_parser_next_init, av_parser_init_next);
 }

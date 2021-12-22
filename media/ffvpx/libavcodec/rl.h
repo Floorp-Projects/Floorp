@@ -49,16 +49,11 @@ typedef struct RLTable {
 } RLTable;
 
 /**
- * @param static_store static uint8_t array[2][2*MAX_RUN + MAX_LEVEL + 3] which will hold
- *                     the level and run tables, if this is NULL av_malloc() will be used
+ * @param static_store static uint8_t array[2][2*MAX_RUN + MAX_LEVEL + 3]
+ *                     to hold the level and run tables.
  */
-int ff_rl_init(RLTable *rl, uint8_t static_store[2][2*MAX_RUN + MAX_LEVEL + 3]);
+void ff_rl_init(RLTable *rl, uint8_t static_store[2][2*MAX_RUN + MAX_LEVEL + 3]);
 void ff_rl_init_vlc(RLTable *rl, unsigned static_size);
-
-/**
- * Free the contents of a dynamically allocated table.
- */
-void ff_rl_free(RLTable *rl);
 
 #define INIT_VLC_RL(rl, static_size)\
 {\
@@ -72,6 +67,14 @@ void ff_rl_free(RLTable *rl);
         ff_rl_init_vlc(&rl, static_size);\
     }\
 }
+
+#define INIT_FIRST_VLC_RL(rl, static_size)              \
+do {                                                    \
+    static RL_VLC_ELEM rl_vlc_table[static_size];       \
+                                                        \
+    rl.rl_vlc[0] = rl_vlc_table;                        \
+    ff_rl_init_vlc(&rl, static_size);                   \
+} while (0)
 
 static inline int get_rl_index(const RLTable *rl, int last, int run, int level)
 {
