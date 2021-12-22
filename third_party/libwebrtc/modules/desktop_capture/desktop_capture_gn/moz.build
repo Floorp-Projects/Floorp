@@ -77,6 +77,29 @@ if CONFIG["OS_TARGET"] == "Linux":
         "Xtst"
     ]
 
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["USE_GLIB"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["WEBRTC_USE_X11"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["_LARGEFILE64_SOURCE"] = True
+    DEFINES["_LARGEFILE_SOURCE"] = True
+    DEFINES["__STDC_CONSTANT_MACROS"] = True
+    DEFINES["__STDC_FORMAT_MACROS"] = True
+
+    OS_LIBS += [
+        "X11",
+        "Xcomposite",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xrandr",
+        "Xrender",
+        "Xtst"
+    ]
+
 if CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
@@ -125,11 +148,19 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_DEBUG"] = True
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_DEBUG"] = True
 
