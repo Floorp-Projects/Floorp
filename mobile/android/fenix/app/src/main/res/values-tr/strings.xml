@@ -908,7 +908,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">Kusura bakmayın, %1$s bu sayfayı yükleyemedi.</string>
+    <string name="tab_crash_title_2">%1$s bu sayfayı yükleyemedi.</string>
     <!-- Description text displayed on the tab crash page -->
     <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Bu sekmeyi kurtarmayı veya kapatmayı deneyebilirsiniz.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
