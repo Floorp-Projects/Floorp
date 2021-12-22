@@ -246,6 +246,9 @@ def build_one_stage(
 
     def cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir):
         machine_targets = "X86;ARM;AArch64" if is_final_stage else "X86"
+        if build_wasm and is_final_stage:
+            machine_targets += ";WebAssembly"
+
         cmake_args = [
             "-GNinja",
             "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
@@ -280,8 +283,7 @@ def build_one_stage(
                 "-DCOMPILER_RT_BUILD_MEMPROF=OFF",
                 "-DCOMPILER_RT_BUILD_LIBFUZZER=OFF",
             ]
-        if build_wasm:
-            cmake_args += ["-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly"]
+
         if is_linux() and not osx_cross_compile and is_final_stage:
             cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
