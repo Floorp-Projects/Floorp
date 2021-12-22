@@ -105,10 +105,15 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
       MOZ_ASSERT(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
                          .Length() == 1,
                  "Unexpected charset source string");
-      int32_t intSource =
-          (int32_t)mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
-              .First();
-      aExecutor->SetDocumentCharsetAndSource(WrapNotNull(mEncoding), intSource);
+      nsCharsetSource enumSource =
+          (nsCharsetSource)
+              mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
+                  .First();
+      aExecutor->SetDocumentCharsetAndSource(WrapNotNull(mEncoding),
+                                             enumSource);
+      if (mCommitEncodingSpeculation) {
+        aExecutor->CommitToInternalEncoding();
+      }
     } break;
     case eSpeculativeLoadSetDocumentMode: {
       NS_ASSERTION(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity

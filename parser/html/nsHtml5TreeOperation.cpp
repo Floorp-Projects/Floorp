@@ -148,7 +148,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation() {
 
     void operator()(const opDoneCreatingElement& aOperation) {}
 
-    void operator()(const opSetDocumentCharset& aOperation) {}
+    void operator()(const opUpdateCharsetSource& aOperation) {}
 
     void operator()(const opCharsetSwitchTo& aOperation) {}
 
@@ -980,10 +980,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
 
-    nsresult operator()(const opSetDocumentCharset& aOperation) {
-      auto encoding = WrapNotNull(aOperation.mEncoding);
-      mBuilder->SetDocumentCharsetAndSource(encoding,
-                                            aOperation.mCharsetSource);
+    nsresult operator()(const opUpdateCharsetSource& aOperation) {
+      mBuilder->UpdateCharsetSource(aOperation.mCharsetSource);
       return NS_OK;
     }
 

@@ -93,9 +93,6 @@ class nsHtml5DocumentBuilder : public nsContentSink {
 
   inline bool IsInFlush() { return mFlushState == eInFlush; }
 
-  void SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
-                                   int32_t aCharsetSource);
-
   /**
    * Sets up style sheet load / parse
    */

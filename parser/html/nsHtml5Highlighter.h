@@ -47,6 +47,11 @@ class nsHtml5Highlighter {
   void Start(const nsAutoString& aTitle);
 
   /**
+   * Updates the charset source via the op queue.
+   */
+  void UpdateCharsetSource(nsCharsetSource aCharsetSource);
+
+  /**
    * Report a tokenizer state transition.
    *
    * @param aState the state being transitioned to
