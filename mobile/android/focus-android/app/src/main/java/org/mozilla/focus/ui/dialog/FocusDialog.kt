@@ -126,9 +126,9 @@ fun DialogTextButton(
         Text(
             modifier = modifier,
             color = if (enabled) {
-                focusColors.onPrimary
+                focusColors.dialogActiveControls
             } else {
-                focusColors.onPrimary.copy(alpha = 0.5f)
+                focusColors.dialogActiveControls.copy(alpha = 0.5f)
             },
             text = text,
             style = MaterialTheme.typography.button
@@ -155,7 +155,10 @@ fun DialogInputField(
         textStyle = focusTypography.dialogInput,
         colors = TextFieldDefaults.textFieldColors(
             backgroundColor = focusColors.secondary,
-            textColor = focusColors.onSecondary
+            textColor = focusColors.onSecondary,
+            cursorColor = focusColors.onPrimary,
+            focusedIndicatorColor = focusColors.dialogActiveControls,
+            unfocusedIndicatorColor = focusColors.dialogActiveControls
         ),
         singleLine = true,
         shape = MaterialTheme.shapes.large

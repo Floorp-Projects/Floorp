@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
  */
 data class FocusColors(
     val material: Colors,
+    val dialogActiveControls: Color,
     val topSiteBackground: Color,
     val topSiteFaviconText: Color,
     val topSiteTitle: Color,

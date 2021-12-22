@@ -48,6 +48,7 @@ val focusColors: FocusColors
 
 private fun darkColorPalette(): FocusColors = FocusColors(
     material = darkColorsMaterial(),
+    dialogActiveControls = PhotonColors.Pink40,
     topSiteBackground = PhotonColors.Ink05,
     topSiteFaviconText = PhotonColors.LightGrey05,
     topSiteTitle = PhotonColors.LightGrey05,
@@ -59,6 +60,7 @@ private fun darkColorPalette(): FocusColors = FocusColors(
 
 private fun lightColorPalette(): FocusColors = FocusColors(
     material = lightColorsMaterial(),
+    dialogActiveControls = PhotonColors.Pink70,
     topSiteBackground = PhotonColors.White,
     topSiteFaviconText = PhotonColors.Ink50,
     topSiteTitle = PhotonColors.DarkGrey05,
