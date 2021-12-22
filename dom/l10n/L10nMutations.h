@@ -12,12 +12,13 @@
 #include "nsRefreshObservers.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashSet.h"
-#include "mozilla/dom/DOMLocalization.h"
 
 class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
+
+class DOMLocalization;
 
 /**
  * L10nMutations manage observing roots for localization
