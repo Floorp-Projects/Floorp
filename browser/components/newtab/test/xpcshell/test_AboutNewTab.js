@@ -34,13 +34,11 @@ const SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
 const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";
 const SIMPLIFIED_WELCOME_ENABLED_PREF = "browser.aboutwelcome.enabled";
-const NEWTAB_PREF = "browser.newtabpage.enabled";
 
 function cleanup() {
   Services.prefs.clearUserPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_DEBUG_PREF);
   Services.prefs.clearUserPref(SIMPLIFIED_WELCOME_ENABLED_PREF);
-  Services.prefs.clearUserPref(NEWTAB_PREF);
   AboutNewTab.resetNewTabURL();
 }
 
@@ -357,22 +355,5 @@ addTestsWithPrivilegedContentProcessPref(async function test_updates() {
   AboutNewTab.resetNewTabURL();
   await notificationPromise;
 
-  cleanup();
-});
-
-add_task(async function test_disabling_newtab() {
-  // Check disabling new tab also disables activity stream.
-  Services.prefs.setBoolPref(NEWTAB_PREF, false);
-  Assert.ok(
-    !AboutNewTab.activityStreamEnabled,
-    ".activityStreamEnabled should be disabled"
-  );
-
-  // Check enabling new tab also enables activity stream.
-  Services.prefs.setBoolPref(NEWTAB_PREF, true);
-  Assert.ok(
-    AboutNewTab.activityStreamEnabled,
-    ".activityStreamEnabled should be enabled."
-  );
   cleanup();
 });
