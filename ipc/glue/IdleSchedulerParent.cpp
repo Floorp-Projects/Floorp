@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIThread.h"
+#include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 
 namespace mozilla::ipc {
 
@@ -70,7 +71,9 @@ IdleSchedulerParent::IdleSchedulerParent() {
                   CalculateNumIdleTasks();
                 });
 
-            thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+            if (MOZ_LIKELY(!gXPCOMThreadsShutDown)) {
+              thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+            }
           }
         });
     NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
