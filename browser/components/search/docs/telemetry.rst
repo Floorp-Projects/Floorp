@@ -2,7 +2,12 @@ Telemetry
 =========
 
 This section describes existing telemetry probes measuring interaction with
-search engines.
+search engines from the browser UI.
+
+Other search-related telemetry is recorded by Toolkit such as search service
+telemetry and telemetry related to fetching search suggestions. Toolkit search
+telemetry is relevant to Firefox as well as other consumers of Toolkit. See
+:doc:`/toolkit/search/Telemetry` in the Toolkit documentation for details.
 
 .. toctree::
    :caption: Table of Contents
