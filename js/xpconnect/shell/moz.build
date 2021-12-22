@@ -63,6 +63,11 @@ if CONFIG["OS_ARCH"] == "WINNT":
     # only enable it for processes that are not using JIT in xul.dll.
     LINK_FLAGS["CETCOMPAT"] = []
 
+if CONFIG["OS_TARGET"] == "Darwin":
+    OS_LIBS += [
+        "-framework Foundation",
+    ]
+
 CFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 OS_LIBS += CONFIG["TK_LIBS"]

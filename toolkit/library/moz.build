@@ -198,9 +198,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" or CONFIG["MOZ_TREE_FREETYPE"]:
         "freetype",
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-
 if CONFIG["MOZ_WEBRTC"]:
     if CONFIG["OS_TARGET"] == "WINNT":
         OS_LIBS += [
@@ -216,7 +213,23 @@ if CONFIG["MOZ_WEBRTC"]:
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     OS_LIBS += [
+        "-framework Foundation",
+        "-framework CoreFoundation",
+        "-framework CoreLocation",
+        "-framework QuartzCore",
+        "-framework Carbon",
+        "-framework CoreAudio",
+        "-framework CoreVideo",
+        "-framework AudioToolbox",
+        "-framework AudioUnit",
+        "-framework AddressBook",
         "-framework OpenGL",
+        "-framework Security",
+        "-framework ServiceManagement",
+        "-framework CoreServices",
+        "-framework ApplicationServices",
+        "-framework AppKit",
+        "-framework CoreMIDI",
         "-framework SystemConfiguration",
         "-framework AVFoundation",
         "-framework CoreMedia",
@@ -225,6 +238,20 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework CoreUI",
         "-framework CoreSymbolication",
         "cups",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+    OS_LIBS += [
+        "-framework Foundation",
+        "-framework CoreFoundation",
+        "-framework CoreGraphics",
+        "-framework CoreText",
+        "-framework AVFoundation",
+        "-framework AudioToolbox",
+        "-framework CoreMedia",
+        "-framework CoreVideo",
+        "-framework OpenGLES",
+        "-framework QuartzCore",
     ]
 
 if CONFIG["MOZ_WMF"]:
@@ -282,9 +309,6 @@ if CONFIG["HAVE_CLOCK_MONOTONIC"]:
     OS_LIBS += CONFIG["REALTIME_LIBS"]
 
 OS_LIBS += CONFIG["ICONV_LIBS"]
-
-if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
-    OS_LIBS += CONFIG["TK_LIBS"]
 
 if CONFIG["OS_ARCH"] == "OpenBSD":
     OS_LIBS += [
