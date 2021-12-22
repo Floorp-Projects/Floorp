@@ -529,9 +529,6 @@ void nsHttpTransaction::SetConnection(nsAHttpConnection* conn) {
     mConnection = conn;
     if (mConnection) {
       mIsHttp3Used = mConnection->Version() == HttpVersion::v3_0;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      mConnection->SanityCheck();
-#endif
     }
   }
 }
