@@ -311,11 +311,81 @@ exports.fetchRequestHeadersAndCookies = function(
  * @param nsIHttpChannel channel
  *        Request to check.
  * @param filters
- *        NetworkObserver filters to match against.
+ *        NetworkObserver filters to match against. An object with one of the following attributes:
+ *        - sessionContext: When inspecting requests from the parent process, pass the WatcherActor's session context.
+ *          This helps know what is the overall debugged scope.
+ *          See watcher actor constructor for more info.
+ *        - targetActor: When inspecting requests from the content process, pass the WindowGlobalTargetActor.
+ *          This helps know what exact subset of request we should accept.
+ *          This is especially useful to behave correctly regarding EFT, where we should include or not
+ *          iframes requests.
+ *        - browserId, addonId, window: All these attributes are legacy.
+ *          Only browserId attribute is still used by the legacy WebConsoleActor startListener API.
  * @return boolean
  *         True if the network request should be logged, false otherwise.
  */
 function matchRequest(channel, filters) {
+  // NetworkEventWatcher should now pass a session context for the parent process codepath
+  if (filters.sessionContext) {
+    const { type } = filters.sessionContext;
+    if (type == "all") {
+      return true;
+    }
+
+    // Ignore requests from chrome or add-on code when we don't monitor the whole browser
+    if (
+      channel.loadInfo?.loadingDocument === null &&
+      (channel.loadInfo.loadingPrincipal ===
+        Services.scriptSecurityManager.getSystemPrincipal() ||
+        channel.loadInfo.isInDevToolsContext)
+    ) {
+      return false;
+    }
+
+    if (type == "browser-element") {
+      if (!channel.loadInfo.browsingContext) {
+        const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+        // `topFrame` is typically null for some chrome requests like favicons
+        // And its `browsingContext` attribute might be null if the request happened
+        // while the tab is being closed.
+        return (
+          topFrame?.browsingContext?.browserId ==
+          filters.sessionContext.browserId
+        );
+      }
+      return (
+        channel.loadInfo.browsingContext.browserId ==
+        filters.sessionContext.browserId
+      );
+    }
+    if (type == "webextension") {
+      return (
+        channel?.loadInfo.loadingPrincipal.addonId ===
+        filters.sessionContext.addonId
+      );
+    }
+    throw new Error("Unsupported session context type: " + type);
+  }
+
+  // NetworkEventContentWatcher and NetworkEventStackTraces pass a target actor instead, from the content processes
+  // Because of EFT, we can't use session context as we have to know what exact windows the target actor covers.
+  if (filters.targetActor) {
+    const { window } = filters.targetActor;
+    if (!window) {
+      throw new Error("Target actor is missing a window attribute");
+    }
+    const win = NetworkHelper.getWindowForRequest(channel);
+    return filters.targetActor.windows.includes(win);
+  }
+
+  // This is fallback code for the legacy WebConsole.startListeners codepath,
+  // which may still pass individual browserId/window/addonId attributes.
+  // This should be removable once we drop the WebConsole codepath for network events
+  // (bug 1721592 and followups)
+  return legacyMatchRequest(channel, filters);
+}
+
+function legacyMatchRequest(channel, filters) {
   // Log everything if no filter is specified
   if (!filters.browserId && !filters.window && !filters.addonId) {
     return true;

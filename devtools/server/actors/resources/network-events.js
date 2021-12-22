@@ -49,10 +49,7 @@ class NetworkEventWatcher {
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
     this.listener = new NetworkObserver(
-      {
-        browserId: this.browserId,
-        addonId: watcherActor.sessionContext.addonId,
-      },
+      { sessionContext: watcherActor.sessionContext },
       { onNetworkEvent: this.onNetworkEvent.bind(this) }
     );
 
@@ -321,11 +318,8 @@ class NetworkEventWatcher {
 
   /**
    * Stop watching for network event related to a given Watcher Actor.
-   *
-   * @param WatcherActor watcherActor
-   *        The watcher actor from which we should stop observing network events
    */
-  destroy(watcherActor) {
+  destroy() {
     if (this.listener) {
       this.listener.destroy();
       Services.obs.removeObserver(this, "window-global-destroyed");

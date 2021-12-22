@@ -106,11 +106,9 @@ class NetworkEventStackTracesWatcher {
       }
     }
 
-    // XXX: is window the best filter to use?
     if (
       !NetworkUtils.matchRequest(channel, {
-        window: this.targetActor.window,
-        matchExactWindow: this.targetActor.ignoreSubFrames,
+        targetActor: this.targetActor,
       })
     ) {
       return;
