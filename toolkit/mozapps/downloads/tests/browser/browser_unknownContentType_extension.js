@@ -8,37 +8,13 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-function waitDelay(delay) {
-  return new Promise((resolve, reject) => {
-    /* eslint-disable mozilla/no-arbitrary-setTimeout */
-    window.setTimeout(resolve, delay);
-  });
-}
-
 /**
  * Check that case-sensitivity doesn't cause us to duplicate
  * file name extensions.
  */
 add_task(async function test_download_filename_extension() {
+  forcePromptForFiles("application/octet-stream", "exe");
   let windowObserver = BrowserTestUtils.domWindowOpenedAndLoaded();
-
-  // If browser.download.improvements_to_download_panel pref is enabled,
-  // the unknownContentType will not appear by default.
-  // So wait an amount of time to ensure it hasn't opened.
-  let windowOpenDelay = waitDelay(1000);
-  let uctWindow = await Promise.race([windowOpenDelay, windowObserver.promise]);
-  const prefEnabled = Services.prefs.getBoolPref(
-    "browser.download.improvements_to_download_panel"
-  );
-
-  if (prefEnabled) {
-    SimpleTest.is(
-      !uctWindow,
-      true,
-      "UnknownContentType window shouldn't open."
-    );
-    return;
-  }
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
