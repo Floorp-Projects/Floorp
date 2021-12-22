@@ -261,22 +261,6 @@ function initPage() {
   }
 
   var err = gErrorCode;
-  // List of error pages with an illustration.
-  let illustratedErrors = [
-    "malformedURI",
-    "dnsNotFound",
-    "connectionFailure",
-    "netInterrupt",
-    "netTimeout",
-    "netReset",
-    "netOffline",
-  ];
-  if (
-    illustratedErrors.includes(err) &&
-    !RPMGetBoolPref("browser.proton.enabled")
-  ) {
-    document.body.classList.add("illustrated", err);
-  }
   if (err == "blockedByPolicy") {
     document.body.classList.add("blocked");
   }
@@ -924,7 +908,7 @@ function setCertErrorDetails(event) {
         "wrongSystemTime_systemDate1"
       ).textContent = systemDate;
       if (clockSkew) {
-        document.body.classList.add("illustrated", "clockSkewError");
+        document.body.classList.add("clockSkewError");
         document.l10n.setAttributes(titleElement, "clockSkewError-title");
         let clockErrDesc = document.getElementById("ed_clockSkewError");
         desc = document.getElementById("errorShortDescText");
@@ -933,10 +917,6 @@ function setCertErrorDetails(event) {
           // eslint-disable-next-line no-unsanitized/property
           desc.innerHTML = clockErrDesc.innerHTML;
         }
-        let errorPageContainer = document.getElementById("errorPageContainer");
-        let textContainer = document.getElementById("text-container");
-        errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight /
-          2}px)`;
       } else {
         let targetElems = document.querySelectorAll(
           "#wrongSystemTime_systemDate2"

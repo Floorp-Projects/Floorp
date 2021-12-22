@@ -92,7 +92,6 @@ let RemotePageAccessManager = {
         "security.certerrors.tls.version.show-override",
         "security.xfocsp.errorReporting.automatic",
         "security.xfocsp.errorReporting.enabled",
-        "browser.proton.enabled",
       ],
       RPMSetBoolPref: [
         "security.tls.version.enable-deprecated",
