@@ -1275,10 +1275,6 @@ uikit)
 
 esac
 
-if test "$OS_TARGET" = Darwin; then
-    LDFLAGS="$LDFLAGS -lobjc"
-fi
-
 dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
 dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
 case "$MOZ_WIDGET_TOOLKIT" in
