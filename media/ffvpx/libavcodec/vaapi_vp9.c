@@ -22,7 +22,7 @@
 
 #include "libavutil/pixdesc.h"
 
-#include "hwconfig.h"
+#include "hwaccel.h"
 #include "vaapi_decode.h"
 #include "vp9shared.h"
 
