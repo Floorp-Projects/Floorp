@@ -974,11 +974,8 @@ void nsRetrievalContextWayland::TransferFastTrackClipboard(
   }
 }
 
-GdkAtom* nsRetrievalContextWayland::GetTargetsImpl(int32_t aWhichClipboard,
-                                                   int* aTargetNum) {
-  LOGCLIP("nsRetrievalContextWayland::GetTargetsImpl(%s)\n",
-          aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                              : "clipboard");
+GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
+                                               int* aTargetNum) {
   /* If actual clipboard data is owned by us we don't need to go
    * through Wayland but we ask Gtk+ to directly call data
    * getter callback nsClipboard::SelectionGetEvent().
