@@ -471,7 +471,7 @@ def write_mozbuild(
             try:
                 if relsrcdir in write_mozbuild_variables["INCLUDE_TK_CFLAGS_DIRS"]:
                     mb.write('if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":\n')
-                    mb.write('    CXXFLAGS += CONFIG["TK_CFLAGS"]\n')
+                    mb.write('    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]\n')
             except KeyError:
                 pass
 
