@@ -637,13 +637,17 @@ class CommandSiteManager:
         return lines
 
     def _up_to_date(self):
-        if self._site_packages_source == SitePackagesSource.SYSTEM:
-            _assert_pip_check(self._topsrcdir, self._pthfile_lines(), self._site_name)
+        pthfile_lines = self._pthfile_lines()
+        if (
+            self._site_packages_source == SitePackagesSource.SYSTEM
+            or self._mach_site_packages_source == SitePackagesSource.SYSTEM
+        ):
+            _assert_pip_check(self._topsrcdir, pthfile_lines, self._site_name)
 
         return _is_venv_up_to_date(
             self._topsrcdir,
             self._virtualenv,
-            self._pthfile_lines(),
+            pthfile_lines,
             self._requirements,
             self._metadata,
         )
