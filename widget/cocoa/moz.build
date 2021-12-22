@@ -178,8 +178,6 @@ RESOURCE_FILES.__setattr__(
     ],
 )
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-
 OS_LIBS += [
     "-framework IOSurface",
 ]
