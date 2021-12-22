@@ -28,7 +28,6 @@ A full-page multistep experience that shows a large splash screen and several su
 An older multi-stage experience that has been available since Fx80 but was deprecated in Fx89 and support removed in Fx92.
 
 Testing instructions: 
-- In Fx89, set `browser.proton.enabled` as `false` in about:config.
 - In Fx90+, set `browser.aboutwelcome.protonDesign` as `false` in about:config
 
 ##### Return to AMO (RTAMO)
