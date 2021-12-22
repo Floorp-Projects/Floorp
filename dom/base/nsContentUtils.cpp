@@ -10526,7 +10526,8 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
 /* static */
 nsContentUtils::SubresourceCacheValidationInfo
 nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
-                                                  nsIURI* aURI) {
+                                                  nsIURI* aURI,
+                                                  SubresourceKind aKind) {
   SubresourceCacheValidationInfo info;
   if (nsCOMPtr<nsICacheInfoChannel> cache = do_QueryInterface(aRequest)) {
     uint32_t value = 0;
@@ -10555,9 +10556,13 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
     if (!aURI) {
       return false;
     }
-    if (aURI->SchemeIs("data") || aURI->SchemeIs("moz-page-thumb") ||
-        aURI->SchemeIs("moz-extension")) {
+    if (aURI->SchemeIs("data") || aURI->SchemeIs("moz-page-thumb")) {
       return true;
+    }
+    if (aURI->SchemeIs("moz-extension")) {
+      // TODO(bug 1746841): This should be true always, but we force style to be
+      // revalidated until bug 1746841 is fixed.
+      return aKind != SubresourceKind::Style;
     }
     if (dom::IsChromeURI(aURI)) {
       return !StaticPrefs::nglayout_debug_disable_xul_cache();
