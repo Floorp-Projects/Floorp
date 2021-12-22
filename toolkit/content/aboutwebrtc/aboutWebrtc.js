@@ -240,9 +240,23 @@ class ShowTab extends Control {
     add(new SavePage().render());
     add(new DebugMode().render());
     add(new AecLogging().render());
+    // Add the autorefresh checkbox and its label
+    const autorefresh = document.createElement("input");
+    Object.assign(autorefresh, {
+      type: "checkbox",
+      id: "autorefresh",
+      checked: true,
+    });
+    const autorefreshLabel = document.createElement("label");
+    document.l10n.setAttributes(
+      autorefreshLabel,
+      "about-webrtc-auto-refresh-label"
+    );
 
     const ctrls = document.querySelector("#controls");
     ctrls.append(renderElements("div", { className: "controls" }, [ctrl, msg]));
+    ctrls.appendChild(autorefresh);
+    ctrls.appendChild(autorefreshLabel);
   }
 
   // Render pcs and log
@@ -323,6 +337,10 @@ class ShowTab extends Control {
 
   window.setInterval(
     async history => {
+      // Only refresh if the autorefresh checkbox is checked
+      if (!document.getElementById("autorefresh").checked) {
+        return;
+      }
       const reports = await getStats();
 
       const translateSection = async (report, id, renderFunc) => {
