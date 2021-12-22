@@ -27,19 +27,22 @@
 #include <math.h>
 #include "libavutil/attributes.h"
 
-#define TABLE_4_3_SIZE (8191 + 16)*4
 #if CONFIG_HARDCODED_TABLES
 #define mpegaudio_tableinit()
 #include "libavcodec/mpegaudio_tables.h"
 #else
-static int8_t   table_4_3_exp[TABLE_4_3_SIZE];
-static uint32_t table_4_3_value[TABLE_4_3_SIZE];
+#if defined(BUILD_TABLES) || !USE_FLOATS
+#define FIXED_TABLE
 static uint32_t exp_table_fixed[512];
 static uint32_t expval_table_fixed[512][16];
+#endif
+
+#if defined(BUILD_TABLES) || USE_FLOATS
+#define FLOAT_TABLE
 static float exp_table_float[512];
 static float expval_table_float[512][16];
+#endif
 
-#define FRAC_BITS 23
 #define IMDCT_SCALAR 1.759
 
 static av_cold void mpegaudio_tableinit(void)
@@ -51,41 +54,36 @@ static av_cold void mpegaudio_tableinit(void)
         M_SQRT2               , /* 2 ^ (2 * 0.25) */
         1.68179283050742908606, /* 2 ^ (3 * 0.25) */
     };
-    static double pow43_lut[16];
+    double pow43_lut[16];
     double exp2_base = 2.11758236813575084767080625169910490512847900390625e-22; // 2^(-72)
     double exp2_val;
-    double pow43_val = 0;
+
     for (i = 0; i < 16; ++i)
         pow43_lut[i] = i * cbrt(i);
 
-    for (i = 1; i < TABLE_4_3_SIZE; i++) {
-        double f, fm;
-        int e, m;
-        double value = i / 4;
-        if ((i & 3) == 0)
-            pow43_val = value / IMDCT_SCALAR * cbrt(value);
-        f  = pow43_val * exp2_lut[i & 3];
-        fm = frexp(f, &e);
-        m  = llrint(fm * (1LL << 31));
-        e += FRAC_BITS - 31 + 5 - 100;
-
-        /* normalized to FRAC_BITS */
-        table_4_3_value[i] =  m;
-        table_4_3_exp[i]   = -e;
-    }
     for (exponent = 0; exponent < 512; exponent++) {
         if (exponent && (exponent & 3) == 0)
             exp2_base *= 2;
         exp2_val = exp2_base * exp2_lut[exponent & 3] / IMDCT_SCALAR;
         for (value = 0; value < 16; value++) {
             double f = pow43_lut[value] * exp2_val;
+#ifdef FIXED_TABLE
             expval_table_fixed[exponent][value] = (f < 0xFFFFFFFF ? llrint(f) : 0xFFFFFFFF);
+#endif
+#ifdef FLOAT_TABLE
             expval_table_float[exponent][value] = f;
+#endif
         }
+#ifdef FIXED_TABLE
         exp_table_fixed[exponent] = expval_table_fixed[exponent][1];
+#endif
+#ifdef FLOAT_TABLE
         exp_table_float[exponent] = expval_table_float[exponent][1];
+#endif
     }
 }
+#undef FLOAT_TABLE
+#undef FIXED_TABLE
 #endif /* CONFIG_HARDCODED_TABLES */
 
 #endif /* AVCODEC_MPEGAUDIO_TABLEGEN_H */
