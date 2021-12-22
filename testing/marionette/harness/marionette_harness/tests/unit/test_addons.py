@@ -33,13 +33,16 @@ class TestAddons(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             addons = self.marionette.execute_async_script(
                 """
-              let [resolve] = arguments;
+              const [resolve] = arguments;
               Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-              AddonManager.getAllAddons().then(function(addons) {
-                let ids = addons.map(x => x.id);
+              async function getAllAddons() {
+                const addons = await AddonManager.getAllAddons();
+                const ids = addons.map(x => x.id);
                 resolve(ids);
-              });
+              }
+
+              getAllAddons();
             """
             )
 
@@ -50,14 +53,16 @@ class TestAddons(MarionetteTestCase):
             for addon in self.all_addon_ids - self.preinstalled_addons:
                 addon_id = self.marionette.execute_async_script(
                     """
-                  let [resolve] = arguments;
+                  const [addonId, resolve] = arguments;
                   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-                  return new Promise(await resolve => {
-                    let addon = await AddonManager.getAddonByID(arguments[0]);
+                  async function uninstall() {
+                    const addon = await AddonManager.getAddonByID(addonId);
                     addon.uninstall();
                     resolve(addon.id);
-                  });
+                  }
+
+                  uninstall();
                 """,
                     script_args=(addon,),
                 )
