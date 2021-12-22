@@ -40,7 +40,7 @@ interface DOMLocalization : Localization {
    *    - aLocales             - custom set of locales to be used for this Localization.
    */
   [Throws]
-  constructor(sequence<UTF8String> aResourceIds,
+  constructor(sequence<L10nResourceId> aResourceIds,
               optional boolean aSync = false,
               optional L10nRegistry aRegistry,
               optional sequence<UTF8String> aLocales);

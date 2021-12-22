@@ -4220,6 +4220,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
       return;
     }
   }
+
   mDocumentL10n->AddResourceId(NS_ConvertUTF16toUTF8(href));
 
   if (mReadyState >= READYSTATE_INTERACTIVE) {

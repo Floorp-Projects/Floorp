@@ -6,14 +6,14 @@ use fluent::FluentValue;
 use fluent_fallback::{
     types::{
         L10nAttribute as FluentL10nAttribute, L10nKey as FluentL10nKey,
-        L10nMessage as FluentL10nMessage,
+        L10nMessage as FluentL10nMessage, ResourceId,
     },
     Localization,
 };
 use fluent_ffi::{convert_args, FluentArgs, FluentArgument, L10nArg};
 use l10nregistry_ffi::{
     env::GeckoEnvironment,
-    registry::{get_l10n_registry, GeckoL10nRegistry, ResourceId},
+    registry::{get_l10n_registry, GeckoL10nRegistry, GeckoResourceId},
 };
 use nsstring::{nsACString, nsCString};
 use std::os::raw::c_void;
@@ -156,21 +156,19 @@ impl LocalizationRc {
         }
     }
 
-    pub fn add_resource_id(&self, res_id: String) {
-        self.inner.borrow_mut().add_resource_id(ResourceId::from(res_id));
+    pub fn add_resource_id(&self, res_id: ResourceId) {
+        self.inner.borrow_mut().add_resource_id(res_id);
     }
 
-    pub fn add_resource_ids(&self, res_ids: Vec<String>) {
-        let res_ids = res_ids.into_iter().map(ResourceId::from).collect();
+    pub fn add_resource_ids(&self, res_ids: Vec<ResourceId>) {
         self.inner.borrow_mut().add_resource_ids(res_ids);
     }
 
-    pub fn remove_resource_id(&self, res_id: String) -> usize {
-        self.inner.borrow_mut().remove_resource_id(ResourceId::from(res_id))
+    pub fn remove_resource_id(&self, res_id: ResourceId) -> usize {
+        self.inner.borrow_mut().remove_resource_id(res_id)
     }
 
-    pub fn remove_resource_ids(&self, res_ids: Vec<String>) -> usize {
-        let res_ids = res_ids.into_iter().map(ResourceId::from).collect();
+    pub fn remove_resource_ids(&self, res_ids: Vec<ResourceId>) -> usize {
         self.inner.borrow_mut().remove_resource_ids(res_ids)
     }
 
@@ -422,28 +420,26 @@ pub extern "C" fn localization_parse_locale(input: &nsCString) -> *const c_void 
 
 #[no_mangle]
 pub extern "C" fn localization_new(
-    res_ids: &ThinVec<nsCString>,
+    res_ids: &ThinVec<GeckoResourceId>,
     is_sync: bool,
     reg: Option<&GeckoL10nRegistry>,
     result: &mut *const LocalizationRc,
 ) {
     *result = std::ptr::null();
-
-    let res_ids: Vec<ResourceId> = res_ids.iter().map(|res| res.to_string().into()).collect();
+    let res_ids: Vec<ResourceId> = res_ids.iter().map(ResourceId::from).collect();
     *result = RefPtr::forget_into_raw(LocalizationRc::new(res_ids, is_sync, reg, None));
 }
 
 #[no_mangle]
 pub extern "C" fn localization_new_with_locales(
-    res_ids: &ThinVec<nsCString>,
+    res_ids: &ThinVec<GeckoResourceId>,
     is_sync: bool,
     reg: Option<&GeckoL10nRegistry>,
     locales: Option<&ThinVec<nsCString>>,
     result: &mut *const LocalizationRc,
 ) -> bool {
     *result = std::ptr::null();
-
-    let res_ids: Vec<ResourceId> = res_ids.iter().map(|res| res.to_string().into()).collect();
+    let res_ids: Vec<ResourceId> = res_ids.iter().map(ResourceId::from).collect();
     let locales: Result<Option<Vec<LanguageIdentifier>>, _> = locales
         .map(|locales| {
             locales
@@ -476,29 +472,27 @@ pub unsafe extern "C" fn localization_release(loc: *const LocalizationRc) -> nsr
 }
 
 #[no_mangle]
-pub extern "C" fn localization_add_res_id(loc: &LocalizationRc, res_id: &nsACString) {
-    let res_id = res_id.to_string();
-    loc.add_resource_id(res_id);
+pub extern "C" fn localization_add_res_id(loc: &LocalizationRc, res_id: &GeckoResourceId) {
+    loc.add_resource_id(res_id.into());
 }
 
 #[no_mangle]
-pub extern "C" fn localization_add_res_ids(loc: &LocalizationRc, res_ids: &ThinVec<nsCString>) {
-    let res_ids = res_ids.iter().map(|s| s.to_string()).collect();
+pub extern "C" fn localization_add_res_ids(loc: &LocalizationRc, res_ids: &ThinVec<GeckoResourceId>) {
+    let res_ids = res_ids.iter().map(ResourceId::from).collect();
     loc.add_resource_ids(res_ids);
 }
 
 #[no_mangle]
-pub extern "C" fn localization_remove_res_id(loc: &LocalizationRc, res_id: &nsACString) -> usize {
-    let res_id = res_id.to_string();
-    loc.remove_resource_id(res_id)
+pub extern "C" fn localization_remove_res_id(loc: &LocalizationRc, res_id: &GeckoResourceId) -> usize {
+    loc.remove_resource_id(res_id.into())
 }
 
 #[no_mangle]
 pub extern "C" fn localization_remove_res_ids(
     loc: &LocalizationRc,
-    res_ids: &ThinVec<nsCString>,
+    res_ids: &ThinVec<GeckoResourceId>,
 ) -> usize {
-    let res_ids = res_ids.iter().map(|s| s.to_string()).collect();
+    let res_ids = res_ids.iter().map(ResourceId::from).collect();
     loc.remove_resource_ids(res_ids)
 }
 
