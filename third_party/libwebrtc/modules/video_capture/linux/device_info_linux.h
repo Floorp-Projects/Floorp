@@ -16,7 +16,9 @@
 #include "modules/video_capture/device_info_impl.h"
 
 #include "rtc_base/platform_thread.h"
+#ifdef WEBRTC_LINUX
 #include <sys/inotify.h>
+#endif
 
 struct v4l2_capability;
 
