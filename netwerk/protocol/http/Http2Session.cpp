@@ -4671,7 +4671,5 @@ bool Http2Session::CanAcceptWebsocket() {
          (mPeerAllowsWebsockets || !mProcessedWaitingWebsockets);
 }
 
-void Http2Session::SanityCheck() { MOZ_DIAGNOSTIC_ASSERT(mConnection); }
-
 }  // namespace net
 }  // namespace mozilla
