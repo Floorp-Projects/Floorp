@@ -98,9 +98,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         self.apt_install(*self.BROWSER_COMMON_PACKAGES)
-        modern = self.is_nasm_modern()
-        if not modern:
-            self.apt_install("nasm")
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)

@@ -145,9 +145,6 @@ MODERN_MERCURIAL_VERSION = LooseVersion("4.9")
 # Upgrade rust older than this.
 MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
 
-# Upgrade nasm older than this.
-MODERN_NASM_VERSION = LooseVersion("2.14")
-
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
@@ -633,9 +630,6 @@ class BaseBootstrapper(object):
     def _parse_version(self, path, name=None, env=None):
         return self._parse_version_impl(path, name, env, "--version")
 
-    def _parse_version_short(self, path, name=None, env=None):
-        return self._parse_version_impl(path, name, env, "-v")
-
     def _hg_cleanenv(self, load_hgrc=False):
         """Returns a copy of the current environment updated with the HGPLAIN
         and HGRCPATH environment variables.
@@ -711,17 +705,6 @@ class BaseBootstrapper(object):
                 "cause flaky installations of the requirements, and other unexpected "
                 "issues with mach. It is recommended to unset this variable."
             )
-
-    def is_nasm_modern(self):
-        nasm = which("nasm")
-        if not nasm:
-            return False
-
-        our = self._parse_version_short(nasm, "version")
-        if not our:
-            return False
-
-        return our >= MODERN_NASM_VERSION
 
     def is_rust_modern(self, cargo_bin):
         rustc = which("rustc", extra_search_dirs=[cargo_bin])

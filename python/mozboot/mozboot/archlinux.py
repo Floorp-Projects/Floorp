@@ -35,7 +35,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libvpx",
         "libxt",
         "mime-types",
-        "nasm",
         "startup-notification",
         "gst-plugins-base-libs",
         "libpulse",
@@ -69,10 +68,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
-
-    def ensure_nasm_packages(self, state_dir, checkout_root):
-        # installed via install_browser_packages
-        pass
 
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
