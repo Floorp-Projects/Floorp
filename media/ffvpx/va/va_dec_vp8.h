@@ -43,13 +43,12 @@ extern "C" {
  */
 
 /**
- * \brief VPX Bool Coder Context structure 
+ * \brief VPX Bool Coder Context structure
  *
  * This common structure is defined for potential sharing by other VP formats
  *
  */
-typedef struct _VABoolCoderContextVPX
-{
+typedef struct _VABoolCoderContextVPX {
     /* partition 0 "range" */
     uint8_t range;
     /* partition 0 "value" */
@@ -69,8 +68,7 @@ typedef struct _VABoolCoderContextVPX
  * per frame.
  *
  */
-typedef struct  _VAPictureParameterBufferVP8
-{
+typedef struct  _VAPictureParameterBufferVP8 {
     /* frame width in pixels */
     uint32_t frame_width;
     /* frame height in pixels */
@@ -87,38 +85,38 @@ typedef struct  _VAPictureParameterBufferVP8
 
     union {
         struct {
-	    /* same as key_frame in bitstream syntax, 0 means a key frame */
-            uint32_t key_frame			: 1; 
-	    /* same as version in bitstream syntax */
-            uint32_t version			: 3;
-	    /* same as segmentation_enabled in bitstream syntax */
-            uint32_t segmentation_enabled		: 1;
-	    /* same as update_mb_segmentation_map in bitstream syntax */
-            uint32_t update_mb_segmentation_map	: 1;
-	    /* same as update_segment_feature_data in bitstream syntax */
-            uint32_t update_segment_feature_data	: 1;
-	    /* same as filter_type in bitstream syntax */
-            uint32_t filter_type			: 1; 
-	    /* same as sharpness_level in bitstream syntax */
-            uint32_t sharpness_level		: 3; 
-	    /* same as loop_filter_adj_enable in bitstream syntax */
-            uint32_t loop_filter_adj_enable		: 1; 
-	    /* same as mode_ref_lf_delta_update in bitstream syntax */
-            uint32_t mode_ref_lf_delta_update	: 1; 
-	    /* same as sign_bias_golden in bitstream syntax */
-            uint32_t sign_bias_golden		: 1; 
-	    /* same as sign_bias_alternate in bitstream syntax */
-            uint32_t sign_bias_alternate		: 1; 
-	    /* same as mb_no_coeff_skip in bitstream syntax */
-            uint32_t mb_no_coeff_skip		: 1; 
-	    /* flag to indicate that loop filter should be disabled */
-            uint32_t loop_filter_disable		: 1; 
+            /* same as key_frame in bitstream syntax, 0 means a key frame */
+            uint32_t key_frame          : 1;
+            /* same as version in bitstream syntax */
+            uint32_t version            : 3;
+            /* same as segmentation_enabled in bitstream syntax */
+            uint32_t segmentation_enabled       : 1;
+            /* same as update_mb_segmentation_map in bitstream syntax */
+            uint32_t update_mb_segmentation_map : 1;
+            /* same as update_segment_feature_data in bitstream syntax */
+            uint32_t update_segment_feature_data    : 1;
+            /* same as filter_type in bitstream syntax */
+            uint32_t filter_type            : 1;
+            /* same as sharpness_level in bitstream syntax */
+            uint32_t sharpness_level        : 3;
+            /* same as loop_filter_adj_enable in bitstream syntax */
+            uint32_t loop_filter_adj_enable     : 1;
+            /* same as mode_ref_lf_delta_update in bitstream syntax */
+            uint32_t mode_ref_lf_delta_update   : 1;
+            /* same as sign_bias_golden in bitstream syntax */
+            uint32_t sign_bias_golden       : 1;
+            /* same as sign_bias_alternate in bitstream syntax */
+            uint32_t sign_bias_alternate        : 1;
+            /* same as mb_no_coeff_skip in bitstream syntax */
+            uint32_t mb_no_coeff_skip       : 1;
+            /* flag to indicate that loop filter should be disabled */
+            uint32_t loop_filter_disable        : 1;
         } bits;
         uint32_t value;
     } pic_fields;
 
     /*
-     * probabilities of the segment_id decoding tree and same as 
+     * probabilities of the segment_id decoding tree and same as
      * mb_segment_tree_probs in the spec.
      */
     uint8_t mb_segment_tree_probs[3];
@@ -139,18 +137,18 @@ typedef struct  _VAPictureParameterBufferVP8
     /* same as prob_gf in bitstream syntax */
     uint8_t prob_gf;
 
-    /* 
+    /*
      * list of 4 probabilities of the luma intra prediction mode decoding
      * tree and same as y_mode_probs in frame header
      */
-    uint8_t y_mode_probs[4]; 
+    uint8_t y_mode_probs[4];
     /*
      * list of 3 probabilities of the chroma intra prediction mode decoding
      * tree and same as uv_mode_probs in frame header
      */
     uint8_t uv_mode_probs[3];
-    /* 
-     * updated mv decoding probabilities and same as mv_probs in 
+    /*
+     * updated mv decoding probabilities and same as mv_probs in
      * frame header
      */
     uint8_t mv_probs[2][19];
@@ -164,15 +162,14 @@ typedef struct  _VAPictureParameterBufferVP8
 /**
  * \brief VP8 Slice Parameter Buffer Structure
  *
- * This structure conveys parameters related to data partitions and should be 
+ * This structure conveys parameters related to data partitions and should be
  * sent once per frame. Slice data buffer of VASliceDataBufferType is used
  * to send the partition data.
  *
  */
-typedef struct  _VASliceParameterBufferVP8
-{
+typedef struct  _VASliceParameterBufferVP8 {
     /*
-     * number of bytes in the slice data buffer for the partitions 
+     * number of bytes in the slice data buffer for the partitions
      */
     uint32_t slice_data_size;
     /*
@@ -182,7 +179,7 @@ typedef struct  _VASliceParameterBufferVP8
     /*
      * see VA_SLICE_DATA_FLAG_XXX definitions
      */
-    uint32_t slice_data_flag; 
+    uint32_t slice_data_flag;
     /*
      * offset to the first bit of MB from the first byte of partition data(slice_data_offset)
      */
@@ -207,19 +204,18 @@ typedef struct  _VASliceParameterBufferVP8
 /**
  * \brief VP8 Coefficient Probability Data Buffer Structure
  *
- * Contains the contents of the token probability table, which may be 
- * incrementally modified in the frame header. There are four dimensions to 
- * the token probability array. The outermost dimension is indexed by the 
- * type of plane being decoded; the next dimension is selected by the 
- * position of the coefficient being decoded; the third dimension, * roughly 
- * speaking, measures the "local complexity" or extent to which nearby 
- * coefficients are non-zero; the fourth, and final, dimension of the token 
- * probability array is indexed by the position in the token tree structure, 
+ * Contains the contents of the token probability table, which may be
+ * incrementally modified in the frame header. There are four dimensions to
+ * the token probability array. The outermost dimension is indexed by the
+ * type of plane being decoded; the next dimension is selected by the
+ * position of the coefficient being decoded; the third dimension, * roughly
+ * speaking, measures the "local complexity" or extent to which nearby
+ * coefficients are non-zero; the fourth, and final, dimension of the token
+ * probability array is indexed by the position in the token tree structure,
  * as are all tree probability arrays. This structure is sent once per frame.
  *
  */
-typedef struct _VAProbabilityDataBufferVP8
-{
+typedef struct _VAProbabilityDataBufferVP8 {
     uint8_t dct_coeff_probs[4][8][3][11];
 
     /** \brief Reserved bytes for future use, must be zero */
@@ -230,12 +226,11 @@ typedef struct _VAProbabilityDataBufferVP8
  * \brief VP8 Inverse Quantization Matrix Buffer Structure
  *
  * Contains quantization indices for yac(0),ydc(1),y2dc(2),y2ac(3),uvdc(4),
- * uvac(5) for each segment (0-3). When segmentation is disabled, only  
+ * uvac(5) for each segment (0-3). When segmentation is disabled, only
  * quantization_index[0][] will be used. This structure is sent once per frame.
  */
-typedef struct _VAIQMatrixBufferVP8
-{
-    /* 
+typedef struct _VAIQMatrixBufferVP8 {
+    /*
      * array first dimensional is segment and 2nd dimensional is Q index
      * all Q indexs should be clipped to be range [0, 127]
      */
