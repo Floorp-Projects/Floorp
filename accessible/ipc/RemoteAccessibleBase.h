@@ -294,6 +294,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   static const uintptr_t kNoParent = UINTPTR_MAX;
 
   friend Derived;
+  friend DocAccessibleParent;
 
   nsTArray<Derived*> mChildren;
   DocAccessibleParent* mDoc;

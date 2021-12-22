@@ -868,6 +868,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // events causes script to run.
   mObservingState = eRefreshProcessing;
 
+  mDocument->SendAccessiblesWillMove();
+
   CoalesceMutationEvents();
   ProcessMutationEvents();
   mEventGeneration = 0;
@@ -900,6 +902,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     mutEvent->SetNextEvent(nullptr);
     mMutationMap.RemoveEvent(mutEvent);
     mutEvent = nextEvent;
+  }
+
+  if (mDocument) {
+    mDocument->ClearMovedAccessibles();
   }
 
   ProcessEventQueue();
