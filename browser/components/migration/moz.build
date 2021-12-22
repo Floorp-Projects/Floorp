@@ -33,7 +33,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "nsIEHistoryEnumerator.cpp",
     ]
     EXTRA_JS_MODULES += [
-        "360seProfileMigrator.jsm",
+        "360seMigrationUtils.jsm",
         "ChromeWindowsLoginCrypto.jsm",
         "EdgeProfileMigrator.jsm",
         "ESEDBReader.jsm",
