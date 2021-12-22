@@ -1579,9 +1579,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-fallback"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "768feaf8a77beababd5cf3bb1154597b7161eb5a555013a3ac594fe3ed8b18ee"
+checksum = "e0ebe8c34b89a10c8a431de9c0c5c2005b79c438d9a498a028c4e05b88afb3d6"
 dependencies = [
  "async-trait",
  "chunky-vec",
@@ -2717,7 +2717,7 @@ dependencies = [
 [[package]]
 name = "l10nregistry"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/l10nregistry-rs?rev=fd02134161505f978e132114cbabdac057ce3b71#fd02134161505f978e132114cbabdac057ce3b71"
+source = "git+https://github.com/mozilla/l10nregistry-rs.git?rev=9da98c6e5325a5f2997191727eaa82c0ebc2004c#9da98c6e5325a5f2997191727eaa82c0ebc2004c"
 dependencies = [
  "async-trait",
  "fluent-bundle",

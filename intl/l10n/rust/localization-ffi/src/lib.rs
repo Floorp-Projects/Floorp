@@ -13,7 +13,7 @@ use fluent_fallback::{
 use fluent_ffi::{convert_args, FluentArgs, FluentArgument, L10nArg};
 use l10nregistry_ffi::{
     env::GeckoEnvironment,
-    registry::{get_l10n_registry, GeckoL10nRegistry},
+    registry::{get_l10n_registry, GeckoL10nRegistry, ResourceId},
 };
 use nsstring::{nsACString, nsCString};
 use std::os::raw::c_void;
@@ -132,7 +132,7 @@ unsafe impl RefCounted for LocalizationRc {
 
 impl LocalizationRc {
     pub fn new(
-        res_ids: Vec<String>,
+        res_ids: Vec<ResourceId>,
         is_sync: bool,
         registry: Option<&GeckoL10nRegistry>,
         locales: Option<Vec<LanguageIdentifier>>,
@@ -157,18 +157,20 @@ impl LocalizationRc {
     }
 
     pub fn add_resource_id(&self, res_id: String) {
-        self.inner.borrow_mut().add_resource_id(res_id);
+        self.inner.borrow_mut().add_resource_id(ResourceId::from(res_id));
     }
 
     pub fn add_resource_ids(&self, res_ids: Vec<String>) {
+        let res_ids = res_ids.into_iter().map(ResourceId::from).collect();
         self.inner.borrow_mut().add_resource_ids(res_ids);
     }
 
     pub fn remove_resource_id(&self, res_id: String) -> usize {
-        self.inner.borrow_mut().remove_resource_id(res_id)
+        self.inner.borrow_mut().remove_resource_id(ResourceId::from(res_id))
     }
 
     pub fn remove_resource_ids(&self, res_ids: Vec<String>) -> usize {
+        let res_ids = res_ids.into_iter().map(ResourceId::from).collect();
         self.inner.borrow_mut().remove_resource_ids(res_ids)
     }
 
@@ -427,7 +429,7 @@ pub extern "C" fn localization_new(
 ) {
     *result = std::ptr::null();
 
-    let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
+    let res_ids: Vec<ResourceId> = res_ids.iter().map(|res| res.to_string().into()).collect();
     *result = RefPtr::forget_into_raw(LocalizationRc::new(res_ids, is_sync, reg, None));
 }
 
@@ -441,7 +443,7 @@ pub extern "C" fn localization_new_with_locales(
 ) -> bool {
     *result = std::ptr::null();
 
-    let res_ids: Vec<String> = res_ids.iter().map(|res| res.to_string()).collect();
+    let res_ids: Vec<ResourceId> = res_ids.iter().map(|res| res.to_string().into()).collect();
     let locales: Result<Option<Vec<LanguageIdentifier>>, _> = locales
         .map(|locales| {
             locales
