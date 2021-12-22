@@ -219,26 +219,22 @@ class Bootstrapper(object):
 
         self.instance = cls(**args)
 
-    def maybe_install_private_packages_or_exit(
-        self, state_dir, checkout_root, application
-    ):
+    def maybe_install_private_packages_or_exit(self, application):
         # Install the clang packages needed for building the style system, as
         # well as the version of NodeJS that we currently support.
         # Also install the clang static-analysis package by default
         # The best place to install our packages is in the state directory
         # we have.  We should have created one above in non-interactive mode.
-        self.instance.ensure_node_packages(state_dir, checkout_root)
-        self.instance.ensure_fix_stacks_packages(state_dir, checkout_root)
-        self.instance.ensure_minidump_stackwalk_packages(state_dir, checkout_root)
+        self.instance.ensure_node_packages()
+        self.instance.ensure_fix_stacks_packages()
+        self.instance.ensure_minidump_stackwalk_packages()
         if not self.instance.artifact_mode:
-            self.instance.ensure_stylo_packages(state_dir, checkout_root)
-            self.instance.ensure_clang_static_analysis_package(state_dir, checkout_root)
-            self.instance.ensure_nasm_packages(state_dir, checkout_root)
-            self.instance.ensure_sccache_packages(state_dir, checkout_root)
+            self.instance.ensure_stylo_packages()
+            self.instance.ensure_clang_static_analysis_package()
+            self.instance.ensure_nasm_packages()
+            self.instance.ensure_sccache_packages()
         # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
-        getattr(self.instance, "ensure_%s_packages" % application)(
-            state_dir, checkout_root
-        )
+        getattr(self.instance, "ensure_%s_packages" % application)()
 
     def check_code_submission(self, checkout_root):
         if self.instance.no_interactive or which("moz-phab"):
@@ -317,13 +313,12 @@ class Bootstrapper(object):
         (checkout_type, checkout_root) = current_firefox_checkout(
             env=self.instance._hg_cleanenv(load_hgrc=True), hg=which("hg")
         )
-        self.instance.validate_environment(checkout_root)
+        self.instance.srcdir = checkout_root
+        self.instance.validate_environment()
         self._validate_python_environment()
 
         if self.instance.no_system_changes:
-            self.maybe_install_private_packages_or_exit(
-                state_dir, checkout_root, application
-            )
+            self.maybe_install_private_packages_or_exit(application)
             self._output_mozconfig(application, mozconfig_builder)
             sys.exit(0)
 
@@ -361,9 +356,7 @@ class Bootstrapper(object):
                     which("git"), which("git-cinnabar"), state_dir, checkout_root
                 )
 
-        self.maybe_install_private_packages_or_exit(
-            state_dir, checkout_root, application
-        )
+        self.maybe_install_private_packages_or_exit(application)
         self.check_code_submission(checkout_root)
         # Wait until after moz-phab setup to check telemetry so that employees
         # will be automatically opted-in.
