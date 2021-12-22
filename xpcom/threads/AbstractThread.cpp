@@ -368,38 +368,4 @@ void AbstractThread::DispatchDirectTask(
   }
 }
 
-/* static */
-already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
-    nsIThread* aThread, bool aRequireTailDispatch, bool aOnThread) {
-  nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(aThread);
-  MOZ_ASSERT(internalThread, "Need an nsThread for AbstractThread");
-  RefPtr<XPCOMThreadWrapper> wrapper =
-      new XPCOMThreadWrapper(internalThread, aRequireTailDispatch, aOnThread);
-
-  bool onCurrentThread = false;
-  Unused << aThread->IsOnCurrentThread(&onCurrentThread);
-
-  if (onCurrentThread) {
-    if (!aOnThread) {
-      MOZ_ASSERT(!sCurrentThreadTLS.get(),
-                 "There can only be a single XPCOMThreadWrapper available on a "
-                 "thread");
-      sCurrentThreadTLS.set(wrapper);
-    }
-    return wrapper.forget();
-  }
-
-  // Set the thread-local sCurrentThreadTLS to point to the wrapper on the
-  // target thread. This ensures that sCurrentThreadTLS is as expected by
-  // AbstractThread::GetCurrent() on the target thread.
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "AbstractThread::CreateXPCOMThreadWrapper", [wrapper]() {
-        MOZ_ASSERT(!sCurrentThreadTLS.get(),
-                   "There can only be a single XPCOMThreadWrapper available on "
-                   "a thread");
-        sCurrentThreadTLS.set(wrapper);
-      });
-  aThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-  return wrapper.forget();
-}
 }  // namespace mozilla
