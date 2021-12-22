@@ -88,6 +88,25 @@ if CONFIG["OS_TARGET"] == "Linux":
         "rt"
     ]
 
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    DEFINES["USE_GLIB"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["_LARGEFILE64_SOURCE"] = True
+    DEFINES["_LARGEFILE_SOURCE"] = True
+    DEFINES["__STDC_CONSTANT_MACROS"] = True
+    DEFINES["__STDC_FORMAT_MACROS"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
 if CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
@@ -155,12 +174,6 @@ if CONFIG["CPU_ARCH"] == "x86":
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64":
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-    ]
-
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -173,6 +186,10 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
@@ -182,6 +199,10 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["_DEBUG"] = True
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_DEBUG"] = True
 
@@ -206,10 +227,18 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
@@ -232,5 +261,15 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
 
 Library("fft_size_128_gn")
