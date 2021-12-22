@@ -11,6 +11,21 @@ let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+let { RegionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/RegionTestUtils.jsm"
+);
+
+let { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
+
+const initialHomeRegion = Region._home;
+const intialCurrentRegion = Region._current;
+
+// Helper to run tests for specific regions
+async function setupRegions(home, current) {
+  Region._setHomeRegion(home || "");
+  Region._setCurrentRegion(current || "");
+}
+
 /**
  * Test that we don't show moreFromMozilla pane when it's disabled.
  */
@@ -130,6 +145,7 @@ add_task(async function test_aboutpreferences_advanced_template() {
     set: [
       ["browser.preferences.moreFromMozilla", true],
       ["browser.preferences.moreFromMozilla.template", "advanced"],
+      ["browser.vpn_promo.enabled", true],
     ],
   });
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
@@ -253,4 +269,139 @@ add_task(async function test_aboutpreferences_search() {
   Assert.ok(BrowserTestUtils.is_visible(rally), "Rally shown");
 
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_VPN_promo_enabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(vpnPromoCard, "The VPN promo is visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_VPN_promo_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.enabled", false]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!vpnPromoCard, "The VPN promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  Services.prefs.clearUserPref("browser.vpn_promo.enabled");
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_VPN_promo_in_disallowed_home_region() {
+  const disallowedRegion = "SY";
+
+  setupRegions(disallowedRegion);
+
+  // Promo should not show in disallowed regions even when vpn_promo pref is enabled
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!vpnPromoCard, "The VPN promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_VPN_promo_in_illegal_home_region() {
+  const illegalRegion = "CN";
+
+  setupRegions(illegalRegion);
+
+  // Promo should not show in illegal regions even if the list of disallowed regions is somehow altered (though changing this preference is blocked)
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.disallowedRegions", "SY, CU"]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!vpnPromoCard, "The VPN promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_VPN_promo_in_disallowed_current_region() {
+  const allowedRegion = "US";
+  const disallowedRegion = "SY";
+
+  setupRegions(allowedRegion, disallowedRegion);
+
+  // Promo should not show in disallowed regions even when vpn_promo pref is enabled
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!vpnPromoCard, "The VPN promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_VPN_promo_in_illegal_current_region() {
+  const allowedRegion = "US";
+  const illegalRegion = "CN";
+
+  setupRegions(allowedRegion, illegalRegion);
+
+  // Promo should not show in illegal regions even if the list of disallowed regions is somehow altered (though changing this preference is blocked)
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.vpn_promo.disallowedRegions", "SY, CU"]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!vpnPromoCard, "The VPN promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

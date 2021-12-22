@@ -61,6 +61,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   CloudStorage: "resource://gre/modules/CloudStorage.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",

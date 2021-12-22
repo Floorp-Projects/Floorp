@@ -1867,6 +1867,13 @@ pref("browser.contentblocking.report.proxy.enabled", false);
 // Disable the mobile promotion by default.
 pref("browser.contentblocking.report.show_mobile_app", true);
 
+// Avoid advertising in certain regions. Comma separated string of two letter ISO 3166-1 country codes.
+// We're currently blocking all of Ukraine (ua), but would prefer to block just Crimea (ua-43). Currently, the Mozilla Location Service APIs used by Region.jsm only exposes the country, not the subdivision.
+pref("browser.vpn_promo.disallowed_regions", "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua");
+
+// Default to enabling VPN promo messages to be shown when specified and allowed
+pref("browser.vpn_promo.enabled", true);
+
 // Enable the vpn card by default.
 pref("browser.contentblocking.report.vpn.enabled", true);
 // Only show vpn card to certain regions. Comma separated string of two letter ISO 3166-1 country codes.

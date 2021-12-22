@@ -93,7 +93,10 @@ var gMoreFromMozillaPane = {
           },
         },
       },
-      {
+    ];
+
+    if (BrowserUtils.shouldShowVPNPromo()) {
+      const vpn = {
         id: "mozilla-vpn",
         title_string_id: "mozilla-vpn-title",
         description_string_id: "mozilla-vpn-description",
@@ -102,18 +105,22 @@ var gMoreFromMozillaPane = {
           label_string_id: "button-mozilla-vpn",
           actionURL: "https://www.mozilla.org/products/vpn/",
         },
+      };
+      products.push(vpn);
+    }
+
+    const rally = {
+      id: "mozilla-rally",
+      title_string_id: "mozilla-rally-title",
+      description_string_id: "mozilla-rally-description",
+      button: {
+        id: "mozillaRally",
+        label_string_id: "button-mozilla-rally",
+        actionURL: "https://rally.mozilla.org/",
       },
-      {
-        id: "mozilla-rally",
-        title_string_id: "mozilla-rally-title",
-        description_string_id: "mozilla-rally-description",
-        button: {
-          id: "mozillaRally",
-          label_string_id: "button-mozilla-rally",
-          actionURL: "https://rally.mozilla.org/",
-        },
-      },
-    ];
+    };
+    products.push(rally);
+
     this._productsContainer = document.getElementById(
       "moreFromMozillaCategory"
     );
