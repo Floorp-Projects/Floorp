@@ -25,7 +25,7 @@ AUR_URL_TEMPLATE = "https://aur.archlinux.org/cgit/aur.git/snapshot/{}.tar.gz"
 class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """Archlinux experimental bootstrapper."""
 
-    SYSTEM_PACKAGES = ["base-devel", "nodejs", "unzip", "zip"]
+    SYSTEM_PACKAGES = ["base-devel", "unzip", "zip"]
 
     BROWSER_PACKAGES = [
         "alsa-lib",

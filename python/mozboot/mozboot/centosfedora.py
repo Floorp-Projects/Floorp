@@ -18,9 +18,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         self.group_packages = []
 
-        # For CentOS 7, later versions of nodejs come from nodesource
-        # and include the npm package.
-        self.packages = ["nodejs", "which"]
+        self.packages = ["which"]
 
         self.browser_group_packages = ["GNOME Software Development"]
 
@@ -50,8 +48,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
                     "GNOME Software Development",
                 ]
 
-                self.packages += ["npm"]
-
             else:
                 self.packages += ["redhat-rpm-config"]
 
@@ -60,7 +56,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         elif self.distro == "fedora":
             self.group_packages += ["C Development Tools and Libraries"]
 
-            self.packages += ["npm", "redhat-rpm-config"]
+            self.packages += ["redhat-rpm-config"]
             if self.version >= 33:
                 self.packages.append("perl-FindBin")
 

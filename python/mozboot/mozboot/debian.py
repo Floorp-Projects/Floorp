@@ -34,16 +34,9 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "build-essential",
         "libpython3-dev",
         "m4",
-        "nodejs",
         "unzip",
         "uuid",
         "zip",
-    ]
-
-    # Ubuntu and Debian don't often differ, but they do for npm.
-    DEBIAN_PACKAGES = [
-        # Comment the npm package until Debian bring it back
-        # 'npm'
     ]
 
     # These are common packages for building Firefox for Desktop
@@ -76,8 +69,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.codename = codename
 
         self.packages = list(self.COMMON_PACKAGES)
-        if self.distro == "debian":
-            self.packages += self.DEBIAN_PACKAGES
 
     def suggest_install_distutils(self):
         print(
