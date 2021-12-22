@@ -19,6 +19,7 @@ import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
 import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
@@ -44,7 +45,6 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTh
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingToolbarPositionPickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
-import org.mozilla.fenix.home.BottomSpacerViewHolder
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -211,26 +211,31 @@ class SessionControlAdapter(
         when (viewType) {
             CustomizeHomeButtonViewHolder.LAYOUT_ID -> return CustomizeHomeButtonViewHolder(
                 composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
                 interactor = interactor
             )
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
                 composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
                 store = store,
                 interactor = interactor
             )
             RecentBookmarksViewHolder.LAYOUT_ID -> return RecentBookmarksViewHolder(
                 composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
                 store = store,
                 interactor = interactor,
                 metrics = components.analytics.metrics
             )
             RecentTabViewHolder.LAYOUT_ID -> return RecentTabViewHolder(
                 composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
                 store = store,
                 interactor = interactor
             )
             RecentlyVisitedViewHolder.LAYOUT_ID -> return RecentlyVisitedViewHolder(
                 composeView = ComposeView(parent.context),
+                viewLifecycleOwner,
                 store = store,
                 interactor = interactor,
                 metrics = components.analytics.metrics

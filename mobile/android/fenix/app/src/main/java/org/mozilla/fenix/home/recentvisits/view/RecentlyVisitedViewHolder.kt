@@ -5,20 +5,20 @@
 package org.mozilla.fenix.home.recentvisits.view
 
 import android.view.View
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
-import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
  * View holder for [RecentlyVisitedItem]s.
@@ -29,50 +29,50 @@ import org.mozilla.fenix.utils.view.ViewHolder
  * @property metrics [MetricController] that handles telemetry events.
  */
 class RecentlyVisitedViewHolder(
-    val composeView: ComposeView,
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
     private val store: HomeFragmentStore,
     private val interactor: RecentVisitsInteractor,
     private val metrics: MetricController
-) : ViewHolder(composeView) {
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        val horizontalPadding = composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
         composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
 
-        composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-        )
-        composeView.setContent {
-            val recentVisits = store.observeAsComposableState { state -> state.recentHistory }
+    @Composable
+    override fun Content() {
+        val recentVisits = store.observeAsComposableState { state -> state.recentHistory }
 
-            FirefoxTheme {
-                RecentlyVisited(
-                    recentVisits = recentVisits.value ?: emptyList(),
-                    menuItems = listOfNotNull(
-                        RecentVisitMenuItem(
-                            title = stringResource(R.string.recently_visited_menu_item_remove),
-                            onClick = { visit ->
-                                when (visit) {
-                                    is RecentHistoryGroup -> interactor.onRemoveRecentHistoryGroup(visit.title)
-                                    is RecentHistoryHighlight -> interactor.onRemoveRecentHistoryHighlight(visit.url)
-                                }
-                            }
-                        )
-                    ),
-                    onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
-                        when (recentlyVisitedItem) {
-                            is RecentHistoryHighlight -> {
-                                interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
-                            }
-                            is RecentHistoryGroup -> {
-                                metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
-                                interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
-                            }
+        RecentlyVisited(
+            recentVisits = recentVisits.value ?: emptyList(),
+            menuItems = listOfNotNull(
+                RecentVisitMenuItem(
+                    title = stringResource(R.string.recently_visited_menu_item_remove),
+                    onClick = { visit ->
+                        when (visit) {
+                            is RecentHistoryGroup -> interactor.onRemoveRecentHistoryGroup(visit.title)
+                            is RecentHistoryHighlight -> interactor.onRemoveRecentHistoryHighlight(
+                                visit.url
+                            )
                         }
                     }
                 )
+            ),
+            onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
+                when (recentlyVisitedItem) {
+                    is RecentHistoryHighlight -> {
+                        interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
+                    }
+                    is RecentHistoryGroup -> {
+                        metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
+                        interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
+                    }
+                }
             }
-        }
+        )
     }
 
     companion object {

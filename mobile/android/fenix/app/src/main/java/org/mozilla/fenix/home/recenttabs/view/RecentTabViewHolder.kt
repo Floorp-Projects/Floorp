@@ -5,14 +5,14 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.View
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
  * View holder for a recent tab item.
@@ -22,32 +22,30 @@ import org.mozilla.fenix.utils.view.ViewHolder
  * @param interactor [RecentTabInteractor] which will have delegated to all user interactions.
  */
 class RecentTabViewHolder(
-    val composeView: ComposeView,
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
     private val store: HomeFragmentStore,
     private val interactor: RecentTabInteractor
-) : ViewHolder(composeView) {
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        val horizontalPadding = composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
         composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
-
-        composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-        )
-        composeView.setContent {
-            val recentTabs = store.observeAsComposableState { state -> state.recentTabs }
-
-            FirefoxTheme {
-                RecentTabs(
-                    recentTabs = recentTabs.value ?: emptyList(),
-                    onRecentTabClick = { interactor.onRecentTabClicked(it) },
-                    onRecentSearchGroupClicked = { interactor.onRecentSearchGroupClicked(it) }
-                )
-            }
-        }
     }
 
     companion object {
         val LAYOUT_ID = View.generateViewId()
+    }
+
+    @Composable
+    override fun Content() {
+        val recentTabs = store.observeAsComposableState { state -> state.recentTabs }
+
+        RecentTabs(
+            recentTabs = recentTabs.value ?: emptyList(),
+            onRecentTabClick = { interactor.onRecentTabClicked(it) },
+            onRecentSearchGroupClicked = { interactor.onRecentSearchGroupClicked(it) }
+        )
     }
 }

@@ -17,16 +17,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.home.HomeFragmentStore
-import org.mozilla.fenix.theme.FirefoxTheme
 
 internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
 internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
@@ -40,34 +40,29 @@ internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
  * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketStoriesViewHolder(
-    val composeView: ComposeView,
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
     val store: HomeFragmentStore,
     val interactor: PocketStoriesInteractor
-) : RecyclerView.ViewHolder(composeView) {
-
-    init {
-        composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-        )
-        composeView.setContent {
-            FirefoxTheme {
-                PocketStories(
-                    store,
-                    interactor::onStoriesShown,
-                    interactor::onStoryClicked,
-                    interactor::onCategoryClicked,
-                    interactor::onDiscoverMoreClicked,
-                    interactor::onLearnMoreClicked,
-                    with(composeView.resources) {
-                        getDimensionPixelSize(R.dimen.home_item_horizontal_margin) / displayMetrics.density
-                    }
-                )
-            }
-        }
-    }
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     companion object {
         val LAYOUT_ID = View.generateViewId()
+    }
+
+    @Composable
+    override fun Content() {
+        PocketStories(
+            store,
+            interactor::onStoriesShown,
+            interactor::onStoryClicked,
+            interactor::onCategoryClicked,
+            interactor::onDiscoverMoreClicked,
+            interactor::onLearnMoreClicked,
+            with(composeView.resources) {
+                getDimensionPixelSize(R.dimen.home_item_horizontal_margin) / displayMetrics.density
+            }
+        )
     }
 }
 
@@ -110,7 +105,12 @@ fun PocketStories(
 
         Spacer(Modifier.height(17.dp))
 
-        PocketStories(stories ?: emptyList(), horizontalPadding.dp, onStoryClicked, onDiscoverMoreClicked)
+        PocketStories(
+            stories ?: emptyList(),
+            horizontalPadding.dp,
+            onStoryClicked,
+            onDiscoverMoreClicked
+        )
 
         Spacer(Modifier.height(24.dp))
 

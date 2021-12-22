@@ -5,42 +5,39 @@
 package org.mozilla.fenix.home.recentbookmarks.view
 
 import android.view.View
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
-import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.view.ViewHolder
 
 class RecentBookmarksViewHolder(
-    val composeView: ComposeView,
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
     private val store: HomeFragmentStore,
     val interactor: RecentBookmarksInteractor,
     val metrics: MetricController
-) : ViewHolder(composeView) {
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
         metrics.track(Event.RecentBookmarksShown)
-
-        composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-        )
-        composeView.setContent {
-            val recentBookmarks = store.observeAsComposableState { state -> state.recentBookmarks }
-
-            FirefoxTheme {
-                RecentBookmarks(
-                    bookmarks = recentBookmarks.value ?: emptyList(),
-                    onRecentBookmarkClick = interactor::onRecentBookmarkClicked
-                )
-            }
-        }
     }
 
     companion object {
         val LAYOUT_ID = View.generateViewId()
+    }
+
+    @Composable
+    override fun Content() {
+        val recentBookmarks = store.observeAsComposableState { state -> state.recentBookmarks }
+
+        RecentBookmarks(
+            bookmarks = recentBookmarks.value ?: emptyList(),
+            onRecentBookmarkClick = interactor::onRecentBookmarkClicked
+        )
     }
 }
