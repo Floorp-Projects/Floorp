@@ -101,9 +101,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self(["pip3", "install", "--upgrade", "pip", "--user"])
         self(["pip3", "install", "--upgrade", "Mercurial", "--user"])
 
-    def ensure_nasm_packages(self, state_dir, checkout_root):
-        self.zypper_install("nasm")
-
     def zypper_install(self, *packages):
         command = ["zypper", "install"]
         if self.no_interactive:

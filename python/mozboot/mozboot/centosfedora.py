@@ -31,7 +31,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             # Development group.
             "libstdc++-static",
             "libXt-devel",
-            "nasm",
             "pulseaudio-libs-devel",
             "gcc-c++",
         ]
