@@ -10176,6 +10176,19 @@
     "kind": "boolean",
     "description": "If we are on Windows and neither the Windows countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
   },
+  "SEARCH_SUGGESTIONS_LATENCY_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["fx-search@mozilla.com", "adw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1743885],
+    "description": "Records the latencies (ms) of search suggestions fetches per search engine. Keys in this histogram are search engine IDs for built-in search engines and 'other' for non-built-in search engines."
+  },
   "TOUCH_ENABLED_DEVICE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
