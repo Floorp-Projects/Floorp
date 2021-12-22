@@ -87,4 +87,22 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Tavsiya etilgan loginlarni yigʻish</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Tavsiya etilgan loginlar</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Bu saytga maʼlumotlar qayta yuborilsinmi?</string>
+    <string name="mozac_feature_prompt_repost_message">Bu sahifani yangilash toʻlovni yuborish yoki ikki marta sharh qoldirish kabi soʻnggi amallarni takrorlashi mumkin.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Maʼlumotlarni qayta yuborish</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Bekor qilish</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Kredit kartani tanlash</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Tavsiya etilgan kredit kartalarni kengaytirish</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Tavsiya etiladigan kredit kartalarni yigʻish</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Kredit kartalarni boshqarish</string>
 </resources>

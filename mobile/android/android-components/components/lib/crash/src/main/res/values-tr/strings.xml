@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">Kusura bakmayın, %1$s bir sorunla karşılaştı ve çöktü.</string>
+    <string name="mozac_lib_crash_dialog_title">%1$s bir sorunla karşılaştı ve çöktü.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">Çökme raporunu %1$s’ya gönder</string>
@@ -17,7 +17,7 @@
     <string name="mozac_lib_crash_channel">Çökmeler</string>
 
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
-    <string name="mozac_lib_crash_notification_action_report">Bildir</string>
+    <string name="mozac_lib_crash_notification_action_report">Raporla</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">Çökme raporu %1$s\'ya gönderiliyor</string>

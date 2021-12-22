@@ -31,4 +31,8 @@
     <string name="mozac_feature_sitepermissions_always_allow">Doimo</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">Hech qachon</string>
+    <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_persistent_storage_title">%1$sga maʼlumotlarni mavjud xotiraga joylashga ruxsat berilsinmi?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">DRM tomonidan boshqariladigan kontentni %1$s ishga tushirishiga ruxsat berilsinmi?</string>
 </resources>

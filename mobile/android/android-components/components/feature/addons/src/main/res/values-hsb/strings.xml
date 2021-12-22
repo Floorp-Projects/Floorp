@@ -3,31 +3,31 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Nastajenja priwatnosće čitać a změnić</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Mějće přistup na swoje daty za wšě websydła</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Mějće přistup k swojim datam za wšě websydła</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
-    <string name="mozac_feature_addons_permissions_one_site_description">Mějće přistup na swoje daty za %1$s</string>
+    <string name="mozac_feature_addons_permissions_one_site_description">Mějće přistup k swojim datam za %1$s</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
-    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Mějće přistup na swoje daty za sydła w domenje %1$s</string>
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Mějće přistup k swojim datam za sydła w domenje %1$s</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
-    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Mějće přistup na swoje daty na 1 dalšim websydle</string>
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Mějće přistup k swojim datam na 1 dalšim websydle</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
      %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Mějće přistup na swoje daty na %1$d dalšich websydłach</string>
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Mějće přistup k swojim datam na %1$d dalšich websydłach</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
       then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
-    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Mějće přistup na swoje daty na 1 dalšej domenje</string>
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Mějće přistup k swojim datam na 1 dalšej domenje</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Mějće přistup na swoje daty na %1$d dalšich domenach</string>
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Mějće přistup k swojim datam na %1$d dalšich domenach</string>
     <!-- Description for tabs add-on permission. -->
-    <string name="mozac_feature_addons_permissions_tabs_description">Mějće přistup na rajtarki wobhladowaka</string>
+    <string name="mozac_feature_addons_permissions_tabs_description">Mějće přistup k rajtarkam wobhladowaka</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Njewobmjezowanu ličbu klientowych datow składować</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">Mějće přistup na aktiwitu wobhladowaka za nawigaciju</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Mějće přistup k aktiwiće wobhladowaka za nawigaciju</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Zapołožki čitać a změnić</string>
     <!-- Description for browser_setting permission. -->
@@ -45,9 +45,9 @@
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Tekst wšěch wočinjenych rajtarkow čitać</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">Přistup na waše stejnišćo</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">Přistup k wašemu stejnišću</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">Mějće přistup na přehladowansku historiju</string>
+    <string name="mozac_feature_addons_permissions_history_description">Mějće přistup k přehladowanskej historiji</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Wužiwanje rozšěrjenjow wobkedźbować a drasty rjadować</string>
     <!-- Description for native_messaging permission. -->
@@ -59,13 +59,13 @@
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Proksynastajenja wobhladowaka kontrolować</string>
     <!-- Description for sessions permission. -->
-    <string name="mozac_feature_addons_permissions_sessions_description">Mějće přistup na njedawno začinjene rajtarki</string>
+    <string name="mozac_feature_addons_permissions_sessions_description">Mějće přistup k njedawno začinjenym rajtarkam</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Rajtarki wobhladowaka schować a pokazać</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">Mějće přistup na přehladowansku historiju</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Mějće přistup k přehladowanskej historiji</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Rozšěrće wuwiwarske nastroje, zo byšće přistup na swoje daty we wočinjenych rajtarkach měł</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Rozšěrće wuwiwarske nastroje, zo byšće přistup k swojim datam we wočinjenych rajtarkach měł</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Wersija</string>
     <!-- The authors of an add-on. -->

@@ -212,7 +212,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">Přistup na dataju je so wotpokazał</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">Přistup k dataji je so wotpokazał</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
         <li>Snano je so wotstroniła, přesunyła, abo datajowe prawa zadźěwaju přistupej.</li>

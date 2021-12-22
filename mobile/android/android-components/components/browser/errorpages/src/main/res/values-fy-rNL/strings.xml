@@ -429,4 +429,11 @@
       <p>De website op %1$s is rapportearre as in  misliedende website en is blokkearre op basis fan jo befeiligingsfoarkarren.</p>
       
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Befeilige website net beskikber</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Jo hawwe de Allinnich-HTTPS-modus foar ferbettere befeiliging ynskeakele, en in HTTPS-ferzje fan <em>%1$s</em> is net beskikber.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Trochgean nei HTTP-website</string>
 </resources>
