@@ -482,7 +482,9 @@ AboutReader.prototype = {
   },
 
   _onReaderClose() {
-    ReaderMode.leaveReaderMode(this._actor.docShell, this._win);
+    if (this._actor) {
+      this._actor.closeReaderMode();
+    }
   },
 
   async _resetFontSize() {
