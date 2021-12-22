@@ -573,20 +573,16 @@ add_task(async function test_scriptMetaData() {
     ];
   }
 
-  async function background(pageUrl) {
+  async function background() {
     for (let scriptMetadata of getTestCases(true)) {
       await browser.userScripts.register({
         js: [{ file: "userscript.js" }],
         runAt: "document_end",
-        allFrames: true,
         matches: ["http://localhost/*/file_sample.html"],
         scriptMetadata,
       });
     }
 
-    let f = document.createElement("iframe");
-    f.src = pageUrl;
-    document.body.append(f);
     browser.test.sendMessage("background-page:done");
   }
 
@@ -620,7 +616,7 @@ add_task(async function test_scriptMetaData() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `${getTestCases};(${background})("${BASE_URL}/file_sample.html")`,
+    background: `${getTestCases};(${background})()`,
     manifest: {
       permissions: ["http://*/*/file_sample.html"],
       user_scripts: {
@@ -636,7 +632,14 @@ add_task(async function test_scriptMetaData() {
   await extension.startup();
 
   await extension.awaitMessage("background-page:done");
+
+  const pageUrl = `${BASE_URL}/file_sample.html`;
+  info(`Load content page: ${pageUrl}`);
+  const page = await ExtensionTestUtils.loadContentPage(pageUrl);
+
   await extension.awaitMessage("apiscript:done");
+
+  await page.close();
 
   await extension.unload();
 });
