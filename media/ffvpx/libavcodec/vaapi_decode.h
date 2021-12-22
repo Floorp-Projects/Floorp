@@ -20,7 +20,6 @@
 #define AVCODEC_VAAPI_DECODE_H
 
 #include <va/va.h>
-#include <va/va_dec_vp9.h>
 
 #include "libavutil/frame.h"
 #include "libavutil/hwcontext.h"

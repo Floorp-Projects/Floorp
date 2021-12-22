@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#define FFT_FLOAT 0
-#define FFT_FIXED_32 0
-#include "fft_template.c"
+#ifndef AVCODEC_VAAPI_HEVC_H
+#define AVCODEC_VAAPI_HEVC_H
+
+#include <va/va.h>
+#include "avcodec.h"
+
+VAProfile ff_vaapi_parse_hevc_rext_profile(AVCodecContext *avctx);
+
+#endif /* AVCODEC_VAAPI_HEVC_H */
