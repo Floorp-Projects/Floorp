@@ -90,7 +90,10 @@ var FormAutofill = {
       if (!FormAutofill.supportRTL && Services.locale.isAppLocaleRTL) {
         return false;
       }
-      let region = Services.prefs.getCharPref(BROWSER_SEARCH_REGION_PREF, "");
+      let region = Services.prefs.getCharPref(
+        BROWSER_SEARCH_REGION_PREF,
+        this.DEFAULT_REGION
+      );
 
       return supportedCountries.includes(region);
     }
