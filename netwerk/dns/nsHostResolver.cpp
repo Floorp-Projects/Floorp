@@ -317,6 +317,7 @@ void nsHostResolver::Shutdown() {
 
     mQueue.ClearAll(
         [&](nsHostRecord* aRec) {
+          mLock.AssertCurrentThreadOwns();
           if (aRec->IsAddrRecord()) {
             CompleteLookupLocked(aRec, NS_ERROR_ABORT, nullptr, aRec->pb,
                                  aRec->originSuffix, aRec->mTRRSkippedReason,
@@ -857,6 +858,7 @@ bool nsHostResolver::TRRServiceEnabledForRecord(nsHostRecord* aRec) {
   }
 
   auto hasConnectivity = [this]() -> bool {
+    mLock.AssertCurrentThreadOwns();
     if (!mNCS) {
       return true;
     }
@@ -1749,6 +1751,7 @@ void nsHostResolver::ThreadFunc() {
     }
   } while (true);
 
+  MutexAutoLock lock(mLock);
   mActiveTaskCount--;
   LOG(("DNS lookup thread - queue empty, task finished.\n"));
 }
