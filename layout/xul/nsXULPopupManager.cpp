@@ -1226,11 +1226,14 @@ void nsXULPopupManager::HideMenu(nsIContent* aMenu) {
 
 // This is used to hide the popup after a transition finishes.
 class TransitionEnder final : public nsIDOMEventListener {
+ private:
+  // Effectively const but is cycle collected
+  MOZ_KNOWN_LIVE RefPtr<nsIContent> mContent;
+
  protected:
   virtual ~TransitionEnder() = default;
 
  public:
-  nsCOMPtr<nsIContent> mContent;
   bool mDeselectMenu;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -1239,16 +1242,18 @@ class TransitionEnder final : public nsIDOMEventListener {
   TransitionEnder(nsIContent* aContent, bool aDeselectMenu)
       : mContent(aContent), mDeselectMenu(aDeselectMenu) {}
 
-  NS_IMETHOD HandleEvent(Event* aEvent) override {
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD HandleEvent(Event* aEvent) override {
     mContent->RemoveSystemEventListener(u"transitionend"_ns, this, false);
 
     nsMenuPopupFrame* popupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
+    if (!popupFrame) {
+      return NS_OK;
+    }
 
     // Now hide the popup. There could be other properties transitioning, but
     // we'll assume they all end at the same time and just hide the popup upon
     // the first one ending.
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm && popupFrame) {
+    if (RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance()) {
       pm->HidePopupCallback(mContent, popupFrame, nullptr, nullptr,
                             popupFrame->PopupType(), mDeselectMenu);
     }
@@ -1265,7 +1270,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransitionEnder)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(TransitionEnder, mContent);
-
 void nsXULPopupManager::HidePopupCallback(
     nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
     nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu) {
@@ -1301,13 +1305,13 @@ void nsXULPopupManager::HidePopupCallback(
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupHidden, nullptr,
                          WidgetMouseEvent::eReal);
-  EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(), &event, nullptr,
-                            &status);
+  RefPtr<nsPresContext> presContext = aPopupFrame->PresContext();
+  EventDispatcher::Dispatch(aPopup, presContext, &event, nullptr, &status);
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // Force any popups that might be anchored on elements within this popup to
   // update.
-  UpdatePopupPositions(aPopupFrame->PresContext()->RefreshDriver());
+  UpdatePopupPositions(presContext->RefreshDriver());
 
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
