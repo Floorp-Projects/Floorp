@@ -531,7 +531,7 @@ option(
 @depends(
     host,
     vs_major_version,
-    check_build_environment,
+    build_environment,
     "VC_PATH",
     "--with-visual-studio-version",
     when=host_is_windows,
@@ -1655,7 +1655,7 @@ set_define("_LIBCPP_ALWAYS_INLINE", libcxx_override_visibility.empty)
 set_define("_LIBCPP_HIDE_FROM_ABI", libcxx_override_visibility.hide_from_abi)
 
 
-@depends(target, check_build_environment)
+@depends(target, build_environment)
 def visibility_flags(target, env):
     if target.os != "WINNT":
         if target.kernel == "Darwin":
@@ -2067,7 +2067,7 @@ set_config("MOZ_CODE_COVERAGE", code_coverage)
 set_define("MOZ_CODE_COVERAGE", code_coverage)
 
 
-@depends(target, c_compiler, check_build_environment, when=code_coverage)
+@depends(target, c_compiler, build_environment, when=code_coverage)
 @imports("os")
 @imports("re")
 @imports(_from="__builtin__", _import="open")
@@ -2842,7 +2842,7 @@ def path_remapping(value):
 
 @depends(
     target,
-    check_build_environment,
+    build_environment,
     target_sysroot.path,
     valid_windows_sdk_dir,
     vc_path,
