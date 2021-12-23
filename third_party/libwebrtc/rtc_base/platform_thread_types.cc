@@ -43,9 +43,7 @@ PlatformThreadId CurrentThreadId() {
   return static_cast<PlatformThreadId>(pthread_self());
 #else
   // Default implementation for nacl and solaris.
-  // WEBRTC_BSD: pthread_t is a pointer, so cannot be casted to pid_t
-  //             (aka int32_t) on 64-bit archs. Required on OpenBSD.
-  return reinterpret_cast<long>(pthread_self());
+  return reinterpret_cast<PlatformThreadId>(pthread_self());
 #endif
 #endif  // defined(WEBRTC_POSIX)
 }
