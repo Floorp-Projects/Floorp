@@ -19,7 +19,8 @@ with Files("*IMContextWrapper*"):
 with Files("*nsGtkKeyUtils*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-DIRS += ["mozgtk"]
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    DIRS += ["mozgtk"]
 
 if CONFIG["MOZ_WAYLAND"]:
     DIRS += ["wayland", "mozwayland"]
