@@ -426,9 +426,9 @@ void nsMenuX::MenuOpened() {
     explicit MenuOpenedAsyncRunnable(nsMenuX* aMenu)
         : CancelableRunnable("MenuOpenedAsyncRunnable"), mMenu(aMenu) {}
 
-    nsresult Run() override {
-      if (mMenu) {
-        RefPtr<nsMenuX> menu = mMenu;
+    // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult Run() override {
+      if (RefPtr<nsMenuX> menu = mMenu) {
         menu->MenuOpenedAsync();
         mMenu = nullptr;
       }
@@ -465,7 +465,7 @@ void nsMenuX::MenuOpenedAsync() {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
-  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
+  RefPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   // Notify our observer.
   if (mObserver && popupContent) {
@@ -475,7 +475,7 @@ void nsMenuX::MenuOpenedAsync() {
   // Fire popupshown.
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
-  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
+  RefPtr<nsIContent> dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 }
 
@@ -507,9 +507,9 @@ void nsMenuX::MenuClosed(bool aEntireMenuClosingDueToActivateItem) {
     explicit MenuClosedAsyncRunnable(nsMenuX* aMenu)
         : CancelableRunnable("MenuClosedAsyncRunnable"), mMenu(aMenu) {}
 
-    nsresult Run() override {
-      if (mMenu) {
-        RefPtr<nsMenuX> menu = mMenu;
+    // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult Run() override {
+      if (RefPtr<nsMenuX> menu = mMenu) {
         menu->MenuClosedAsync();
         mMenu = nullptr;
       }
@@ -875,7 +875,7 @@ bool nsMenuX::OnOpen() {
                "seems odd.");
   }
 
-  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
+  RefPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   if (mObserver && popupContent) {
     mObserver->OnMenuWillOpen(popupContent->AsElement());
@@ -885,7 +885,7 @@ bool nsMenuX::OnOpen() {
   WidgetMouseEvent event(true, eXULPopupShowing, nullptr, WidgetMouseEvent::eReal);
 
   nsresult rv = NS_OK;
-  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
+  RefPtr<nsIContent> dispatchTo = popupContent ? popupContent : mContent;
   rv = EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault) {
     return false;
