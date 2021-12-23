@@ -55,6 +55,8 @@
 
 #if defined(XP_WIN)
 #  include <process.h>
+
+#  include "mozilla/WinDllServices.h"
 #else
 #  include <unistd.h>
 #endif
@@ -175,6 +177,11 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   if (!EnsureNSSInitializedChromeOrContent()) {
     return false;
   }
+
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->StartUntrustedModulesProcessor();
+#endif  // defined(XP_WIN)
 
   return true;
 }
@@ -693,6 +700,20 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvTestTriggerMetrics(
   aResolve(true);
   return IPC_OK();
 }
+
+#if defined(XP_WIN)
+mozilla::ipc::IPCResult SocketProcessChild::RecvGetUntrustedModulesData(
+    GetUntrustedModulesDataResolver&& aResolver) {
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->GetUntrustedModulesData()->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aResolver](Maybe<UntrustedModulesData>&& aData) {
+        aResolver(std::move(aData));
+      },
+      [aResolver](nsresult aReason) { aResolver(Nothing()); });
+  return IPC_OK();
+}
+#endif  // defined(XP_WIN)
 
 }  // namespace net
 }  // namespace mozilla

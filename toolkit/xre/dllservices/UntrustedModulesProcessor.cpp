@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Likely.h"
+#include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
@@ -92,6 +93,7 @@ bool UntrustedModulesProcessor::IsSupportedProcessType() {
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
     case GeckoProcessType_Content:
+    case GeckoProcessType_Socket:
       return Telemetry::CanRecordReleaseData();
     case GeckoProcessType_RDD:
       // For RDD process, we check the telemetry settings in RDDChild::Init()
@@ -538,6 +540,36 @@ void UntrustedModulesProcessor::BackgroundProcessModuleLoadQueueChildProcess() {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
+UntrustedModulesProcessor::LoadsVec
+UntrustedModulesProcessor::ExtractLoadingEventsToProcess(size_t aMaxLength) {
+  LoadsVec loadsToProcess;
+
+  MutexAutoLock lock(mUnprocessedMutex);
+  CancelScheduledProcessing(lock);
+
+  // The potential size of mProcessedModuleLoads if all of the unprocessed
+  // events are from third-party modules.
+  const size_t newDataLength =
+      mProcessedModuleLoads.mEvents.length() + mUnprocessedModuleLoads.length();
+  if (newDataLength <= aMaxLength) {
+    loadsToProcess.swap(mUnprocessedModuleLoads);
+  } else {
+    // To prevent mProcessedModuleLoads from exceeding |aMaxLength|,
+    // we process the first items in the mUnprocessedModuleLoads,
+    // leaving the the remaining events for the next time.
+    const size_t capacity =
+        aMaxLength > mProcessedModuleLoads.mEvents.length()
+            ? (aMaxLength - mProcessedModuleLoads.mEvents.length())
+            : 0;
+    auto moveRangeBegin = mUnprocessedModuleLoads.begin();
+    auto moveRangeEnd = moveRangeBegin + capacity;
+    Unused << loadsToProcess.moveAppend(moveRangeBegin, moveRangeEnd);
+    mUnprocessedModuleLoads.erase(moveRangeBegin, moveRangeEnd);
+  }
+
+  return loadsToProcess;
+}
+
 // This function contains multiple |mAllowProcessing| checks so that we can
 // quickly bail out at the first sign of shutdown. This may be important when
 // the current thread is running under background priority.
@@ -548,34 +580,8 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
     return;
   }
 
-  Vector<glue::EnhancedModuleLoadInfo> loadsToProcess;
-
-  {  // Scope for lock
-    MutexAutoLock lock(mUnprocessedMutex);
-    CancelScheduledProcessing(lock);
-
-    // The potential size of mProcessedModuleLoads if all of the unprocessed
-    // events are from third-party modules.
-    const size_t newDataLength = mProcessedModuleLoads.mEvents.length() +
-                                 mUnprocessedModuleLoads.length();
-    if (newDataLength <= UntrustedModulesData::kMaxEvents) {
-      loadsToProcess.swap(mUnprocessedModuleLoads);
-    } else {
-      // To prevent mProcessedModuleLoads from exceeding |kMaxEvents|,
-      // we process the first items in the mUnprocessedModuleLoads,
-      // leaving the the remaining events for the next time.
-      const size_t capacity = UntrustedModulesData::kMaxEvents >
-                                      mProcessedModuleLoads.mEvents.length()
-                                  ? (UntrustedModulesData::kMaxEvents -
-                                     mProcessedModuleLoads.mEvents.length())
-                                  : 0;
-      auto moveRangeBegin = mUnprocessedModuleLoads.begin();
-      auto moveRangeEnd = moveRangeBegin + capacity;
-      Unused << loadsToProcess.moveAppend(moveRangeBegin, moveRangeEnd);
-      mUnprocessedModuleLoads.erase(moveRangeBegin, moveRangeEnd);
-    }
-  }
-
+  LoadsVec loadsToProcess =
+      ExtractLoadingEventsToProcess(UntrustedModulesData::kMaxEvents);
   if (!mAllowProcessing || loadsToProcess.empty()) {
     return;
   }
@@ -695,6 +701,15 @@ UntrustedModulesProcessor::SendGetModulesTrust(ModulePaths&& aModules,
       return ::mozilla::SendGetModulesTrust(RDDParent::GetSingleton(),
                                             std::move(aModules), runNormal);
     }
+    case GeckoProcessType_Socket: {
+      printf_stderr(
+          "!!!! UntrustedModulesProcessor::SendGetModulesTrust for Socket - "
+          "%llu\n",
+          aModules.mModuleNtPaths.as<ModulePaths::SetType>().Count());
+      return ::mozilla::SendGetModulesTrust(
+          net::SocketProcessChild::GetSingleton(), std::move(aModules),
+          runNormal);
+    }
     default: {
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");
       return GetModulesTrustIpcPromise::CreateAndReject(
@@ -723,14 +738,8 @@ UntrustedModulesProcessor::ProcessModuleLoadQueueChildProcess(
   AssertRunningOnLazyIdleThread();
   MOZ_ASSERT(!XRE_IsParentProcess());
 
-  Vector<glue::EnhancedModuleLoadInfo> loadsToProcess;
-
-  {  // Scope for lock
-    MutexAutoLock lock(mUnprocessedMutex);
-    CancelScheduledProcessing(lock);
-    loadsToProcess.swap(mUnprocessedModuleLoads);
-  }
-
+  LoadsVec loadsToProcess =
+      ExtractLoadingEventsToProcess(UntrustedModulesData::kMaxEvents);
   if (loadsToProcess.empty()) {
     // Nothing to process
     return GetModulesTrustPromise::CreateAndResolve(Nothing(), __func__);
