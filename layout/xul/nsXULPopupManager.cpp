@@ -832,8 +832,8 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
 
   popupFrame->InitializePopupAsNativeContextMenu(triggerContent, aXPos, aYPos);
 
-  nsEventStatus status =
-      FirePopupShowingEvent(pendingPopup, popupFrame->PresContext());
+  RefPtr<nsPresContext> presContext = popupFrame->PresContext();
+  nsEventStatus status = FirePopupShowingEvent(pendingPopup, presContext);
 
   // if the event was cancelled, don't open the popup, reset its state back
   // to closed and clear its trigger content.
@@ -845,7 +845,6 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
     return true;
   }
 
-  nsPresContext* presContext = popupFrame->PresContext();
   auto scale = presContext->CSSToDevPixelScale() /
                presContext->DeviceContext()->GetDesktopToDeviceScale();
   DesktopPoint position = CSSPoint(aXPos, aYPos) * scale;
@@ -1553,8 +1552,8 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
   event.mInputSource = aPendingPopup.MouseInputSource();
   event.mRefPoint = aPendingPopup.mMousePoint;
   event.mModifiers = aPendingPopup.mModifiers;
-  EventDispatcher::Dispatch(aPendingPopup.mPopup, aPresContext, &event, nullptr,
-                            &status);
+  RefPtr<nsIContent> popup = aPendingPopup.mPopup;
+  EventDispatcher::Dispatch(popup, aPresContext, &event, nullptr, &status);
 
   return status;
 }
@@ -1562,7 +1561,7 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
 void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
                                           bool aIsContextMenu,
                                           bool aSelectFirstItem) {
-  nsCOMPtr<nsIContent> popup = aPendingPopup.mPopup;
+  RefPtr<nsIContent> popup = aPendingPopup.mPopup;
 
   nsMenuPopupFrame* popupFrame =
       do_QueryFrame(popup->GetPrimaryFrame());
@@ -1570,7 +1569,7 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
     return;
   }
 
-  nsPresContext* presContext = popupFrame->PresContext();
+  RefPtr<nsPresContext> presContext = popupFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
   presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::TreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1794,12 +1793,12 @@ already_AddRefed<nsINode> nsXULPopupManager::GetLastTriggerNode(
     Document* aDocument, bool aIsTooltip) {
   if (!aDocument) return nullptr;
 
-  nsCOMPtr<nsINode> node;
+  RefPtr<nsINode> node;
 
   // If a pending popup is set, it means that a popupshowing event is being
   // fired. In this case, just use the cached node, as the popup is not yet in
   // the list of open popups.
-  nsCOMPtr<nsIContent> openingPopup =
+  RefPtr<nsIContent> openingPopup =
       mPendingPopup ? mPendingPopup->mPopup : nullptr;
   if (openingPopup && openingPopup->GetUncomposedDoc() == aDocument &&
       aIsTooltip == openingPopup->IsXULElement(nsGkAtoms::tooltip)) {
