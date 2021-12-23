@@ -11,11 +11,11 @@ const {
 
 // Test the behavior rules are dynamically added
 
-const ISSUE_BINDING = {
+const ISSUE_CURSOR = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-binding",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
-  deprecated: true,
+  property: "cursor",
+  url: "https://developer.mozilla.org/docs/Web/CSS/cursor",
+  deprecated: false,
   experimental: false,
 };
 
@@ -31,7 +31,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .issue {
-      -moz-binding: none;
+      cursor: grab;
     }
   </style>
   <body>
@@ -59,7 +59,7 @@ add_task(async function() {
   await waitForCompatibilityListUpdate;
 
   info("Check initial issues");
-  await checkPanelIssues(selectedElementPane, allElementsPane, [ISSUE_BINDING]);
+  await checkPanelIssues(selectedElementPane, allElementsPane, [ISSUE_CURSOR]);
 
   await addNewRule(
     "hyphens",
@@ -67,13 +67,13 @@ add_task(async function() {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_BINDING, ISSUE_HYPHENS]
+    [ISSUE_CURSOR, ISSUE_HYPHENS]
   );
 
   info("Toggle the inline issue rendering it disable");
   await togglePropStatusOnRuleView(inspector, 0, 0);
   info("Check the issues listed in panel");
-  await checkPanelIssues(selectedElementPane, allElementsPane, [ISSUE_BINDING]);
+  await checkPanelIssues(selectedElementPane, allElementsPane, [ISSUE_CURSOR]);
 
   info("Toggle the class rule rendering it disabled");
   await togglePropStatusOnRuleView(inspector, 1, 0);
