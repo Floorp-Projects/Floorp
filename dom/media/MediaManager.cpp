@@ -2000,6 +2000,25 @@ bool MediaManager::IsInMediaThread() {
 }
 #endif
 
+template <typename Function>
+static void ForeachObservedPref(const Function& aFunction) {
+  aFunction("media.navigator.video.default_width"_ns);
+  aFunction("media.navigator.video.default_height"_ns);
+  aFunction("media.navigator.video.default_fps"_ns);
+  aFunction("media.navigator.audio.fake_frequency"_ns);
+#ifdef MOZ_WEBRTC
+  aFunction("media.getusermedia.aec_enabled"_ns);
+  aFunction("media.getusermedia.aec"_ns);
+  aFunction("media.getusermedia.agc_enabled"_ns);
+  aFunction("media.getusermedia.agc"_ns);
+  aFunction("media.getusermedia.hpf_enabled"_ns);
+  aFunction("media.getusermedia.noise_enabled"_ns);
+  aFunction("media.getusermedia.noise"_ns);
+  aFunction("media.ondevicechange.fakeDeviceChangeEvent.enabled"_ns);
+  aFunction("media.getusermedia.channels"_ns);
+#endif
+}
+
 // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
 // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
 // from MediaManager thread.
@@ -2041,26 +2060,9 @@ MediaManager* MediaManager::Get() {
     // else MediaManager won't work properly and will leak (see bug 837874)
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-      prefs->AddObserver("media.navigator.video.default_width", sSingleton,
-                         false);
-      prefs->AddObserver("media.navigator.video.default_height", sSingleton,
-                         false);
-      prefs->AddObserver("media.navigator.video.default_fps", sSingleton,
-                         false);
-      prefs->AddObserver("media.navigator.audio.fake_frequency", sSingleton,
-                         false);
-#ifdef MOZ_WEBRTC
-      prefs->AddObserver("media.getusermedia.aec_enabled", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.aec", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.agc_enabled", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.agc", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.hpf_enabled", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.noise_enabled", sSingleton, false);
-      prefs->AddObserver("media.getusermedia.noise", sSingleton, false);
-      prefs->AddObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled",
-                         sSingleton, false);
-      prefs->AddObserver("media.getusermedia.channels", sSingleton, false);
-#endif
+      ForeachObservedPref([&](const nsLiteralCString& aPrefName) {
+        prefs->AddObserver(aPrefName, sSingleton, false);
+      });
     }
     RegisterStrongMemoryReporter(sSingleton);
 
@@ -3425,22 +3427,9 @@ void MediaManager::Shutdown() {
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    prefs->RemoveObserver("media.navigator.video.default_width", this);
-    prefs->RemoveObserver("media.navigator.video.default_height", this);
-    prefs->RemoveObserver("media.navigator.video.default_fps", this);
-    prefs->RemoveObserver("media.navigator.audio.fake_frequency", this);
-#ifdef MOZ_WEBRTC
-    prefs->RemoveObserver("media.getusermedia.aec_enabled", this);
-    prefs->RemoveObserver("media.getusermedia.aec", this);
-    prefs->RemoveObserver("media.getusermedia.agc_enabled", this);
-    prefs->RemoveObserver("media.getusermedia.hpf_enabled", this);
-    prefs->RemoveObserver("media.getusermedia.agc", this);
-    prefs->RemoveObserver("media.getusermedia.noise_enabled", this);
-    prefs->RemoveObserver("media.getusermedia.noise", this);
-    prefs->RemoveObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled",
-                          this);
-    prefs->RemoveObserver("media.getusermedia.channels", this);
-#endif
+    ForeachObservedPref([&](const nsLiteralCString& aPrefName) {
+      prefs->RemoveObserver(aPrefName, this);
+    });
   }
 
   if (mDeviceChangeTimer) {
