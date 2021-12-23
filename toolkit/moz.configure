@@ -451,7 +451,7 @@ def check_for_freetype2(fc_freetype):
 
 # Check for freetype2. Flags are combined with fontconfig flags.
 freetype2_info = pkg_check_modules(
-    "_FT2", "freetype2 >= 6.1.0", when=check_for_freetype2
+    "_FT2", "freetype2 >= 9.10.3", when=check_for_freetype2
 )
 
 
