@@ -42,13 +42,15 @@ import six
 
 
 def main(argv):
-    _activate_build_virtualenv()
     config = {}
 
     if "OLD_CONFIGURE" not in os.environ:
         os.environ["OLD_CONFIGURE"] = os.path.join(base_dir, "old-configure")
 
     sandbox = ConfigureSandbox(config, os.environ, argv)
+
+    if not sandbox._help:
+        _activate_build_virtualenv()
 
     clobber_file = "CLOBBER"
     if not os.path.exists(clobber_file):
