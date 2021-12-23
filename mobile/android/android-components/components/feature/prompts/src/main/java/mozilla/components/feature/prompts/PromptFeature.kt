@@ -757,7 +757,10 @@ class PromptFeature private constructor(
         if (canShowThisPrompt(promptRequest)) {
             dialog.show(fragmentManager, FRAGMENT_TAG)
             activePrompt = WeakReference(dialog)
-            activePromptsToDismiss.add(dialog)
+
+            if (promptRequest.shouldDismissOnLoad) {
+                activePromptsToDismiss.add(dialog)
+            }
         } else {
             (promptRequest as Dismissible).onDismiss()
             store.dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
