@@ -3808,24 +3808,6 @@ bool nsContentUtils::IsExactSitePermDeny(nsIPrincipal* aPrincipal,
                       true);
 }
 
-bool nsContentUtils::HasExactSitePerm(nsIPrincipal* aPrincipal,
-                                      const nsACString& aType) {
-  if (!aPrincipal) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      components::PermissionManager::Service();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t perm;
-  nsresult rv =
-      permMgr->TestExactPermissionFromPrincipal(aPrincipal, aType, &perm);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return perm != nsIPermissionManager::UNKNOWN_ACTION;
-}
-
 static const char* gEventNames[] = {"event"};
 static const char* gSVGEventNames[] = {"evt"};
 // for b/w compat, the first name to onerror is still 'event', even though it
