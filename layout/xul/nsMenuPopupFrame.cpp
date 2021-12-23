@@ -435,7 +435,8 @@ void nsMenuPopupFrame::SetPopupState(nsPopupState aState) {
   }
 }
 
-NS_IMETHODIMP nsXULPopupShownEvent::Run() {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsXULPopupShownEvent::Run() {
   nsMenuPopupFrame* popup = do_QueryFrame(mPopup->GetPrimaryFrame());
   // Set the state to visible if the popup is still open.
   if (popup && popup->IsOpen()) {
