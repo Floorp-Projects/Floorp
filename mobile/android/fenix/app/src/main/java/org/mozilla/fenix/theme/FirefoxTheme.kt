@@ -57,7 +57,6 @@ private val darkColorPalette = FirefoxColors(
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
     formDisabled = PhotonColors.DarkGrey05,
-    controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey90,
     textPrimary = PhotonColors.LightGrey05,
     textSecondary = PhotonColors.LightGrey40,
@@ -104,7 +103,6 @@ private val lightColorPalette = FirefoxColors(
     formSelected = PhotonColors.Violet90,
     formSurface = PhotonColors.LightGrey50,
     formDisabled = PhotonColors.LightGrey50,
-    controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey50,
     textPrimary = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
@@ -156,7 +154,6 @@ class FirefoxColors(
     formSelected: Color,
     formSurface: Color,
     formDisabled: Color,
-    controlDark: Color,
     controlActive: Color,
     textPrimary: Color,
     textSecondary: Color,
@@ -234,9 +231,6 @@ class FirefoxColors(
         private set
     // Checkbox disabled, Radio disabled
     var formDisabled by mutableStateOf(formDisabled)
-        private set
-    // Switch background ON
-    var controlDark by mutableStateOf(controlDark)
         private set
     // Indicator active
     var controlActive by mutableStateOf(controlActive)
@@ -339,7 +333,6 @@ class FirefoxColors(
         formSelected = other.formSelected
         formSurface = other.formSurface
         formDisabled = other.formDisabled
-        controlDark = other.controlDark
         controlActive = other.controlActive
         textPrimary = other.textPrimary
         textSecondary = other.textSecondary
@@ -386,7 +379,6 @@ class FirefoxColors(
         formSelected = formSelected,
         formSurface = formSurface,
         formDisabled = formDisabled,
-        controlDark = controlDark,
         controlActive = controlActive,
         textPrimary = textPrimary,
         textSecondary = textSecondary,
