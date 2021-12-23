@@ -1096,13 +1096,8 @@ nsMenuFrame::GetActiveChild(dom::Element** aResult) {
 NS_IMETHODIMP
 nsMenuFrame::SetActiveChild(dom::Element* aChild) {
   nsMenuPopupFrame* popupFrame = GetPopup();
-  if (!popupFrame) return NS_ERROR_FAILURE;
-
-  // Force the child frames within the popup to be generated.
-  AutoWeakFrame weakFrame(popupFrame);
-  popupFrame->GenerateFrames();
-  if (!weakFrame.IsAlive()) {
-    return NS_OK;
+  if (!popupFrame) {
+    return NS_ERROR_FAILURE;
   }
 
   if (!aChild) {
@@ -1112,7 +1107,9 @@ nsMenuFrame::SetActiveChild(dom::Element* aChild) {
   }
 
   nsMenuFrame* menu = do_QueryFrame(aChild->GetPrimaryFrame());
-  if (menu) popupFrame->ChangeMenuItem(menu, false, false);
+  if (menu) {
+    popupFrame->ChangeMenuItem(menu, false, false);
+  }
   return NS_OK;
 }
 

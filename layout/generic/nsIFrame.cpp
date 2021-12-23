@@ -171,13 +171,11 @@ const nsIFrame::FrameClassBits nsIFrame::sFrameClassBits[
     0] = {
 #define Leaf eFrameClassBitsLeaf
 #define NotLeaf eFrameClassBitsNone
-#define DynamicLeaf eFrameClassBitsDynamicLeaf
 #define FRAME_ID(class_, type_, leaf_, ...) leaf_,
 #define ABSTRACT_FRAME_ID(...)
 #include "mozilla/FrameIdList.h"
 #undef Leaf
 #undef NotLeaf
-#undef DynamicLeaf
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
 };
