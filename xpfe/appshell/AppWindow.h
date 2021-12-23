@@ -187,7 +187,7 @@ class AppWindow final : public nsIBaseWindow,
 
   friend class mozilla::AppWindowTimerCallback;
 
-  bool ExecuteCloseHandler();
+  MOZ_CAN_RUN_SCRIPT bool ExecuteCloseHandler();
   void ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
 
   void SetPersistenceTimer(uint32_t aDirtyFlags);
