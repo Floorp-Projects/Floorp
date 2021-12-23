@@ -33,10 +33,10 @@
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Checkbox selected, Radio button selected -->
     <color name="fx_mobile_action_color_form_selected" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <!-- Switch background OFF, Switch background ON -->
+    <color name="fx_mobile_action_color_form_surface" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
     <!-- Checkbox disabled, Radio disabled -->
     <color name="fx_mobile_action_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
-    <!-- Switch background OFF, Indicator OFF -->
-    <color name="fx_mobile_action_color_control" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
     <!-- Switch background ON -->
     <color name="fx_mobile_action_color_control_dark" tools:ignore="UnusedResources">@color/photonViolet40A30</color>
     <!-- Indicator active -->

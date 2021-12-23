@@ -55,8 +55,8 @@ private val darkColorPalette = FirefoxColors(
     actionSecondary = PhotonColors.DarkGrey50,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
+    formSurface = PhotonColors.DarkGrey05,
     actionDisabled = PhotonColors.DarkGrey05,
-    control = PhotonColors.DarkGrey05,
     controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey90,
     textPrimary = PhotonColors.LightGrey05,
@@ -102,8 +102,8 @@ private val lightColorPalette = FirefoxColors(
     actionSecondary = PhotonColors.LightGrey40,
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Violet90,
+    formSurface = PhotonColors.LightGrey50,
     actionDisabled = PhotonColors.LightGrey50,
-    control = PhotonColors.LightGrey30,
     controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey50,
     textPrimary = PhotonColors.DarkGrey90,
@@ -154,8 +154,8 @@ class FirefoxColors(
     actionSecondary: Color,
     formDefault: Color,
     formSelected: Color,
+    formSurface: Color,
     actionDisabled: Color,
-    control: Color,
     controlDark: Color,
     controlActive: Color,
     textPrimary: Color,
@@ -229,11 +229,11 @@ class FirefoxColors(
     // Checkbox selected, Radio button selected
     var formSelected by mutableStateOf(formSelected)
         private set
+    // Switch background OFF, Switch background ON
+    var formSurface by mutableStateOf(formSurface)
+        private set
     // Checkbox disabled, Radio disabled
     var actionDisabled by mutableStateOf(actionDisabled)
-        private set
-    // Switch background OFF, Indicator OFF
-    var control by mutableStateOf(control)
         private set
     // Switch background ON
     var controlDark by mutableStateOf(controlDark)
@@ -337,8 +337,8 @@ class FirefoxColors(
         actionSecondary = other.actionSecondary
         formDefault = other.formDefault
         formSelected = other.formSelected
+        formSurface = other.formSurface
         actionDisabled = other.actionDisabled
-        control = other.control
         controlDark = other.controlDark
         controlActive = other.controlActive
         textPrimary = other.textPrimary
@@ -384,8 +384,8 @@ class FirefoxColors(
         actionSecondary = actionSecondary,
         formDefault = formDefault,
         formSelected = formSelected,
+        formSurface = formSurface,
         actionDisabled = actionDisabled,
-        control = control,
         controlDark = controlDark,
         controlActive = controlActive,
         textPrimary = textPrimary,
