@@ -1456,15 +1456,7 @@ bool ClientWebGLContext::IsXRCompatible() const { return mXRCompatible; }
 already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(
     ErrorResult& aRv) {
   const FuncScope funcScope(*this, "MakeXRCompatible");
-  nsCOMPtr<nsIGlobalObject> global;
-  // TODO: Bug 1596921
-  // Should use nsICanvasRenderingContextInternal::GetParentObject
-  // once it has been updated to work in the offscreencanvas case
-  if (mCanvasElement) {
-    global = GetOwnerDoc()->GetScopeObject();
-  } else if (mOffscreenCanvas) {
-    global = mOffscreenCanvas->GetOwnerGlobal();
-  }
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
   if (!global) {
     aRv.ThrowInvalidAccessError(
         "Using a WebGL context that is not attached to either a canvas or an "
