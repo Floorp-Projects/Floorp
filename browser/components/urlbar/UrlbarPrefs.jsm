@@ -496,6 +496,12 @@ class Preferences {
       "suggest.searches",
     ];
 
+    // This is resolved when the first update to the Firefox Suggest scenario
+    // (on startup) finishes.
+    this._firefoxSuggestScenarioStartupPromise = new Promise(
+      resolve => (this._resolveFirefoxSuggestScenarioStartupPromise = resolve)
+    );
+
     // This is set to true when we update the Firefox Suggest scenario to
     // prevent re-entry due to pref observers.
     this._updatingFirefoxSuggestScenario = false;
@@ -630,6 +636,13 @@ class Preferences {
       this._updateFirefoxSuggestScenarioHelper(isStartup, testOverrides);
     } finally {
       this._updatingFirefoxSuggestScenario = false;
+    }
+
+    // Null check `_resolveFirefoxSuggestScenarioStartupPromise` since some
+    // tests force `isStartup` after actual startup and it's been set to null.
+    if (isStartup && this._resolveFirefoxSuggestScenarioStartupPromise) {
+      this._resolveFirefoxSuggestScenarioStartupPromise();
+      this._resolveFirefoxSuggestScenarioStartupPromise = null;
     }
   }
 
@@ -1037,6 +1050,16 @@ class Preferences {
         this.set("suggest.quicksuggest.sponsored", false);
       }
     }
+  }
+
+  /**
+   * @returns {Promise}
+   *   This can be used to wait until the initial Firefox Suggest scenario has
+   *   been set on startup. It's resolved when the first call to
+   *   `updateFirefoxSuggestScenario()` finishes.
+   */
+  get firefoxSuggestScenarioStartupPromise() {
+    return this._firefoxSuggestScenarioStartupPromise;
   }
 
   /**
