@@ -57,6 +57,10 @@ private val darkColorPalette = FirefoxColors(
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
     formDisabled = PhotonColors.DarkGrey05,
+    formOn = PhotonColors.Violet40,
+    formOff = PhotonColors.LightGrey05,
+    indicatorActive = PhotonColors.LightGrey90,
+    indicatorInactive = PhotonColors.DarkGrey05,
     textPrimary = PhotonColors.LightGrey05,
     textSecondary = PhotonColors.LightGrey40,
     textDisabled = PhotonColors.LightGrey05A40,
@@ -102,6 +106,10 @@ private val lightColorPalette = FirefoxColors(
     formSelected = PhotonColors.Violet90,
     formSurface = PhotonColors.LightGrey50,
     formDisabled = PhotonColors.LightGrey50,
+    formOn = PhotonColors.Violet90,
+    formOff = PhotonColors.LightGrey05,
+    indicatorActive = PhotonColors.LightGrey50,
+    indicatorInactive = PhotonColors.LightGrey30,
     textPrimary = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
     textDisabled = PhotonColors.DarkGrey90A40,
@@ -152,6 +160,10 @@ class FirefoxColors(
     formSelected: Color,
     formSurface: Color,
     formDisabled: Color,
+    formOn: Color,
+    formOff: Color,
+    indicatorActive: Color,
+    indicatorInactive: Color,
     textPrimary: Color,
     textSecondary: Color,
     textDisabled: Color,
@@ -228,6 +240,18 @@ class FirefoxColors(
         private set
     // Checkbox disabled, Radio disabled
     var formDisabled by mutableStateOf(formDisabled)
+        private set
+    // Switch thumb ON
+    var formOn by mutableStateOf(formOn)
+        private set
+    // Switch thumb OFF
+    var formOff by mutableStateOf(formOff)
+        private set
+    // Scroll indicator active
+    var indicatorActive by mutableStateOf(indicatorActive)
+        private set
+    // Scroll indicator inactive
+    var indicatorInactive by mutableStateOf(indicatorInactive)
         private set
 
     // Text
@@ -327,6 +351,10 @@ class FirefoxColors(
         formSelected = other.formSelected
         formSurface = other.formSurface
         formDisabled = other.formDisabled
+        formOn = other.formOn
+        formOff = other.formOff
+        indicatorActive = other.indicatorActive
+        indicatorInactive = other.indicatorInactive
         textPrimary = other.textPrimary
         textSecondary = other.textSecondary
         textDisabled = other.textDisabled
@@ -372,6 +400,10 @@ class FirefoxColors(
         formSelected = formSelected,
         formSurface = formSurface,
         formDisabled = formDisabled,
+        formOn = formOn,
+        formOff = formOff,
+        indicatorActive = indicatorActive,
+        indicatorInactive = indicatorInactive,
         textPrimary = textPrimary,
         textSecondary = textSecondary,
         textDisabled = textDisabled,
