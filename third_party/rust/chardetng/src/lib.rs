@@ -593,7 +593,7 @@ impl LatinCandidate {
                         }
                     }
                     OrdinalState::Copyright => {
-                        if b == b' ' {
+                        if caseless_class == 0 {
                             score += COPYRIGHT_BONUS;
                             self.ordinal_state = OrdinalState::Space;
                         } else {
