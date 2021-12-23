@@ -50,20 +50,24 @@ using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
 
 static nsString DefaultVideoName() {
-  MOZ_ASSERT(!NS_IsMainThread());
   // For the purpose of testing we allow to change the name of the fake device
   // by pref.
   nsAutoString cameraNameFromPref;
   nsresult rv;
-  // Here it is preferred a "hard" block, provided by the combination of Await &
-  // InvokeAsync, instead of "soft" block, provided by sync dispatch which
-  // allows the waiting thread to spin its event loop. The latter would allow
-  // miltiple enumeration requests being processed out-of-order.
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(__func__, [&]() {
+  auto getPref = [&]() {
     rv = Preferences::GetString("media.getusermedia.fake-camera-name",
                                 cameraNameFromPref);
-  });
-  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
+  };
+  if (NS_IsMainThread()) {
+    getPref();
+  } else {
+    // Here it is preferred a "hard" block, instead of "soft" block provided
+    // by sync dispatch, which allows the waiting thread to spin its event
+    // loop. The latter would allow multiple enumeration requests being
+    // processed out-of-order.
+    RefPtr runnable = NS_NewRunnableFunction(__func__, getPref);
+    SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
+  }
 
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);
