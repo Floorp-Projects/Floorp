@@ -12,7 +12,7 @@
     <color name="fx_mobile_layer_color_2" tools:ignore="UnusedResources">@color/photonDarkGrey50</color>
     <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonDarkGrey60</color>
-    <!-- Frontlayer header (edit), Header (edit) -->
+    <!-- App Bar Top (edit), Header (edit) -->
     <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Selected tab -->
     <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet40A12</color>
