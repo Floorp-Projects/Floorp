@@ -1229,7 +1229,7 @@ static mozilla::StyleAlignFlags SimplifyAlignOrJustifyContentForOneItem(
   // space-{between,around,evenly} (since those values only make sense with
   // multiple alignment subjects), and otherwise just use the specified value:
   if (specified == StyleAlignFlags::SPACE_BETWEEN) {
-    return StyleAlignFlags::START;
+    return StyleAlignFlags::FLEX_START;
   }
   if (specified == StyleAlignFlags::SPACE_AROUND ||
       specified == StyleAlignFlags::SPACE_EVENLY) {
