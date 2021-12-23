@@ -32,7 +32,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
             "nsXRemoteClient.cpp",
             "nsXRemoteServer.cpp",
         ]
-    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     SOURCES += [
