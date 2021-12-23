@@ -82,7 +82,6 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
  public:
   MediaEngineDefaultVideoSource();
 
-  static nsString GetUUID();
   static nsString GetGroupId();
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
@@ -142,10 +141,6 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
       NS_ConvertASCIItoUTF16(dom::VideoFacingModeEnumValues::strings
                                  [uint8_t(VideoFacingModeEnum::Environment)]
                                      .value));
-}
-
-nsString MediaEngineDefaultVideoSource::GetUUID() {
-  return u"1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"_ns;
 }
 
 nsString MediaEngineDefaultVideoSource::GetGroupId() {
@@ -616,13 +611,13 @@ void MediaEngineDefault::EnumerateDevices(
   }
 
   switch (aMediaSource) {
-    case MediaSourceEnum::Camera:
-      // Only supports camera video sources. See Bug 1038241.
+    case MediaSourceEnum::Camera: {
+      nsString name = DefaultVideoName();
       aDevices->EmplaceBack(new MediaDevice(
-          this, aMediaSource, DefaultVideoName(),
-          MediaEngineDefaultVideoSource::GetUUID(),
+          this, aMediaSource, name, /*aRawId=*/name,
           MediaEngineDefaultVideoSource::GetGroupId(), IsScary::No));
       return;
+    }
     case MediaSourceEnum::Microphone:
       aDevices->EmplaceBack(new MediaDevice(
           this, aMediaSource, u"Default Audio Device"_ns,
