@@ -50,6 +50,12 @@ using mozilla::net::SocketInfo from "mozilla/net/DashboardTypes.h";
 using mozilla::net::DNSCacheEntries from "mozilla/net/DashboardTypes.h";
 using mozilla::net::HttpRetParams from "mozilla/net/DashboardTypes.h";
 
+#if defined(XP_WIN)
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+#endif  // defined(XP_WIN)
+
 namespace mozilla {
 namespace net {
 
@@ -147,6 +153,11 @@ parent:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FOGData(ByteBuf buf);
 
+#if defined(XP_WIN)
+  async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+      returns (ModulesMapResult? modMapResult);
+#endif  // defined(XP_WIN)
+
 child:
   async Init(SocketPorcessInitAttributes aAttributes);
   async PreferenceUpdate(Pref pref);
@@ -206,6 +217,10 @@ child:
   // Asks the Socket process to trigger test-only instrumentation.
   // The unused returned value is to have a promise we can await.
   async TestTriggerMetrics() returns (bool unused);
+
+#if defined(XP_WIN)
+  async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+#endif  // defined(XP_WIN)
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
