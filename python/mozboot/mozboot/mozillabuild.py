@@ -115,7 +115,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
             self, no_interactive=no_interactive, no_system_changes=no_system_changes
         )
 
-    def validate_environment(self, srcdir):
+    def validate_environment(self):
         if self.application.startswith("mobile_android"):
             print(
                 "WARNING!!! Building Firefox for Android on Windows is not "
@@ -124,7 +124,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
                 file=sys.stderr,
             )
 
-        if is_windefender_affecting_srcdir(srcdir):
+        if is_windefender_affecting_srcdir(self.srcdir):
             print(
                 "Warning: the Firefox checkout directory is currently not in the "
                 "Windows Defender exclusion list. This can cause the build process "
