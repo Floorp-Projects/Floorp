@@ -119,8 +119,8 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
   virtual ~nsXULPopupShownEvent() = default;
 
  private:
-  nsCOMPtr<nsIContent> mPopup;
-  RefPtr<nsPresContext> mPresContext;
+  const nsCOMPtr<nsIContent> mPopup;
+  const RefPtr<nsPresContext> mPresContext;
 };
 
 class nsMenuPopupFrame final : public nsBoxFrame,
