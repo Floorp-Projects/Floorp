@@ -15,9 +15,9 @@ job-defaults:
         toolchain:
             - macosx64-geckodriver
             - macosx64-node
-    platform: macosx1014-64-shippable/opt
+    platform: macosx1015-64-shippable-qr/opt
     require-build:
-        macosx1014-64-shippable/opt: build-macosx64-shippable/opt
+        macosx1015-64-shippable-qr/opt: build-macosx64-shippable/opt
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
 

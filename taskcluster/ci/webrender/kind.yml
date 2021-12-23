@@ -132,7 +132,7 @@ jobs:
 
     macos-release:
         description: Runs release-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1015-r8
         worker:
             # repo cloning has highly variable run time
             max-run-time: 7200
@@ -152,7 +152,7 @@ jobs:
                 export WRENCH_BINARY=$PWD/wrench-macos/bin/wrench &&
                 ci-scripts/macos-release-tests.sh
         treeherder:
-            platform: macosx1014-64-qr/opt
+            platform: macosx1015-64-qr/opt
             symbol: WR(wrench)
         when:
             files-changed:
@@ -189,7 +189,7 @@ jobs:
 
     macos-debug:
         description: Runs debug-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1015-r8
         worker:
             max-run-time: 3600
             env:
@@ -207,7 +207,7 @@ jobs:
                 cd target &&
                 for i in debug/deps/*; do $i; done
         treeherder:
-            platform: macosx1014-64-qr/debug
+            platform: macosx1015-64-qr/debug
             symbol: WR(cargotest)
         when:
             files-changed:
