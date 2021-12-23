@@ -36,7 +36,7 @@
     <!-- Switch background OFF, Switch background ON -->
     <color name="fx_mobile_action_color_form_surface" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Checkbox disabled, Radio disabled -->
-    <color name="fx_mobile_action_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
+    <color name="fx_mobile_action_color_form_disabled" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Switch background ON -->
     <color name="fx_mobile_action_color_control_dark" tools:ignore="UnusedResources">@color/photonViolet40A30</color>
     <!-- Indicator active -->

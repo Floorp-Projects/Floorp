@@ -56,7 +56,7 @@ private val darkColorPalette = FirefoxColors(
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
-    actionDisabled = PhotonColors.DarkGrey05,
+    formDisabled = PhotonColors.DarkGrey05,
     controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey90,
     textPrimary = PhotonColors.LightGrey05,
@@ -103,7 +103,7 @@ private val lightColorPalette = FirefoxColors(
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Violet90,
     formSurface = PhotonColors.LightGrey50,
-    actionDisabled = PhotonColors.LightGrey50,
+    formDisabled = PhotonColors.LightGrey50,
     controlDark = PhotonColors.Violet40A30,
     controlActive = PhotonColors.LightGrey50,
     textPrimary = PhotonColors.DarkGrey90,
@@ -155,7 +155,7 @@ class FirefoxColors(
     formDefault: Color,
     formSelected: Color,
     formSurface: Color,
-    actionDisabled: Color,
+    formDisabled: Color,
     controlDark: Color,
     controlActive: Color,
     textPrimary: Color,
@@ -233,7 +233,7 @@ class FirefoxColors(
     var formSurface by mutableStateOf(formSurface)
         private set
     // Checkbox disabled, Radio disabled
-    var actionDisabled by mutableStateOf(actionDisabled)
+    var formDisabled by mutableStateOf(formDisabled)
         private set
     // Switch background ON
     var controlDark by mutableStateOf(controlDark)
@@ -338,7 +338,7 @@ class FirefoxColors(
         formDefault = other.formDefault
         formSelected = other.formSelected
         formSurface = other.formSurface
-        actionDisabled = other.actionDisabled
+        formDisabled = other.formDisabled
         controlDark = other.controlDark
         controlActive = other.controlActive
         textPrimary = other.textPrimary
@@ -385,7 +385,7 @@ class FirefoxColors(
         formDefault = formDefault,
         formSelected = formSelected,
         formSurface = formSurface,
-        actionDisabled = actionDisabled,
+        formDisabled = formDisabled,
         controlDark = controlDark,
         controlActive = controlActive,
         textPrimary = textPrimary,
