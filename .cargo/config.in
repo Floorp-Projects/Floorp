@@ -84,7 +84,7 @@ rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 [source."https://github.com/hsivonen/chardetng"]
 git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
-rev = "302c995f91f44cf26e77dc4758ad56c3ff0153ad"
+rev = "cb8052aaf9c4bca3bea4a579667441cc3ba7537c"
 
 [source."https://github.com/grovesNL/glow"]
 git = "https://github.com/grovesNL/glow"
