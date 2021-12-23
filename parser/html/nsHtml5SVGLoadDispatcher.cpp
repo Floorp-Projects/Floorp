@@ -18,8 +18,8 @@ nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
   mDocument->BlockOnload();
 }
 
-NS_IMETHODIMP
-nsHtml5SVGLoadDispatcher::Run() {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsHtml5SVGLoadDispatcher::Run() {
   WidgetEvent event(true, eSVGLoad);
   event.mFlags.mBubbles = false;
   // Do we care about forcing presshell creation if it hasn't happened yet?
