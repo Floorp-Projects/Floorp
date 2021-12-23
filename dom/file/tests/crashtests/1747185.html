@@ -1,0 +1,11 @@
+<html>
+<head>
+  <script>
+    window.addEventListener('load', () => {
+      let a = new Blob([new Uint8Array(2147483647)])
+      let b = new File([a], '')
+      b.stream()
+    })
+  </script>
+</head>
+</html>
