@@ -116,23 +116,14 @@ class WindowsBootstrapper(BaseBootstrapper):
                 "option when beginning bootstrap."
             )
 
-        from mozboot import stylo
-
-        self.install_toolchain_artifact(stylo.WINDOWS_CLANG)
-        self.install_toolchain_artifact(stylo.WINDOWS_CBINDGEN)
+        self.install_toolchain_artifact("clang")
+        self.install_toolchain_artifact("cbindgen")
 
     def ensure_nasm_packages(self):
-        from mozboot import nasm
-
-        self.install_toolchain_artifact(nasm.WINDOWS_NASM)
+        self.install_toolchain_artifact("nasm")
 
     def ensure_node_packages(self):
-        from mozboot import node
-
-        # We don't have native aarch64 node available, but aarch64 windows
-        # runs x86 binaries, so just use the x86 packages for such hosts.
-        node_artifact = node.WIN32 if is_aarch64_host() else node.WIN64
-        self.install_toolchain_artifact(node_artifact)
+        self.install_toolchain_artifact("node")
 
     def _update_package_manager(self):
         self.pacman_update()

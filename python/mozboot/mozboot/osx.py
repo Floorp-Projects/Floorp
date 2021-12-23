@@ -313,36 +313,25 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def ensure_sccache_packages(self):
         from mozboot import sccache
 
-        self.install_toolchain_artifact(sccache.MACOS_SCCACHE)
+        self.install_toolchain_artifact("sccache")
         self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True)
         self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True)
 
     def ensure_fix_stacks_packages(self):
-        from mozboot import fix_stacks
-
-        self.install_toolchain_artifact(fix_stacks.MACOS_FIX_STACKS)
+        self.install_toolchain_artifact("fix-stacks")
 
     def ensure_stylo_packages(self):
-        from mozboot import stylo
-
-        self.install_toolchain_artifact(stylo.MACOS_CLANG)
-        self.install_toolchain_artifact(stylo.MACOS_CBINDGEN)
+        self.install_toolchain_artifact("clang")
+        self.install_toolchain_artifact("cbindgen")
 
     def ensure_nasm_packages(self):
-        from mozboot import nasm
-
-        self.install_toolchain_artifact(nasm.MACOS_NASM)
+        self.install_toolchain_artifact("nasm")
 
     def ensure_node_packages(self):
-        # XXX from necessary?
-        from mozboot import node
-
-        self.install_toolchain_artifact(node.OSX)
+        self.install_toolchain_artifact("node")
 
     def ensure_minidump_stackwalk_packages(self):
-        from mozboot import minidump_stackwalk
-
-        self.install_toolchain_artifact(minidump_stackwalk.MACOS_MINIDUMP_STACKWALK)
+        self.install_toolchain_artifact("minidump_stackwalk")
 
     def install_homebrew(self):
         print(BREW_INSTALL)
