@@ -131,6 +131,20 @@ class IOUtils final {
   static already_AddRefed<Promise> SetWindowsAttributes(
       GlobalObject& aGlobal, const nsAString& aPath,
       const mozilla::dom::WindowsFileAttributes& aAttrs);
+#elif defined(XP_MACOSX)
+  static already_AddRefed<Promise> HasMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
+  static already_AddRefed<Promise> GetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
+  static already_AddRefed<Promise> SetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr,
+                                               const Uint8Array& aValue);
+  static already_AddRefed<Promise> DelMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
 #endif
 
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
@@ -401,6 +415,16 @@ class IOUtils final {
    */
   static Result<Ok, IOError> SetWindowsAttributesSync(
       nsIFile* aFile, const uint32_t aSetAttrs, const uint32_t aClearAttrs);
+#elif defined(XP_MACOSX)
+  static Result<bool, IOError> HasMacXAttrSync(nsIFile* aFile,
+                                               const nsCString& aAttr);
+  static Result<nsTArray<uint8_t>, IOError> GetMacXAttrSync(
+      nsIFile* aFile, const nsCString& aAttr);
+  static Result<Ok, IOError> SetMacXAttrSync(nsIFile* aFile,
+                                             const nsCString& aAttr,
+                                             const nsTArray<uint8_t>& aValue);
+  static Result<Ok, IOError> DelMacXAttrSync(nsIFile* aFile,
+                                             const nsCString& aAttr);
 #endif
 
   enum class EventQueueStatus {
