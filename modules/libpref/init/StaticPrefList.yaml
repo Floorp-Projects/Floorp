@@ -1124,7 +1124,7 @@
 # See bug 1710926
 - name: browser.download.improvements_to_download_panel
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # See bug 1731668
