@@ -774,9 +774,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
   void ShowPopupCallback(nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame,
                          bool aIsContextMenu, bool aSelectFirstItem);
-  void HidePopupCallback(nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame,
-                         nsIContent* aNextPopup, nsIContent* aLastPopup,
-                         nsPopupType aPopupType, bool aDeselectMenu);
+  MOZ_CAN_RUN_SCRIPT void HidePopupCallback(
+      nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
+      nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu);
 
   /**
    * Trigger frame construction and reflow in the popup, fire a popupshowing
