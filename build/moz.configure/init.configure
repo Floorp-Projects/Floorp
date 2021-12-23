@@ -13,18 +13,11 @@ toolkit = dependable(None)
 # build/moz.configure/bindgen.configure is not included.
 bindgen_config_paths = dependable(None)
 
-option(env="DIST", nargs=1, help="DIST directory")
-
-
-@depends("--help", "DIST")
-def build_environment(_, dist):
+@depends("--help")
+def build_environment(_):
     topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-
-    if dist:
-        dist = normsep(dist[0])
-    else:
-        dist = os.path.join(topobjdir, "dist")
+    dist = os.path.join(topobjdir, "dist")
 
     return namespace(
         topsrcdir=topsrcdir,
