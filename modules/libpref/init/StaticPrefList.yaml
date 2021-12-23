@@ -9903,13 +9903,6 @@
   mirror: always
 #endif
 
-# Whether to allow a bypass flag to be set on httpChannel that will
-# prevent proxies from being used for that specific request.
-- name: network.proxy.allow_bypass
-  type: bool
-  value: true
-  mirror: always
-
 - name: network.proxy.parse_pac_on_socket_process
   type: RelaxedAtomicBool
   value: false
