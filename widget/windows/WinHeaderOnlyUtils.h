@@ -789,6 +789,35 @@ inline UniquePtr<wchar_t[]> GetPackageFamilyName() {
   return packageIdentity;
 }
 
+// This implementation is equivalent to PathGetDriveNumber[AW].
+// We define our own version because using PathGetDriveNumber
+// delay-loads shlwapi.dll, which may fail when the process is
+// sandboxed.
+template <typename T>
+int MozPathGetDriveNumber(const T* aPath) {
+  const auto ToDriveNumber = [](const T* aPath) -> int {
+    if (*aPath == '\0' || *(aPath + 1) != ':') {
+      return -1;
+    }
+
+    T c = *aPath;
+    return (c >= 'A' && c <= 'Z')   ? c - 'A'
+           : (c >= 'a' && c <= 'z') ? c - 'a'
+                                    : -1;
+  };
+
+  if (!aPath) {
+    return -1;
+  }
+
+  if (*aPath == '\\' && *(aPath + 1) == '\\' && *(aPath + 2) == '?' &&
+      *(aPath + 3) == '\\') {
+    return ToDriveNumber(aPath + 4);
+  }
+
+  return ToDriveNumber(aPath);
+}
+
 }  // namespace mozilla
 
 #endif  // mozilla_WinHeaderOnlyUtils_h
