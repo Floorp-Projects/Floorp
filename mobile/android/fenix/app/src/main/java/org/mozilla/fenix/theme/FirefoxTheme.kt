@@ -54,6 +54,7 @@ private val darkColorPalette = FirefoxColors(
     actionPrimary = PhotonColors.Violet60,
     actionSecondary = PhotonColors.DarkGrey50,
     formDefault = PhotonColors.LightGrey05,
+    formSelected = PhotonColors.Violet40,
     actionDisabled = PhotonColors.DarkGrey05,
     control = PhotonColors.DarkGrey05,
     controlDark = PhotonColors.Violet40A30,
@@ -100,6 +101,7 @@ private val lightColorPalette = FirefoxColors(
     actionPrimary = PhotonColors.Violet90,
     actionSecondary = PhotonColors.LightGrey40,
     formDefault = PhotonColors.DarkGrey90,
+    formSelected = PhotonColors.Violet90,
     actionDisabled = PhotonColors.LightGrey50,
     control = PhotonColors.LightGrey30,
     controlDark = PhotonColors.Violet40A30,
@@ -151,6 +153,7 @@ class FirefoxColors(
     actionPrimary: Color,
     actionSecondary: Color,
     formDefault: Color,
+    formSelected: Color,
     actionDisabled: Color,
     control: Color,
     controlDark: Color,
@@ -222,6 +225,9 @@ class FirefoxColors(
         private set
     // Checkbox default, Radio button default
     var formDefault by mutableStateOf(formDefault)
+        private set
+    // Checkbox selected, Radio button selected
+    var formSelected by mutableStateOf(formSelected)
         private set
     // Checkbox disabled, Radio disabled
     var actionDisabled by mutableStateOf(actionDisabled)
@@ -330,6 +336,7 @@ class FirefoxColors(
         actionPrimary = other.actionPrimary
         actionSecondary = other.actionSecondary
         formDefault = other.formDefault
+        formSelected = other.formSelected
         actionDisabled = other.actionDisabled
         control = other.control
         controlDark = other.controlDark
@@ -376,6 +383,7 @@ class FirefoxColors(
         actionPrimary = actionPrimary,
         actionSecondary = actionSecondary,
         formDefault = formDefault,
+        formSelected = formSelected,
         actionDisabled = actionDisabled,
         control = control,
         controlDark = controlDark,
