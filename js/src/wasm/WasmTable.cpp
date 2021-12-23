@@ -40,7 +40,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       tlsPtrs_(std::move(tlsPtrs)),
       elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
-      importedOrExported(desc.importedOrExported),
+      isPublic_(desc.isImportedOrExported),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Func);
@@ -53,7 +53,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       objects_(std::move(objects)),
       elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
-      importedOrExported(desc.importedOrExported),
+      isPublic_(desc.isImportedOrExported),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Ref);
@@ -310,7 +310,7 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
         gc::PreWriteBarrier(dstTlsPtr->instance->objectUnbarriered());
       }
 
-      if (isImportedOrExported() && !srcTable.isImportedOrExported()) {
+      if (isPublic() && !srcTable.isPublic()) {
         RootedFunction fun(cx);
         if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
           // OOM, pass it on

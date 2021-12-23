@@ -925,8 +925,7 @@ static void RemoveDuplicates(VectorOfIndirectStubTarget* vector) {
 bool Instance::ensureIndirectStubs(JSContext* cx,
                                    const Uint32Vector& elemFuncIndices,
                                    uint32_t srcOffset, uint32_t len,
-                                   const Tier tier,
-                                   const bool tableIsImportedOrExported) {
+                                   const Tier tier, const bool tableIsPublic) {
   const MetadataTier& metadataTier = metadata(tier);
   VectorOfIndirectStubTarget targets;
 
@@ -964,8 +963,7 @@ bool Instance::ensureIndirectStubs(JSContext* cx,
       continue;
     }
 
-    if (!tableIsImportedOrExported ||
-        getIndirectStub(funcIndex, tlsData(), tier)) {
+    if (!tableIsPublic || getIndirectStub(funcIndex, tlsData(), tier)) {
       continue;
     }
 
@@ -985,7 +983,7 @@ bool Instance::ensureIndirectStubs(JSContext* cx,
 }
 
 bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
-                                  const bool tableIsImportedOrExported) {
+                                  const bool tableIsPublic) {
   if (ref->isNull()) {
     return true;
   }
@@ -996,8 +994,7 @@ bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
     return false;
   }
 
-  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier,
-                             tableIsImportedOrExported);
+  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier, tableIsPublic);
 }
 
 bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
@@ -1019,7 +1016,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
     // code pointers in the table.  This ensures that either the table is
     // updated with all pointers, or with none.
     if (!ensureIndirectStubs(cx, elemFuncIndices, srcOffset, len, tier,
-                             table.isImportedOrExported())) {
+                             table.isPublic())) {
       return false;
     }
   }
@@ -1056,11 +1053,11 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       }
     } else {
       // The function is an internal wasm function that belongs to the current
-      // instance. If table is isImportedOrExported then some other module can
+      // instance. If table is isPublic then some other module can
       // import this table and call its functions so we have to use indirect
       // stub, otherwise we can use checked call entry because we don't cross
       // instance's borders.
-      if (table.isImportedOrExported()) {
+      if (table.isPublic()) {
         code = getIndirectStub(funcIndex, tlsData(), tier);
         MOZ_ASSERT(code);
       } else {
@@ -1224,7 +1221,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       // table, or the later call to fillFuncRef may want to create a new stub
       // for the better tier and may OOM anyway, and it must not.
       if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
-                                        table.isImportedOrExported())) {
+                                        table.isPublic())) {
         return -1;
       }
 
