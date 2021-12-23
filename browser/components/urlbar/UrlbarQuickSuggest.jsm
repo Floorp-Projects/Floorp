@@ -203,6 +203,11 @@ class Suggestions {
    *   True if the dialog was shown and false if not.
    */
   async maybeShowOnboardingDialog() {
+    // The call to this method races scenario initialization on startup, and the
+    // Nimbus variables we rely on below depend on the scenario, so wait for it
+    // to be initialized.
+    await UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
+
     // If quicksuggest is not available, the onboarding dialog is configured to
     // be skipped, the user has already seen the dialog, or has otherwise opted
     // in already, then we won't show the quicksuggest onboarding.
