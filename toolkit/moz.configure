@@ -241,7 +241,7 @@ include("../build/moz.configure/node.configure")
 option("--with-l10n-base", nargs=1, env="L10NBASEDIR", help="Path to l10n repositories")
 
 
-@depends("--with-l10n-base", "MOZ_AUTOMATION", check_build_environment)
+@depends("--with-l10n-base", "MOZ_AUTOMATION", build_environment)
 @imports(_from="os.path", _import="isdir")
 @imports(_from="os.path", _import="expanduser")
 @imports(_from="os", _import="environ")
@@ -978,7 +978,7 @@ set_define("HAVE_FT_GLYPHSLOT_EMBOLDEN", tree_freetype)
 set_define("HAVE_FT_LOAD_SFNT_TABLE", tree_freetype)
 
 
-@depends(freetype2_combined_info, tree_freetype, check_build_environment)
+@depends(freetype2_combined_info, tree_freetype, build_environment)
 def ft2_info(freetype2_combined_info, tree_freetype, build_env):
     if tree_freetype:
         return namespace(
@@ -1260,7 +1260,7 @@ with only_when("--enable-compile-environment"):
         set_config("USE_ELF_HACK", depends_if("--enable-elf-hack")(lambda _: True))
 
 
-@depends(check_build_environment)
+@depends(build_environment)
 def idl_roots(build_env):
     return namespace(
         ipdl_root=os.path.join(build_env.topobjdir, "ipc", "ipdl"),

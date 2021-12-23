@@ -15,7 +15,7 @@ nss_pkg = pkg_check_modules(
 set_config("MOZ_SYSTEM_NSS", True, when="--with-system-nss")
 
 
-@depends(nss_pkg, check_build_environment)
+@depends(nss_pkg, build_environment)
 def nss_config(nss_pkg, build_env):
     cflags = ["-I%s" % os.path.join(build_env.dist, "include", "nss")]
     libs = None

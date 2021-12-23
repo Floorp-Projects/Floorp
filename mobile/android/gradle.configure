@@ -28,7 +28,7 @@ def with_gradle(value):
         return True
 
 
-@depends(host, "--with-gradle", check_build_environment)
+@depends(host, "--with-gradle", build_environment)
 @imports(_from="os.path", _import="isfile")
 def gradle(host, value, build_env):
     if len(value):

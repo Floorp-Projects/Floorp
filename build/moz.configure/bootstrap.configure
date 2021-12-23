@@ -104,7 +104,7 @@ def bootstrap_path(path, **kwargs):
         toolchains_base_dir,
         bootstrap_toolchain_tasks,
         shell,
-        check_build_environment,
+        build_environment,
         dependable(path),
         when=when,
     )

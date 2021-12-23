@@ -406,7 +406,7 @@ def build_backends(backends):
 set_config("BUILD_BACKENDS", build_backends)
 
 
-@depends(check_build_environment, build_backends)
+@depends(build_environment, build_backends)
 @imports("glob")
 def check_objdir_backend_reuse(build_env, backends):
     # "Make based" might be RecursiveMake or a hybrid backend, so "Make" is
@@ -477,7 +477,7 @@ set_config("MOZ_ICU4X", True, when="--enable-icu4x")
 # ==============================================================
 
 
-@depends(host_library_name_info, check_build_environment, when="--enable-clang-plugin")
+@depends(host_library_name_info, build_environment, when="--enable-clang-plugin")
 def clang_plugin_path(library_name_info, build_env):
     topobjdir = build_env.topobjdir
     if topobjdir.endswith("/js/src"):
@@ -934,7 +934,7 @@ include("build/moz.configure/old.configure")
 include("js/sub.configure", when=compile_environment & toolkit)
 
 
-@depends(check_build_environment, build_project)
+@depends(build_environment, build_project)
 @imports("__sandbox__")
 @imports("glob")
 @imports(_from="os.path", _import="exists")
