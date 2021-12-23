@@ -1493,12 +1493,6 @@ if test "$USE_FC_FREETYPE"; then
             LIBS="$_SAVE_LIBS"
             CFLAGS="$_SAVE_CFLAGS"
         fi
-
-        _SAVE_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $FT2_CFLAGS"
-        MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
-            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
-        CPPFLAGS="$_SAVE_CPPFLAGS"
     fi
 fi
 
