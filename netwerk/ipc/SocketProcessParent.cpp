@@ -42,6 +42,9 @@
 #  include "mozilla/java/GeckoProcessManagerWrappers.h"
 #  include "mozilla/java/GeckoProcessTypeWrappers.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN)
+#  include "mozilla/WinDllServices.h"
+#endif
 
 namespace mozilla {
 namespace net {
@@ -474,6 +477,22 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvFOGData(ByteBuf&& aBuf) {
   glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
+
+#if defined(XP_WIN)
+mozilla::ipc::IPCResult SocketProcessParent::RecvGetModulesTrust(
+    ModulePaths&& aModPaths, bool aRunAtNormalPriority,
+    GetModulesTrustResolver&& aResolver) {
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  dllSvc->GetModulesTrust(std::move(aModPaths), aRunAtNormalPriority)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [aResolver](ModulesMapResult&& aResult) {
+            aResolver(Some(ModulesMapResult(std::move(aResult))));
+          },
+          [aResolver](nsresult aRv) { aResolver(Nothing()); });
+  return IPC_OK();
+}
+#endif  // defined(XP_WIN)
 
 }  // namespace net
 }  // namespace mozilla
