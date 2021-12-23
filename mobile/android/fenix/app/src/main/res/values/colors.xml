@@ -10,7 +10,7 @@
     <color name="fx_mobile_layer_color_1" tools:ignore="UnusedResources">@color/photonLightGrey20</color>
     <!-- Card background, Menu background -->
     <color name="fx_mobile_layer_color_2" tools:ignore="UnusedResources">@color/photonWhite</color>
-    <!-- App Bar Top, App Bar Bottom, Toolbar background, Frontlayer header -->
+    <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
     <!-- Frontlayer header (edit), Header (edit) -->
     <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>

@@ -190,7 +190,7 @@ class FirefoxColors(
     // Card background, Menu background
     var layer2 by mutableStateOf(layer2)
         private set
-    // App Bar Top, App Bar Bottom, Toolbar background, Frontlayer header
+    // App Bar Top, App Bar Bottom, Frontlayer header
     var layer3 by mutableStateOf(layer3)
         private set
     // Frontlayer header (edit), Header (edit)
