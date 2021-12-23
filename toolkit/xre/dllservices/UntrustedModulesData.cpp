@@ -220,13 +220,25 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
     return;
   }
 
-  // Sanitize the requested DLL name. It is not a critical failure if we
-  // cannot do so; we simply do not provide that field to Telemetry.
-  nsAutoString strRequested(
-      aModLoadInfo.mNtLoadInfo.mRequestedDllName.AsString());
-  if (!strRequested.IsEmpty() &&
-      widget::WinUtils::PreparePathForTelemetry(strRequested)) {
-    mRequestedDllName = strRequested;
+  mRequestedDllName = aModLoadInfo.mNtLoadInfo.mRequestedDllName.AsString();
+
+  // If we're in the main process, sanitize the requested DLL name here.
+  // If not, we cannot use PreparePathForTelemetry because it may try to
+  // delayload shlwapi.dll and could fail if the process is sandboxed.
+  // We leave mRequestedDllName unsanitized here and sanitize it when
+  // transferring it to the main process.
+  // (See ParamTraits<mozilla::UntrustedModulesData>::ReadEvent)
+  if (XRE_IsParentProcess()) {
+    SanitizeRequestedDllName();
+  }
+}
+
+void ProcessedModuleLoadEvent::SanitizeRequestedDllName() {
+  if (!mRequestedDllName.IsEmpty() &&
+      !widget::WinUtils::PreparePathForTelemetry(mRequestedDllName)) {
+    // If we cannot sanitize a path, we simply do not provide that field to
+    // Telemetry.
+    mRequestedDllName.Truncate();
   }
 }
 
