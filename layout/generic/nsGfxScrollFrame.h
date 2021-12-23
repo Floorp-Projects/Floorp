@@ -99,7 +99,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   OverflowState GetOverflowState() const;
 
-  nsresult FireScrollPortEvent();
+  MOZ_CAN_RUN_SCRIPT nsresult FireScrollPortEvent();
   void PostScrollEndEvent();
   void FireScrollEndEvent();
   void PostOverflowEvent();
@@ -139,9 +139,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void CurPosAttributeChanged(nsIContent* aChild, bool aDoScroll = true);
 
   void PostScrollEvent(bool aDelayed = false);
-  void FireScrollEvent();
+  MOZ_CAN_RUN_SCRIPT void FireScrollEvent();
   void PostScrolledAreaEvent();
-  void FireScrolledAreaEvent();
+  MOZ_CAN_RUN_SCRIPT void FireScrolledAreaEvent();
 
   bool IsSmoothScrollingEnabled();
 
