@@ -85,12 +85,24 @@ def bootstrap_toolchain_tasks(host):
         ("x86_64", "WINNT", "WINNT"): "win64",
     }.get((host.cpu, host.os, host.kernel))
     try:
-        return namespace(prefix=prefix, tasks=toolchain_task_definitions())
+        tasks = toolchain_task_definitions()
     except Exception as e:
         message = traceback.format_exc()
         log.warning(str(e))
         log.debug(message)
         return None
+    # We only want to use toolchains annotated with "local-toolchain". We also limit the
+    # amount of data to what we use, so that trace logs can be more useful.
+    tasks = {
+        k: {
+            "index": t.optimization["index-search"][0],
+            "artifact": t.attributes["toolchain-artifact"],
+        }
+        for k, t in tasks.items()
+        if t.attributes.get("local-toolchain") and "index-search" in t.optimization
+    }
+
+    return namespace(prefix=prefix, tasks=tasks)
 
 
 @template
@@ -130,12 +142,10 @@ def bootstrap_path(path, **kwargs):
             log.debug("Trying to bootstrap %s", label)
             if not task:
                 return False
-            task_index = task.optimization.get("index-search")
-            if not task_index:
-                return False
-            log.debug("Resolved %s to %s", label, task_index[0])
-            task_index = task_index[0].split(".")[-1]
-            artifact = task.attributes["toolchain-artifact"]
+            task_index = task["index"]
+            log.debug("Resolved %s to %s", label, task_index)
+            task_index = task_index.split(".")[-1]
+            artifact = task["artifact"]
             # `mach artifact toolchain` doesn't support authentication for
             # private artifacts.
             if not artifact.startswith("public/"):
