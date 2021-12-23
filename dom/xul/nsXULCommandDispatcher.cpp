@@ -27,6 +27,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementBinding.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -193,29 +194,30 @@ nsXULCommandDispatcher::AdvanceFocus() {
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::RewindFocus() {
-  nsCOMPtr<nsPIDOMWindowOuter> win;
-  GetRootFocusedContentAndWindow(getter_AddRefs(win));
-
-  RefPtr<Element> result;
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm)
-    return fm->MoveFocus(win, nullptr, nsIFocusManager::MOVEFOCUS_BACKWARD, 0,
-                         getter_AddRefs(result));
-  return NS_OK;
+nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt) {
+  return MoveFocusIntoSubtree(aElt, /* aForward = */ true);
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt) {
+nsXULCommandDispatcher::RewindFocus() {
+  return MoveFocusIntoSubtree(nullptr, /* aForward = */ false);
+}
+
+nsresult nsXULCommandDispatcher::MoveFocusIntoSubtree(Element* aElt,
+                                                      bool aForward) {
   nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   RefPtr<Element> result;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm)
-    return fm->MoveFocus(win, aElt, nsIFocusManager::MOVEFOCUS_FORWARD, 0,
-                         getter_AddRefs(result));
-  return NS_OK;
+  if (!fm) {
+    return NS_OK;
+  }
+  auto flags = nsFocusManager::ProgrammaticFocusFlags(dom::FocusOptions()) |
+               nsIFocusManager::FLAG_BYMOVEFOCUS;
+  auto type = aForward ? nsIFocusManager::MOVEFOCUS_FORWARD
+                       : nsIFocusManager::MOVEFOCUS_BACKWARD;
+  return fm->MoveFocus(win, aElt, type, flags, getter_AddRefs(result));
 }
 
 NS_IMETHODIMP
