@@ -339,6 +339,10 @@ def run(
             os.path.splitext(os.path.basename(l))[0] for l in lint_paths["lint_paths"]
         ]
         print("\n".join(sorted(linters)))
+        print(
+            "\nNote that clang-tidy checks are not run as part of this "
+            "command, but using the static-analysis command."
+        )
         return 0
 
     lint = LintRoller(**lintargs)
