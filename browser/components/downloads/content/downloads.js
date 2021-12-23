@@ -336,6 +336,10 @@ var DownloadsPanel = {
       case "keypress":
         this._onKeyPress(aEvent);
         break;
+      case "focus":
+      case "select":
+        this._onSelect(aEvent);
+        break;
     }
   },
 
@@ -368,10 +372,7 @@ var DownloadsPanel = {
     DownloadsCommon.getIndicatorData(window).attentionSuppressed = true;
 
     // Ensure that the first item is selected when the panel is focused.
-    if (
-      DownloadsView.richListBox.itemCount > 0 &&
-      DownloadsView.richListBox.selectedIndex == -1
-    ) {
+    if (DownloadsView.richListBox.itemCount > 0) {
       DownloadsView.richListBox.selectedIndex = 0;
     }
 
@@ -433,6 +434,8 @@ var DownloadsPanel = {
     // Handle keypress to be able to preventDefault() events before they reach
     // the richlistbox, for keyboard navigation.
     this.panel.addEventListener("keypress", this);
+    DownloadsView.richListBox.addEventListener("focus", this);
+    DownloadsView.richListBox.addEventListener("select", this);
   },
 
   /**
@@ -442,6 +445,8 @@ var DownloadsPanel = {
   _unattachEventListeners() {
     this.panel.removeEventListener("keydown", this);
     this.panel.removeEventListener("keypress", this);
+    DownloadsView.richListBox.removeEventListener("focus", this);
+    DownloadsView.richListBox.removeEventListener("select", this);
   },
 
   _onKeyPress(aEvent) {
@@ -450,8 +455,18 @@ var DownloadsPanel = {
       return;
     }
 
-    let richListBox = DownloadsView.richListBox;
+    // Pass keypress events to the richlistbox view when it's focused.
+    if (document.activeElement === DownloadsView.richListBox) {
+      DownloadsView.onDownloadKeyPress(aEvent);
+    }
+  },
 
+  /**
+   * Keydown listener that listens for the keys to start key focusing, as well
+   * as the the accel-V "paste" event, which initiates a file download if the
+   * pasted item can be resolved to a URI.
+   */
+  _onKeyDown(aEvent) {
     // If the user has pressed the tab, up, or down cursor key, start keyboard
     // navigation, thus enabling focusrings in the panel.  Keyboard navigation
     // is automatically disabled if the user moves the mouse on the panel, or
@@ -463,13 +478,22 @@ var DownloadsPanel = {
       !this.keyFocusing
     ) {
       this.keyFocusing = true;
-      // Ensure there's a selection, we will show the focus ring around it and
-      // prevent the richlistbox from changing the selection.
-      if (DownloadsView.richListBox.selectedIndex == -1) {
-        DownloadsView.richListBox.selectedIndex = 0;
+    }
+
+    let richListBox = DownloadsView.richListBox;
+    // If the footer is focused and the downloads list has at least 1 element
+    // in it, focus the last element in the list when going up.
+    if (aEvent.keyCode == aEvent.DOM_VK_UP && richListBox.firstElementChild) {
+      if (
+        document
+          .getElementById("downloadsFooter")
+          .contains(document.activeElement)
+      ) {
+        richListBox.selectedItem = richListBox.lastElementChild;
+        richListBox.focus();
+        aEvent.preventDefault();
+        return;
       }
-      aEvent.preventDefault();
-      return;
     }
 
     if (aEvent.keyCode == aEvent.DOM_VK_DOWN) {
@@ -477,38 +501,15 @@ var DownloadsPanel = {
       // focused, focus the footer.
       if (
         richListBox.selectedItem === richListBox.lastElementChild ||
-        document.activeElement.parentNode.id === "downloadsFooter"
+        document
+          .getElementById("downloadsFooter")
+          .contains(document.activeElement)
       ) {
+        richListBox.selectedIndex = -1;
         DownloadsFooter.focus();
         aEvent.preventDefault();
         return;
       }
-    }
-
-    // Pass keypress events to the richlistbox view when it's focused.
-    if (document.activeElement === richListBox) {
-      DownloadsView.onDownloadKeyPress(aEvent);
-    }
-  },
-
-  /**
-   * Keydown listener that listens for the keys to start key focusing, as well
-   * as the the accel-V "paste" event, which initiates a file download if the
-   * pasted item can be resolved to a URI.
-   */
-  _onKeyDown(aEvent) {
-    // If the footer is focused and the downloads list has at least 1 element
-    // in it, focus the last element in the list when going up.
-    if (
-      aEvent.keyCode == aEvent.DOM_VK_UP &&
-      document.activeElement.parentNode.id === "downloadsFooter" &&
-      DownloadsView.richListBox.firstElementChild
-    ) {
-      DownloadsView.richListBox.focus();
-      DownloadsView.richListBox.selectedItem =
-        DownloadsView.richListBox.lastElementChild;
-      aEvent.preventDefault();
-      return;
     }
 
     let pasting =
@@ -542,6 +543,18 @@ var DownloadsPanel = {
       DownloadsCommon.log("Pasted URL seems valid. Starting download.");
       DownloadURL(uri.spec, name, document);
     } catch (ex) {}
+  },
+
+  _onSelect() {
+    let richlistbox = DownloadsView.richListBox;
+    richlistbox.itemChildren.forEach(item => {
+      let button = item.querySelector("button");
+      if (item.selected) {
+        button.removeAttribute("tabindex");
+      } else {
+        button.setAttribute("tabindex", -1);
+      }
+    });
   },
 
   /**

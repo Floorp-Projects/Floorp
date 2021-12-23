@@ -9,7 +9,7 @@
 %define item #downloadsListBox > richlistitem
 %define itemFinished @item@[state="1"]
 %define itemNotFinished @item@:not([state="1"])
-%define itemFocused #downloadsListBox:focus > @item@[selected]
+%define itemFocused #downloadsListBox:focus > richlistitem[selected]
 
 /*** Panel and outer controls ***/
 
@@ -57,7 +57,9 @@
 @item@:is(.openWhenFinished).hoveringMainArea:hover,
 @item@[verdict]:hover,
 @item@:hover:is(.openWhenFinished),
-.downloadsPanelFooterButton:hover {
+.downloadsPanelFooterButton:hover,
+@keyfocus@ @itemFocused@,
+#downloadsHistory:focus {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
