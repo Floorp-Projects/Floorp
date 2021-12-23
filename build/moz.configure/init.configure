@@ -61,9 +61,6 @@ option(env="MOZCONFIG", nargs=1, help="Mozconfig location")
 @imports(_from="mozbuild.mozconfig", _import="MozconfigLoader")
 @imports(_from="mozboot.mozconfig", _import="find_mozconfig")
 def mozconfig(mozconfig, old_configure, build_env, help):
-    if not old_configure and not help:
-        die("The OLD_CONFIGURE environment variable must be set")
-
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
     # While the long term goal is that js and top-level use the same configure
