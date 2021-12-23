@@ -247,8 +247,7 @@ MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["fuzztest"]
