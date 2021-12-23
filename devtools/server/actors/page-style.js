@@ -1125,7 +1125,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @returns DOMElement of the style tag
    */
   getStyleElement: function(document) {
-    if (!this.styleElements.has(document)) {
+    if (
+      !this.styleElements.has(document) ||
+      !this.styleElements.get(document).isConnected
+    ) {
       const style = document.createElementNS(XHTML_NS, "style");
       style.setAttribute("type", "text/css");
       style.setDevtoolsAsTriggeringPrincipal();
@@ -1161,7 +1164,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let sheet = null;
     if (this.hasStyleSheetWatcherSupport) {
       const doc = node.rawNode.ownerDocument;
-      if (this.styleElements.has(doc)) {
+      if (
+        this.styleElements.has(doc) &&
+        this.styleElements.get(doc).ownerNode?.isConnected
+      ) {
         sheet = this.styleElements.get(doc);
       } else {
         sheet = await this.styleSheetsManager.addStyleSheet(doc);
