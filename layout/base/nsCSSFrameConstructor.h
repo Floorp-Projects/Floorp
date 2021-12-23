@@ -275,9 +275,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   bool EnsureFrameForTextNodeIsCreatedAfterFlush(
       mozilla::dom::CharacterData* aContent);
 
-  // Generate the child frames and process bindings
-  void GenerateChildFrames(nsContainerFrame* aFrame);
-
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.
   void NotifyDestroyingFrame(nsIFrame* aFrame);

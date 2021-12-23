@@ -3364,9 +3364,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsLeaf() const {
     MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
     FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
-    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
-      return IsLeafDynamic();
-    }
     return bits & eFrameClassBitsLeaf;
   }
 
@@ -4964,13 +4961,6 @@ class nsIFrame : public nsQueryFrame {
   void ReparentFrameViewTo(nsViewManager* aViewManager, nsView* aNewParentView,
                            nsView* aOldParentView);
 
-  /**
-   * To be overridden by frame classes that have a varying IsLeaf() state and
-   * is indicating that with DynamicLeaf in FrameIdList.h.
-   * @see IsLeaf()
-   */
-  virtual bool IsLeafDynamic() const { return false; }
-
   // Members
   nsRect mRect;
   nsCOMPtr<nsIContent> mContent;
@@ -5385,7 +5375,6 @@ class nsIFrame : public nsQueryFrame {
   enum FrameClassBits {
     eFrameClassBitsNone = 0x0,
     eFrameClassBitsLeaf = 0x1,
-    eFrameClassBitsDynamicLeaf = 0x2,
   };
   // Maps mClass to IsLeaf() flags.
   static const FrameClassBits sFrameClassBits[
