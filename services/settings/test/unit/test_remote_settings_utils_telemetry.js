@@ -37,36 +37,6 @@ async function assertTelemetryEvents(expectedEvents) {
 
 add_task(async function setup() {
   await TelemetryController.testSetup();
-  const { ServiceRequest } = ChromeUtils.import(
-    "resource://gre/modules/ServiceRequest.jsm"
-  );
-  if (!ServiceRequest.logProxySource) {
-    // https://phabricator.services.mozilla.com/D127170 hasn't landed yet.
-    // Simulate the Events.yaml registration and logProxySource implementation.
-    Services.telemetry.registerBuiltinEvents("service_request", {
-      bypass: {
-        methods: ["bypass"],
-        objects: ["proxy_info"],
-        extra_keys: ["source", "type"],
-        record_on_release: true,
-      },
-    });
-    ServiceRequest.logProxySource = async (channel, service) => {
-      // D127170 also inspects channel, but for non-extensions the source is
-      // ultimately just "prefs".
-      Services.telemetry.setEventRecordingEnabled("service_request", true);
-      Services.telemetry.recordEvent(
-        "service_request",
-        "bypass",
-        "proxy_info",
-        service,
-        {
-          source: "prefs",
-          type: "manual",
-        }
-      );
-    };
-  }
 });
 
 add_task(async function test_telemetry() {
