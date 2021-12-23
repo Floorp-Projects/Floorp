@@ -55,7 +55,7 @@ set_config("MOZ_PROFILE_USE", depends_if("--enable-profile-use")(lambda _: True)
     "--with-pgo-profile-path",
     "--enable-profile-use",
     llvm_profdata,
-    check_build_environment,
+    build_environment,
 )
 @imports("os")
 def pgo_profile_path(path, pgo_use, profdata, build_env):

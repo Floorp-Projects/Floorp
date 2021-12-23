@@ -1115,7 +1115,7 @@ set_config("JS_HAS_INTL_API", True, when="--with-intl-api")
 set_define("JS_HAS_INTL_API", True, when="--with-intl-api")
 
 
-@depends(check_build_environment, when="--with-intl-api")
+@depends(build_environment, when="--with-intl-api")
 @imports(_from="__builtin__", _import="open")
 @imports(_from="__builtin__", _import="ValueError")
 def icu_version(build_env):
