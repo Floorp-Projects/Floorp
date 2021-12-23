@@ -29,8 +29,8 @@
     <color name="fx_mobile_action_color_primary" tools:ignore="UnusedResources">@color/photonViolet90</color>
     <!-- Secondary button, Chip -->
     <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
-    <!-- Checkbox enabled, Radio enabled -->
-    <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <!-- Checkbox default, Radio button default -->
+    <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Checkbox disabled, Radio disabled -->
     <color name="fx_mobile_action_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Switch background OFF, Indicator OFF -->

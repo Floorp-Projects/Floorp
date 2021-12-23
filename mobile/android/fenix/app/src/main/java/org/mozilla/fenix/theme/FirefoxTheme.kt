@@ -53,7 +53,7 @@ private val darkColorPalette = FirefoxColors(
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Violet60,
     actionSecondary = PhotonColors.DarkGrey50,
-    actionTertiary = PhotonColors.LightGrey40,
+    formDefault = PhotonColors.LightGrey05,
     actionDisabled = PhotonColors.DarkGrey05,
     control = PhotonColors.DarkGrey05,
     controlDark = PhotonColors.Violet40A30,
@@ -99,7 +99,7 @@ private val lightColorPalette = FirefoxColors(
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Violet90,
     actionSecondary = PhotonColors.LightGrey40,
-    actionTertiary = PhotonColors.DarkGrey05,
+    formDefault = PhotonColors.DarkGrey90,
     actionDisabled = PhotonColors.LightGrey50,
     control = PhotonColors.LightGrey30,
     controlDark = PhotonColors.Violet40A30,
@@ -150,7 +150,7 @@ class FirefoxColors(
     gradientEnd: Color,
     actionPrimary: Color,
     actionSecondary: Color,
-    actionTertiary: Color,
+    formDefault: Color,
     actionDisabled: Color,
     control: Color,
     controlDark: Color,
@@ -220,8 +220,8 @@ class FirefoxColors(
     // Secondary button, Chip
     var actionSecondary by mutableStateOf(actionSecondary)
         private set
-    // Checkbox enabled, Radio enabled
-    var actionTertiary by mutableStateOf(actionTertiary)
+    // Checkbox default, Radio button default
+    var formDefault by mutableStateOf(formDefault)
         private set
     // Checkbox disabled, Radio disabled
     var actionDisabled by mutableStateOf(actionDisabled)
@@ -329,7 +329,7 @@ class FirefoxColors(
         gradientEnd = other.gradientEnd
         actionPrimary = other.actionPrimary
         actionSecondary = other.actionSecondary
-        actionTertiary = other.actionTertiary
+        formDefault = other.formDefault
         actionDisabled = other.actionDisabled
         control = other.control
         controlDark = other.controlDark
@@ -375,7 +375,7 @@ class FirefoxColors(
         gradientEnd = gradientEnd,
         actionPrimary = actionPrimary,
         actionSecondary = actionSecondary,
-        actionTertiary = actionTertiary,
+        formDefault = formDefault,
         actionDisabled = actionDisabled,
         control = control,
         controlDark = controlDark,
