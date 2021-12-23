@@ -11700,31 +11700,6 @@ void nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame) {
                            InsertionKind::Async);
 }
 
-void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
-  {
-    nsAutoScriptBlocker scriptBlocker;
-    nsFrameList childList;
-    nsFrameConstructorState state(mPresShell, nullptr, nullptr, nullptr);
-
-    nsFrameConstructorSaveState floatSaveState;
-    state.MaybePushFloatContainingBlock(aFrame, floatSaveState);
-
-    ProcessChildren(state, aFrame->GetContent(), aFrame->Style(), aFrame, false,
-                    childList, false);
-
-    aFrame->SetInitialChildList(kPrincipalList, childList);
-  }
-
-#ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService =
-          PresShell::GetAccessibilityService()) {
-    if (nsIContent* child = aFrame->GetContent()->GetFirstChild()) {
-      accService->ContentRangeInserted(mPresShell, child, nullptr);
-    }
-  }
-#endif
-}
-
 //////////////////////////////////////////////////////////
 // nsCSSFrameConstructor::FrameConstructionItem methods //
 //////////////////////////////////////////////////////////
