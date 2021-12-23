@@ -587,7 +587,6 @@ void MediaDevices::SetupDeviceChangeListener() {
 void MediaDevices::SetOndevicechange(
     mozilla::dom::EventHandlerNonNull* aCallback) {
   SetEventHandler(nsGkAtoms::ondevicechange, aCallback);
-  SetupDeviceChangeListener();
 }
 
 void MediaDevices::EventListenerAdded(nsAtom* aType) {
