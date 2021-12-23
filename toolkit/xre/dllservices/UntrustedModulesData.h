@@ -152,6 +152,8 @@ class ProcessedModuleLoadEvent final {
   ProcessedModuleLoadEvent(ProcessedModuleLoadEvent&&) = default;
   ProcessedModuleLoadEvent& operator=(ProcessedModuleLoadEvent&&) = default;
 
+  void SanitizeRequestedDllName();
+
  private:
   static Maybe<LONGLONG> ComputeQPCTimeStampForProcessCreation();
   static uint64_t QPCTimeStampToProcessUptimeMilliseconds(
@@ -552,6 +554,10 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     if (!ReadParam(aMsg, aIter, &aResult->mRequestedDllName)) {
       return false;
     }
+
+    // When ProcessedModuleLoadEvent was constructed in a child process, we left
+    // mRequestedDllName unsanitized, so now is a good time to sanitize it.
+    aResult->SanitizeRequestedDllName();
 
     if (!ReadParam(aMsg, aIter, &aResult->mBaseAddress)) {
       return false;
