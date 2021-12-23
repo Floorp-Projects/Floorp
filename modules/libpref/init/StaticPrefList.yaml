@@ -4004,12 +4004,6 @@
   value: false
   mirror: always
 
-# midi permission is addon-gated
-- name: dom.webmidi.gated
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.webnotifications.allowinsecure
   type: RelaxedAtomicBool
   value: false
