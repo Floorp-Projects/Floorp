@@ -811,8 +811,10 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
-    EventDispatcher::Dispatch(targetElement, presShell->GetPresContext(), &evt,
-                              nullptr, &status);
+
+    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+    EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
+                              &status);
     // If the event was cancelled, don't do the clipboard operation
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
   }

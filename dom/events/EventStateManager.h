@@ -1167,7 +1167,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // member variables for the d&d gesture state machine
   LayoutDeviceIntPoint mGestureDownPoint;  // screen coordinates
   // The content to use as target if we start a d&d (what we drag).
-  nsCOMPtr<nsIContent> mGestureDownContent;
+  RefPtr<nsIContent> mGestureDownContent;
   // The content of the frame where the mouse-down event occurred. It's the same
   // as the target in most cases but not always - for example when dragging
   // an <area> of an image map this is the image. (bug 289667)

@@ -2721,8 +2721,8 @@ class FocusBlurEvent : public Runnable {
     return EventDispatcher::Dispatch(mTarget, mContext, &event);
   }
 
-  nsCOMPtr<nsISupports> mTarget;
-  RefPtr<nsPresContext> mContext;
+  const nsCOMPtr<nsISupports> mTarget;
+  const RefPtr<nsPresContext> mContext;
   EventMessage mEventMessage;
   bool mWindowRaised;
   bool mIsRefocus;
@@ -2762,8 +2762,8 @@ class FocusInOutEvent : public Runnable {
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupports> mTarget;
-  RefPtr<nsPresContext> mContext;
+  const nsCOMPtr<nsISupports> mTarget;
+  const RefPtr<nsPresContext> mContext;
   EventMessage mEventMessage;
   nsCOMPtr<nsPIDOMWindowOuter> mOriginalFocusedWindow;
   nsCOMPtr<nsIContent> mOriginalFocusedContent;

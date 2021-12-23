@@ -977,7 +977,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // onload to the document content since that would likely confuse scripts
     // on the page.
 
-    nsIDocShell* docShell = window->GetDocShell();
+    RefPtr<nsDocShell> docShell = nsDocShell::Cast(window->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
     // Unfortunately, docShell->GetRestoringDocument() might no longer be set
@@ -1082,12 +1082,12 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
 
       d->SetLoadEventFiring(true);
-      EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
+      RefPtr<nsPresContext> presContext = mPresContext;
+      EventDispatcher::Dispatch(window, presContext, &event, nullptr, &status);
       d->SetLoadEventFiring(false);
 
-      RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
-      if (docGroup && dShell->TreatAsBackgroundLoad()) {
-        docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
+      if (docGroup && docShell->TreatAsBackgroundLoad()) {
+        docGroup->TryFlushIframePostMessages(docShell->GetOuterWindowID());
       }
 
       if (timing) {

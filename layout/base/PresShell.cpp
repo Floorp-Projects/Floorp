@@ -2156,7 +2156,7 @@ void PresShell::FireResizeEvent() {
   WidgetEvent event(true, mozilla::eResize);
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
+  if (RefPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
     EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
   }
 }
@@ -5397,8 +5397,7 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   }
   if (mPresContext->IsRootContentDocumentCrossProcess() &&
       !IsTransparentContainerElement(mPresContext)) {
-    color = NS_ComposeColors(
-        GetDefaultBackgroundColorToDraw(), color);
+    color = NS_ComposeColors(GetDefaultBackgroundColorToDraw(), color);
   }
   return {color, drawBackgroundColor};
 }
@@ -8772,8 +8771,8 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
       }
     }
 
-    nsPresContext* context = doc->GetPresContext();
-    if (!context) {
+    RefPtr<nsPresContext> presContext = doc->GetPresContext();
+    if (!presContext) {
       if (contentPresShell) {
         contentPresShell->PopCurrentEventInfo();
       }
@@ -8781,7 +8780,7 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
     }
 
     tmpStatus = nsEventStatus_eIgnore;
-    EventDispatcher::Dispatch(targetPtr, context, &newEvent, nullptr,
+    EventDispatcher::Dispatch(targetPtr, presContext, &newEvent, nullptr,
                               &tmpStatus, aEventCB);
     if (nsEventStatus_eConsumeNoDefault == tmpStatus ||
         newEvent.mFlags.mMultipleActionsPrevented) {
