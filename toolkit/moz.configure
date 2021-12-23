@@ -1418,6 +1418,7 @@ def accessibility(value, check_for_midl, midl, c_compiler):
 
 set_config("ACCESSIBILITY", accessibility)
 set_define("ACCESSIBILITY", accessibility)
+add_old_configure_assignment("ACCESSIBILITY", accessibility)
 
 
 # Addon signing
@@ -2678,24 +2679,6 @@ with only_when(compile_environment):
             when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
         )
 
-
-# Gtk+
-# ==============================================================
-with only_when(toolkit_gtk):
-    pkg_check_modules(
-        "MOZ_GTK3",
-        "gtk+-3.0 >= 3.14.0 gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0",
-    )
-
-    set_define("GDK_VERSION_MIN_REQUIRED", "GDK_VERSION_3_14")
-    set_define("GDK_VERSION_MAX_ALLOWED", "GDK_VERSION_3_14")
-
-    pkg_check_modules("GLIB", "glib-2.0 >= 2.42 gobject-2.0")
-
-    set_define("GLIB_VERSION_MIN_REQUIRED", "GLIB_VERSION_2_42")
-    set_define("GLIB_VERSION_MAX_ALLOWED", "GLIB_VERSION_2_42")
-
-    set_define("MOZ_ACCESSIBILITY_ATK", True, when=accessibility)
 
 # DBus
 # ==============================================================

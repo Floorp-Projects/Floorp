@@ -45,6 +45,13 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
+GLIB_VERSION=2.42
+GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_42
+GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_42
+CAIRO_VERSION=1.10
+GTK3_VERSION=3.14.0
+GDK_VERSION_MIN_REQUIRED=GDK_VERSION_3_14
+GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_14
 W32API_VERSION=3.14
 
 dnl Set various checks
@@ -1242,6 +1249,35 @@ dnl ========================================================
 MOZ_ARG_HEADER(Toolkit Options)
 
 dnl ========================================================
+dnl = Enable the toolkit as needed                         =
+dnl ========================================================
+
+dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
+dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
+case "$MOZ_WIDGET_TOOLKIT" in
+gtk*)
+    MOZ_ENABLE_GTK=1
+    ;;
+esac
+
+if test "$COMPILE_ENVIRONMENT"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk; then
+    PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0 $GDK_PACKAGES)
+    TK_CFLAGS=$MOZ_GTK3_CFLAGS
+    TK_LIBS=$MOZ_GTK3_LIBS
+    AC_DEFINE_UNQUOTED(GDK_VERSION_MIN_REQUIRED,$GDK_VERSION_MIN_REQUIRED)
+    AC_DEFINE_UNQUOTED(GDK_VERSION_MAX_ALLOWED,$GDK_VERSION_MAX_ALLOWED)
+  fi
+  if test "$MOZ_ENABLE_GTK"; then
+    AC_DEFINE_UNQUOTED(GLIB_VERSION_MIN_REQUIRED,$GLIB_VERSION_MIN_REQUIRED)
+    AC_DEFINE_UNQUOTED(GLIB_VERSION_MAX_ALLOWED,$GLIB_VERSION_MAX_ALLOWED)
+  fi
+fi # COMPILE_ENVIRONMENT
+
+AC_SUBST_LIST(TK_CFLAGS)
+AC_SUBST_LIST(TK_LIBS)
+
+dnl ========================================================
 dnl =
 dnl = Components & Features
 dnl =
@@ -1545,6 +1581,17 @@ dnl = Standalone module options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
+
+dnl Check for GLib.
+dnl ========================================================
+
+if test -z "$SKIP_PATH_CHECKS"; then
+if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
+    if test "$MOZ_ENABLE_GTK" ; then
+        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
+    fi
+fi
+fi
 
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
@@ -1868,6 +1915,10 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================
+
+if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
+    AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
+fi
 
 AC_SUBST(MOZ_DEV_EDITION)
 if test -n "$MOZ_DEV_EDITION"; then
