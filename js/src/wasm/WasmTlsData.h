@@ -166,24 +166,8 @@ struct TableTls {
 
   // Pointer to the array of elements (which can have various representations).
   // For tables of anyref this is null.
+  // For tables of functions, this is a pointer to the array of code pointers.
   void* elements;
-};
-
-// Table element for TableRepr::Func which carries both the code pointer and
-// a tls pointer (and thus anything reachable through the tls, including the
-// instance).
-
-struct FunctionTableElem {
-  // The code to call when calling this element. The table ABI is the system
-  // ABI with the additional ABI requirements that:
-  //  - WasmTlsReg and any pinned registers have been loaded appropriately
-  //  - if this is a heterogeneous table that requires a signature check,
-  //    WasmTableCallSigReg holds the signature id.
-  void* code;
-
-  // The pointer to the callee's instance's TlsData. This must be loaded into
-  // WasmTlsReg before calling 'code'.
-  TlsData* tls;
 };
 
 }  // namespace wasm
