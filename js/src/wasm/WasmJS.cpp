@@ -3412,18 +3412,8 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
 #ifdef DEBUG
 void WasmTableObject::assertRangeNull(uint32_t index, uint32_t length) const {
   Table& tab = table();
-  switch (tab.repr()) {
-    case TableRepr::Func:
-      for (uint32_t i = index; i < index + length; i++) {
-        MOZ_ASSERT(tab.getFuncRef(i).tls == nullptr);
-        MOZ_ASSERT(tab.getFuncRef(i).code == nullptr);
-      }
-      break;
-    case TableRepr::Ref:
-      for (uint32_t i = index; i < index + length; i++) {
-        MOZ_ASSERT(tab.getAnyRef(i).isNull());
-      }
-      break;
+  for (uint32_t i = index; i < index + length; i++) {
+    MOZ_ASSERT(tab.isNull(i));
   }
 }
 #endif

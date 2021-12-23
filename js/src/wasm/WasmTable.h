@@ -29,10 +29,10 @@ namespace wasm {
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
 //
-// A table of FuncRef holds FunctionTableElems, which are (code*,tls*) pairs,
-// where the tls must be traced.
-//
 // A table of AnyRef holds JSObject pointers, which must be traced.
+//
+// A table of FuncRef holds two arrays of the same length which together create
+// (code*,tls*) pairs, where the tls must be traced.
 
 // TODO/AnyRef-boxing: With boxed immediates and strings, JSObject* is no longer
 // the most appropriate representation for Cell::anyref.
@@ -45,12 +45,14 @@ class Table : public ShareableBase<Table> {
       JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
                               MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
                               SystemAllocPolicy>>;
-  using UniqueFuncRefArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
+  using UniqueCodePtrArray = UniquePtr<void*[], JS::FreePolicy>;
+  using UniqueTlsPtrArray = UniquePtr<TlsData*[], JS::FreePolicy>;
 
   WeakHeapPtrWasmTableObject maybeObject_;
   InstanceSet observers_;
-  UniqueFuncRefArray functions_;  // either functions_ has data
-  TableAnyRefVector objects_;     //   or objects_, but not both
+  UniqueCodePtrArray codePtrs_;  // either codePtrs_ + tlsPtrs_
+  UniqueTlsPtrArray tlsPtrs_;    //   have data,
+  TableAnyRefVector objects_;    //     or objects_, but not both
   const RefType elemType_;
   const bool isAsmJS_;
   const bool importedOrExported;
@@ -60,7 +62,7 @@ class Table : public ShareableBase<Table> {
   template <class>
   friend struct js::MallocProvider;
   Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
-        UniqueFuncRefArray functions);
+        UniqueCodePtrArray codePtrs, UniqueTlsPtrArray tlsPtrs);
   Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
         TableAnyRefVector&& objects);
 
@@ -96,7 +98,10 @@ class Table : public ShareableBase<Table> {
   // get/fillAnyRef is allowed only on table-of-anyref.
   // setNull is allowed on either.
 
-  const FunctionTableElem& getFuncRef(uint32_t index) const;
+#ifdef DEBUG
+  [[nodiscard]] bool isNull(uint32_t index) const;
+#endif
+
   [[nodiscard]] bool getFuncRef(JSContext* cx, uint32_t index,
                                 MutableHandleFunction fun) const;
   void setFuncRef(uint32_t index, void* code, const Instance* instance);
