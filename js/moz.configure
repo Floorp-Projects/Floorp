@@ -1258,3 +1258,16 @@ set_config(
         lambda x: x.version[-2] if str(x.version[-2]) in "ab" else None
     ),
 )
+
+
+# Check for tm_zone, tm_gmtoff in struct tm
+# ===================================================
+with only_when(compile_environment):
+    set_define(
+        "HAVE_TM_ZONE_TM_GMTOFF",
+        c_compiler.try_compile(
+            includes=["time.h"],
+            body="struct tm tm; tm.tm_zone = 0; tm.tm_gmtoff = 1;",
+            check_msg="for tm_zone and tm_gmtoff in struct tm",
+        ),
+    )
