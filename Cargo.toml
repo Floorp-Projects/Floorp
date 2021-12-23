@@ -97,7 +97,7 @@ wasm-bindgen = { git = "https://github.com/kvark/dummy-web" }
 web-sys = { git = "https://github.com/kvark/dummy-web" }
 
 # Other overrides
-chardetng = { git = "https://github.com/hsivonen/chardetng", rev="302c995f91f44cf26e77dc4758ad56c3ff0153ad" }
+chardetng = { git = "https://github.com/hsivonen/chardetng", rev="cb8052aaf9c4bca3bea4a579667441cc3ba7537c" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="8b4bd7d8229660a749dbe419a57ea01df9de5453" }
