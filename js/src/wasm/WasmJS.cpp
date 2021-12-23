@@ -3070,7 +3070,7 @@ WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
   MOZ_ASSERT(obj->isNewborn());
 
   TableDesc td(tableType, initialLength, maximumLength, /*isAsmJS*/ false,
-               /*importedOrExported=*/true);
+               /*isImportedOrExported=*/true);
 
   SharedTable table = Table::create(cx, td, obj);
   if (!table) {
