@@ -269,13 +269,15 @@ class SessionUseCasesTest {
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.GoBackAction::class) { action ->
             assertEquals("mozilla", action.tabId)
+            assertTrue(action.userInteraction)
         }
         middleware.reset()
 
-        useCases.goBack()
+        useCases.goBack(userInteraction = false)
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.GoBackAction::class) { action ->
             assertEquals("mozilla", action.tabId)
+            assertFalse(action.userInteraction)
         }
     }
 
@@ -289,13 +291,15 @@ class SessionUseCasesTest {
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.GoForwardAction::class) { action ->
             assertEquals("mozilla", action.tabId)
+            assertTrue(action.userInteraction)
         }
         middleware.reset()
 
-        useCases.goForward()
+        useCases.goForward(userInteraction = false)
         store.waitUntilIdle()
         middleware.assertLastAction(EngineAction.GoForwardAction::class) { action ->
             assertEquals("mozilla", action.tabId)
+            assertFalse(action.userInteraction)
         }
     }
 

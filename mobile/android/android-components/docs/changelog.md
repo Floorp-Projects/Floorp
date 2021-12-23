@@ -12,8 +12,8 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 * **feature-prompts**:
-  * Removes deprecated constructor in `PromptFeature`. 
-  
+  * Removes deprecated constructor in `PromptFeature`.
+
 * * **browser-engine**, **concept-engine*** **feature-sitepermissions**
   * 🌟️️ **Add support for a new `storage_access` API prompt.
 
@@ -32,6 +32,12 @@ permalink: /changelog/
 
 * **browser-errorpages**
   * `ErrorPages.createUrlEncodedErrorPage()` allows overriding the title or description for specific error types now.
+
+* **browser-engine-gecko**
+  * Added `EngineSession.goBack(boolean)` and `EngineSession.goForward(boolean)` for user interaction based navigation.
+
+* **feature-session**
+  * Added support in `SessionUseCases.GoBackUseCase` and `SessionUseCases.GoForwardUseCase` to support optional `userInteraction` parameter in the Gecko engine.
 
 # 96.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v95.0.0...v96.0.0)

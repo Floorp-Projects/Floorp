@@ -975,9 +975,9 @@ open class DummyEngineSession : EngineSession() {
 
     override fun reload(flags: LoadUrlFlags) {}
 
-    override fun goBack() {}
+    override fun goBack(userInteraction: Boolean) {}
 
-    override fun goForward() {}
+    override fun goForward(userInteraction: Boolean) {}
 
     override fun goToHistoryIndex(index: Int) {}
 

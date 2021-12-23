@@ -557,7 +557,7 @@ class GeckoEngineSessionTest {
 
         engineSession.goBack()
 
-        verify(geckoSession).goBack()
+        verify(geckoSession).goBack(true)
     }
 
     @Test
@@ -569,7 +569,7 @@ class GeckoEngineSessionTest {
 
         engineSession.goForward()
 
-        verify(geckoSession).goForward()
+        verify(geckoSession).goForward(true)
     }
 
     @Test
@@ -3021,14 +3021,14 @@ class GeckoEngineSessionTest {
 
         // goBack()
         engineSession.goBack()
-        verify(geckoSession).goBack()
+        verify(geckoSession).goBack(true)
         fakePageLoad(false)
 
         fakePageLoad(true)
 
         // goForward()
         engineSession.goForward()
-        verify(geckoSession).goForward()
+        verify(geckoSession).goForward(true)
         fakePageLoad(false)
 
         fakePageLoad(true)

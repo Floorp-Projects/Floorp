@@ -960,14 +960,16 @@ sealed class EngineAction : BrowserAction() {
      * Navigates back in the tab with the given [tabId].
      */
     data class GoBackAction(
-        override val tabId: String
+        override val tabId: String,
+        val userInteraction: Boolean = true
     ) : EngineAction(), ActionWithTab
 
     /**
      * Navigates forward in the tab with the given [tabId].
      */
     data class GoForwardAction(
-        override val tabId: String
+        override val tabId: String,
+        val userInteraction: Boolean = true
     ) : EngineAction(), ActionWithTab
 
     /**

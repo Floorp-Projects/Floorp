@@ -618,13 +618,17 @@ abstract class EngineSession(
 
     /**
      * Navigates back in the history of this session.
+     *
+     * @param userInteraction informs the engine whether the action was user invoked.
      */
-    abstract fun goBack()
+    abstract fun goBack(userInteraction: Boolean = true)
 
     /**
      * Navigates forward in the history of this session.
+     *
+     * @param userInteraction informs the engine whether the action was user invoked.
      */
-    abstract fun goForward()
+    abstract fun goForward(userInteraction: Boolean = true)
 
     /**
      * Navigates to the specified index in the [HistoryState] of this session. The current index of

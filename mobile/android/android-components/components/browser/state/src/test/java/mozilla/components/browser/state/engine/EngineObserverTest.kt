@@ -58,8 +58,8 @@ class EngineObserverTest {
     fun engineSessionObserver() {
         val engineSession = object : EngineSession() {
             override val settings: Settings = mock()
-            override fun goBack() {}
-            override fun goForward() {}
+            override fun goBack(userInteraction: Boolean) {}
+            override fun goForward(userInteraction: Boolean) {}
             override fun goToHistoryIndex(index: Int) {}
             override fun reload(flags: LoadUrlFlags) {}
             override fun stopLoading() {}
@@ -115,8 +115,8 @@ class EngineObserverTest {
     fun engineSessionObserverWithSecurityChanges() {
         val engineSession = object : EngineSession() {
             override val settings: Settings = mock()
-            override fun goBack() {}
-            override fun goForward() {}
+            override fun goBack(userInteraction: Boolean) {}
+            override fun goForward(userInteraction: Boolean) {}
             override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
             override fun reload(flags: LoadUrlFlags) {}
@@ -166,8 +166,8 @@ class EngineObserverTest {
     fun engineSessionObserverWithTrackingProtection() {
         val engineSession = object : EngineSession() {
             override val settings: Settings = mock()
-            override fun goBack() {}
-            override fun goForward() {}
+            override fun goBack(userInteraction: Boolean) {}
+            override fun goForward(userInteraction: Boolean) {}
             override fun goToHistoryIndex(index: Int) {}
             override fun stopLoading() {}
             override fun reload(flags: LoadUrlFlags) {}

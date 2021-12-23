@@ -320,7 +320,7 @@ class ReaderViewFeatureTest {
         testDispatcher.advanceUntilIdle()
 
         readerViewFeature.hideReaderView()
-        verify(engineSession).goBack()
+        verify(engineSession).goBack(false)
     }
 
     @Test

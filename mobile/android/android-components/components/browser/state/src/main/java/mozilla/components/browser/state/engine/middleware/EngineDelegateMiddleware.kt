@@ -98,7 +98,7 @@ internal class EngineDelegateMiddleware(
         action: EngineAction.GoBackAction
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
-            ?.goBack()
+            ?.goBack(action.userInteraction)
     }
 
     private fun goForward(
@@ -106,7 +106,7 @@ internal class EngineDelegateMiddleware(
         action: EngineAction.GoForwardAction
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
-            ?.goForward()
+            ?.goForward(action.userInteraction)
     }
 
     private fun goToHistoryIndex(

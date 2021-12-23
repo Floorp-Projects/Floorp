@@ -217,8 +217,8 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.goBack]
      */
-    override fun goBack() {
-        geckoSession.goBack()
+    override fun goBack(userInteraction: Boolean) {
+        geckoSession.goBack(userInteraction)
         if (canGoBack) {
             notifyObservers { onNavigateBack() }
         }
@@ -226,8 +226,8 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.goForward]
      */
-    override fun goForward() {
-        geckoSession.goForward()
+    override fun goForward(userInteraction: Boolean) {
+        geckoSession.goForward(userInteraction)
     }
 
     /**

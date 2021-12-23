@@ -110,7 +110,7 @@ class SystemEngineSession(
     /**
      * See [EngineSession.goBack]
      */
-    override fun goBack() {
+    override fun goBack(userInteraction: Boolean) {
         webView.goBack()
         if (webView.canGoBack()) {
             notifyObservers { onNavigateBack() }
@@ -120,7 +120,7 @@ class SystemEngineSession(
     /**
      * See [EngineSession.goForward]
      */
-    override fun goForward() {
+    override fun goForward(userInteraction: Boolean) {
         webView.goForward()
     }
 

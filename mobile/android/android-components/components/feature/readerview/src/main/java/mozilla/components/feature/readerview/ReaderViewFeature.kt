@@ -146,7 +146,7 @@ class ReaderViewFeature(
                 store.dispatch(ReaderAction.UpdateReaderableAction(it.id, false))
                 store.dispatch(ReaderAction.ClearReaderActiveUrlAction(it.id))
                 if (it.content.canGoBack) {
-                    it.engineState.engineSession?.goBack()
+                    it.engineState.engineSession?.goBack(false)
                 } else {
                     extensionController.sendContentMessage(
                         createHideReaderMessage(),

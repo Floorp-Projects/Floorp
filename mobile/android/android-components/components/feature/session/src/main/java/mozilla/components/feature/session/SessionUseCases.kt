@@ -200,9 +200,12 @@ class SessionUseCases(
     ) {
         /**
          * Navigates back in the history of the currently selected tab
+         *
+         * @param userInteraction informs the engine whether the action was user invoked.
          */
         operator fun invoke(
-            tabId: String? = store.state.selectedTabId
+            tabId: String? = store.state.selectedTabId,
+            userInteraction: Boolean = true
         ) {
             if (tabId == null) {
                 return
@@ -210,7 +213,8 @@ class SessionUseCases(
 
             store.dispatch(
                 EngineAction.GoBackAction(
-                    tabId
+                    tabId,
+                    userInteraction
                 )
             )
         }
@@ -221,9 +225,12 @@ class SessionUseCases(
     ) {
         /**
          * Navigates forward in the history of the currently selected session
+         *
+         * @param userInteraction informs the engine whether the action was user invoked.
          */
         operator fun invoke(
-            tabId: String? = store.state.selectedTabId
+            tabId: String? = store.state.selectedTabId,
+            userInteraction: Boolean = true
         ) {
             if (tabId == null) {
                 return
@@ -231,7 +238,8 @@ class SessionUseCases(
 
             store.dispatch(
                 EngineAction.GoForwardAction(
-                    tabId
+                    tabId,
+                    userInteraction
                 )
             )
         }
