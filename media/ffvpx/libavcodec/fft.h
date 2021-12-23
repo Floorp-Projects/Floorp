@@ -32,8 +32,7 @@
 
 #include <stdint.h>
 #include "config.h"
-
-#include "libavutil/mem_internal.h"
+#include "libavutil/mem.h"
 
 #if FFT_FLOAT
 
@@ -51,6 +50,12 @@ typedef float FFTDouble;
 #define FFT_NAME(x) x ## _fixed_32
 
 typedef int32_t FFTSample;
+
+#else /* FFT_FIXED_32 */
+
+#define FFT_NAME(x) x ## _fixed
+
+typedef int16_t FFTSample;
 
 #endif /* FFT_FIXED_32 */
 
@@ -102,6 +107,7 @@ struct FFTContext {
     void (*imdct_calc)(struct FFTContext *s, FFTSample *output, const FFTSample *input);
     void (*imdct_half)(struct FFTContext *s, FFTSample *output, const FFTSample *input);
     void (*mdct_calc)(struct FFTContext *s, FFTSample *output, const FFTSample *input);
+    void (*mdct_calcw)(struct FFTContext *s, FFTDouble *output, const FFTSample *input);
     enum fft_permutation_type fft_permutation;
     enum mdct_permutation_type mdct_permutation;
     uint32_t *revtab32;
@@ -109,16 +115,8 @@ struct FFTContext {
 
 #if CONFIG_HARDCODED_TABLES
 #define COSTABLE_CONST const
-#define ff_init_ff_cos_tabs(index)
 #else
 #define COSTABLE_CONST
-#define ff_init_ff_cos_tabs FFT_NAME(ff_init_ff_cos_tabs)
-
-/**
- * Initialize the cosine table in ff_cos_tabs[index]
- * @param index index in ff_cos_tabs array of the table to initialize
- */
-void ff_init_ff_cos_tabs(int index);
 #endif
 
 #define COSTABLE(size) \
@@ -140,6 +138,14 @@ extern COSTABLE(65536);
 extern COSTABLE(131072);
 extern COSTABLE_CONST FFTSample* const FFT_NAME(ff_cos_tabs)[18];
 
+#define ff_init_ff_cos_tabs FFT_NAME(ff_init_ff_cos_tabs)
+
+/**
+ * Initialize the cosine table in ff_cos_tabs[index]
+ * @param index index in ff_cos_tabs array of the table to initialize
+ */
+void ff_init_ff_cos_tabs(int index);
+
 #define ff_fft_init FFT_NAME(ff_fft_init)
 #define ff_fft_end  FFT_NAME(ff_fft_end)
 
@@ -155,6 +161,8 @@ void ff_fft_init_x86(FFTContext *s);
 void ff_fft_init_arm(FFTContext *s);
 void ff_fft_init_mips(FFTContext *s);
 void ff_fft_init_ppc(FFTContext *s);
+
+void ff_fft_fixed_init_arm(FFTContext *s);
 
 void ff_fft_end(FFTContext *s);
 

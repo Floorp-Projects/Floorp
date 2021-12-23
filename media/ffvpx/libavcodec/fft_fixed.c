@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -16,27 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "film_grain_params.h"
-
-AVFilmGrainParams *av_film_grain_params_alloc(size_t *size)
-{
-    AVFilmGrainParams *params = av_mallocz(sizeof(AVFilmGrainParams));
-
-    if (size)
-        *size = sizeof(*params);
-
-    return params;
-}
-
-AVFilmGrainParams *av_film_grain_params_create_side_data(AVFrame *frame)
-{
-    AVFrameSideData *side_data = av_frame_new_side_data(frame,
-                                                        AV_FRAME_DATA_FILM_GRAIN_PARAMS,
-                                                        sizeof(AVFilmGrainParams));
-    if (!side_data)
-        return NULL;
-
-    memset(side_data->data, 0, sizeof(AVFilmGrainParams));
-
-    return (AVFilmGrainParams *)side_data->data;
-}
+#define FFT_FLOAT 0
+#define FFT_FIXED_32 0
+#include "fft_template.c"

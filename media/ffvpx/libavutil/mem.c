@@ -78,7 +78,8 @@ void *av_malloc(size_t size)
 {
     void *ptr = NULL;
 
-    if (size > max_alloc_size)
+    /* let's disallow possibly ambiguous cases */
+    if (size > (max_alloc_size - 32))
         return NULL;
 
 #if HAVE_POSIX_MEMALIGN
@@ -133,7 +134,8 @@ void *av_malloc(size_t size)
 
 void *av_realloc(void *ptr, size_t size)
 {
-    if (size > max_alloc_size)
+    /* let's disallow possibly ambiguous cases */
+    if (size > (max_alloc_size - 32))
         return NULL;
 
 #if HAVE_ALIGNED_MALLOC
@@ -181,26 +183,23 @@ int av_reallocp(void *ptr, size_t size)
 
 void *av_malloc_array(size_t nmemb, size_t size)
 {
-    size_t result;
-    if (av_size_mult(nmemb, size, &result) < 0)
+    if (!size || nmemb >= INT_MAX / size)
         return NULL;
-    return av_malloc(result);
+    return av_malloc(nmemb * size);
 }
 
 void *av_mallocz_array(size_t nmemb, size_t size)
 {
-    size_t result;
-    if (av_size_mult(nmemb, size, &result) < 0)
+    if (!size || nmemb >= INT_MAX / size)
         return NULL;
-    return av_mallocz(result);
+    return av_mallocz(nmemb * size);
 }
 
 void *av_realloc_array(void *ptr, size_t nmemb, size_t size)
 {
-    size_t result;
-    if (av_size_mult(nmemb, size, &result) < 0)
+    if (!size || nmemb >= INT_MAX / size)
         return NULL;
-    return av_realloc(ptr, result);
+    return av_realloc(ptr, nmemb * size);
 }
 
 int av_reallocp_array(void *ptr, size_t nmemb, size_t size)
@@ -244,10 +243,9 @@ void *av_mallocz(size_t size)
 
 void *av_calloc(size_t nmemb, size_t size)
 {
-    size_t result;
-    if (av_size_mult(nmemb, size, &result) < 0)
+    if (size <= 0 || nmemb >= INT_MAX / size)
         return NULL;
-    return av_mallocz(result);
+    return av_mallocz(nmemb * size);
 }
 
 char *av_strdup(const char *s)
@@ -480,12 +478,12 @@ void *av_fast_realloc(void *ptr, unsigned int *size, size_t min_size)
     if (min_size <= *size)
         return ptr;
 
-    if (min_size > max_alloc_size) {
+    if (min_size > max_alloc_size - 32) {
         *size = 0;
         return NULL;
     }
 
-    min_size = FFMIN(max_alloc_size, FFMAX(min_size + min_size / 16 + 32, min_size));
+    min_size = FFMIN(max_alloc_size - 32, FFMAX(min_size + min_size / 16 + 32, min_size));
 
     ptr = av_realloc(ptr, min_size);
     /* we could set this to the unmodified min_size but this is safer
