@@ -68,6 +68,7 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "-framework Foundation",
     ]
 
-CFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-OS_LIBS += CONFIG["TK_LIBS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]

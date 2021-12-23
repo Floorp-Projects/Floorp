@@ -41,7 +41,7 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
