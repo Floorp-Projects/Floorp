@@ -1308,6 +1308,73 @@ var TelemetrySendImpl = {
     return "/submit/telemetry/" + slug;
   },
 
+  _doPingRequest(ping, id, url, options, errorHandler, onloadHandler) {
+    // Don't send cookies with these requests.
+    let request = new ServiceRequest({ mozAnon: true });
+    request.mozBackgroundRequest = true;
+    request.timeout = Policy.pingSubmissionTimeout();
+
+    request.open("POST", url, options);
+    request.overrideMimeType("text/plain");
+    request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+    request.setRequestHeader("Date", Policy.now().toUTCString());
+    request.setRequestHeader("Content-Encoding", "gzip");
+    request.onerror = errorHandler;
+    request.ontimeout = errorHandler;
+    request.onabort = errorHandler;
+    request.onload = onloadHandler;
+    this._pendingPingRequests.set(id, request);
+
+    let startTime = Utils.monotonicNow();
+
+    // If that's a legacy ping format, just send its payload.
+    let networkPayload = isV4PingFormat(ping) ? ping : ping.payload;
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let utf8Payload = converter.ConvertFromUnicode(
+      JSON.stringify(networkPayload)
+    );
+    utf8Payload += converter.Finish();
+    Services.telemetry
+      .getHistogramById("TELEMETRY_STRINGIFY")
+      .add(Utils.monotonicNow() - startTime);
+
+    let payloadStream = Cc[
+      "@mozilla.org/io/string-input-stream;1"
+    ].createInstance(Ci.nsIStringInputStream);
+    startTime = Utils.monotonicNow();
+    payloadStream.data = Policy.gzipCompressString(utf8Payload);
+
+    // Check the size and drop pings which are too big.
+    const compressedPingSizeBytes = payloadStream.data.length;
+    if (compressedPingSizeBytes > TelemetryStorage.MAXIMUM_PING_SIZE) {
+      this._log.error(
+        "_doPing - submitted ping exceeds the size limit, size: " +
+          compressedPingSizeBytes
+      );
+      Services.telemetry
+        .getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND")
+        .add();
+      Services.telemetry
+        .getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB")
+        .add(Math.floor(compressedPingSizeBytes / 1024 / 1024));
+      // We don't need to call |request.abort()| as it was not sent yet.
+      this._pendingPingRequests.delete(id);
+
+      TelemetryHealthPing.recordDiscardedPing(ping.type);
+      return { promise: TelemetryStorage.removePendingPing(id) };
+    }
+
+    Services.telemetry
+      .getHistogramById("TELEMETRY_COMPRESS")
+      .add(Utils.monotonicNow() - startTime);
+    request.sendInputStream(payloadStream);
+
+    return { payloadStream };
+  },
+
   _doPing(ping, id, isPersisted) {
     if (!this.sendingEnabled(ping)) {
       // We can't send the pings to the server, so don't try to.
@@ -1338,18 +1405,6 @@ var TelemetrySendImpl = {
 
     const url = this._buildSubmissionURL(ping);
 
-    // Don't send cookies with these requests.
-    let request = new ServiceRequest({ mozAnon: true });
-    request.mozBackgroundRequest = true;
-    request.timeout = Policy.pingSubmissionTimeout();
-
-    request.open("POST", url, true);
-    request.overrideMimeType("text/plain");
-    request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-    request.setRequestHeader("Date", Policy.now().toUTCString());
-
-    this._pendingPingRequests.set(id, request);
-
     const monotonicStartTime = Utils.monotonicNow();
     let deferred = PromiseUtils.defer();
 
@@ -1379,30 +1434,45 @@ var TelemetrySendImpl = {
       );
     };
 
-    let errorhandler = event => {
+    let retryRequest = request => {
+      if (
+        this._shutdown ||
+        ServiceRequest.isOffline ||
+        Services.startup.shuttingDown ||
+        !request.bypassProxyEnabled ||
+        this._tooLateToSend ||
+        request.bypassProxy ||
+        !request.isProxied
+      ) {
+        return false;
+      }
+      ServiceRequest.logProxySource(request.channel, "telemetry.send");
+      // If the request failed, and it's using a proxy, automatically
+      // attempt without proxy.
+      let { payloadStream } = this._doPingRequest(
+        ping,
+        id,
+        url,
+        { bypassProxy: true },
+        errorHandler,
+        onloadHandler
+      );
+      this.payloadStream = payloadStream;
+      return true;
+    };
+
+    let errorHandler = event => {
+      let request = event.target;
+      if (retryRequest(request)) {
+        return;
+      }
+
       let failure = event.type;
       if (failure === "error") {
         failure = XHR_ERROR_TYPE[request.errorCode];
       }
 
       TelemetryHealthPing.recordSendFailure(failure);
-
-      if (this.fallbackHttp) {
-        // only one attempt
-        this.fallbackHttp = false;
-
-        request.channel.securityInfo
-          .QueryInterface(Ci.nsITransportSecurityInfo)
-          .QueryInterface(Ci.nsISerializable);
-        if (request.channel.securityInfo.errorCodeString.startsWith("SEC_")) {
-          // re-open the request with the HTTP version of the URL
-          let fallbackUrl = new URL(url);
-          fallbackUrl.protocol = "http:";
-          // TODO encrypt payload
-          request.open("POST", fallbackUrl, true);
-          request.sendInputStream(this.payloadStream);
-        }
-      }
 
       Services.telemetry
         .getHistogramById("TELEMETRY_SEND_FAILURE_TYPE")
@@ -1416,11 +1486,9 @@ var TelemetrySendImpl = {
       );
       onRequestFinished(false, event);
     };
-    request.onerror = errorhandler;
-    request.ontimeout = errorhandler;
-    request.onabort = errorhandler;
 
-    request.onload = event => {
+    let onloadHandler = event => {
+      let request = event.target;
       let status = request.status;
       let statusClass = status - (status % 100);
       let success = false;
@@ -1464,57 +1532,24 @@ var TelemetrySendImpl = {
             event.type
         );
       }
+      if (!success && retryRequest(request)) {
+        return;
+      }
 
       onRequestFinished(success, event);
     };
 
-    // If that's a legacy ping format, just send its payload.
-    let networkPayload = isV4PingFormat(ping) ? ping : ping.payload;
-    request.setRequestHeader("Content-Encoding", "gzip");
-    let converter = Cc[
-      "@mozilla.org/intl/scriptableunicodeconverter"
-    ].createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let startTime = Utils.monotonicNow();
-    let utf8Payload = converter.ConvertFromUnicode(
-      JSON.stringify(networkPayload)
+    let { payloadStream, promise } = this._doPingRequest(
+      ping,
+      id,
+      url,
+      {},
+      errorHandler,
+      onloadHandler
     );
-    utf8Payload += converter.Finish();
-    Services.telemetry
-      .getHistogramById("TELEMETRY_STRINGIFY")
-      .add(Utils.monotonicNow() - startTime);
-
-    let payloadStream = Cc[
-      "@mozilla.org/io/string-input-stream;1"
-    ].createInstance(Ci.nsIStringInputStream);
-    startTime = Utils.monotonicNow();
-    payloadStream.data = Policy.gzipCompressString(utf8Payload);
-
-    // Check the size and drop pings which are too big.
-    const compressedPingSizeBytes = payloadStream.data.length;
-    if (compressedPingSizeBytes > TelemetryStorage.MAXIMUM_PING_SIZE) {
-      this._log.error(
-        "_doPing - submitted ping exceeds the size limit, size: " +
-          compressedPingSizeBytes
-      );
-      Services.telemetry
-        .getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND")
-        .add();
-      Services.telemetry
-        .getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB")
-        .add(Math.floor(compressedPingSizeBytes / 1024 / 1024));
-      // We don't need to call |request.abort()| as it was not sent yet.
-      this._pendingPingRequests.delete(id);
-
-      TelemetryHealthPing.recordDiscardedPing(ping.type);
-      return TelemetryStorage.removePendingPing(id);
+    if (promise) {
+      return promise;
     }
-
-    Services.telemetry
-      .getHistogramById("TELEMETRY_COMPRESS")
-      .add(Utils.monotonicNow() - startTime);
-    request.sendInputStream(payloadStream);
-
     this.payloadStream = payloadStream;
 
     return deferred.promise;

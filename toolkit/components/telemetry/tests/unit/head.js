@@ -52,6 +52,10 @@ const PingServer = {
     return this._httpServer.identity.primaryPort;
   },
 
+  get host() {
+    return this._httpServer.identity.primaryHost;
+  },
+
   get started() {
     return this._started;
   },
