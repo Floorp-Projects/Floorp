@@ -85,6 +85,9 @@ add_task(async function test_decoded_filename_download() {
   const FILE_NAME_ENCODED_3 = "file%X%20encode.txt";
   const FILE_NAME_DECODED_3 = "file%X encode.txt";
   const FILE_NAME_ENCODED_URL_3 = BASE + "/" + FILE_NAME_ENCODED_3;
+  const FILE_NAME_ENCODED_4 = "file%E3%80%82encode.txt";
+  const FILE_NAME_DECODED_4 = "file\u3002encode.txt";
+  const FILE_NAME_ENCODED_URL_4 = BASE + "/" + FILE_NAME_ENCODED_4;
   const FILE_ENCODED_LEN = 8;
 
   const nsIFile = Ci.nsIFile;
@@ -154,6 +157,10 @@ add_task(async function test_decoded_filename_download() {
   equal(msg.status, "success", "download() succeeded");
   downloadIds.fileEncoded3 = msg.id;
 
+  msg = await download({ url: FILE_NAME_ENCODED_URL_4 });
+  equal(msg.status, "success", "download() succeeded");
+  downloadIds.fileEncoded4 = msg.id;
+
   // Search for each individual download and check
   // the corresponding DownloadItem.
   async function checkDownloadItem(id, expect) {
@@ -199,6 +206,16 @@ add_task(async function test_decoded_filename_download() {
     exists: true,
   });
 
+  await checkDownloadItem(downloadIds.fileEncoded4, {
+    url: FILE_NAME_ENCODED_URL_4,
+    filename: downloadPath(FILE_NAME_DECODED_4),
+    state: "complete",
+    bytesReceived: FILE_ENCODED_LEN,
+    totalBytes: FILE_ENCODED_LEN,
+    fileSize: FILE_ENCODED_LEN,
+    exists: true,
+  });
+
   // Searching for downloads by the decoded filename works correctly.
   async function checkSearch(query, expected, description) {
     let item = await search(query);
@@ -228,6 +245,11 @@ add_task(async function test_decoded_filename_download() {
   await checkSearch(
     { filename: downloadPath(FILE_NAME_DECODED_3) },
     ["fileEncoded3"],
+    "filename"
+  );
+  await checkSearch(
+    { filename: downloadPath(FILE_NAME_DECODED_4) },
+    ["fileEncoded4"],
     "filename"
   );
 
