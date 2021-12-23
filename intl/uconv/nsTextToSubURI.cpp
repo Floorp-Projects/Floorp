@@ -100,6 +100,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
 }
 
 NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aURIFragment,
+                                               bool aDontEscape,
                                                nsAString& _retval) {
   nsAutoCString unescapedSpec;
   // skip control octets (0x00 - 0x1f and 0x7f) when unescaping
@@ -112,6 +113,10 @@ NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aURIFragment,
   if (convertURItoUnicode("UTF-8"_ns, unescapedSpec, _retval) != NS_OK) {
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval);
+  }
+
+  if (aDontEscape) {
+    return NS_OK;
   }
 
   // If there are any characters that are unsafe for URIs, reescape those.
