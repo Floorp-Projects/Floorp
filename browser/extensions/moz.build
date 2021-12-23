@@ -11,7 +11,6 @@ DIRS += [
     "webcompat",
     "report-site-issue",
     "pictureinpicture",
-    "proxy-failover",
     "search-detection",
 ]
 
