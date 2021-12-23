@@ -3065,3 +3065,24 @@ memory_watcher:
     bug_numbers: [1715858]
     notification_emails:
       - tkikuchi@mozilla.com
+
+service_request:
+  bypass:
+    description: >
+      This event is recorded by a small set of services when a proxy failure
+      causes a service to re-request with a proxy bypass.  It records some
+      basic information such as the type of proxy configuration, and the source
+      of the proxy configuration.  The value of the event is the name of the
+      service that triggers the event (e.g. telemetry, remote-settings).
+    methods: ["bypass"]
+    objects: ["proxy_info"]
+    release_channel_collection: opt-out
+    expiry_version: never
+    record_in_processes: ["main"]
+    products: ["firefox"]
+    bug_numbers: [1732792, 1732793, 1733481, 1733994, 1732388]
+    notification_emails:
+      - scaraveo@mozilla.com
+    extra_keys:
+      source: the source of the proxy configuration.  e.g. policy, prefs or extension_id
+      type: the type for the proxy configuration source.  e.g. api or string version of nsIProtocolProxyService.proxyConfigType
