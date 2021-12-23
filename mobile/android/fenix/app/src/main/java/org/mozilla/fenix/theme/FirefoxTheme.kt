@@ -217,7 +217,7 @@ class FirefoxColors(
     // Primary button, Snackbar, Floating action button, Controls
     var actionPrimary by mutableStateOf(actionPrimary)
         private set
-    // Secondary button, Pill button
+    // Secondary button, Chip
     var actionSecondary by mutableStateOf(actionSecondary)
         private set
     // Checkbox enabled, Radio enabled
