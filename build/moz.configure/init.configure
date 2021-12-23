@@ -13,6 +13,7 @@ toolkit = dependable(None)
 # build/moz.configure/bindgen.configure is not included.
 bindgen_config_paths = dependable(None)
 
+
 @depends("--help")
 def build_environment(_):
     topobjdir = os.path.realpath(".")
