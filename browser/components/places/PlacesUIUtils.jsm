@@ -1228,51 +1228,6 @@ var PlacesUIUtils = {
     }
   },
 
-  ensureBookmarkToolbarTelemetryListening() {
-    if (this._bookmarkToolbarTelemetryListening) {
-      return;
-    }
-
-    // This listener is for counting new bookmarks
-    let placesUtilsObserversListener = events => {
-      for (let event of events) {
-        switch (event.type) {
-          case "bookmark-added":
-            if (event.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
-              Services.telemetry.scalarAdd(
-                "browser.engagement.bookmarks_toolbar_bookmark_added",
-                1
-              );
-            }
-            break;
-          case "bookmark-moved":
-            let hasMovedToToolbar =
-              event.parentGuid == PlacesUtils.bookmarks.toolbarGuid &&
-              event.oldParentGuid != PlacesUtils.bookmarks.toolbarGuid;
-            if (hasMovedToToolbar) {
-              Services.telemetry.scalarAdd(
-                "browser.engagement.bookmarks_toolbar_bookmark_added",
-                1
-              );
-            }
-            break;
-        }
-      }
-    };
-
-    this._bookmarkToolbarTelemetryListening = true;
-    PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-moved"],
-      placesUtilsObserversListener
-    );
-    PlacesUtils.registerShutdownFunction(() => {
-      PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-moved"],
-        placesUtilsObserversListener
-      );
-    });
-  },
-
   /**
    * Uncollapses PersonalToolbar if its collapsed status is not
    * persisted, and user customized it or changed default bookmarks.
