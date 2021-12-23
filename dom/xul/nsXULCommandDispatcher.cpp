@@ -349,9 +349,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName) {
     updaters.AppendObject(content);
   }
 
-  for (int32_t u = 0; u < updaters.Count(); u++) {
-    nsIContent* content = updaters[u];
-
+  for (nsIContent* content : updaters) {
 #ifdef DEBUG
     if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
       nsAutoCString aeventnameC;
@@ -363,7 +361,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName) {
 #endif
 
     WidgetEvent event(true, eXULCommandUpdate);
-    EventDispatcher::Dispatch(content, nullptr, &event);
+    EventDispatcher::Dispatch(MOZ_KnownLive(content), nullptr, &event);
   }
   return NS_OK;
 }
@@ -417,8 +415,8 @@ nsXULCommandDispatcher::Lock() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULCommandDispatcher::Unlock() {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsXULCommandDispatcher::Unlock() {
   if (mLocked) {
     mLocked = false;
 
