@@ -256,7 +256,7 @@ class FirefoxColors(
     // Small heading
     var textAccent by mutableStateOf(textAccent)
         private set
-    // Text/Icon inverted (on color)
+    // Text Inverted/On Color
     var textInverted by mutableStateOf(textInverted)
         private set
 
