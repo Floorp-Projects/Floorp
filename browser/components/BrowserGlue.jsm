@@ -2689,12 +2689,6 @@ BrowserGlue.prototype = {
       },
 
       {
-        task: () => {
-          PlacesUIUtils.ensureBookmarkToolbarTelemetryListening();
-        },
-      },
-
-      {
         condition: AppConstants.MOZ_UPDATE_AGENT,
         task: () => {
           // Never in automation!  This is close to
