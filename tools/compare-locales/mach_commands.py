@@ -279,6 +279,8 @@ def _do_create_content(
                 repo_config["path"],
                 heads=repo_config.get("heads", {}).keys(),
             )
+            if repo_config.get("post-clobber", False):
+                _nuke_hg_repo(command_context, str(repo_config["path"]))
     else:
         _check_hg_repo(command_context, strings_path)
         for repo_config in config.get("source", {}).values():
@@ -397,3 +399,7 @@ def _check_hg_repo(command_context, path, heads=None):
 
 def _clone_hg_repo(command_context, url, path):
     _retry_run_process(command_context, ["hg", "clone", url, str(path)])
+
+
+def _nuke_hg_repo(command_context, path):
+    _retry_run_process(command_context, ["rm", "-rf", str(path)])

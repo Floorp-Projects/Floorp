@@ -48,6 +48,7 @@ def get_default_config(topsrcdir, strings_path):
             },
             "comm-central": {
                 "path": topsrcdir / "comm",
+                "post-clobber": True,
                 "url": "https://hg.mozilla.org/comm-central/",
                 "heads": {
                     # This list of repositories is ordered, starting with the
