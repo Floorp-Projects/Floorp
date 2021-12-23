@@ -2823,8 +2823,8 @@ class PresShell final : public nsStubDocumentObserver,
   // mDocument and mPresContext should've never been cleared nor swapped with
   // another instance while PresShell instance is alive so that it's safe to
   // call their can-run- script methods without local RefPtr variables.
-  RefPtr<Document> const mDocument;
-  RefPtr<nsPresContext> const mPresContext;
+  MOZ_KNOWN_LIVE RefPtr<Document> const mDocument;
+  MOZ_KNOWN_LIVE RefPtr<nsPresContext> const mPresContext;
   // The document's style set owns it but we maintain a ref, may be null.
   RefPtr<StyleSheet> mPrefStyleSheet;
   UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
