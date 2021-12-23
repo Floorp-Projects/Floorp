@@ -192,7 +192,7 @@
     "PASS"
   ],
   "Cookie specs Page.cookies should get cookies from multiple urls (cookies.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.setCookie should work (cookies.spec.ts)": [
     "FAIL"
@@ -222,7 +222,7 @@
     "PASS"
   ],
   "Cookie specs Page.setCookie should default to setting secure cookie for HTTPS websites (cookies.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Cookie specs Page.setCookie should be able to set unsecure cookie for HTTP website (cookies.spec.ts)": [
     "PASS"
