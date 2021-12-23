@@ -269,6 +269,11 @@ DeviceResetReason:
     Reason why a DirectX device has been reset, Windows only.
   type: string
 
+DistributionID:
+  description: >
+    Product application's distribution ID.
+  type: string
+
 DOMFissionEnabled:
   description: >
     Set to 1 when DOM fission is enabled, and subframes are potentially loaded
