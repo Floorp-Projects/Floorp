@@ -60,6 +60,7 @@ option(env="MOZCONFIG", nargs=1, help="Mozconfig location")
 @depends("MOZCONFIG", "OLD_CONFIGURE", build_environment, "--help")
 @imports(_from="mozbuild.mozconfig", _import="MozconfigLoader")
 @imports(_from="mozboot.mozconfig", _import="find_mozconfig")
+@imports("os")
 def mozconfig(mozconfig, old_configure, build_env, help):
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
@@ -77,8 +78,10 @@ def mozconfig(mozconfig, old_configure, build_env, help):
     # OLD_CONFIGURE path, which points to js/src/old-configure.
     # I expect we'll have figured things out for mozconfigs well before
     # old-configure dies.
-    if old_configure and os.path.dirname(os.path.abspath(old_configure[0])).endswith(
-        "/js/src"
+    if (
+        old_configure
+        and os.path.dirname(os.path.abspath(old_configure[0])).endswith("/js/src")
+        or (mozconfig and mozconfig[0] == os.devnull)
     ):
         return {"path": None}
 

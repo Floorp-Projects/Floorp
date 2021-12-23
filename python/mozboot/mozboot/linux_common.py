@@ -20,9 +20,7 @@ class SccacheInstall(object):
         pass
 
     def ensure_sccache_packages(self):
-        from mozboot import sccache
-
-        self.install_toolchain_artifact(sccache.LINUX_SCCACHE)
+        self.install_toolchain_artifact("sccache")
 
 
 class FixStacksInstall(object):
@@ -30,9 +28,7 @@ class FixStacksInstall(object):
         pass
 
     def ensure_fix_stacks_packages(self):
-        from mozboot import fix_stacks
-
-        self.install_toolchain_artifact(fix_stacks.LINUX_FIX_STACKS)
+        self.install_toolchain_artifact("fix-stacks")
 
 
 class StyloInstall(object):
@@ -40,8 +36,6 @@ class StyloInstall(object):
         pass
 
     def ensure_stylo_packages(self):
-        from mozboot import stylo
-
         if is_non_x86_64():
             print(
                 "Cannot install bindgen clang and cbindgen packages from taskcluster.\n"
@@ -49,8 +43,8 @@ class StyloInstall(object):
             )
             return
 
-        self.install_toolchain_artifact(stylo.LINUX_CLANG)
-        self.install_toolchain_artifact(stylo.LINUX_CBINDGEN)
+        self.install_toolchain_artifact("clang")
+        self.install_toolchain_artifact("cbindgen")
 
 
 class NasmInstall(object):
@@ -65,9 +59,7 @@ class NasmInstall(object):
             )
             return
 
-        from mozboot import nasm
-
-        self.install_toolchain_artifact(nasm.LINUX_NASM)
+        self.install_toolchain_artifact("nasm")
 
 
 class NodeInstall(object):
@@ -82,9 +74,7 @@ class NodeInstall(object):
             )
             return
 
-        from mozboot import node
-
-        self.install_toolchain_artifact(node.LINUX)
+        self.install_toolchain_artifact("node")
 
 
 class ClangStaticAnalysisInstall(object):
@@ -109,9 +99,7 @@ class MinidumpStackwalkInstall(object):
         pass
 
     def ensure_minidump_stackwalk_packages(self):
-        from mozboot import minidump_stackwalk
-
-        self.install_toolchain_artifact(minidump_stackwalk.LINUX_MINIDUMP_STACKWALK)
+        self.install_toolchain_artifact("minidump_stackwalk")
 
 
 class MobileAndroidBootstrapper(object):

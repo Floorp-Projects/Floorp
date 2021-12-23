@@ -83,6 +83,7 @@ def bootstrap_toolchain_tasks(host):
         ("x86_64", "OSX", "Darwin"): "macosx64",
         ("aarch64", "OSX", "Darwin"): "macosx64-aarch64",
         ("x86_64", "WINNT", "WINNT"): "win64",
+        ("aarch64", "WINNT", "WINNT"): "win64-aarch64",
     }.get((host.cpu, host.os, host.kernel))
     try:
         tasks = toolchain_task_definitions()
