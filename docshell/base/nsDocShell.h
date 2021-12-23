@@ -958,11 +958,13 @@ class nsDocShell final : public nsDocLoader,
   // If aSkipCheckingDynEntries is true, it will not try to remove dynamic
   // subframe entries. This is to avoid redundant RemoveDynEntries calls in all
   // children docshells.
-  void FirePageHideNotificationInternal(bool aIsUnload,
-                                        bool aSkipCheckingDynEntries);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePageHideNotificationInternal(
+      bool aIsUnload, bool aSkipCheckingDynEntries);
 
   void ThawFreezeNonRecursive(bool aThaw);
-  void FirePageHideShowNonRecursive(bool aShow);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePageHideShowNonRecursive(bool aShow);
 
   nsresult Dispatch(mozilla::TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable);
