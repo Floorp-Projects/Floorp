@@ -316,39 +316,6 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no]))
     LDFLAGS=$_SAVE_LDFLAGS
 
-    # Check for -mssse3 on $CC
-    AC_MSG_CHECKING([if toolchain supports -mssse3 option])
-    HAVE_TOOLCHAIN_SUPPORT_MSSSE3=
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS -mssse3"
-    AC_TRY_COMPILE([asm ("pmaddubsw %xmm2,%xmm3");],,AC_MSG_RESULT([yes])
-                     [HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1],
-                     AC_MSG_RESULT([no]))
-    CFLAGS=$_SAVE_CFLAGS
-
-    # Check for -msse4.1 on $CC
-    AC_MSG_CHECKING([if toolchain supports -msse4.1 option])
-    HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS -msse4.1"
-    AC_TRY_COMPILE([asm ("pmulld %xmm6,%xmm0");],,AC_MSG_RESULT([yes])
-                     [HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1],
-                     AC_MSG_RESULT([no]))
-    CFLAGS=$_SAVE_CFLAGS
-
-    case "${CPU_ARCH}" in
-    x86 | x86_64)
-      AC_MSG_CHECKING(for x86 AVX2 asm support in compiler)
-      AC_TRY_COMPILE([],
-                     [asm volatile ("vpermq      \$0xd8,%ymm0,%ymm0 \n");],
-                     result="yes", result="no")
-      AC_MSG_RESULT("$result")
-      if test "$result" = "yes"; then
-          HAVE_X86_AVX2=1
-      fi
-      ;;
-    esac
-
     DSO_LDOPTS='-shared'
     if test "$GCC_USE_GNU_LD"; then
         # Some tools like ASan use a runtime library that is only
@@ -657,12 +624,6 @@ case "$target" in
         MOZ_OPTIMIZE_FLAGS='-O2'
         MOZ_FIX_LINK_PATHS=
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE"
-        dnl Minimum reqiurement of Gecko is VS2015 or later which supports
-        dnl both SSSE3 and SSE4.1.
-        HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
-        HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
-        dnl allow AVX2 code from VS2015
-        HAVE_X86_AVX2=1
     fi
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
@@ -1841,9 +1802,6 @@ AC_SUBST_LIST(HOST_OPTIMIZE_FLAGS)
 AC_SUBST(HOST_BIN_SUFFIX)
 
 AC_SUBST(TARGET_XPCOM_ABI)
-AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
-AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
-AC_SUBST(HAVE_X86_AVX2)
 
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(BIN_SUFFIX)
