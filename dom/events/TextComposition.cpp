@@ -151,8 +151,10 @@ void TextComposition::DispatchEvent(
   if (aDispatchEvent->mMessage == eCompositionChange) {
     aDispatchEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
   }
-  EventDispatcher::Dispatch(mNode, mPresContext, aDispatchEvent, nullptr,
-                            aStatus, aCallBack);
+  RefPtr<nsINode> node = mNode;
+  RefPtr<nsPresContext> presContext = mPresContext;
+  EventDispatcher::Dispatch(node, presContext, aDispatchEvent, nullptr, aStatus,
+                            aCallBack);
 
   OnCompositionEventDispatched(aDispatchEvent);
 }
