@@ -231,6 +231,7 @@ CalleeDesc CalleeDesc::wasmTable(const TableDesc& desc, TypeIdDesc funcTypeId) {
   c.which_ = WasmTable;
   c.u.table.globalDataOffset_ = desc.globalDataOffset;
   c.u.table.minLength_ = desc.initialLength;
+  c.u.table.maxLength_ = desc.maximumLength;
   c.u.table.funcTypeId_ = funcTypeId;
   return c;
 }

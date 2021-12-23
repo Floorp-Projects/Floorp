@@ -3813,15 +3813,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                     Label* rejoin)
       DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
+  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest);
+
   // This function takes care of loading the callee's TLS and pinned regs but
   // it is the caller's responsibility to save/restore TLS or pinned regs.
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
                             const wasm::CalleeDesc& callee);
 
   // WasmTableCallIndexReg must contain the index of the indirect call.
+  // This is for wasm calls only.
   CodeOffset wasmCallIndirect(const wasm::CallSiteDesc& desc,
                               const wasm::CalleeDesc& callee,
-                              bool needsBoundsCheck);
+                              bool needsBoundsCheck,
+                              mozilla::Maybe<uint32_t> tableSize);
+
+  // WasmTableCallIndexReg must contain the index of the indirect call.
+  // This is for asm.js calls only.
+  CodeOffset asmCallIndirect(const wasm::CallSiteDesc& desc,
+                             const wasm::CalleeDesc& callee);
 
   // This function takes care of loading the pointer to the current instance
   // as the implicit first argument. It preserves TLS and pinned registers.

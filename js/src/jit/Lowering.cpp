@@ -5358,19 +5358,26 @@ void LIRGenerator::visitWasmStackResult(MWasmStackResult* ins) {
 
 void LIRGenerator::visitWasmCall(MWasmCall* ins) {
   bool needsBoundsCheck = true;
+  mozilla::Maybe<uint32_t> tableSize;
+
   if (ins->callee().isTable()) {
     MDefinition* index = ins->getOperand(ins->numArgs());
 
-    if (ins->callee().which() == wasm::CalleeDesc::WasmTable &&
-        index->isConstant()) {
-      if (uint32_t(index->toConstant()->toInt32()) <
-          ins->callee().wasmTableMinLength()) {
+    if (ins->callee().which() == wasm::CalleeDesc::WasmTable) {
+      uint32_t minLength = ins->callee().wasmTableMinLength();
+      mozilla::Maybe<uint32_t> maxLength = ins->callee().wasmTableMaxLength();
+      if (index->isConstant() &&
+          uint32_t(index->toConstant()->toInt32()) < minLength) {
         needsBoundsCheck = false;
+      }
+      if (maxLength.isSome() && *maxLength == minLength) {
+        tableSize = maxLength;
       }
     }
   }
 
-  auto* lir = allocateVariadic<LWasmCall>(ins->numOperands(), needsBoundsCheck);
+  auto* lir = allocateVariadic<LWasmCall>(ins->numOperands(), needsBoundsCheck,
+                                          tableSize);
   if (!lir) {
     abort(AbortReason::Alloc, "OOM: LIRGenerator::lowerWasmCall");
     return;

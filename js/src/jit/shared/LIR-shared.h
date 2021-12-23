@@ -7,6 +7,7 @@
 #ifndef jit_shared_LIR_shared_h
 #define jit_shared_LIR_shared_h
 
+#include "mozilla/Maybe.h"
 #include "jit/AtomicOp.h"
 #include "jit/shared/Assembler-shared.h"
 #include "util/Memory.h"
@@ -3179,13 +3180,16 @@ class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
 
 class LWasmCall : public LVariadicInstruction<0, 0> {
   bool needsBoundsCheck_;
+  mozilla::Maybe<uint32_t> tableSize_;
 
  public:
   LIR_HEADER(WasmCall);
 
-  LWasmCall(uint32_t numOperands, bool needsBoundsCheck)
+  LWasmCall(uint32_t numOperands, bool needsBoundsCheck,
+            mozilla::Maybe<uint32_t> tableSize = mozilla::Nothing())
       : LVariadicInstruction(classOpcode, numOperands),
-        needsBoundsCheck_(needsBoundsCheck) {
+        needsBoundsCheck_(needsBoundsCheck),
+        tableSize_(tableSize) {
     this->setIsCall();
   }
 
@@ -3201,6 +3205,7 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
   }
 
   bool needsBoundsCheck() const { return needsBoundsCheck_; }
+  mozilla::Maybe<uint32_t> tableSize() const { return tableSize_; }
 };
 
 class LWasmRegisterResult : public LInstructionHelper<1, 0, 0> {
