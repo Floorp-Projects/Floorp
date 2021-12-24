@@ -25,7 +25,7 @@
             android:maxWidth="200dp"
             android:text="@string/onboarding_home_screen_jump_back_contextual_hint"
             android:textAppearance="@style/Body16TextStyle"
-            android:textColor="@color/contrast_text_light_theme"
+            android:textColor="@color/fx_mobile_private_text_color_primary"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/close_info_banner"
@@ -45,7 +45,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_close"
-            app:tint="@color/contrast_text_light_theme" />
+            app:tint="@color/fx_mobile_private_text_color_primary" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView

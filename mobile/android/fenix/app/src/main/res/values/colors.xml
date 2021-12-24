@@ -136,7 +136,6 @@
 
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
-    <color name="contrast_text_light_theme">@color/photonLightGrey05</color>
     <color name="foundation_light_theme">@color/photonLightGrey20</color>
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
@@ -206,7 +205,7 @@
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
     <color name="secondary_text_normal_theme">@color/photonGrey50</color>
-    <color name="contrast_text_normal_theme">@color/contrast_text_light_theme</color>
+    <color name="contrast_text_normal_theme">@color/photonLightGrey05</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="foundation_normal_theme">@color/foundation_light_theme</color>
     <color name="above_normal_theme">@color/photonWhite</color>
