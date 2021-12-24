@@ -1253,7 +1253,7 @@ already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
   if (mCurrentContext) {
     return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
   } else if (mOffscreenDisplay) {
-    return mOffscreenDisplay->GetSurfaceSnapshot(aOutAlphaType);
+    return mOffscreenDisplay->GetSurfaceSnapshot();
   }
   return nullptr;
 }

@@ -7,17 +7,28 @@
 #ifndef MOZILLA_DOM_OFFSCREENCANVASDISPLAYHELPER_H_
 #define MOZILLA_DOM_OFFSCREENCANVASDISPLAYHELPER_H_
 
-#include "CanvasRenderingContextHelper.h"
 #include "ImageContainer.h"
+#include "GLContextTypes.h"
+#include "mozilla/dom/CanvasRenderingContextHelper.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
-#include "nsICanvasRenderingContextInternal.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla::dom {
 class HTMLCanvasElement;
+
+struct OffscreenCanvasDisplayData final {
+  mozilla::gfx::IntSize mSize = {0, 0};
+  bool mDoPaintCallbacks = false;
+  bool mIsOpaque = true;
+  bool mIsAlphaPremult = true;
+  mozilla::gl::OriginPos mOriginPos = gl::OriginPos::TopLeft;
+};
 
 class OffscreenCanvasDisplayHelper final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OffscreenCanvasDisplayHelper)
@@ -32,20 +43,13 @@ class OffscreenCanvasDisplayHelper final {
 
   void UpdateContext(CanvasContextType aType, int32_t aChildId);
 
-  void UpdateParameters(uint32_t aWidth, uint32_t aHeight, bool aHasAlpha,
-                        bool aIsPremultiplied, bool aIsOriginBottomLeft);
-
   bool CommitFrameToCompositor(nsICanvasRenderingContextInternal* aContext,
-                               layers::TextureType aTextureType);
+                               layers::TextureType aTextureType,
+                               const Maybe<OffscreenCanvasDisplayData>& aData);
 
   void Destroy();
 
-  mozilla::Maybe<mozilla::layers::SurfaceDescriptor> GetFrontBuffer(
-      mozilla::WebGLFramebufferJS*, const bool webvr = false);
-
-  already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
-      gfxAlphaType* out_alphaType = nullptr);
-
+  already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot();
   already_AddRefed<mozilla::layers::Image> GetAsImage();
 
  private:
@@ -59,17 +63,13 @@ class OffscreenCanvasDisplayHelper final {
   RefPtr<gfx::SourceSurface> mFrontBufferSurface;
   Maybe<layers::SurfaceDescriptor> mFrontBufferDesc;
 
+  OffscreenCanvasDisplayData mData;
   CanvasContextType mType = CanvasContextType::NoContext;
-  uint32_t mWidth;
-  uint32_t mHeight;
   uint32_t mContextManagerId = 0;
   int32_t mContextChildId = 0;
   mozilla::layers::ImageContainer::ProducerID mImageProducerID;
   mozilla::layers::ImageContainer::FrameID mLastFrameID = 0;
   bool mPendingInvalidate = false;
-  bool mHasAlpha = false;
-  bool mIsPremultiplied = false;
-  bool mIsOriginBottomLeft = false;
 };
 
 }  // namespace mozilla::dom
