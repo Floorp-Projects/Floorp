@@ -106,7 +106,7 @@
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/photonViolet50</color>
     <color name="accent_bright_normal_theme">@color/photonViolet70</color>
-    <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="accent_high_contrast_normal_theme">@color/photonViolet40</color>
     <color name="tab_ring_normal_theme">@color/accent_normal_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
@@ -114,7 +114,7 @@
     <color name="disabled_normal_theme">@color/photonLightGrey05A40</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
-    <color name="accent_on_dark_background_normal_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="accent_on_dark_background_normal_theme">@color/photonViolet40</color>
     <color name="toolbar_start_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_center_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_end_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
@@ -124,7 +124,7 @@
     <color name="sync_disconnected_background_normal_theme">#5B5846</color>
     <color name="swipe_delete_background_normal_theme">@color/photonDarkGrey20</color>
     <color name="onboarding_card_background_start_gradient_normal_theme">@color/photonViolet70</color>
-    <color name="onboarding_card_background_end_gradient_normal_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="onboarding_card_background_end_gradient_normal_theme">@color/photonViolet40</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/accent_normal_theme</color>
     <color name="onboarding_illustration_deselected_normal_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_normal_theme</color>
@@ -132,9 +132,9 @@
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonViolet50</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen60</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
-    <color name="select_login_header_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="select_credit_card_header_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="menu_item_button_normal_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="select_login_header_normal_theme">@color/photonViolet40</color>
+    <color name="select_credit_card_header_normal_theme">@color/photonViolet40</color>
+    <color name="menu_item_button_normal_theme">@color/photonViolet40</color>
     <color name="recently_used_share_theme">@color/photonDarkGrey10</color>
 
     <color name="mozac_widget_favicon_background_normal_theme">@color/photonDarkGrey50</color>
