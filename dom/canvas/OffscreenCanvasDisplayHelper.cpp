@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/SVGObserverUtils.h"
+#include "nsICanvasRenderingContextInternal.h"
 
 namespace mozilla::dom {
 
@@ -17,9 +18,10 @@ OffscreenCanvasDisplayHelper::OffscreenCanvasDisplayHelper(
     HTMLCanvasElement* aCanvasElement, uint32_t aWidth, uint32_t aHeight)
     : mMutex("mozilla::dom::OffscreenCanvasDisplayHelper"),
       mCanvasElement(aCanvasElement),
-      mWidth(aWidth),
-      mHeight(aHeight),
-      mImageProducerID(layers::ImageContainer::AllocateProducerID()) {}
+      mImageProducerID(layers::ImageContainer::AllocateProducerID()) {
+  mData.mSize.width = aWidth;
+  mData.mSize.height = aHeight;
+}
 
 OffscreenCanvasDisplayHelper::~OffscreenCanvasDisplayHelper() = default;
 
@@ -56,30 +58,10 @@ void OffscreenCanvasDisplayHelper::UpdateContext(CanvasContextType aType,
   MaybeQueueInvalidateElement();
 }
 
-void OffscreenCanvasDisplayHelper::UpdateParameters(uint32_t aWidth,
-                                                    uint32_t aHeight,
-                                                    bool aHasAlpha,
-                                                    bool aIsPremultiplied,
-                                                    bool aIsOriginBottomLeft) {
-  MutexAutoLock lock(mMutex);
-  if (!mCanvasElement) {
-    // Our weak reference to the canvas element has been cleared, so we cannot
-    // present directly anymore.
-    return;
-  }
-
-  mWidth = aWidth;
-  mHeight = aHeight;
-  mHasAlpha = aHasAlpha;
-  mIsPremultiplied = aIsPremultiplied;
-  mIsOriginBottomLeft = aIsOriginBottomLeft;
-
-  MaybeQueueInvalidateElement();
-}
-
 bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     nsICanvasRenderingContextInternal* aContext,
-    layers::TextureType aTextureType) {
+    layers::TextureType aTextureType,
+    const Maybe<OffscreenCanvasDisplayData>& aData) {
   MutexAutoLock lock(mMutex);
 
   gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
@@ -91,20 +73,36 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     return false;
   }
 
-  if (!mHasAlpha) {
+  if (aData) {
+    mData = aData.ref();
+    MaybeQueueInvalidateElement();
+  }
+
+  if (mData.mIsOpaque) {
     flags |= layers::TextureFlags::IS_OPAQUE;
     format = gfx::SurfaceFormat::B8G8R8X8;
-  } else if (!mIsPremultiplied) {
+  } else if (!mData.mIsAlphaPremult) {
     flags |= layers::TextureFlags::NON_PREMULTIPLIED;
   }
 
-  if (mIsOriginBottomLeft) {
-    flags |= layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
+  switch (mData.mOriginPos) {
+    case gl::OriginPos::BottomLeft:
+      flags |= layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
+      break;
+    case gl::OriginPos::TopLeft:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled origin position!");
+      break;
   }
 
   auto imageBridge = layers::ImageBridgeChild::GetSingleton();
   if (!imageBridge) {
     return false;
+  }
+
+  if (mData.mDoPaintCallbacks) {
+    aContext->OnBeforePaintTransaction();
   }
 
   RefPtr<layers::Image> image;
@@ -115,16 +113,20 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   if (desc) {
     RefPtr<layers::TextureClient> texture =
         layers::SharedSurfaceTextureData::CreateTextureClient(
-            *desc, format, gfx::IntSize(mWidth, mHeight), flags, imageBridge);
+            *desc, format, mData.mSize, flags, imageBridge);
     if (texture) {
       image = new layers::TextureWrapperImage(
-          texture, gfx::IntRect(0, 0, mWidth, mHeight));
+          texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
     }
   } else {
     surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ true);
     if (surface) {
       image = new layers::SourceSurfaceImage(surface);
     }
+  }
+
+  if (mData.mDoPaintCallbacks) {
+    aContext->OnDidPaintTransaction();
   }
 
   if (image) {
@@ -142,12 +144,13 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
 }
 
 void OffscreenCanvasDisplayHelper::MaybeQueueInvalidateElement() {
+  mMutex.AssertCurrentThreadOwns();
+
   if (!mPendingInvalidate) {
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "OffscreenCanvasDisplayHelper::InvalidateElement",
-        [self = RefPtr{this}]() { self->InvalidateElement(); });
-    NS_DispatchToMainThread(runnable.forget());
     mPendingInvalidate = true;
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "OffscreenCanvasDisplayHelper::InvalidateElement",
+        [self = RefPtr{this}] { self->InvalidateElement(); }));
   }
 }
 
@@ -155,32 +158,25 @@ void OffscreenCanvasDisplayHelper::InvalidateElement() {
   MOZ_ASSERT(NS_IsMainThread());
 
   HTMLCanvasElement* canvasElement;
-  uint32_t width, height;
+  gfx::IntSize size;
 
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mPendingInvalidate);
     mPendingInvalidate = false;
     canvasElement = mCanvasElement;
-    width = mWidth;
-    height = mHeight;
+    size = mData.mSize;
   }
 
   if (canvasElement) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(canvasElement);
-    canvasElement->InvalidateCanvasPlaceholder(width, height);
+    canvasElement->InvalidateCanvasPlaceholder(size.width, size.height);
     canvasElement->InvalidateCanvasContent(nullptr);
   }
 }
 
-Maybe<layers::SurfaceDescriptor> OffscreenCanvasDisplayHelper::GetFrontBuffer(
-    WebGLFramebufferJS*, const bool webvr) {
-  MutexAutoLock lock(mMutex);
-  return mFrontBufferDesc;
-}
-
 already_AddRefed<gfx::SourceSurface>
-OffscreenCanvasDisplayHelper::GetSurfaceSnapshot(gfxAlphaType* out_alphaType) {
+OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
   MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<layers::SurfaceDescriptor> desc;
@@ -196,7 +192,7 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot(gfxAlphaType* out_alphaType) {
       return surface.forget();
     }
 
-    hasAlpha = mHasAlpha;
+    hasAlpha = !mData.mIsOpaque;
     managerId = mContextManagerId;
     childId = mContextChildId;
   }

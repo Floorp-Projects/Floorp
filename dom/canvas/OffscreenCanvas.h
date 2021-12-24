@@ -8,17 +8,19 @@
 #define MOZILLA_DOM_OFFSCREENCANVAS_H_
 
 #include "gfxTypes.h"
+#include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/dom/ImageEncoder.h"
+#include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "CanvasRenderingContextHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
 
 namespace mozilla {
-
+class CancelableRunnable;
 class ErrorResult;
 
 namespace gfx {
@@ -148,10 +150,11 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   OffscreenCanvasCloneData* ToCloneData();
 
-  void UpdateParameters(uint32_t aWidth, uint32_t aHeight, bool aHasAlpha,
-                        bool aIsPremultiplied, bool aIsOriginBottomLeft);
+  void UpdateDisplayData(const OffscreenCanvasDisplayData& aData);
 
   void CommitFrameToCompositor();
+  void DequeueCommitToCompositor();
+  void QueueCommitToCompositor();
 
   virtual bool GetOpaqueAttr() override { return false; }
 
@@ -176,8 +179,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   bool ShouldResistFingerprinting() const;
 
-  void QueueCommitToCompositor();
-
  private:
   ~OffscreenCanvas();
 
@@ -201,6 +202,8 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   layers::TextureType mTextureType;
 
   RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
+  RefPtr<CancelableRunnable> mPendingCommit;
+  Maybe<OffscreenCanvasDisplayData> mPendingUpdate;
 };
 
 }  // namespace dom
