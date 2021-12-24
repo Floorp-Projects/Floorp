@@ -472,10 +472,15 @@ void ClientWebGLContext::UpdateCanvasParameters() {
 
   const auto& options = *mInitialOptions;
   const auto& size = DrawingBufferSize();
-  mOffscreenCanvas->UpdateParameters(
-      size.x, size.y, options.alpha,
-      !options.alpha || options.premultipliedAlpha,
-      /* aIsOriginBottomLeft */ true);
+
+  mozilla::dom::OffscreenCanvasDisplayData data;
+  data.mOriginPos = gl::OriginPos::BottomLeft;
+  data.mIsOpaque = !options.alpha;
+  data.mIsAlphaPremult = !options.alpha || options.premultipliedAlpha;
+  data.mSize = {size.x, size.y};
+  data.mDoPaintCallbacks = false;
+
+  mOffscreenCanvas->UpdateDisplayData(data);
 }
 
 layers::LayersBackend ClientWebGLContext::GetCompositorBackendType() const {
