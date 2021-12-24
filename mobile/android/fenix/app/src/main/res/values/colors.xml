@@ -141,7 +141,6 @@
     <color name="dark_grey_90_gradient_end">#0015141A</color>
 
     <!-- Dark theme color palette -->
-    <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
 
     <!-- Tab Tray -->
@@ -211,7 +210,7 @@
     <color name="sync_disconnected_icon_fill_normal_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
     <color name="swipe_delete_background_normal_theme">@color/photonLightGrey30</color>
-    <color name="onboarding_card_background_start_gradient_normal_theme">@color/accent_bright_dark_theme</color>
+    <color name="onboarding_card_background_start_gradient_normal_theme">@color/photonViolet70</color>
     <color name="onboarding_card_background_end_gradient_normal_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/photonViolet70</color>
     <color name="onboarding_illustration_deselected_normal_theme">#9915141A</color>
