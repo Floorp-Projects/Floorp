@@ -207,8 +207,6 @@
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonInk20</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen70</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue50</color>
-    <color name="select_login_header_normal_theme">@color/photonViolet70</color>
-    <color name="select_credit_card_header_normal_theme">@color/photonViolet70</color>
     <color name="mozac_widget_favicon_background_normal_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/photonLightGrey30</color>
     <color name="menu_item_button_normal_theme">@color/photonViolet70</color>

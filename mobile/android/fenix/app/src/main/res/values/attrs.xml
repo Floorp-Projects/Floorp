@@ -88,8 +88,7 @@
         <attr name="onboardingKeyDescription" format="reference" />
     </declare-styleable>
 
-    <attr name="selectLoginHeaderTextColor" format="reference"/>
-    <attr name="selectCreditCardHeaderTextColor" format="reference"/>
+    <attr name="selectPromptHeaderTextColor" format="reference"/>
 
     <declare-styleable name="TextPercentageSeekBarPreference">
         <attr format="integer" name="min"/>

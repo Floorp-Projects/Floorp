@@ -28,8 +28,8 @@
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
         <item name="mozacInputLayoutErrorIconColor"
             tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
-        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectLoginHeaderTextStyle</item>
-        <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectCreditCardHeaderTextStyle</item>
+        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
+        <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
         <!-- Design system color attributes -->
         <!-- Small heading, Text link -->
@@ -80,9 +80,8 @@
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_normal_theme</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
-        <item name="selectLoginHeaderTextColor">@color/select_login_header_normal_theme</item>
-        <item name="selectCreditCardHeaderTextColor">@color/select_credit_card_header_normal_theme</item>
         <item name="preferenceSectionHeader">@color/fx_mobile_text_color_accent</item>
+        <item name="selectPromptHeaderTextColor">@color/fx_mobile_text_color_accent</item>
         <item name="menuItemButtonTintColor">@color/menu_item_button_normal_theme</item>
         <item name="recentlyUsedShareMenu">@color/recently_used_share_theme</item>
 
@@ -155,13 +154,8 @@
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
     </style>
 
-    <style name="SelectLoginHeaderTextStyle" parent="Header16TextStyle">
-        <item name="android:textColor">?selectLoginHeaderTextColor</item>
-        <item name="drawableTint">?accentHighContrast</item>
-    </style>
-
-    <style name="SelectCreditCardHeaderTextStyle" parent="Header16TextStyle">
-        <item name="android:textColor">?selectCreditCardHeaderTextColor</item>
+    <style name="SelectPromptHeaderTextStyle" parent="Header16TextStyle">
+        <item name="android:textColor">?selectPromptHeaderTextColor</item>
         <item name="drawableTint">?accentHighContrast</item>
     </style>
 
@@ -213,8 +207,8 @@
             tools:ignore="UnusedResources">@color/destructive_private_theme</item>
         <item name="mozacInputLayoutErrorIconColor"
             tools:ignore="UnusedResources">@color/destructive_private_theme</item>
-        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectLoginHeaderTextStyle</item>
-        <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectCreditCardHeaderTextStyle</item>
+        <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
+        <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
         <!-- Design system color attributes -->
         <!-- Small heading, Text link -->
@@ -263,8 +257,7 @@
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_private_theme</item>
         <item name="awesomeBarIndicatorColor">@color/photonGreen60</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/photonBlue40</item>
-        <item name="selectLoginHeaderTextColor">@color/accent_high_contrast_private_theme</item>
-        <item name="selectCreditCardHeaderTextColor">@color/accent_high_contrast_private_theme</item>
+        <item name="selectPromptHeaderTextColor">@color/accent_high_contrast_private_theme</item>
         <item name="preferenceSectionHeader">@color/photonViolet40</item>
         <item name="menuItemButtonTintColor">@color/accent_high_contrast_private_theme</item>
 
