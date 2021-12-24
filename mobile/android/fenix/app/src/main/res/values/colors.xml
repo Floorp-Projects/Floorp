@@ -26,7 +26,7 @@
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
-    <color name="fx_mobile_action_color_primary" tools:ignore="UnusedResources">@color/photonInk20</color>
+    <color name="fx_mobile_action_color_primary">@color/photonInk20</color>
     <!-- Secondary button, Chip -->
     <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <!-- Checkbox default, Radio button default -->
@@ -204,7 +204,6 @@
     <color name="neutral_faded_normal_theme">@color/photonGrey20</color>
     <color name="destructive_normal_theme">@color/photonRed70</color>
     <color name="disabled_normal_theme">#6620123A</color>
-    <color name="snackbar_normal_theme">@color/accent_light_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_bright_light_theme</color>
     <color name="toolbar_start_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_center_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
