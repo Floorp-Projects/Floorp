@@ -180,11 +180,14 @@ linux64-liblowercase:
 
 linux64-wine:
     description: "Wine build for Windows Cross Compile"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(wine)
         tier: 1
     worker:
         max-run-time: 10800
+    run-on-projects: [trunk]
     run:
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.zst
