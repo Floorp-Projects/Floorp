@@ -1250,9 +1250,12 @@ void HTMLCanvasElement::SetFrameCapture(
 
 already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
     gfxAlphaType* const aOutAlphaType) {
-  if (!mCurrentContext) return nullptr;
-
-  return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  if (mCurrentContext) {
+    return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  } else if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetSurfaceSnapshot(aOutAlphaType);
+  }
+  return nullptr;
 }
 
 layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
