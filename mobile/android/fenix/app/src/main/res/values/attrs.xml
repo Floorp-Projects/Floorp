@@ -3,13 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <!-- Design system color attributes -->
+    <!-- Small heading, Text link -->
+    <attr name="textAccent" format="reference" />
+
     <!-- Color palette attributes -->
     <attr name="primaryText" format="reference" />
     <attr name="secondaryText" format="reference" />
     <attr name="contrastText" format="reference" />
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />
-    <attr name="aboutLink" format="reference" />
     <attr name="accentHighContrast" format="reference" />
     <attr name="accentUsedOnDarkBackground" format="reference" />
     <attr name="tabRing" format="reference" />

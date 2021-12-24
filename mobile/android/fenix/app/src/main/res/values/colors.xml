@@ -118,7 +118,7 @@
     <color name="fx_mobile_private_text_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <color name="fx_mobile_private_text_color_tertiary" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <color name="fx_mobile_private_text_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
-    <color name="fx_mobile_private_text_color_action" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_private_text_color_accent">@color/photonViolet40</color>
     <color name="fx_mobile_private_text_color_warning_light" tools:ignore="UnusedResources">@color/photonRed80</color>
     <color name="fx_mobile_private_text_color_warning_dark" tools:ignore="UnusedResources">@color/photonRed40</color>
 
@@ -136,7 +136,6 @@
     <color name="primary_text_light_theme">@color/photonInk80</color>
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
-    <color name="about_link_normal_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
@@ -163,7 +162,6 @@
     <color name="above_private_theme">@color/photonInk50</color>
     <color name="accent_private_theme">@color/photonViolet50</color>
     <color name="accent_bright_private_theme">@color/photonViolet70</color>
-    <color name="about_link_private_theme">@color/photonViolet40</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
