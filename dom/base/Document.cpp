@@ -13682,7 +13682,7 @@ void Document::MaybeResolveReadyForIdle() {
   IgnoredErrorResult rv;
   Promise* readyPromise = GetDocumentReadyForIdle(rv);
   if (readyPromise) {
-    readyPromise->MaybeResolve(this);
+    readyPromise->MaybeResolveWithUndefined();
   }
 }
 
