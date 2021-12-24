@@ -82,7 +82,7 @@
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
         <item name="selectLoginHeaderTextColor">@color/select_login_header_normal_theme</item>
         <item name="selectCreditCardHeaderTextColor">@color/select_credit_card_header_normal_theme</item>
-        <item name="preferenceSectionHeader">@color/preference_section_header_normal_theme</item>
+        <item name="preferenceSectionHeader">@color/fx_mobile_text_color_accent</item>
         <item name="menuItemButtonTintColor">@color/menu_item_button_normal_theme</item>
         <item name="recentlyUsedShareMenu">@color/recently_used_share_theme</item>
 

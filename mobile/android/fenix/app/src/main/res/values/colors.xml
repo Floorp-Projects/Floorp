@@ -141,7 +141,6 @@
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
-    <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
 
     <!-- Dark theme color palette -->
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
