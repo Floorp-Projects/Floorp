@@ -18,7 +18,7 @@ fun BrowserMenu.showWithTheme(view: View) {
         (popupMenu.contentView as? CardView)?.setCardBackgroundColor(
             ContextCompat.getColor(
                 view.context,
-                R.color.foundation_normal_theme
+                R.color.fx_mobile_layer_color_1
             )
         )
     }

@@ -6,7 +6,7 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 <item>
     <shape>
-        <solid android:color="@color/foundation_normal_theme" />
+        <solid android:color="@color/fx_mobile_layer_color_1" />
     </shape>
 </item>
 <item android:bottom="-2dp" android:left="-2dp" android:right="-2dp">

@@ -14,6 +14,6 @@
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">@color/foundation_normal_theme</item>
+        <item name="android:navigationBarColor">@color/fx_mobile_layer_color_1</item>
     </style>
 </resources>

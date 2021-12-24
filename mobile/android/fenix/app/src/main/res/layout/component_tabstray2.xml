@@ -9,7 +9,7 @@
     style="@style/BottomSheetModal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTint="@color/foundation_normal_theme"
+    android:backgroundTint="@color/fx_mobile_layer_color_1"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     tools:ignore="MozMultipleConstraintLayouts">
 
@@ -28,7 +28,7 @@
         android:id="@+id/info_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/foundation_normal_theme"
+        android:background="@color/fx_mobile_layer_color_1"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@+id/topBar" />
 
@@ -36,7 +36,7 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="@color/foundation_normal_theme"
+        android:background="@color/fx_mobile_layer_color_1"
         android:importantForAccessibility="no"
         app:layout_constraintTop_toBottomOf="@+id/handle" />
 
@@ -78,7 +78,7 @@
         android:id="@+id/tab_layout"
         android:layout_width="0dp"
         android:layout_height="80dp"
-        android:background="@color/foundation_normal_theme"
+        android:background="@color/fx_mobile_layer_color_1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/handle"
         app:layout_constraintWidth_percent="0.5"

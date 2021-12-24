@@ -19,12 +19,12 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.TabstrayMultiselectItemsBinding
 import org.mozilla.fenix.tabstray.NavigationInteractor
+import org.mozilla.fenix.tabstray.TabsTrayAction.ExitSelectMode
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState
-import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.TabsTrayAction.ExitSelectMode
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode.Select
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 
 /**
@@ -123,7 +123,7 @@ class SelectionBannerBinding(
             val colorResource = if (isSelectMode) {
                 R.color.accent_normal_theme
             } else {
-                R.color.foundation_normal_theme
+                R.color.fx_mobile_layer_color_1
             }
 
             val color = ContextCompat.getColor(backgroundView.context, colorResource)

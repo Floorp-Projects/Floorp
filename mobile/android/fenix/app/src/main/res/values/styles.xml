@@ -12,7 +12,7 @@
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">@color/foundation_normal_theme</item>
+        <item name="android:windowBackground">@color/fx_mobile_layer_color_1</item>
         <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
         <item name="android:textColorPrimary">@color/state_list_text_color</item>
@@ -48,7 +48,7 @@
         <item name="accentBright">@color/accent_bright_normal_theme</item>
         <item name="aboutLink">@color/about_link_normal_theme</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
-        <item name="foundation">@color/foundation_normal_theme</item>
+        <item name="foundation">@color/fx_mobile_layer_color_1</item>
         <item name="above">@color/above_normal_theme</item>
         <item name="inset">@color/inset_normal_theme</item>
         <item name="tabRing">@color/tab_ring_normal_theme</item>
@@ -98,7 +98,7 @@
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
-        <item name="homeBackground">@color/foundation_normal_theme</item>
+        <item name="homeBackground">@color/fx_mobile_layer_color_1</item>
         <item name="bottomBarBackground">@drawable/home_bottom_bar_background</item>
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
@@ -595,7 +595,7 @@
     <!-- Tab Tray does not present a private theme, so it needs to be separate from other bottom sheet styles -->
     <style name="TabTrayDialogStyleBase" parent="BottomSheetBase">
         <item name="bottomSheetStyle">@style/BottomSheetModal</item>
-        <item name="android:colorBackground">@color/foundation_normal_theme</item>
+        <item name="android:colorBackground">@color/fx_mobile_layer_color_1</item>
     </style>
 
     <style name="TabTrayDialogStyle" parent="TabTrayDialogStyleBase" />

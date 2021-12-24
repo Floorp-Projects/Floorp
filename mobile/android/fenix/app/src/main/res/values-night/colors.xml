@@ -7,7 +7,7 @@
 
     <!-- Layers -->
     <!-- Default Screen, Search, Frontlayer background -->
-    <color name="fx_mobile_layer_color_1" tools:ignore="UnusedResources">@color/photonDarkGrey80</color>
+    <color name="fx_mobile_layer_color_1">@color/photonDarkGrey80</color>
     <!-- Card background, Menu background -->
     <color name="fx_mobile_layer_color_2" tools:ignore="UnusedResources">@color/photonDarkGrey50</color>
     <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
@@ -100,7 +100,6 @@
     <color name="secondary_text_normal_theme">#A7A2B7</color>
     <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
-    <color name="foundation_normal_theme">@color/photonDarkGrey80</color>
     <color name="above_normal_theme">@color/photonDarkGrey50</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/photonViolet50</color>
@@ -116,9 +115,9 @@
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
     <color name="snackbar_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="toolbar_start_gradient_normal_theme">@color/foundation_normal_theme</color>
-    <color name="toolbar_center_gradient_normal_theme">@color/foundation_normal_theme</color>
-    <color name="toolbar_end_gradient_normal_theme">@color/foundation_normal_theme</color>
+    <color name="toolbar_start_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
+    <color name="toolbar_center_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
+    <color name="toolbar_end_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_divider_color_normal_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_normal_theme">#FFF36E</color>
@@ -163,7 +162,7 @@
     <!--Top site colors -->
     <color name="top_site_pager_dot">@color/photonDarkGrey40</color>
     <color name="top_site_pager_dot_selected">@color/photonDarkGrey05</color>
-    <color name="top_site_pin_icon_color">@color/foundation_light_theme</color>
+    <color name="top_site_pin_icon_color">@color/photonLightGrey20</color>
     <color name="top_sites_border_color">@color/photonDarkGrey90</color>
 
     <!-- Collection icons-->

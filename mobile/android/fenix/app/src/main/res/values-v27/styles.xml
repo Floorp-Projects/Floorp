@@ -48,6 +48,6 @@
     <style name="TabTrayDialogStyle" parent="TabTrayDialogStyleBase">
         <item name="android:navigationBarDividerColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar">@bool/theme_is_light</item>
-        <item name="android:navigationBarColor">@color/foundation_normal_theme</item>
+        <item name="android:navigationBarColor">@color/fx_mobile_layer_color_1</item>
     </style>
 </resources>

@@ -117,7 +117,7 @@ class Core(
             enterpriseRootsEnabled = context.settings().allowThirdPartyRootCerts,
             clearColor = ContextCompat.getColor(
                 context,
-                R.color.foundation_normal_theme
+                R.color.fx_mobile_layer_color_1
             )
         )
 
