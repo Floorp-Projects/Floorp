@@ -1811,7 +1811,7 @@ int32_t GetUnicharStringWidth(Span<const char16_t> aString) {
   int32_t width = 0;
   for (auto iter = aString.begin(); iter != aString.end(); ++iter) {
     char32_t c = *iter;
-    if (NS_IS_HIGH_SURROGATE(c) && iter != aString.end() &&
+    if (NS_IS_HIGH_SURROGATE(c) && (iter + 1) != aString.end() &&
         NS_IS_LOW_SURROGATE(*(iter + 1))) {
       c = SURROGATE_TO_UCS4(c, *++iter);
     }
