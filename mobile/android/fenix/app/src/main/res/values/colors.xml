@@ -323,7 +323,6 @@
 
     <!-- Button Colors -->
     <color name="grey_button_color">@color/photonLightGrey30</color>
-    <color name="destructive_button_text_color">@color/destructive_normal_theme</color>
     <color name="button_text_color">@color/photonInk20</color>
 
     <!-- Search Widget -->

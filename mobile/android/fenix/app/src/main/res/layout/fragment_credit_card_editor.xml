@@ -182,7 +182,7 @@
                 android:padding="10dp"
                 android:text="@string/credit_cards_delete_card_button"
                 android:textAllCaps="false"
-                android:textColor="@color/destructive_button_text_color"
+                android:textColor="@color/destructive_normal_theme"
                 android:visibility="gone"
                 app:fontFamily="@font/metropolis_semibold"
                 app:layout_constraintBottom_toBottomOf="parent"

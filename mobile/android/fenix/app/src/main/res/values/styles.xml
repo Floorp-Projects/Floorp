@@ -326,8 +326,8 @@
     </style>
 
     <style name="DestructiveButton" parent="NeutralButton">
-        <item name="iconTint">@color/destructive_button_text_color</item>
-        <item name="android:textColor">@color/destructive_button_text_color</item>
+        <item name="iconTint">@color/destructive_normal_theme</item>
+        <item name="android:textColor">@color/destructive_normal_theme</item>
     </style>
 
     <style name="PositiveButton" parent="NeutralButton">
