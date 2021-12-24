@@ -137,7 +137,6 @@
 
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
-    <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
@@ -166,7 +165,7 @@
     <color name="disabled_private_theme">@color/photonLightGrey05A40</color>
     <color name="scrimStart_private_theme">#F520123A</color>
     <color name="scrimEnd_private_theme">#F515141A</color>
-    <color name="snackbar_private_theme">@color/accent_light_theme</color>
+    <color name="snackbar_private_theme">@color/photonInk20</color>
     <color name="accent_on_dark_background_private_theme">@color/accent_high_contrast_private_theme</color>
     <color name="toolbar_start_gradient_private_theme">#7529A7</color>
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
@@ -175,7 +174,7 @@
     <color name="fill_link_from_clipboard_private_theme">@color/accent_on_dark_background_private_theme</color>
     <color name="sync_disconnected_icon_fill_private_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
-    <color name="swipe_delete_background_private_theme">@color/accent_light_theme</color>
+    <color name="swipe_delete_background_private_theme">@color/photonInk20</color>
     <color name="onboarding_card_background_start_gradient_private_theme">@color/photonViolet60</color>
     <color name="onboarding_card_background_end_gradient_private_theme">@color/photonPurple50</color>
     <color name="onboarding_illustration_selected_private_theme">@color/accent_private_theme</color>
@@ -196,10 +195,10 @@
     <color name="contrast_text_normal_theme">@color/photonLightGrey05</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="inset_normal_theme">@color/photonLightGrey30</color>
-    <color name="accent_normal_theme">@color/accent_light_theme</color>
+    <color name="accent_normal_theme">@color/photonInk20</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="accent_high_contrast_normal_theme">@color/accent_light_theme</color>
-    <color name="tab_ring_normal_theme">@color/accent_light_theme</color>
+    <color name="accent_high_contrast_normal_theme">@color/photonInk20</color>
+    <color name="tab_ring_normal_theme">@color/photonInk20</color>
     <color name="neutral_normal_theme">@color/photonGrey30</color>
     <color name="neutral_faded_normal_theme">@color/photonGrey20</color>
     <color name="destructive_normal_theme">@color/photonRed70</color>
@@ -209,7 +208,7 @@
     <color name="toolbar_center_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_end_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_divider_color_normal_theme">@color/photonLightGrey50</color>
-    <color name="fill_link_from_clipboard_normal_theme">@color/accent_light_theme</color>
+    <color name="fill_link_from_clipboard_normal_theme">@color/photonInk20</color>
     <color name="sync_disconnected_icon_fill_normal_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
     <color name="swipe_delete_background_normal_theme">@color/photonLightGrey30</color>
