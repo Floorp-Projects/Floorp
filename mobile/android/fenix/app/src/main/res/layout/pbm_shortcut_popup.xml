@@ -50,7 +50,7 @@
             android:background="@drawable/rounded_gray_corners"
             android:text="@string/cfr_pos_button_text"
             android:textAllCaps="false"
-            android:textColor="@color/above_dark_theme"
+            android:textColor="@color/photonDarkGrey50"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@id/cfr_neg_button"
             app:layout_constraintEnd_toEndOf="parent"

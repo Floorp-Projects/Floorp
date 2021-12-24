@@ -18,7 +18,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/mozac_ic_check"
-            tools:tint="@color/above_dark_theme" />
+            tools:tint="@color/photonDarkGrey50" />
 
     <TextView
             android:id="@+id/migration_item_name"

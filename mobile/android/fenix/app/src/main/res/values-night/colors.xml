@@ -103,7 +103,7 @@
     <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
     <color name="foundation_normal_theme">@color/photonDarkGrey80</color>
-    <color name="above_normal_theme">@color/above_dark_theme</color>
+    <color name="above_normal_theme">@color/photonDarkGrey50</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/photonViolet50</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_dark_theme</color>
