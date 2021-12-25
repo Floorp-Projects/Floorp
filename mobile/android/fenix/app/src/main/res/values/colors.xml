@@ -166,7 +166,6 @@
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
     <color name="toolbar_end_gradient_private_theme">#383372</color>
     <color name="toolbar_divider_color_private_theme">@color/photonDarkGrey10</color>
-    <color name="fill_link_from_clipboard_private_theme">@color/accent_on_dark_background_private_theme</color>
     <color name="sync_disconnected_icon_fill_private_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
     <color name="swipe_delete_background_private_theme">@color/photonInk20</color>

@@ -250,7 +250,7 @@
         <item name="toolbarCenterGradient">@color/toolbar_center_gradient_private_theme</item>
         <item name="toolbarEndGradient">@color/toolbar_end_gradient_private_theme</item>
         <item name="toolbarDivider">@color/toolbar_divider_color_private_theme</item>
-        <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_private_theme</item>
+        <item name="fillLinkFromClipboard">@color/accent_on_dark_background_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
         <item name="swipeDeleteBackground">@color/swipe_delete_background_private_theme</item>
