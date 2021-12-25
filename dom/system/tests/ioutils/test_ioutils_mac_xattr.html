@@ -1,0 +1,90 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+
+    const ATTR = "bogus.attr";
+    const VALUE = new TextEncoder().encode("bogus");
+
+    add_task(async function test_macXAttr() {
+      const tmpDir = PathUtils.join(await PathUtils.getTempDir(), "ioutils-macos-xattr.tmp.d");
+
+      await createDir(tmpDir);
+
+      const path = PathUtils.join(tmpDir, "file.tmp");
+      ok(!await IOUtils.exists(path), "File should not exist");
+      await IOUtils.writeUTF8(path, "");
+
+      ok(
+        !await IOUtils.hasMacXAttr(path, ATTR),
+        "File does not have an extended attribute at creation"
+      );
+
+      info("Testing getting an attribute that does not exist");
+      await Assert.rejects(
+        IOUtils.getMacXAttr(path, ATTR),
+        /NotFoundError: The file `.+' does not have an extended attribute/,
+        "IOUtils::getMacXAttr rejects when the attribute does not exist"
+      );
+
+      info("Testing setting an attribute");
+      await IOUtils.setMacXAttr(path, ATTR, VALUE);
+      ok(
+        await IOUtils.hasMacXAttr(path, ATTR),
+        "File has extended attribute after setting"
+      );
+
+      {
+        info("Testing getting an attribute")
+        const value = await IOUtils.getMacXAttr(path, ATTR);
+        Assert.deepEqual(
+          Array.from(value),
+          Array.from(VALUE),
+          "Attribute value should match"
+        );
+      }
+
+      info("Testing removing an attribute");
+      await IOUtils.delMacXAttr(path, ATTR);
+      await Assert.rejects(
+        IOUtils.getMacXAttr(path, ATTR),
+        /NotFoundError: The file `.+' does not have an extended attribute/,
+        "IOUtils::delMacXAttr removes the attribute"
+      );
+
+      ok(
+        !await IOUtils.hasMacXAttr(path, ATTR),
+        "File does not have extended attribute after removing"
+      );
+
+      info("Testing removing an attribute that does not exist");
+      await Assert.rejects(
+        IOUtils.delMacXAttr(path, ATTR),
+        /NotFoundError: The file `.+' does not have an extended attribute/,
+        "IOUtils::delMacXAttr rejects when the attribute does not exist"
+      );
+
+      await cleanup(tmpDir);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>
