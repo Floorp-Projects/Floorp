@@ -202,7 +202,6 @@
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
     <color name="tab_tray_item_divider_normal_theme">@color/photonLightGrey30</color>
-    <color name="tab_tray_item_media_background_normal_theme">@color/photonInk20</color>
     <color name="tab_tray_heading_icon_inactive_normal_theme">@color/photonInk20A48</color>
     <color name="tab_tray_heading_icon_menu_normal_theme">@color/accent_normal_theme</color>
     <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonLightGrey10</color>
