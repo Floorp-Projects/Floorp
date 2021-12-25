@@ -64,9 +64,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
       gTest.window.location = "about:blank";
-      let cond = () => gTest.window.location.href == "about:blank";
-      await SimpleTest.promiseWaitForCondition(cond,
-                                               "about:blank never loaded");
+      await new Promise(r => gTest.window.onpagehide = r);
+      // The active document is updated synchronously after "pagehide" (and
+      // its associated microtasks), so, after waiting for the next global
+      // task, gTest.window will be proxying the realm associated with the
+      // "about:blank" document.
+      // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-the-session-history-with-the-new-page
+      await new Promise(r => setTimeout(r));
+      is(gTest.window.location.href, "about:blank", "location.href");
       await SimpleTest.promiseFocus(gTest.window, true);
 
       gTest.window.history.back();
