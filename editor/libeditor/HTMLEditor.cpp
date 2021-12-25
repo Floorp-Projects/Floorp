@@ -6003,10 +6003,17 @@ Element* HTMLEditor::GetActiveEditingHost(
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
     return nullptr;
   }
-  // Note that `Selection` shouldn't be in the native anonymous subtree of
-  // <input>/<textarea>, but can be in them (e.g., collapsed at {<input> - 0}).
-  // Even in such case, we need to look for an ancestor which does not have
-  // editable parent.
+
+  // Although the content shouldn't be in a native anonymous subtree, but
+  // perhaps due to a bug of Selection or Range API, it may occur.  HTMLEditor
+  // shouldn't touch native anonymous subtree so that return nullptr in such
+  // case.
+  if (MOZ_UNLIKELY(content->IsInNativeAnonymousSubtree())) {
+    return nullptr;
+  }
+
+  // Note that `Selection` can be in <input> or <textarea>.  In the case, we
+  // need to look for an ancestor which does not have editable parent.
   Element* candidateEditingHost = content->GetEditingHost();
   if (!candidateEditingHost) {
     return nullptr;
