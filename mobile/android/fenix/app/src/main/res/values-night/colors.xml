@@ -105,7 +105,6 @@
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/photonViolet50</color>
-    <color name="accent_bright_normal_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_normal_theme">@color/photonViolet40</color>
     <color name="tab_ring_normal_theme">@color/accent_normal_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>

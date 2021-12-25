@@ -49,7 +49,7 @@
         <item name="secondaryText">@color/secondary_text_normal_theme</item>
         <item name="contrastText">@color/contrast_text_normal_theme</item>
         <item name="accent">@color/accent_normal_theme</item>
-        <item name="accentBright">@color/accent_bright_normal_theme</item>
+        <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
         <item name="foundation">@color/fx_mobile_layer_color_1</item>
         <item name="above">@color/fx_mobile_layer_color_2</item>
@@ -226,7 +226,7 @@
         <item name="secondaryText">@color/secondary_text_private_theme</item>
         <item name="contrastText">@color/fx_mobile_private_text_color_primary</item>
         <item name="accent">@color/accent_private_theme</item>
-        <item name="accentBright">@color/accent_bright_private_theme</item>
+        <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_private_theme</item>
         <item name="foundation">@color/foundation_private_theme</item>
         <item name="above">@color/fx_mobile_private_layer_color_1</item>

@@ -148,7 +148,6 @@
     <color name="caption_text_private_theme">@color/photonLightGrey70</color>
     <color name="foundation_private_theme">#261E4B</color>
     <color name="accent_private_theme">@color/photonViolet50</color>
-    <color name="accent_bright_private_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
@@ -184,7 +183,6 @@
     <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="inset_normal_theme">@color/photonLightGrey30</color>
     <color name="accent_normal_theme">@color/photonInk20</color>
-    <color name="accent_bright_normal_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_normal_theme">@color/photonInk20</color>
     <color name="tab_ring_normal_theme">@color/photonInk20</color>
     <color name="neutral_normal_theme">@color/photonGrey30</color>
