@@ -123,7 +123,7 @@
     <color name="fx_mobile_private_text_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <color name="fx_mobile_private_text_color_accent">@color/photonViolet40</color>
     <color name="fx_mobile_private_text_color_warning_light" tools:ignore="UnusedResources">@color/photonRed80</color>
-    <color name="fx_mobile_private_text_color_warning_dark" tools:ignore="UnusedResources">@color/photonRed40</color>
+    <color name="fx_mobile_private_text_color_warning_dark">@color/photonRed40</color>
 
     <!-- Icon -->
     <color name="fx_mobile_private_icon_color_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
@@ -153,7 +153,6 @@
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
-    <color name="destructive_private_theme">@color/photonRed40</color>
     <color name="disabled_private_theme">@color/photonLightGrey05A40</color>
     <color name="scrimStart_private_theme">@color/photonInk80A96</color>
     <color name="scrimEnd_private_theme">@color/photonDarkGrey90A96</color>
