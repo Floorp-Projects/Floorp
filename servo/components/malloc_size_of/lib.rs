@@ -71,7 +71,6 @@ extern crate smallbitvec;
 extern crate smallvec;
 #[cfg(feature = "servo")]
 extern crate string_cache;
-extern crate thin_slice;
 #[cfg(feature = "servo")]
 extern crate time;
 #[cfg(feature = "url")]
@@ -246,24 +245,6 @@ impl<T: ?Sized> MallocShallowSizeOf for Box<T> {
 }
 
 impl<T: MallocSizeOf + ?Sized> MallocSizeOf for Box<T> {
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.shallow_size_of(ops) + (**self).size_of(ops)
-    }
-}
-
-impl<T> MallocShallowSizeOf for thin_slice::ThinBoxedSlice<T> {
-    fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        let mut n = 0;
-        unsafe {
-            n += thin_slice::ThinBoxedSlice::spilled_storage(self)
-                .map_or(0, |ptr| ops.malloc_size_of(ptr));
-            n += ops.malloc_size_of(&**self);
-        }
-        n
-    }
-}
-
-impl<T: MallocSizeOf> MallocSizeOf for thin_slice::ThinBoxedSlice<T> {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         self.shallow_size_of(ops) + (**self).size_of(ops)
     }
