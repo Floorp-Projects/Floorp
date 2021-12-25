@@ -121,7 +121,7 @@ class SelectionBannerBinding(
         // memoize to avoid setting the background unnecessarily.
         if (isPreviousModeSelect != isSelectMode) {
             val colorResource = if (isSelectMode) {
-                R.color.accent_normal_theme
+                R.color.fx_mobile_layer_color_accent
             } else {
                 R.color.fx_mobile_layer_color_1
             }
