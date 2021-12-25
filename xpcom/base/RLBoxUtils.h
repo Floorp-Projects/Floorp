@@ -24,8 +24,8 @@ class MOZ_STACK_CLASS RLBoxTransferBufferToSandbox {
                                const size_t aLen)
       : mSandbox(aSandbox), mCopied(false), mBuf(nullptr) {
     if (aBuf) {
-      mBuf = rlbox::copy_memory_or_grant_access(
-          *mSandbox, aBuf, aLen * sizeof(T), false, mCopied);
+      mBuf = rlbox::copy_memory_or_grant_access(*mSandbox, aBuf, aLen, false,
+                                                mCopied);
     }
   };
   ~RLBoxTransferBufferToSandbox() {
