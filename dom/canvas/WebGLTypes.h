@@ -257,6 +257,17 @@ class UniqueBuffer {
   // Like UniquePtr<>, but for void* and malloc/calloc/free.
   void* mBuffer;
 
+  void reset() {
+  // Believe it or not, when `free` unconditional, it was showing up
+  // in profiles, nearly 20% of time spent in MethodDispatcther<UniformData>
+  // on Aquarium.
+    if (mBuffer) {
+      free(mBuffer);
+      mBuffer = nullptr;
+    }
+  }
+
+
  public:
   static inline UniqueBuffer Alloc(const size_t byteSize) {
     return {malloc(byteSize)};
@@ -266,7 +277,9 @@ class UniqueBuffer {
 
   MOZ_IMPLICIT UniqueBuffer(void* buffer) : mBuffer(buffer) {}
 
-  ~UniqueBuffer() { free(mBuffer); }
+  ~UniqueBuffer() {
+    reset();
+  }
 
   UniqueBuffer(UniqueBuffer&& other) {
     this->mBuffer = other.mBuffer;
@@ -274,14 +287,14 @@ class UniqueBuffer {
   }
 
   UniqueBuffer& operator=(UniqueBuffer&& other) {
-    free(this->mBuffer);
+    reset();
     this->mBuffer = other.mBuffer;
     other.mBuffer = nullptr;
     return *this;
   }
 
   UniqueBuffer& operator=(void* newBuffer) {
-    free(this->mBuffer);
+    reset();
     this->mBuffer = newBuffer;
     return *this;
   }
