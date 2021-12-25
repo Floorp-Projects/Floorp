@@ -112,7 +112,7 @@
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
     <color name="destructive_normal_theme">@color/photonRed40</color>
-    <color name="disabled_normal_theme">#66FBFBFE</color>
+    <color name="disabled_normal_theme">@color/photonLightGrey05A40</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
     <color name="snackbar_normal_theme">@color/accent_bright_dark_theme</color>
