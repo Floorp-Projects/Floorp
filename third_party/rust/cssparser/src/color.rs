@@ -564,8 +564,8 @@ where
 {
     let (red, green, blue, uses_commas) = match_ignore_ascii_case! { name,
         "rgb" | "rgba" => parse_rgb_components_rgb(component_parser, arguments)?,
-        "hsl" | "hsla" => parse_hsl_hwb(component_parser, arguments, hsl_to_rgb)?,
-        "hwb" => parse_hsl_hwb(component_parser, arguments, hwb_to_rgb)?,
+        "hsl" | "hsla" => parse_hsl_hwb(component_parser, arguments, hsl_to_rgb, /* allow_comma = */ true)?,
+        "hwb" => parse_hsl_hwb(component_parser, arguments, hwb_to_rgb, /* allow_comma = */ false)?,
         _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name.to_owned().into()))),
     };
 
@@ -633,6 +633,7 @@ fn parse_hsl_hwb<'i, 't, ComponentParser>(
     component_parser: &ComponentParser,
     arguments: &mut Parser<'i, 't>,
     to_rgb: impl FnOnce(f32, f32, f32) -> (f32, f32, f32),
+    allow_comma: bool,
 ) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
@@ -646,7 +647,7 @@ where
     let hue = hue_normalized_degrees / 360.;
 
     // Saturation and lightness are clamped to 0% ... 100%
-    let uses_commas = arguments.try_parse(|i| i.expect_comma()).is_ok();
+    let uses_commas = allow_comma && arguments.try_parse(|i| i.expect_comma()).is_ok();
 
     let first_percentage = component_parser.parse_percentage(arguments)?.max(0.).min(1.);
 
