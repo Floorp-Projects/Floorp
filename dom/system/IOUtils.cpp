@@ -59,6 +59,8 @@
 
 #if defined(XP_WIN)
 #  include "nsILocalFileWin.h"
+#elif defined(XP_MACOSX)
+#  include "nsILocalFileMac.h"
 #endif
 
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
@@ -156,6 +158,9 @@ template <typename T>
 static void ResolveJSPromise(Promise* aPromise, T&& aValue) {
   if constexpr (std::is_same_v<T, Ok>) {
     aPromise->MaybeResolveWithUndefined();
+  } else if constexpr (std::is_same_v<T, nsTArray<uint8_t>>) {
+    TypedArrayCreator<Uint8Array> array(aValue);
+    aPromise->MaybeResolve(array);
   } else {
     aPromise->MaybeResolve(std::forward<T>(aValue));
   }
@@ -241,6 +246,9 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
     case NS_ERROR_ILLEGAL_VALUE:
       aPromise->MaybeRejectWithDataError(
           errMsg.refOr("Argument is not allowed"_ns));
+      break;
+    case NS_ERROR_NOT_AVAILABLE:
+      aPromise->MaybeRejectWithNotFoundError(errMsg.refOr("Unavailable"_ns));
       break;
     case NS_ERROR_ABORT:
       aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
@@ -773,6 +781,84 @@ already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
                            [file = std::move(file), setAttrs, clearAttrs]() {
                              return SetWindowsAttributesSync(file, setAttrs,
                                                              clearAttrs);
+                           });
+  });
+}
+
+#elif defined(XP_MACOSX)
+
+/* static */
+already_AddRefed<Promise> IOUtils::HasMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    DispatchAndResolve<bool>(
+        state->mEventQueue, promise,
+        [file = std::move(file), attr = nsCString(aAttr)]() {
+          return HasMacXAttrSync(file, attr);
+        });
+  });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::GetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    DispatchAndResolve<nsTArray<uint8_t>>(
+        state->mEventQueue, promise,
+        [file = std::move(file), attr = nsCString(aAttr)]() {
+          return GetMacXAttrSync(file, attr);
+        });
+  });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::SetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr,
+                                               const Uint8Array& aValue) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    aValue.ComputeState();
+    nsTArray<uint8_t> value;
+
+    if (!value.AppendElements(aValue.Data(), aValue.Length(), fallible)) {
+      RejectJSPromise(
+          promise,
+          IOError(NS_ERROR_OUT_OF_MEMORY)
+              .WithMessage(
+                  "Could not allocate buffer to set extended attribute"));
+      return;
+    }
+
+    DispatchAndResolve<Ok>(state->mEventQueue, promise,
+                           [file = std::move(file), attr = nsCString(aAttr),
+                            value = std::move(value)] {
+                             return SetMacXAttrSync(file, attr, value);
+                           });
+  });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::DelMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+    DispatchAndResolve<Ok>(state->mEventQueue, promise,
+                           [file = std::move(file), attr = nsCString(aAttr)] {
+                             return DelMacXAttrSync(file, attr);
                            });
   });
 }
@@ -1538,7 +1624,95 @@ Result<Ok, IOUtils::IOError> IOUtils::SetWindowsAttributesSync(
   return Ok{};
 }
 
-#endif  // XP_WIN
+#elif defined(XP_MACOSX)
+
+/* static */
+Result<bool, IOUtils::IOError> IOUtils::HasMacXAttrSync(
+    nsIFile* aFile, const nsCString& aAttr) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsILocalFileMac> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  bool hasAttr = false;
+  if (nsresult rv = file->HasXAttr(aAttr, &hasAttr); NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage(
+        "Could not read the extended attribute `%s' from the file `%s'",
+        aAttr.get(), aFile->HumanReadablePath().get()));
+  }
+
+  return hasAttr;
+}
+
+/* static */
+Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::GetMacXAttrSync(
+    nsIFile* aFile, const nsCString& aAttr) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsILocalFileMac> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  nsTArray<uint8_t> value;
+  if (nsresult rv = file->GetXAttr(aAttr, value); NS_FAILED(rv)) {
+    auto err = IOError(rv);
+
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return Err(err.WithMessage(
+          "The file `%s' does not have an extended attribute `%s'",
+          aFile->HumanReadablePath().get(), aAttr.get()));
+    }
+
+    return Err(err.WithMessage(
+        "Could not read the extended attribute `%s' from the file `%s'",
+        aAttr.get(), aFile->HumanReadablePath().get()));
+  }
+
+  return value;
+}
+
+/* static */
+Result<Ok, IOUtils::IOError> IOUtils::SetMacXAttrSync(
+    nsIFile* aFile, const nsCString& aAttr, const nsTArray<uint8_t>& aValue) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsILocalFileMac> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  if (nsresult rv = file->SetXAttr(aAttr, aValue); NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage(
+        "Could not set extended attribute `%s' on file `%s'", aAttr.get(),
+        aFile->HumanReadablePath().get()));
+  }
+
+  return Ok{};
+}
+
+/* static */
+Result<Ok, IOUtils::IOError> IOUtils::DelMacXAttrSync(nsIFile* aFile,
+                                                      const nsCString& aAttr) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsILocalFileMac> file = do_QueryInterface(aFile);
+  MOZ_ASSERT(file);
+
+  if (nsresult rv = file->DelXAttr(aAttr); NS_FAILED(rv)) {
+    auto err = IOError(rv);
+
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return Err(err.WithMessage(
+          "The file `%s' does not have an extended attribute `%s'",
+          aFile->HumanReadablePath().get(), aAttr.get()));
+    }
+
+    return Err(IOError(rv).WithMessage(
+        "Could not delete extended attribute `%s' on file `%s'", aAttr.get(),
+        aFile->HumanReadablePath().get()));
+  }
+
+  return Ok{};
+}
+
+#endif
 
 /* static */
 void IOUtils::GetProfileBeforeChange(GlobalObject& aGlobal,
