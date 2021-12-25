@@ -730,13 +730,21 @@ bool EditorBase::IsSelectionEditable() {
   if (IsTextEditor()) {
     // XXX we just check that the anchor node is editable at the moment
     //     we should check that all nodes in the selection are editable
-    nsCOMPtr<nsINode> anchorNode = SelectionRef().GetAnchorNode();
+    const nsINode* anchorNode = SelectionRef().GetAnchorNode();
     return anchorNode && anchorNode->IsContent() && anchorNode->IsEditable();
   }
 
-  nsINode* anchorNode = SelectionRef().GetAnchorNode();
-  nsINode* focusNode = SelectionRef().GetFocusNode();
+  const nsINode* anchorNode = SelectionRef().GetAnchorNode();
+  const nsINode* focusNode = SelectionRef().GetFocusNode();
   if (!anchorNode || !focusNode) {
+    return false;
+  }
+
+  // if anchorNode or focusNode is in a native anonymous subtree, HTMLEditor
+  // shouldn't edit content in it.
+  // XXX This must be a bug of Selection API.
+  if (MOZ_UNLIKELY(anchorNode->IsInNativeAnonymousSubtree() ||
+                   focusNode->IsInNativeAnonymousSubtree())) {
     return false;
   }
 
@@ -750,7 +758,7 @@ bool EditorBase::IsSelectionEditable() {
     return false;
   }
 
-  nsINode* commonAncestor =
+  const nsINode* commonAncestor =
       SelectionRef().GetAnchorFocusRange()->GetClosestCommonInclusiveAncestor();
   while (commonAncestor && !commonAncestor->IsEditable()) {
     commonAncestor = commonAncestor->GetParentNode();
