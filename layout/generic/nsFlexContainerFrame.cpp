@@ -44,12 +44,6 @@ static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOGV(...) \
   MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, (__VA_ARGS__));
 
-// XXXdholbert Some of this helper-stuff should be separated out into a general
-// "main/cross-axis utils" header, shared by grid & flexbox?
-// (Particularly when grid gets support for align-*/justify-* properties.)
-
-// Helper structs / classes / methods
-// ==================================
 // Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}box
 // or display:-moz-{inline-}box.
 static inline bool IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp) {
