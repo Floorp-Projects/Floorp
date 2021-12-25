@@ -155,8 +155,8 @@
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
     <color name="destructive_private_theme">@color/photonRed40</color>
     <color name="disabled_private_theme">@color/photonLightGrey05A40</color>
-    <color name="scrimStart_private_theme">#F520123A</color>
-    <color name="scrimEnd_private_theme">#F515141A</color>
+    <color name="scrimStart_private_theme">@color/photonInk80A96</color>
+    <color name="scrimEnd_private_theme">@color/photonDarkGrey90A96</color>
     <color name="snackbar_private_theme">@color/photonInk20</color>
     <color name="toolbar_start_gradient_private_theme">#7529A7</color>
     <color name="toolbar_center_gradient_private_theme">#492E85</color>
