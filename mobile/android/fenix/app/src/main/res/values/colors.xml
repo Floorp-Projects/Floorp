@@ -102,7 +102,7 @@
 
     <!-- Layers -->
     <!-- Default Background, Search Background, Menu Background, App Bar Top, App Bar Bottom, Dialogs -->
-    <color name="fx_mobile_private_layer_color_1" tools:ignore="UnusedResources">@color/photonInk50</color>
+    <color name="fx_mobile_private_layer_color_1">@color/photonInk50</color>
 
     <!-- Action -->
     <!-- Primary Button -->
@@ -148,7 +148,6 @@
     <color name="caption_text_private_theme">@color/photonLightGrey70</color>
     <color name="foundation_private_theme">#261E4B</color>
     <color name="inset_private_theme">@color/photonInk50</color>
-    <color name="above_private_theme">@color/photonInk50</color>
     <color name="accent_private_theme">@color/photonViolet50</color>
     <color name="accent_bright_private_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
