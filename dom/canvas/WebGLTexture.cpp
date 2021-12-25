@@ -590,7 +590,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
     const size_t sliceByteCount = checkedByteCount.value();
 
-    UniqueBuffer zeros = calloc(1u, sliceByteCount);
+    const auto zeros = UniqueBuffer::Take(calloc(1u, sliceByteCount));
     if (!zeros) return false;
 
     // Don't bother with striding it well.
@@ -635,7 +635,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
   const size_t sliceByteCount = checkedByteCount.value();
 
-  UniqueBuffer zeros = calloc(1u, sliceByteCount);
+  const auto zeros = UniqueBuffer::Take(calloc(1u, sliceByteCount));
   if (!zeros) return false;
 
   // Don't bother with striding it well.

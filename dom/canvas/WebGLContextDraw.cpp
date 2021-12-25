@@ -1086,7 +1086,7 @@ bool WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount) {
 
   ////
 
-  const UniqueBuffer data(malloc(dataSize));
+  const auto data = UniqueBuffer::Take(malloc(dataSize));
   if (!data) {
     ErrorOutOfMemory("Failed to allocate fake vertex attrib 0 array.");
     return false;
