@@ -52,7 +52,7 @@
         <item name="accentBright">@color/accent_bright_normal_theme</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
         <item name="foundation">@color/fx_mobile_layer_color_1</item>
-        <item name="above">@color/above_normal_theme</item>
+        <item name="above">@color/fx_mobile_layer_color_2</item>
         <item name="inset">@color/inset_normal_theme</item>
         <item name="tabRing">@color/tab_ring_normal_theme</item>
         <item name="neutral">@color/neutral_normal_theme</item>
