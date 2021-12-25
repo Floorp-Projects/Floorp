@@ -63,9 +63,9 @@
         <item name="scrimEnd">@color/fx_mobile_layer_color_scrim_end</item>
         <item name="snackbar">@color/fx_mobile_action_color_primary</item>
         <item name="accentUsedOnDarkBackground">@color/accent_on_dark_background_normal_theme</item>
-        <item name="toolbarStartGradient">@color/toolbar_start_gradient_normal_theme</item>
-        <item name="toolbarCenterGradient">@color/toolbar_center_gradient_normal_theme</item>
-        <item name="toolbarEndGradient">@color/toolbar_end_gradient_normal_theme</item>
+        <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
+        <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
+        <item name="toolbarEndGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarDivider">@color/toolbar_divider_color_normal_theme</item>
         <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_normal_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>

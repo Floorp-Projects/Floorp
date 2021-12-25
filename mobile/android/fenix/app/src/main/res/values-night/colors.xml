@@ -115,9 +115,6 @@
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/photonViolet40</color>
-    <color name="toolbar_start_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
-    <color name="toolbar_center_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
-    <color name="toolbar_end_gradient_normal_theme">@color/fx_mobile_layer_color_1</color>
     <color name="toolbar_divider_color_normal_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="sync_disconnected_icon_fill_normal_theme">#FFF36E</color>

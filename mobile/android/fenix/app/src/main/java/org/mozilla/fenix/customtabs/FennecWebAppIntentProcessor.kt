@@ -139,7 +139,7 @@ class FennecWebAppIntentProcessor(
 
     private fun createFallbackCustomTabConfig(): CustomTabConfig {
         return CustomTabConfig(
-            toolbarColor = ContextCompat.getColor(context, R.color.toolbar_center_gradient_normal_theme)
+            toolbarColor = ContextCompat.getColor(context, R.color.fx_mobile_layer_color_1)
         )
     }
 
