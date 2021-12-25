@@ -299,4 +299,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>%1$s ਤੋਂ ਇਸ ਵੈੱਬ ਸਫ਼ੇ ਨੂੰ ਭਰਮਪੂਰਕ ਸਾਈਟ ਵਜੋਂ ਇਤਲਾਹ ਦਿੱਤੀ ਗਈ ਹੈ ਅਤੇ ਤੁਹਾਡੀਆਂ ਸੁਰੱਖਿਆ ਪਸੰਦਾਂ ਦੇ ਮੁਤਾਬਕ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ।</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ਸੁਰੱਖਿਅਤ ਸਾਈਟ ਮੌਜੂਦ ਨਹੀਂ ਹੈ</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[ਤੁਸੀਂ ਵਧਾਈ ਸੁਰੱਖਿਆ ਵਾਸਤੇ ਸਿਰਫ਼-HTTPS ਢੰਗ ਸਮਰੱਥ ਕੀਤਾ ਹੋਇਆ ਹੈ, ਅਤੇ <em>%1$s</em> ਦਾ HTTPS ਵਰਜ਼ਨ ਮੌਜੂਦ ਨਹੀਂ ਹੈ।]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP ਸਾਈਟ ਨਾਲ ਜਾਰੀ ਰੱਖੋ</string>
 </resources>
