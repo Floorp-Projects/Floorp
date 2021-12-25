@@ -3,6 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/tab_tray_heading_icon_normal_theme" android:state_selected="true" />
+    <item android:color="@color/accent_normal_theme" android:state_selected="true" />
     <item android:color="@color/tab_tray_heading_icon_inactive_normal_theme" />
 </selector>
