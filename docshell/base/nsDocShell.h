@@ -293,16 +293,11 @@ class nsDocShell final : public nsDocLoader,
    * header is found. If docshell is busy loading a page currently, the request
    * will be queued and executed when the current page finishes loading.
    *
-   * @param aBaseURI base URI to resolve refresh uri with.
-   * @param aPrincipal The triggeringPrincipal for the refresh load
-   *   May be null, in which case the principal of current document will be
-   *   applied.
-   * @param aInnerWindowID The window id to use for error reporting.
-   * @param aHeader  The meta refresh header string.
+   * @param aDocument    document to which the refresh header applies.
+   * @param aHeader      The meta refresh header string.
    */
-  nsresult SetupRefreshURIFromHeader(nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
-                                     uint64_t aInnerWindowID,
-                                     const nsACString& aHeader);
+  void SetupRefreshURIFromHeader(mozilla::dom::Document* aDocument,
+                                 const nsAString& aHeader);
 
   // Perform a URI load from a refresh timer. This is just like the
   // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
