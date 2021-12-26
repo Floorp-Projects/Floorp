@@ -6760,9 +6760,7 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
       // should really be the same thing).  Note that this code can run
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
-      mDocumentContainer->SetupRefreshURIFromHeader(
-          mDocumentURI, NodePrincipal(), InnerWindowID(),
-          NS_ConvertUTF16toUTF8(aData));
+      mDocumentContainer->SetupRefreshURIFromHeader(this, aData);
     }
   }
 

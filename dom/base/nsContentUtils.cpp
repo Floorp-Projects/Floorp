@@ -1309,23 +1309,20 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
 }
 
 // Parse an integer according to HTML spec
-template <class StringT>
+template <class CharT>
 int32_t nsContentUtils::ParseHTMLIntegerImpl(
-    const StringT& aValue, ParseHTMLIntegerResultFlags* aResult) {
-  using CharT = typename StringT::char_type;
-
+    const CharT* aStart, const CharT* aEnd,
+    ParseHTMLIntegerResultFlags* aResult) {
   int result = eParseHTMLInteger_NoFlags;
 
-  typename StringT::const_iterator iter, end;
-  aValue.BeginReading(iter);
-  aValue.EndReading(end);
+  const CharT* iter = aStart;
 
-  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+  while (iter != aEnd && nsContentUtils::IsHTMLWhitespace(*iter)) {
     result |= eParseHTMLInteger_NonStandard;
     ++iter;
   }
 
-  if (iter == end) {
+  if (iter == aEnd) {
     result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
     *aResult = (ParseHTMLIntegerResultFlags)result;
     return 0;
@@ -1346,7 +1343,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
 
   // Check for leading zeros first.
   uint64_t leadingZeros = 0;
-  while (iter != end) {
+  while (iter != aEnd) {
     if (*iter != CharT('0')) {
       break;
     }
@@ -1356,7 +1353,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
     ++iter;
   }
 
-  while (iter != end) {
+  while (iter != aEnd) {
     if (*iter >= CharT('0') && *iter <= CharT('9')) {
       value = (value * 10) + (*iter - CharT('0')) * sign;
       ++iter;
@@ -1380,7 +1377,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
     result |= eParseHTMLInteger_NonStandard;
   }
 
-  if (iter != end) {
+  if (iter != aEnd) {
     result |= eParseHTMLInteger_DidNotConsumeAllInput;
   }
 
@@ -1389,14 +1386,15 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
 }
 
 // Parse an integer according to HTML spec
-int32_t nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
+int32_t nsContentUtils::ParseHTMLInteger(const char16_t* aStart,
+                                         const char16_t* aEnd,
                                          ParseHTMLIntegerResultFlags* aResult) {
-  return ParseHTMLIntegerImpl(aValue, aResult);
+  return ParseHTMLIntegerImpl(aStart, aEnd, aResult);
 }
 
-int32_t nsContentUtils::ParseHTMLInteger(const nsACString& aValue,
+int32_t nsContentUtils::ParseHTMLInteger(const char* aStart, const char* aEnd,
                                          ParseHTMLIntegerResultFlags* aResult) {
-  return ParseHTMLIntegerImpl(aValue, aResult);
+  return ParseHTMLIntegerImpl(aStart, aEnd, aResult);
 }
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
