@@ -702,13 +702,23 @@ class nsContentUtils {
     eParseHTMLInteger_Negative = 1 << 5,
   };
   static int32_t ParseHTMLInteger(const nsAString& aValue,
+                                  ParseHTMLIntegerResultFlags* aResult) {
+    return ParseHTMLInteger(aValue.BeginReading(), aValue.EndReading(),
+                            aResult);
+  }
+  static int32_t ParseHTMLInteger(const char16_t* aStart, const char16_t* aEnd,
                                   ParseHTMLIntegerResultFlags* aResult);
   static int32_t ParseHTMLInteger(const nsACString& aValue,
+                                  ParseHTMLIntegerResultFlags* aResult) {
+    return ParseHTMLInteger(aValue.BeginReading(), aValue.EndReading(),
+                            aResult);
+  }
+  static int32_t ParseHTMLInteger(const char* aStart, const char* aEnd,
                                   ParseHTMLIntegerResultFlags* aResult);
 
  private:
-  template <class StringT>
-  static int32_t ParseHTMLIntegerImpl(const StringT& aValue,
+  template <class CharT>
+  static int32_t ParseHTMLIntegerImpl(const CharT* aStart, const CharT* aEnd,
                                       ParseHTMLIntegerResultFlags* aResult);
 
  public:
