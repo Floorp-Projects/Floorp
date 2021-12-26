@@ -2685,14 +2685,15 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       audioEnumerationType = DeviceEnumerationType::Fake;
     }
   }
-
-  bool realDevicesRequested =
-      (videoEnumerationType != DeviceEnumerationType::Fake && hasVideo) ||
-      (audioEnumerationType != DeviceEnumerationType::Fake && hasAudio);
+  // fake:true is effective only for microphone and camera devices, so
+  // permission must be requested for screen capture even if fake:true is set.
+  bool hasOnlyForcedFakes =
+      forceFakes && (!hasVideo || videoType == MediaSourceEnum::Camera) &&
+      (!hasAudio || audioType == MediaSourceEnum::Microphone);
   bool askPermission =
       (!privileged ||
        Preferences::GetBool("media.navigator.permission.force")) &&
-      (realDevicesRequested ||
+      (!hasOnlyForcedFakes ||
        Preferences::GetBool("media.navigator.permission.fake"));
 
   LOG("%s: Preparing to enumerate devices. windowId=%" PRIu64
