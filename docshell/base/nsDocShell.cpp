@@ -5171,247 +5171,216 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-nsresult nsDocShell::SetupRefreshURIFromHeader(nsIURI* aBaseURI,
-                                               nsIPrincipal* aPrincipal,
-                                               uint64_t aInnerWindowID,
-                                               const nsACString& aHeader) {
+static const char16_t* SkipASCIIWhitespace(const char16_t* aStart,
+                                           const char16_t* aEnd) {
+  const char16_t* iter = aStart;
+  while (iter != aEnd && mozilla::IsAsciiWhitespace(*iter)) {
+    ++iter;
+  }
+  return iter;
+}
+
+static Tuple<const char16_t*, const char16_t*> ExtractURLString(
+    const char16_t* aPosition, const char16_t* aEnd) {
+  MOZ_ASSERT(aPosition != aEnd);
+
+  // 1. Let urlString be the substring of input from the code point at
+  //    position to the end of the string.
+  const char16_t* urlStart = aPosition;
+  const char16_t* urlEnd = aEnd;
+
+  // 2. If the code point in input pointed to by position is U+0055 (U) or
+  //    U+0075 (u), then advance position to the next code point.
+  //    Otherwise, jump to the step labeled skip quotes.
+  if (*aPosition == 'U' || *aPosition == 'u') {
+    ++aPosition;
+
+    // 3. If the code point in input pointed to by position is U+0052 (R) or
+    //    U+0072 (r), then advance position to the next code point.
+    //    Otherwise, jump to the step labeled parse.
+    if (aPosition == aEnd || (*aPosition != 'R' && *aPosition != 'r')) {
+      return MakeTuple(urlStart, urlEnd);
+    }
+
+    ++aPosition;
+
+    // 4. If the code point in input pointed to by position is U+004C (L) or
+    //    U+006C (l), then advance position to the next code point.
+    //    Otherwise, jump to the step labeled parse.
+    if (aPosition == aEnd || (*aPosition != 'L' && *aPosition != 'l')) {
+      return MakeTuple(urlStart, urlEnd);
+    }
+
+    ++aPosition;
+
+    // 5. Skip ASCII whitespace within input given position.
+    aPosition = SkipASCIIWhitespace(aPosition, aEnd);
+
+    // 6. If the code point in input pointed to by position is U+003D (=),
+    //    then advance position to the next code point. Otherwise, jump to
+    //    the step labeled parse.
+    if (aPosition == aEnd || *aPosition != '=') {
+      return MakeTuple(urlStart, urlEnd);
+    }
+
+    ++aPosition;
+
+    // 7. Skip ASCII whitespace within input given position.
+    aPosition = SkipASCIIWhitespace(aPosition, aEnd);
+  }
+
+  // 8. Skip quotes: If the code point in input pointed to by position is
+  //    U+0027 (') or U+0022 ("), then let quote be that code point, and
+  //    advance position to the next code point. Otherwise, let quote be
+  //    the empty string.
+  Maybe<char> quote;
+  if (aPosition != aEnd && (*aPosition == '\'' || *aPosition == '"')) {
+    quote.emplace(*aPosition);
+    ++aPosition;
+  }
+
+  // 9. Set urlString to the substring of input from the code point at
+  //    position to the end of the string.
+  urlStart = aPosition;
+  urlEnd = aEnd;
+
+  // 10. If quote is not the empty string, and there is a code point in
+  //     urlString equal to quote, then truncate urlString at that code
+  //     point, so that it and all subsequent code points are removed.
+  const char16_t* quotePos;
+  if (quote.isSome() &&
+      (quotePos = nsCharTraits<char16_t>::find(
+           urlStart, std::distance(urlStart, aEnd), quote.value()))) {
+    urlEnd = quotePos;
+  }
+
+  return MakeTuple(urlStart, urlEnd);
+}
+
+void nsDocShell::SetupRefreshURIFromHeader(Document* aDocument,
+                                           const nsAString& aHeader) {
   if (mIsBeingDestroyed) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
-  // Refresh headers are parsed with the following format in mind
-  // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
-  // By the time we are here, the following is true:
-  // header = "REFRESH"
-  // content = "5; URL=http://uri" // note the URL attribute is
-  // optional, if it is absent, the currently loaded url is used.
-  // Also note that the seconds and URL separator can be either
-  // a ';' or a ','. The ',' separator should be illegal but CNN
-  // is using it.
-  //
-  // We need to handle the following strings, where
-  //  - X is a set of digits
-  //  - URI is either a relative or absolute URI
-  //
-  // Note that URI should start with "url=" but we allow omission
-  //
-  // "" || ";" || ","
-  //  empty string. use the currently loaded URI
-  //  and refresh immediately.
-  // "X" || "X;" || "X,"
-  //  Refresh the currently loaded URI in X seconds.
-  // "X; URI" || "X, URI"
-  //  Refresh using URI as the destination in X seconds.
-  // "URI" || "; URI" || ", URI"
-  //  Refresh immediately using URI as the destination.
-  //
-  // Currently, anything immediately following the URI, if
-  // separated by any char in the set "'\"\t\r\n " will be
-  // ignored. So "10; url=go.html ; foo=bar" will work,
-  // and so will "10; url='go.html'; foo=bar". However,
-  // "10; url=go.html; foo=bar" will result in the uri
-  // "go.html;" since ';' and ',' are valid uri characters.
-  //
-  // Note that we need to remove any tokens wrapping the URI.
-  // These tokens currently include spaces, double and single
-  // quotes.
+  const char16_t* position = aHeader.BeginReading();
+  const char16_t* end = aHeader.EndReading();
 
-  // when done, seconds is 0 or the given number of seconds
-  //            uriAttrib is empty or the URI specified
-  MOZ_ASSERT(aPrincipal);
+  // See
+  // https://html.spec.whatwg.org/#pragma-directives:shared-declarative-refresh-steps.
 
-  nsAutoCString uriAttrib;
-  CheckedInt<uint32_t> seconds(0);
-  bool specifiesSeconds = false;
+  // 3. Skip ASCII whitespace
+  position = SkipASCIIWhitespace(position, end);
 
-  nsACString::const_iterator iter, tokenStart, doneIterating;
+  // 4. Let time be 0.
+  CheckedInt<uint32_t> milliSeconds;
 
-  aHeader.BeginReading(iter);
-  aHeader.EndReading(doneIterating);
-
-  // skip leading whitespace
-  while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter)) {
-    ++iter;
+  // 5. Collect a sequence of code points that are ASCII digits
+  const char16_t* digitsStart = position;
+  while (position != end && mozilla::IsAsciiDigit(*position)) {
+    ++position;
   }
 
-  tokenStart = iter;
-
-  if (iter != doneIterating) {
-    if (*iter == '-') {
-      return NS_ERROR_FAILURE;
+  if (position == digitsStart) {
+    // 6. If timeString is the empty string, then:
+    //    1. If the code point in input pointed to by position is not U+002E
+    //       (.), then return.
+    if (position == end || *position != '.') {
+      return;
     }
-
-    // skip leading +
-    if (*iter == '+') {
-      ++iter;
-    }
-  }
-
-  // parse number
-  while (iter != doneIterating && (*iter >= '0' && *iter <= '9')) {
-    seconds = seconds * 10 + (*iter - '0');
-    if (!seconds.isValid()) {
-      return NS_ERROR_FAILURE;
-    }
-    specifiesSeconds = true;
-    ++iter;
-  }
-
-  CheckedInt<uint32_t> milliSeconds(seconds * 1000);
-  if (!milliSeconds.isValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (iter != doneIterating) {
-    // skip to next ';' or ','
-    nsACString::const_iterator iterAfterDigit = iter;
-    while (iter != doneIterating && !(*iter == ';' || *iter == ',')) {
-      if (specifiesSeconds) {
-        // Non-whitespace characters here mean that the string is
-        // malformed but tolerate sites that specify a decimal point,
-        // even though meta refresh only works on whole seconds.
-        if (iter == iterAfterDigit && !nsCRT::IsAsciiSpace(*iter) &&
-            *iter != '.') {
-          // The characters between the seconds and the next
-          // section are just garbage!
-          //   e.g. content="2a0z+,URL=http://www.mozilla.org/"
-          // Just ignore this redirect.
-          return NS_ERROR_FAILURE;
-        } else if (nsCRT::IsAsciiSpace(*iter)) {
-          // We've had at least one whitespace so tolerate the mistake
-          // and drop through.
-          // e.g. content="10 foo"
-          ++iter;
-          break;
-        }
-      }
-      ++iter;
-    }
-
-    // skip any remaining whitespace
-    while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter)) {
-      ++iter;
-    }
-
-    // skip ';' or ','
-    if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
-      ++iter;
-    }
-
-    // skip whitespace
-    while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter)) {
-      ++iter;
-    }
-  }
-
-  // possible start of URI
-  tokenStart = iter;
-
-  // skip "url = " to real start of URI
-  if (iter != doneIterating && (*iter == 'u' || *iter == 'U')) {
-    ++iter;
-    if (iter != doneIterating && (*iter == 'r' || *iter == 'R')) {
-      ++iter;
-      if (iter != doneIterating && (*iter == 'l' || *iter == 'L')) {
-        ++iter;
-
-        // skip whitespace
-        while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter)) {
-          ++iter;
-        }
-
-        if (iter != doneIterating && *iter == '=') {
-          ++iter;
-
-          // skip whitespace
-          while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter)) {
-            ++iter;
-          }
-
-          // found real start of URI
-          tokenStart = iter;
-        }
-      }
-    }
-  }
-
-  // skip a leading '"' or '\''.
-
-  bool isQuotedURI = false;
-  if (tokenStart != doneIterating &&
-      (*tokenStart == '"' || *tokenStart == '\'')) {
-    isQuotedURI = true;
-    ++tokenStart;
-  }
-
-  // set iter to start of URI
-  iter = tokenStart;
-
-  // tokenStart here points to the beginning of URI
-
-  // grab the rest of the URI
-  while (iter != doneIterating) {
-    if (isQuotedURI && (*iter == '"' || *iter == '\'')) {
-      break;
-    }
-    ++iter;
-  }
-
-  // move iter one back if the last character is a '"' or '\''
-  if (iter != tokenStart && isQuotedURI) {
-    --iter;
-    if (!(*iter == '"' || *iter == '\'')) {
-      ++iter;
-    }
-  }
-
-  // URI is whatever's contained from tokenStart to iter.
-  // note: if tokenStart == doneIterating, so is iter.
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIURI> uri;
-  bool specifiesURI = false;
-  if (tokenStart == iter) {
-    uri = aBaseURI;
   } else {
-    uriAttrib = Substring(tokenStart, iter);
-    // NS_NewURI takes care of any whitespace surrounding the URL
-    rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, nullptr, aBaseURI);
-    specifiesURI = true;
-  }
+    // 7. Otherwise, set time to the result of parsing timeString using the
+    //    rules for parsing non-negative integers.
+    nsContentUtils::ParseHTMLIntegerResultFlags result;
+    uint32_t seconds =
+        nsContentUtils::ParseHTMLInteger(digitsStart, position, &result);
+    MOZ_ASSERT(!(result & nsContentUtils::eParseHTMLInteger_Negative));
+    if (result & nsContentUtils::eParseHTMLInteger_Error) {
+      // The spec assumes no errors here (since we only pass ASCII digits in),
+      // but we can still overflow, so this block should deal with that (and
+      // only that).
+      MOZ_ASSERT(!(result & nsContentUtils::eParseHTMLInteger_ErrorOverflow));
+      return;
+    }
+    MOZ_ASSERT(
+        !(result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput));
 
-  // No URI or seconds were specified
-  if (!specifiesSeconds && !specifiesURI) {
-    // Do nothing because the alternative is to spin around in a refresh
-    // loop forever!
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIScriptSecurityManager> securityManager(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      rv = securityManager->CheckLoadURIWithPrincipal(
-          aPrincipal, uri,
-          nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT,
-          aInnerWindowID);
-
-      if (NS_SUCCEEDED(rv)) {
-        bool isjs = true;
-        rv = NS_URIChainHasFlags(
-            uri, nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT, &isjs);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (isjs) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-
-      rv = RefreshURI(uri, aPrincipal, milliSeconds.value());
+    milliSeconds = seconds;
+    milliSeconds *= 1000;
+    if (!milliSeconds.isValid()) {
+      return;
     }
   }
-  return rv;
+
+  // 8. Collect a sequence of code points that are ASCII digits and U+002E FULL
+  //    STOP characters (.) from input given position. Ignore any collected
+  //    characters.
+  while (position != end &&
+         (mozilla::IsAsciiDigit(*position) || *position == '.')) {
+    ++position;
+  }
+
+  // 9. Let urlRecord be document's URL.
+  nsCOMPtr<nsIURI> urlRecord(aDocument->GetDocumentURI());
+
+  // 10. If position is not past the end of input
+  if (position != end) {
+    // 1. If the code point in input pointed to by position is not U+003B (;),
+    //    U+002C (,), or ASCII whitespace, then return.
+    if (*position != ';' && *position != ',' &&
+        !mozilla::IsAsciiWhitespace(*position)) {
+      return;
+    }
+
+    // 2. Skip ASCII whitespace within input given position.
+    position = SkipASCIIWhitespace(position, end);
+
+    // 3. If the code point in input pointed to by position is U+003B (;) or
+    //    U+002C (,), then advance position to the next code point.
+    if (position != end && (*position == ';' || *position == ',')) {
+      ++position;
+
+      // 4. Skip ASCII whitespace within input given position.
+      position = SkipASCIIWhitespace(position, end);
+    }
+
+    // 11. If position is not past the end of input, then:
+    if (position != end) {
+      const char16_t* urlStart;
+      const char16_t* urlEnd;
+
+      // 1-10. See ExtractURLString.
+      Tie(urlStart, urlEnd) = ExtractURLString(position, end);
+
+      // 11. Parse: Parse urlString relative to document. If that fails, return.
+      //     Otherwise, set urlRecord to the resulting URL record.
+      nsresult rv = NS_NewURI(
+          getter_AddRefs(urlRecord),
+          Substring(urlStart, std::distance(urlStart, urlEnd)),
+          aDocument->GetDocumentCharacterSet(), aDocument->GetDocBaseURI());
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+  }
+
+  nsIPrincipal* principal = aDocument->NodePrincipal();
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+      nsContentUtils::GetSecurityManager();
+  nsresult rv = securityManager->CheckLoadURIWithPrincipal(
+      principal, urlRecord,
+      nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT,
+      aDocument->InnerWindowID());
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  bool isjs = true;
+  rv = NS_URIChainHasFlags(
+      urlRecord, nsIProtocolHandler::URI_OPENING_EXECUTES_SCRIPT, &isjs);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (isjs) {
+    return;
+  }
+
+  RefreshURI(urlRecord, principal, milliSeconds.value());
 }
 
 static void DoCancelRefreshURITimers(nsIMutableArray* aTimerList) {
