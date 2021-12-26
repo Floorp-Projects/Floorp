@@ -70,6 +70,7 @@ xpcshell:
         by-test-platform:
             windows.*(-shippable)/opt: 5400
             .*64-ccov(-qr)?/.*: 7200
+            .*64-2004-ccov(-qr)?/.*: 7200  # Windows 10 x64 2004 CCov specific, the line above does not catch this case.
             .*-tsan-qr/opt: 7200
             default: 2700
     allow-software-gl-layers: false
