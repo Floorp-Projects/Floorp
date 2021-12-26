@@ -18,10 +18,7 @@ runTest(async () => {
     ["media.setsinkid.enabled", true],
     // This test uses real devices because fake devices are not grouped with
     // audiooutput devices.
-    ["media.navigator.streams.fake", false],
-    // Non empty media.audio_loopback_dev would disable fake:true for streams
-    // returned from getUserMedia().
-    ["media.audio_loopback_dev", ""]);
+    ["media.navigator.streams.fake", false]);
   const devices = navigator.mediaDevices;
   {
     // `fake:true` means that getUserMedia() resolves without any permission
