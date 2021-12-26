@@ -300,16 +300,14 @@ class MediaManager final : public nsIMediaManagerService,
   MediaEventSource<void>& DeviceListChangeEvent() {
     return mDeviceListChangeEvent;
   }
+  RefPtr<LocalDeviceSetPromise> AnonymizeDevices(
+      nsPIDOMWindowInner* aWindow, RefPtr<const MediaDeviceSetRefCnt> aDevices);
 
   MediaEnginePrefs mPrefs;
 
  private:
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
-
-  static RefPtr<LocalMediaDeviceSetRefCnt> AnonymizeDevices(
-      const MediaDeviceSet& aDevices, const nsACString& aOriginKey,
-      const uint64_t aWindowId);
 
  public:
   /**
