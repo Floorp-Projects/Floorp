@@ -9,6 +9,7 @@
 #include "nsITheme.h"
 #include "nsNativeTheme.h"
 #include "ScrollbarDrawing.h"
+#include "ScrollbarDrawingWin.h"
 
 namespace mozilla::widget {
 

@@ -12,6 +12,8 @@
 #include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
 
+using mozilla::gfx::sRGBColor;
+
 namespace mozilla::widget {
 
 static LayoutDeviceIntCoord CSSToScrollbarDeviceSize(
@@ -120,7 +122,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
   auto [buttonColor, arrowColor] = ComputeScrollbarButtonColors(
       aFrame, aAppearance, aStyle, aElementState, aDocumentState, aColors);
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
-                       ColorPattern(ToDeviceColor(buttonColor)));
+                       gfx::ColorPattern(ToDeviceColor(buttonColor)));
 
   // Start with Up arrow.
   float arrowPolygonX[] = {-4.5f, 4.5f, 4.5f, 0.5f, -0.5f, -4.5f, -4.5f};
