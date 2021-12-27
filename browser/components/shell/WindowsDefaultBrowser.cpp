@@ -65,18 +65,6 @@ static bool SettingsAppBelievesConnected() {
   return !!value;
 }
 
-// Generates the install directory without a trailing path separator.
-bool GetInstallDirectory(mozilla::UniquePtr<wchar_t[]>& installPath) {
-  installPath = mozilla::GetFullBinaryPath();
-  // It's not safe to use PathRemoveFileSpecW with strings longer than MAX_PATH
-  // (including null terminator).
-  if (wcslen(installPath.get()) >= MAX_PATH) {
-    return false;
-  }
-  PathRemoveFileSpecW(installPath.get());
-  return true;
-}
-
 bool GetAppRegName(mozilla::UniquePtr<wchar_t[]>& aAppRegName) {
   mozilla::UniquePtr<wchar_t[]> appDirStr;
   bool success = GetInstallDirectory(appDirStr);
