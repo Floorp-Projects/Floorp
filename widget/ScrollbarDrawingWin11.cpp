@@ -118,17 +118,27 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
                        ColorPattern(ToDeviceColor(buttonColor)));
 
   // Start with Up arrow.
-  float arrowPolygonX[] = {-5.5f, 3.5f, 3.5f, -0.5f, -1.5f, -5.5f, -5.5f};
-  float arrowPolygonXActive[] = {-5.0f,  3.0f,  3.0f, -0.75f,
-                                 -1.25f, -5.0f, -5.0f};
-  float arrowPolygonXHover[] = {-6.0f,  4.0f,  4.0f, -0.25f,
-                                -1.75f, -6.0f, -6.0f};
+  float arrowPolygonX[] = {-4.5f, 4.5f, 4.5f, 0.5f, -0.5f, -4.5f, -4.5f};
+  float arrowPolygonXActive[] = {-4.0f,  4.0f,  4.0f, -0.25f,
+                                 -0.25f, -4.0f, -4.0f};
+  float arrowPolygonXHover[] = {-5.0f, 5.0f, 5.0f, 0.75f, -0.75f, -5.0f, -5.0f};
   float arrowPolygonY[] = {2.5f, 2.5f, 1.0f, -4.0f, -4.0f, 1.0f, 2.5f};
   float arrowPolygonYActive[] = {2.0f, 2.0f, 0.5f, -3.5f, -3.5f, 0.5f, 2.0f};
   float arrowPolygonYHover[] = {3.0f, 3.0f, 1.5f, -4.5f, -4.5f, 1.5f, 3.0f};
   float* arrowX = arrowPolygonX;
   float* arrowY = arrowPolygonY;
-  const float offset = aFrame->GetWritingMode().IsPhysicalLTR() ? 1.5f : -1.5f;
+  const bool horizontal =
+      aAppearance == StyleAppearance::ScrollbarbuttonRight ||
+      aAppearance == StyleAppearance::ScrollbarbuttonLeft;
+
+  const float offset = [&] {
+    // Compensate for the displacement we do of the thumb position by displacing
+    // the arrow as well, see comment in DoPaintScrollbarThumb.
+    if (horizontal) {
+      return -0.5f;
+    }
+    return aFrame->GetWritingMode().IsPhysicalLTR() ? 0.5f : -0.5f;
+  }();
   const float kPolygonSize = 17;
   const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
 
@@ -142,25 +152,25 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
 
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonDown:
+    case StyleAppearance::ScrollbarbuttonRight:
       for (int32_t i = 0; i < arrowNumPoints; i++) {
         arrowY[i] *= -1;
       }
       [[fallthrough]];
     case StyleAppearance::ScrollbarbuttonUp:
-      for (int32_t i = 0; i < arrowNumPoints; i++) {
-        arrowX[i] += offset;
-      }
-      break;
-    case StyleAppearance::ScrollbarbuttonRight:
-      for (int32_t i = 0; i < arrowNumPoints; i++) {
-        arrowX[i] *= -1;
-      }
-      [[fallthrough]];
     case StyleAppearance::ScrollbarbuttonLeft:
-      std::swap(arrowX, arrowY);
+      if (offset != 0.0f) {
+        for (int32_t i = 0; i < arrowNumPoints; i++) {
+          arrowX[i] += offset;
+        }
+      }
       break;
     default:
       return false;
+  }
+
+  if (horizontal) {
+    std::swap(arrowX, arrowY);
   }
 
   ThemeDrawing::PaintArrow(aDrawTarget, aRect, arrowX, arrowY, kPolygonSize,
@@ -181,9 +191,23 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 
   if (ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
     if (aHorizontal) {
+      // Scrollbar is 17px high. We make the thumb it 6px tall and move it 5px
+      // towards the bottom, so the center (8.5 initially) is displaced by
+      //   (5px + 6px / 2) - 8.5px = -0.5px
+      //
+      // TODO(emilio): These displacements don't work quite right with custom
+      // scrollbar sizes.
       thumbRect.height = 6 * aDpiRatio.scale;
       thumbRect.y += 5 * aDpiRatio.scale;
     } else {
+      // Scrollbar is 17px wide. We make the thumb it 6px wide and move it 5px
+      // or 6px towards the right (depending on writing-mode), so the center
+      // (8.5px initially) is displaced by:
+      //   (6px + 6px / 2) - 8.5px = 0.5px for LTR
+      //   (5px + 6px / 2) - 8.5px = -0.5px for RTL
+      //
+      // TODO(emilio): These displacements don't work quite right with custom
+      // scrollbar sizes.
       thumbRect.width = 6 * aDpiRatio.scale;
       if (aFrame->GetWritingMode().IsPhysicalLTR()) {
         thumbRect.x += 6 * aDpiRatio.scale;
