@@ -2998,11 +2998,11 @@ impl<'a> SceneBuilder<'a> {
                 };
 
                 match border.source {
-                    NinePatchBorderSource::Image(image_key) => {
+                    NinePatchBorderSource::Image(key, rendering) => {
                         let prim = ImageBorder {
                             request: ImageRequest {
-                                key: image_key,
-                                rendering: ImageRendering::Auto,
+                                key,
+                                rendering,
                                 tile: None,
                             },
                             nine_patch,

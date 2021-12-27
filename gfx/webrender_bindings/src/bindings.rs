@@ -3375,6 +3375,7 @@ pub extern "C" fn wr_dp_push_border(
 pub struct WrBorderImage {
     widths: LayoutSideOffsets,
     image: WrImageKey,
+    image_rendering: ImageRendering,
     width: i32,
     height: i32,
     fill: bool,
@@ -3395,7 +3396,7 @@ pub extern "C" fn wr_dp_push_border_image(
 ) {
     debug_assert!(unsafe { is_in_main_thread() });
     let border_details = BorderDetails::NinePatch(NinePatchBorder {
-        source: NinePatchBorderSource::Image(params.image),
+        source: NinePatchBorderSource::Image(params.image, params.image_rendering),
         width: params.width,
         height: params.height,
         slice: params.slice,
