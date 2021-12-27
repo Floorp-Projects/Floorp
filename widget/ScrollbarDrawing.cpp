@@ -7,6 +7,7 @@
 #include "ScrollbarDrawing.h"
 
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsContainerFrame.h"
 #include "nsDeviceContext.h"
 #include "nsIFrame.h"
@@ -14,9 +15,9 @@
 #include "nsLookAndFeel.h"
 #include "nsNativeTheme.h"
 
-using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::widget;
+
+namespace mozilla::widget {
 
 using ScrollbarParams = ScrollbarDrawing::ScrollbarParams;
 using mozilla::RelativeLuminanceUtils;
@@ -440,3 +441,5 @@ bool ScrollbarDrawing::PaintScrollbarButton(
                            kPolygonSize, arrowNumPoints, arrowColor);
   return true;
 }
+
+}  // namespace mozilla::widget
