@@ -50,8 +50,8 @@ restart-required = false
 preference = "devtools.webconsole.input.context"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
-is-public = {default = false, nightly = true}
-default-value = {default = false, nightly = true}
+is-public = true
+default-value = true
 
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
