@@ -12,7 +12,6 @@ const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // These symbols are, unfortunately, accessed via the module global from
 // tests, and therefore cannot be lexical definitions.
 var { GMPPrefs, GMPUtils, GMP_PLUGIN_IDS } = ChromeUtils.import(
@@ -578,8 +577,8 @@ GMPAddon.prototype = {
  * Constructs a GMPExtractor object which is used to extract a GMP zip
  * into the specified location.
  * @param zipPath The path on disk of the zip file to extract
- * @param relativePath The relative path inside the profile directory to
- * extract the zip to.
+ * @param relativePath The relative path components inside the profile directory
+ *                     to extract the zip to.
  */
 function GMPExtractor(zipPath, relativeInstallPath) {
   this.zipPath = zipPath;
@@ -656,9 +655,13 @@ GMPDownloader.prototype = {
     };
     return ProductAddonChecker.downloadAddon(gmpAddon, downloadOptions).then(
       zipPath => {
-        let relativePath = OS.Path.join(gmpAddon.id, gmpAddon.version);
-        log.info("install to directory path: " + relativePath);
-        let gmpInstaller = new GMPExtractor(zipPath, relativePath);
+        log.info(
+          `install to directory path: ${gmpAddon.id}/${gmpAddon.version}`
+        );
+        let gmpInstaller = new GMPExtractor(zipPath, [
+          gmpAddon.id,
+          gmpAddon.version,
+        ]);
         let installPromise = gmpInstaller.install();
         return installPromise.then(extractedPaths => {
           // Success, set the prefs
