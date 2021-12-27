@@ -156,10 +156,10 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
   NS_ENSURE_TRUE(expectedSize > 0, false);
 
   // The sandbox should have space for the input, output and misc allocations
-  // To account for misc allocations, we'll set the sandbox size to
-  // input + output + 33% extra
+  // To account for misc allocations, we'll set the sandbox size to:
+  // twice the size of (input + output)
 
-  const uint64_t expectedSandboxSize = static_cast<uint64_t>(1.33 * (aLength + expectedSize));
+  const uint64_t expectedSandboxSize = static_cast<uint64_t>(2 * (aLength + expectedSize));
   auto sandboxPoolData = RLBoxWOFF2SandboxPool::sSingleton->PopOrCreate(expectedSandboxSize);
   NS_ENSURE_TRUE(sandboxPoolData, false);
 
