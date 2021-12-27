@@ -63,7 +63,7 @@ tls13_MakeHrrCookie(sslSocket *ss, const sslNamedGroupDef *selectedGroup,
     }
 
     if (ss->xtnData.ech) {
-        /* Record that we received ECH. See sslEchCookieData */
+        /* Record that we received ECH. */
         rv = sslBuffer_AppendNumber(&cookieBuf, PR_TRUE, 1);
         if (rv != SECSuccess) {
             return SECFailure;
@@ -80,16 +80,6 @@ tls13_MakeHrrCookie(sslSocket *ss, const sslNamedGroupDef *selectedGroup,
             return SECFailure;
         }
         rv = sslBuffer_AppendNumber(&cookieBuf, ss->xtnData.ech->aeadId, 2);
-        if (rv != SECSuccess) {
-            return SECFailure;
-        }
-        /* We need to send a ECH HRR Extension containing a signal for the client,
-         * we must store the signal in the cookie so we can reconstruct the transcript
-         * later. To avoid leaking whether ECH was accepted in the length of the cookie
-         * we include the empty signal in the cookie regardless.
-         */
-        PR_ASSERT(SSL_BUFFER_LEN(&ss->ssl3.hs.greaseEchBuf) == TLS13_ECH_SIGNAL_LEN);
-        rv = sslBuffer_AppendBuffer(&cookieBuf, &ss->ssl3.hs.greaseEchBuf);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -153,8 +143,11 @@ tls13_HandleHrrCookie(sslSocket *ss,
                       unsigned char *cookie, unsigned int cookieLen,
                       ssl3CipherSuite *previousCipherSuite,
                       const sslNamedGroupDef **previousGroup,
-                      PRBool *previousOfferedEch,
-                      sslEchCookieData *echData,
+                      PRBool *previousEchOffered,
+                      HpkeKdfId *previousEchKdfId,
+                      HpkeAeadId *previousEchAeadId,
+                      PRUint8 *previousEchConfigId,
+                      HpkeContext **previousEchHpkeCtx,
                       PRBool recoverState)
 {
     SECStatus rv;
@@ -163,20 +156,20 @@ tls13_HandleHrrCookie(sslSocket *ss,
     sslBuffer messageBuf = SSL_BUFFER_EMPTY;
     sslReadBuffer echHpkeBuf = { 0 };
     PRBool receivedEch;
+    PRUint8 echConfigId = 0;
     PRUint64 sentinel;
     PRUint64 cipherSuite;
-    sslEchCookieData parsedEchData = { 0 };
-    sslReadBuffer greaseReadBuf = { 0 };
+    HpkeContext *hpkeContext = NULL;
+    HpkeKdfId echKdfId = 0;
+    HpkeAeadId echAeadId = 0;
     PRUint64 group;
     PRUint64 tmp64;
     const sslNamedGroupDef *selectedGroup;
     PRUint64 appTokenLen;
-    sslBuffer greaseBuf = SSL_BUFFER_EMPTY;
 
     rv = ssl_SelfEncryptUnprotect(ss, cookie, cookieLen,
                                   plaintext, &plaintextLen, sizeof(plaintext));
     if (rv != SECSuccess) {
-        SSL_TRC(100, ("Error decrypting cookie."));
         return SECFailure;
     }
 
@@ -210,7 +203,7 @@ tls13_HandleHrrCookie(sslSocket *ss,
         return SECFailure;
     }
     receivedEch = tmp64 == PR_TRUE;
-    *previousOfferedEch = receivedEch;
+
     if (receivedEch) {
         /* ECH config ID */
         rv = sslRead_ReadNumber(&reader, 1, &tmp64);
@@ -218,7 +211,7 @@ tls13_HandleHrrCookie(sslSocket *ss,
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
             return SECFailure;
         }
-        parsedEchData.configId = (PRUint8)tmp64;
+        echConfigId = tmp64;
 
         /* ECH Ciphersuite */
         rv = sslRead_ReadNumber(&reader, 2, &tmp64);
@@ -226,29 +219,14 @@ tls13_HandleHrrCookie(sslSocket *ss,
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
             return SECFailure;
         }
-        parsedEchData.kdfId = (HpkeKdfId)tmp64;
+        echKdfId = (HpkeKdfId)tmp64;
 
         rv = sslRead_ReadNumber(&reader, 2, &tmp64);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
             return SECFailure;
         }
-        parsedEchData.aeadId = (HpkeAeadId)tmp64;
-
-        rv = sslRead_Read(&reader, TLS13_ECH_SIGNAL_LEN, &greaseReadBuf);
-        if (rv != SECSuccess) {
-            FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
-            return SECFailure;
-        }
-
-        if (echData) {
-            rv = sslBuffer_Append(&greaseBuf, greaseReadBuf.buf, greaseReadBuf.len);
-            if (rv != SECSuccess) {
-                FATAL_ERROR(ss, SSL_ERROR_INTERNAL_ERROR_ALERT, internal_error);
-                return SECFailure;
-            }
-            parsedEchData.signal = greaseBuf;
-        }
+        echAeadId = (HpkeAeadId)tmp64;
 
         /* ECH HPKE context may be empty. */
         rv = sslRead_ReadVariable(&reader, 2, &echHpkeBuf);
@@ -256,11 +234,12 @@ tls13_HandleHrrCookie(sslSocket *ss,
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
             return SECFailure;
         }
-        if (echData && echHpkeBuf.len) {
+
+        if (previousEchHpkeCtx && echHpkeBuf.len) {
             const SECItem hpkeItem = { siBuffer, CONST_CAST(unsigned char, echHpkeBuf.buf),
                                        echHpkeBuf.len };
-            parsedEchData.hpkeCtx = PK11_HPKE_ImportContext(&hpkeItem, NULL);
-            if (!parsedEchData.hpkeCtx) {
+            hpkeContext = PK11_HPKE_ImportContext(&hpkeItem, NULL);
+            if (!hpkeContext) {
                 FATAL_ERROR(ss, PORT_GetError(), illegal_parameter);
                 return SECFailure;
             }
@@ -332,8 +311,22 @@ tls13_HandleHrrCookie(sslSocket *ss,
     if (previousGroup) {
         *previousGroup = selectedGroup;
     }
-    if (echData) {
-        PORT_Memcpy(echData, &parsedEchData, sizeof(parsedEchData));
+    if (previousEchOffered) {
+        *previousEchOffered = receivedEch;
+    }
+    if (receivedEch) {
+        if (previousEchConfigId) {
+            *previousEchConfigId = echConfigId;
+        }
+        if (previousEchKdfId) {
+            *previousEchKdfId = echKdfId;
+        }
+        if (previousEchAeadId) {
+            *previousEchAeadId = echAeadId;
+        }
+        if (previousEchHpkeCtx) {
+            *previousEchHpkeCtx = hpkeContext;
+        }
     }
     return SECSuccess;
 }

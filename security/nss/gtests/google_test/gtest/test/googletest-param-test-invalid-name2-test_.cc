@@ -27,19 +27,22 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 #include "gtest/gtest.h"
 
 namespace {
 class DummyTest : public ::testing::TestWithParam<const char *> {};
 
 std::string StringParamTestSuffix(
-    const testing::TestParamInfo<const char *> &info) {
+    const testing::TestParamInfo<const char*>& info) {
   return std::string(info.param);
 }
 
-TEST_P(DummyTest, Dummy) {}
+TEST_P(DummyTest, Dummy) {
+}
 
-INSTANTIATE_TEST_SUITE_P(DuplicateTestNames, DummyTest,
+INSTANTIATE_TEST_SUITE_P(DuplicateTestNames,
+                         DummyTest,
                          ::testing::Values("a", "b", "a", "c"),
                          StringParamTestSuffix);
 }  // namespace
@@ -48,3 +51,5 @@ int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
+
