@@ -88,15 +88,18 @@ SECStatus tls13_DecodeKeyShareEntry(sslReader *rdr, TLS13KeyShareEntry **ksp);
 PRUint32 tls13_SizeOfKeyShareEntry(const SECKEYPublicKey *pubKey);
 SECStatus tls13_EncodeKeyShareEntry(sslBuffer *buf, SSLNamedGroup group,
                                     SECKEYPublicKey *pubKey);
-SECStatus tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                   SECItem *data);
+SECStatus tls13_ServerHandleInnerEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                                        SECItem *data);
+SECStatus tls13_ServerHandleOuterEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                                        SECItem *data);
+SECStatus tls13_ServerSendHrrEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                                    sslBuffer *buf, PRBool *added);
 SECStatus tls13_ServerSendEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                  sslBuffer *buf, PRBool *added);
+SECStatus tls13_ClientHandleHrrEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                                      SECItem *data);
 SECStatus tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                    SECItem *data);
-SECStatus tls13_ServerHandleEchIsInnerXtn(const sslSocket *ss,
-                                          TLSExtensionData *xtnData,
-                                          SECItem *data);
 SECStatus tls13_ClientSendPostHandshakeAuthXtn(const sslSocket *ss,
                                                TLSExtensionData *xtnData,
                                                sslBuffer *buf, PRBool *added);

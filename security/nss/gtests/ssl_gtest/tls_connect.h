@@ -156,7 +156,7 @@ class TlsConnectTestBase : public ::testing::Test {
                 std::shared_ptr<TlsAgent>& server,
                 HpkeKemId kem_id = HpkeDhKemX25519Sha256,
                 bool expect_ech = true, bool set_client_config = true,
-                bool set_server_config = true);
+                bool set_server_config = true, int maxConfigSize = 100);
 
  protected:
   SSLProtocolVariant variant_;

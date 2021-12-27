@@ -27,7 +27,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 // This sample shows how to test common properties of multiple
 // implementations of the same interface (aka interface tests).
 
@@ -72,6 +71,8 @@ class PrimeTableTest : public testing::Test {
   // types) in the base interface, for example.
   PrimeTable* const table_;
 };
+
+#if GTEST_HAS_TYPED_TEST
 
 using testing::Types;
 
@@ -132,6 +133,10 @@ TYPED_TEST(PrimeTableTest, CanGetNextPrime) {
 // in the type list specified in TYPED_TEST_SUITE.  Sit back and be
 // happy that you don't have to define them multiple times.
 
+#endif  // GTEST_HAS_TYPED_TEST
+
+#if GTEST_HAS_TYPED_TEST_P
+
 using testing::Types;
 
 // Sometimes, however, you don't yet know all the types that you want
@@ -151,8 +156,7 @@ using testing::Types;
 // the PrimeTableTest fixture defined earlier:
 
 template <class T>
-class PrimeTableTest2 : public PrimeTableTest<T> {
-};
+class PrimeTableTest2 : public PrimeTableTest<T> {};
 
 // Then, declare the test case.  The argument is the name of the test
 // fixture, and also the name of the test case (as usual).  The _P
@@ -214,4 +218,5 @@ INSTANTIATE_TYPED_TEST_SUITE_P(OnTheFlyAndPreCalculated,    // Instance name
                                PrimeTableTest2,             // Test case name
                                PrimeTableImplementations);  // Type list
 
+#endif  // GTEST_HAS_TYPED_TEST_P
 }  // namespace

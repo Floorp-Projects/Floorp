@@ -313,7 +313,7 @@ void TlsConnectTestBase::SetupEch(std::shared_ptr<TlsAgent>& client,
                                   std::shared_ptr<TlsAgent>& server,
                                   HpkeKemId kem_id, bool expect_ech,
                                   bool set_client_config,
-                                  bool set_server_config) {
+                                  bool set_server_config, int max_name_len) {
   EXPECT_TRUE(set_server_config || set_client_config);
   ScopedSECKEYPublicKey pub;
   ScopedSECKEYPrivateKey priv;
@@ -322,8 +322,8 @@ void TlsConnectTestBase::SetupEch(std::shared_ptr<TlsAgent>& client,
       {HpkeKdfHkdfSha256, HpkeAeadChaCha20Poly1305},
       {HpkeKdfHkdfSha256, HpkeAeadAes128Gcm}};
 
-  GenerateEchConfig(kem_id, kDefaultSuites, "public.name", 100, record, pub,
-                    priv);
+  GenerateEchConfig(kem_id, kDefaultSuites, "public.name", max_name_len, record,
+                    pub, priv);
   ASSERT_NE(0U, record.len());
   SECStatus rv;
   if (set_server_config) {
