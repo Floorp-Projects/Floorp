@@ -24,7 +24,10 @@ LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
   MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
-
+  if (!UseOverlayStyle(aPresContext)) {
+    return ScrollbarDrawingWin::GetMinimumWidgetSize(aPresContext, aAppearance,
+                                                     aFrame);
+  }
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
@@ -107,11 +110,13 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
     const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, const Colors& aColors) {
+    const EventStates& aDocumentState, const Colors& aColors,
+    const DPIRatio& aDpiRatio) {
   if (!ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
     return true;
   }
 
+  const bool overlay = UseOverlayStyle(aFrame->PresContext());
   auto [buttonColor, arrowColor] = ComputeScrollbarButtonColors(
       aFrame, aAppearance, aStyle, aElementState, aDocumentState, aColors);
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
@@ -132,6 +137,9 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
       aAppearance == StyleAppearance::ScrollbarbuttonLeft;
 
   const float offset = [&] {
+    if (!overlay) {
+      return 0.0f;  // Always center it in the rect.
+    }
     // Compensate for the displacement we do of the thumb position by displacing
     // the arrow as well, see comment in DoPaintScrollbarThumb.
     if (horizontal) {
@@ -173,9 +181,21 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
     std::swap(arrowX, arrowY);
   }
 
-  ThemeDrawing::PaintArrow(aDrawTarget, aRect, arrowX, arrowY, kPolygonSize,
+  LayoutDeviceRect arrowRect(aRect);
+  if (!overlay) {
+    auto margin = CSSCoord(2) * aDpiRatio;
+    arrowRect.Deflate(margin, margin);
+  }
+
+  ThemeDrawing::PaintArrow(aDrawTarget, arrowRect, arrowX, arrowY, kPolygonSize,
                            arrowNumPoints, arrowColor);
   return true;
+}
+
+bool ScrollbarDrawingWin11::UseOverlayStyle(nsPresContext* aPresContext) {
+  return StaticPrefs::
+             widget_non_native_theme_win11_scrollbar_force_overlay_style() ||
+         aPresContext->UseOverlayScrollbars();
 }
 
 template <typename PaintBackendData>
@@ -189,7 +209,23 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 
   LayoutDeviceRect thumbRect(aRect);
 
-  if (ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
+  const bool overlay = UseOverlayStyle(aFrame->PresContext());
+  const bool hovered =
+      ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame);
+  if (!overlay) {
+    auto margin = CSSCoord(hovered ? 3 : 4) * aDpiRatio;
+    if (aHorizontal) {
+      thumbRect.Deflate(0, margin);
+    } else {
+      thumbRect.Deflate(margin, 0);
+    }
+    auto radius = CSSCoord(hovered ? 2 : 0);
+    ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, thumbRect, thumbColor,
+                                             sRGBColor(), 0, radius, aDpiRatio);
+    return true;
+  }
+
+  if (hovered) {
     if (aHorizontal) {
       // Scrollbar is 17px high. We make the thumb it 6px tall and move it 5px
       // towards the bottom, so the center (8.5 initially) is displaced by
