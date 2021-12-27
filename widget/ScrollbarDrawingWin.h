@@ -47,6 +47,8 @@ class ScrollbarDrawingWin : public ScrollbarDrawing {
   void RecomputeScrollbarParams() override;
 };
 
+static constexpr uint32_t kDefaultWinScrollbarSize = 17;
+
 }  // namespace mozilla::widget
 
 #endif
