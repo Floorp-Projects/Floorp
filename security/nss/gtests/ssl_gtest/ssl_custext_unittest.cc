@@ -23,23 +23,23 @@ static void IncrementCounterArg(void *arg) {
   }
 }
 
-static PRBool NoopExtensionWriter(PRFileDesc *fd, SSLHandshakeType message,
-                                  PRUint8 *data, unsigned int *len,
-                                  unsigned int maxLen, void *arg) {
+PRBool NoopExtensionWriter(PRFileDesc *fd, SSLHandshakeType message,
+                           PRUint8 *data, unsigned int *len,
+                           unsigned int maxLen, void *arg) {
   IncrementCounterArg(arg);
   return PR_FALSE;
 }
 
-static PRBool EmptyExtensionWriter(PRFileDesc *fd, SSLHandshakeType message,
-                                   PRUint8 *data, unsigned int *len,
-                                   unsigned int maxLen, void *arg) {
+PRBool EmptyExtensionWriter(PRFileDesc *fd, SSLHandshakeType message,
+                            PRUint8 *data, unsigned int *len,
+                            unsigned int maxLen, void *arg) {
   IncrementCounterArg(arg);
   return PR_TRUE;
 }
 
-static SECStatus NoopExtensionHandler(PRFileDesc *fd, SSLHandshakeType message,
-                                      const PRUint8 *data, unsigned int len,
-                                      SSLAlertDescription *alert, void *arg) {
+SECStatus NoopExtensionHandler(PRFileDesc *fd, SSLHandshakeType message,
+                               const PRUint8 *data, unsigned int len,
+                               SSLAlertDescription *alert, void *arg) {
   return SECSuccess;
 }
 

@@ -16,5 +16,7 @@ trap 'rm -rf "$d"' EXIT
     "$1" "$d"/googletest
 rm -rf gtest
 mv "$d"/googletest/googletest gtest
+mv "$d"/googletest/CONTRIBUTORS gtest/CONTRIBUTORS
+mv "$d"/googletest/LICENSE gtest/LICENSE
 echo "$1" > VERSION
 cat "$d"/googletest/.git-copy >> VERSION
