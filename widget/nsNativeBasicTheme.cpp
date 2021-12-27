@@ -1163,7 +1163,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           GetScrollbarDrawing().PaintScrollbarButton(
               aPaintData, aAppearance, devPxRect, aFrame,
               *nsLayoutUtils::StyleForScrollbar(aFrame), eventState, docState,
-              colors);
+              colors, dpiRatio);
         }
       }
       break;

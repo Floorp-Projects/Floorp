@@ -29,6 +29,8 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
                                        const EventStates& aDocumentState,
                                        const Colors&) override;
 
+  static bool UseOverlayStyle(nsPresContext*);
+
   // Returned colors are button, arrow.
   std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
       nsIFrame*, StyleAppearance, const ComputedStyle&,
@@ -39,8 +41,8 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
                             const LayoutDeviceRect&, nsIFrame*,
                             const ComputedStyle&,
                             const EventStates& aElementState,
-                            const EventStates& aDocumentState,
-                            const Colors&) override;
+                            const EventStates& aDocumentState, const Colors&,
+                            const DPIRatio&) override;
 
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,

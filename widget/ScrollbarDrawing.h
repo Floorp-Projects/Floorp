@@ -96,7 +96,7 @@ class ScrollbarDrawing {
                                     const ComputedStyle&,
                                     const EventStates& aElementState,
                                     const EventStates& aDocumentState,
-                                    const Colors&);
+                                    const Colors&, const DPIRatio&);
 
   virtual bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
                                    bool aHorizontal, nsIFrame*,
