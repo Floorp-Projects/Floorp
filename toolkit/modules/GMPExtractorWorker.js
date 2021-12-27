@@ -6,6 +6,8 @@
 
 "use strict";
 
+importScripts("resource://gre/modules/osfile.jsm");
+
 const FILE_ENTRY = "201: ";
 
 onmessage = async function(msg) {
@@ -41,27 +43,31 @@ onmessage = async function(msg) {
         };
         reader.readAsArrayBuffer(fileContents);
       });
-      let profileDirPath = await IOUtils.getProfileDir();
-      let installToDirPath = IOUtils.join(
+      let profileDirPath = OS.Constants.Path.profileDir;
+      let installToDirPath = OS.Path.join(
         profileDirPath,
-        ...msg.data.relativeInstallPath
+        msg.data.relativeInstallPath
       );
-      await IOUtils.makeDirectory(installToDirPath);
+      await OS.File.makeDir(installToDirPath, {
+        ignoreExisting: true,
+        unixMode: 0o755,
+        from: profileDirPath,
+      });
       // Do not extract into directories. Extract all files to the same
       // directory.
-      let destPath = PathUtils.join(installToDirPath, fileName);
-      await IOUtils.write(destPath, new Uint8Array(fileData), {
+      let destPath = OS.Path.join(installToDirPath, fileName);
+      await OS.File.writeAtomic(destPath, new Uint8Array(fileData), {
         tmpPath: destPath + ".tmp",
       });
       // Ensure files are writable and executable. Otherwise, we may be
       // unable to execute or uninstall them.
-      await IOUtils.setPermissions(destPath, 0o700);
-      if (IOUtils.removeMacXAttr) {
+      await OS.File.setPermissions(destPath, { unixMode: 0o700 });
+      if (OS.Constants.Sys.Name == "Darwin") {
         // If we're on MacOS Firefox will add the quarantine xattr to files it
         // downloads. In this case we want to clear that xattr so we can load
         // the CDM.
         try {
-          await IOUtils.removeMacXAttr(destPath, "com.apple.quarantine");
+          await OS.File.macRemoveXAttr(destPath, "com.apple.quarantine");
         } catch (e) {
           // Failed to remove the attribute. This could be because the profile
           // exists on a file system without xattr support.
