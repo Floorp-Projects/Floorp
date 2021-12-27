@@ -2718,13 +2718,13 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
                                    HandleValue referencingPrivate,
                                    HandleObject moduleRequest,
                                    HandleObject promiseArg) {
-  // If we do not have an evaluation promise for the module, we can assume that
-  // evaluation has failed or been interrupted -- we can reject the dynamic
-  // module.
+  // If we do not have an evaluation promise or a module request for the module,
+  // we can assume that evaluation has failed or been interrupted -- we can
+  // reject the dynamic module.
   auto releasePrivate = mozilla::MakeScopeExit(
       [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
 
-  if (!evaluationPromise) {
+  if (!evaluationPromise || !moduleRequest) {
     Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
     return RejectPromiseWithPendingError(cx, promise);
   }
