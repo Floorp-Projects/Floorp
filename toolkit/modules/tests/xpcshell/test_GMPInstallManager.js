@@ -15,6 +15,7 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -948,7 +949,7 @@ add_task(async function test_GMPExtractor_paths() {
   registerCleanupFunction(function() {
     // Must stop holding on to the zip file using the JAR cache:
     let zipFile = new FileUtils.File(
-      PathUtils.join(tempDir.path, "dummy_gmp.zip")
+      OS.Path.join(tempDir.path, "dummy_gmp.zip")
     );
     Services.obs.notifyObservers(zipFile, "flush-cache-entry");
     extractedDir.remove(/* recursive */ true);
@@ -960,12 +961,12 @@ add_task(async function test_GMPExtractor_paths() {
   // - 猫 -- ensure we handle non-ascii characters appropriately.
   let tempDirName = "TmpDir#猫";
   let tempDir = FileUtils.getDir("TmpD", [tempDirName], true);
-  let zipPath = PathUtils.join(tempDir.path, "dummy_gmp.zip");
-  await IOUtils.copy("zips/dummy_gmp.zip", zipPath);
+  let zipPath = OS.Path.join(tempDir.path, "dummy_gmp.zip");
+  await OS.File.copy("zips/dummy_gmp.zip", zipPath, { noOverwrite: false });
   // The path inside the profile dir we'll extract to. Make sure we handle
   // the characters there too.
   let relativeExtractPath = "extracted#猫";
-  let extractor = new GMPExtractor(zipPath, [relativeExtractPath]);
+  let extractor = new GMPExtractor(zipPath, relativeExtractPath);
   let extractedPaths = await extractor.install();
   // extractedPaths should contain the files extracted. In this case we
   // should have a single file extracted to our profile dir -- the zip
@@ -979,30 +980,27 @@ add_task(async function test_GMPExtractor_paths() {
     !extractedPaths[0].includes("verified_contents.json"),
     "verified_contents.json should not be on extracted path"
   );
-  let extractedDir = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath
-  );
+  let extractedDir = FileUtils.getDir("ProfD", [relativeExtractPath], false);
   Assert.ok(
-    await IOUtils.exists(extractedDir),
+    extractedDir.exists(),
     "Extraction should have created a directory"
   );
-  let extractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath,
-    "dummy_file.txt"
+  let extractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "dummy_file.txt"],
+    false
   );
   Assert.ok(
-    await IOUtils.exists(extractedFile),
+    extractedFile.exists(),
     "Extraction should have created dummy_file.txt"
   );
-  let unextractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath,
-    "verified_contents.json"
+  let unextractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "verified_contents.json"],
+    false
   );
   Assert.ok(
-    !(await IOUtils.exists(unextractedFile)),
+    !unextractedFile.exists(),
     "Extraction should not have created verified_contents.json"
   );
 });
