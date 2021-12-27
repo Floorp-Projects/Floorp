@@ -40,6 +40,9 @@ sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
         return SECSuccess;
     }
 
+    /* If buf is non-NULL, space must be non-zero;
+     * if buf is NULL, space must be zero. */
+    PORT_Assert((b->buf && b->space) || (!b->buf && !b->space));
     newLen = PR_MAX(newLen, b->len + 1024);
     if (newLen > b->space) {
         unsigned char *newBuf;
@@ -54,6 +57,22 @@ sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
         b->buf = newBuf;
         b->space = newLen;
     }
+    return SECSuccess;
+}
+
+/* Appends len copies of c to b */
+SECStatus
+sslBuffer_Fill(sslBuffer *b, PRUint8 c, size_t len)
+{
+    PORT_Assert(b);
+    SECStatus rv = sslBuffer_Grow(b, b->len + len);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (len > 0) {
+        memset(SSL_BUFFER_NEXT(b), c, len);
+    }
+    b->len += len;
     return SECSuccess;
 }
 

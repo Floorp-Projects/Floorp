@@ -5525,7 +5525,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
 
     if (!ss->ssl3.hs.echHpkeCtx) {
         if (extensionBuf.len) {
-            rv = tls13_MaybeGreaseEch(ss, chBuf.len, &extensionBuf);
+            rv = tls13_MaybeGreaseEch(ss, &chBuf, &extensionBuf);
             if (rv != SECSuccess) {
                 goto loser; /* err set by tls13_MaybeGreaseEch. */
             }
@@ -9809,21 +9809,26 @@ ssl_ConstructServerHello(sslSocket *ss, PRBool helloRetry,
         return SECFailure;
     }
     if (SSL_BUFFER_LEN(extensionBuf)) {
+        /* Directly copy the extensions */
         rv = sslBuffer_AppendBufferVariable(messageBuf, extensionBuf, 2);
         if (rv != SECSuccess) {
             return SECFailure;
         }
     }
 
-    if (!helloRetry && ssl3_ExtensionNegotiated(ss, ssl_tls13_ech_is_inner_xtn)) {
+    if (ss->xtnData.ech && ss->xtnData.ech->receivedInnerXtn) {
         /* Signal ECH acceptance if we handled handled both CHOuter/CHInner (i.e.
          * in shared mode), or if we received a CHInner in split/backend mode. */
         if (ss->ssl3.hs.echAccepted || ss->opt.enableTls13BackendEch) {
-            return tls13_WriteServerEchSignal(ss, SSL_BUFFER_BASE(messageBuf),
-                                              SSL_BUFFER_LEN(messageBuf));
+            if (helloRetry) {
+                return tls13_WriteServerEchHrrSignal(ss, SSL_BUFFER_BASE(messageBuf),
+                                                     SSL_BUFFER_LEN(messageBuf));
+            } else {
+                return tls13_WriteServerEchSignal(ss, SSL_BUFFER_BASE(messageBuf),
+                                                  SSL_BUFFER_LEN(messageBuf));
+            }
         }
     }
-
     return SECSuccess;
 }
 
@@ -13499,6 +13504,7 @@ ssl3_InitState(sslSocket *ss)
     ss->ssl3.hs.serverTrafficSecret = NULL;
     ss->ssl3.hs.echHpkeCtx = NULL;
     ss->ssl3.hs.echAccepted = PR_FALSE;
+    ss->ssl3.hs.echDecided = PR_FALSE;
 
     PORT_Assert(!ss->ssl3.hs.messages.buf && !ss->ssl3.hs.messages.space);
     ss->ssl3.hs.messages.buf = NULL;

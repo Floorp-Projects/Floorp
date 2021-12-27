@@ -27,7 +27,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 // This sample shows how to test code relying on some global flag variables.
 // Combine() helps with generating all possible combinations of such flags,
 // and each test is given one combination as a parameter.
@@ -49,9 +48,8 @@ class HybridPrimeTable : public PrimeTable {
  public:
   HybridPrimeTable(bool force_on_the_fly, int max_precalculated)
       : on_the_fly_impl_(new OnTheFlyPrimeTable),
-        precalc_impl_(force_on_the_fly
-                          ? nullptr
-                          : new PreCalculatedPrimeTable(max_precalculated)),
+        precalc_impl_(force_on_the_fly ? nullptr : new PreCalculatedPrimeTable(
+                                                       max_precalculated)),
         max_precalculated_(max_precalculated) {}
   ~HybridPrimeTable() override {
     delete on_the_fly_impl_;
