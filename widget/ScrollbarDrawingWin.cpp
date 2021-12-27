@@ -161,7 +161,7 @@ bool ScrollbarDrawingWin::PaintScrollbarThumb(
 }
 
 void ScrollbarDrawingWin::RecomputeScrollbarParams() {
-  uint32_t defaultSize = 17;
+  uint32_t defaultSize = kDefaultWinScrollbarSize;
   uint32_t overrideSize =
       StaticPrefs::widget_non_native_theme_scrollbar_size_override();
   if (overrideSize > 0) {
