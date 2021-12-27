@@ -688,7 +688,10 @@ nsParser::Parse(nsIURI* aURL, void* aKey) {
     if (rv != NS_OK) {
       return rv;
     }
-    NS_ConvertUTF8toUTF16 theName(spec);
+    nsString theName;  // Not nsAutoString due to length and usage
+    if (!CopyUTF8toUTF16(spec, theName, mozilla::fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsScanner* theScanner = new nsScanner(theName, false);
     CParserContext* pc =
