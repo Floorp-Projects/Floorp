@@ -615,9 +615,6 @@ void ModuleLoader::FinishDynamicImport(
 
   JS::Rooted<JSObject*> moduleRequest(aCx,
                                       JS::CreateModuleRequest(aCx, specifier));
-  if (!moduleRequest) {
-    JS_ReportOutOfMemory(aCx);
-  }
 
   JS::FinishDynamicModuleImport(aCx, aEvaluationPromise, referencingScript,
                                 moduleRequest, promise);
