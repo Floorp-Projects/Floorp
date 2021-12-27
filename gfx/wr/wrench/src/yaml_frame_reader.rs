@@ -1286,7 +1286,7 @@ impl YamlFrameReader {
                             let file = rsrc_path(&item["image-source"], &self.aux_dir);
                             let (image_key, _) = self
                                 .add_or_get_image(&file, None, item, wrench);
-                            NinePatchBorderSource::Image(image_key)
+                            NinePatchBorderSource::Image(image_key, ImageRendering::Auto)
                         }
                         "gradient" => {
                             let gradient = self.to_gradient(dl, item);
