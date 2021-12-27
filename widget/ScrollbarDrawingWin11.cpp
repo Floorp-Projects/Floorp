@@ -30,15 +30,20 @@ LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
     return ScrollbarDrawingWin::GetMinimumWidgetSize(aPresContext, aAppearance,
                                                      aFrame);
   }
+  constexpr float kArrowRatio = 14.0f / kDefaultWinScrollbarSize;
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-      return LayoutDeviceIntSize{GetVerticalScrollbarWidth(),
-                                 CSSToScrollbarDeviceSize(14, aPresContext)};
+    case StyleAppearance::ScrollbarbuttonDown: {
+      const uint32_t size = GetVerticalScrollbarWidth();
+      return LayoutDeviceIntSize{
+          size, CSSToScrollbarDeviceSize(kArrowRatio * size, aPresContext)};
+    }
     case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-      return LayoutDeviceIntSize{CSSToScrollbarDeviceSize(14, aPresContext),
-                                 GetHorizontalScrollbarHeight()};
+    case StyleAppearance::ScrollbarbuttonRight: {
+      const uint32_t size = GetHorizontalScrollbarHeight();
+      return LayoutDeviceIntSize{
+          CSSToScrollbarDeviceSize(kArrowRatio * size, aPresContext), size};
+    }
     default:
       return ScrollbarDrawingWin::GetMinimumWidgetSize(aPresContext,
                                                        aAppearance, aFrame);
@@ -149,7 +154,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
     }
     return aFrame->GetWritingMode().IsPhysicalLTR() ? 0.5f : -0.5f;
   }();
-  const float kPolygonSize = 17;
+  const float kPolygonSize = kDefaultWinScrollbarSize;
   const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
 
   if (aElementState.HasState(NS_EVENT_STATE_ACTIVE)) {
@@ -215,12 +220,17 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
   const bool hovered =
       ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame);
   if (!overlay) {
-    auto margin = CSSCoord(hovered ? 3 : 4) * aDpiRatio;
+    constexpr float kHoveredThumbRatio =
+        (1.0f - (11.0f / kDefaultWinScrollbarSize)) / 2.0f;
+    constexpr float kUnhoveredThumbRatio =
+        (1.0f - (9.0f / kDefaultWinScrollbarSize)) / 2.0f;
+    const float ratio = hovered ? kHoveredThumbRatio : kUnhoveredThumbRatio;
     if (aHorizontal) {
-      thumbRect.Deflate(0, margin);
+      thumbRect.Deflate(0, thumbRect.height * ratio);
     } else {
-      thumbRect.Deflate(margin, 0);
+      thumbRect.Deflate(thumbRect.width * ratio, 0);
     }
+
     auto radius = CSSCoord(hovered ? 2 : 0);
     ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, thumbRect, thumbColor,
                                              sRGBColor(), 0, radius, aDpiRatio);
@@ -228,30 +238,31 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
   }
 
   if (hovered) {
+    constexpr float kHoverThumbSize = 6.0f / kDefaultWinScrollbarSize;
     if (aHorizontal) {
-      // Scrollbar is 17px high. We make the thumb it 6px tall and move it 5px
-      // towards the bottom, so the center (8.5 initially) is displaced by
+      // Scrollbar is 17px high by default. We make the thumb 6px tall and move
+      // it 5px towards the bottom, so the center (8.5 initially) is displaced
+      // by:
       //   (5px + 6px / 2) - 8.5px = -0.5px
-      //
-      // TODO(emilio): These displacements don't work quite right with custom
-      // scrollbar sizes.
-      thumbRect.height = 6 * aDpiRatio.scale;
-      thumbRect.y += 5 * aDpiRatio.scale;
+      constexpr float kShift = 5.0f / kDefaultWinScrollbarSize;
+
+      thumbRect.y += thumbRect.height * kShift;
+      thumbRect.height *= kHoverThumbSize;
     } else {
-      // Scrollbar is 17px wide. We make the thumb it 6px wide and move it 5px
-      // or 6px towards the right (depending on writing-mode), so the center
-      // (8.5px initially) is displaced by:
+      // Scrollbar is 17px wide by default. We make the thumb 6px wide and move
+      // it 5px or 6px towards the right (depending on writing-mode), so the
+      // center (8.5px initially) is displaced by:
       //   (6px + 6px / 2) - 8.5px = 0.5px for LTR
       //   (5px + 6px / 2) - 8.5px = -0.5px for RTL
-      //
-      // TODO(emilio): These displacements don't work quite right with custom
-      // scrollbar sizes.
-      thumbRect.width = 6 * aDpiRatio.scale;
+      constexpr float kLtrShift = 6.0f / kDefaultWinScrollbarSize;
+      constexpr float kRtlShift = 5.0f / kDefaultWinScrollbarSize;
+
       if (aFrame->GetWritingMode().IsPhysicalLTR()) {
-        thumbRect.x += 6 * aDpiRatio.scale;
+        thumbRect.x += thumbRect.width * kLtrShift;
       } else {
-        thumbRect.x += 5 * aDpiRatio.scale;
+        thumbRect.x += thumbRect.width * kRtlShift;
       }
+      thumbRect.width *= kHoverThumbSize;
     }
     LayoutDeviceCoord radius =
         (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f;
@@ -264,16 +275,21 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
     return true;
   }
 
+  constexpr float kThumbSize = 2.0f / kDefaultWinScrollbarSize;
   if (aHorizontal) {
-    thumbRect.height = 2 * aDpiRatio.scale;
-    thumbRect.y += 7 * aDpiRatio.scale;
+    constexpr float kShift = 7.0f / kDefaultWinScrollbarSize;
+    thumbRect.y += thumbRect.height * kShift;
+    thumbRect.height *= kThumbSize;
   } else {
-    thumbRect.width = 2 * aDpiRatio.scale;
+    constexpr float kLtrShift = 8.0f / kDefaultWinScrollbarSize;
+    constexpr float kRtlShift = 7.0f / kDefaultWinScrollbarSize;
+
     if (aFrame->GetWritingMode().IsPhysicalLTR()) {
-      thumbRect.x += 8 * aDpiRatio.scale;
+      thumbRect.x += thumbRect.width * kLtrShift;
     } else {
-      thumbRect.x += 7 * aDpiRatio.scale;
+      thumbRect.x += thumbRect.width * kRtlShift;
     }
+    thumbRect.width *= kThumbSize;
   }
   ThemeDrawing::FillRect(aPaintData, thumbRect, thumbColor);
   return true;
