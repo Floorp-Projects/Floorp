@@ -38,14 +38,17 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
 
   // Whether we draw a non-native widget.
   //
-  // We draw widgets as non-native when their color-scheme is dark, since win32
-  // classic APIs don't allow us to draw dark form controls.
+  // We always draw scrollbars as non-native so that all of Firefox has
+  // consistent scrollbar styles both in chrome and content (plus, the
+  // non-native scrollbars support scrollbar-width, auto-darkening...).
   //
-  // We don't call into the non-native theme for sizing information
-  // (GetWidgetPadding/Border and GetMinimumWidgetSize), to avoid subtle sizing
-  // changes. The non-native theme can basically draw at any size, so we prefer
-  // to have consistent sizing information with the native theme.
-  bool IsWidgetNonNative(nsIFrame*, StyleAppearance);
+  // We draw other widgets as non-native when their color-scheme is dark.  In
+  // that case (`BecauseColorMismatch`) we don't call into the non-native theme
+  // for sizing information (GetWidgetPadding/Border and GetMinimumWidgetSize),
+  // to avoid subtle sizing changes. The non-native theme can basically draw at
+  // any size, so we prefer to have consistent sizing information.
+  enum class NonNative { No, Always, BecauseColorMismatch };
+  NonNative IsWidgetNonNative(nsIFrame*, StyleAppearance);
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
