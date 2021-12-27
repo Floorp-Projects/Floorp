@@ -94,6 +94,15 @@ auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
   return {(CSSCoord(w) * dpi).Rounded(), (CSSCoord(h) * dpi).Rounded()};
 }
 
+auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
+                                         nsIFrame* aFrame) -> ScrollbarSizes {
+  auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  auto width = style->StyleUIReset()->mScrollbarWidth;
+  auto overlay =
+      aPresContext->UseOverlayScrollbars() ? Overlay::Yes : Overlay::No;
+  return GetScrollbarSizes(aPresContext, width, overlay);
+}
+
 bool ScrollbarDrawing::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
   auto trackColor = ComputeScrollbarTrackColor(
       aFrame, *nsLayoutUtils::StyleForScrollbar(aFrame),

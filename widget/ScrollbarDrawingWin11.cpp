@@ -16,12 +16,6 @@ using mozilla::gfx::sRGBColor;
 
 namespace mozilla::widget {
 
-static LayoutDeviceIntCoord CSSToScrollbarDeviceSize(
-    CSSCoord aCoord, nsPresContext* aPresContext) {
-  return (aCoord * ScrollbarDrawing::GetDPIRatioForScrollbarPart(aPresContext))
-      .Rounded();
-}
-
 LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
@@ -34,15 +28,23 @@ LayoutDeviceIntSize ScrollbarDrawingWin11::GetMinimumWidgetSize(
   switch (aAppearance) {
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown: {
-      const uint32_t size = GetVerticalScrollbarWidth();
+      if (IsScrollbarWidthThin(aFrame)) {
+        return {};
+      }
+      const LayoutDeviceIntCoord size =
+          GetScrollbarSizes(aPresContext, aFrame).mVertical;
       return LayoutDeviceIntSize{
-          size, CSSToScrollbarDeviceSize(kArrowRatio * size, aPresContext)};
+          size, (kArrowRatio * LayoutDeviceCoord(size)).Rounded()};
     }
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
-      const uint32_t size = GetHorizontalScrollbarHeight();
+      if (IsScrollbarWidthThin(aFrame)) {
+        return {};
+      }
+      const LayoutDeviceIntCoord size =
+          GetScrollbarSizes(aPresContext, aFrame).mHorizontal;
       return LayoutDeviceIntSize{
-          CSSToScrollbarDeviceSize(kArrowRatio * size, aPresContext), size};
+          (kArrowRatio * LayoutDeviceCoord(size)).Rounded(), size};
     }
     default:
       return ScrollbarDrawingWin::GetMinimumWidgetSize(aPresContext,
@@ -76,15 +78,29 @@ sRGBColor ScrollbarDrawingWin11::ComputeScrollbarThumbColor(
     return ScrollbarDrawingWin::ComputeScrollbarThumbColor(
         aFrame, aStyle, aElementState, aDocumentState, aColors);
   }
-  if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
-    return sRGBColor::FromU8(149, 149, 149, 255);
+  const nscolor baseColor = [&] {
+    if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
+      return NS_RGBA(149, 149, 149, 255);
+    }
+    const nsStyleUI* ui = aStyle.StyleUI();
+    if (ui->mScrollbarColor.IsColors()) {
+      return ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle);
+    }
+    return NS_RGBA(133, 133, 133, 255);
+  }();
+  EventStates state = aElementState;
+  if (!IsScrollbarWidthThin(aStyle)) {
+    // non-thin scrollbars get hover feedback by changing thumb shape, so we
+    // only provide active feedback (and we use the hover state for that as it's
+    // more subtle).
+    state &= ~NS_EVENT_STATE_HOVER;
+    if (state.HasState(NS_EVENT_STATE_ACTIVE)) {
+      state &= ~NS_EVENT_STATE_ACTIVE;
+      state |= NS_EVENT_STATE_HOVER;
+    }
   }
-  const nsStyleUI* ui = aStyle.StyleUI();
-  if (ui->mScrollbarColor.IsColors()) {
-    return sRGBColor::FromABGR(ThemeColors::AdjustUnthemedScrollbarThumbColor(
-        ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle), aElementState));
-  }
-  return sRGBColor::FromU8(133, 133, 133, 255);
+  return sRGBColor::FromABGR(
+      ThemeColors::AdjustUnthemedScrollbarThumbColor(baseColor, state));
 }
 
 std::pair<sRGBColor, sRGBColor>
@@ -101,15 +117,6 @@ ScrollbarDrawingWin11::ComputeScrollbarButtonColors(
       ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
   sRGBColor arrowColor = ComputeScrollbarThumbColor(
       aFrame, aStyle, aElementState, aDocumentState, aColors);
-
-  if (aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER |
-                                          NS_EVENT_STATE_ACTIVE)) {
-    if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
-      arrowColor = sRGBColor::FromU8(205, 205, 205, 255);
-    } else {
-      arrowColor = sRGBColor::FromU8(102, 102, 102, 255);
-    }
-  }
   return {buttonColor, arrowColor};
 }
 
@@ -218,7 +225,8 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 
   const bool overlay = UseOverlayStyle(aFrame->PresContext());
   const bool hovered =
-      ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame);
+      ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame) ||
+      IsScrollbarWidthThin(aStyle);
   if (!overlay) {
     constexpr float kHoveredThumbRatio =
         (1.0f - (11.0f / kDefaultWinScrollbarSize)) / 2.0f;
