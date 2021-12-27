@@ -61,6 +61,7 @@ class ScrollbarDrawing {
 
   virtual ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                            Overlay);
+  ScrollbarSizes GetScrollbarSizes(nsPresContext*, nsIFrame*);
   virtual LayoutDeviceIntSize GetMinimumWidgetSize(nsPresContext*,
                                                    StyleAppearance aAppearance,
                                                    nsIFrame* aFrame) = 0;
