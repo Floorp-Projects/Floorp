@@ -12315,11 +12315,6 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
-
-- name: widget.macos.enable-pre-bigsur-workaround-for-dark-mode-context-menus
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
 #endif
 
 # Whether to allow gtk dark themes in content.
