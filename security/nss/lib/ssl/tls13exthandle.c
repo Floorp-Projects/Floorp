@@ -1204,6 +1204,36 @@ tls13_ServerSendHrrCookieXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 }
 
 SECStatus
+tls13_ClientHandleHrrEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                            SECItem *data)
+{
+    if (data->len != TLS13_ECH_SIGNAL_LEN) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+        return SECFailure;
+    }
+    if (!ssl3_ExtensionAdvertised(ss, ssl_tls13_encrypted_client_hello_xtn)) {
+        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+        return SECFailure;
+    }
+    if (!ss->ssl3.hs.echHpkeCtx) {
+        SSL_TRC(50, ("%d: TLS13[%d]: client received GREASEd ECH confirmation",
+                     SSL_GETPID(), ss->fd));
+        return SECSuccess;
+    }
+    SSL_TRC(50, ("%d: TLS13[%d]: client received HRR ECH confirmation",
+                 SSL_GETPID(), ss->fd));
+    PORT_Assert(!xtnData->ech);
+    xtnData->ech = PORT_ZNew(sslEchXtnState);
+    if (!xtnData->ech) {
+        return SECFailure;
+    }
+    xtnData->ech->hrrConfirmation = data->data;
+    return SECSuccess;
+}
+
+SECStatus
 tls13_ClientHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                          SECItem *data)
 {
@@ -1452,9 +1482,64 @@ tls13_ServerSendEchXtn(const sslSocket *ss,
     return SECSuccess;
 }
 
+/* If ECH is accepted, this value will be a placeholder and overwritten later. */
 SECStatus
-tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                         SECItem *data)
+tls13_ServerSendHrrEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                          sslBuffer *buf, PRBool *added)
+{
+    SECStatus rv;
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 || !xtnData->ech || (!ss->echPubKey && !ss->opt.enableTls13GreaseEch)) {
+        SSL_TRC(100, ("%d: TLS13[%d]: server not sending HRR ECH Xtn",
+                      SSL_GETPID(), ss->fd));
+        return SECSuccess;
+    }
+    SSL_TRC(100, ("%d: TLS13[%d]: server sending HRR ECH Xtn",
+                  SSL_GETPID(), ss->fd));
+    PR_ASSERT(SSL_BUFFER_LEN(&ss->ssl3.hs.greaseEchBuf) == TLS13_ECH_SIGNAL_LEN);
+    PRINT_BUF(100, (ss, "grease_ech_confirmation", ss->ssl3.hs.greaseEchBuf.buf, TLS13_ECH_SIGNAL_LEN));
+    rv = sslBuffer_AppendBuffer(buf, &ss->ssl3.hs.greaseEchBuf);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    *added = PR_TRUE;
+    return SECSuccess;
+}
+
+SECStatus
+tls13_ServerHandleInnerEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                              SECItem *data)
+{
+    PRUint64 xtn_type;
+    sslReader xtnReader = SSL_READER(data->data, data->len);
+
+    PR_ASSERT(ss->ssl3.hs.echAccepted || ss->opt.enableTls13BackendEch);
+    PR_ASSERT(!xtnData->ech->receivedInnerXtn);
+
+    SECStatus rv = sslRead_ReadNumber(&xtnReader, 1, &xtn_type);
+    if (rv != SECSuccess) {
+        goto alert_loser;
+    }
+    if (xtn_type != ech_xtn_type_inner) {
+        goto alert_loser;
+    }
+    if (SSL_READER_REMAINING(&xtnReader)) {
+        /* Inner ECH Extension must contain only type enum */
+        goto alert_loser;
+    }
+
+    xtnData->ech->receivedInnerXtn = PR_TRUE;
+    xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
+    return SECSuccess;
+
+alert_loser:
+    ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+    PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+    return SECFailure;
+}
+
+SECStatus
+tls13_ServerHandleOuterEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
+                              SECItem *data)
 {
     SECStatus rv;
     HpkeKdfId kdf;
@@ -1464,24 +1549,41 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     SECItem senderPubKey;
     SECItem encryptedCh;
 
-    /* Ignore it if not doing 1.3+. If we have no ECHConfigs,
-     * proceed to save the config_id for HRR validation. */
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
-        IS_DTLS(ss)) {
-        return SECSuccess;
+    PRUint32 xtn_type;
+    rv = ssl3_ExtConsumeHandshakeNumber(ss, &xtn_type, 1, &data->data, &data->len);
+    if (rv != SECSuccess) {
+        goto alert_loser;
     }
-
+    if (xtn_type != ech_xtn_type_outer && xtn_type != ech_xtn_type_inner) {
+        SSL_TRC(3, ("%d: TLS13[%d]: unexpected ECH extension type in client hello outer, alert",
+                    SSL_GETPID(), ss->fd));
+        goto alert_loser;
+    }
+    /* If we are operating in shared mode, we can accept an inner xtn in the ClientHelloOuter */
+    if (xtn_type == ech_xtn_type_inner) {
+        if (!ss->opt.enableTls13BackendEch) {
+            ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+            PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+            return SECFailure;
+        }
+        PORT_Assert(!xtnData->ech);
+        xtnData->ech = PORT_ZNew(sslEchXtnState);
+        if (!xtnData->ech) {
+            return SECFailure;
+        }
+        /* We have to rewind the buffer advanced by ssl3_ExtConsumeHandshakeNumber */
+        data->data--;
+        data->len++;
+        return tls13_ServerHandleInnerEchXtn(ss, xtnData, data);
+    }
     if (ss->ssl3.hs.echAccepted) {
         ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
         PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
         return SECFailure;
     }
 
-    if (ssl3_FindExtension(CONST_CAST(sslSocket, ss), ssl_tls13_ech_is_inner_xtn)) {
-        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
-        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
-        return SECFailure;
-    }
+    SSL_TRC(3, ("%d: TLS13[%d]: handle outer ECH extension",
+                SSL_GETPID(), ss->fd));
 
     PORT_Assert(!xtnData->ech);
     xtnData->ech = PORT_ZNew(sslEchXtnState);
@@ -1519,6 +1621,7 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     }
 
     /* payload, which must be final and non-empty. */
+    xtnData->ech->payloadStart = data->data + 2; /* Move past length */
     rv = ssl3_ExtConsumeHandshakeVariable(ss, &encryptedCh, 2,
                                           &data->data, &data->len);
     if (rv != SECSuccess) {
@@ -1542,6 +1645,7 @@ tls13_ServerHandleEchXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     }
 
     rv = SECITEM_CopyItem(NULL, &xtnData->ech->innerCh, &encryptedCh);
+    PRINT_BUF(100, (ss, "CT for ECH Decryption", encryptedCh.data, encryptedCh.len));
     if (rv == SECFailure) {
         return SECFailure;
     }
@@ -1556,37 +1660,4 @@ alert_loser:
     ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
     PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
     return SECFailure;
-}
-
-SECStatus
-tls13_ServerHandleEchIsInnerXtn(const sslSocket *ss,
-                                TLSExtensionData *xtnData,
-                                SECItem *data)
-{
-    SSL_TRC(3, ("%d: TLS13[%d]: handle ech_is_inner extension",
-                SSL_GETPID(), ss->fd));
-
-    if (data->len) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
-        return SECFailure;
-    }
-
-    if (ssl3_FindExtension(CONST_CAST(sslSocket, ss), ssl_tls13_encrypted_client_hello_xtn)) {
-        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
-        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
-        return SECFailure;
-    }
-
-    /* Consider encrypted_client_hello_xtn negotiated if we performed the
-     * CHOuter decryption. This is only supported in shared mode, so we'll also
-     * handle ech_is_inner in that case. We might, however, receive a CHInner
-     * that was forwarded by a different client-facing server. In this case,
-     * mark ech_is_inner as negotiated, which triggers sending of the ECH
-     * acceptance signal. ech_is_inner_xtn being negotiated does not imply
-     * that any other ECH state actually exists. */
-    if (ss->ssl3.hs.echAccepted) {
-        xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
-    }
-    xtnData->negotiated[xtnData->numNegotiated++] = ssl_tls13_ech_is_inner_xtn;
-    return SECSuccess;
 }

@@ -857,6 +857,17 @@ class ClientHelloPreambleCapture : public TlsHandshakeFilter {
   DataBuffer data_;
 };
 
+class ServerHelloRandomChanger : public TlsHandshakeFilter {
+ public:
+  ServerHelloRandomChanger(const std::shared_ptr<TlsAgent>& a)
+      : TlsHandshakeFilter(a, {kTlsHandshakeServerHello}) {}
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override;
+};
+
 }  // namespace nss_test
 
 #endif

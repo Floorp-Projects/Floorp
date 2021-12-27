@@ -38,6 +38,7 @@ typedef struct sslSocketStr sslSocket;
 typedef struct sslNamedGroupDefStr sslNamedGroupDef;
 typedef struct sslEchConfigStr sslEchConfig;
 typedef struct sslEchConfigContentsStr sslEchConfigContents;
+typedef struct sslEchCookieDataStr sslEchCookieData;
 typedef struct sslEchXtnStateStr sslEchXtnState;
 typedef struct sslPskStr sslPsk;
 typedef struct sslDelegatedCredentialStr sslDelegatedCredential;
@@ -288,6 +289,7 @@ typedef struct sslOptionsStr {
     unsigned int suppressEndOfEarlyData : 1;
     unsigned int enableTls13GreaseEch : 1;
     unsigned int enableTls13BackendEch : 1;
+    unsigned int callExtensionWriterOnEchInner : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -745,12 +747,14 @@ typedef struct SSL3HandshakeStateStr {
                                 * used to generate ACKs. */
 
     /* TLS 1.3 ECH state. */
-    PRBool echAccepted;        /* Client/Server: True if we've commited to using CHInner. */
-    HpkeContext *echHpkeCtx;   /* Client/Server: HPKE context for ECH. */
-    const char *echPublicName; /* Client: If rejected, the ECHConfig.publicName to
+    PRBool echAccepted; /* Client/Server: True if we've commited to using CHInner. */
+    PRBool echDecided;
+    HpkeContext *echHpkeCtx;    /* Client/Server: HPKE context for ECH. */
+    const char *echPublicName;  /* Client: If rejected, the ECHConfig.publicName to
                                 * use for certificate verification. */
-    sslBuffer greaseEchBuf;    /* Client: Remember GREASE ECH, as advertised, for CH2 (HRR case). */
-
+    sslBuffer greaseEchBuf;     /* Client: Remember GREASE ECH, as advertised, for CH2 (HRR case).
+                                  Server: Remember HRR Grease Value, for transcript calculations */
+    PRBool echInvalidExtension; /* Client: True if the server offered an invalid extension for the ClientHelloInner */
 } SSL3HandshakeState;
 
 #define SSL_ASSERT_HASHES_EMPTY(ss)                                  \
@@ -1956,6 +1960,7 @@ SECStatus SSLExp_DestroyMaskingContext(SSLMaskingContext *ctx);
 SECStatus SSLExp_EnableTls13GreaseEch(PRFileDesc *fd, PRBool enabled);
 
 SECStatus SSLExp_EnableTls13BackendEch(PRFileDesc *fd, PRBool enabled);
+SECStatus SSLExp_CallExtensionWriterOnEchInner(PRFileDesc *fd, PRBool enabled);
 
 SEC_END_PROTOS
 
