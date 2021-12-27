@@ -12,13 +12,7 @@
 #include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
 
-using mozilla::ComputedStyle;
-using mozilla::EventStates;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
-using mozilla::StyleAppearance;
-using mozilla::StyleScrollbarWidth;
+namespace mozilla::widget {
 
 LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
@@ -182,3 +176,5 @@ void ScrollbarDrawingWin::RecomputeScrollbarParams() {
         LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
   }
 }
+
+}  // namespace mozilla::widget
