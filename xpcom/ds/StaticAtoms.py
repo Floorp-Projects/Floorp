@@ -848,6 +848,7 @@ STATIC_ATOMS = [
     Atom("onmouseout", "onmouseout"),
     Atom("onmouseover", "onmouseover"),
     Atom("onMozMouseHittest", "onMozMouseHittest"),
+    Atom("onMozMouseExploreByTouch", "onMozMouseExploreByTouch"),
     Atom("onmouseup", "onmouseup"),
     Atom("onMozAfterPaint", "onMozAfterPaint"),
     Atom("onmozfullscreenchange", "onmozfullscreenchange"),
