@@ -6,11 +6,12 @@
 use bytes::{BufMut, Bytes, BytesMut};
 use libc::{self, cmsghdr};
 use std::convert::TryInto;
+use std::mem::size_of;
 use std::os::unix::io::RawFd;
 use std::{convert, mem, ops, slice};
 
 #[derive(Clone, Debug)]
-pub struct Fds {
+struct Fds {
     fds: Bytes,
 }
 
@@ -30,11 +31,29 @@ impl ops::Deref for Fds {
     }
 }
 
-pub struct ControlMsgIter {
+struct ControlMsgIter {
     control: Bytes,
 }
 
-pub fn iterator(c: Bytes) -> ControlMsgIter {
+pub fn encode_handle(cmsg: &mut BytesMut, handle: RawFd) {
+    // TODO: Rework builder to commit directly to outbound buffer.
+    match builder(cmsg).rights(&[handle]).finish() {
+        Ok(handle_bytes) => cmsg.extend_from_slice(&handle_bytes),
+        Err(e) => debug!("cmsg::builder failed: {:?}", e),
+    }
+}
+
+// Decode one cmsghdr containing a handle, and adjust the `cmsg` buffer cursor past
+// the decoded handle.
+pub fn decode_handle(cmsg: &mut BytesMut) -> RawFd {
+    let b = cmsg.split_to(space(size_of::<i32>())).freeze();
+    // TODO: Clean this up to only expect a single fd per message.
+    let fd = iterator(b).next().unwrap();
+    assert_eq!(fd.len(), 1);
+    fd[0]
+}
+
+fn iterator(c: Bytes) -> ControlMsgIter {
     ControlMsgIter { control: c }
 }
 
@@ -82,17 +101,17 @@ impl Iterator for ControlMsgIter {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum Error {
+enum Error {
     /// Not enough space in storage to insert control mesage.
     NoSpace,
 }
 
 #[must_use]
-pub struct ControlMsgBuilder {
+struct ControlMsgBuilder {
     result: Result<BytesMut, Error>,
 }
 
-pub fn builder(buf: &mut BytesMut) -> ControlMsgBuilder {
+fn builder(buf: &mut BytesMut) -> ControlMsgBuilder {
     let buf = aligned(buf);
     ControlMsgBuilder { result: Ok(buf) }
 }
