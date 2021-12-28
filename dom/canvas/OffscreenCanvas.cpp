@@ -73,6 +73,39 @@ already_AddRefed<OffscreenCanvas> OffscreenCanvas::Constructor(
   return offscreenCanvas.forget();
 }
 
+void OffscreenCanvas::SetWidth(uint32_t aWidth, ErrorResult& aRv) {
+  if (mNeutered) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set width of placeholder canvas transferred to worker.");
+    return;
+  }
+
+  if (mWidth != aWidth) {
+    mWidth = aWidth;
+    CanvasAttrChanged();
+  }
+}
+
+void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
+  if (mNeutered) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set height of placeholder canvas transferred to worker.");
+    return;
+  }
+
+  if (mHeight != aHeight) {
+    mHeight = aHeight;
+    CanvasAttrChanged();
+  }
+}
+
+void OffscreenCanvas::UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight) {
+  MOZ_ASSERT(mNeutered);
+  MOZ_ASSERT(!mCurrentContext);
+  mWidth = aWidth;
+  mHeight = aHeight;
+}
+
 void OffscreenCanvas::GetContext(
     JSContext* aCx, const OffscreenRenderingContextId& aContextId,
     JS::Handle<JS::Value> aContextOptions,
