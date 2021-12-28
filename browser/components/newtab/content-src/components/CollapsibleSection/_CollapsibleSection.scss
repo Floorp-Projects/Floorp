@@ -3,6 +3,16 @@
 
   .section-title-container {
     margin: 0;
+
+    &.has-subtitle {
+      display: flex;
+      flex-direction: column;
+      @media (min-width: $break-point-large) {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+    }
   }
 
   .section-title {
@@ -34,6 +44,13 @@
 
       vertical-align: top;
     }
+  }
+
+  .section-sub-title {
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--newtab-text-secondary-color);
+    opacity: 0.3;
   }
 
   .section-top-bar {

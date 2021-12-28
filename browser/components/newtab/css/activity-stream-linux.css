@@ -2179,6 +2179,17 @@ main.has-snippet {
 .collapsible-section .section-title-container {
   margin: 0;
 }
+.collapsible-section .section-title-container.has-subtitle {
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 866px) {
+  .collapsible-section .section-title-container.has-subtitle {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+}
 .collapsible-section .section-title {
   font-size: 17px;
   font-weight: 600;
@@ -2204,6 +2215,12 @@ main.has-snippet {
   .collapsible-section .section-title .section-title-contents .learn-more-link-wrapper .learn-more-link {
     margin-inline-start: 0;
   }
+}
+.collapsible-section .section-sub-title {
+  font-size: 14px;
+  line-height: 16px;
+  color: var(--newtab-text-secondary-color);
+  opacity: 0.3;
 }
 .collapsible-section .section-top-bar {
   min-height: 19px;
@@ -2611,12 +2628,19 @@ main.has-snippet {
   display: grid;
   grid-gap: 24px;
 }
+.ds-card-grid.ds-card-grid-compact {
+  grid-gap: 20px;
+}
 .ds-card-grid .ds-card {
   background: #FFF;
   border-radius: 4px;
 }
 [lwt-newtab-brighttext] .ds-card-grid .ds-card {
   background: none;
+}
+.ds-card-grid .ds-sub-header {
+  grid-column: 1/-1;
+  margin-bottom: -7px;
 }
 @media (min-width: 866px) {
   .ds-column-12 .ds-card-grid.ds-card-grid-hero {
@@ -3378,6 +3402,10 @@ main.has-snippet {
   font-size: 13px;
   color: var(--newtab-text-secondary-color);
 }
+.ds-card .meta .new-sponsored-label {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
 .ds-card .meta .cta-button {
   background-color: var(--newtab-button-secondary-color);
   width: 100%;
@@ -3417,6 +3445,35 @@ main.has-snippet {
 }
 .ds-card .meta .cta-link:hover {
   text-decoration: underline;
+}
+.ds-card.ds-card-title-lines-2 .meta .title {
+  font-size: 17px;
+  -webkit-line-clamp: 2;
+  line-height: 24px;
+}
+.ds-card.ds-card-title-lines-1 .meta .title {
+  font-size: 17px;
+  -webkit-line-clamp: 1;
+  line-height: 24px;
+}
+.ds-card.ds-card-desc-lines-2 .meta .excerpt {
+  font-size: 14px;
+  -webkit-line-clamp: 2;
+  line-height: 20px;
+}
+.ds-card.ds-card-desc-lines-1 .meta .excerpt {
+  font-size: 14px;
+  -webkit-line-clamp: 1;
+  line-height: 20px;
+}
+.ds-card.ds-card-compact-image .img {
+  padding-top: 47%;
+}
+.ds-card.ds-card-image-gradient img {
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), black 40px);
+}
+.ds-card.ds-card-image-gradient .meta {
+  padding: 3px 15px 11px;
 }
 .ds-card header {
   line-height: 24px;
