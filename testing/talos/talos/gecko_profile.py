@@ -50,10 +50,13 @@ class GeckoProfile(object):
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
         self.profile_arcname = os.path.join(
-            self.upload_dir, "profile_{0}.zip".format(test_config["name"])
+            self.upload_dir, "profile_{0}.zip".format(test_config["suite"])
         )
-        LOG.info("Clearing archive {0}".format(self.profile_arcname))
-        mozfile.remove(self.profile_arcname)
+
+        # We delete the archive if the current test is the first in the suite
+        if test_config.get("is_first_test", False):
+            LOG.info("Clearing archive {0}".format(self.profile_arcname))
+            mozfile.remove(self.profile_arcname)
 
         self.symbol_paths = {
             "FIREFOX": tempfile.mkdtemp(),
