@@ -42,7 +42,7 @@ use crate::stylesheets::{
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::thread_state::{self, ThreadState};
 use crate::AllocErr;
-use crate::{Atom, LocalName, Namespace, WeakAtom};
+use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
 use fxhash::FxHashMap;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]
@@ -292,7 +292,7 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
             )?;
         }
 
-        new_data.cascade_data.compute_layer_order();
+        new_data.cascade_data.did_finish_rebuild();
 
         Ok(Arc::new(new_data))
     }
@@ -2000,6 +2000,15 @@ impl ElementAndPseudoRules {
         self.element_map.clear();
         self.pseudos_map.clear();
     }
+
+    fn shrink_if_needed(&mut self) {
+        self.element_map.shrink_if_needed();
+        for pseudo in self.pseudos_map.iter_mut() {
+            if let Some(ref mut pseudo) = pseudo {
+                pseudo.shrink_if_needed();
+            }
+        }
+    }
 }
 
 impl PartElementAndPseudoRules {
@@ -2186,7 +2195,7 @@ impl CascadeData {
             result.is_ok()
         });
 
-        self.compute_layer_order();
+        self.did_finish_rebuild();
 
         result
     }
@@ -2252,6 +2261,27 @@ impl CascadeData {
     #[inline]
     fn layer_order_for(&self, id: LayerId) -> LayerOrder {
         self.layers[id.0 as usize].order
+    }
+
+    fn did_finish_rebuild(&mut self) {
+        self.shrink_maps_if_needed();
+        self.compute_layer_order();
+    }
+
+    fn shrink_maps_if_needed(&mut self) {
+        self.normal_rules.shrink_if_needed();
+        if let Some(ref mut host_rules) = self.host_rules {
+            host_rules.shrink_if_needed();
+        }
+        if let Some(ref mut slotted_rules) = self.slotted_rules {
+            slotted_rules.shrink_if_needed();
+        }
+        self.invalidation_map.shrink_if_needed();
+        self.attribute_dependencies.shrink_if_needed();
+        self.mapped_ids.shrink_if_needed();
+        self.layer_id.shrink_if_needed();
+        self.selectors_for_cache_revalidation.shrink_if_needed();
+
     }
 
     fn compute_layer_order(&mut self) {
