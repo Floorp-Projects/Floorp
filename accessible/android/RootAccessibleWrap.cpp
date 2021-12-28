@@ -12,9 +12,13 @@
 #include "RemoteAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/MouseEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
+using namespace mozilla::dom;
 
 RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDoc,
                                        PresShell* aPresShell)
@@ -95,4 +99,54 @@ AccessibleWrap* RootAccessibleWrap::FindAccessibleById(DocAccessibleWrap* aDoc,
   }
 
   return acc;
+}
+
+nsresult RootAccessibleWrap::AddEventListeners() {
+  nsPIDOMWindowOuter* window = mDocumentNode->GetWindow();
+  nsCOMPtr<EventTarget> nstarget = window ? window->GetParentTarget() : nullptr;
+
+  if (nstarget) {
+    nstarget->AddEventListener(u"MozMouseExploreByTouch"_ns, this, false, true);
+  }
+
+  return RootAccessible::AddEventListeners();
+}
+
+nsresult RootAccessibleWrap::RemoveEventListeners() {
+  nsPIDOMWindowOuter* window = mDocumentNode->GetWindow();
+  nsCOMPtr<EventTarget> nstarget = window ? window->GetParentTarget() : nullptr;
+  if (nstarget) {
+    nstarget->RemoveEventListener(u"MozMouseExploreByTouch"_ns, this, true);
+  }
+
+  return RootAccessible::RemoveEventListeners();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIDOMEventListener
+
+NS_IMETHODIMP
+RootAccessibleWrap::HandleEvent(Event* aDOMEvent) {
+  WidgetMouseEvent* widgetEvent = aDOMEvent->WidgetEventPtr()->AsMouseEvent();
+  if (widgetEvent && widgetEvent->mMessage == eMouseExploreByTouch) {
+    if (HasShutdown()) {
+      return NS_OK;
+    }
+
+    MouseEvent* mouseEvent = aDOMEvent->AsMouseEvent();
+    if (mouseEvent) {
+      nsPresContext* pc = PresContext();
+
+      int32_t x =
+          pc->CSSPixelsToDevPixels(mouseEvent->ScreenX(CallerType::System));
+      int32_t y =
+          pc->CSSPixelsToDevPixels(mouseEvent->ScreenY(CallerType::System));
+
+      ExploreByTouch(x, y);
+    }
+
+    return NS_OK;
+  }
+
+  return RootAccessible::HandleEvent(aDOMEvent);
 }

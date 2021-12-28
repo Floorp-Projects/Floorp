@@ -65,15 +65,6 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPaste(uint64_t aID) {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvExploreByTouch(
-    uint64_t aID, float aX, float aY) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->ExploreByTouch(aX, aY);
-  }
-
-  return IPC_OK();
-}
-
 AccessibleWrap* DocAccessiblePlatformExtChild::IdToAccessibleWrap(
     const uint64_t& aID) const {
   return static_cast<AccessibleWrap*>(
