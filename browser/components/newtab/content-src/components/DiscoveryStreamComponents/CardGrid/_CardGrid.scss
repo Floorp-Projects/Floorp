@@ -5,6 +5,10 @@ $col4-header-font-size: 14;
   display: grid;
   grid-gap: 24px;
 
+  &.ds-card-grid-compact {
+    grid-gap: 20px;
+  }
+
   .ds-card {
     @include dark-theme-only {
       background: none;
@@ -12,6 +16,11 @@ $col4-header-font-size: 14;
 
     background: $white;
     border-radius: 4px;
+  }
+
+  .ds-sub-header {
+    grid-column: 1 / -1;
+    margin-bottom: -7px;
   }
 
   .ds-column-12 &.ds-card-grid-hero {

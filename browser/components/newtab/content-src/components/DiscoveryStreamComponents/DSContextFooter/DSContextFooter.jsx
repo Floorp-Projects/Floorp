@@ -10,24 +10,18 @@ import React from "react";
 // Animation time is mirrored in DSContextFooter.scss
 const ANIMATION_DURATION = 3000;
 
-export const DSMessageFooter = props => {
+export const DSMessageLabel = props => {
   const {
     context,
     context_type,
     display_engagement_labels,
     engagement,
-    saveToPocketCard,
   } = props;
   const { icon, fluentID } = cardContextTypes[context_type] || {};
 
-  // This case is specific and already displayed to the user elsewhere.
-  if (saveToPocketCard && context_type === "pocket") {
-    return null;
-  }
-
-  return (
-    <TransitionGroup component={null}>
-      {!context && (context_type || (display_engagement_labels && engagement)) && (
+  if (!context && (context_type || (display_engagement_labels && engagement))) {
+    return (
+      <TransitionGroup component={null}>
         <CSSTransition
           key={fluentID}
           timeout={ANIMATION_DURATION}
@@ -39,9 +33,11 @@ export const DSMessageFooter = props => {
             <StatusMessage icon={icon} fluentID={fluentID} />
           )}
         </CSSTransition>
-      )}
-    </TransitionGroup>
-  );
+      </TransitionGroup>
+    );
+  }
+
+  return null;
 };
 
 export const StatusMessage = ({ icon, fluentID }) => (
@@ -54,8 +50,13 @@ export const StatusMessage = ({ icon, fluentID }) => (
   </div>
 );
 
-export const SponsorLabel = ({ sponsored_by_override, sponsor, context }) => {
-  const classList = "story-sponsored-label clamp";
+export const SponsorLabel = ({
+  sponsored_by_override,
+  sponsor,
+  context,
+  newSponsoredLabel,
+}) => {
+  const classList = `story-sponsored-label ${newSponsoredLabel || ""} clamp`;
   // If override is not false or an empty string.
   if (sponsored_by_override) {
     return <p className={classList}>{sponsored_by_override}</p>;
@@ -93,16 +94,51 @@ export class DSContextFooter extends React.PureComponent {
       sponsored_by_override,
     } = this.props;
 
-    return (
-      <div className="story-footer">
-        {SponsorLabel({ sponsored_by_override, sponsor, context })}
-        {DSMessageFooter({
-          context,
-          context_type,
-          display_engagement_labels,
-          engagement,
-        })}
-      </div>
-    );
+    const sponsorLabel = SponsorLabel({
+      sponsored_by_override,
+      sponsor,
+      context,
+    });
+    const dsMessageLabel = DSMessageLabel({
+      context,
+      context_type,
+      display_engagement_labels,
+      engagement,
+    });
+
+    if (sponsorLabel || dsMessageLabel) {
+      return (
+        <div className="story-footer">
+          {sponsorLabel}
+          {dsMessageLabel}
+        </div>
+      );
+    }
+
+    return null;
   }
 }
+
+export const DSMessageFooter = props => {
+  const {
+    context,
+    context_type,
+    engagement,
+    display_engagement_labels,
+    saveToPocketCard,
+  } = props;
+
+  const dsMessageLabel = DSMessageLabel({
+    context,
+    context_type,
+    engagement,
+    display_engagement_labels,
+  });
+
+  // This case is specific and already displayed to the user elsewhere.
+  if (!dsMessageLabel || (saveToPocketCard && context_type === "pocket")) {
+    return null;
+  }
+
+  return <div className="story-footer">{dsMessageLabel}</div>;
+};
