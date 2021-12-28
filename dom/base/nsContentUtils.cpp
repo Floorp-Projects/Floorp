@@ -8207,6 +8207,8 @@ nsresult nsContentUtils::SendMouseEvent(
     contextMenuKey = (aButton == 0);
   } else if (aType.EqualsLiteral("MozMouseHittest")) {
     msg = eMouseHitTest;
+  } else if (aType.EqualsLiteral("MozMouseExploreByTouch")) {
+    msg = eMouseExploreByTouch;
   } else {
     return NS_ERROR_FAILURE;
   }
