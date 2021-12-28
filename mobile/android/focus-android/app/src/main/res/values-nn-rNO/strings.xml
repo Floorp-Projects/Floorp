@@ -782,6 +782,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Berre HTTPS-modus</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS gir eit trygt, kryptert samband mellom %1$s og nettstadar du besøkjer. Dei fleste nettstadar støttar HTTPS, og dersom berre HTTPS-modus er aktivert, vil %1$s oppgradere alle tilkoplingar til HTTPS.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Unntak</string>
     <!-- Description for the exceptions preference screen-->
