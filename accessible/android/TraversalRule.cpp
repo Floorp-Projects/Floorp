@@ -29,6 +29,7 @@ uint16_t TraversalRule::Match(Accessible* aAcc) {
   MOZ_ASSERT(
       aAcc && aAcc->IsLocal(),
       "Should only receive local accessibles when processing on android.");
+
   LocalAccessible* aAccessible = aAcc->AsLocal();
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
@@ -290,4 +291,15 @@ uint16_t TraversalRule::DefaultMatch(LocalAccessible* aAccessible) {
   }
 
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
+}
+
+uint16_t ExploreByTouchRule::Match(Accessible* aAcc) {
+  if (aAcc->IsRemote()) {
+    // Explore by touch happens in the local process and should
+    // not drill down into remote frames.
+    return nsIAccessibleTraversalRule::FILTER_IGNORE |
+           nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  }
+
+  return TraversalRule::Match(aAcc);
 }
