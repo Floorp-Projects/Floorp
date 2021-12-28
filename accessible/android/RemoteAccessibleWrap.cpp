@@ -112,11 +112,6 @@ void RemoteAccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
       Proxy()->ID(), aGranularity, aForward, aInclusive);
 }
 
-void RemoteAccessibleWrap::ExploreByTouch(float aX, float aY) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendExploreByTouch(
-      Proxy()->ID(), aX, aY);
-}
-
 void RemoteAccessibleWrap::NavigateText(int32_t aGranularity,
                                         int32_t aStartOffset,
                                         int32_t aEndOffset, bool aForward,
