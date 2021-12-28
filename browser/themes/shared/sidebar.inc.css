@@ -80,7 +80,7 @@
 
 #sidebar-switcher-target:-moz-focusring:not(:hover, [open]),
 #sidebar-close:-moz-focusring:not(:hover, [open]) {
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 #sidebar-switcher-target:hover:active,

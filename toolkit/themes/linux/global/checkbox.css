@@ -33,7 +33,7 @@ checkbox:where([native]) {
 checkbox[native]:-moz-focusring > .checkbox-label-box {
   /* Native theming should take care of this but it appears to be broken with
      some Gtk themes. Bug 1312169. */
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 /* ..... disabled state ..... */
