@@ -44,7 +44,7 @@ radio {
 /* ..... focused state ..... */
 
 radio[focused="true"] > .radio-label-box {
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 /* ..... disabled state ..... */
