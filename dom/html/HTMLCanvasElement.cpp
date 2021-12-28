@@ -1014,6 +1014,28 @@ bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) {
                                                 nsGkAtoms::all_urlsPermission);
 }
 
+void HTMLCanvasElement::SetWidth(uint32_t aWidth, ErrorResult& aRv) {
+  if (mOffscreenCanvas) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set width of placeholder canvas transferred to "
+        "OffscreenCanvas.");
+    return;
+  }
+
+  SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
+}
+
+void HTMLCanvasElement::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
+  if (mOffscreenCanvas) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set height of placeholder canvas transferred to "
+        "OffscreenCanvas.");
+    return;
+  }
+
+  SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
+}
+
 void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
                                                     uint32_t aHeight) {
   // We need to keep our placeholder canvas dimensions in sync with the actual
@@ -1022,6 +1044,13 @@ void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
   if (mOffscreenCanvas->IsNeutered()) {
     mOffscreenCanvas->UpdateNeuteredSize(aWidth, aHeight);
   }
+
+  // We always need to update the canvas element itself however.
+  ErrorResult rv;
+  SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, rv);
+  MOZ_ASSERT(!rv.Failed());
+  SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, rv);
+  MOZ_ASSERT(!rv.Failed());
 }
 
 void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
