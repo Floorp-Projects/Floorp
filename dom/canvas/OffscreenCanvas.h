@@ -85,38 +85,10 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   void ClearResources();
 
   uint32_t Width() const { return mWidth; }
-
   uint32_t Height() const { return mHeight; }
-
-  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
-    if (mNeutered) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    if (mWidth != aWidth) {
-      mWidth = aWidth;
-      CanvasAttrChanged();
-    }
-  }
-
-  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
-    if (mNeutered) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    if (mHeight != aHeight) {
-      mHeight = aHeight;
-      CanvasAttrChanged();
-    }
-  }
-
-  void UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight) {
-    MOZ_ASSERT(mNeutered);
-    mWidth = aWidth;
-    mHeight = aHeight;
-  }
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv);
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv);
+  void UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight);
 
   void GetContext(JSContext* aCx, const OffscreenRenderingContextId& aContextId,
                   JS::Handle<JS::Value> aContextOptions,

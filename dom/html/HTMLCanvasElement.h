@@ -139,25 +139,11 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   uint32_t Height() {
     return GetUnsignedIntAttr(nsGkAtoms::height, DEFAULT_CANVAS_HEIGHT);
   }
-  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
-    if (mOffscreenCanvas) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
-  }
   uint32_t Width() {
     return GetUnsignedIntAttr(nsGkAtoms::width, DEFAULT_CANVAS_WIDTH);
   }
-  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
-    if (mOffscreenCanvas) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
-  }
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv);
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv);
 
   already_AddRefed<nsISupports> GetContext(
       JSContext* aCx, const nsAString& aContextId,
