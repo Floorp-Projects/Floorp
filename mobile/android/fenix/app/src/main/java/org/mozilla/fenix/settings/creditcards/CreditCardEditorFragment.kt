@@ -50,12 +50,6 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
 
         setHasOptionsMenu(true)
 
-        if (!isEditing) {
-            showToolbar(getString(R.string.credit_cards_add_card))
-        } else {
-            showToolbar(getString(R.string.credit_cards_edit_card))
-        }
-
         val storage = requireContext().components.core.autofillStorage
         interactor = DefaultCreditCardEditorInteractor(
             controller = DefaultCreditCardEditorController(
@@ -75,6 +69,15 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             }
             creditCardEditorView = CreditCardEditorView(binding, interactor)
             creditCardEditorView.bind(creditCardEditorState)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isEditing) {
+            showToolbar(getString(R.string.credit_cards_add_card))
+        } else {
+            showToolbar(getString(R.string.credit_cards_edit_card))
         }
     }
 

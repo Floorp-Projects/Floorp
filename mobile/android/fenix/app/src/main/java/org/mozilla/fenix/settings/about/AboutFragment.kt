@@ -56,7 +56,6 @@ class AboutFragment : Fragment(), AboutPageListener {
         appName = getString(R.string.app_name)
         headerAppName =
             if (Config.channel.isRelease) getString(R.string.daylight_app_name) else appName
-        showToolbar(getString(R.string.preferences_about, appName))
 
         return binding.root
     }
@@ -85,6 +84,11 @@ class AboutFragment : Fragment(), AboutPageListener {
 
         populateAboutHeader()
         aboutPageAdapter?.submitList(populateAboutList())
+    }
+
+    override fun onResume() {
+        super.onResume()
+        showToolbar(getString(R.string.preferences_about, appName))
     }
 
     override fun onDestroyView() {

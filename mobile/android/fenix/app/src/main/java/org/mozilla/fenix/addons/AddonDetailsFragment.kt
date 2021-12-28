@@ -34,13 +34,15 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val binding = FragmentAddOnDetailsBinding.bind(view)
+        AddonDetailsBindingDelegate(binding, interactor = this).bind(args.addon)
+    }
 
+    override fun onResume() {
+        super.onResume()
         context?.let {
             showToolbar(title = args.addon.translateName(it))
         }
-
-        val binding = FragmentAddOnDetailsBinding.bind(view)
-        AddonDetailsBindingDelegate(binding, interactor = this).bind(args.addon)
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {

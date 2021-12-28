@@ -25,8 +25,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.showToolbar
 
 /**
  * An activity to show the details of a installed add-on.
@@ -60,6 +60,13 @@ class InstalledAddonDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bindAddon()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        context?.let {
+            showToolbar(title = addon.translateName(it))
+        }
     }
 
     override fun onDestroyView() {
@@ -100,9 +107,6 @@ class InstalledAddonDetailsFragment : Fragment() {
     }
 
     private fun bindUI() {
-        val title = addon.translateName(binding.root.context)
-        showToolbar(title)
-
         bindEnableSwitch()
         bindSettings()
         bindDetails()

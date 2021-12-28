@@ -36,14 +36,14 @@ import java.util.Locale
 class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val appName = getString(R.string.app_name)
         val binding = FragmentAboutLibrariesBinding.bind(view)
-        showToolbar(getString(R.string.open_source_licenses_title, appName))
         setupLibrariesListView(binding.aboutLibrariesListview)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
+    override fun onResume() {
+        super.onResume()
+        val appName = getString(R.string.app_name)
+        showToolbar(getString(R.string.open_source_licenses_title, appName))
     }
 
     private fun setupLibrariesListView(listView: ListView) {

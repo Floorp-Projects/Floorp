@@ -31,13 +31,6 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
         return inflater.inflate(R.layout.fragment_add_on_internal_settings, container, false)
     }
 
-    override fun onResume() {
-        super.onResume()
-        context?.let {
-            showToolbar(args.addon.translateName(it))
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentAddOnInternalSettingsBinding.bind(view)
@@ -47,5 +40,12 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
                 engineSession.loadUrl(it)
             }
         } ?: findNavController().navigateUp()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        context?.let {
+            showToolbar(title = args.addon.translateName(it))
+        }
     }
 }

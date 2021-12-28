@@ -27,11 +27,15 @@ class AddonPermissionsDetailsFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        context?.let {
-            showToolbar(args.addon.translateName(it))
-        }
         val binding = FragmentAddOnPermissionsBinding.bind(view)
         AddonPermissionDetailsBindingDelegate(binding, interactor = this).bind(args.addon)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        context?.let {
+            showToolbar(title = args.addon.translateName(it))
+        }
     }
 
     override fun openWebsite(addonSiteUrl: Uri) {
