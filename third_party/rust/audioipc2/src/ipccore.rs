@@ -10,7 +10,7 @@ use std::thread;
 use mio::{event::Event, Events, Interest, Poll, Registry, Token, Waker};
 use slab::Slab;
 
-use crate::messages::AssocRawPlatformHandle;
+use crate::messages::AssociateHandleForMessage;
 use crate::rpccore::{make_client, make_server, Client, Handler, Proxy, Server};
 use crate::{
     codec::Codec,
@@ -67,8 +67,8 @@ impl EventLoopHandle {
         connection: sys::Pipe,
     ) -> Result<Proxy<<C as Client>::ServerMessage, <C as Client>::ClientMessage>>
     where
-        <C as Client>::ServerMessage: Serialize + Debug + AssocRawPlatformHandle + Send,
-        <C as Client>::ClientMessage: DeserializeOwned + Debug + AssocRawPlatformHandle + Send,
+        <C as Client>::ServerMessage: Serialize + Debug + AssociateHandleForMessage + Send,
+        <C as Client>::ClientMessage: DeserializeOwned + Debug + AssociateHandleForMessage + Send,
     {
         let (handler, mut proxy) = make_client::<C>();
         let driver = Box::new(FramedDriver::new(handler));
@@ -83,8 +83,8 @@ impl EventLoopHandle {
         connection: sys::Pipe,
     ) -> Result<()>
     where
-        <S as Server>::ServerMessage: DeserializeOwned + Debug + AssocRawPlatformHandle + Send,
-        <S as Server>::ClientMessage: Serialize + Debug + AssocRawPlatformHandle + Send,
+        <S as Server>::ServerMessage: DeserializeOwned + Debug + AssociateHandleForMessage + Send,
+        <S as Server>::ClientMessage: Serialize + Debug + AssociateHandleForMessage + Send,
     {
         let handler = make_server::<S>(server);
         let driver = Box::new(FramedDriver::new(handler));
@@ -446,7 +446,7 @@ impl Connection {
                     match r {
                         Ok(done) => {
                             if done {
-                                return Ok(done);
+                                return Ok(true);
                             }
                         }
                         Err(e) => {
@@ -558,8 +558,8 @@ trait Driver {
 impl<T> Driver for FramedDriver<T>
 where
     T: Handler,
-    T::In: DeserializeOwned + Debug + AssocRawPlatformHandle,
-    T::Out: Serialize + Debug + AssocRawPlatformHandle,
+    T::In: DeserializeOwned + Debug + AssociateHandleForMessage,
+    T::Out: Serialize + Debug + AssociateHandleForMessage,
 {
     // Caller passes `inbound` data, this function will trim any complete messages from `inbound` and pass them to the handler for processing.
     fn process_inbound(&mut self, inbound: &mut sys::ConnectionBuffer) -> Result<bool> {
@@ -569,17 +569,7 @@ where
         #[allow(unused_mut)]
         while let Some(mut item) = self.codec.decode(&mut inbound.buf)? {
             #[cfg(unix)]
-            {
-                // TODO: Clean this up to only expect a single fd per message.
-                let mut handle = None;
-                let b = inbound.cmsg.take().freeze();
-                for fd in cmsg::iterator(b) {
-                    assert_eq!(fd.len(), 1);
-                    assert!(handle.is_none());
-                    handle = Some(fd[0]);
-                }
-                item.set_owned_handle(|| handle);
-            }
+            item.receive_owned_message_handle(|| cmsg::decode_handle(&mut inbound.cmsg));
             self.handler.consume(item)?;
         }
 
@@ -592,37 +582,21 @@ where
 
         // Repeatedly grab outgoing items from the handler, passing each to `encode` for serialization into `outbound`.
         while let Some(mut item) = self.handler.produce()? {
-            let handle = item.take_handle_for_send();
-
-            // On Windows, the handle is transferred by duplicating it into the target remote process during message send.
-            #[cfg(windows)]
-            if let Some((handle, target_pid)) = handle {
-                let remote_handle = unsafe { duplicate_platform_handle(handle, Some(target_pid))? };
-                trace!(
-                    "item handle: {:?} remote_handle: {:?}",
-                    handle,
-                    remote_handle
-                );
-                // The new handle in the remote process is indicated by updating the handle stored in the item with the expected
-                // value on the remote.
-                item.set_remote_handle_value(|| Some(remote_handle));
-            }
-            // On Unix, the handle is encoded into a cmsg buffer for out-of-band transport via sendmsg.
-            #[cfg(unix)]
-            if let Some((handle, _)) = handle {
-                item.set_remote_handle_value(|| Some(handle));
-            }
+            item.prepare_send_message_handle(|handle, _target| {
+                // On Unix, the handle is encoded into a cmsg buffer for out-of-band transport via sendmsg.
+                #[cfg(unix)]
+                {
+                    cmsg::encode_handle(&mut outbound.cmsg, handle);
+                    Ok(handle)
+                }
+                // On Windows, the handle is transferred by duplicating it into the target remote process during message send.
+                #[cfg(windows)]
+                unsafe {
+                    duplicate_platform_handle(handle, Some(_target))
+                }
+            })?;
 
             self.codec.encode(item, &mut outbound.buf)?;
-
-            #[cfg(unix)]
-            if let Some((handle, _)) = handle {
-                // TODO: Rework builder to commit directly to outbound buffer.
-                match cmsg::builder(&mut outbound.cmsg).rights(&[handle]).finish() {
-                    Ok(handle_bytes) => outbound.cmsg.extend_from_slice(&handle_bytes),
-                    Err(e) => debug!("cmsg::builder failed: {:?}", e),
-                }
-            }
         }
         Ok(())
     }
@@ -716,7 +690,7 @@ mod test {
     enum TestServerMessage {
         TestRequest,
     }
-    impl AssocRawPlatformHandle for TestServerMessage {}
+    impl AssociateHandleForMessage for TestServerMessage {}
 
     struct TestServerImpl {}
 
@@ -735,7 +709,7 @@ mod test {
         TestResponse,
     }
 
-    impl AssocRawPlatformHandle for TestClientMessage {}
+    impl AssociateHandleForMessage for TestClientMessage {}
 
     struct TestClientImpl {}
 
