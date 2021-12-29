@@ -24,6 +24,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
+        "advapi32",
         "userenv",
         "ws2_32",
     ]

@@ -509,6 +509,10 @@ if CONFIG["ENABLE_TRACE_LOGGING"]:
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "advapi32",
+        "winmm",
+    ]
     UNIFIED_SOURCES += [
         "threading/windows/CpuCount.cpp",
         "threading/windows/WindowsThread.cpp",
