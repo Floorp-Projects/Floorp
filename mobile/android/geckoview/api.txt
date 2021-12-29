@@ -837,7 +837,9 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
     method @NonNull @UiThread public WebExtension.SessionController getWebExtensionController();
     method @AnyThread public void goBack();
+    method @AnyThread public void goBack(boolean);
     method @AnyThread public void goForward();
+    method @AnyThread public void goForward(boolean);
     method @AnyThread public void gotoHistoryIndex(int);
     method @AnyThread public boolean isOpen();
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
