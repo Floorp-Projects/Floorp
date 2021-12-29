@@ -83,6 +83,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       canAddTabToSearch: true,
       hasUnitConversionResult: false,
       maxHeuristicResultSpan: 0,
+      maxTabToSearchResultSpan: 0,
       // When you add state, update _copyState() as necessary.
     };
 
@@ -106,6 +107,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     // Now that the first pass is done, adjust the available result span.
+    if (state.maxTabToSearchResultSpan) {
+      // Subtract the max tab-to-search span.
+      state.availableResultSpan = Math.max(
+        state.availableResultSpan - state.maxTabToSearchResultSpan,
+        0
+      );
+    }
     if (state.maxHeuristicResultSpan) {
       if (UrlbarPrefs.get("experimental.hideHeuristic")) {
         // The heuristic is hidden. The muxer will include it but the view will
@@ -704,7 +712,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == UrlbarProviderTabToSearch.name) {
       // Discard the result if a tab-to-search result was added already.
       if (!state.canAddTabToSearch) {
         return false;
@@ -913,16 +921,27 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     // Subtract from `availableResultSpan` the span of global suggestedIndex
-    // results so there will be room for them at the end of the sort.
+    // results so there will be room for them at the end of the sort. Except
+    // when `maxRichResults` is zero and other special cases, we assume
+    // suggestedIndex results will always be shown regardless of the total
+    // available result span, `context.maxResults`, and `maxRichResults`.
     if (
       result.hasSuggestedIndex &&
       !result.isSuggestedIndexRelativeToGroup &&
       this._canAddResult(result, state)
     ) {
-      state.availableResultSpan = Math.max(
-        state.availableResultSpan - UrlbarUtils.getSpanForResult(result),
-        0
-      );
+      let span = UrlbarUtils.getSpanForResult(result);
+      if (result.providerName == UrlbarProviderTabToSearch.name) {
+        state.maxTabToSearchResultSpan = Math.max(
+          state.maxTabToSearchResultSpan,
+          span
+        );
+      } else {
+        state.availableResultSpan = Math.max(
+          state.availableResultSpan - span,
+          0
+        );
+      }
     }
 
     // Save some state we'll use later to dedupe URL results.
@@ -1046,7 +1065,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Avoid multiple tab-to-search results.
     // TODO (Bug 1670185): figure out better strategies to manage this case.
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == UrlbarProviderTabToSearch.name) {
       state.canAddTabToSearch = false;
       // We want to record in urlbar.tips once per engagement per engine. Since
       // whether these results are shown is dependent on the Muxer, we must
