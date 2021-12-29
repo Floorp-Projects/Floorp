@@ -897,7 +897,13 @@ class Code : public ShareableBase<Code> {
   const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;
 #endif
   bool containsCodePC(const void* pc) const;
-  bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
+  // It is possible for there to be two trap descriptors at the same address in
+  // the corner case when an indirect call which may trap on null is followed
+  // directly by another operation that can trap - the call's trap address is
+  // after the call while the other operation's trap address is at the
+  // operation.  Callers of lookupTrap must deal with this ambiguity.
+  bool lookupTrap(void* pc, Trap* trap1Out, Trap* trap2Out,
+                  BytecodeOffset* bytecode) const;
 
   // To save memory, profilingLabels_ are generated lazily when profiling mode
   // is enabled.

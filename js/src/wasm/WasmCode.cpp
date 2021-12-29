@@ -1594,7 +1594,9 @@ struct TrapSitePCOffset {
   uint32_t operator[](size_t index) const { return trapSites[index].pcOffset; }
 };
 
-bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
+bool Code::lookupTrap(void* pc, Trap* trap1Out, Trap* trap2Out,
+                      BytecodeOffset* bytecode) const {
+  *trap1Out = *trap2Out = Trap::Limit;
   for (Tier t : tiers()) {
     const TrapSiteVectorArray& trapSitesArray = metadata(t).trapSites;
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
@@ -1608,14 +1610,19 @@ bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
       if (BinarySearch(TrapSitePCOffset(trapSites), lowerBound, upperBound,
                        target, &match)) {
         MOZ_ASSERT(segment(t).containsCodePC(pc));
-        *trapOut = trap;
+        if (*trap1Out == Trap::Limit) {
+          *trap1Out = trap;
+        } else if (*trap2Out == Trap::Limit) {
+          *trap2Out = trap;
+        } else {
+          MOZ_CRASH("Too many traps at this address");
+        }
         *bytecode = trapSites[match].bytecode;
-        return true;
       }
     }
   }
 
-  return false;
+  return *trap1Out != Trap::Limit;
 }
 
 // When enabled, generate profiling labels for every name in funcNames_ that is
