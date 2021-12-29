@@ -330,8 +330,29 @@ add_task(async function multipleEnginesForHostname() {
     },
     true
   );
-  await PlacesTestUtils.addVisits(["https://example.com/"]);
+
   let context = createContext("examp", { isPrivate: false });
+  let maxResultCount = UrlbarPrefs.get("maxRichResults");
+
+  // Add enough visits to autofill example.com.
+  for (let i = 0; i < maxResultCount; i++) {
+    await PlacesTestUtils.addVisits("https://example.com/");
+  }
+
+  // Add enough visits to other URLs matching our query to fill up the list of
+  // results.
+  let otherVisitResults = [];
+  for (let i = 0; i < maxResultCount; i++) {
+    let url = "https://mochi.test:8888/example/" + i;
+    await PlacesTestUtils.addVisits(url);
+    otherVisitResults.unshift(
+      makeVisitResult(context, {
+        uri: url,
+        title: "test visit for " + url,
+      })
+    );
+  }
+
   await check_results({
     context,
     autofilled: "example.com/",
@@ -353,6 +374,12 @@ add_task(async function multipleEnginesForHostname() {
         query: "",
         providerName: "TabToSearch",
       }),
+      // There should be `maxResultCount` - 2 other visit results. If this fails
+      // because there are actually `maxResultCount` - 3 other results, then the
+      // muxer is improperly including both TabToSearch results in its
+      // calculation of the total available result span instead of only one, so
+      // one fewer visit result appears than expected.
+      ...otherVisitResults.slice(0, maxResultCount - 2),
     ],
   });
   await cleanupPlaces();
