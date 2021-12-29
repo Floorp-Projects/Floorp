@@ -1430,6 +1430,15 @@ set_config("ACCESSIBILITY", accessibility)
 set_define("ACCESSIBILITY", accessibility)
 
 
+@depends(moz_debug, developer_options)
+def a11y_log(debug, developer_options):
+    return debug or developer_options
+
+
+set_config("A11Y_LOG", True, when=a11y_log)
+set_define("A11Y_LOG", True, when=a11y_log)
+
+
 # Addon signing
 # ==============================================================
 @depends(milestone)
