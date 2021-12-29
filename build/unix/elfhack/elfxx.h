@@ -175,10 +175,10 @@ class ElfEntSize : public ElfValue {
 };
 
 template <typename T>
-class serializable : public T::Type32 {
+class serializable : public T::Type64 {
  public:
   serializable(){};
-  serializable(const typename T::Type32& p) : T::Type32(p){};
+  serializable(const typename T::Type64& p) : T::Type64(p){};
 
  private:
   template <typename R>

@@ -94,10 +94,10 @@ void Elf_Rela_Traits::swap(T& t, R& r) {
   r.r_addend = endian::swap(t.r_addend);
 }
 
-static const Elf32_Shdr null32_section = {0, SHT_NULL,  0, 0, 0,
+static const Elf64_Shdr null64_section = {0, SHT_NULL,  0, 0, 0,
                                           0, SHN_UNDEF, 0, 0, 0};
 
-Elf_Shdr null_section(null32_section);
+Elf_Shdr null_section(null64_section);
 
 Elf_Ehdr::Elf_Ehdr(std::ifstream& file, char ei_class, char ei_data)
     : serializable<Elf_Ehdr_Traits>(file, ei_class, ei_data),
@@ -534,7 +534,7 @@ ElfSection::ElfSection(Elf_Shdr& s, std::ifstream* file, Elf* parent)
 }
 
 unsigned int ElfSection::getAddr() {
-  if (shdr.sh_addr != (Elf32_Word)-1) return shdr.sh_addr;
+  if (shdr.sh_addr != (Elf64_Addr)-1) return shdr.sh_addr;
 
   // It should be safe to adjust sh_addr for all allocated sections that
   // are neither SHT_NOBITS nor SHT_PROGBITS
@@ -550,7 +550,7 @@ unsigned int ElfSection::getAddr() {
 }
 
 unsigned int ElfSection::getOffset() {
-  if (shdr.sh_offset != (Elf32_Word)-1) return shdr.sh_offset;
+  if (shdr.sh_offset != (Elf64_Off)-1) return shdr.sh_offset;
 
   if (previous == nullptr) return (shdr.sh_offset = 0);
 
@@ -600,9 +600,9 @@ int ElfSection::getIndex() {
 
 Elf_Shdr& ElfSection::getShdr() {
   getOffset();
-  if (shdr.sh_link == (Elf32_Word)-1)
+  if (shdr.sh_link == (Elf64_Word)-1)
     shdr.sh_link = getLink() ? getLink()->getIndex() : 0;
-  if (shdr.sh_info == (Elf32_Word)-1)
+  if (shdr.sh_info == (Elf64_Word)-1)
     shdr.sh_info = ((getType() == SHT_REL) || (getType() == SHT_RELA))
                        ? (getInfo().section ? getInfo().section->getIndex() : 0)
                        : getInfo().index;

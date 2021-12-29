@@ -262,23 +262,23 @@ class ElfRelHackCode_Section : public ElfSection {
     ElfSymtab_Section* symtab = (ElfSymtab_Section*)rel->getLink();
     for (auto r = rel->rels.begin(); r != rel->rels.end(); ++r) {
       ElfSection* section =
-          symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
+          symtab->syms[ELF64_R_SYM(r->r_info)].value.getSection();
       add_code_section(section);
     }
   }
 
   class pc32_relocation {
    public:
-    Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
-                          Elf32_Word addend, unsigned int addr) {
+    Elf32_Addr operator()(unsigned int base_addr, Elf64_Off offset,
+                          Elf64_Sxword addend, unsigned int addr) {
       return addr + addend - offset - base_addr;
     }
   };
 
   class arm_plt32_relocation {
    public:
-    Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
-                          Elf32_Word addend, unsigned int addr) {
+    Elf32_Addr operator()(unsigned int base_addr, Elf64_Off offset,
+                          Elf64_Sxword addend, unsigned int addr) {
       // We don't care about sign_extend because the only case where this is
       // going to be used only jumps forward.
       Elf32_Addr tmp = (Elf32_Addr)(addr - offset - base_addr) >> 2;
@@ -289,8 +289,8 @@ class ElfRelHackCode_Section : public ElfSection {
 
   class arm_thm_jump24_relocation {
    public:
-    Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
-                          Elf32_Word addend, unsigned int addr) {
+    Elf32_Addr operator()(unsigned int base_addr, Elf64_Off offset,
+                          Elf64_Sxword addend, unsigned int addr) {
       /* Follows description of b.w and bl instructions as per
          ARM Architecture Reference Manual ARM® v7-A and ARM® v7-R edition,
          A8.6.16 We limit ourselves to Encoding T4 of b.w and Encoding T1 of bl.
@@ -342,8 +342,8 @@ class ElfRelHackCode_Section : public ElfSection {
 
   class gotoff_relocation {
    public:
-    Elf32_Addr operator()(unsigned int base_addr, Elf32_Off offset,
-                          Elf32_Word addend, unsigned int addr) {
+    Elf32_Addr operator()(unsigned int base_addr, Elf64_Off offset,
+                          Elf64_Sxword addend, unsigned int addr) {
       return addr + addend;
     }
   };
@@ -376,9 +376,9 @@ class ElfRelHackCode_Section : public ElfSection {
     for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin();
          r != rel->rels.end(); ++r) {
       // TODO: various checks on the symbol
-      const char* name = symtab->syms[ELF32_R_SYM(r->r_info)].name;
+      const char* name = symtab->syms[ELF64_R_SYM(r->r_info)].name;
       unsigned int addr;
-      if (symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection() == nullptr) {
+      if (symtab->syms[ELF64_R_SYM(r->r_info)].value.getSection() == nullptr) {
         if (strcmp(name, "relhack") == 0) {
           addr = relhack_section.getAddr();
         } else if (strcmp(name, "elf_header") == 0) {
@@ -413,14 +413,14 @@ class ElfRelHackCode_Section : public ElfSection {
         }
       } else {
         ElfSection* section =
-            symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
+            symtab->syms[ELF64_R_SYM(r->r_info)].value.getSection();
         assert((section->getType() == SHT_PROGBITS) &&
                (section->getFlags() & SHF_EXECINSTR));
-        addr = symtab->syms[ELF32_R_SYM(r->r_info)].value.getValue();
+        addr = symtab->syms[ELF64_R_SYM(r->r_info)].value.getValue();
       }
       // Do the relocation
 #define REL(machine, type) (EM_##machine | (R_##machine##_##type << 8))
-      switch (elf->getMachine() | (ELF32_R_TYPE(r->r_info) << 8)) {
+      switch (elf->getMachine() | (ELF64_R_TYPE(r->r_info) << 8)) {
         case REL(X86_64, PC32):
         case REL(X86_64, PLT32):
         case REL(386, PC32):
@@ -503,8 +503,8 @@ void maybe_split_segment(Elf* elf, ElfSegment* segment) {
       phdr.p_paddr = phdr.p_vaddr + segment->getVPDiff();
       phdr.p_flags = segment->getFlags();
       phdr.p_align = segment->getAlign();
-      phdr.p_filesz = (unsigned int)-1;
-      phdr.p_memsz = (unsigned int)-1;
+      phdr.p_filesz = (Elf64_Xword)-1LL;
+      phdr.p_memsz = (Elf64_Xword)-1LL;
       ElfSegment* newSegment = new ElfSegment(&phdr);
       elf->insertSegmentAfter(segment, newSegment);
       for (; it != segment->end(); ++it) {
@@ -775,23 +775,23 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
   }
   assert(section->getType() == Rel_Type::sh_type);
 
-  Elf32_Shdr relhack32_section = {
+  Elf64_Shdr relhack64_section = {
       0,
       SHT_PROGBITS,
       SHF_ALLOC,
       0,
-      (Elf32_Off)-1,
+      (Elf64_Off)-1LL,
       0,
       SHN_UNDEF,
       0,
       Elf_RelHack::size(elf->getClass()),
       Elf_RelHack::size(elf->getClass())};  // TODO: sh_addralign should be an
                                             // alignment, not size
-  Elf32_Shdr relhackcode32_section = {0,
+  Elf64_Shdr relhackcode64_section = {0,
                                       SHT_PROGBITS,
                                       SHF_ALLOC | SHF_EXECINSTR,
                                       0,
-                                      (Elf32_Off)-1,
+                                      (Elf64_Off)-1LL,
                                       0,
                                       SHN_UNDEF,
                                       0,
@@ -823,8 +823,8 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
       init_array = dyn->getSectionForType(DT_INIT_ARRAY);
   }
 
-  Elf_Shdr relhack_section(relhack32_section);
-  Elf_Shdr relhackcode_section(relhackcode32_section);
+  Elf_Shdr relhack_section(relhack64_section);
+  Elf_Shdr relhackcode_section(relhackcode64_section);
   ElfRelHack_Section* relhack = new ElfRelHack_Section(relhack_section);
 
   ElfSymtab_Section* symtab = (ElfSymtab_Section*)section->getLink();
@@ -838,7 +838,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
   for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
        i != section->rels.end(); ++i) {
     // We don't need to keep R_*_NONE relocations
-    if (!ELF32_R_TYPE(i->r_info)) continue;
+    if (!ELF64_R_TYPE(i->r_info)) continue;
     ElfLocation loc(i->r_offset, elf);
     // __cxa_pure_virtual is a function used in vtables to point at pure
     // virtual methods. The __cxa_pure_virtual function usually abort()s.
@@ -852,7 +852,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
         // If we are statically linked to libstdc++, the
         // __cxa_pure_virtual symbol is defined in our lib, and we
         // have relative relocations (rel_type) for it.
-        if (ELF32_R_TYPE(i->r_info) == rel_type) {
+        if (ELF64_R_TYPE(i->r_info) == rel_type) {
           Elf_Addr addr(loc.getBuffer(), entry_sz, elf->getClass(),
                         elf->getData());
           if (addr.value == sym->value.getValue()) {
@@ -864,8 +864,8 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
         // If we are dynamically linked to libstdc++, the
         // __cxa_pure_virtual symbol is undefined in our lib, and we
         // have absolute relocations (rel_type2) for it.
-        if ((ELF32_R_TYPE(i->r_info) == rel_type2) &&
-            (sym == &symtab->syms[ELF32_R_SYM(i->r_info)])) {
+        if ((ELF64_R_TYPE(i->r_info) == rel_type2) &&
+            (sym == &symtab->syms[ELF64_R_SYM(i->r_info)])) {
           memset((char*)loc.getBuffer(), 0, entry_sz);
           continue;
         }
@@ -877,7 +877,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
       init_array_relocs.push_back(*i);
       init_array_insert = new_rels.size();
     } else if (!(loc.getSection()->getFlags() & SHF_WRITE) ||
-               (ELF32_R_TYPE(i->r_info) != rel_type)) {
+               (ELF64_R_TYPE(i->r_info) != rel_type)) {
       // Don't pack relocations happening in non writable sections.
       // Our injected code is likely not to be allowed to write there.
       new_rels.push_back(*i);
@@ -943,7 +943,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
         // We found a hole, move the preceding entries.
         while (off) {
           auto& p = init_array_relocs[--off];
-          if (ELF32_R_TYPE(p.r_info) == rel_type) {
+          if (ELF64_R_TYPE(p.r_info) == rel_type) {
             unsigned int addend = get_addend(&p, elf);
             p.r_offset += length;
             set_relative_reloc(&p, elf, addend);
@@ -972,12 +972,12 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
       // function to be called by the injected code.
       auto& rel = init_array_relocs[0];
       unsigned int addend = get_addend(&rel, elf);
-      if (ELF32_R_TYPE(rel.r_info) == rel_type) {
+      if (ELF64_R_TYPE(rel.r_info) == rel_type) {
         original_init = addend;
-      } else if (ELF32_R_TYPE(rel.r_info) == rel_type2) {
+      } else if (ELF64_R_TYPE(rel.r_info) == rel_type2) {
         ElfSymtab_Section* symtab = (ElfSymtab_Section*)section->getLink();
         original_init =
-            symtab->syms[ELF32_R_SYM(rel.r_info)].value.getValue() + addend;
+            symtab->syms[ELF64_R_SYM(rel.r_info)].value.getValue() + addend;
       } else {
         fprintf(stderr,
                 "Unsupported relocation type for DT_INIT_ARRAY's first entry. "
@@ -1014,7 +1014,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
         symtab->grow(symtab->syms.size() * symtab->getEntSize());
         sym_value->name =
             ((ElfStrtab_Section*)symtab->getLink())->getStr(symbol);
-        sym_value->info = ELF32_ST_INFO(STB_GLOBAL, STT_FUNC);
+        sym_value->info = ELF64_ST_INFO(STB_GLOBAL, STT_FUNC);
         sym_value->other = STV_DEFAULT;
         new (&sym_value->value) ElfLocation(nullptr, 0, ElfLocation::ABSOLUTE);
         sym_value->size = 0;
@@ -1040,7 +1040,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
       new_rels.emplace_back();
       Rel_Type& rel = new_rels.back();
       memset(&rel, 0, sizeof(rel));
-      rel.r_info = ELF32_R_INFO(
+      rel.r_info = ELF64_R_INFO(
           std::distance(symtab->syms.begin(),
                         std::vector<Elf_SymValue>::iterator(symbol)),
           rel_type2);
@@ -1174,7 +1174,7 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
     // by transforming its relocation into a relative one pointing to the
     // address of the injected code.
     Rel_Type* rel = &section->rels[init_array_insert];
-    rel->r_info = ELF32_R_INFO(0, rel_type);  // Set as a relative relocation
+    rel->r_info = ELF64_R_INFO(0, rel_type);  // Set as a relative relocation
     set_relative_reloc(rel, elf, init->getValue());
   } else if (!dyn->setValueForType(DT_INIT, init)) {
     fprintf(stderr, "Can't grow .dynamic section to set DT_INIT. Skipping\n");
