@@ -1691,14 +1691,6 @@ if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
 
-if test "$MOZ_DEBUG" -o "$DEVELOPER_OPTIONS"; then
-    A11Y_LOG=1
-fi
-AC_SUBST(A11Y_LOG)
-if test -n "$A11Y_LOG"; then
-    AC_DEFINE(A11Y_LOG)
-fi
-
 dnl Windows AccessibilityHandler
 dnl ========================================================
 
