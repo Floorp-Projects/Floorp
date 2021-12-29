@@ -2020,7 +2020,6 @@ dependencies = [
  "log",
  "mapped_hyph",
  "mdns_service",
- "midir",
  "midir_impl",
  "mozurl",
  "mp4parse_capi",

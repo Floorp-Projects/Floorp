@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["OS_TARGET"] != "Android":
-    DIRS += ["midir_impl"]
-
 IPDL_SOURCES += [
     "MIDITypes.ipdlh",
     "PMIDIManager.ipdl",
@@ -58,15 +55,16 @@ UNIFIED_SOURCES += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-if CONFIG["OS_TARGET"] == "Linux":
-    OS_LIBS += ["asound"]  # Required by midir
-    UNIFIED_SOURCES += ["AlsaCompatibility.cpp"]
-
-
-if CONFIG["OS_TARGET"] != "Android":
+if CONFIG["MOZ_WEBMIDI_MIDIR_IMPL"]:
+    DEFINES["MOZ_WEBMIDI_MIDIR_IMPL"] = True
+    DIRS += ["midir_impl"]
     UNIFIED_SOURCES += [
         "midirMIDIPlatformService.cpp",
     ]
+
+    if CONFIG["OS_TARGET"] == "Linux":
+        OS_LIBS += ["asound"]  # Required by midir
+        UNIFIED_SOURCES += ["AlsaCompatibility.cpp"]
 
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
