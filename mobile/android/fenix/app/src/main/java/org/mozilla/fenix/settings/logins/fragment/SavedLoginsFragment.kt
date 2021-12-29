@@ -120,6 +120,7 @@ class SavedLoginsFragment : Fragment() {
         val searchView: SearchView = searchItem.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
         searchView.queryHint = getString(R.string.preferences_passwords_saved_logins_search)
+        searchView.maxWidth = Int.MAX_VALUE
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {

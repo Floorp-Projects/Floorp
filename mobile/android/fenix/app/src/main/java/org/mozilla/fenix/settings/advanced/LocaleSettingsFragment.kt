@@ -18,10 +18,8 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentLocaleSettingsBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
 class LocaleSettingsFragment : Fragment() {
@@ -71,6 +69,7 @@ class LocaleSettingsFragment : Fragment() {
         val searchView: SearchView = searchItem.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
         searchView.queryHint = getString(R.string.locale_search_hint)
+        searchView.maxWidth = Int.MAX_VALUE
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
@@ -106,10 +105,5 @@ class LocaleSettingsFragment : Fragment() {
         super.onDestroyView()
 
         _binding = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
     }
 }
