@@ -124,6 +124,7 @@ def resolve_setting_from_arcconfig(topsrcdir: Path, setting):
             cwd=str(topsrcdir),
             universal_newlines=True,
         )
+        git_path = Path(git_path)
 
     for arcconfig_path in [
         topsrcdir / ".hg" / ".arcconfig",
