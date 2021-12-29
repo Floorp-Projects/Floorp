@@ -37,7 +37,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
     OS_LIBS += [
         "mfuuid",
-        "uuid",
     ]
 
     DEFINES["ENABLE_WMF"] = True

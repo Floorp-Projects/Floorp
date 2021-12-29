@@ -7,7 +7,6 @@ USE_LIBS += [
 ]
 
 OS_LIBS += [
-    "advapi32",
     "bcrypt",
 ]
 

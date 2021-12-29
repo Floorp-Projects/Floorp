@@ -27,10 +27,8 @@ DisableStlWrapping()
 USE_STATIC_LIBS = True
 
 OS_LIBS += [
-    "advapi32",
     "comctl32",
     "shell32",
-    "userenv",
     "ws2_32",
 ]
 

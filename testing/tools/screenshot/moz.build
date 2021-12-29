@@ -23,10 +23,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         WIN32_EXE_LDFLAGS += ["-municode"]
     OS_LIBS += [
-        "advapi32",
-        "gdi32",
         "gdiplus",
-        "user32",
     ]
 
 NO_PGO = True
