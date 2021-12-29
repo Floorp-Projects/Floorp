@@ -26,10 +26,10 @@ class NativeMenuMac : public NativeMenu,
                       public nsMenuItemIconX::Listener,
                       public nsMenuX::Observer {
  public:
-  explicit NativeMenuMac(mozilla::dom::Element* aElement);
+  explicit NativeMenuMac(dom::Element* aElement);
 
   // NativeMenu
-  void ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) override;
+  void ShowAsContextMenu(const DesktopPoint& aPosition) override;
   bool Close() override;
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers, int16_t aButton,
                     ErrorResult& aRv) override;
@@ -47,11 +47,11 @@ class NativeMenuMac : public NativeMenu,
   void IconUpdated() override;
 
   // nsMenuX::Observer
-  void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
-  void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
-  void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
-                              mozilla::dom::Element* aMenuItemElement) override;
-  void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
+  void OnMenuWillOpen(dom::Element* aPopupElement) override;
+  void OnMenuDidOpen(dom::Element* aPopupElement) override;
+  void OnMenuWillActivateItem(dom::Element* aPopupElement,
+                              dom::Element* aMenuItemElement) override;
+  void OnMenuClosed(dom::Element* aPopupElement) override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
   void MenuWillOpen();
