@@ -2893,3 +2893,9 @@ def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
                 die(f"Cannot remap paths because {p} is an ancestor of {q}")
 
     return path_remappings
+
+
+set_config("MMX_FLAGS", ["-mmmx"])
+set_config("SSE_FLAGS", ["-msse"])
+set_config("SSE2_FLAGS", ["-msse2"])
+set_config("SSSE3_FLAGS", ["-mssse3"])
