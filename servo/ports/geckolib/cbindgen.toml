@@ -235,6 +235,7 @@ include = [
   "PageSize",
   "DProperty",
   "ImageRendering",
+  "PrintColorAdjust",
   "ScrollbarGutter",
   "ScrollDirection",
   "HyphenateCharacter",

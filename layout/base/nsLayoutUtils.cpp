@@ -5447,7 +5447,8 @@ static bool ShouldDarkenColors(nsIFrame* aFrame) {
   if (pc->GetBackgroundColorDraw() || pc->GetBackgroundImageDraw()) {
     return false;
   }
-  return aFrame->StyleVisibility()->mColorAdjust != StyleColorAdjust::Exact;
+  return aFrame->StyleVisibility()->mPrintColorAdjust !=
+         StylePrintColorAdjust::Exact;
 }
 
 nscolor nsLayoutUtils::DarkenColorIfNeeded(nsIFrame* aFrame, nscolor aColor) {

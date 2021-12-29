@@ -2705,7 +2705,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mImageRendering(StyleImageRendering::Auto),
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
-      mColorAdjust(StyleColorAdjust::Economy) {
+      mPrintColorAdjust(StylePrintColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
@@ -2716,7 +2716,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
       mImageRendering(aSource.mImageRendering),
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
-      mColorAdjust(aSource.mColorAdjust) {
+      mPrintColorAdjust(aSource.mPrintColorAdjust) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
@@ -2754,7 +2754,7 @@ nsChangeHint nsStyleVisibility::CalcDifference(
     if (mImageRendering != aNewData.mImageRendering) {
       hint |= nsChangeHint_RepaintFrame;
     }
-    if (mColorAdjust != aNewData.mColorAdjust) {
+    if (mPrintColorAdjust != aNewData.mPrintColorAdjust) {
       // color-adjust only affects media where dynamic changes can't happen.
       hint |= nsChangeHint_NeutralChange;
     }
