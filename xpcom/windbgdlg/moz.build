@@ -5,3 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SimplePrograms(["windbgdlg"])
+
+OS_LIBS += [
+    "advapi32",
+    "user32",
+]

@@ -92,8 +92,11 @@ USE_LIBS += [
 ]
 
 OS_LIBS += [
+    "advapi32",
+    "uuid",
     "rpcrt4",
     "oleacc",
+    "user32",
 ]
 
 RCINCLUDE = "AccessibleHandler.rc"
