@@ -38,6 +38,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "shlwapi",
         "crypt32",
         "advapi32",
+        "gdi32",
+        "user32",
+        "userenv",
+        "uuid",
     ]
 
 USE_LIBS += [
