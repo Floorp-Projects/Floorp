@@ -1872,16 +1872,48 @@ public class GeckoSession {
     mEventDispatcher.dispatch("GeckoView:Stop", null);
   }
 
-  /** Go back in history. */
+  /**
+   * Go back in history and assumes the call was based on a user interaction.
+   *
+   * @see #goBack(boolean)
+   */
   @AnyThread
   public void goBack() {
-    mEventDispatcher.dispatch("GeckoView:GoBack", null);
+    goBack(true);
   }
 
-  /** Go forward in history. */
+  /**
+   * Go back in history.
+   *
+   * @param userInteraction Whether the action was invoked by a user interaction.
+   */
+  @AnyThread
+  public void goBack(final boolean userInteraction) {
+    final GeckoBundle msg = new GeckoBundle(1);
+    msg.putBoolean("userInteraction", userInteraction);
+    mEventDispatcher.dispatch("GeckoView:GoBack", msg);
+  }
+
+  /**
+   * Go forward in history and assumes the call was based on a user interaction.
+   *
+   * @see #goForward(boolean)
+   */
   @AnyThread
   public void goForward() {
-    mEventDispatcher.dispatch("GeckoView:GoForward", null);
+    goForward(true);
+  }
+
+  /**
+   * Go forward in history.
+   *
+   * @param userInteraction Whether the action was invoked by a user interaction.
+   */
+  @AnyThread
+  public void goForward(final boolean userInteraction) {
+    final GeckoBundle msg = new GeckoBundle(1);
+    msg.putBoolean("userInteraction", userInteraction);
+    mEventDispatcher.dispatch("GeckoView:GoForward", msg);
   }
 
   /**

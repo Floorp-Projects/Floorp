@@ -21,6 +21,7 @@ exclude: true
   type of process a crash occured in.
 - ⚠️ Deprecated [`EXTRA_CRASH_FATAL`][97.5]. Use `EXTRA_CRASH_PROCESS_TYPE` instead.
 - Added [`OrientationController`][97.6] to allow GeckoView to handle orientation locking.
+- Added [GeckoSession.goBack][97.7] and [GeckoSession.goForward][97.8] with a `userInteraction` parameter. Updated the default goBack/goForward behaviour to also be considered as a user interaction.
 
 [97.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#rawId
 [97.2]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#id
@@ -28,6 +29,8 @@ exclude: true
 [97.4]: {{javadoc_uri}}/GeckoRuntime.html#CRASHED_PROCESS_TYPE_MAIN
 [97.5]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_FATAL
 [97.6]: {{javadoc_uri}}/OrientationController.html
+[97.7]: {{javadoc_uri}}/GeckoSession.html#goBack-boolean-
+[97.8]: {{javadoc_uri}}/GeckoSession.html#goForward-boolean-
 
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
@@ -234,7 +237,7 @@ exclude: true
   [`setAllowInsecureConnections`][87.6].
 - Removed [`JSONException`] throws from [`SessionState.fromString`][87.7], fixed annotations,
   and clarified null-handling a bit.
-  
+
 [87.1]: {{javadoc_uri}}/WebExtension.DownloadInitData.html
 [87.2]: {{javadoc_uri}}/WebExtension.Download.Info.html
 [87.3]: {{javadoc_uri}}/Image.html#getBitmap-int-
@@ -323,11 +326,11 @@ exclude: true
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
   WebExtension notifications which don't have a `source` field.
 - ⚠️ Deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`][82.1] with the intention of removing
-  them in GeckoView v85. 
+  them in GeckoView v85.
   ([bug 1530022]({{bugzilla}}1530022))
 - Added [`ContentDelegate#onExternalResponse(GeckoSession, WebResponse)`][82.2] to eliminate the need
   to make a second request for downloads and ensure more efficient and reliable downloads in a single request. The second
-  parameter is now a [`WebResponse`][65.15] 
+  parameter is now a [`WebResponse`][65.15]
   ([bug 1530022]({{bugzilla}}1530022))
 - Added [`Image`][82.3] support for size-dependent bitmap retrieval from image resources.
   ([bug 1658456]({{bugzilla}}1658456))
@@ -1107,4 +1110,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f109d55f4da6ba24b94fa8cb8f42fe7e68d11426
+[api-version]: ae48110979be68338211be23a6839b1064a51deb
