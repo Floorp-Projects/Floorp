@@ -967,11 +967,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-if test -n "$ZLIB_IN_MOZGLUE"; then
-    AC_DEFINE(ZLIB_IN_MOZGLUE)
-fi
-AC_SUBST(ZLIB_IN_MOZGLUE)
-
 dnl ========================================================
 dnl =
 dnl = Application
