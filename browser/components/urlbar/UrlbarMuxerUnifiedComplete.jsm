@@ -82,13 +82,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       suggestions: new Set(),
       canAddTabToSearch: true,
       hasUnitConversionResult: false,
+      maxHeuristicResultSpan: 0,
       // When you add state, update _copyState() as necessary.
     };
-
-    // If the heuristic is hidden, increment the available span.
-    if (UrlbarPrefs.get("experimental.hideHeuristic")) {
-      state.availableResultSpan++;
-    }
 
     // Do the first pass over all results to build some state.
     for (let result of context.results) {
@@ -109,6 +105,23 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._updateStatePreAdd(result, state);
     }
 
+    // Now that the first pass is done, adjust the available result span.
+    if (state.maxHeuristicResultSpan) {
+      if (UrlbarPrefs.get("experimental.hideHeuristic")) {
+        // The heuristic is hidden. The muxer will include it but the view will
+        // hide it. Increase the available span to compensate so that the total
+        // visible span accurately reflects `context.maxResults`.
+        state.availableResultSpan += state.maxHeuristicResultSpan;
+      } else if (context.maxResults > 0) {
+        // `context.maxResults` is positive. Make sure there's room for the
+        // heuristic even if it means exceeding `context.maxResults`.
+        state.availableResultSpan = Math.max(
+          state.availableResultSpan,
+          state.maxHeuristicResultSpan
+        );
+      }
+    }
+
     // Determine the result groups to use for this sort.  In search mode with
     // an engine, show search suggestions first.
     let rootGroup = context.searchMode?.engineName
@@ -123,16 +136,23 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state
     );
 
-    // Add global suggestedIndex results.
-    let suggestedIndexResults = state.resultsByGroup.get(
-      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
-    );
-    if (suggestedIndexResults) {
-      this._addSuggestedIndexResults(
-        suggestedIndexResults,
-        sortedResults,
-        state
+    // Add global suggestedIndex results unless the max result count is zero,
+    // which isn't really supported but it's easy to honor here. We add them all
+    // even if they exceed the max because we assume they're high-priority
+    // results that should always be shown, and as long as the max is positive
+    // it's not a problem to exceed it sometimes. In practice that will happen
+    // only for small, non-default values of `maxRichResults`.
+    if (context.maxResults > 0) {
+      let suggestedIndexResults = state.resultsByGroup.get(
+        UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
       );
+      if (suggestedIndexResults) {
+        this._addSuggestedIndexResults(
+          suggestedIndexResults,
+          sortedResults,
+          state
+        );
+      }
     }
 
     context.results = sortedResults;
@@ -884,6 +904,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   Global state that we use to make decisions during this sort.
    */
   _updateStatePreAdd(result, state) {
+    // Keep track of the largest heuristic result span.
+    if (result.heuristic && this._canAddResult(result, state)) {
+      state.maxHeuristicResultSpan = Math.max(
+        state.maxHeuristicResultSpan,
+        UrlbarUtils.getSpanForResult(result)
+      );
+    }
+
     // Subtract from `availableResultSpan` the span of global suggestedIndex
     // results so there will be room for them at the end of the sort.
     if (
