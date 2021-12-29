@@ -2968,3 +2968,19 @@ with only_when(compile_environment):
             check_msg="for pthread_cond_timedwait_monotonic_np",
         ),
     )
+
+
+# Custom dynamic linker for Android
+# ==============================================================
+with only_when(target_is_linux & compile_environment):
+    option(
+        env="MOZ_LINKER",
+        default=depends(target.os, when="--enable-jemalloc")(
+            lambda os: os == "Android"
+        ),
+        help="{Enable|Disable} custom dynamic linker",
+    )
+
+    set_config("MOZ_LINKER", True, when="MOZ_LINKER")
+    set_define("MOZ_LINKER", True, when="MOZ_LINKER")
+    add_old_configure_assignment("MOZ_LINKER", True, when="MOZ_LINKER")
