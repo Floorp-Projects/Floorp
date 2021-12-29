@@ -1087,17 +1087,6 @@ else
 fi
 
 dnl ========================================================
-dnl Ensure Android SDK and build-tools versions depending on
-dnl mobile target.
-dnl ========================================================
-
-case "$MOZ_BUILD_APP" in
-mobile/android)
-    MOZ_ANDROID_SDK
-    ;;
-esac
-
-dnl ========================================================
 dnl =
 dnl = Toolkit Options
 dnl =
