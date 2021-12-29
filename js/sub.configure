@@ -52,7 +52,6 @@ def old_js_configure_env(substs, mozconfig):
     for var in (
         "MOZ_DEV_EDITION",
         "STLPORT_LIBS",
-        "MOZ_LINKER",
         "ZLIB_IN_MOZGLUE",
         "RANLIB",
     ):
