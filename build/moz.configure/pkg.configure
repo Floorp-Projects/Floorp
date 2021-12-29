@@ -51,11 +51,6 @@ def pkg_config_env(vars):
 set_config("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
 set_config("PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR)
 set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
-add_old_configure_assignment("PKG_CONFIG_PATH", pkg_config_vars.PKG_CONFIG_PATH)
-add_old_configure_assignment(
-    "PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR
-)
-add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
 
 
 # Locates the given module using pkg-config.
