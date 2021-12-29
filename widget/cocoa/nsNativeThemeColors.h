@@ -8,9 +8,9 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "LookAndFeel.h"
 #include "nsCocoaFeatures.h"
 #include "SDKDeclarations.h"
+#include "mozilla/ColorScheme.h"
 
 enum ColorName {
   toolbarTopBorderGrey,
@@ -66,11 +66,10 @@ inline NSColor* ControlAccentColor() {
              : [NSColor colorWithSRGBRed:0.247 green:0.584 blue:0.965 alpha:1.0];
 }
 
-inline NSAppearance* NSAppearanceForColorScheme(mozilla::LookAndFeel::ColorScheme aScheme) {
-  using ColorScheme = mozilla::LookAndFeel::ColorScheme;
+inline NSAppearance* NSAppearanceForColorScheme(mozilla::ColorScheme aScheme) {
   if (@available(macOS 10.14, *)) {
     NSAppearanceName appearanceName =
-        aScheme == ColorScheme::Light ? NSAppearanceNameAqua : NSAppearanceNameDarkAqua;
+        aScheme == mozilla::ColorScheme::Light ? NSAppearanceNameAqua : NSAppearanceNameDarkAqua;
     return [NSAppearance appearanceNamed:appearanceName];
   }
   return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
