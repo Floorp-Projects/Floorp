@@ -2136,14 +2136,12 @@ def is_linker_option_enabled(target):
         return True
 
 
-option(
-    "--enable-gold",
-    env="MOZ_FORCE_GOLD",
-    help="Enable GNU Gold Linker when it is not already the default",
-    when=is_linker_option_enabled,
-)
-
-imply_option("--enable-linker", "gold", when="--enable-gold")
+@deprecated_option("--enable-gold", env="MOZ_FORCE_GOLD", when=is_linker_option_enabled)
+def enable_gold(value):
+    if value:
+        die("--enable-gold is deprecated, use --enable-linker=gold instead")
+    else:
+        die("--disable-gold is deprecated, use --enable-linker=something_else instead")
 
 
 @depends(target, developer_options)
@@ -2175,7 +2173,6 @@ def enable_linker(linker):
     "--enable-linker",
     c_compiler,
     developer_options,
-    "--enable-gold",
     extra_toolchain_flags,
     target,
     when=is_linker_option_enabled,
@@ -2183,9 +2180,7 @@ def enable_linker(linker):
 @checking("for linker", lambda x: x.KIND)
 @imports("os")
 @imports("shutil")
-def select_linker(
-    linker, c_compiler, developer_options, enable_gold, toolchain_flags, target
-):
+def select_linker(linker, c_compiler, developer_options, toolchain_flags, target):
 
     if linker:
         linker = linker[0]
@@ -2265,7 +2260,6 @@ def select_linker(
 
     if (
         linker is None
-        and enable_gold.origin == "default"
         and developer_options
         and (result is None or result.KIND in ("bfd", "gold"))
     ):
