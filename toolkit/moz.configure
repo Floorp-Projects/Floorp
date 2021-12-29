@@ -2952,3 +2952,19 @@ with only_when(compile_environment):
             check_msg="for sa_len in struct sockaddr",
         ),
     )
+
+
+# Check for pthread_cond_timedwait_monotonic_np
+# ==============================================================
+with only_when(compile_environment):
+    set_define(
+        "HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC",
+        c_compiler.try_compile(
+            includes=["pthread.h"],
+            body="pthread_cond_timedwait_monotonic_np(0, 0, 0);",
+            # -Werror to catch any "implicit declaration" warning that means the function
+            # is not supported.
+            flags=["-Werror"],
+            check_msg="for pthread_cond_timedwait_monotonic_np",
+        ),
+    )
