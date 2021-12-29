@@ -34,4 +34,4 @@ It's worth noting that golden_gate is just for the Sync engine part - other
 parts of the component (ie, the part that provides the functionality that's not
 sync related) will have its own mechanism for this. For example, the
 `webext-storage bridge <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/storage/webext_storage_bridge/src>`_
-uses a similar technique.
+uses a similar technique `which has some in-depth documentation <../../toolkit/components/extensions/webextensions/webext-storage.html>`_.
