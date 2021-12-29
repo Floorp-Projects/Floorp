@@ -70,24 +70,24 @@ var gMoreFromMozillaPane = {
     let products = [
       {
         id: "firefox-mobile",
-        title_string_id: "firefox-mobile-title",
-        description_string_id: "firefox-mobile-description",
+        title_string_id: "more-from-moz-firefox-mobile-title",
+        description_string_id: "more-from-moz-firefox-mobile-description",
         button: {
           id: "fxMobile",
           type: "link",
-          label_string_id: "more-mozilla-learn-more-link",
+          label_string_id: "more-from-moz-learn-more-link",
           actionURL: "https://www.mozilla.org/firefox/browsers/mobile/",
         },
         qrcode: {
           title: {
-            string_id: "qr-code-box-firefox-mobile-title",
+            string_id: "more-from-moz-qr-code-box-firefox-mobile-title",
           },
           image_src_prefix:
             "chrome://browser/content/preferences/more-from-mozilla-qr-code",
           button: {
             id: "qr-code-send-email",
             label: {
-              string_id: "qr-code-box-firefox-mobile-button",
+              string_id: "more-from-moz-qr-code-box-firefox-mobile-button",
             },
             actionURL: "https://www.mozilla.org/en-US/firefox/mobile/get-app",
           },
@@ -98,11 +98,11 @@ var gMoreFromMozillaPane = {
     if (BrowserUtils.shouldShowVPNPromo()) {
       const vpn = {
         id: "mozilla-vpn",
-        title_string_id: "mozilla-vpn-title",
-        description_string_id: "mozilla-vpn-description",
+        title_string_id: "more-from-moz-mozilla-vpn-title",
+        description_string_id: "more-from-moz-mozilla-vpn-description",
         button: {
           id: "mozillaVPN",
-          label_string_id: "button-mozilla-vpn",
+          label_string_id: "more-from-moz-button-mozilla-vpn",
           actionURL: "https://www.mozilla.org/products/vpn/",
         },
       };
@@ -111,11 +111,11 @@ var gMoreFromMozillaPane = {
 
     const rally = {
       id: "mozilla-rally",
-      title_string_id: "mozilla-rally-title",
-      description_string_id: "mozilla-rally-description",
+      title_string_id: "more-from-moz-mozilla-rally-title",
+      description_string_id: "more-from-moz-mozilla-rally-description",
       button: {
         id: "mozillaRally",
-        label_string_id: "button-mozilla-rally",
+        label_string_id: "more-from-moz-button-mozilla-rally",
         actionURL: "https://rally.mozilla.org/",
       },
     };
@@ -149,7 +149,7 @@ var gMoreFromMozillaPane = {
         template.querySelector(".product-img").id = `${product.id}-image`;
         desc.setAttribute(
           "data-l10n-id",
-          `more-mozilla-advanced-${product.description_string_id}`
+          `${product.description_string_id}-advanced`
         );
       } else {
         desc.setAttribute("data-l10n-id", product.description_string_id);
