@@ -3043,7 +3043,7 @@ exports.CSS_PROPERTIES = {
       "visibility",
       "writing-mode",
       "text-orientation",
-      "color-adjust",
+      "print-color-adjust",
       "image-rendering",
       "image-orientation",
       "dominant-baseline",
@@ -5662,7 +5662,7 @@ exports.CSS_PROPERTIES = {
   "color-adjust": {
     "isInherited": true,
     "subproperties": [
-      "color-adjust"
+      "print-color-adjust"
     ],
     "supports": [],
     "values": [
@@ -9621,6 +9621,22 @@ exports.CSS_PROPERTIES = {
       "revert-layer",
       "static",
       "sticky",
+      "unset"
+    ]
+  },
+  "print-color-adjust": {
+    "isInherited": true,
+    "subproperties": [
+      "print-color-adjust"
+    ],
+    "supports": [],
+    "values": [
+      "economy",
+      "exact",
+      "inherit",
+      "initial",
+      "revert",
+      "revert-layer",
       "unset"
     ]
   },
