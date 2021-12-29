@@ -169,22 +169,32 @@ imply_option("--enable-profiling", dmd)
 imply_option("--enable-jemalloc", dmd, when=compile_environment)
 imply_option("--enable-replace-malloc", dmd, when=compile_environment)
 
-# ALSA cubeb backend
+# midir-based Web MIDI support
 # ==============================================================
 @depends(target)
-def alsa_default_check(target):
+def midir_linux_support(target):
     return target.kernel == "Linux" and target.os != "Android"
 
 
+@depends(target, midir_linux_support)
+def midir_support(target, midir_linux_support):
+    if target.os in ("WINNT", "OSX") or midir_linux_support:
+        return True
+
+
+set_config("MOZ_WEBMIDI_MIDIR_IMPL", midir_support)
+
+# ALSA cubeb backend
+# ==============================================================
 option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
 
 
-@depends("--enable-alsa", alsa_default_check)
-def enable_alsa_or_alsa_default_check(alsa_enabled, alsa_default_check):
-    return alsa_enabled or alsa_default_check
+@depends("--enable-alsa", midir_linux_support)
+def enable_alsa_or_midir_linux_support(alsa_enabled, midir_linux_support):
+    return alsa_enabled or midir_linux_support
 
 
-pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_alsa_default_check)
+pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_midir_linux_support)
 
 set_config("MOZ_ALSA", True, when="--enable-alsa")
 set_define("MOZ_ALSA", True, when="--enable-alsa")
