@@ -423,10 +423,6 @@ case "$target" in
     ;;
 
 *-android*|*-linuxandroid*)
-    if test "$COMPILE_ENVIRONMENT" -a -n "$MOZ_MEMORY"; then
-        MOZ_LINKER=1
-    fi
-
     if test -z "$CLANG_CC"; then
         MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
     else
@@ -697,11 +693,6 @@ if test -z "$MOZ_OPTIMIZE_FLAGS"; then
     MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
-
-AC_SUBST(MOZ_LINKER)
-if test -n "$MOZ_LINKER"; then
-  AC_DEFINE(MOZ_LINKER)
-fi
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
