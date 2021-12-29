@@ -99,8 +99,6 @@ def old_configure_options(*options):
     "--includedir",
     "--libdir",
     "--prefix",
-    "--with-android-max-sdk",
-    "--with-android-min-sdk",
     "--with-branding",
     "--with-distribution-id",
     "--with-macbundlename-prefix",

@@ -46,9 +46,49 @@ def android_sdk_root(value):
     )
 
 
-@dependable
-def android_sdk_version():
-    return namespace(build_tools_version="30.0.2", target_sdk_version="30")
+@depends("--enable-geckoview-lite")
+def android_sdk_version(geckoview_lite):
+    # We support Android SDK version 21 and up by default (16 in lite mode).
+    # See the --enable-android-min-sdk option below.
+    #
+    # Warning: Before increasing the with-android-min-sdk value, please note several places in
+    # and out of tree have to be changed. Otherwise, places like Treeherder or archive.mozilla.org
+    # will advertise a bad API level. This may confuse people. As an example, please look at
+    # bug 1384482.
+    # If you think you can't handle the whole set of changes, please reach out to the Release
+    # Engineering team.
+    return namespace(
+        build_tools_version="30.0.2",
+        target_sdk_version="30",
+        min_sdk_version="16" if geckoview_lite else "21",
+    )
+
+
+option(
+    "--with-android-min-sdk",
+    default=android_sdk_version.min_sdk_version,
+    help="Impose a minimum Firefox for Android SDK version",
+)
+
+
+@depends("--with-android-min-sdk", android_sdk_version.target_sdk_version)
+@imports(_from="__builtin__", _import="ValueError")
+def valid_android_min_sdk(min_sdk_version, target_sdk_version):
+    if not min_sdk_version:
+        die("--without-android-min-sdk is not a valid option")
+    try:
+        if int(min_sdk_version[0]) > int(target_sdk_version):
+            die(
+                "--with-android-min-sdk is expected to be less than {}".format(
+                    target_sdk_version
+                )
+            )
+    except ValueError:
+        die("--with-android-min-sdk takes a numerical value")
+    return min_sdk_version[0]
+
+
+set_config("MOZ_ANDROID_MIN_SDK_VERSION", valid_android_min_sdk)
 
 
 @depends(android_sdk_root, android_sdk_version)
@@ -127,6 +167,3 @@ set_config("ANDROID_TOOLS", android_tools)
 
 set_config("ANDROID_BUILD_TOOLS_VERSION", android_sdk_version.build_tools_version)
 set_config("ANDROID_TARGET_SDK", android_sdk_version.target_sdk_version)
-add_old_configure_assignment(
-    "ANDROID_TARGET_SDK", android_sdk_version.target_sdk_version
-)
