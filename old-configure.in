@@ -1056,8 +1056,6 @@ dnl = Application
 dnl =
 dnl ========================================================
 
-MOZ_ARG_HEADER(Application)
-
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_NO_SMART_CARDS=
@@ -1085,20 +1083,6 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
 else
   AC_MSG_RESULT([no])
 fi
-
-dnl ========================================================
-dnl =
-dnl = Toolkit Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Toolkit Options)
-
-dnl ========================================================
-dnl =
-dnl = Components & Features
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Components and Features)
 
 AC_SUBST(MOZ_OFFICIAL_BRANDING)
 if test -n "$MOZ_OFFICIAL_BRANDING"; then
@@ -1193,32 +1177,11 @@ if test -n "$MOZ_NO_SMART_CARDS"; then
 fi
 AC_SUBST(MOZ_NO_SMART_CARDS)
 
-dnl ========================================================
-dnl =
-dnl = Module specific options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Individual module options)
-
 dnl ==============================
 dnl === SQLite fdatasync check ===
 dnl ==============================
 dnl Check to see if fdatasync is available and make use of it
 AC_CHECK_FUNC(fdatasync)
-
-dnl ========================================================
-dnl =
-dnl = Feature options that require extra sources to be pulled
-dnl =
-dnl ========================================================
-dnl MOZ_ARG_HEADER(Features that require extra sources)
-
-dnl ========================================================
-dnl =
-dnl = Runtime debugging and Optimization Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Runtime debugging and Optimizations)
 
 dnl ========================================================
 dnl = Enable code optimization. ON by default.
@@ -1305,13 +1268,6 @@ MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl =
-dnl = Profiling and Instrumenting
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Profiling and Instrumenting)
-
-dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -1339,21 +1295,7 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
     AC_LANG_RESTORE
 fi
 
-dnl ========================================================
-dnl =
-dnl = Misc. Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Misc. Options)
-
 if test -z "$SKIP_COMPILER_CHECKS"; then
-dnl ========================================================
-dnl =
-dnl = Compiler Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Compiler Options)
-
 dnl ========================================================
 dnl Check for gcc -pipe support
 dnl ========================================================
@@ -1374,20 +1316,6 @@ AC_LANG_C
 if test "$COMPILE_ENVIRONMENT"; then
 MOZ_EXPAND_LIBS
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl =
-dnl = Static Build Options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Static build options)
-
-dnl ========================================================
-dnl =
-dnl = Standalone module options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
 dnl ========================================================
 dnl Check if we need the 32-bit Linux SSE2 error dialog
