@@ -700,12 +700,6 @@ enum class StyleTextRendering : uint8_t {
   Geometricprecision,
 };
 
-// color-adjust
-enum class StyleColorAdjust : uint8_t {
-  Economy = 0,
-  Exact = 1,
-};
-
 // color-interpolation and color-interpolation-filters
 enum class StyleColorInterpolation : uint8_t {
   Auto = 0,

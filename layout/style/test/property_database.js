@@ -2543,13 +2543,20 @@ var gCSSProperties = {
     alias_for: "box-sizing",
     subproperties: ["box-sizing"],
   },
-  "color-adjust": {
-    domProp: "colorAdjust",
+  "print-color-adjust": {
+    domProp: "printColorAdjust",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["economy"],
     other_values: ["exact"],
     invalid_values: [],
+  },
+  "color-adjust": {
+    domProp: "colorAdjust",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "print-color-adjust",
+    subproperties: ["print-color-adjust"],
   },
   columns: {
     domProp: "columns",
