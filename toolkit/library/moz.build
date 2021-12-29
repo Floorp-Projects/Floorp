@@ -269,14 +269,11 @@ if CONFIG["OS_ARCH"] == "FreeBSD":
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "crypt32",
-        "gdi32",
         "shell32",
         "ntdll",
         "ole32",
         "version",
         "winspool",
-        "userenv",
-        "uuid",
     ]
 
 if CONFIG["OS_ARCH"] == "Linux" and CONFIG["OS_TARGET"] != "Android":
