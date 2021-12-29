@@ -2984,3 +2984,5 @@ with only_when(target_is_linux & compile_environment):
     set_config("MOZ_LINKER", True, when="MOZ_LINKER")
     set_define("MOZ_LINKER", True, when="MOZ_LINKER")
     add_old_configure_assignment("MOZ_LINKER", True, when="MOZ_LINKER")
+
+    moz_linker = depends(when="MOZ_LINKER")(lambda: True)
