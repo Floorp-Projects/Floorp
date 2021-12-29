@@ -247,10 +247,6 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    MMX_FLAGS="-mmmx"
-    SSE_FLAGS="-msse"
-    SSE2_FLAGS="-msse2"
-    SSSE3_FLAGS="-mssse3"
     CFLAGS="$CFLAGS -fno-strict-aliasing"
 
     if test "$OS_ARCH" != "WINNT" -o -z "$CLANG_CC"; then
@@ -526,15 +522,7 @@ case "$target" in
               CXXFLAGS="$CXXFLAGS -arch:SSE2"
             fi
             changequote([,])
-            SSE_FLAGS="-arch:SSE"
-            SSE2_FLAGS="-arch:SSE2"
-            dnl MSVC allows the use of intrinsics without any flags
-            dnl and doesn't have a separate arch for SSSE3
-            SSSE3_FLAGS="-arch:SSE2"
         fi
-        dnl clang-cl requires appropriate flags to enable SSSE3 support
-        dnl on all architectures.
-        SSSE3_FLAGS="-mssse3"
         dnl VS2013+ supports -Gw for better linker optimizations.
         dnl http://blogs.msdn.com/b/vcblog/archive/2013/09/11/introducing-gw-compiler-switch.aspx
         dnl Disabled on ASan because it causes false-positive ODR violations.
@@ -709,10 +697,6 @@ if test -z "$MOZ_OPTIMIZE_FLAGS"; then
     MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
-AC_SUBST_LIST(MMX_FLAGS)
-AC_SUBST_LIST(SSE_FLAGS)
-AC_SUBST_LIST(SSE2_FLAGS)
-AC_SUBST_LIST(SSSE3_FLAGS)
 
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
