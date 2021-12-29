@@ -556,7 +556,7 @@ public:
     }
     detail::dynamic_check(is_pointer_in_sandbox_memory(ptr),
                           "Malloc returned pointer outside the sandbox memory");
-    auto ptr_end = reinterpret_cast<uintptr_t>(ptr + (total_size - 1));
+    auto ptr_end = reinterpret_cast<uintptr_t>(ptr + (count - 1));
     detail::dynamic_check(
       is_in_same_sandbox(ptr, reinterpret_cast<void*>(ptr_end)),
       "Malloc returned a pointer whose range goes beyond sandbox memory");
