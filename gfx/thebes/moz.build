@@ -116,7 +116,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     ]
     EXPORTS.mozilla.gfx += [
         "PrintTargetPDF.h",
-        "PrintTargetPS.h",
     ]
     SOURCES += [
         "gfxFcPlatformFontList.cpp",
@@ -124,7 +123,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         "gfxFT2Utils.cpp",
         "gfxPlatformGtk.cpp",
         "PrintTargetPDF.cpp",
-        "PrintTargetPS.cpp",
     ]
 
     if CONFIG["MOZ_X11"]:
