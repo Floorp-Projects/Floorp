@@ -109,17 +109,19 @@ var gMoreFromMozillaPane = {
       products.push(vpn);
     }
 
-    const rally = {
-      id: "mozilla-rally",
-      title_string_id: "more-from-moz-mozilla-rally-title",
-      description_string_id: "more-from-moz-mozilla-rally-description",
-      button: {
-        id: "mozillaRally",
-        label_string_id: "more-from-moz-button-mozilla-rally",
-        actionURL: "https://rally.mozilla.org/",
-      },
-    };
-    products.push(rally);
+    if (BrowserUtils.shouldShowRallyPromo()) {
+      const rally = {
+        id: "mozilla-rally",
+        title_string_id: "more-from-moz-mozilla-rally-title",
+        description_string_id: "more-from-moz-mozilla-rally-description",
+        button: {
+          id: "mozillaRally",
+          label_string_id: "more-from-moz-button-mozilla-rally",
+          actionURL: "https://rally.mozilla.org/",
+        },
+      };
+      products.push(rally);
+    }
 
     this._productsContainer = document.getElementById(
       "moreFromMozillaCategory"
