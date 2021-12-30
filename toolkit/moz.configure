@@ -3008,3 +3008,14 @@ with only_when(target_is_linux & compile_environment):
             check_msg="for 32-bits ethtool_cmd.speed",
         ),
     )
+
+# Gamepad support
+# ==============================================================
+check_header(
+    "linux/joystick.h",
+    onerror=lambda: die(
+        "Can't find header linux/joystick.h, needed for gamepad support."
+        " Please install Linux kernel headers."
+    ),
+    when=target_is_linux & compile_environment,
+)
