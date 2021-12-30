@@ -3025,3 +3025,13 @@ check_header(
     ),
     when=target_is_linux & compile_environment,
 )
+
+# Smart card support
+# ==============================================================
+@depends(build_project)
+def disable_smart_cards(build_project):
+    return build_project == "mobile/android"
+
+
+set_config("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
+set_define("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
