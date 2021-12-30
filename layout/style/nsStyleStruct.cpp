@@ -228,7 +228,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeOffset{0},
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mMathDepth(0),
-      mMathVariant(StyleMathMLMathVariant::None),
+      mMathVariant(StyleMathVariant::None),
       mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
       mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),

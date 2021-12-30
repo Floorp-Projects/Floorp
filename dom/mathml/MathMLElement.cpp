@@ -634,25 +634,25 @@ void MathMLElement::MapMathMLAttributesInto(
                                        "tailed",
                                        "looped",
                                        "stretched"};
-    static const StyleMathMLMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
-        StyleMathMLMathVariant::Normal,
-        StyleMathMLMathVariant::Bold,
-        StyleMathMLMathVariant::Italic,
-        StyleMathMLMathVariant::BoldItalic,
-        StyleMathMLMathVariant::Script,
-        StyleMathMLMathVariant::BoldScript,
-        StyleMathMLMathVariant::Fraktur,
-        StyleMathMLMathVariant::DoubleStruck,
-        StyleMathMLMathVariant::BoldFraktur,
-        StyleMathMLMathVariant::SansSerif,
-        StyleMathMLMathVariant::BoldSansSerif,
-        StyleMathMLMathVariant::SansSerifItalic,
-        StyleMathMLMathVariant::SansSerifBoldItalic,
-        StyleMathMLMathVariant::Monospace,
-        StyleMathMLMathVariant::Initial,
-        StyleMathMLMathVariant::Tailed,
-        StyleMathMLMathVariant::Looped,
-        StyleMathMLMathVariant::Stretched};
+    static const StyleMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
+        StyleMathVariant::Normal,
+        StyleMathVariant::Bold,
+        StyleMathVariant::Italic,
+        StyleMathVariant::BoldItalic,
+        StyleMathVariant::Script,
+        StyleMathVariant::BoldScript,
+        StyleMathVariant::Fraktur,
+        StyleMathVariant::DoubleStruck,
+        StyleMathVariant::BoldFraktur,
+        StyleMathVariant::SansSerif,
+        StyleMathVariant::BoldSansSerif,
+        StyleMathVariant::SansSerifItalic,
+        StyleMathVariant::SansSerifBoldItalic,
+        StyleMathVariant::Monospace,
+        StyleMathVariant::Initial,
+        StyleMathVariant::Tailed,
+        StyleMathVariant::Looped,
+        StyleMathVariant::Stretched};
     for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
       if (str.LowerCaseEqualsASCII(sizes[i])) {
         aDecls.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);

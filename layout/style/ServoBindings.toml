@@ -135,7 +135,7 @@ rusty-enums = [
     "mozilla::StyleStrokeLinecap",
     "mozilla::StyleStrokeLinejoin",
     "mozilla::StyleFlexWrap",
-    "mozilla::StyleMathMLMathVariant",
+    "mozilla::StyleMathVariant",
     "mozilla::StyleTextDecorationSkipInk",
     "mozilla::StyleTextDecorationLength",
     "mozilla::StyleMaskType",

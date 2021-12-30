@@ -2250,8 +2250,8 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     }
     fontStyle = f->StyleFont();
     nsIFrame* parent = mLineContainer->GetParent();
-    if (StyleMathMLMathVariant::None != fontStyle->mMathVariant) {
-      if (StyleMathMLMathVariant::Normal != fontStyle->mMathVariant) {
+    if (StyleMathVariant::None != fontStyle->mMathVariant) {
+      if (StyleMathVariant::Normal != fontStyle->mMathVariant) {
         anyMathMLStyling = true;
       }
     } else if (mLineContainer->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
