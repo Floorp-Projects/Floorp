@@ -13,6 +13,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Snapshots: "resource:///modules/Snapshots.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   return console.createInstance({
     prefix: "SnapshotSelector",
@@ -194,7 +198,7 @@ const SnapshotScorer = new (class SnapshotScorer {
    * @returns {number}
    */
   _scoreIsUserPersisted(snapshot) {
-    return snapshot.userPersisted ? 1 : 0;
+    return snapshot.userPersisted != Snapshots.USER_PERSISTED.NO ? 1 : 0;
   }
 
   /**
