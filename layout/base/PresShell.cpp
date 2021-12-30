@@ -10964,9 +10964,9 @@ void PresShell::SetIsActive(bool aIsActive, bool aIsInActiveTab) {
     mDocument->EnumerateSubDocuments(recurse);
   }
 
-  if (activityChanged) {
-    UpdateImageLockingState();
+  UpdateImageLockingState();
 
+  if (activityChanged) {
 #if defined(MOZ_WIDGET_ANDROID)
     if (!aIsActive && presContext &&
         presContext->IsRootContentDocumentCrossProcess()) {
