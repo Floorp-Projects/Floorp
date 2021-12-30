@@ -2995,3 +2995,16 @@ with only_when(target_is_linux & compile_environment):
     add_old_configure_assignment("MOZ_LINKER", True, when="MOZ_LINKER")
 
     moz_linker = depends(when="MOZ_LINKER")(lambda: True)
+
+
+# 32-bits ethtool_cmd.speed
+# ==============================================================
+with only_when(target_is_linux & compile_environment):
+    set_config(
+        "MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI",
+        c_compiler.try_compile(
+            includes=["linux/ethtool.h"],
+            body="struct ethtool_cmd cmd; cmd.speed_hi = 0;",
+            check_msg="for 32-bits ethtool_cmd.speed",
+        ),
+    )
