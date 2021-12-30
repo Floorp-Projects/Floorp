@@ -15,6 +15,9 @@ namespace mozilla {
 namespace dom {
 class ScreenDetails;
 }  // namespace dom
+namespace hal {
+class ScreenConfiguration;
+}
 }  // namespace mozilla
 
 namespace mozilla {
@@ -33,6 +36,11 @@ class Screen final : public nsIScreen {
   Screen(const Screen& aOther);
 
   mozilla::dom::ScreenDetails ToScreenDetails();
+
+  // Convert to hal's ScreenConfiguration.
+  // NOTE: Since Screen doesn't have orientation and angle information,
+  //       these can't be set.
+  mozilla::hal::ScreenConfiguration ToScreenConfiguration();
 
  private:
   virtual ~Screen() = default;
