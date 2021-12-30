@@ -1125,14 +1125,6 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
-dnl ========================================================
-dnl = Disable smartcard support
-dnl ========================================================
-if test -n "$MOZ_NO_SMART_CARDS"; then
-    AC_DEFINE(MOZ_NO_SMART_CARDS)
-fi
-AC_SUBST(MOZ_NO_SMART_CARDS)
-
 dnl ==============================
 dnl === SQLite fdatasync check ===
 dnl ==============================
