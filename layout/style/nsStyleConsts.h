@@ -384,7 +384,7 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
 
 // See nsStyleFont
-enum class StyleMathMLMathVariant : uint8_t {
+enum class StyleMathVariant : uint8_t {
   None = 0,
   Normal = 1,
   Bold = 2,
