@@ -171,7 +171,7 @@ function assertSnapshot(actual, expected) {
   // Avoid falsey-types that we might get from the database.
   Assert.strictEqual(
     actual.userPersisted,
-    expected.userPersisted ?? false,
+    expected.userPersisted ?? Snapshots.USER_PERSISTED.NO,
     "Should have the expected user persisted value"
   );
   Assert.strictEqual(
