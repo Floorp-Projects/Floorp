@@ -21,7 +21,7 @@
     <string name="no_private_tabs_description">Opnu einkafliparnir þínir verða sýndir hér.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 opinn flipi. Snertu til að skipta um flipa.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 opinn flipi. Snertu til að skipta um flipa.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s opnir flipar. Snertu til að skipta um flipa.</string>
 
@@ -30,7 +30,7 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Þú ert í huliðsglugga</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Þú ert í huliðsglugga</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
@@ -38,7 +38,7 @@
     <string name="private_browsing_common_myths">
       Algengar mýtur um huliðsleit</string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Eyða setu</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Eyða setu</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -47,6 +47,10 @@
     <string name="cfr_pos_button_text">Bæta við flýtileið</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nei takk</string>
+
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Loka</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -57,9 +61,27 @@
     <!-- Heading for the Top Sites block -->
     <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Vinsælustu svæðin</string>
 
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+    The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Vefsvæði: %1$s</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">%d vefsvæði</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Nýlega heimsótt</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Nýlegar leitir</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Fjarlægja</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Opnir flipar</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Opnir flipar</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Til baka</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -71,7 +93,7 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Bókamerki</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Breyta bókamerki</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Breyta bókamerki</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Viðbætur</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -96,13 +118,13 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Finna á síðu</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Einkaflipi</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Einkaflipi</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Vista í safn</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Deila</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Deila með…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Deila með…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Opna með %1$s</string>
@@ -120,17 +142,17 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Opna í smáforriti</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Útlit</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Útlit</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Get ekki tengst. Óþekkjanlegt fyrirkomulag á slóð.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Get ekki tengst. Óþekkjanlegt fyrirkomulag á slóð.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Valið tungumál</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Leit</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Leit</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Nota tungumál tækis</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -139,6 +161,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skanna</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Leitarvél</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Leitarvélastillingar</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -154,6 +178,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Fræðast meira</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Leita með %s</string>
+
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Leita</string>
 
@@ -167,7 +194,7 @@
     <!-- Title for the settings page-->
     <string name="settings">Stillingar</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Grunnatriði</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Grunnatriði</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Almennt</string>
     <!-- Preference category for all links about Fenix -->
@@ -179,26 +206,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Staðsetningarslá</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Hjálp</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Hjálp</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Gefa einkunn á Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Veita endurgjöf</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Veita endurgjöf</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Um %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Réttur þinn</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Réttur þinn</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Aðgangsorð</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Aðgangsorð</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Krítartkort og heimilisföng</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Krítartkort og heimilisföng</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Setja sem sjálfgefinn vafra</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Frekari stillingar</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Friðhelgi</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Friðhelgi</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Friðhelgi og öruggi</string>
     <!-- Preference for advanced site permissions -->
@@ -222,7 +249,7 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Reikningur</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Innskráning</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Innskráning</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Verkfæraslá</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -242,9 +269,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Gagnasöfnun</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Meðferð persónuupplýsinga</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Meðferð persónuupplýsinga</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Verkfærakista forritarans</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Verkfærakista forritarans</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Kembt með fjartengingu með USB tengi</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -309,22 +336,22 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Tók á móti flipa</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Tók á móti flipum</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Tók á móti flipum</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Flipi frá %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Vörn gegn gagnasöfnun</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Vörn gegn gagnasöfnun</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Vörn gegn gagnasöfnun</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Vörn gegn gagnasöfnun</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Lokaðu fyrir efni og annað sem fylgist með þér á netinu</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Lokaðu fyrir efni og annað sem fylgist með þér á netinu</string>
 
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Undanþágur</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Vörn gegn gagnasöfnun er ekki virk fyrir þessi vefsvæði</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Vörn gegn gagnasöfnun er ekki virk fyrir þessi vefsvæði</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Virkja fyrir öll vefsvæði</string>
     <!-- Text displayed when there are no exceptions -->
@@ -333,7 +360,7 @@
     <string name="exceptions_empty_message_learn_more_link">Fræðast meira</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Fjarmælingar</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Fjarmælingar</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Notkun og tæknileg gögn</string>
 
@@ -342,17 +369,17 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Markaðsgögn</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Deilir gögnum um hvaða eiginleika þú notar í %1$s með Leanplum, farsímamarkaðsbirgja Mozilla.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Deilir gögnum um hvaða eiginleika þú notar í %1$s með Leanplum, farsímamarkaðsbirgja Mozilla.</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Prófanir</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Prófanir</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Leyfir Mozilla að setja upp og safna gögnum fyrir eiginleika sem verið er að prófa</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Leyfir Mozilla að setja upp og safna gögnum fyrir eiginleika sem verið er að prófa</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Hrunaskýrsla</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Hrunaskýrsla</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Staðsetningarþjónusta Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Staðsetningarþjónusta Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s ástandsskoðun</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">%s ástandsskoðun</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -360,7 +387,7 @@
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Skannaðu pörunarkóða úr Firefox á tölvunni</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Innskráning</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Innskráning</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Skráðu þig inn til að tengjast aftur</string>
     <!-- Preference for removing FxA account -->
@@ -370,9 +397,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Skannaðu QR kóðann sem sýndur er á <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Opna myndavél</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Opna myndavél</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Hætta við</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Hætta við</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -393,9 +420,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Setur</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Setur</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Skjámyndir</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Skjámyndir</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Niðurhal</string>
     <!-- Option in library to open Bookmarks page -->
@@ -411,13 +438,13 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Ferill</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Lestrarlisti</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Lestrarlisti</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Leit</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Leit</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Stillingar</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Valmynd söguferils</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Valmynd söguferils</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Loka</string>
 
@@ -425,7 +452,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Opna flipa</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Huliðslota</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Huliðslota</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Huliðsflipar</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -435,19 +462,19 @@
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Einka</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Opnir flipar</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Opnir flipar</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Vista í safn</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Vista í safn</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Deila flipum</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Loka öllum flipum</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Nýr flipi</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Nýr flipi</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Á upphafsreit</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Á upphafsreit</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Skiptu um flipa</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Skiptu um flipa</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Fjarlæga flipann úr safni</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -458,25 +485,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Opnaðu flipa valmyndina</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Loka öllum flipum</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Loka öllum flipum</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Deila flipum</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Deila flipum</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Vista flipa í safn</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Valmynd flipa</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Deila flipa</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Deila flipa</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Eyða</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Eyða</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Vista</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Vista</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Deila</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Deila</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Mynd fyrir núverandi setu</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Mynd fyrir núverandi setu</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Vista í safn</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Vista í safn</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Eyða safni</string>
     <!-- Text for the menu button to rename a collection -->
@@ -493,31 +520,23 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Eyða ferli</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Ertu viss að þú viljir hreinsa ferilinn þinn?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Ertu viss að þú viljir hreinsa ferilinn þinn?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Hreinsa feril</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Eyða %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Hreinsa</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Afrita</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Deila</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Opna nýjan flipa</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Opna í einkaflipa</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Eyða</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Hreinsa</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Eyða</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d valið</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Eyða %1$d atriðum</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Eyða %1$d atriðum</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Síðasta sólarhringinn</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">Síðasta sólarhringinn</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Síðustu 7 daga</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -532,7 +551,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Því miður getur %1$s ekki hlaðið þessa síðu.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Þú getur reynt að endurheimta eða loka þessum flipa hér fyrir neðan.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Þú getur reynt að endurheimta eða loka þessum flipa hér fyrir neðan.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Senda hrunskýrslu til Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -541,22 +560,22 @@
     <string name="tab_crash_restore">Endurheimta flipa</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Lotustillingar</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Lotustillingar</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Deila lotu</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Deila lotu</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Bókarmerkja valmynd</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Bókarmerkja valmynd</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Breyta bókamerki</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Veldu möppu</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Veldu möppu</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Ertu viss um að þú viljir eyða þessari möppu?</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Eyddi %1$s</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">Eyddi %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Bæta við möppu</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -566,7 +585,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Breyta</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Velja</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Velja</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Afrita</string>
     <!-- Bookmark overflow menu share button -->
@@ -614,7 +633,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Heimildir</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Heimildir</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Fara í stillingar</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -625,7 +644,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Mælt með</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Stjórna heimildum vefsvæða</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Stjórna heimildum vefsvæða</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Hreinsa heimildir</string>
     <!-- Button label for clearing a site permission-->
@@ -713,14 +732,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Senda og deila</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Senda og deila</string>
     <!-- Share screen header -->
     <string name="share_header_2">Deila</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Deila</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Deila tengli</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Deila tengli</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Senda til tækis</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -754,17 +773,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Huliðslota</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Huliðslota</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Eyða huliðsflipum</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Eyða huliðsflipum</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Loka huliðsflipum</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Opna</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Opna</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Eyða og opna</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Eyða og opna</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Knúið af</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Knúið af</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -772,9 +791,9 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Safn endurnefnt</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Flipa eytt</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Flipa eytt</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Flipum eytt</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Flipum eytt</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Flipa lokað</string>
     <!-- Text shown in snackbar when user closes all tabs -->
@@ -787,15 +806,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Huliðsflipum lokað</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Huliðsflipum eytt</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Huliðsflipum eytt</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">AFTURKALLA</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Vefsvæði fjarlægt</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Vefsvæði fjarlægt</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Afturkalla</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Afturkalla</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Staðfesta</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Staðfesta</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Leyfa %1$s að opna %2$s</string>
@@ -807,8 +826,6 @@
     <string name="tab_collection_dialog_message">Ertu viss um að þú viljir eyða %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Eyða</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Hætta við</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Fara í fullan skjá</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -837,10 +854,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d vistföng</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Ferill</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Ferill</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d síður</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d síður</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Smákökur</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -856,7 +873,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Eyða vafragögnum þegar hætt er að nota vafrann</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Eyðir vafragögnum sjálfvirkt þegar þú ýtir á &quot;Hætta&quot; í aðalvalmyndinni</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Eyðir vafragögnum sjálfvirkt þegar þú ýtir á &quot;Hætta&quot; í aðalvalmyndinni</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Eyðir vafragögnum sjálfvirkt þegar þú ýtir á \&quot;Hætta\&quot; í aðalvalmyndinni</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -909,48 +926,29 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Velkomin í %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Ertu þegar með reikning?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Hvað er nýtt!</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Ertu með spurningar um hið endurhannaða %s? Viltu vita hvað hefur breyst?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Fáðu svör hér</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Ertu þegar með reikning?</string>
 
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Já, skráðu mig inn</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Já, skráðu mig inn</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Skrái inn…</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">Skrái inn…</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Vera útskráður</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Vera útskráður</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Kveikt er á samstillingu</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Innskráning mistókst</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">Innskráning mistókst</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Staðlað (sjálfgefið)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Strangt (mælt með)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Strangt (mælt með)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strangt</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Huliðsvöfrun</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Opna huliðsflipa einu sinni: Snertu %s táknið.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Opna huliðsflipa í hvert sinn: Uppfærðu huliðsstillingarnar þínar.</string>
 
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Opna stillingar</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Persónuvernd þín</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lestu persónuverndartilkynningu okkar</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Loka</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Fara að vafra</string>
@@ -987,7 +985,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Nota tölvupóst í staðinn</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox mun hætta að samstilla reikninginn þinn en mun ekki eyða neinum vafragögnum á þessu tæki.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox mun hætta að samstilla reikninginn þinn en mun ekki eyða neinum vafragögnum á þessu tæki.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s mun hætta að samstilla reikninginn þinn en mun ekki eyða neinum vafragögnum á þessu tæki.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1040,7 +1038,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Eingöngu í huliðsflipum</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Aðeins í sérsniðnum flipum</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Aðeins í sérsniðnum flipum</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Dulritunaraðilar</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1069,8 +1067,6 @@
     <string name="etp_tracking_content_title">Rakið efni</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stöðvar utanaðkomandi auglýsingar myndbönd og annað efni sem inniheldur kóða til að rekja hegðun frá því að hlaðast. Getur haft áhrif á virkni vefsetra.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Í hvert skipti sem skjöldurinn er fjólublár þá hefur %s lokað fyrir rekjara á vefsetrinu. Snertu til að fá meiri upplýsingar.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Kveikt er á vörn fyrir þetta vefsvæði</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1082,9 +1078,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Fara til baka</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Rétturinn þinn</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Rétturinn þinn</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Opin hugbúnaðarsöfn sem við notum</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Opin hugbúnaðarsöfn sem við notum</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Hvað er nýtt í %s</string>
     <!-- Open source licenses page title
@@ -1110,9 +1106,9 @@
     <string name="about_debug_menu_toast_done">Kembiforrit virkt</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 flipi</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 flipi</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d flipar</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d flipar</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1144,15 +1140,13 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Biðja um að vista</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Aldrei vista</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Sjálfvirk útfylling</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Samstilla innskráningar</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Endurtengja</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Endurtengja</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Skráðu þig inn til að samstilla</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Skráðu þig inn til að samstilla</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Vistaðar innskráningar</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1169,9 +1163,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Leita að innskráningu</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Stafrófsröð</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Stafrófsröð</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Nýlega notað</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Nýlega notað</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Vefsvæði</string>
     <!-- The header for the username for a login -->
@@ -1179,31 +1173,31 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Lykilorð</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Sláðu aftur inn PIN númerið þitt</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Sláðu aftur inn PIN númerið þitt</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Aflæstu til að skoða vistaðar innskráningar</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Aflæstu til að skoða vistaðar innskráningar</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Þessi tenging er ekki örugg. Öllum gögnum sem er slegið hér inn gætu verið óörugg.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Þessi tenging er ekki örugg. Öllum gögnum sem er slegið hér inn gætu verið óörugg.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Fræðast meira</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Fræðast meira</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Viltu að %s visti þessar innskráningarupplýsingar?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Viltu að %s visti þessar innskráningarupplýsingar?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Vista</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Vista</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Ekki vista</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Ekki vista</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Lykilorð afritað á klemmuspjald</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Notendnafn afritað á klemmuspjald</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Vistvang afritað á klemmuspjald</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Vistvang afritað á klemmuspjald</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Afrita lykilorð</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Afrita notendanafn</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Afritaðu vistfang</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Afritaðu vistfang</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Sýna lykilorð</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1255,16 +1249,16 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Skipta út fyrirspurninni með “%s”. Dæmi:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Fræðast meira</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Fræðast meira</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Upplýsingar um sérsniðnar leitarvélar</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Fræðast meira hlekkur</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Fræðast meira hlekkur</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Skráðu heiti leitarvélar</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Leitarvél með nafninu %s er þegar til.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Leitarvél með nafninu %s er þegar til.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Sláðu inn leitarstreng</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1301,10 +1295,6 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Breyttu <b>%1$s</b> yfir í VIRKT]]></string>
 
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Örugg tenging</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Óörugg tenging</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ertu viss um að þú viljir hreinsa allar heimildir á öllum vefsvæðum?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1314,7 +1304,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Engar undantekningar</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Helstu greinar</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Helstu greinar</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ertu viss um að þú viljir eyða þessu bókamerki?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1341,7 +1331,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Vista breytingar á innskráningu.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Hætta við breytingar</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Hætta við breytingar</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Breyta</string>
     <!--  The error message in add/edit login view when password field is blank. -->
