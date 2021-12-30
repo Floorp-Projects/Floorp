@@ -12,12 +12,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import os
 import re
-import sys
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-lib_path = os.path.join(HERE, "..", "..", "..", "third_party", "python")
-sys.path.append(os.path.join(lib_path, "voluptuous"))
-sys.path.append(os.path.join(lib_path, "pyyaml", "lib"))
 
 import voluptuous
 import yaml
