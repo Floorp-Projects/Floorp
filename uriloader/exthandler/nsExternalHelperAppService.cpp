@@ -153,8 +153,7 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
       do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return textToSubURI->UnEscapeURIForUI(aFragment, /* aDontEscape = */ true,
-                                        aResult);
+  return textToSubURI->UnEscapeURIForUI(aFragment, aResult);
 }
 
 /**
