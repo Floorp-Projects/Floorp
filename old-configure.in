@@ -1126,19 +1126,6 @@ AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 dnl ========================================================
-dnl Updater
-dnl ========================================================
-
-MOZ_ARG_DISABLE_BOOL(updater,
-[  --disable-updater       Disable building of updater],
-    MOZ_UPDATER=,
-    MOZ_UPDATER=1 )
-
-if test -n "$MOZ_UPDATER"; then
-    AC_DEFINE(MOZ_UPDATER)
-fi
-
-dnl ========================================================
 dnl = Disable smartcard support
 dnl ========================================================
 if test -n "$MOZ_NO_SMART_CARDS"; then
@@ -1322,7 +1309,6 @@ AC_SUBST_LIST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST_LIST(WARNINGS_CFLAGS)
 
 AC_SUBST(MOZ_STUB_INSTALLER)
-AC_SUBST(MOZ_UPDATER)
 
 AC_SUBST_LIST(MOZ_FIX_LINK_PATHS)
 
