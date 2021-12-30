@@ -67,7 +67,8 @@ class ElfRelHack_Section : public ElfSection {
     name = elfhack_data;
   };
 
-  void serialize(std::ofstream& file, char ei_class, char ei_data) {
+  void serialize(std::ofstream& file, unsigned char ei_class,
+                 unsigned char ei_data) {
     for (std::vector<Elf_RelHack>::iterator i = rels.begin(); i != rels.end();
          ++i)
       (*i).serialize(file, ei_class, ei_data);
@@ -194,7 +195,8 @@ class ElfRelHackCode_Section : public ElfSection {
 
   ~ElfRelHackCode_Section() { delete elf; }
 
-  void serialize(std::ofstream& file, char ei_class, char ei_data) override {
+  void serialize(std::ofstream& file, unsigned char ei_class,
+                 unsigned char ei_data) override {
     // Readjust code offsets
     for (std::vector<ElfSection*>::iterator c = code.begin(); c != code.end();
          ++c)
@@ -519,23 +521,25 @@ void maybe_split_segment(Elf* elf, ElfSegment* segment) {
 }
 
 // EH_FRAME constants
-static const char DW_EH_PE_absptr = 0x00;
-static const char DW_EH_PE_omit = 0xff;
+static const unsigned char DW_EH_PE_absptr = 0x00;
+static const unsigned char DW_EH_PE_omit = 0xff;
 
 // Data size
-static const char DW_EH_PE_LEB128 = 0x01;
-static const char DW_EH_PE_data2 = 0x02;
-static const char DW_EH_PE_data4 = 0x03;
-static const char DW_EH_PE_data8 = 0x04;
+static const unsigned char DW_EH_PE_LEB128 = 0x01;
+static const unsigned char DW_EH_PE_data2 = 0x02;
+static const unsigned char DW_EH_PE_data4 = 0x03;
+static const unsigned char DW_EH_PE_data8 = 0x04;
 
 // Data signedness
-static const char DW_EH_PE_signed = 0x08;
+static const unsigned char DW_EH_PE_signed = 0x08;
 
 // Modifiers
-static const char DW_EH_PE_pcrel = 0x10;
+static const unsigned char DW_EH_PE_pcrel = 0x10;
 
 // Return the data size part of the encoding value
-static char encoding_data_size(char encoding) { return encoding & 0x07; }
+static unsigned char encoding_data_size(unsigned char encoding) {
+  return encoding & 0x07;
+}
 
 // Advance `step` bytes in the buffer at `data` with size `size`, returning
 // the advanced buffer pointer and remaining size.
@@ -561,7 +565,8 @@ static bool skip_LEB128(char** data, size_t* size) {
 
 // Advance in the given buffer, skipping the full length of a pointer encoded
 // with the given encoding.
-static bool skip_eh_frame_pointer(char** data, size_t* size, char encoding) {
+static bool skip_eh_frame_pointer(char** data, size_t* size,
+                                  unsigned char encoding) {
   switch (encoding_data_size(encoding)) {
     case DW_EH_PE_data2:
       return advance_buffer(data, size, 2);
@@ -602,7 +607,8 @@ static bool adjust_eh_frame_sized_pointer(char** data, size_t* size,
 // In the given eh_frame section, adjust the pointer with the given encoding,
 // pointed to by the given buffer (`data`, `size`), considering the eh_frame
 // section was originally at `origAddr`. Also advances in the buffer.
-static bool adjust_eh_frame_pointer(char** data, size_t* size, char encoding,
+static bool adjust_eh_frame_pointer(char** data, size_t* size,
+                                    unsigned char encoding,
                                     ElfSection* eh_frame, unsigned int origAddr,
                                     Elf* elf) {
   if ((encoding & 0x70) != DW_EH_PE_pcrel)
@@ -647,8 +653,8 @@ static void adjust_eh_frame(ElfSection* eh_frame, unsigned int origAddr,
 
   char* data = const_cast<char*>(eh_frame->getData());
   size_t size = eh_frame->getSize();
-  char LSDAencoding = DW_EH_PE_omit;
-  char FDEencoding = DW_EH_PE_absptr;
+  unsigned char LSDAencoding = DW_EH_PE_omit;
+  unsigned char FDEencoding = DW_EH_PE_absptr;
   bool hasZ = false;
 
   // Decoding of eh_frame based on https://www.airs.com/blog/archives/460
@@ -718,7 +724,7 @@ static void adjust_eh_frame(ElfSection* eh_frame, unsigned int origAddr,
             length--;
             break;
           case 'P': {
-            char encoding = *cursor++;
+            unsigned char encoding = (unsigned char)*cursor++;
             length--;
             if (!adjust_eh_frame_pointer(&cursor, &length, encoding, eh_frame,
                                          origAddr, elf))
