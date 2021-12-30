@@ -2920,6 +2920,8 @@ impl<'a> SceneBuilder<'a> {
         // For line decorations, we can construct the render task cache key
         // here during scene building, since it doesn't depend on device
         // pixel ratio or transform.
+        let mut info = info.clone();
+
         let size = get_line_decoration_size(
             &info.rect.size(),
             orientation,
@@ -2928,6 +2930,32 @@ impl<'a> SceneBuilder<'a> {
         );
 
         let cache_key = size.map(|size| {
+            // If dotted, adjust the clip rect to ensure we don't draw a final
+            // partial dot.
+            if style == LineStyle::Dotted {
+                let clip_size = match orientation {
+                    LineOrientation::Horizontal => {
+                        LayoutSize::new(
+                            size.width * (info.rect.width() / size.width).floor(),
+                            info.rect.height(),
+                        )
+                    }
+                    LineOrientation::Vertical => {
+                        LayoutSize::new(
+                            info.rect.width(),
+                            size.height * (info.rect.height() / size.height).floor(),
+                        )
+                    }
+                };
+                let clip_rect = LayoutRect::from_origin_and_size(
+                    info.rect.min,
+                    clip_size,
+                );
+                info.clip_rect = clip_rect
+                    .intersection(&info.clip_rect)
+                    .unwrap_or_else(LayoutRect::zero);
+            }
+
             LineDecorationCacheKey {
                 style,
                 orientation,
