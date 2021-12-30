@@ -552,7 +552,7 @@ class CommandSiteManager:
             if req.satisfied_by is not None:
                 return
 
-        self._virtualenv.pip_install([package])
+        self._virtualenv.pip_install_with_constraints([package])
 
     def install_pip_requirements(self, path, require_hashes=True, quiet=False):
         """Install a pip requirements.txt file.
@@ -577,6 +577,7 @@ class CommandSiteManager:
             args.append("--quiet")
 
         self._virtualenv.pip_install(args)
+        self._virtualenv.pip_check()
 
     def _pthfile_lines(self):
         """Generate the prioritized import scope to encode in the venv's pthfile
@@ -717,6 +718,36 @@ class PythonVirtualenv:
             path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
         return path
 
+    def pip_install_with_constraints(self, pip_args):
+        """Create a pip constraints file or existing packages
+
+        When pip installing an incompatible package, pip will follow through with
+        the install but raise a warning afterwards.
+
+        To defend our environment from breakage, we run "pip install" but add all
+        existing packages to a "constraints file". This ensures that conflicts are
+        raised as errors up-front, and the virtual environment doesn't have conflicting
+        packages installed.
+
+        Note: pip_args is expected to contain either the requested package or
+              requirements file.
+        """
+        existing_packages = self._resolve_installed_packages()
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            constraints_path = os.path.join(tempdir, "site-constraints.txt")
+            with open(constraints_path, "w") as file:
+                file.write(
+                    "\n".join(
+                        [
+                            f"{name}=={version}"
+                            for name, version in existing_packages.items()
+                        ]
+                    )
+                )
+
+            return self.pip_install(["--constraint", constraints_path] + pip_args)
+
     def pip_install(self, pip_install_args):
         # distutils will use the architecture of the running Python instance when building
         # packages. However, it's possible for the Xcode Python to be a universal binary
@@ -740,6 +771,15 @@ class PythonVirtualenv:
             stderr=subprocess.STDOUT,
             check=True,
         )
+
+    def pip_check(self):
+        subprocess.check_call(
+            [self.python_path, "-m", "pip", "check"],
+            stderr=subprocess.STDOUT,
+        )
+
+    def _resolve_installed_packages(self):
+        return _resolve_installed_packages(self.python_path)
 
 
 class ExternalSitePackageValidationResult:
@@ -835,21 +875,7 @@ class ExternalPythonSite:
 
     @functools.lru_cache(maxsize=None)
     def _resolve_installed_packages(self):
-        pip_json = subprocess.check_output(
-            [
-                self.python_path,
-                "-m",
-                "pip",
-                "list",
-                "--format",
-                "json",
-                "--disable-pip-version-check",
-            ],
-            universal_newlines=True,
-        )
-
-        installed_packages = json.loads(pip_json)
-        return {package["name"]: package["version"] for package in installed_packages}
+        return _resolve_installed_packages(self.python_path)
 
 
 @functools.lru_cache(maxsize=None)
@@ -894,6 +920,24 @@ def _system_python_env_variable_present():
     return any(
         os.environ.get(var) for var in ("MACH_USE_SYSTEM_PYTHON", "MOZ_AUTOMATION")
     )
+
+
+def _resolve_installed_packages(python_executable):
+    pip_json = subprocess.check_output(
+        [
+            python_executable,
+            "-m",
+            "pip",
+            "list",
+            "--format",
+            "json",
+            "--disable-pip-version-check",
+        ],
+        universal_newlines=True,
+    )
+
+    installed_packages = json.loads(pip_json)
+    return {package["name"]: package["version"] for package in installed_packages}
 
 
 def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name):
@@ -1027,7 +1071,7 @@ def _create_venv_with_pthfile(
 
         for requirement in requirements.pypi_optional_requirements:
             try:
-                target_venv.pip_install([str(requirement.requirement)])
+                target_venv.pip_install_with_constraints([str(requirement.requirement)])
             except subprocess.CalledProcessError:
                 print(
                     f"Could not install {requirement.requirement.name}, so "
