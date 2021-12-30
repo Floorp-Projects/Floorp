@@ -1256,7 +1256,7 @@ with only_when("--enable-compile-environment"):
         return (
             target.kernel == "Linux"
             and host.kernel == "Linux"
-            and target.cpu in ("arm", "x86", "x86_64")
+            and target.cpu in ("arm", "aarch64", "x86", "x86_64")
         )
 
     @depends("--enable-release", enable_linker)
