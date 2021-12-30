@@ -7787,12 +7787,6 @@
   value: 1
   mirror: always
 
-# Activity granted to out-of-process iframes in the foreground tab, in milliseconds.
-- name: layout.oopif_activity_grace_period_ms
-  type: uint32_t
-  value: 1000
-  mirror: always
-
 - name: layout.lower_priority_refresh_driver_during_load
   type: bool
   value: true
