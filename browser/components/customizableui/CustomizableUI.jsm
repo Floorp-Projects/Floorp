@@ -2135,22 +2135,9 @@ var CustomizableUIInternal = {
    * If people put things in the panel which need more than single-click interaction,
    * we don't want to close it. Right now we check for text inputs and menu buttons.
    * We also check for being outside of any toolbaritem/toolbarbutton, ie on a blank
-   * part of the menu.
+   * part of the menu, or on another menu (like a context menu inside the panel).
    */
   _isOnInteractiveElement(aEvent) {
-    function getMenuPopupForDescendant(aNode) {
-      let lastPopup = null;
-      while (
-        aNode &&
-        aNode.parentNode &&
-        aNode.parentNode.localName.startsWith("menu")
-      ) {
-        lastPopup = aNode.localName == "menupopup" ? aNode : lastPopup;
-        aNode = aNode.parentNode;
-      }
-      return lastPopup;
-    }
-
     let target = aEvent.originalTarget;
     let panel = this._getPanelForNode(aEvent.currentTarget);
     // This can happen in e.g. customize mode. If there's no panel,
@@ -2165,13 +2152,11 @@ var CustomizableUIInternal = {
     let inMenu = false;
     // whether we're in a toolbarbutton/toolbaritem
     let inItem = false;
-    // whether the current menuitem has a valid closemenu attribute
-    let menuitemCloseMenu = "auto";
 
     // While keeping track of that, we go from the original target back up,
     // to the panel if we have to. We bail as soon as we find an input,
-    // a toolbarbutton/item, or the panel:
-    while (true && target) {
+    // a toolbarbutton/item, or a menuItem.
+    while (target) {
       // Skip out of iframes etc:
       if (target.nodeType == target.DOCUMENT_NODE) {
         if (!target.defaultView) {
@@ -2187,16 +2172,8 @@ var CustomizableUIInternal = {
       let tagName = target.localName;
       inInput = tagName == "input" || tagName == "searchbar";
       inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
-      let isMenuItem = tagName == "menuitem";
-      inMenu = inMenu || isMenuItem;
+      inMenu = tagName == "menuitem";
 
-      if (isMenuItem && target.hasAttribute("closemenu")) {
-        let closemenuVal = target.getAttribute("closemenu");
-        menuitemCloseMenu =
-          closemenuVal == "single" || closemenuVal == "none"
-            ? closemenuVal
-            : "auto";
-      }
       // Break out of the loop immediately for disabled items, as we need to
       // keep the menu open in that case.
       if (target.getAttribute("disabled") == "true") {
@@ -2205,38 +2182,19 @@ var CustomizableUIInternal = {
 
       // This isn't in the loop condition because we want to break before
       // changing |target| if any of these conditions are true
-      if (inInput || inItem || target == panel) {
+      if (inMenu || inInput || inItem || target == panel) {
         break;
       }
-      // We need specific code for popups: the item on which they were invoked
-      // isn't necessarily in their parentNode chain:
-      if (isMenuItem) {
-        let topmostMenuPopup = getMenuPopupForDescendant(target);
-        target =
-          (topmostMenuPopup && topmostMenuPopup.triggerNode) ||
-          target.parentNode;
-      } else {
-        // Skip any parent shadow roots
-        target = target.parentNode?.host?.parentNode || target.parentNode;
-      }
+      // Skip any parent shadow roots
+      target = target.parentNode?.host?.parentNode || target.parentNode;
     }
-
-    // If the user clicked a menu item...
-    if (inMenu) {
-      // We care if we're in an input also,
-      // or if the user specified closemenu!="auto":
-      if (inInput || menuitemCloseMenu != "auto") {
-        return true;
-      }
-      // Otherwise, we're probably fine to close the panel
-      return false;
-    }
-    // If we're not in a menu, and we *are* in a type="menu" toolbarbutton,
-    // we'll now interact with the menu
-    if (inItem && target.getAttribute("type") == "menu") {
-      return true;
-    }
-    return inInput || !inItem;
+    return (
+      inMenu ||
+      inInput ||
+      // If we are in a type="menu" toolbarbutton, we'll now interact with the
+      // menu.
+      (inItem && target.getAttribute("type") == "menu")
+    );
   },
 
   hidePanelForNode(aNode) {
@@ -2247,24 +2205,25 @@ var CustomizableUIInternal = {
   },
 
   maybeAutoHidePanel(aEvent) {
-    if (aEvent.type == "keypress") {
-      if (aEvent.keyCode != aEvent.DOM_VK_RETURN) {
-        return;
-      }
-      // If the user hit enter/return, we don't check preventDefault - it makes sense
-      // that this was prevented, but we probably still want to close the panel.
-      // If consumers don't want this to happen, they should specify the closemenu
-      // attribute.
-    } else if (aEvent.type != "command") {
-      // mouse events:
-      if (aEvent.defaultPrevented || aEvent.button != 0) {
-        return;
-      }
-      let isInteractive = this._isOnInteractiveElement(aEvent);
-      log.debug("maybeAutoHidePanel: interactive ? " + isInteractive);
-      if (isInteractive) {
-        return;
-      }
+    let eventType = aEvent.type;
+    if (eventType == "keypress" && aEvent.keyCode != aEvent.DOM_VK_RETURN) {
+      return;
+    }
+
+    // If the user hit enter/return, we don't check preventDefault - it makes sense
+    // that this was prevented, but we probably still want to close the panel.
+    // If consumers don't want this to happen, they should specify the closemenu
+    // attribute.
+    if (
+      eventType != "command" &&
+      eventType != "keypress" &&
+      (aEvent.defaultPrevented || aEvent.button != 0)
+    ) {
+      return;
+    }
+
+    if (eventType != "command" && this._isOnInteractiveElement(aEvent)) {
+      return;
     }
 
     // We can't use event.target because we might have passed an anonymous
