@@ -196,11 +196,7 @@ NS_IMETHODIMP nsPrintSettingsGTK::GetOutputFormat(int16_t* aOutputFormat) {
 
   if (format == nsIPrintSettings::kOutputFormatNative &&
       GTK_IS_PRINTER(mGTKPrinter)) {
-    if (gtk_printer_accepts_pdf(mGTKPrinter)) {
-      format = nsIPrintSettings::kOutputFormatPDF;
-    } else {
-      format = nsIPrintSettings::kOutputFormatPS;
-    }
+    format = nsIPrintSettings::kOutputFormatPDF;
   }
 
   *aOutputFormat = format;
