@@ -11,10 +11,6 @@ let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-let { RegionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/RegionTestUtils.jsm"
-);
-
 let { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
 
 const initialHomeRegion = Region._home;
@@ -403,5 +399,85 @@ add_task(async function test_VPN_promo_in_illegal_current_region() {
   ok(mobileCard, "The Mobile promo is visible");
 
   setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(
+  async function test_rally_promo_with_approved_home_region_and_language() {
+    // Only show the Rally promo when US is the region and English is the langauge
+    setupRegions("US");
+
+    await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+      leaveOpen: true,
+    });
+
+    let doc = gBrowser.contentDocument;
+    let rallyPromoCard = doc.getElementById("mozilla-rally");
+    let mobileCard = doc.getElementById("firefox-mobile");
+    ok(rallyPromoCard, "The Rally promo is visible");
+    ok(mobileCard, "The Mobile promo is visible");
+
+    setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+);
+
+add_task(async function test_rally_promo_with_unapproved_home_region() {
+  setupRegions("IS");
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_rally_promo_with_unapproved_current_region() {
+  setupRegions("US", "IS");
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_rally_promo_with_unapproved_language() {
+  function setLanguage(language) {
+    Services.locale.availableLocales = [language];
+    Services.locale.requestedLocales = [language];
+  }
+  // Rally promo should be hidden in the US for languages other than English
+  setupRegions("US");
+  const initialLanguage = Services.locale.appLocaleAsBCP47;
+  setLanguage("ko-KR");
+
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
+  ok(!rallyPromoCard, "The Rally promo is not visible");
+  ok(mobileCard, "The Mobile promo is visible");
+
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  // revert changes to language
+  setLanguage(initialLanguage);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
