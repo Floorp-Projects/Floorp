@@ -345,11 +345,13 @@ class nsSocketTransport final : public nsASocketHandler,
   bool RecoverFromError();
 
   void OnMsgInputPending() {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (mState == STATE_TRANSFERRING) {
       mPollFlags |= (PR_POLL_READ | PR_POLL_EXCEPT);
     }
   }
   void OnMsgOutputPending() {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (mState == STATE_TRANSFERRING) {
       mPollFlags |= (PR_POLL_WRITE | PR_POLL_EXCEPT);
     }

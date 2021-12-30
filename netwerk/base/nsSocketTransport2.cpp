@@ -826,7 +826,6 @@ nsresult nsSocketTransport::InitWithName(const char* name, size_t length) {
 nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
                                                     const NetAddr* addr) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
 
   char buf[kNetAddrMaxCStrBufSize];
   addr->ToStringBuffer(buf, sizeof(buf));
@@ -851,7 +850,7 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
 
   {
     MutexAutoLock lock(mLock);
-
+    NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
     mFD = fd;
     mFDref = 1;
     mFDconnected = true;
@@ -924,6 +923,7 @@ nsresult nsSocketTransport::ResolveHost() {
       this, SocketHost().get(), SocketPort(),
       mConnectionFlags & nsSocketTransport::BYPASS_CACHE ? " bypass cache" : "",
       mProxyTransparentResolvesHost));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsresult rv;
 
@@ -1195,6 +1195,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
 
 nsresult nsSocketTransport::InitiateSocket() {
   SOCKET_LOG(("nsSocketTransport::InitiateSocket [this=%p]\n", this));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsresult rv;
   bool isLocal;
@@ -1282,10 +1283,13 @@ nsresult nsSocketTransport::InitiateSocket() {
   //
   // if we already have a connected socket, then just attach and return.
   //
-  if (mFD.IsInitialized()) {
-    rv = mSocketTransportService->AttachSocket(mFD, this);
-    if (NS_SUCCEEDED(rv)) mAttached = true;
-    return rv;
+  {
+    MutexAutoLock lock(mLock);
+    if (mFD.IsInitialized()) {
+      rv = mSocketTransportService->AttachSocket(mFD, this);
+      if (NS_SUCCEEDED(rv)) mAttached = true;
+      return rv;
+    }
   }
 
   //
@@ -1393,19 +1397,21 @@ nsresult nsSocketTransport::InitiateSocket() {
   PR_SetSocketOption(fd, &opt);
 #endif
 
-  // inform socket transport about this newly created socket...
-  rv = mSocketTransportService->AttachSocket(fd, this);
-  if (NS_FAILED(rv)) {
-    CloseSocket(fd,
-                mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
-    return rv;
-  }
-  mAttached = true;
+  // up to here, mFD will only be accessed by us
 
   // assign mFD so that we can properly handle OnSocketDetached before we've
   // established a connection.
   {
     MutexAutoLock lock(mLock);
+    // inform socket transport about this newly created socket...
+    rv = mSocketTransportService->AttachSocket(fd, this);
+    if (NS_FAILED(rv)) {
+      CloseSocket(
+          fd, mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
+      return rv;
+    }
+    mAttached = true;
+
     mFD = fd;
     mFDref = 1;
     mFDconnected = false;
@@ -1615,8 +1621,12 @@ bool nsSocketTransport::RecoverFromError() {
 
   nsresult rv;
 
-  // OK to check this outside mLock
-  NS_ASSERTION(!mFDconnected, "socket should not be connected");
+#ifdef DEBUG
+  {
+    MutexAutoLock lock(mLock);
+    NS_ASSERTION(!mFDconnected, "socket should not be connected");
+  }
+#endif
 
   // all connection failures need to be reported to DNS so that the next
   // time we will use a different address if available.
@@ -1904,6 +1914,7 @@ void nsSocketTransport::ReleaseFD_Locked(PRFileDesc* fd) {
 
 void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
                                       nsISupports* param) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(
       ("nsSocketTransport::OnSocketEvent [this=%p type=%u status=%" PRIx32
        " param=%p]\n",
@@ -2039,6 +2050,7 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
 // socket handler impl
 
 void nsSocketTransport::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG1(("nsSocketTransport::OnSocketReady [this=%p outFlags=%hd]\n",
                this, outFlags));
 
@@ -2539,6 +2551,7 @@ nsSocketTransport::Bind(NetAddr* aLocalAddr) {
   NS_ENSURE_ARG(aLocalAddr);
 
   MutexAutoLock lock(mLock);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mAttached) {
     return NS_ERROR_FAILURE;
   }
