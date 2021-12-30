@@ -321,6 +321,16 @@ var BrowserUtils = {
       !avoidAdsCountries.has(currentRegion.toLowerCase())
     );
   },
+
+  // Returns true if user should see Rally promos
+  shouldShowRallyPromo() {
+    const homeRegion = Region.home || "";
+    const currentRegion = Region.current || "";
+    const region = currentRegion || homeRegion;
+    const language = Services.locale.appLocaleAsBCP47;
+
+    return language.startsWith("en-") && region.toLowerCase() == "us";
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
