@@ -1125,14 +1125,6 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
-# Avoid defining MOZ_ENABLE_CAIRO_FT on Windows platforms because
-# "cairo-ft-font.c" includes <dlfcn.h>, which only exists on posix platforms
-if test -n "$MOZ_TREE_FREETYPE" -a "$OS_TARGET" != WINNT; then
-   MOZ_ENABLE_CAIRO_FT=1
-   CAIRO_FT_CFLAGS="-I$_topsrcdir/modules/freetype2/include"
-   AC_SUBST_LIST(CAIRO_FT_CFLAGS)
-fi
-
 dnl ========================================================
 dnl Updater
 dnl ========================================================
@@ -1310,11 +1302,6 @@ if test "$OS_ARCH" = "WINNT"; then
     AC_DEFINE(HAVE_UINT64_T)
 fi
 
-if test "$_HAVE_FREETYPE2"; then
-    MOZ_ENABLE_CAIRO_FT=1
-    CAIRO_FT_CFLAGS="$FT2_CFLAGS"
-fi
-
 case "$MOZ_WIDGET_TOOLKIT" in
   windows)
     if test "$COMPILE_ENVIRONMENT"; then
@@ -1322,7 +1309,6 @@ case "$MOZ_WIDGET_TOOLKIT" in
     fi
     ;;
 esac
-AC_SUBST(MOZ_ENABLE_CAIRO_FT)
 AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 
 dnl ========================================================

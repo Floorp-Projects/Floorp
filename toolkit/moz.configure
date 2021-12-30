@@ -477,9 +477,6 @@ def freetype2_combined_info(fontconfig_info, freetype2_info):
     )
 
 
-add_old_configure_assignment(
-    "_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True)
-)
 set_define("MOZ_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True))
 
 # Apple platform decoder support
@@ -981,7 +978,6 @@ def tree_freetype(target, skia_pdf):
 
 set_define("MOZ_TREE_FREETYPE", tree_freetype)
 set_config("MOZ_TREE_FREETYPE", tree_freetype)
-add_old_configure_assignment("MOZ_TREE_FREETYPE", tree_freetype)
 
 set_define("HAVE_FT_BITMAP_SIZE_Y_PPEM", tree_freetype)
 set_define("HAVE_FT_GLYPHSLOT_EMBOLDEN", tree_freetype)
@@ -999,8 +995,18 @@ def ft2_info(freetype2_combined_info, tree_freetype, build_env):
 
 
 set_config("FT2_LIBS", ft2_info.libs)
-add_old_configure_assignment("FT2_LIBS", ft2_info.libs)
-add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
+
+
+@depends(target, tree_freetype, freetype2_info)
+def enable_cairo_ft(target, tree_freetype, freetype2_info):
+    # Avoid defining MOZ_ENABLE_CAIRO_FT on Windows platforms because
+    # "cairo-ft-font.c" includes <dlfcn.h>, which only exists on posix platforms
+    return freetype2_info or (tree_freetype and target.os != "WINNT")
+
+
+set_config("MOZ_ENABLE_CAIRO_FT", True, when=enable_cairo_ft)
+set_config("CAIRO_FT_CFLAGS", ft2_info.cflags, when=enable_cairo_ft)
+
 
 # WebDriver (HTTP / BiDi)
 # ==============================================================
