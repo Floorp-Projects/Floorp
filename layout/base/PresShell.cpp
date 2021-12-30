@@ -814,7 +814,6 @@ PresShell::PresShell(Document* aDocument)
       mShouldUnsuppressPainting(false),
       mIgnoreFrameDestruction(false),
       mIsActive(true),
-      mIsInActiveTab(true),
       mFrozen(false),
       mIsFirstPaint(true),
       mObservesMutationsForPrint(false),
@@ -10842,30 +10841,16 @@ void PresShell::ActivenessMaybeChanged() {
   if (!mDocument) {
     return;
   }
-  auto activeness = ComputeActiveness();
-  SetIsActive(activeness.mShouldBeActive, activeness.mIsInActiveTab);
+  SetIsActive(ShouldBeActive());
 }
 
-// A PresShell being active means that it is visible (or close to be visible, if
-// the front-end is warming it). That means that when it is active we always
-// tick its refresh driver at full speed if needed.
-//
-// However we also want to track whether we're in the active tab (represented by
-// the browsing context activeness) for the refresh driver to be able to treat
-// invisible-but-in-the-active-tab frames slightly differently in some
-// circumstances (give them a throttled or unthrottled refresh driver after a
-// while). mIsInActiveTab should ~always be GetBrowsingContext()->IsActive().
-//
-// Image documents behave specially in the sense that they are always "active"
-// and never "in the active tab". However these documents tick manually so
-// there's not much to worry about there.
-auto PresShell::ComputeActiveness() const -> Activeness {
+bool PresShell::ShouldBeActive() const {
   MOZ_LOG(gLog, LogLevel::Debug,
-          ("PresShell::ShouldBeActive(%s, %d, %d)\n",
+          ("PresShell::ShouldBeActive(%s, %d)\n",
            mDocument->GetDocumentURI()
                ? mDocument->GetDocumentURI()->GetSpecOrDefault().get()
                : "(no uri)",
-           mIsActive, mIsInActiveTab));
+           mIsActive));
 
   Document* doc = mDocument;
 
@@ -10873,10 +10858,7 @@ auto PresShell::ComputeActiveness() const -> Activeness {
     // Documents used as an image can remain active. They do not tick their
     // refresh driver if not painted, and they can't run script or such so they
     // can't really observe much else.
-    //
-    // Image docs can be displayed in multiple docs at the same time so the "in
-    // active tab" bool doesn't make much sense for them.
-    return {true, false};
+    return true;
   }
 
   if (Document* displayDoc = doc->GetDisplayDocument()) {
@@ -10887,12 +10869,6 @@ auto PresShell::ComputeActiveness() const -> Activeness {
                "external resource doc shouldn't have its own BC");
     doc = displayDoc;
   }
-
-  BrowsingContext* bc = doc->GetBrowsingContext();
-  const bool inActiveTab = bc && bc->IsActive();
-
-  MOZ_LOG(gLog, LogLevel::Debug,
-          (" > BrowsingContext %p  active: %d", bc, inActiveTab));
 
   Document* root = nsContentUtils::GetInProcessSubtreeRootDocument(doc);
   if (auto* browserChild = BrowserChild::GetFrom(root->GetDocShell())) {
@@ -10913,7 +10889,7 @@ auto PresShell::ComputeActiveness() const -> Activeness {
     if (!browserChild->IsVisible()) {
       MOZ_LOG(gLog, LogLevel::Debug,
               (" > BrowserChild %p is not visible", browserChild));
-      return {false, inActiveTab};
+      return false;
     }
 
     // If the browser is visible but just due to be preserving layers
@@ -10923,40 +10899,42 @@ auto PresShell::ComputeActiveness() const -> Activeness {
       MOZ_LOG(gLog, LogLevel::Debug,
               (" > BrowserChild %p is visible and not preserving layers",
                browserChild));
-      return {true, inActiveTab};
+      return true;
     }
     MOZ_LOG(
         gLog, LogLevel::Debug,
         (" > BrowserChild %p is visible and preserving layers", browserChild));
   }
-  return {inActiveTab, inActiveTab};
+
+  BrowsingContext* bc = doc->GetBrowsingContext();
+  MOZ_LOG(gLog, LogLevel::Debug,
+          (" > BrowsingContext %p  active: %d", bc, bc && bc->IsActive()));
+  return bc && bc->IsActive();
 }
 
-void PresShell::SetIsActive(bool aIsActive, bool aIsInActiveTab) {
+void PresShell::SetIsActive(bool aIsActive) {
   MOZ_ASSERT(mDocument, "should only be called with a document");
 
-  const bool activityChanged = mIsActive != aIsActive;
-  const bool inActiveTabChanged = mIsInActiveTab != aIsInActiveTab;
+  const bool changed = mIsActive != aIsActive;
 
   mIsActive = aIsActive;
-  mIsInActiveTab = aIsInActiveTab;
 
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
       presContext->RefreshDriver()->GetPresContext() == presContext) {
-    presContext->RefreshDriver()->SetActivity(aIsActive, aIsInActiveTab);
+    presContext->RefreshDriver()->SetThrottled(!mIsActive);
   }
 
-  if (activityChanged || inActiveTabChanged) {
+  if (changed) {
     // Propagate state-change to my resource documents' PresShells and other
     // subdocuments.
     //
     // Note that it is fine to not propagate to fission iframes. Those will
     // become active / inactive as needed as a result of they getting painted /
     // not painted eventually.
-    auto recurse = [aIsActive, aIsInActiveTab](Document& aSubDoc) {
+    auto recurse = [aIsActive](Document& aSubDoc) {
       if (PresShell* presShell = aSubDoc.GetPresShell()) {
-        presShell->SetIsActive(aIsActive, aIsInActiveTab);
+        presShell->SetIsActive(aIsActive);
       }
       return CallState::Continue;
     };
@@ -10965,25 +10943,26 @@ void PresShell::SetIsActive(bool aIsActive, bool aIsInActiveTab) {
   }
 
   UpdateImageLockingState();
-
-  if (activityChanged) {
-#if defined(MOZ_WIDGET_ANDROID)
-    if (!aIsActive && presContext &&
-        presContext->IsRootContentDocumentCrossProcess()) {
-      if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
-        // Reset the dynamic toolbar offset state.
-        presContext->UpdateDynamicToolbarOffset(0);
-      }
-    }
-#endif
-  }
-
-  if (aIsActive) {
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = GetAccessibilityService()) {
+  if (aIsActive) {
+    if (nsAccessibilityService* accService =
+            PresShell::GetAccessibilityService()) {
       accService->PresShellActivated(this);
     }
+  }
+#endif  // #ifdef ACCESSIBILITY
+
+#if defined(MOZ_WIDGET_ANDROID)
+  if (changed && !aIsActive && presContext &&
+      presContext->IsRootContentDocumentCrossProcess()) {
+    if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
+      // Reset the dynamic toolbar offset state.
+      presContext->UpdateDynamicToolbarOffset(0);
+    }
+  }
 #endif
+
+  if (aIsActive) {
     if (nsIFrame* rootFrame = GetRootFrame()) {
       rootFrame->SchedulePaint();
     }

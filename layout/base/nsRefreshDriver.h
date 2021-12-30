@@ -277,7 +277,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    */
   void Disconnect();
 
-  bool IsFrozen() const { return mFreezeCount > 0; }
+  bool IsFrozen() { return mFreezeCount > 0; }
 
   /**
    * Freeze the refresh driver.  It should stop delivering future
@@ -298,7 +298,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * Throttle or unthrottle the refresh driver.  This is done if the
    * corresponding presshell is hidden or shown.
    */
-  void SetActivity(bool aIsActive, bool aIsInActiveTab);
+  void SetThrottled(bool aThrottled);
 
   /**
    * Return the prescontext we were initialized with
@@ -472,10 +472,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void EnsureTimerStarted(EnsureTimerStartedFlags aFlags = eNone);
   void StopTimer();
 
-  bool ComputeShouldBeThrottled() const;
-  bool ShouldStopActivityGracePeriod() const;
-  void UpdateThrottledState();
-
   bool HasObservers() const;
   void AppendObserverDescriptionsToString(nsACString& aStr) const;
   // Note: This should only be called in the dtor of nsRefreshDriver.
@@ -551,13 +547,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mViewManagerFlushCause;
 
   bool mThrottled : 1;
-  bool mIsActive : 1;
-  bool mIsInActiveTab : 1;
-  // We grant a period of activity to out-of-process iframes that are in the
-  // foreground tab but inactive (hidden), in case they can set themselves up
-  // and get shown soon enough (see bug 1745869).
-  bool mIsGrantingActivityGracePeriod : 1;
-  bool mHasGrantedActivityGracePeriod : 1;
   bool mNeedToRecomputeVisibility : 1;
   bool mTestControllingRefreshes : 1;
 
@@ -611,7 +600,6 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   mozilla::TimeStamp mNextThrottledFrameRequestTick;
   mozilla::TimeStamp mNextRecomputeVisibilityTick;
   mozilla::TimeStamp mBeforeFirstContentfulPaintTimerRunningLimit;
-  mozilla::TimeStamp mActivityGracePeriodStart;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[4];
