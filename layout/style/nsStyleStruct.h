@@ -103,7 +103,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   // math-depth support (used for MathML scriptlevel)
   int8_t mMathDepth;
   // MathML  mathvariant support
-  uint8_t mMathVariant;
+  mozilla::StyleMathMLMathVariant mMathVariant;
   // math-style support (used for MathML displaystyle)
   uint8_t mMathStyle;
 

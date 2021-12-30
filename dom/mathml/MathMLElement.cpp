@@ -634,25 +634,25 @@ void MathMLElement::MapMathMLAttributesInto(
                                        "tailed",
                                        "looped",
                                        "stretched"};
-    static const int32_t values[MOZ_ARRAY_LENGTH(sizes)] = {
-        NS_MATHML_MATHVARIANT_NORMAL,
-        NS_MATHML_MATHVARIANT_BOLD,
-        NS_MATHML_MATHVARIANT_ITALIC,
-        NS_MATHML_MATHVARIANT_BOLD_ITALIC,
-        NS_MATHML_MATHVARIANT_SCRIPT,
-        NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
-        NS_MATHML_MATHVARIANT_FRAKTUR,
-        NS_MATHML_MATHVARIANT_DOUBLE_STRUCK,
-        NS_MATHML_MATHVARIANT_BOLD_FRAKTUR,
-        NS_MATHML_MATHVARIANT_SANS_SERIF,
-        NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF,
-        NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC,
-        NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC,
-        NS_MATHML_MATHVARIANT_MONOSPACE,
-        NS_MATHML_MATHVARIANT_INITIAL,
-        NS_MATHML_MATHVARIANT_TAILED,
-        NS_MATHML_MATHVARIANT_LOOPED,
-        NS_MATHML_MATHVARIANT_STRETCHED};
+    static const StyleMathMLMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
+        StyleMathMLMathVariant::Normal,
+        StyleMathMLMathVariant::Bold,
+        StyleMathMLMathVariant::Italic,
+        StyleMathMLMathVariant::BoldItalic,
+        StyleMathMLMathVariant::Script,
+        StyleMathMLMathVariant::BoldScript,
+        StyleMathMLMathVariant::Fraktur,
+        StyleMathMLMathVariant::DoubleStruck,
+        StyleMathMLMathVariant::BoldFraktur,
+        StyleMathMLMathVariant::SansSerif,
+        StyleMathMLMathVariant::BoldSansSerif,
+        StyleMathMLMathVariant::SansSerifItalic,
+        StyleMathMLMathVariant::SansSerifBoldItalic,
+        StyleMathMLMathVariant::Monospace,
+        StyleMathMLMathVariant::Initial,
+        StyleMathMLMathVariant::Tailed,
+        StyleMathMLMathVariant::Looped,
+        StyleMathMLMathVariant::Stretched};
     for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
       if (str.LowerCaseEqualsASCII(sizes[i])) {
         aDecls.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
