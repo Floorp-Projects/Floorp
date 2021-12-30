@@ -35,7 +35,7 @@ struct nsTransformedCharStyle final {
   RefPtr<nsPresContext> mPresContext;
   float mScriptSizeMultiplier;
   mozilla::StyleTextTransform mTextTransform;
-  mozilla::StyleMathMLMathVariant mMathVariant;
+  mozilla::StyleMathVariant mMathVariant;
   bool mExplicitLanguage;
   bool mForceNonFullWidth = false;
   bool mMaskPassword = false;

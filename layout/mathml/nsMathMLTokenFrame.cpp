@@ -37,14 +37,14 @@ eMathMLFrameType nsMathMLTokenFrame::GetMathMLFrameType() {
     return eMathMLFrameType_Ordinary;
   }
 
-  StyleMathMLMathVariant mathVariant = StyleFont()->mMathVariant;
-  if ((mathVariant == StyleMathMLMathVariant::None &&
+  StyleMathVariant mathVariant = StyleFont()->mMathVariant;
+  if ((mathVariant == StyleMathVariant::None &&
        (StyleFont()->mFont.style == FontSlantStyle::Italic() ||
         HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI))) ||
-      mathVariant == StyleMathMLMathVariant::Italic ||
-      mathVariant == StyleMathMLMathVariant::BoldItalic ||
-      mathVariant == StyleMathMLMathVariant::SansSerifItalic ||
-      mathVariant == StyleMathMLMathVariant::SansSerifBoldItalic) {
+      mathVariant == StyleMathVariant::Italic ||
+      mathVariant == StyleMathVariant::BoldItalic ||
+      mathVariant == StyleMathVariant::SansSerifItalic ||
+      mathVariant == StyleMathVariant::SansSerifBoldItalic) {
     return eMathMLFrameType_ItalicIdentifier;
   }
   return eMathMLFrameType_UprightIdentifier;
