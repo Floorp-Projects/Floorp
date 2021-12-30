@@ -1872,3 +1872,15 @@ assert_invalid(
     ),
   `type mismatch`,
 );
+
+// ./test/core/i64.wast:487
+assert_malformed(
+  () => instantiate(`(func (result i64) (i64.const nan:arithmetic)) `),
+  `unexpected token`,
+);
+
+// ./test/core/i64.wast:491
+assert_malformed(
+  () => instantiate(`(func (result i64) (i64.const nan:canonical)) `),
+  `unexpected token`,
+);

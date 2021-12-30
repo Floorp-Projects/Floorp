@@ -79,37 +79,65 @@ let $0 = instantiate(`(module
       )
     )
   )
+
+  (func (export "rethrow-stack-polymorphism")
+    (try
+      (do (throw $$e0))
+      (catch $$e0 (i32.const 1) (rethrow 0))
+    )
+  )
 )`);
 
-// ./test/core/rethrow.wast:68
+// ./test/core/rethrow.wast:75
 assert_exception(() => invoke($0, `catch-rethrow-0`, []));
 
-// ./test/core/rethrow.wast:70
+// ./test/core/rethrow.wast:77
 assert_exception(() => invoke($0, `catch-rethrow-1`, [0]));
 
-// ./test/core/rethrow.wast:71
+// ./test/core/rethrow.wast:78
 assert_return(() => invoke($0, `catch-rethrow-1`, [1]), [value("i32", 23)]);
 
-// ./test/core/rethrow.wast:73
+// ./test/core/rethrow.wast:80
 assert_exception(() => invoke($0, `catchall-rethrow-0`, []));
 
-// ./test/core/rethrow.wast:75
+// ./test/core/rethrow.wast:82
 assert_exception(() => invoke($0, `catchall-rethrow-1`, [0]));
 
-// ./test/core/rethrow.wast:76
+// ./test/core/rethrow.wast:83
 assert_return(() => invoke($0, `catchall-rethrow-1`, [1]), [value("i32", 23)]);
 
-// ./test/core/rethrow.wast:77
+// ./test/core/rethrow.wast:84
 assert_exception(() => invoke($0, `rethrow-nested`, [0]));
 
-// ./test/core/rethrow.wast:78
+// ./test/core/rethrow.wast:85
 assert_exception(() => invoke($0, `rethrow-nested`, [1]));
 
-// ./test/core/rethrow.wast:79
+// ./test/core/rethrow.wast:86
 assert_return(() => invoke($0, `rethrow-nested`, [2]), [value("i32", 23)]);
 
-// ./test/core/rethrow.wast:81
+// ./test/core/rethrow.wast:88
 assert_return(() => invoke($0, `rethrow-recatch`, [0]), [value("i32", 23)]);
 
-// ./test/core/rethrow.wast:82
+// ./test/core/rethrow.wast:89
 assert_return(() => invoke($0, `rethrow-recatch`, [1]), [value("i32", 42)]);
+
+// ./test/core/rethrow.wast:91
+assert_exception(() => invoke($0, `rethrow-stack-polymorphism`, []));
+
+// ./test/core/rethrow.wast:93
+assert_invalid(
+  () => instantiate(`(module (func (rethrow 0)))`),
+  `invalid rethrow label`,
+);
+
+// ./test/core/rethrow.wast:94
+assert_invalid(
+  () => instantiate(`(module (func (block (rethrow 0))))`),
+  `invalid rethrow label`,
+);
+
+// ./test/core/rethrow.wast:95
+assert_invalid(
+  () => instantiate(`(module (func (try (do (rethrow 0)) (delegate 0))))`),
+  `invalid rethrow label`,
+);
