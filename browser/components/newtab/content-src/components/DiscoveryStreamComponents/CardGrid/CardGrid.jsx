@@ -53,7 +53,7 @@ export class CardGrid extends React.PureComponent {
   renderCards() {
     let { items, compact } = this.props;
     const {
-      includeDescriptions,
+      hideDescriptions,
       lastCardMessageEnabled,
       saveToPocketCard,
       loadMoreThreshold,
@@ -108,7 +108,7 @@ export class CardGrid extends React.PureComponent {
             bookmarkGuid={rec.bookmarkGuid}
             engagement={rec.engagement}
             display_engagement_labels={this.props.display_engagement_labels}
-            includeDescriptions={includeDescriptions}
+            hideDescriptions={hideDescriptions}
             saveToPocketCard={saveToPocketCard}
             compactImages={compactImages}
             imageGradient={imageGradient}
@@ -151,7 +151,7 @@ export class CardGrid extends React.PureComponent {
 
     const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
 
-    const includeDescriptionsClassName = includeDescriptions
+    const hideDescriptionsClassName = !hideDescriptions
       ? `ds-card-grid-include-descriptions`
       : ``;
 
@@ -159,7 +159,7 @@ export class CardGrid extends React.PureComponent {
 
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptionsClassName} ${compactGridClassName}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
       >
         {cards}
       </div>

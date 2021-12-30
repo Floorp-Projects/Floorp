@@ -480,7 +480,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         lastCardMessageEnabled: pocketConfig.lastCardMessageEnabled,
         saveToPocketCard: pocketConfig.saveToPocketCard,
         newFooterSection: pocketConfig.newFooterSection,
-        includeDescriptions: pocketConfig.includeDescriptions,
+        hideDescriptions: pocketConfig.hideDescriptions,
         compactGrid: pocketConfig.compactGrid,
         compactImages: pocketConfig.compactImages,
         imageGradient: pocketConfig.imageGradient,
@@ -1872,7 +1872,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
      `lastCardMessageEnabled` Shows a message card at the end of the feed.
      `newFooterSection` Changes the layout of the topics section.
      `saveToPocketCard` Cards have a save to Pocket button over their thumbnail on hover.
-     `includeDescriptions` Hide or display descriptions for Pocket stories.
+     `hideDescriptions` Hide or display descriptions for Pocket stories.
      `compactGrid` Reduce the number of pixels between the Pocket cards.
      `compactImages` Reduce the height on Pocket card images.
      `imageGradient` Add a gradient to the bottom of Pocket card images to blend the image in with the card.
@@ -1891,7 +1891,7 @@ getHardcodedLayout = ({
   lastCardMessageEnabled = false,
   newFooterSection = false,
   saveToPocketCard = false,
-  includeDescriptions = true,
+  hideDescriptions = true,
   compactGrid = false,
   compactImages = false,
   imageGradient = false,
@@ -1977,7 +1977,7 @@ getHardcodedLayout = ({
           properties: {
             items,
             compact: compactLayout,
-            includeDescriptions: includeDescriptions && !compactLayout,
+            hideDescriptions: hideDescriptions || compactLayout,
             compactImages,
             imageGradient,
             newSponsoredLabel: newSponsoredLabel || compactLayout,
