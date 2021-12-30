@@ -6,35 +6,22 @@
 #define mozilla_fallback_FallbackScreenConfiguration_h
 
 #include "Hal.h"
-#include "nsIScreenManager.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/widget/ScreenManager.h"
 
 namespace mozilla {
 namespace fallback {
 
 inline void GetCurrentScreenConfiguration(
     hal::ScreenConfiguration* aScreenConfiguration) {
-  nsresult rv;
-  nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Can't find nsIScreenManager!");
-    return;
-  }
+  RefPtr<widget::Screen> screen =
+      widget::ScreenManager::GetSingleton().GetPrimaryScreen();
 
-  int32_t colorDepth, pixelDepth, x, y, w, h;
-  hal::ScreenOrientation orientation;
-  nsCOMPtr<nsIScreen> screen;
-
-  screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-  screen->GetRect(&x, &y, &w, &h);
-  screen->GetColorDepth(&colorDepth);
-  screen->GetPixelDepth(&pixelDepth);
-  orientation = w >= h ? hal::eScreenOrientation_LandscapePrimary
-                       : hal::eScreenOrientation_PortraitPrimary;
-
-  *aScreenConfiguration = hal::ScreenConfiguration(
-      nsIntRect(x, y, w, h), orientation, 0, colorDepth, pixelDepth);
+  *aScreenConfiguration = screen->ToScreenConfiguration();
+  aScreenConfiguration->orientation() =
+      aScreenConfiguration->rect().Width() >=
+              aScreenConfiguration->rect().Height()
+          ? hal::eScreenOrientation_LandscapePrimary
+          : hal::eScreenOrientation_PortraitPrimary;
 }
 
 }  // namespace fallback
