@@ -13,22 +13,20 @@
  * limitations under the License.
  */
 
-// ./test/core/comments.wast
+// ./test/core/break-drop.wast
 
-// ./test/core/comments.wast:10:0
-let $0 = instantiate(`(module;;comment
+// ./test/core/break-drop.wast:1
+let $0 = instantiate(`(module
+  (func (export "br") (block (br 0)))
+  (func (export "br_if") (block (br_if 0 (i32.const 1))))
+  (func (export "br_table") (block (br_table 0 (i32.const 0))))
 )`);
 
-// ./test/core/comments.wast:52:11
-let $1 = instantiate(`(module(;comment;)
-(;comment;))`);
+// ./test/core/break-drop.wast:7
+assert_return(() => invoke($0, `br`, []), []);
 
-// ./test/core/comments.wast:62
-let $2 = instantiate(`(module
-  (;comment(;nested(;further;)nested;)comment;)
-)`);
+// ./test/core/break-drop.wast:8
+assert_return(() => invoke($0, `br_if`, []), []);
 
-// ./test/core/comments.wast:71
-let $3 = instantiate(`(module
-  (;comment;;comment(;nested;)comment;)
-)`);
+// ./test/core/break-drop.wast:9
+assert_return(() => invoke($0, `br_table`, []), []);
