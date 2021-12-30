@@ -109,8 +109,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   The date/time of the last interaction with the snapshot.
  * @property {Interactions.DOCUMENT_TYPE} documentType
  *   The document type of the snapshot.
- * @property {boolean} userPersisted
- *   True if the user created or persisted the snapshot in some way.
+ * @property {Snapshots.USER_PERSISTED} userPersisted
+ *   Whether the user created the snapshot and if they did, through what action.
  * @property {Map<type, data>} pageData
  *   Collection of PageData by type. See PageDataService.jsm
  * @property {Number} overlappingVisitScore
@@ -129,6 +129,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *     Sent when a snapshot is removed.
  */
 const Snapshots = new (class Snapshots {
+  USER_PERSISTED = {
+    // The snapshot was created automatically.
+    NO: 0,
+    // The user created the snapshot manually, e.g. snapshot keyboard shortcut.
+    MANUAL: 1,
+    // The user pinned the page which caused the snapshot to be created.
+    PINNED: 2,
+  };
+
   constructor() {
     // TODO: we should update the pagedata periodically. We first need a way to
     // track when the last update happened, we may add an updated_at column to
@@ -319,17 +328,17 @@ const Snapshots = new (class Snapshots {
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
-   * then the userPersisted flag will be set, and the removed_at flag will be
+   * then the userPersisted value will be updated, and the removed_at flag will be
    * cleared.
    *
    * @param {object} details
    * @param {string} details.url
    *   The url associated with the snapshot.
-   * @param {boolean} [details.userPersisted]
-   *   True if the user created or persisted the snapshot in some way, defaults to
-   *   false.
+   * @param {Snapshots.USER_PERSISTED} [details.userPersisted]
+   *   Whether the user created the snapshot and if they did, through what
+   *   action, defaults to USER_PERSISTED.NO.
    */
-  async add({ url, userPersisted = false }) {
+  async add({ url, userPersisted = this.USER_PERSISTED.NO }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
@@ -360,7 +369,7 @@ const Snapshots = new (class Snapshots {
             LEFT JOIN moz_places_metadata m ON m.place_id = h.id
             WHERE h.url_hash = hash(:url) AND h.url = :url
             GROUP BY h.id
-            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted = 1
+            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted <> 0
             RETURNING place_id, created_at, user_persisted
           `,
           {
@@ -376,7 +385,7 @@ const Snapshots = new (class Snapshots {
           // and we only overwrite it when the new request is user_persisted.
           if (
             rows[0].getResultByName("created_at") != now &&
-            !rows[0].getResultByName("user_persisted")
+            rows[0].getResultByName("user_persisted") == this.USER_PERSISTED.NO
           ) {
             return null;
           }
@@ -680,7 +689,7 @@ const Snapshots = new (class Snapshots {
         row.getResultByName("last_interaction_at")
       ),
       documentType: row.getResultByName("document_type"),
-      userPersisted: !!row.getResultByName("user_persisted"),
+      userPersisted: row.getResultByName("user_persisted"),
       overlappingVisitScore,
       pageData: pageData ?? new Map(),
       visitCount: row.getResultByName("visit_count"),
