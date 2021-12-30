@@ -211,7 +211,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             dispatch={this.props.dispatch}
             items={component.properties.items}
             compact={component.properties.compact}
-            includeDescriptions={component.properties.includeDescriptions}
+            hideDescriptions={component.properties.hideDescriptions}
             compactGrid={component.properties.compactGrid}
             compactImages={component.properties.compactImages}
             imageGradient={component.properties.imageGradient}

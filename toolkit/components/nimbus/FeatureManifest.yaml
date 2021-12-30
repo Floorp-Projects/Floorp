@@ -206,12 +206,12 @@ pocketNewtab:
       description: >-
         A save to Pocket button inside the card, shown on the card thumbnail, on
         hover.
-    includeDescriptions:
+    hideDescriptions:
       type: boolean
       fallbackPref: >-
-        browser.newtabpage.activity-stream.discoverystream.includeDescriptions.enabled
+        browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled
       description: >-
-        Hide or display descriptios for Pocket stories on newtab.
+        Hide or display descriptions for Pocket stories on newtab.
     compactGrid:
       type: boolean
       fallbackPref: >-

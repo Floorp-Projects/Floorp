@@ -3291,7 +3291,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           dispatch: this.props.dispatch,
           items: component.properties.items,
           compact: component.properties.compact,
-          includeDescriptions: component.properties.includeDescriptions,
+          hideDescriptions: component.properties.hideDescriptions,
           compactGrid: component.properties.compactGrid,
           compactImages: component.properties.compactImages,
           imageGradient: component.properties.imageGradient,
@@ -13512,14 +13512,14 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     const {
       is_video,
       saveToPocketCard,
-      includeDescriptions,
+      hideDescriptions,
       compactImages,
       imageGradient,
       titleLines = 3,
       descLines = 3,
       displayReadTime
     } = this.props;
-    const excerpt = includeDescriptions ? this.props.excerpt : "";
+    const excerpt = !hideDescriptions ? this.props.excerpt : "";
     let timeToRead;
 
     if (displayReadTime) {
@@ -13800,7 +13800,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       compact
     } = this.props;
     const {
-      includeDescriptions,
+      hideDescriptions,
       lastCardMessageEnabled,
       saveToPocketCard,
       loadMoreThreshold,
@@ -13854,7 +13854,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         bookmarkGuid: rec.bookmarkGuid,
         engagement: rec.engagement,
         display_engagement_labels: this.props.display_engagement_labels,
-        includeDescriptions: includeDescriptions,
+        hideDescriptions: hideDescriptions,
         saveToPocketCard: saveToPocketCard,
         compactImages: compactImages,
         imageGradient: imageGradient,
@@ -13889,10 +13889,10 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
     const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
     const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
-    const includeDescriptionsClassName = includeDescriptions ? `ds-card-grid-include-descriptions` : ``;
+    const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
     return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptionsClassName} ${compactGridClassName}`
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`
     }, cards);
   }
 

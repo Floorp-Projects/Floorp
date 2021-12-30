@@ -410,14 +410,14 @@ export class _DSCard extends React.PureComponent {
     const {
       is_video,
       saveToPocketCard,
-      includeDescriptions,
+      hideDescriptions,
       compactImages,
       imageGradient,
       titleLines = 3,
       descLines = 3,
       displayReadTime,
     } = this.props;
-    const excerpt = includeDescriptions ? this.props.excerpt : "";
+    const excerpt = !hideDescriptions ? this.props.excerpt : "";
 
     let timeToRead;
     if (displayReadTime) {
