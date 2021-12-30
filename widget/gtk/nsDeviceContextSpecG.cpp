@@ -6,7 +6,6 @@
 #include "nsDeviceContextSpecG.h"
 
 #include "mozilla/gfx/PrintTargetPDF.h"
-#include "mozilla/gfx/PrintTargetPS.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 
@@ -46,7 +45,6 @@ using namespace mozilla;
 using mozilla::gfx::IntSize;
 using mozilla::gfx::PrintTarget;
 using mozilla::gfx::PrintTargetPDF;
-using mozilla::gfx::PrintTargetPS;
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
     : mGtkPrintSettings(nullptr), mGtkPageSetup(nullptr) {}
@@ -106,25 +104,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
   rv = stream->Init(mSpoolFile, -1, -1, 0);
   if (NS_FAILED(rv)) return nullptr;
 
-  int16_t format;
-  mPrintSettings->GetOutputFormat(&format);
-
-  // We assume PDF output if asked for native output.
-  if (format == nsIPrintSettings::kOutputFormatNative) {
-    format = nsIPrintSettings::kOutputFormatPDF;
-  }
-
-  IntSize size = IntSize::Ceil(width, height);
-  if (format == nsIPrintSettings::kOutputFormatPDF) {
-    return PrintTargetPDF::CreateOrNull(stream, size);
-  }
-
-  int32_t orientation = mPrintSettings->GetSheetOrientation();
-  return PrintTargetPS::CreateOrNull(
-      stream, size,
-      orientation == nsIPrintSettings::kPortraitOrientation
-          ? PrintTargetPS::PORTRAIT
-          : PrintTargetPS::LANDSCAPE);
+  return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
 }
 
 #define DECLARE_KNOWN_MONOCHROME_SETTING(key_, value_) {"cups-" key_, value_},

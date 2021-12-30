@@ -94,7 +94,6 @@ interface nsIPrintSettings : nsISupports
    * Output file format
    */
   const short kOutputFormatNative = 0;
-  const short kOutputFormatPS     = 1;
   const short kOutputFormatPDF    = 2;
 
   /**
