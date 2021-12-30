@@ -285,6 +285,70 @@ add_task(async function test_get_root_domain_from_engine() {
   await extension.unload();
 });
 
+add_task(async function matchAllDomainLevels() {
+  let baseHostname = "matchalldomainlevels";
+  Assert.equal(
+    (await UrlbarSearchUtils.enginesForDomainPrefix(baseHostname)).length,
+    0,
+    `Sanity check: No engines initially match ${baseHostname}`
+  );
+
+  // Install engines with the following domains. When we match engines below,
+  // perfectly matching domains should come before partially matching domains.
+  let baseDomain = `${baseHostname}.com`;
+  let perfectDomains = [baseDomain, `www.${baseDomain}`];
+  let partialDomains = [`foo.${baseDomain}`, `foo.bar.${baseDomain}`];
+
+  // Install engines with partially matching domains first so that the test
+  // isn't incidentally passing because engines are installed in the order it
+  // ultimately expects them in. Wait for each engine to finish installing
+  // before starting the next one to avoid intermittent out-of-order failures.
+  let extensions = [];
+  for (let list of [partialDomains, perfectDomains]) {
+    for (let domain of list) {
+      let ext = await SearchTestUtils.installSearchExtension(
+        {
+          name: domain,
+          search_url: `https://${domain}/`,
+        },
+        true
+      );
+      extensions.push(ext);
+    }
+  }
+
+  // Perfect matches come before partial matches.
+  let expectedDomains = [...perfectDomains, ...partialDomains];
+
+  // Do searches for the following strings. Each should match all the engines
+  // installed above.
+  let searchStrings = [baseHostname, baseHostname + "."];
+  for (let searchString of searchStrings) {
+    info(`Searching for "${searchString}"`);
+    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchString, {
+      matchAllDomainLevels: true,
+    });
+    let engineData = engines.map(e => ({
+      name: e.name,
+      searchForm: e.searchForm,
+    }));
+    info("Matching engines: " + JSON.stringify(engineData));
+
+    Assert.equal(
+      engines.length,
+      expectedDomains.length,
+      "Expected number of matching engines"
+    );
+    Assert.deepEqual(
+      engineData.map(d => d.name),
+      expectedDomains,
+      "Expected matching engine names/domains in the expected order"
+    );
+  }
+
+  await Promise.all(extensions.map(e => e.unload()));
+});
+
 function promiseSearchTopic(expectedVerb) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observe(subject, topic, verb) {
