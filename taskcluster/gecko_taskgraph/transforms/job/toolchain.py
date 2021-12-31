@@ -181,7 +181,12 @@ def common_toolchain(config, job, taskdesc, is_docker):
         "{}/taskcluster/scripts/misc/{}".format(gecko_path, run.pop("script"))
     ] + run.pop("arguments", [])
     if not is_docker:
-        run["command"] = shell_quote(*run["command"])
+        # Don't quote the first item in the command because it purposely contains
+        # an environment variable that is not meant to be quoted.
+        if len(run["command"]) > 1:
+            run["command"] = run["command"][0] + " " + shell_quote(*run["command"][1:])
+        else:
+            run["command"] = run["command"][0]
 
     configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])
 
