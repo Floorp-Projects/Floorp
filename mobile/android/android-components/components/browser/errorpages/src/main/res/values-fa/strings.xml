@@ -15,7 +15,12 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">برقراری اتصال ایمن شکست خورد</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul><li>صفحه‌ای که تلاش می‌کنید از آن بازدید کنید قابل نمایش نیست، زیرا امکان تایید اعتبار اطلاعات دریافتی آن وجود ندارد.</li><li>لطفاً با صاحبان این پایگاه اینترنتی تماس بگیرید و آنها را در جریان این مشکل قرار دهید.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>صفحه‌ای که تلاش می‌کنید از آن بازدید کنید قابل نمایش نیست، زیرا امکان تأیید اعتبار اطلاعات دریافتی آن وجود ندارد.</li>
+        <li>لطفاً با صاحبان این سایت تماس بگیرید و آنها را در جریان این مشکل قرار دهید.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">برقراری اتصال ایمن شکست خورد</string>
@@ -41,7 +46,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">پذیرش خطر و ادامه</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_title">اتصال مختل شد</string>
+    <string name="mozac_browser_errorpages_net_interrupt_title">اتّصال قطع شد</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
       <p>مرورگر با موفقیت متّصل شد، اما هنگام انتقال اطلاعات، اتّصال قطع شد. لطفاً دوباره تلاش کنید.</p>
@@ -67,10 +72,12 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">قادر به برقراری اتصال نیست</string>
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
-<li>سایت می‌تواند موقتا در دسترس نباشد یا خیلی شلوغ باشد. چند لحظه دیگر مجددا تلاش کنید.</li>
-<li>اگر شما نمی‌توانید هیچ صفحه‌ای را باز کنید، اتصال داده یا Wi-Fi دستگاه خود را بررسی کنید.</li> 
-</ul>]]></string>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>سایت می‌تواند موقتاً در دسترس نباشد یا خیلی شلوغ باشد. چند لحظهٔ دیگر دوباره تلاش کنید.</li>
+        <li>اگر نمی‌توانید هیچ صفحه‌ای را باز کنید، اتّصال دادهٔ دستگاه یا وای‌فای خود را بررسی کنید.</li> 
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">جواب غیرمنتظره از کارگزار</string>
@@ -191,4 +198,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">مشکل یک سایت فریب دهنده است</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>صفحه %1$s به عنوان یک پایگاه وب گمراه‌کننده گزارش شده و بر اساس ترجیحات امنیتی شما مسدود شده است.</p>]]></string>
-</resources>
+
+    </resources>
