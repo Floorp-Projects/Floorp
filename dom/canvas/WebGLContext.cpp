@@ -485,6 +485,7 @@ UniquePtr<webgl::FormatUsageAuthority> WebGLContext::CreateFormatUsage(
 RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
                                           const webgl::InitContextDesc& desc,
                                           webgl::InitContextResult* const out) {
+  AUTO_PROFILER_LABEL("WebGLContext::Create", GRAPHICS);
   nsCString failureId = "FEATURE_FAILURE_WEBGL_UNKOWN"_ns;
   const bool forceEnabled = StaticPrefs::webgl_force_enabled();
   ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);

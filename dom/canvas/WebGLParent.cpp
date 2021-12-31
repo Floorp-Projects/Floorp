@@ -33,6 +33,7 @@ using IPCResult = mozilla::ipc::IPCResult;
 
 IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
                                             const uint64_t cmdsByteSize) {
+  AUTO_PROFILER_LABEL("WebGLParent::RecvDispatchCommands", GRAPHICS);
   if (!mHost) {
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
@@ -80,6 +81,10 @@ IPCResult WebGLParent::RecvTexImage(const uint32_t level,
                                     const uvec3& offset,
                                     const webgl::PackingInfo& pi,
                                     webgl::TexUnpackBlobDesc&& desc) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   mHost->TexImage(level, respecFormat, offset, pi, desc);
   return IPC_OK();
 }
@@ -102,8 +107,8 @@ IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
 
 IPCResult WebGLParent::GetFrontBufferSnapshot(
     webgl::FrontBufferSnapshotIpc* const ret, IProtocol* aProtocol) {
+  AUTO_PROFILER_LABEL("WebGLParent::GetFrontBufferSnapshot", GRAPHICS);
   *ret = {};
-
   if (!mHost) {
     return IPC_FAIL(aProtocol, "HostWebGLContext is not initialized.");
   }
@@ -138,6 +143,7 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
                                             const uint64_t srcByteOffset,
                                             const uint64_t byteSize,
                                             Shmem* const ret) {
+  AUTO_PROFILER_LABEL("WebGLParent::RecvGetBufferSubData", GRAPHICS);
   if (!mHost) {
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
@@ -166,8 +172,8 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
 IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
                                       const uint64_t byteSize,
                                       webgl::ReadPixelsResultIpc* const ret) {
+  AUTO_PROFILER_LABEL("WebGLParent::RecvReadPixels", GRAPHICS);
   *ret = {};
-
   if (!mHost) {
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
