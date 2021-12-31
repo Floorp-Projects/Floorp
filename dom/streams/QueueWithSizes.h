@@ -91,6 +91,35 @@ inline void DequeueValue(QueueContainingClass aContainer,
   aResultValue.set(valueWithSize->mValue);
 }
 
+// https://streams.spec.whatwg.org/#peek-queue-value
+template <class QueueContainingClass>
+inline void PeekQueueValue(QueueContainingClass aContainer,
+                           JS::MutableHandle<JS::Value> aResultValue) {
+  // Step 1. Assert: container has [[queue]] and [[queueTotalSize]] internal
+  // slots.
+  // Step 2. Assert: container.[[queue]] is not empty.
+  MOZ_ASSERT(!aContainer->Queue().isEmpty());
+
+  // Step 3. Let valueWithSize be container.[[queue]][0].
+  ValueWithSize* valueWithSize = aContainer->Queue().getFirst();
+
+  // Step 4. Return valueWithSize’s value.
+  aResultValue.set(valueWithSize->mValue);
+}
+
+// https://streams.spec.whatwg.org/#reset-queue
+template <class QueueContainingClass>
+inline void ResetQueue(QueueContainingClass aContainer) {
+  // Step 1. Assert: container has [[queue]] and [[queueTotalSize]] internal
+  // slots. (implicit)
+
+  // Step 2. Set container.[[queue]] to a new empty list.
+  aContainer->Queue().clear();
+
+  // Step 3. Set container.[[queueTotalSize]] to 0.
+  aContainer->SetQueueTotalSize(0.0);
+}
+
 }  // namespace mozilla::dom
 
 #endif

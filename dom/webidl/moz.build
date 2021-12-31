@@ -1008,7 +1008,11 @@ if CONFIG["MOZ_DOM_STREAMS"]:
         "ReadableStream.webidl",
         "ReadableStreamDefaultController.webidl",
         "ReadableStreamDefaultReader.webidl",
+        "UnderlyingSink.webidl",
         "UnderlyingSource.webidl",
+        "WritableStream.webidl",
+        "WritableStreamDefaultController.webidl",
+        "WritableStreamDefaultWriter.webidl",
     ]
 
 if CONFIG["MOZ_WEBRTC"]:

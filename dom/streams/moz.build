@@ -16,8 +16,13 @@ EXPORTS.mozilla.dom += [
     "ReadableStreamGenericReader.h",
     "ReadableStreamTee.h",
     "ReadRequest.h",
+    "StreamUtils.h",
     "TeeState.h",
+    "UnderlyingSinkCallbackHelpers.h",
     "UnderlyingSourceCallbackHelpers.h",
+    "WritableStream.h",
+    "WritableStreamDefaultController.h",
+    "WritableStreamDefaultWriter.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -26,8 +31,13 @@ UNIFIED_SOURCES += [
     "ReadableStreamDefaultController.cpp",
     "ReadableStreamDefaultReader.cpp",
     "ReadableStreamTee.cpp",
+    "StreamUtils.cpp",
     "TeeState.cpp",
+    "UnderlyingSinkCallbackHelpers.cpp",
     "UnderlyingSourceCallbackHelpers.cpp",
+    "WritableStream.cpp",
+    "WritableStreamDefaultController.cpp",
+    "WritableStreamDefaultWriter.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
