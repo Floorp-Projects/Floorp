@@ -1225,8 +1225,11 @@ ContentPrefService2.prototype = {
     if (aConn) {
       await aConn.close();
     }
-    let backupFile = aPath + ".corrupt";
-    let uniquePath = PathUtils.createUniquePath(backupFile);
+    let uniquePath = await IOUtils.createUniqueFile(
+      PathUtils.parent(aPath),
+      PathUtils.filename(aPath) + ".corrupt",
+      0o600
+    );
     await IOUtils.copy(aPath, uniquePath);
     await IOUtils.remove(aPath);
     this.log("Completed DB cleanup.");

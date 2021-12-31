@@ -712,6 +712,49 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
   });
 }
 
+/* static */
+already_AddRefed<Promise> IOUtils::CreateUniqueFile(
+    GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
+    const uint32_t aPermissions) {
+  return CreateUnique(aGlobal, aParent, aPrefix, nsIFile::NORMAL_FILE_TYPE,
+                      aPermissions);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::CreateUniqueDirectory(
+    GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
+    const uint32_t aPermissions) {
+  return CreateUnique(aGlobal, aParent, aPrefix, nsIFile::DIRECTORY_TYPE,
+                      aPermissions);
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::CreateUnique(GlobalObject& aGlobal,
+                                                const nsAString& aParent,
+                                                const nsAString& aPrefix,
+                                                const uint32_t aFileType,
+                                                const uint32_t aPermissions) {
+  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
+    REJECT_IF_INIT_PATH_FAILED(file, aParent, promise);
+
+    if (nsresult rv = file->Append(aPrefix); NS_FAILED(rv)) {
+      RejectJSPromise(
+          promise,
+          IOError(rv).WithMessage("Could not append prefix `%s' to parent `%s'",
+                                  NS_ConvertUTF16toUTF8(aPrefix).get(),
+                                  file->HumanReadablePath().get()));
+      return;
+    }
+
+    DispatchAndResolve<nsString>(
+        state->mEventQueue, promise,
+        [file = std::move(file), aPermissions, aFileType]() {
+          return CreateUniqueSync(file, aFileType, aPermissions);
+        });
+  });
+}
+
 #if defined(XP_WIN)
 
 /* static */
@@ -1586,6 +1629,22 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
   MOZ_TRY(aFile->Exists(&exists));
 
   return exists;
+}
+
+/* static */
+Result<nsString, IOUtils::IOError> IOUtils::CreateUniqueSync(
+    nsIFile* aFile, const uint32_t aFileType, const uint32_t aPermissions) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (nsresult rv = aFile->CreateUnique(aFileType, aPermissions);
+      NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not create unique path"));
+  }
+
+  nsString path;
+  MOZ_ALWAYS_SUCCEEDS(aFile->GetPath(path));
+
+  return path;
 }
 
 #if defined(XP_WIN)
