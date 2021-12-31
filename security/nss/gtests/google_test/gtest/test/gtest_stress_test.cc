@@ -27,7 +27,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 // Tests that SCOPED_TRACE() and various Google Test assertions can be
 // used in a large number of threads concurrently.
 
@@ -66,13 +65,12 @@ std::string IdToString(int id) {
 }
 
 void ExpectKeyAndValueWereRecordedForId(
-    const std::vector<TestProperty>& properties,
-    int id, const char* suffix) {
+    const std::vector<TestProperty>& properties, int id, const char* suffix) {
   TestPropertyKeyIs matches_key(IdToKey(id, suffix).c_str());
   const std::vector<TestProperty>::const_iterator property =
       std::find_if(properties.begin(), properties.end(), matches_key);
-  ASSERT_TRUE(property != properties.end())
-      << "expecting " << suffix << " value for id " << id;
+  ASSERT_TRUE(property != properties.end()) << "expecting " << suffix
+                                            << " value for id " << id;
   EXPECT_STREQ(IdToString(id).c_str(), property->value());
 }
 
@@ -121,15 +119,13 @@ TEST(StressTest, CanUseScopedTraceAndAssertionsInManyThreads) {
     std::unique_ptr<ThreadWithParam<int> > threads[kThreadCount];
     Notification threads_can_start;
     for (int i = 0; i != kThreadCount; i++)
-      threads[i].reset(new ThreadWithParam<int>(&ManyAsserts,
-                                                i,
-                                                &threads_can_start));
+      threads[i].reset(
+          new ThreadWithParam<int>(&ManyAsserts, i, &threads_can_start));
 
     threads_can_start.Notify();
 
     // Blocks until all the threads are done.
-    for (int i = 0; i != kThreadCount; i++)
-      threads[i]->Join();
+    for (int i = 0; i != kThreadCount; i++) threads[i]->Join();
   }
 
   // Ensures that kThreadCount*kThreadCount failures have been reported.
@@ -149,7 +145,7 @@ TEST(StressTest, CanUseScopedTraceAndAssertionsInManyThreads) {
     ExpectKeyAndValueWereRecordedForId(properties, i, "string");
     ExpectKeyAndValueWereRecordedForId(properties, i, "int");
   }
-  CheckTestFailureCount(kThreadCount*kThreadCount);
+  CheckTestFailureCount(kThreadCount * kThreadCount);
 }
 
 void FailingThread(bool is_fatal) {
@@ -196,8 +192,8 @@ TEST(FatalFailureTest, ExpectFatalFailureIgnoresFailuresInOtherThreads) {
 TEST(FatalFailureOnAllThreadsTest, ExpectFatalFailureOnAllThreads) {
   // This statement should succeed, because failures in all threads are
   // considered.
-  EXPECT_FATAL_FAILURE_ON_ALL_THREADS(
-      GenerateFatalFailureInAnotherThread(true), "expected");
+  EXPECT_FATAL_FAILURE_ON_ALL_THREADS(GenerateFatalFailureInAnotherThread(true),
+                                      "expected");
   CheckTestFailureCount(0);
   // We need to add a failure, because main() checks that there are failures.
   // But when only this test is run, we shouldn't have any failures.
@@ -226,7 +222,7 @@ TEST(NonFatalFailureOnAllThreadsTest, ExpectNonFatalFailureOnAllThreads) {
 }  // namespace
 }  // namespace testing
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
 
   const int result = RUN_ALL_TESTS();  // Expected to fail.
@@ -238,8 +234,7 @@ int main(int argc, char **argv) {
 
 #else
 TEST(StressTest,
-     DISABLED_ThreadSafetyTestsAreSkippedWhenGoogleTestIsNotThreadSafe) {
-}
+     DISABLED_ThreadSafetyTestsAreSkippedWhenGoogleTestIsNotThreadSafe) {}
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
