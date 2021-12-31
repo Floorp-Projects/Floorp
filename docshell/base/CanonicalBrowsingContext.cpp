@@ -2540,7 +2540,7 @@ static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
 }
 
 bool CanonicalBrowsingContext::AllowedInBFCache(
-    const Maybe<uint64_t>& aChannelId) {
+    const Maybe<uint64_t>& aChannelId, nsIURI* aNewURI) {
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug))) {
     nsAutoCString uri("[no uri]");
     nsCOMPtr<nsIURI> currentURI = GetCurrentURI();
@@ -2584,6 +2584,16 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
         !currentURI->GetSpecOrDefault().EqualsLiteral("about:blank")) {
       bfcacheCombo |= BFCacheStatus::ABOUT_PAGE;
       MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * about:* page"));
+    }
+
+    if (aNewURI) {
+      bool equalUri = false;
+      aNewURI->Equals(currentURI, &equalUri);
+      if (equalUri) {
+        // When loading the same uri, disable bfcache so that
+        // nsDocShell::OnNewURI transforms the load to LOAD_NORMAL_REPLACE.
+        return false;
+      }
     }
   }
 
