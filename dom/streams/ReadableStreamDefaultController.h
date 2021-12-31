@@ -26,9 +26,11 @@ namespace mozilla {
 namespace dom {
 
 class ReadableStream;
+class ReadableStreamDefaultReader;
 struct UnderlyingSource;
 class UnderlyingSourceCancelCallbackHelper;
 class UnderlyingSourcePullCallbackHelper;
+class UnderlyingSourceStartCallbackHelper;
 
 class ReadableStreamDefaultController final : public nsISupports,
                                               public nsWrapperCache {
