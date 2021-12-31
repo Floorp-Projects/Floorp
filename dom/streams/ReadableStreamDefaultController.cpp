@@ -30,7 +30,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mCancelAlgorithm,
                                   mStrategySizeAlgorithm, mPullAlgorithm,
                                   mStream)
-
+  tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStreamDefaultController)
@@ -283,19 +283,6 @@ void ReadableStreamDefaultController::Error(JSContext* aCx,
                                             JS::Handle<JS::Value> aError,
                                             ErrorResult& aRv) {
   ReadableStreamDefaultControllerError(aCx, this, aError, aRv);
-}
-
-// https://streams.spec.whatwg.org/#reset-queue
-void ResetQueue(ReadableStreamDefaultController* aController) {
-  // Step 1. Implicit.
-
-  // Step 2.
-  //
-  // This is described in the spec 'set queue to new empty list'
-  aController->Queue().clear();
-
-  // Step 3.
-  aController->SetQueueTotalSize(0.0);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
