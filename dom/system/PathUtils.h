@@ -50,9 +50,6 @@ class PathUtils final {
                            const nsAString& aRelativePath, nsString& aResult,
                            ErrorResult& aErr);
 
-  static void CreateUniquePath(const GlobalObject&, const nsAString& aPath,
-                               nsString& aResult, ErrorResult& aErr);
-
   static void ToExtendedWindowsPath(const GlobalObject&, const nsAString& aPath,
                                     nsString& aResult, ErrorResult& aErr);
 
