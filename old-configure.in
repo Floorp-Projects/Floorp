@@ -1122,12 +1122,6 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
-dnl ==============================
-dnl === SQLite fdatasync check ===
-dnl ==============================
-dnl Check to see if fdatasync is available and make use of it
-AC_CHECK_FUNC(fdatasync)
-
 dnl ========================================================
 dnl = Enable code optimization. ON by default.
 dnl ========================================================
