@@ -81,8 +81,8 @@ audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb2
 
 # https://github.com/kinetiknz/audioipc-2/commits/macos
 [target.'cfg(target_os = "macos")'.dependencies]
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "2ec125ecf1926c7f94ce682c16048a3fe2bf3800", optional = true }
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "2ec125ecf1926c7f94ce682c16048a3fe2bf3800", optional = true }
+audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "62086d05c1c6ea9ba42a33c3920db65c678fc567", optional = true }
+audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "62086d05c1c6ea9ba42a33c3920db65c678fc567", optional = true }
 
 [features]
 default = []
