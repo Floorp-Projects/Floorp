@@ -703,7 +703,7 @@ if __name__ == "__main__":
                 "We only know how to do Release, Debug, RelWithDebInfo or "
                 "MinSizeRel builds"
             )
-    build_libcxx = not is_windows()
+    build_libcxx = True
     if "build_libcxx" in config:
         build_libcxx = config["build_libcxx"]
         if build_libcxx not in (True, False):
