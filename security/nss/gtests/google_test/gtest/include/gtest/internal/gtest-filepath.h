@@ -37,13 +37,13 @@
 
 // GOOGLETEST_CM0001 DO NOT DELETE
 
-#ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
-#define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
+#ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
+#define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
 
 #include "gtest/internal/gtest-string.h"
 
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
-/* class A needs to have dll-interface to be used by clients of class B */)
+GTEST_DISABLE_MSC_WARNINGS_PUSH_(
+    4251 /* class A needs to have dll-interface to be used by clients of class B */)
 
 namespace testing {
 namespace internal {
@@ -61,8 +61,8 @@ namespace internal {
 
 class GTEST_API_ FilePath {
  public:
-  FilePath() : pathname_("") { }
-  FilePath(const FilePath& rhs) : pathname_(rhs.pathname_) { }
+  FilePath() : pathname_("") {}
+  FilePath(const FilePath& rhs) : pathname_(rhs.pathname_) {}
 
   explicit FilePath(const std::string& pathname) : pathname_(pathname) {
     Normalize();
@@ -73,9 +73,7 @@ class GTEST_API_ FilePath {
     return *this;
   }
 
-  void Set(const FilePath& rhs) {
-    pathname_ = rhs.pathname_;
-  }
+  void Set(const FilePath& rhs) { pathname_ = rhs.pathname_; }
 
   const std::string& string() const { return pathname_; }
   const char* c_str() const { return pathname_.c_str(); }
@@ -88,8 +86,7 @@ class GTEST_API_ FilePath {
   // than zero (e.g., 12), returns "dir/test_12.xml".
   // On Windows platform, uses \ as the separator rather than /.
   static FilePath MakeFileName(const FilePath& directory,
-                               const FilePath& base_name,
-                               int number,
+                               const FilePath& base_name, int number,
                                const char* extension);
 
   // Given directory = "dir", relative_path = "test.xml",
@@ -195,7 +192,7 @@ class GTEST_API_ FilePath {
 
   void Normalize();
 
-  // Returns a pointer to the last occurrence of a valid path separator in
+  // Returns a pointer to the last occurence of a valid path separator in
   // the FilePath. On Windows, for example, both '/' and '\' are valid path
   // separators. Returns NULL if no path separator was found.
   const char* FindLastPathSeparator() const;
@@ -208,4 +205,4 @@ class GTEST_API_ FilePath {
 
 GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 
-#endif  // GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
+#endif  // GTEST_INCLUDE_GTEST_INTERNAL_GTEST_FILEPATH_H_
