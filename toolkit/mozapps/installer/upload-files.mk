@@ -35,11 +35,11 @@ ifndef _APPNAME
 _APPNAME = $(MOZ_MACBUNDLE_NAME)
 endif
 ifndef _BINPATH
-_BINPATH = /$(_APPNAME)/Contents/MacOS
+_BINPATH = $(_APPNAME)/Contents/MacOS
 endif # _BINPATH
 ifndef _RESPATH
 # Resource path for the precomplete file
-_RESPATH = /$(_APPNAME)/Contents/Resources
+_RESPATH = $(_APPNAME)/Contents/Resources
 endif
 endif
 
