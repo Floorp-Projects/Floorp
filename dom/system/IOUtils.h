@@ -124,6 +124,24 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
+  static already_AddRefed<Promise> CreateUniqueFile(
+      GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
+      const uint32_t aPermissions);
+  static already_AddRefed<Promise> CreateUniqueDirectory(
+      GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
+      const uint32_t aPermissions);
+
+ private:
+  /**
+   * A helper method for CreateUniqueFile and CreateUniqueDirectory.
+   */
+  static already_AddRefed<Promise> CreateUnique(GlobalObject& aGlobal,
+                                                const nsAString& aParent,
+                                                const nsAString& aPrefix,
+                                                const uint32_t aFileType,
+                                                const uint32_t aPermissions);
+
+ public:
 #if defined(XP_WIN)
   static already_AddRefed<Promise> GetWindowsAttributes(GlobalObject& aGlobal,
                                                         const nsAString& aPath);
@@ -394,6 +412,19 @@ class IOUtils final {
    * @return Whether or not the file exists.
    */
   static Result<bool, IOError> ExistsSync(nsIFile* aFile);
+
+  /**
+   * Create a file or directory with a unique path.
+   *
+   * @param aFile     The location of the file or directory (including prefix)
+   * @param aFileType One of |nsIFile::NORMAL_FILE_TYPE| or
+   *                  |nsIFile::DIRECTORY_TYPE|.
+   * @param aperms    The permissions to create the file or directory with.
+   *
+   * @return A unique path.
+   */
+  static Result<nsString, IOError> CreateUniqueSync(
+      nsIFile* aFile, const uint32_t aFileType, const uint32_t aPermissions);
 
 #if defined(XP_WIN)
   /**
