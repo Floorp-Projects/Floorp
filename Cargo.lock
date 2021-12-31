@@ -133,9 +133,9 @@ dependencies = [
 
 [[package]]
 name = "ashmem"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b43da58b19e1c6ffb1859b10766a2049cefa15f613c42dfeab8423701e8b76b6"
+checksum = "b947f77692187a29daa2768b6644e589cef61e7434bb96300197acfb876105ac"
 dependencies = [
  "ioctl-sys",
  "libc",
@@ -267,7 +267,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=2ec125ecf1926c7f94ce682c16048a3fe2bf3800#2ec125ecf1926c7f94ce682c16048a3fe2bf3800"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=62086d05c1c6ea9ba42a33c3920db65c678fc567#62086d05c1c6ea9ba42a33c3920db65c678fc567"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -292,7 +292,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=2ec125ecf1926c7f94ce682c16048a3fe2bf3800#2ec125ecf1926c7f94ce682c16048a3fe2bf3800"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=62086d05c1c6ea9ba42a33c3920db65c678fc567#62086d05c1c6ea9ba42a33c3920db65c678fc567"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=2ec125ecf1926c7f94ce682c16048a3fe2bf3800#2ec125ecf1926c7f94ce682c16048a3fe2bf3800"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=62086d05c1c6ea9ba42a33c3920db65c678fc567#62086d05c1c6ea9ba42a33c3920db65c678fc567"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",

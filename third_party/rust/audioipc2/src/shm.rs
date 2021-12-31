@@ -196,7 +196,7 @@ mod unix {
     impl SharedMem {
         pub fn new(id: &str, size: usize) -> Result<SharedMem> {
             let file = open_shm_file(id, size)?;
-            let mut mmap = unsafe { MmapOptions::new().map_mut(&file)? };
+            let mut mmap = unsafe { MmapOptions::new().len(size).map_mut(&file)? };
             assert_eq!(mmap.len(), size);
             let view = SharedMemView {
                 ptr: mmap.as_mut_ptr() as _,
@@ -215,7 +215,7 @@ mod unix {
 
         pub unsafe fn from(handle: PlatformHandle, size: usize) -> Result<SharedMem> {
             let file = File::from_raw_fd(handle.into_raw());
-            let mut mmap = MmapOptions::new().map_mut(&file)?;
+            let mut mmap = MmapOptions::new().len(size).map_mut(&file)?;
             assert_eq!(mmap.len(), size);
             let view = SharedMemView {
                 ptr: mmap.as_mut_ptr() as _,
