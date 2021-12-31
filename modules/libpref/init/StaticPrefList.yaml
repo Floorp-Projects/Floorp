@@ -11665,7 +11665,7 @@
 # definitions in Gecko are used first in <input> and <textarea>
 - name: ui.key.textcontrol.prefer_native_key_bindings_over_builtin_shortcut_key_definitions
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 #ifdef MOZ_WIDGET_GTK
@@ -11677,7 +11677,7 @@
 # are just ignored.
 - name: ui.key.use_select_all_in_single_line_editor
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 #endif
 
