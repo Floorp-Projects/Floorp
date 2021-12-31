@@ -34,7 +34,7 @@ stage-package: multilocale.txt locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_
 		) \
 		$(addprefix --jarlog ,$(wildcard $(JARLOG_FILE_AB_CD))) \
 		$(addprefix --compress ,$(JAR_COMPRESSION)) \
-		$(MOZ_PKG_MANIFEST) '$(DIST)' '$(DIST)'/$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH)) \
+		$(MOZ_PKG_MANIFEST) '$(DIST)' '$(DIST)'/$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH:%=/%)) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 ifdef RUN_FIND_DUPES
 	$(PYTHON3) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DEFINES) $(ACDEFINES) $(MOZ_PKG_DUPEFLAGS) $(DIST)/$(MOZ_PKG_DIR)
@@ -96,8 +96,8 @@ ifeq (Darwin, $(OS_ARCH))
 	cd $(topsrcdir)/security/mac && \
 	  zip -rD '$(ABS_DIST)/$(PKG_PATH)$(MACOS_CODESIGN_ARCHIVE_BASENAME).zip' hardenedruntime
 ifdef MOZ_ASAN
-	@echo "Rewriting ASan runtime dylib paths for all binaries in $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH) ..."
-	$(PYTHON3) $(MOZILLA_DIR)/build/unix/rewrite_asan_dylib.py $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH)
+	@echo "Rewriting ASan runtime dylib paths for all binaries in $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH:%=/%) ..."
+	$(PYTHON3) $(MOZILLA_DIR)/build/unix/rewrite_asan_dylib.py $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH:%=/%)
 endif # MOZ_ASAN
 endif # Darwin
 
