@@ -236,6 +236,8 @@
     <string name="preferences_open_links_in_a_private_tab">Opna tengla í huliðsflipa</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Leyfa skjáskot í huliðsstillingu</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Ef leyft er, verða huliðsflipar einnig sýnilegir þegar mörg forrit eru opin</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Bæta við flýtileið fyrir huliðsglugga</string>
     <!-- Preference for accessibility -->
