@@ -10,7 +10,7 @@
 #include "elfxx.h"
 #include "mozilla/CheckedInt.h"
 
-#define ver "0"
+#define ver "1"
 #define elfhack_data ".elfhack.data.v" ver
 #define elfhack_text ".elfhack.text.v" ver
 
@@ -47,42 +47,66 @@ class Elf_Addr_Traits {
 
 typedef serializable<Elf_Addr_Traits> Elf_Addr;
 
-class Elf_RelHack_Traits {
- public:
-  typedef Elf32_Rel Type32;
-  typedef Elf32_Rel Type64;
-
-  template <class endian, typename R, typename T>
-  static inline void swap(T& t, R& r) {
-    r.r_offset = endian::swap(t.r_offset);
-    r.r_info = endian::swap(t.r_info);
-  }
-};
-
-typedef serializable<Elf_RelHack_Traits> Elf_RelHack;
-
 class ElfRelHack_Section : public ElfSection {
  public:
-  ElfRelHack_Section(Elf_Shdr& s) : ElfSection(s, nullptr, nullptr) {
+  ElfRelHack_Section(Elf_Shdr& s)
+      : ElfSection(s, nullptr, nullptr),
+        block_size((8 * s.sh_entsize - 1) * s.sh_entsize) {
     name = elfhack_data;
   };
 
   void serialize(std::ofstream& file, unsigned char ei_class,
                  unsigned char ei_data) {
-    for (std::vector<Elf_RelHack>::iterator i = rels.begin(); i != rels.end();
-         ++i)
-      (*i).serialize(file, ei_class, ei_data);
+    for (std::vector<Elf64_Addr>::iterator i = relr.begin(); i != relr.end();
+         ++i) {
+      Elf_Addr out;
+      out.value = *i;
+      out.serialize(file, ei_class, ei_data);
+    }
   }
 
   bool isRelocatable() { return true; }
 
-  void push_back(Elf_RelHack& r) {
-    rels.push_back(r);
-    shdr.sh_size = rels.size() * shdr.sh_entsize;
+  void push_back(Elf64_Addr offset) {
+    // The format used for the packed relocations is SHT_RELR, described in
+    // https://groups.google.com/g/generic-abi/c/bX460iggiKg/m/Jnz1lgLJAgAJ
+    // The gist of it is that an address is recorded, and the following words,
+    // if their LSB is 1, represent a bitmap of word-size-spaced relocations
+    // at the addresses that follow. There can be multiple such bitmaps, such
+    // that very long streaks of (possibly spaced) relocations can be recorded
+    // in a very compact way.
+    for (;;) {
+      // [block_start; block_start + block_size] represents the range of offsets
+      // the current bitmap can record. If the offset doesn't fall in that
+      // range, or if doesn't align properly to be recorded, we record the
+      // bitmap, and slide the block corresponding to a new bitmap. If the
+      // offset doesn't fall in the range for the new bitmap, or if there wasn't
+      // an active bitmap in the first place, we record the offset and start a
+      // new bitmap for the block that follows it.
+      if (!block_start || offset < block_start ||
+          offset >= block_start + block_size ||
+          (offset - block_start) % shdr.sh_entsize) {
+        if (bitmap) {
+          relr.push_back((bitmap << 1) | 1);
+          block_start += block_size;
+          bitmap = 0;
+          continue;
+        }
+        relr.push_back(offset);
+        block_start = offset + shdr.sh_entsize;
+        break;
+      }
+      bitmap |= 1ULL << ((offset - block_start) / shdr.sh_entsize);
+      break;
+    }
+    shdr.sh_size = relr.size() * shdr.sh_entsize;
   }
 
  private:
-  std::vector<Elf_RelHack> rels;
+  std::vector<Elf64_Addr> relr;
+  size_t block_size;
+  Elf64_Addr block_start = 0;
+  Elf64_Addr bitmap = 0;
 };
 
 class ElfRelHackCode_Section : public ElfSection {
@@ -859,18 +883,16 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
   }
   assert(section->getType() == Rel_Type::sh_type);
 
-  Elf64_Shdr relhack64_section = {
-      0,
-      SHT_PROGBITS,
-      SHF_ALLOC,
-      0,
-      (Elf64_Off)-1LL,
-      0,
-      SHN_UNDEF,
-      0,
-      Elf_RelHack::size(elf->getClass()),
-      Elf_RelHack::size(elf->getClass())};  // TODO: sh_addralign should be an
-                                            // alignment, not size
+  Elf64_Shdr relhack64_section = {0,
+                                  SHT_PROGBITS,
+                                  SHF_ALLOC,
+                                  0,
+                                  (Elf64_Off)-1LL,
+                                  0,
+                                  SHN_UNDEF,
+                                  0,
+                                  Elf_Addr::size(elf->getClass()),
+                                  Elf_Addr::size(elf->getClass())};
   Elf64_Shdr relhackcode64_section = {0,
                                       SHT_PROGBITS,
                                       SHF_ALLOC | SHF_EXECINSTR,
@@ -915,8 +937,6 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
   Elf_SymValue* sym = symtab->lookup("__cxa_pure_virtual");
 
   std::vector<Rel_Type> new_rels;
-  Elf_RelHack relhack_entry;
-  relhack_entry.r_offset = relhack_entry.r_info = 0;
   std::vector<Rel_Type> init_array_relocs;
   size_t init_array_insert = 0;
   for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
@@ -965,6 +985,10 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
       // Don't pack relocations happening in non writable sections.
       // Our injected code is likely not to be allowed to write there.
       new_rels.push_back(*i);
+    } else if (i->r_offset & 1) {
+      // RELR packing doesn't support relocations at an odd address, but
+      // there shouldn't be any.
+      new_rels.push_back(*i);
     } else {
       // With Elf_Rel, the value pointed by the relocation offset is the addend.
       // With Elf_Rela, the addend is in the relocation entry, but the elfhacked
@@ -983,20 +1007,11 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
                 "Relocation addend inconsistent with content. Skipping\n");
         return -1;
       }
-      if (i->r_offset ==
-          relhack_entry.r_offset + relhack_entry.r_info * entry_sz) {
-        relhack_entry.r_info++;
-      } else {
-        if (relhack_entry.r_offset) relhack->push_back(relhack_entry);
-        relhack_entry.r_offset = i->r_offset;
-        relhack_entry.r_info = 1;
-      }
+      relhack->push_back(i->r_offset);
     }
   }
-  if (relhack_entry.r_offset) relhack->push_back(relhack_entry);
-  // Last entry must be nullptr
-  relhack_entry.r_offset = relhack_entry.r_info = 0;
-  relhack->push_back(relhack_entry);
+  // Last entry must be a nullptr
+  relhack->push_back(0);
 
   if (init_array) {
     // Some linkers create a DT_INIT_ARRAY section that, for all purposes,
