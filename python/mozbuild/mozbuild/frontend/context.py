@@ -655,8 +655,8 @@ class CompileFlags(TargetCompileFlags):
                 ("CXXFLAGS", "CFLAGS"),
             ),
             (
-                "NEWPM",
-                context.config.substs.get("MOZ_NEW_PASS_MANAGER_FLAGS"),
+                "PASS_MANAGER",
+                context.config.substs.get("MOZ_PASS_MANAGER_FLAGS"),
                 ("CXXFLAGS", "CFLAGS"),
             ),
             (
