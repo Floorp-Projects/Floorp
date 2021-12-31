@@ -34,6 +34,7 @@ Table of Contents
 
    nontechnical-overview
    overview
+   lifetime
    utilities
    telemetry
    firefox-suggest-telemetry
