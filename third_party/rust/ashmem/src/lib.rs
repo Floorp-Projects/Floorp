@@ -27,7 +27,7 @@ static mut LIBANDROID_ASHAREDMEMORY_SETPROT: Option<
 > = None;
 
 unsafe fn maybe_init() {
-    const LIBANDROID_NAME: *const libc::c_char = "libandroid\0".as_ptr() as *const libc::c_char;
+    const LIBANDROID_NAME: *const libc::c_char = "libandroid.so\0".as_ptr() as *const libc::c_char;
     const LIBANDROID_ASHAREDMEMORY_CREATE_NAME: *const libc::c_char =
         "ASharedMemory_create\0".as_ptr() as _;
     const LIBANDROID_ASHAREDMEMORY_GETSIZE_NAME: *const libc::c_char =
@@ -58,7 +58,7 @@ unsafe fn maybe_init() {
 /// Directly calls C or kernel APIs.
 #[allow(non_snake_case)]
 pub unsafe fn ASharedMemory_create(name: *const libc::c_char, size: libc::size_t) -> libc::c_int {
-    const ASHMEM_NAME_DEF: *const libc::c_char = "/dev/ashmem".as_ptr() as _;
+    const ASHMEM_NAME_DEF: *const libc::c_char = "/dev/ashmem\0".as_ptr() as _;
     const ASHMEM_NAME_LEN: usize = 256;
     const ASHMEM_SET_NAME: libc::c_int = iow!(
         __ASHMEMIOC,
