@@ -350,6 +350,10 @@ doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
           const char *start, const char *end, const char **endPtr,
           XML_Bool haveMore);
 static enum XML_Error
+doContentInternal(XML_Parser parser, int startTagLevel, const ENCODING *enc,
+                  const char *start, const char *end, const char **endPtr,
+                  XML_Bool haveMore);
+static enum XML_Error
 doCdataSection(XML_Parser parser, const ENCODING *, const char **startPtr,
                const char *end, const char **nextPtr, XML_Bool haveMore);
 #ifdef XML_DTD
@@ -2525,13 +2529,8 @@ contentProcessor(XML_Parser parser,
                  const char *end,
                  const char **endPtr)
 {
-  enum XML_Error result = doContent(parser, 0, encoding, start, end,
-                                    endPtr, (XML_Bool)!ps_finalBuffer);
-  if (result == XML_ERROR_NONE) {
-    if (!storeRawNames(parser))
-      return XML_ERROR_NO_MEMORY;
-  }
-  return result;
+  return doContent(parser, 0, encoding, start, end,
+                   endPtr, (XML_Bool)!ps_finalBuffer);
 }
 
 static enum XML_Error PTRCALL
@@ -2641,13 +2640,8 @@ externalEntityContentProcessor(XML_Parser parser,
                                const char *end,
                                const char **endPtr)
 {
-  enum XML_Error result = doContent(parser, 1, encoding, start, end,
-                                    endPtr, (XML_Bool)!ps_finalBuffer);
-  if (result == XML_ERROR_NONE) {
-    if (!storeRawNames(parser))
-      return XML_ERROR_NO_MEMORY;
-  }
-  return result;
+  return doContent(parser, 1, encoding, start, end,
+                   endPtr, (XML_Bool)!ps_finalBuffer);
 }
 
 static enum XML_Error
@@ -2658,6 +2652,24 @@ doContent(XML_Parser parser,
           const char *end,
           const char **nextPtr,
           XML_Bool haveMore)
+{
+  enum XML_Error result = doContentInternal(parser, startTagLevel, enc,
+                                            s, end, nextPtr, haveMore);
+  if (result == XML_ERROR_NONE) {
+    if (!storeRawNames(parser))
+      return XML_ERROR_NO_MEMORY;
+  }
+  return result;
+}
+
+static enum XML_Error
+doContentInternal(XML_Parser parser,
+                  int startTagLevel,
+                  const ENCODING *enc,
+                  const char *s,
+                  const char *end,
+                  const char **nextPtr,
+                  XML_Bool haveMore)
 {
   /* save one level of indirection */
   DTD * const dtd = _dtd;
