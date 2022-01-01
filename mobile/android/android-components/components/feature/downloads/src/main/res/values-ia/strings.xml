@@ -45,4 +45,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Impossibile aperir %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Le permission de accesso a files e multimedia es necessari pro discargar files. Vade al parametros de Android, tocca Permissiones e tocca Permitter.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Cancellar le discargamentos private?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Si tu claude tote le schedas private ora, %1$s discargamento essera cancellate. Desira tu vermente abandonar le Navigation private?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Cancellar le discargamentos</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Restar in navigation private</string>
 </resources>

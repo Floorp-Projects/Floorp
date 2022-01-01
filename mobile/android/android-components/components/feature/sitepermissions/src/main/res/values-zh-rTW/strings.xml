@@ -44,4 +44,12 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">要允許 %1$s 將資料儲存於持續性儲存空間嗎？</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">要允許 %1$s 播放 DRM 控制的內容嗎？</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">要允許 %1$s 在 %2$s 上使用該網站自己的 cookie 嗎？</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">如果 %s 沒有清楚解釋為什麼需要此資料，您應該封鎖它。</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">了解更多</string>
 </resources>

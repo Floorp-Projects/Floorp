@@ -44,4 +44,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Ei voitu avata %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Tiedostojen lataamiseksi tarvitaan tiedostojen ja median käyttöoikeudet. Siirry Androidin asetuksiin, napauta käyttöoikeudet ja napauta salli.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Perutetaanko yksityiset lataukset?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Jos suljet kaikki yksityiset välilehdet nyt, tiedoston %1$s lataus perutaan. Haluatko varmasti poistua yksityisestä selaamisesta?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Peruuta lataukset</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Pysy yksityisessä selaamisessa</string>
 </resources>

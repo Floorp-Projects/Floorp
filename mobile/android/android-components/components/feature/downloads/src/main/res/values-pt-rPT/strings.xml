@@ -44,4 +44,7 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Não foi possível abrir %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">A permissão de acesso a ficheiros e media é necessária para transferir ficheiros. Aceda às configurações do Android, toque em permissões e toque em permitir.</string>
-</resources>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Cancelar transferências</string>
+    </resources>

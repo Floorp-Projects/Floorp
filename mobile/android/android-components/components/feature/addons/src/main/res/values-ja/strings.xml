@@ -65,7 +65,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">閲覧履歴へのアクセス</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">開いたタブのユーザーデータへアクセスするため開発ツールを展開</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">開いているタブのユーザーデータへアクセスするため開発ツールを展開</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">バージョン</string>
     <!-- The authors of an add-on. -->
