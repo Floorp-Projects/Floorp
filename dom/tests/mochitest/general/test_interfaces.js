@@ -800,7 +800,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Notification", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvas", insecureContext: true, nightly: true },
+  { name: "OffscreenCanvas", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OfflineAudioCompletionEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
