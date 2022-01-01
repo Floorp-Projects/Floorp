@@ -1007,6 +1007,8 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
                                                bool aDeferCompilation,
                                                bool aPermitUntrustedEvents,
                                                Element* aElement) {
+  RemoveEventHandler(aName);
+
   nsCOMPtr<Document> doc;
   nsCOMPtr<nsIScriptGlobalObject> global =
       GetScriptGlobalAndDocument(getter_AddRefs(doc));
