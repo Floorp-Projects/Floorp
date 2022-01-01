@@ -220,8 +220,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "NotificationEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvas", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   "Performance",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "PerformanceEntry",
@@ -281,38 +279,6 @@ var interfaceNamesInGlobalScope = [
   "URLSearchParams",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebSocket",
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGL2RenderingContext", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLActiveInfo", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLBuffer", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLContextEvent", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLFramebuffer", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLProgram", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLRenderbuffer", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLRenderingContext", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLSampler", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLShader", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLShaderPrecisionFormat", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLSync", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLTexture", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLTransformFeedback", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLUniformLocation", nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLVertexArrayObject", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebGLQuery",
   // IMPORTANT: Do not change this list without review from a DOM peer!
