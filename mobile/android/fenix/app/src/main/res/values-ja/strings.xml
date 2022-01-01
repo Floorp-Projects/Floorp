@@ -61,7 +61,9 @@
     <string name="recently_saved_show_all">すべて表示</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">保存したブックマークをすべて表示するボタン</string>
+    <string name="recently_saved_show_all_content_description_2">保存したブックマークをすべて表示します</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">保存したブックマークをすべて表示するボタン</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s は Mozilla の製品です。</string>
@@ -143,7 +145,9 @@
     <string name="recent_tabs_show_all">すべて表示</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">最近のタブをすべて表示するボタンです</string>
+    <string name="recent_tabs_show_all_content_description_2">最近のタブをすべて表示するボタンです</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">最近のタブをすべて表示します</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot; についての検索</string>
@@ -167,7 +171,9 @@
     <string name="recently_visited_menu_item_remove">削除</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">過去の検索をすべて表示するボタンです</string>
+    <string name="past_explorations_show_all_content_description_2">過去の検索をすべて表示します</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">過去の検索をすべて表示するボタンです</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -304,7 +310,7 @@
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">個人に合わせた Firefox ホームページ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">開いているタブ、ブックマーク、ブラウジング履歴にジャンプします。</string>
+    <string name="onboarding_home_screen_section_home_description_2">開いているタブ、ブックマーク、閲覧履歴にジャンプします。</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">きれいに整理されたタブ</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -492,7 +498,7 @@
     <!-- Preference category for sync -->
     <string name="preferences_sync_category">同期するデータの選択</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">履歴</string>
+    <string name="preferences_sync_history">表示履歴</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ブックマーク</string>
     <!-- Preference for syncing logins -->
@@ -1040,6 +1046,8 @@
     <string name="preference_phone_feature_notification">通知</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">永続ストレージ</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">クロスサイト Cookie</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM 制御されたコンテンツ</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1513,7 +1521,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">クロスサイトトラッキング Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">広告ネットワークやアクセス解析サービスが様々なサイトから閲覧データを収集するための Cookie をブロックします。</string>
+    <string name="etp_cookies_description">広告ネットワークやアクセス解析サービスが様々なサイトからブラウジングデータを収集するために使用する Cookie をブロックします。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">暗号通貨マイニング</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1947,7 +1955,7 @@
     <string name="synced_tabs_sign_in_button">Sync にログイン</string>
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
-    <string name="synced_tabs_no_open_tabs">開いたタブはありません</string>
+    <string name="synced_tabs_no_open_tabs">開いているタブはありません</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->

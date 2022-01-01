@@ -62,7 +62,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">모두 표시</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">저장된 북마크 모두 표시 버튼</string>
+    <string name="recently_saved_show_all_content_description_2">저장된 북마크 모두 표시</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">저장된 북마크 모두 표시 버튼</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s는 Mozilla에서 제작했습니다.</string>
@@ -145,8 +147,9 @@
     <string name="recent_tabs_show_all">모두 표시</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">모든 최근 탭 표시 버튼</string>
-
+    <string name="recent_tabs_show_all_content_description_2">모든 최근 탭 표시 버튼</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">모든 최근 탭 표시</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot;에 대한 검색</string>
@@ -170,7 +173,9 @@
     <string name="recently_visited_menu_item_remove">삭제</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">모든 지난 탐색 표시 버튼</string>
+    <string name="past_explorations_show_all_content_description_2">모든 지난 탐색 표시</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">모든 지난 탐색 표시 버튼</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1049,6 +1054,8 @@
     <string name="preference_phone_feature_notification">알림</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">영구 저장소</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">교차 사이트 쿠키</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM 제어 콘텐츠</string>
     <!-- Label that indicates that a permission must be asked always -->

@@ -57,7 +57,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Monstrar toto</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Monstrar tote le button marcapaginas salvate</string>
+    <string name="recently_saved_show_all_content_description_2">Monstrar tote le marcapaginas salvate</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Monstrar tote le button marcapaginas salvate</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producite per Mozilla.</string>
@@ -138,7 +140,9 @@
     <string name="recent_tabs_show_all">Monstrar toto</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Monstrar tote le recente button de schedas</string>
+    <string name="recent_tabs_show_all_content_description_2">Monstrar tote le recente button de schedas</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Monstrar tote le schedas recente</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Tu recerca de \&quot;%1$s\&quot;</string>
@@ -162,7 +166,9 @@
     <string name="recently_visited_menu_item_remove">Remover</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Monstrar tote le passate buttones de exploration </string>
+    <string name="past_explorations_show_all_content_description_2">Monstrar tote le passate explorationes</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Monstrar tote le passate buttones de exploration </string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1055,6 +1061,8 @@
     <string name="preference_phone_feature_notification">Notification</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Memoria persistente</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookies inter sitos</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Contento protegite per DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
