@@ -15,7 +15,7 @@ apt-get install \
     libx11-xcb1 \
     libxml2-utils \
     libxt6 \
-    python \
+    libxtst6 \
     shellcheck \
     unzip \
     wget

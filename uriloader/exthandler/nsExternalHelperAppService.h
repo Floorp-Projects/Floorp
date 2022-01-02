@@ -85,6 +85,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
                                     nsIHandlerInfo** aHandlerInfo) override;
 
   NS_IMETHOD LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aRedirectPrincipal,
                      mozilla::dom::BrowsingContext* aBrowsingContext,
                      bool aWasTriggeredExternally) override;
   NS_IMETHOD SetProtocolHandlerDefaults(nsIHandlerInfo* aHandlerInfo,
@@ -273,6 +274,9 @@ class nsExternalAppHandler final : public nsIStreamListener,
   void SetShouldCloseWindow() { mShouldCloseWindow = true; }
 
  protected:
+  // Record telemetry about a download that was attempted.
+  void RecordDownloadTelemetry(nsIChannel* aChannel, const char* aAction);
+
   bool IsDownloadSpam(nsIChannel* aChannel);
 
   ~nsExternalAppHandler();
@@ -492,6 +496,11 @@ class nsExternalAppHandler final : public nsIStreamListener,
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest* aRequest,
                         const nsString& path);
+
+  /**
+   * Tell the launcher to open the local file with its configured handler.
+   */
+  nsresult LaunchLocalFile();
 
   /**
    * Set in nsHelperDlgApp.js. This is always null after the user has chosen an

@@ -7,8 +7,35 @@ import os
 import os.path
 import posixpath
 import stat
+try:
+	from typing import (
+		Any,
+		AnyStr,
+		Callable,
+		Dict,
+		Iterable,
+		Iterator,
+		List,
+		Optional,
+		Sequence,
+		Set,
+		Text,
+		Union)
+except ImportError:
+	pass
+try:
+	# Python 3.6+ type hints.
+	from os import PathLike
+	from typing import Collection
+except ImportError:
+	pass
 
-from .compat import Collection, Iterable, string_types, unicode
+from .compat import (
+	CollectionType,
+	IterableType,
+	string_types,
+	unicode)
+from .pattern import Pattern
 
 NORMALIZE_PATH_SEPS = [sep for sep in [os.sep, os.altsep] if sep and sep != posixpath.sep]
 """
@@ -26,6 +53,7 @@ registered pattern factory (:class:`~collections.abc.Callable`).
 
 
 def detailed_match_files(patterns, files, all_matches=None):
+	# type: (Iterable[Pattern], Iterable[Text], Optional[bool]) -> Dict[Text, 'MatchDetail']
 	"""
 	Matches the files to the patterns, and returns which patterns matched
 	the files.
@@ -43,7 +71,7 @@ def detailed_match_files(patterns, files, all_matches=None):
 	Returns the matched files (:class:`dict`) which maps each matched file
 	(:class:`str`) to the patterns that matched in order (:class:`.MatchDetail`).
 	"""
-	all_files = files if isinstance(files, Collection) else list(files)
+	all_files = files if isinstance(files, CollectionType) else list(files)
 	return_files = {}
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -68,6 +96,7 @@ def detailed_match_files(patterns, files, all_matches=None):
 
 
 def _is_iterable(value):
+	# type: (Any) -> bool
 	"""
 	Check whether the value is an iterable (excludes strings).
 
@@ -75,10 +104,11 @@ def _is_iterable(value):
 
 	Returns whether *value* is a iterable (:class:`bool`).
 	"""
-	return isinstance(value, Iterable) and not isinstance(value, (unicode, bytes))
+	return isinstance(value, IterableType) and not isinstance(value, (unicode, bytes))
 
 
 def iter_tree_entries(root, on_error=None, follow_links=None):
+	# type: (Text, Optional[Callable], Optional[bool]) -> Iterator['TreeEntry']
 	"""
 	Walks the specified directory for all files and directories.
 
@@ -96,7 +126,7 @@ def iter_tree_entries(root, on_error=None, follow_links=None):
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterable` yielding each file or
+	Returns an :class:`~collections.abc.Iterator` yielding each file or
 	directory entry (:class:`.TreeEntry`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
@@ -110,6 +140,7 @@ def iter_tree_entries(root, on_error=None, follow_links=None):
 
 
 def iter_tree_files(root, on_error=None, follow_links=None):
+	# type: (Text, Optional[Callable], Optional[bool]) -> Iterator[Text]
 	"""
 	Walks the specified directory for all files.
 
@@ -127,7 +158,7 @@ def iter_tree_files(root, on_error=None, follow_links=None):
 
 	Raises :exc:`RecursionError` if recursion is detected.
 
-	Returns an :class:`~collections.abc.Iterable` yielding the path to
+	Returns an :class:`~collections.abc.Iterator` yielding the path to
 	each file (:class:`str`) relative to *root*.
 	"""
 	if on_error is not None and not callable(on_error):
@@ -146,6 +177,7 @@ iter_tree = iter_tree_files
 
 
 def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
+	# type: (Text, Text, Dict[Text, Text], Callable, bool) -> Iterator['TreeEntry']
 	"""
 	Scan the directory for all descendant files.
 
@@ -223,6 +255,7 @@ def _iter_tree_entries_next(root_full, dir_rel, memo, on_error, follow_links):
 
 
 def lookup_pattern(name):
+	# type: (Text) -> Callable[[AnyStr], Pattern]
 	"""
 	Lookups a registered pattern factory by name.
 
@@ -235,6 +268,7 @@ def lookup_pattern(name):
 
 
 def match_file(patterns, file):
+	# type: (Iterable[Pattern], Text) -> bool
 	"""
 	Matches the file to the patterns.
 
@@ -255,6 +289,7 @@ def match_file(patterns, file):
 
 
 def match_files(patterns, files):
+	# type: (Iterable[Pattern], Iterable[Text]) -> Set[Text]
 	"""
 	Matches the files to the patterns.
 
@@ -266,7 +301,7 @@ def match_files(patterns, files):
 
 	Returns the matched files (:class:`set` of :class:`str`).
 	"""
-	all_files = files if isinstance(files, Collection) else list(files)
+	all_files = files if isinstance(files, CollectionType) else list(files)
 	return_files = set()
 	for pattern in patterns:
 		if pattern.include is not None:
@@ -279,6 +314,7 @@ def match_files(patterns, files):
 
 
 def _normalize_entries(entries, separators=None):
+	# type: (Iterable['TreeEntry'], Optional[Collection[Text]]) -> Dict[Text, 'TreeEntry']
 	"""
 	Normalizes the entry paths to use the POSIX path separator.
 
@@ -299,8 +335,10 @@ def _normalize_entries(entries, separators=None):
 
 
 def normalize_file(file, separators=None):
+	# type: (Union[Text, PathLike], Optional[Collection[Text]]) -> Text
 	"""
-	Normalizes the file path to use the POSIX path separator (i.e., ``'/'``).
+	Normalizes the file path to use the POSIX path separator (i.e.,
+	``'/'``), and make the paths relative (remove leading ``'/'``).
 
 	*file* (:class:`str` or :class:`pathlib.PurePath`) is the file path.
 
@@ -323,14 +361,19 @@ def normalize_file(file, separators=None):
 	for sep in separators:
 		norm_file = norm_file.replace(sep, posixpath.sep)
 
-	# Remove current directory prefix.
-	if norm_file.startswith('./'):
+	if norm_file.startswith('/'):
+		# Make path relative.
+		norm_file = norm_file[1:]
+
+	elif norm_file.startswith('./'):
+		# Remove current directory prefix.
 		norm_file = norm_file[2:]
 
 	return norm_file
 
 
 def normalize_files(files, separators=None):
+	# type: (Iterable[Union[str, PathLike]], Optional[Collection[Text]]) -> Dict[Text, List[Union[str, PathLike]]]
 	"""
 	Normalizes the file paths to use the POSIX path separator.
 
@@ -341,16 +384,23 @@ def normalize_files(files, separators=None):
 	:data:`None`) optionally contains the path separators to normalize.
 	See :func:`normalize_file` for more information.
 
-	Returns a :class:`dict` mapping the each normalized file path (:class:`str`)
-	to the original file path (:class:`str`)
+	Returns a :class:`dict` mapping the each normalized file path
+	(:class:`str`) to the original file paths (:class:`list` of
+	:class:`str` or :class:`pathlib.PurePath`).
 	"""
 	norm_files = {}
 	for path in files:
-		norm_files[normalize_file(path, separators=separators)] = path
+		norm_file = normalize_file(path, separators=separators)
+		if norm_file in norm_files:
+			norm_files[norm_file].append(path)
+		else:
+			norm_files[norm_file] = [path]
+
 	return norm_files
 
 
 def register_pattern(name, pattern_factory, override=None):
+	# type: (Text, Callable[[AnyStr], Pattern], Optional[bool]) -> None
 	"""
 	Registers the specified pattern factory.
 
@@ -382,6 +432,7 @@ class AlreadyRegisteredError(Exception):
 	"""
 
 	def __init__(self, name, pattern_factory):
+		# type: (Text, Callable[[AnyStr], Pattern]) -> None
 		"""
 		Initializes the :exc:`AlreadyRegisteredError` instance.
 
@@ -394,6 +445,7 @@ class AlreadyRegisteredError(Exception):
 
 	@property
 	def message(self):
+		# type: () -> Text
 		"""
 		*message* (:class:`str`) is the error message.
 		"""
@@ -404,6 +456,7 @@ class AlreadyRegisteredError(Exception):
 
 	@property
 	def name(self):
+		# type: () -> Text
 		"""
 		*name* (:class:`str`) is the name of the registered pattern.
 		"""
@@ -411,6 +464,7 @@ class AlreadyRegisteredError(Exception):
 
 	@property
 	def pattern_factory(self):
+		# type: () -> Callable[[AnyStr], Pattern]
 		"""
 		*pattern_factory* (:class:`~collections.abc.Callable`) is the
 		registered pattern factory.
@@ -425,6 +479,7 @@ class RecursionError(Exception):
 	"""
 
 	def __init__(self, real_path, first_path, second_path):
+		# type: (Text, Text, Text) -> None
 		"""
 		Initializes the :exc:`RecursionError` instance.
 
@@ -441,6 +496,7 @@ class RecursionError(Exception):
 
 	@property
 	def first_path(self):
+		# type: () -> Text
 		"""
 		*first_path* (:class:`str`) is the first path encountered for
 		:attr:`self.real_path <RecursionError.real_path>`.
@@ -449,6 +505,7 @@ class RecursionError(Exception):
 
 	@property
 	def message(self):
+		# type: () -> Text
 		"""
 		*message* (:class:`str`) is the error message.
 		"""
@@ -460,6 +517,7 @@ class RecursionError(Exception):
 
 	@property
 	def real_path(self):
+		# type: () -> Text
 		"""
 		*real_path* (:class:`str`) is the real path that recursion was
 		encountered on.
@@ -468,6 +526,7 @@ class RecursionError(Exception):
 
 	@property
 	def second_path(self):
+		# type: () -> Text
 		"""
 		*second_path* (:class:`str`) is the second path encountered for
 		:attr:`self.real_path <RecursionError.real_path>`.
@@ -484,6 +543,7 @@ class MatchDetail(object):
 	__slots__ = ('patterns',)
 
 	def __init__(self, patterns):
+		# type: (Sequence[Pattern]) -> None
 		"""
 		Initialize the :class:`.MatchDetail` instance.
 
@@ -510,6 +570,7 @@ class TreeEntry(object):
 	__slots__ = ('_lstat', 'name', 'path', '_stat')
 
 	def __init__(self, name, path, lstat, stat):
+		# type: (Text, Text, os.stat_result, os.stat_result) -> None
 		"""
 		Initialize the :class:`.TreeEntry` instance.
 
@@ -547,6 +608,7 @@ class TreeEntry(object):
 		"""
 
 	def is_dir(self, follow_links=None):
+		# type: (Optional[bool]) -> bool
 		"""
 		Get whether the entry is a directory.
 
@@ -563,6 +625,7 @@ class TreeEntry(object):
 		return stat.S_ISDIR(node_stat.st_mode)
 
 	def is_file(self, follow_links=None):
+		# type: (Optional[bool]) -> bool
 		"""
 		Get whether the entry is a regular file.
 
@@ -579,12 +642,14 @@ class TreeEntry(object):
 		return stat.S_ISREG(node_stat.st_mode)
 
 	def is_symlink(self):
+		# type: () -> bool
 		"""
 		Returns whether the entry is a symbolic link (:class:`bool`).
 		"""
 		return stat.S_ISLNK(self._lstat.st_mode)
 
 	def stat(self, follow_links=None):
+		# type: (Optional[bool]) -> os.stat_result
 		"""
 		Get the cached stat result for the entry.
 

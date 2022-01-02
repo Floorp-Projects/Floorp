@@ -1522,6 +1522,9 @@ ko{
         LRD{
             other{"라이베리아 달러"}
         }
+        LSL{
+            other{"레소토 로티"}
+        }
         LTL{
             other{"리투아니아 리타"}
         }

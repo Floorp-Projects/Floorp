@@ -9,7 +9,7 @@ import sys
 import traceback
 
 import six
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object, MissingVCSExtension
 from .util.manage_estimates import (
@@ -51,7 +51,7 @@ build = MozbuildObject.from_environment(cwd=here)
 vcs = get_repository_object(build.topsrcdir)
 
 history_path = os.path.join(
-    get_state_dir(srcdir=True), "history", "try_task_configs.json"
+    get_state_dir(specific_to_topsrcdir=True), "history", "try_task_configs.json"
 )
 
 
@@ -120,7 +120,9 @@ def display_push_estimates(try_task_config):
     if task_labels is None:
         return
 
-    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
+    cache_dir = os.path.join(
+        get_state_dir(specific_to_topsrcdir=True), "cache", "taskgraph"
+    )
 
     graph_cache = None
     dep_cache = None

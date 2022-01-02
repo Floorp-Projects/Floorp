@@ -391,64 +391,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     documentNode.reparent(parentNode);
   }
 
-  /**
-   * Evaluate the cross iframes query selectors for the current walker front.
-   *
-   * @param {Array} selectors
-   *        An array of CSS selectors to find the target accessible object.
-   *        Several selectors can be needed if the element is nested in frames
-   *        and not directly in the root document.
-   * @return {Promise} a promise that resolves when the node front is found for
-   *                   selection using inspector tools.
-   */
-  async findNodeFront(nodeSelectors) {
-    const querySelectors = async nodeFront => {
-      const selector = nodeSelectors.shift();
-      if (!selector) {
-        return nodeFront;
-      }
-      nodeFront = await nodeFront.walkerFront.querySelector(
-        nodeFront,
-        selector
-      );
-      // It's possible the containing iframe isn't available by the time
-      // walkerFront.querySelector is called, which causes the re-selected node to be
-      // unavailable. There also isn't a way for us to know when all iframes on the page
-      // have been created after a reload. Because of this, we should should bail here.
-      if (!nodeFront) {
-        return null;
-      }
-
-      if (nodeSelectors.length > 0) {
-        await nodeFront.waitForFrameLoad();
-
-        const { nodes } = await this.children(nodeFront);
-
-        // If there are remaining selectors to process, they will target a document or a
-        // document-fragment under the current node. Whether the element is a frame or
-        // a web component, it can only contain one document/document-fragment, so just
-        // select the first one available.
-        nodeFront = nodes.find(node => {
-          const { nodeType } = node;
-          return (
-            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
-            nodeType === Node.DOCUMENT_NODE
-          );
-        });
-
-        // The iframe selector might have matched an element which is not an
-        // iframe in the new page (or an iframe with no document?). In this
-        // case, bail out and fallback to the root body element.
-        if (!nodeFront) {
-          return null;
-        }
-      }
-      return querySelectors(nodeFront) || nodeFront;
-    };
-    const nodeFront = await this.getRootNode();
-    return querySelectors(nodeFront);
-  }
-
   _onRootNodeAvailable(rootNode) {
     if (rootNode.isTopLevelDocument) {
       this.rootNode = rootNode;

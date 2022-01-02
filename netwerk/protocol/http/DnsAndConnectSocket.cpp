@@ -562,7 +562,7 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
 
     if (nsHttpTransaction* trans = mTransaction->QueryHttpTransaction()) {
       if (mIsHttp3) {
-        trans->DisableHttp3();
+        trans->DisableHttp3(true);
         gHttpHandler->ExcludeHttp3(mConnInfo);
       }
       // The transaction's connection info is changed after DisableHttp3(), so

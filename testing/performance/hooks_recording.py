@@ -61,7 +61,7 @@ def before_runs(env):
             app_name = "firefox"
 
         name = [
-            "mitm6",
+            "mitm7",
             platform_name,
             "gve" if app_name == "geckoview_example" else app_name,
             test_site["name"],
@@ -78,6 +78,10 @@ def before_runs(env):
         add_option(env, "browsertime.url", test_site.get("test_url"), overwrite=True)
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
+
+        prefs = test_site.get("preferences", {})
+        for pref, val in prefs.items():
+            add_option(env, "firefox.preference", f"{pref}:{val}")
 
         second_url = test_site.get("secondary_url", None)
         if second_url:

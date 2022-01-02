@@ -160,6 +160,11 @@ sw{
             }
         }
         concentr{
+            item{
+                dnam{"kipengee"}
+                one{"kipengee {0}"}
+                other{"vipengee {0}"}
+            }
             karat{
                 dnam{"karati"}
                 one{"karati {0}"}
@@ -426,6 +431,11 @@ sw{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowati saa kwa kilomita 100"}
+                one{"kilowati saa {0} kwa kilomita 100"}
+                other{"kilowati saa {0} kwa kilomita 100"}
+            }
             newton{
                 dnam{"newtoni"}
                 one{"newtoni {0}"}
@@ -1118,10 +1128,21 @@ sw{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"kipengee"}
+            }
+            millimole-per-liter{
+                dnam{"mmol/L"}
+                one{"mmol {0}/L"}
+                other{"mmol {0}/L"}
+            }
             percent{
                 dnam{"asilimia"}
                 one{"asilimia {0}"}
                 other{"asilimia {0}"}
+            }
+            permillion{
+                dnam{"ppm"}
             }
         }
         consumption{
@@ -1129,6 +1150,9 @@ sw{
                 dnam{"lita kwa kilomita 100"}
                 one{"L/100km {0}"}
                 other{"L/100km {0}"}
+            }
+            mile-per-gallon{
+                dnam{"mpg"}
             }
         }
         coordinate{
@@ -1185,6 +1209,16 @@ sw{
                 dnam{"volti"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/km 100"}
+                one{"kWh {0} kwa km 100"}
+                other{"kWh {0} kwa km 100"}
+            }
+            newton{
+                dnam{"N"}
+            }
+        }
         length{
             centimeter{
                 dnam{"sentimita"}
@@ -1230,6 +1264,11 @@ sw{
             yard{
                 one{"Yadi {0}"}
                 other{"Yadi {0}"}
+            }
+        }
+        light{
+            solar-luminosity{
+                dnam{"L☉"}
             }
         }
         mass{
@@ -1452,6 +1491,11 @@ sw{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"kipengee"}
+                one{"kipengee {0}"}
+                other{"vipengee {0}"}
+            }
             karat{
                 dnam{"karati"}
                 one{"karati {0}"}
@@ -1716,6 +1760,11 @@ sw{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/km 100"}
+                one{"kWh {0} /km 100"}
+                other{"kWh {0} /km 100"}
+            }
             newton{
                 dnam{"newtoni"}
                 one{"N {0}"}

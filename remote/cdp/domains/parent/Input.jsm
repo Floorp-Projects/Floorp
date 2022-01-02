@@ -86,30 +86,53 @@ class Input extends Domain {
     await this.executeInChild("_waitForContentEvent", eventId);
   }
 
+  /**
+   * Simulate mouse events.
+   *
+   * @param {Object} options
+   * @param {string} options.type
+   * @param {number} options.x
+   * @param {number} options.y
+   * @param {number} options.modifiers
+   * @param {number} options.timestamp [Not Supported]
+   * @param {string} options.button
+   * @param {number} options.buttons [Not Supported]
+   * @param {string} options.clickCount
+   * @param {number} options.deltaX [Not Supported]
+   * @param {number} options.deltaY [Not Supported]
+   * @param {string} options.pointerType [Not Supported]
+   */
   async dispatchMouseEvent(options = {}) {
-    const { button, x, y, modifiers, clickCount } = options;
+    const { button, clickCount, modifiers, type, x, y } = options;
     const { alt, ctrl, meta, shift } = Input.Modifier;
 
-    let type;
-    if (options.type == "mousePressed") {
-      type = "mousedown";
-    } else if (options.type == "mouseReleased") {
-      type = "mouseup";
-    } else if (options.type == "mouseMoved") {
-      type = "mousemove";
+    let domType;
+    if (type === "mousePressed") {
+      domType = "mousedown";
+    } else if (type === "mouseReleased") {
+      domType = "mouseup";
+    } else if (type === "mouseMoved") {
+      domType = "mousemove";
     } else {
-      throw new Error(`Mouse type is not supported: ${options.type}`);
+      throw new Error(`Mouse type is not supported: ${type}`);
     }
 
-    if (type === "mousedown" && button === "right") {
-      type = "contextmenu";
+    if (domType === "mousedown" && button === "right") {
+      domType = "contextmenu";
     }
+
     const buttonID = Input.Button[button] || Input.Button.left;
     const { browser } = this.session.target;
     const currentWindow = browser.ownerGlobal;
+
     const EventUtils = this._getEventUtils(currentWindow);
+    const eventId = await this.executeInChild(
+      "_addContentEventListener",
+      domType
+    );
+
     EventUtils.synthesizeMouse(browser, x, y, {
-      type,
+      type: domType,
       button: buttonID,
       clickCount: clickCount || 1,
       altKey: !!(modifiers & alt),
@@ -117,6 +140,8 @@ class Input extends Domain {
       metaKey: !!(modifiers & meta),
       shiftKey: !!(modifiers & shift),
     });
+
+    await this.executeInChild("_waitForContentEvent", eventId);
   }
 
   /**

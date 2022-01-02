@@ -356,8 +356,16 @@ class ChromeActions {
     var blobUri = NetUtil.newURI(blobUrl);
 
     // If the download was triggered from the ctrl/cmd+s or "Save Page As"
-    // launch the "Save As" dialog.
-    if (data.sourceEventType == "save") {
+    // or the download button, launch the "Save As" dialog.
+    const saveOnDownload = getBoolPref(
+      "browser.download.improvements_to_download_panel",
+      false
+    );
+
+    if (
+      data.sourceEventType == "save" ||
+      (saveOnDownload && data.sourceEventType == "download")
+    ) {
       let actor = getActor(this.domWindow);
       actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
         blobUrl,
@@ -1209,8 +1217,10 @@ PdfStreamConverter.prototype = {
 
     aRequest.QueryInterface(Ci.nsIWritablePropertyBag);
 
+    var contentDisposition = aRequest.DISPOSITION_INLINE;
     var contentDispositionFilename;
     try {
+      contentDisposition = aRequest.contentDisposition;
       contentDispositionFilename = aRequest.contentDispositionFilename;
     } catch (e) {}
 
@@ -1229,8 +1239,17 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader("Refresh", "", false);
     }
 
-    PdfJsTelemetry.onViewerIsUsed();
+    PdfJsTelemetry.onViewerIsUsed(
+      contentDisposition == aRequest.DISPOSITION_ATTACHMENT
+    );
     PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
+
+    // The document will be loaded via the stream converter as html,
+    // but since we may have come here via a download or attachment
+    // that was opened directly, force the content disposition to be
+    // inline so that the html document will be loaded normally instead
+    // of going to the helper service.
+    aRequest.contentDisposition = Ci.nsIChannel.DISPOSITION_FORCE_INLINE;
 
     // Creating storage for PDF data
     var contentLength = aRequest.contentLength;

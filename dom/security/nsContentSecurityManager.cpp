@@ -1385,8 +1385,8 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
     }
     // Please note that DoCheckLoadURIChecks should only be enforced for
     // cross origin requests. If the flag SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT
-    // is set within the loadInfo, then then CheckLoadURIWithPrincipal is
-    // performed within nsCorsListenerProxy
+    // is set within the loadInfo, then CheckLoadURIWithPrincipal is performed
+    // within nsCorsListenerProxy
     rv = DoCheckLoadURIChecks(uri, loadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO: Bug 1371237

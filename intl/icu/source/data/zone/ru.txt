@@ -1940,6 +1940,9 @@ ru{
             lg{"Екатеринбург"}
             ls{"Екатеринбург, стандартное время"}
         }
+        "meta:Yukon"{
+            ls{"Юкон"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

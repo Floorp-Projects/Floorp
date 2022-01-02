@@ -252,10 +252,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                              uint64_t* aIDOfLink,
                                              bool* aOk) override;
 
-  virtual mozilla::ipc::IPCResult RecvLinkIndexOf(const uint64_t& aID,
-                                                  const uint64_t& aLinkID,
-                                                  int32_t* aIndex) override;
-
   virtual mozilla::ipc::IPCResult RecvLinkIndexAtOffset(
       const uint64_t& aID, const uint32_t& aOffset, int32_t* aIndex) override;
 
@@ -439,8 +435,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual mozilla::ipc::IPCResult RecvStep(const uint64_t& aID,
                                            double* aStep) override;
-
-  virtual mozilla::ipc::IPCResult RecvTakeFocus(const uint64_t& aID) override;
 
   virtual mozilla::ipc::IPCResult RecvFocusedChild(
       const uint64_t& aID, PDocAccessibleChild** aResultDoc,

@@ -120,6 +120,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "TestMacNSURLEscaping.mm",
     ]
 
+if CONFIG["OS_TARGET"] == "Linux":
+    UNIFIED_SOURCES += [
+        "TestAvailableMemoryWatcherLinux.cpp",
+    ]
+
 if (
     CONFIG["WRAP_STL_INCLUDES"]
     and CONFIG["CC_TYPE"] != "clang-cl"
@@ -131,8 +136,12 @@ if (
 
 # Compile TestAllocReplacement separately so Windows headers don't pollute
 # the global namespace for other files.
+if CONFIG["MOZ_MEMORY"]:
+    SOURCES += [
+        "TestAllocReplacement.cpp",
+    ]
+
 SOURCES += [
-    "TestAllocReplacement.cpp",
     "TestCOMArray.cpp",
     "TestCOMPtr.cpp",  # Redefines IFoo and IBar
     "TestHashtables.cpp",  # Redefines IFoo

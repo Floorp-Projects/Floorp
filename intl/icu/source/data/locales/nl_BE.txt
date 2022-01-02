@@ -19,6 +19,16 @@ nl_BE{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMd",
+            }
             availableFormats{
                 MEd{"E d/M"}
                 Md{"d/M"}
@@ -66,6 +76,16 @@ nl_BE{
                 "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMd",
             }
             availableFormats{
                 MEd{"E d/M"}

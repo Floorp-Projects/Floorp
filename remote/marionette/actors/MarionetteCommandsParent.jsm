@@ -59,7 +59,7 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     if ("error" in result) {
       throw error.WebDriverError.fromJSON(result.error);
     } else {
-      return evaluate.fromJSON(result.data, elementIdCache);
+      return evaluate.fromJSON({ obj: result.data, seenEls: elementIdCache });
     }
   }
 
@@ -109,6 +109,12 @@ class MarionetteCommandsParent extends JSWindowActorParent {
       strategy,
       selector,
       opts,
+    });
+  }
+
+  async getShadowRoot(webEl) {
+    return this.sendQuery("MarionetteCommandsParent:getShadowRoot", {
+      elem: webEl,
     });
   }
 

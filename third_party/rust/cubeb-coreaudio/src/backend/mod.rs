@@ -3294,7 +3294,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
             e
         })?;
 
-        if self.core_stream_data.setup().is_err() {
+        if let Err(setup_err) = self.core_stream_data.setup() {
             cubeb_log!(
                 "({:p}) Stream reinit failed.",
                 self.core_stream_data.stm_ptr
@@ -3317,6 +3317,9 @@ impl<'ctx> AudioUnitStream<'ctx> {
                     );
                     e
                 })?;
+            } else {
+                cubeb_log!("({:p}) Setup failed.", self.core_stream_data.stm_ptr);
+                return Err(setup_err);
             }
         }
 

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf-8,<script>
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><script>
   window.bar = { baz: 1 };
   console.log("foo");
   console.log("foo", window.bar);

@@ -100,7 +100,10 @@ add_task(async function() {
   info("Select the iframe");
   iframeBtn.click();
 
-  await willNavigate;
+  // will-navigate isn't emitted in the targetCommand-based iframe picker.
+  if (!isEveryFrameTargetEnabled()) {
+    await willNavigate;
+  }
   await onInspectorReloaded;
   // wait a bit more in case an eventual title update would happen later
   await wait(1000);

@@ -18,28 +18,29 @@
       /* exported performRequests */
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address, true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(null);
+        });
       }
 
       // Use a count parameter to defeat caching.
       let count = 0;
 
-      function performRequests(total, url, timeout = 0) {
+      async function performRequests(total, url, timeout = 0) {
         if (!total) {
           return;
         }
-        get(url || "request_" + (count++), function() {
-          setTimeout(performRequests.bind(this, --total, url, timeout), timeout);
-        });
+        await get(url || "request_" + (count++));
+        setTimeout(performRequests.bind(this, --total, url, timeout), timeout);
       }
     </script>
   </body>

@@ -15,6 +15,18 @@
 #  include "mozilla/dom/PContent.h"
 #endif  // MOZ_WIDGET_ANDROID
 
+#if defined(XP_WIN)
+#  include <inspectable.h>
+
+// The UUID comes from winrt/windows.system.profile.idl
+// in the Windows SDK
+MIDL_INTERFACE("7D1D81DB-8D63-4789-9EA5-DDCF65A94F3C")
+IWindowsIntegrityPolicyStatics : public IInspectable {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE get_IsEnabled(bool* value) = 0;
+};
+#endif
+
 class nsISerialEventTarget;
 
 struct FolderDiskInfo {
@@ -38,6 +50,10 @@ struct OSInfo {
 struct ProcessInfo {
   bool isWow64 = false;
   bool isWowARM64 = false;
+  // Whether or not the system is Windows 10 or 11 in S Mode.
+  // S Mode existed prior to us being able to query it, so this
+  // is unreliable on Windows versions prior to 1810.
+  bool isWindowsSMode = false;
   int32_t cpuCount = 0;
   int32_t cpuCores = 0;
   nsCString cpuVendor;

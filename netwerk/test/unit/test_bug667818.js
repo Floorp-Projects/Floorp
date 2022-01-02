@@ -1,9 +1,7 @@
 "use strict";
 
 function makeURI(str) {
-  return Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService)
-    .newURI(str);
+  return Services.io.newURI(str);
 }
 
 add_task(async () => {

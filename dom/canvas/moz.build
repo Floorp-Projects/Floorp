@@ -71,6 +71,10 @@ EXPORTS.mozilla.dom += [
 ]
 # XRWebGLLayer.h must be exported for use by the generated WebXRBinding.h
 
+EXPORTS.mozilla.gfx += [
+    "DrawTargetWebgl.h",
+]
+
 # Canvas 2D and common sources
 UNIFIED_SOURCES += [
     "CanvasGradient.cpp",
@@ -88,6 +92,7 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    "DrawTargetWebgl.cpp",  # Isolate Skia
     "ImageUtils.cpp",
 ]
 
@@ -193,9 +198,6 @@ LOCAL_INCLUDES += [
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += ["-Werror=implicit-int-conversion"]

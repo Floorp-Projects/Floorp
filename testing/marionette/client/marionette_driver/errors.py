@@ -60,6 +60,10 @@ class MarionetteException(Exception):
         return self._message
 
 
+class DetachedShadowRootException(MarionetteException):
+    status = "detached shadow root"
+
+
 class ElementNotSelectableException(MarionetteException):
     status = "element not selectable"
 
@@ -90,6 +94,10 @@ class JavascriptException(MarionetteException):
 
 class NoSuchElementException(MarionetteException):
     status = "no such element"
+
+
+class NoSuchShadowRootException(MarionetteException):
+    status = "no such shadow root"
 
 
 class NoSuchWindowException(MarionetteException):

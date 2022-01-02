@@ -907,6 +907,10 @@ zu{
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
             }
+            mile-per-gallon-imperial{
+                one{"{0}m/gUK"}
+                other{"{0}m/gUK"}
+            }
         }
         coordinate{
             dnam{"indlela"}
@@ -955,6 +959,12 @@ zu{
                 dnam{"y"}
                 one{"{0} y"}
                 other{"{0} y"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0}kWh/100km"}
+                other{"{0}kWh/100km"}
             }
         }
         length{
@@ -1010,6 +1020,26 @@ zu{
             }
         }
         volume{
+            dessert-spoon-imperial{
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            dram{
+                dnam{"fl.dr."}
+            }
+            drop{
+                dnam{"dr"}
+                one{"{0}dr"}
+                other{"{0}dr"}
+            }
+            fluid-ounce-imperial{
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                one{"{0}galIm"}
+                other{"{0}galIm"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}

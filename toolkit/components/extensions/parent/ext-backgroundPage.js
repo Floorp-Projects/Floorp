@@ -7,7 +7,11 @@
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
-var { HiddenExtensionPage, promiseExtensionViewLoaded } = ExtensionParent;
+var {
+  HiddenExtensionPage,
+  promiseExtensionViewLoaded,
+  watchExtensionWorkerContextLoaded,
+} = ExtensionParent;
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -79,7 +83,7 @@ class BackgroundPage extends HiddenExtensionPage {
       if (extension.persistentListeners) {
         EventManager.clearPrimedListeners(this.extension, false);
       }
-      extension.emit("background-page-aborted");
+      extension.emit("background-script-aborted");
       return;
     }
 
@@ -99,7 +103,7 @@ class BackgroundPage extends HiddenExtensionPage {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
-    extension.emit("background-page-started");
+    extension.emit("background-script-started");
   }
 
   shutdown() {
@@ -111,7 +115,6 @@ class BackgroundPage extends HiddenExtensionPage {
 // Responsible for the background.service_worker section of the manifest.
 class BackgroundWorker {
   constructor(extension, options) {
-    this.registrationInfo = null;
     this.extension = extension;
     this.workerScript = options.service_worker;
 
@@ -120,21 +123,48 @@ class BackgroundWorker {
     }
   }
 
+  get registrationInfo() {
+    const { principal } = this.extension;
+    return serviceWorkerManager.getRegistrationForAddonPrincipal(principal);
+  }
+
+  getWorkerInfo(descriptorId) {
+    return this.registrationInfo?.getWorkerByID(descriptorId);
+  }
+
+  validateWorkerInfoForContext(context) {
+    const { extension } = this;
+    if (!this.getWorkerInfo(context.workerDescriptorId)) {
+      throw new Error(
+        `ServiceWorkerInfo not found for ${extension.policy.debugName} contextId ${context.contextId}`
+      );
+    }
+  }
+
   async build() {
     const { extension } = this;
 
+    let context;
     try {
+      const contextPromise = new Promise(resolve => {
+        let unwatch = watchExtensionWorkerContextLoaded(
+          { extension, viewType: "background_worker" },
+          context => {
+            unwatch();
+            this.validateWorkerInfoForContext(context);
+            resolve(context);
+          }
+        );
+      });
+
       // TODO(Bug 17228327): follow up to spawn the active worker for a previously installed
       // background service worker.
-      const regInfo = await serviceWorkerManager.registerForAddonPrincipal(
+      await serviceWorkerManager.registerForAddonPrincipal(
         this.extension.principal
       );
-      this.registrationInfo = regInfo.QueryInterface(
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
 
-      // TODO(bug 17228326): wait for worker context to be loaded (as we currently do
-      // for the delayed background page).
+      context = await contextPromise;
+
       await this.waitForActiveWorker();
     } catch (e) {
       // Extension may be shutting down before the background worker has registered or
@@ -145,15 +175,16 @@ class BackgroundWorker {
         EventManager.clearPrimedListeners(this.extension, false);
       }
 
-      // TODO(bug 17228326): rename this to "background-script-aborted".
-      extension.emit("background-page-aborted");
+      extension.emit("background-script-aborted");
       return;
     }
 
-    // TODO(bug 17228326): wait for worker context to be loaded and
-    // wait for all persistent event listeners registered by the worker
-    // script to be handled (as we currently do for the delayed background
-    // page).
+    if (context) {
+      // Wait until all event listeners registered by the script so far
+      // to be handled.
+      await Promise.all(context.listenerPromises);
+      context.listenerPromises = null;
+    }
 
     if (extension.persistentListeners) {
       // |this.extension| may be null if the extension was shut down.
@@ -162,8 +193,7 @@ class BackgroundWorker {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
-    // TODO(bug 17228326): rename this to "background-script-started".
-    extension.emit("background-page-started");
+    extension.emit("background-script-started");
   }
 
   shutdown(isAppShutdown) {
@@ -175,8 +205,6 @@ class BackgroundWorker {
     if (!isAppShutdown) {
       this.registrationInfo?.forceShutdown();
     }
-
-    this.registrationInfo = null;
   }
 
   waitForActiveWorker() {
@@ -256,18 +284,18 @@ this.backgroundPage = class extends ExtensionAPI {
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
       let done = () => {
-        extension.off("background-page-started", done);
-        extension.off("background-page-aborted", done);
+        extension.off("background-script-started", done);
+        extension.off("background-script-aborted", done);
         extension.off("shutdown", done);
         resolve();
       };
-      extension.on("background-page-started", done);
-      extension.on("background-page-aborted", done);
+      extension.on("background-script-started", done);
+      extension.on("background-script-aborted", done);
       extension.on("shutdown", done);
     });
 
     extension.wakeupBackground = () => {
-      extension.emit("background-page-event");
+      extension.emit("background-script-event");
       extension.wakeupBackground = () => bgStartupPromise;
       return bgStartupPromise;
     };
@@ -278,7 +306,7 @@ this.backgroundPage = class extends ExtensionAPI {
 
     EventManager.primeListeners(extension);
 
-    extension.once("start-background-page", async () => {
+    extension.once("start-background-script", async () => {
       if (!this.extension) {
         // Extension was shut down. Don't build the background page.
         // Primed listeners have been cleared in onShutdown.
@@ -294,13 +322,13 @@ this.backgroundPage = class extends ExtensionAPI {
     //    or else we can miss it if the event occurs after the first
     //    window is painted but before #2
     // 2. After all windows have been restored.
-    extension.once("background-page-event", async () => {
+    extension.once("background-script-event", async () => {
       await ExtensionParent.browserPaintedPromise;
-      extension.emit("start-background-page");
+      extension.emit("start-background-script");
     });
 
     ExtensionParent.browserStartupPromise.then(() => {
-      extension.emit("start-background-page");
+      extension.emit("start-background-script");
     });
   }
 

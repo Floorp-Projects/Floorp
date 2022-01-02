@@ -11,6 +11,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/PFetchEventOpChild.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
@@ -32,18 +33,21 @@ class FetchEventOpChild final : public PFetchEventOpChild {
  public:
   static RefPtr<GenericPromise> SendFetchEvent(
       PRemoteWorkerControllerChild* aManager,
-      ServiceWorkerFetchEventOpArgs&& aArgs,
+      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
       RefPtr<ServiceWorkerRegistrationInfo> aRegistrationInfo,
+      RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
       RefPtr<KeepAliveToken>&& aKeepAliveToken);
 
   ~FetchEventOpChild();
 
  private:
-  FetchEventOpChild(ServiceWorkerFetchEventOpArgs&& aArgs,
-                    nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
-                    RefPtr<ServiceWorkerRegistrationInfo>&& aRegistrationInfo,
-                    RefPtr<KeepAliveToken>&& aKeepAliveToken);
+  FetchEventOpChild(
+      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
+      nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
+      RefPtr<ServiceWorkerRegistrationInfo>&& aRegistrationInfo,
+      RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
+      RefPtr<KeepAliveToken>&& aKeepAliveToken);
 
   mozilla::ipc::IPCResult RecvAsyncLog(const nsCString& aScriptSpec,
                                        const uint32_t& aLineNumber,
@@ -52,16 +56,17 @@ class FetchEventOpChild final : public PFetchEventOpChild {
                                        nsTArray<nsString>&& aParams);
 
   mozilla::ipc::IPCResult RecvRespondWith(
-      IPCFetchEventRespondWithResult&& aResult);
+      ParentToParentFetchEventRespondWithResult&& aResult);
 
   mozilla::ipc::IPCResult Recv__delete__(
       const ServiceWorkerFetchEventOpResult& aResult);
 
   void ActorDestroy(ActorDestroyReason) override;
 
-  nsresult StartSynthesizedResponse(IPCSynthesizeResponseArgs&& aArgs);
+  nsresult StartSynthesizedResponse(
+      ParentToParentSynthesizeResponseArgs&& aArgs);
 
-  void SynthesizeResponse(IPCSynthesizeResponseArgs&& aArgs);
+  void SynthesizeResponse(ParentToParentSynthesizeResponseArgs&& aArgs);
 
   void ResetInterception(bool aBypass);
 
@@ -69,12 +74,15 @@ class FetchEventOpChild final : public PFetchEventOpChild {
 
   void MaybeScheduleRegistrationUpdate() const;
 
-  const ServiceWorkerFetchEventOpArgs mArgs;
+  ParentToParentServiceWorkerFetchEventOpArgs mArgs;
   nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<KeepAliveToken> mKeepAliveToken;
   bool mInterceptedChannelHandled = false;
   MozPromiseHolder<GenericPromise> mPromiseHolder;
+  bool mWasSent = false;
+  MozPromiseRequestHolder<FetchServiceResponsePromise>
+      mPreloadResponseReadyPromiseRequestHolder;
 };
 
 }  // namespace dom

@@ -359,8 +359,7 @@ properties, supported by all of the results.
 
   Result types are also enumerated by *UrlbarUtils.RESULT_TYPE*.
 
-.. highlight:: JavaScript
-.. code::
+.. code-block::
 
   UrlbarResult {
     constructor(resultType, payload);

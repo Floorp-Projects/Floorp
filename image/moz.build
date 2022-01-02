@@ -65,12 +65,13 @@ EXPORTS.mozilla.image += [
     "ICOFileHeaders.h",
     "ImageMemoryReporter.h",
     "Resolution.h",
-    "SourceSurfaceBlobImage.h",
+    "WebRenderImageProvider.h",
 ]
 
 UNIFIED_SOURCES += [
     "AnimationFrameBuffer.cpp",
     "AnimationSurfaceProvider.cpp",
+    "BlobSurfaceProvider.cpp",
     "ClippedImage.cpp",
     "DecodedSurfaceProvider.cpp",
     "Decoder.cpp",
@@ -98,7 +99,6 @@ UNIFIED_SOURCES += [
     "ScriptedNotificationObserver.cpp",
     "ShutdownTracker.cpp",
     "SourceBuffer.cpp",
-    "SourceSurfaceBlobImage.cpp",
     "SurfaceCache.cpp",
     "SurfaceCacheUtils.cpp",
     "SurfacePipe.cpp",
@@ -134,9 +134,6 @@ LOCAL_INCLUDES += [
 ]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

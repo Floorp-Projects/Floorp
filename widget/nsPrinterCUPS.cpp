@@ -5,7 +5,9 @@
 
 #include "nsPrinterCUPS.h"
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/GkRustUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "nsTHashtable.h"
 #include "nsPaper.h"
@@ -14,6 +16,7 @@
 #include "plstr.h"
 
 using namespace mozilla;
+using MarginDouble = mozilla::gfx::MarginDouble;
 
 // Requested attributes for IPP requests, just the CUPS version now.
 static constexpr Array<const char* const, 1> requestedAttributes{

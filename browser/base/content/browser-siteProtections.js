@@ -783,12 +783,13 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
   }
 
   _getExceptionState(origin) {
-    for (let perm of Services.perms.getAllForPrincipal(
-      gBrowser.contentPrincipal
-    )) {
-      if (perm.type == "3rdPartyStorage^" + origin) {
-        return perm.capability;
-      }
+    let thirdPartyStorage = Services.perms.testPermissionFromPrincipal(
+      gBrowser.contentPrincipal,
+      "3rdPartyStorage^" + origin
+    );
+
+    if (thirdPartyStorage != Services.perms.UNKNOWN_ACTION) {
+      return thirdPartyStorage;
     }
 
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(

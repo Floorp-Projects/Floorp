@@ -88,14 +88,14 @@
     ok(isWithinErr,
        `Contributing source has correct audio level. (${source0.audioLevel})`);
     ok(compareTimestamps(source0.timestamp, timestamp0),
-       `Contributing source has correct timestamp (${source0.timestamp})`);
+        `Contributing source has correct timestamp (got ${source0.timestamp}), expected ${timestamp0}`);
     is(source0.rtpTimestamp, rtpTimestamp0,
        `Contributing source has correct RTP timestamp (${source0.rtpTimestamp}`);
     // Check the CSRC without audioLevel
     is(source1.audioLevel, undefined,
        `Contributing source has no audio level. (${source1.audioLevel})`);
     ok(compareTimestamps(source1.timestamp, timestamp1),
-       `Contributing source has correct timestamp (${source1.timestamp})`);
+        `Contributing source has correct timestamp (got ${source1.timestamp}, expected ${timestamp1})`);
     is(source1.rtpTimestamp, rtpTimestamp1,
        `Contributing source has correct RTP timestamp (${source1.rtpTimestamp}`);
     // Check that a received RTP audio level 127 is exactly 0

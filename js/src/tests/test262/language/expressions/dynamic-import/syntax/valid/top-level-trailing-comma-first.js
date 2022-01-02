@@ -1,4 +1,4 @@
-// |reftest| skip -- import-assertions is not supported
+// |reftest| shell-option(--enable-import-assertions) skip-if(!xulRuntime.shell) -- requires shell-options
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/trailing-comma-first.case
 // - src/dynamic-import/syntax/valid/top-level.template

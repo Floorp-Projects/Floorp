@@ -139,6 +139,9 @@ bool RResumePoint::recover(JSContext* cx, SnapshotIterator& iter) const {
 }
 
 bool MBitNot::writeRecoverData(CompactBufferWriter& writer) const {
+  // 64-bit int bitnots exist only when compiling wasm; they exist neither for
+  // JS nor asm.js.  So we don't expect them here.
+  MOZ_ASSERT(type() != MIRType::Int64);
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_BitNot));
   return true;
@@ -1695,31 +1698,6 @@ bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MCreateThisWithTemplate::writeRecoverData(
-    CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_CreateThisWithTemplate));
-  return true;
-}
-
-RCreateThisWithTemplate::RCreateThisWithTemplate(CompactBufferReader& reader) {}
-
-bool RCreateThisWithTemplate::recover(JSContext* cx,
-                                      SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
-
-  // See CodeGenerator::visitCreateThisWithTemplate
-  JSObject* resultObject = CreateThisWithTemplate(cx, templateObject);
-  if (!resultObject) {
-    return false;
-  }
-
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
-  return true;
-}
-
 bool MLambda::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Lambda));
@@ -2082,5 +2060,35 @@ bool RCreateInlinedArgumentsObject::recover(JSContext* cx,
   }
 
   iter.storeInstructionResult(JS::ObjectValue(*result));
+  return true;
+}
+
+bool MRest::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_Rest));
+  writer.writeUnsigned(numFormals());
+  return true;
+}
+
+RRest::RRest(CompactBufferReader& reader) {
+  numFormals_ = reader.readUnsigned();
+}
+
+bool RRest::recover(JSContext* cx, SnapshotIterator& iter) const {
+  JitFrameLayout* frame = iter.frame();
+
+  uint32_t numActuals = iter.read().toInt32();
+  MOZ_ASSERT(numActuals == frame->numActualArgs());
+
+  uint32_t numFormals = numFormals_;
+
+  uint32_t length = std::max(numActuals, numFormals) - numFormals;
+  Value* src = frame->argv() + numFormals + 1;  // +1 to skip |this|.
+  JSObject* rest = jit::InitRestParameter(cx, length, src, nullptr);
+  if (!rest) {
+    return false;
+  }
+
+  iter.storeInstructionResult(ObjectValue(*rest));
   return true;
 }

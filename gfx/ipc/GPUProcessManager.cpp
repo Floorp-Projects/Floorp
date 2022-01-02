@@ -39,6 +39,7 @@
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsAppRunner.h"
+#include "mozilla/widget/CompositorWidget.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 #  include "mozilla/widget/CompositorWidgetChild.h"
 #endif
@@ -56,6 +57,10 @@
 #  include "mozilla/widget/AndroidUiThread.h"
 #  include "mozilla/layers/UiCompositorControllerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
+
+#if defined(XP_WIN)
+#  include "gfxWindowsPlatform.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -383,6 +388,11 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
     mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
     result = UiCompositorControllerChild::CreateForGPUProcess(
         mProcessToken, std::move(childPipe));
+
+    if (result) {
+      result->SetCompositorSurfaceManager(
+          mProcess->GetCompositorSurfaceManager());
+    }
   }
   if (result) {
     result->SetBaseWidget(aWidget);
@@ -527,15 +537,6 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
     mUnstableProcessAttempts = 1;
   }
 
-#if defined(MOZ_WIDGET_ANDROID)
-  // If aError is not wr::WebRenderError::INITIALIZE, nsWindow does not
-  // re-create LayerManager. Needs to trigger re-creating LayerManager on
-  // android
-  if (aError != wr::WebRenderError::INITIALIZE) {
-    NotifyDisablingWebRender();
-  }
-#endif
-
   return true;
 }
 
@@ -606,7 +607,11 @@ void GPUProcessManager::OnInProcessDeviceReset(bool aTrackThreshold) {
     DisableWebRenderConfig(wr::WebRenderError::EXCESSIVE_RESETS, nsCString());
 #endif
   }
-
+#ifdef XP_WIN
+  // Ensure device reset handling before re-creating in process sessions.
+  // Normally nsWindow::OnPaint() already handled it.
+  gfxWindowsPlatform::GetPlatform()->HandleDeviceReset();
+#endif
   RebuildInProcessSessions();
   NotifyListenersOnCompositeDeviceReset();
 }
@@ -773,18 +778,6 @@ void GPUProcessManager::RebuildInProcessSessions() {
   }
 }
 
-void GPUProcessManager::NotifyDisablingWebRender() {
-#if defined(MOZ_WIDGET_ANDROID)
-  for (const auto& session : mRemoteSessions) {
-    session->NotifyDisablingWebRender();
-  }
-
-  for (const auto& session : mInProcessSessions) {
-    session->NotifyDisablingWebRender();
-  }
-#endif
-}
-
 void GPUProcessManager::NotifyRemoteActorDestroyed(
     const uint64_t& aProcessToken) {
   if (!NS_IsMainThread()) {
@@ -924,11 +917,23 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     }
     apz = static_cast<APZCTreeManagerChild*>(papz);
 
-    RefPtr<APZInputBridgeChild> pinput = new APZInputBridgeChild();
-    if (!mGPUChild->SendPAPZInputBridgeConstructor(pinput, aRootLayerTreeId)) {
+    ipc::Endpoint<PAPZInputBridgeParent> parentPipe;
+    ipc::Endpoint<PAPZInputBridgeChild> childPipe;
+    nsresult rv = PAPZInputBridge::CreateEndpoints(mGPUChild->OtherPid(),
+                                                   base::GetCurrentProcId(),
+                                                   &parentPipe, &childPipe);
+    if (NS_FAILED(rv)) {
       return nullptr;
     }
-    apz->SetInputBridge(pinput);
+    mGPUChild->SendInitAPZInputBridge(aRootLayerTreeId, std::move(parentPipe));
+
+    RefPtr<APZInputBridgeChild> inputBridge =
+        APZInputBridgeChild::Create(mProcessToken, std::move(childPipe));
+    if (!inputBridge) {
+      return nullptr;
+    }
+
+    apz->SetInputBridge(inputBridge);
   }
 
   return new RemoteCompositorSession(aWidget, child, widget, apz,
@@ -1258,6 +1263,12 @@ RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
     return nullptr;
   }
   return new GPUMemoryReporter();
+}
+
+void GPUProcessManager::TestTriggerMetrics() {
+  if (!NS_WARN_IF(!mGPUChild)) {
+    mGPUChild->SendTestTriggerMetrics();
+  }
 }
 
 }  // namespace gfx

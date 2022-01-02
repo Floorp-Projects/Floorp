@@ -116,7 +116,7 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
     if (std::regex_search(str, m, kQuadro)) {
       if (Contains(str, "RTX")) return GEFORCE_980;
       const auto archLetter = m.str(1);
-      if (archLetter.size()) {
+      if (!archLetter.empty()) {
         switch (archLetter[0]) {
           case 'M':  // Maxwell
           case 'P':  // Pascal
@@ -181,7 +181,7 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 
     static const std::regex kIntelHD("Intel.*Graphics( P?([0-9][0-9][0-9]+))?");
     if (std::regex_search(str, m, kIntelHD)) {
-      if (!m.str(1).size()) {
+      if (m.str(1).empty()) {
         return HD_GRAPHICS;
       }
       const auto modelNum = stoul(m.str(2));

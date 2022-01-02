@@ -2,7 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+const {
+  LocalizationProvider,
+  Localized,
+} = require("devtools/client/shared/vendor/fluent-react");
+
 import React, { PureComponent } from "react";
+import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";
 import actions from "../../actions";
@@ -98,9 +104,13 @@ class WhyPaused extends PureComponent {
             {ancestorRep}
             {ancestorGrip ? (
               <span className="why-paused-ancestor">
-                {action === "remove"
-                  ? L10N.getStr("whyPaused.mutationBreakpointRemoved")
-                  : L10N.getStr("whyPaused.mutationBreakpointAdded")}
+                <Localized
+                  id={
+                    action === "remove"
+                      ? "whypaused-mutation-breakpoint-removed"
+                      : "whypaused-mutation-breakpoint-added"
+                  }
+                ></Localized>
                 {targetRep}
               </span>
             ) : (
@@ -120,27 +130,35 @@ class WhyPaused extends PureComponent {
 
   render() {
     const { endPanelCollapsed, why } = this.props;
+    const { fluentBundles } = this.context;
     const reason = getPauseReason(why);
 
     if (!why || !reason || endPanelCollapsed) {
       return <div className={this.state.hideWhyPaused} />;
     }
-
     return (
-      <div className="pane why-paused">
-        <div>
-          <div className="info icon">
-            <AccessibleImage className="info" />
-          </div>
-          <div className="pause reason">
-            {L10N.getStr(reason)}
-            {this.renderMessage(why)}
+      // We're rendering the LocalizationProvider component from here and not in an upper
+      // component because it does set a new context, overriding the context that we set
+      // in the first place in <App>, which breaks some components.
+      // This should be fixed in Bug 1743155.
+      <LocalizationProvider bundles={fluentBundles || []}>
+        <div className="pane why-paused">
+          <div>
+            <div className="info icon">
+              <AccessibleImage className="info" />
+            </div>
+            <div className="pause reason">
+              <Localized id={reason}></Localized>
+              {this.renderMessage(why)}
+            </div>
           </div>
         </div>
-      </div>
+      </LocalizationProvider>
     );
   }
 }
+
+WhyPaused.contextTypes = { fluentBundles: PropTypes.array };
 
 const mapStateToProps = state => ({
   endPanelCollapsed: getPaneCollapse(state, "end"),

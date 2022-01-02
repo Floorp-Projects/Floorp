@@ -418,6 +418,15 @@ function pushPrefs(...p) {
   return SpecialPowers.pushPrefEnv({ set: p });
 }
 
+async function withPrefs(prefs, func) {
+  await SpecialPowers.pushPrefEnv({ set: prefs });
+  try {
+    return await func();
+  } finally {
+    await SpecialPowers.popPrefEnv();
+  }
+}
+
 function setupEnvironment() {
   var defaultMochitestPrefs = {
     set: [

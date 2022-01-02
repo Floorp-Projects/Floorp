@@ -89,6 +89,8 @@ async function cleanup(topLevelSite = TEST_TOP_SITE) {
   // Ensure we clear the stylesheet cache so that we re-classify.
   SpecialPowers.DOMWindowUtils.clearSharedStyleSheetCache();
 
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
+
   await clearServiceWorker();
 }
 
@@ -103,6 +105,8 @@ async function runTests() {
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
+    // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+    ["network.cookie.sameSite.laxByDefault", false],
   ]});
 
   await classifierHelper.waitForInit();

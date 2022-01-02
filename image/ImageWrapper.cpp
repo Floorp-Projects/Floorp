@@ -59,19 +59,16 @@ uint32_t ImageWrapper::GetAnimationConsumers() {
 #endif
 
 nsresult ImageWrapper::OnImageDataAvailable(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsIInputStream* aInStr,
                                             uint64_t aSourceOffset,
                                             uint32_t aCount) {
-  return mInnerImage->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                           aSourceOffset, aCount);
+  return mInnerImage->OnImageDataAvailable(aRequest, aInStr, aSourceOffset,
+                                           aCount);
 }
 
 nsresult ImageWrapper::OnImageDataComplete(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsresult aStatus, bool aLastPart) {
-  return mInnerImage->OnImageDataComplete(aRequest, aContext, aStatus,
-                                          aLastPart);
+  return mInnerImage->OnImageDataComplete(aRequest, aStatus, aLastPart);
 }
 
 void ImageWrapper::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) {
@@ -141,8 +138,8 @@ NS_IMETHODIMP
 ImageWrapper::GetType(uint16_t* aType) { return mInnerImage->GetType(aType); }
 
 NS_IMETHODIMP
-ImageWrapper::GetProducerId(uint32_t* aId) {
-  return mInnerImage->GetProducerId(aId);
+ImageWrapper::GetProviderId(uint32_t* aId) {
+  return mInnerImage->GetProviderId(aId);
 }
 
 NS_IMETHODIMP
@@ -171,14 +168,14 @@ ImageWrapper::IsImageContainerAvailable(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-ImageWrapper::GetImageContainerAtSize(WindowRenderer* aRenderer,
-                                      const gfx::IntSize& aSize,
-                                      const Maybe<SVGImageContext>& aSVGContext,
-                                      const Maybe<ImageIntRegion>& aRegion,
-                                      uint32_t aFlags,
-                                      layers::ImageContainer** aOutContainer) {
-  return mInnerImage->GetImageContainerAtSize(aRenderer, aSize, aSVGContext,
-                                              aRegion, aFlags, aOutContainer);
+ImageWrapper::GetImageProvider(WindowRenderer* aRenderer,
+                               const gfx::IntSize& aSize,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               const Maybe<ImageIntRegion>& aRegion,
+                               uint32_t aFlags,
+                               WebRenderImageProvider** aProvider) {
+  return mInnerImage->GetImageProvider(aRenderer, aSize, aSVGContext, aRegion,
+                                       aFlags, aProvider);
 }
 
 NS_IMETHODIMP_(ImgDrawResult)

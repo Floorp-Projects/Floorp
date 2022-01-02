@@ -11,7 +11,6 @@ UNIFIED_SOURCES = [
     "TestADAM7InterpolatingFilter.cpp",
     "TestAnimationFrameBuffer.cpp",
     "TestBlendAnimationFilter.cpp",
-    "TestContainers.cpp",
     "TestCopyOnWrite.cpp",
     "TestDeinterlacingFilter.cpp",
     "TestFrameAnimator.cpp",
@@ -153,6 +152,3 @@ LOCAL_INCLUDES += [
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
 FINAL_LIBRARY = "xul-gtest"
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

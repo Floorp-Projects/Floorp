@@ -34,7 +34,7 @@ void moz_wasm2c_trap_handler(const char* msg) {
 // This indicates that the sandbox has run out of memory.
 void moz_wasm2c_malloc_failed(uint32_t size) {
   // We don't use the allocation size information for now
-  (void) size;
+  (void)size;
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::WasmLibrarySandboxMallocFailed, true);

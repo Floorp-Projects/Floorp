@@ -311,6 +311,7 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/docshell/base",
     "/dom/base",
+    "/netwerk/dns",
     "/netwerk/protocol/http",
     "/netwerk/socket",
     "/netwerk/url-classifier",
@@ -321,8 +322,5 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     LOCAL_INCLUDES += [
         "/xpcom/base",
     ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 REQUIRES_UNIFIED_BUILD = True

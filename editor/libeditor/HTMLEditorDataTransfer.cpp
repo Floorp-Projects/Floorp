@@ -8,9 +8,15 @@
 
 #include <string.h>
 
+#include "EditAction.h"
+#include "EditorDOMPoint.h"
+#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "InternetCiter.h"
+#include "SelectionState.h"
+#include "TypeInState.h"
 #include "WSRunObject.h"
+
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -28,14 +34,9 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
-#include "mozilla/SelectionState.h"
-#include "mozilla/TypeInState.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"  // for CRLF
@@ -714,12 +715,12 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
             .SplitNodeDeepWithTransaction(
                 MOZ_KnownLive(*pointToInsert.GetContainerAsContent()),
                 pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (splitNodeResult.Failed()) {
+    if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.Rv();
     }
-    pointToInsert = splitNodeResult.SplitPoint();
-    if (!pointToInsert.IsSet()) {
+    pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
+    if (MOZ_UNLIKELY(!pointToInsert.IsSet())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction() didn't return split "
           "point");
@@ -1033,21 +1034,23 @@ nsresult HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink(
           .SplitNodeDeepWithTransaction(
               aLinkElement, aPointToPutCaret,
               SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (MOZ_UNLIKELY(NS_WARN_IF(splitLinkResult.EditorDestroyed()))) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(
       splitLinkResult.Succeeded(),
       "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
-  if (splitLinkResult.GetPreviousNode()) {
-    EditorRawDOMPoint afterLeftLink(splitLinkResult.GetPreviousNode());
-    if (afterLeftLink.AdvanceOffset()) {
-      nsresult rv =
-          MOZ_KnownLive(mHTMLEditor).CollapseSelectionTo(afterLeftLink);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+  if (nsIContent* previousContentOfSplitPoint =
+          splitLinkResult.GetPreviousContent()) {
+    nsresult rv = MOZ_KnownLive(mHTMLEditor)
+                      .CollapseSelectionTo(EditorRawDOMPoint::After(
+                          *previousContentOfSplitPoint));
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
     }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
   }
   return NS_OK;
 }

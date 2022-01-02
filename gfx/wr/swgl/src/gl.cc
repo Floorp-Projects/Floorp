@@ -1123,9 +1123,7 @@ GLenum GetError() {
 
 // Sets the error status to out-of-memory to indicate that a buffer
 // or texture re-allocation failed.
-static void out_of_memory() {
-  ctx->last_error = GL_OUT_OF_MEMORY;
-}
+static void out_of_memory() { ctx->last_error = GL_OUT_OF_MEMORY; }
 
 static const char* const extensions[] = {
     "GL_ARB_blend_func_extended",
@@ -1175,6 +1173,12 @@ void GetIntegerv(GLenum pname, GLint* params) {
       break;
     case GL_MINOR_VERSION:
       params[0] = 2;
+      break;
+    case GL_MIN_PROGRAM_TEXEL_OFFSET:
+      params[0] = 0;
+      break;
+    case GL_MAX_PROGRAM_TEXEL_OFFSET:
+      params[0] = MAX_TEXEL_OFFSET;
       break;
     default:
       debugf("unhandled glGetIntegerv parameter %x\n", pname);
@@ -2823,7 +2827,7 @@ void DestroyContext(Context* c) {
   delete c;
 }
 
-size_t ReportMemory(Context *ctx, size_t (*size_of_op)(void*)) {
+size_t ReportMemory(Context* ctx, size_t (*size_of_op)(void*)) {
   size_t size = 0;
   if (ctx) {
     for (auto& t : ctx->textures) {

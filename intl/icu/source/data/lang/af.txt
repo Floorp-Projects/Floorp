@@ -96,6 +96,7 @@ af{
         de{"Duits"}
         dgr{"Dogrib"}
         dje{"Zarma"}
+        doi{"Dogri"}
         dsb{"Benedesorbies"}
         dua{"Duala"}
         dv{"Divehi"}
@@ -315,6 +316,7 @@ af{
         quc{"K’iche’"}
         rap{"Rapanui"}
         rar{"Rarotongaans"}
+        rhg{"Rohingya"}
         rm{"Reto-Romaans"}
         rn{"Rundi"}
         ro{"Roemeens"}

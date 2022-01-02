@@ -114,6 +114,7 @@
 #include "nsILoadContext.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
+#include "nsIScreenManager.h"
 #include "nsIScriptError.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIURI.h"
@@ -816,9 +817,9 @@ BrowserChild::GetInterface(const nsIID& aIID, void** aSink) {
 NS_IMETHODIMP
 BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
                             uint32_t aChromeFlags, bool aCalledFromJS,
-                            bool aWidthSpecified, nsIURI* aURI,
-                            const nsAString& aName, const nsACString& aFeatures,
-                            bool aForceNoOpener, bool aForceNoReferrer,
+                            nsIURI* aURI, const nsAString& aName,
+                            const nsACString& aFeatures, bool aForceNoOpener,
+                            bool aForceNoReferrer, bool aIsPopupRequested,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
   *aReturn = nullptr;
@@ -826,7 +827,7 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified,
+      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS,
       aOpenWindowInfo->GetIsForPrinting());
 
   // If it turns out we're opening in the current browser, just hand over the
@@ -848,10 +849,10 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   // open window call was canceled.  It's important that we pass this error
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
-  return cc->ProvideWindowCommon(this, aOpenWindowInfo, aChromeFlags,
-                                 aCalledFromJS, aWidthSpecified, aURI, aName,
-                                 aFeatures, aForceNoOpener, aForceNoReferrer,
-                                 aLoadState, aWindowIsNew, aReturn);
+  return cc->ProvideWindowCommon(
+      this, aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI, aName,
+      aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
+      aLoadState, aWindowIsNew, aReturn);
 }
 
 void BrowserChild::DestroyWindow() {
@@ -2842,9 +2843,9 @@ void BrowserChild::InitRenderingState(
   // Depending on timing, we might paint too early and fall back to basic
   // layers. CreateRemoteLayerManager will destroy us if we manage to get a
   // remote layer manager though, so that's fine.
-  MOZ_ASSERT(!mPuppetWidget->HasLayerManager() ||
+  MOZ_ASSERT(!mPuppetWidget->HasWindowRenderer() ||
              mPuppetWidget->GetWindowRenderer()->GetBackendType() ==
-                 layers::LayersBackend::LAYERS_BASIC);
+                 layers::LayersBackend::LAYERS_NONE);
   bool success = false;
   if (mLayersConnected == Some(true)) {
     success = CreateRemoteLayerManager(compositorChild);
@@ -2985,7 +2986,7 @@ void BrowserChild::MakeHidden() {
   // in that case, since doing so might accidentally put is into
   // BasicLayers mode.
   if (mPuppetWidget) {
-    if (mPuppetWidget->HasLayerManager()) {
+    if (mPuppetWidget->HasWindowRenderer()) {
       ClearCachedResources();
     }
     mPuppetWidget->Show(false);
@@ -3242,6 +3243,10 @@ void BrowserChild::ReinitRendering() {
 
   nsCOMPtr<Document> doc(GetTopLevelDocument());
   doc->NotifyLayerManagerRecreated();
+
+  if (mRenderLayers) {
+    SchedulePaint();
+  }
 }
 
 void BrowserChild::ReinitRenderingForDeviceReset() {
@@ -3436,7 +3441,7 @@ ScreenIntRect BrowserChild::GetOuterRect() {
 
 void BrowserChild::PaintWhileInterruptingJS(
     const layers::LayersObserverEpoch& aEpoch) {
-  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
+  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasWindowRenderer()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
     return;

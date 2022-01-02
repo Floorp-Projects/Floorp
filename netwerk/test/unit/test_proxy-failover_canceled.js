@@ -34,10 +34,7 @@ function run_test() {
   var nc = new ChannelEventSink();
   nc._flags = ES_ABORT_REDIRECT;
 
-  var prefserv = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefService
-  );
-  var prefs = prefserv.getBranch("network.proxy.");
+  var prefs = Services.prefs.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);
   prefs.setCharPref("no_proxies_on", "nothing");
   prefs.setBoolPref("allow_hijacking_localhost", true);

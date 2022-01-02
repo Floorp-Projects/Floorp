@@ -184,14 +184,14 @@ bool TagType::computeLayout() {
   StructLayout layout;
   int32_t refCount = 0;
   for (const ValType argType : argTypes) {
-    if (argType.isReference()) {
+    if (argType.isRefRepr()) {
       refCount++;
     }
   }
   int32_t refIndex = 0;
   for (size_t i = 0; i < argTypes.length(); i++) {
     CheckedInt32 offset;
-    if (argTypes[i].isReference()) {
+    if (argTypes[i].isRefRepr()) {
       NativeObject::elementsSizeMustNotOverflow();
       // Reference typed elements need to be loaded in reverse order
       // as they are pushed stack-like into the exception's Array.

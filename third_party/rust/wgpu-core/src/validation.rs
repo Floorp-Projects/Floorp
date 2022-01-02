@@ -21,6 +21,7 @@ enum ResourceType {
 
 #[derive(Debug)]
 struct Resource {
+    #[allow(unused)]
     name: Option<String>,
     bind: naga::ResourceBinding,
     ty: ResourceType,
@@ -90,6 +91,7 @@ enum Varying {
     BuiltIn(naga::BuiltIn),
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 struct SpecializationConstant {
     id: u32,
@@ -101,13 +103,16 @@ struct EntryPoint {
     inputs: Vec<Varying>,
     outputs: Vec<Varying>,
     resources: Vec<(naga::Handle<Resource>, GlobalUse)>,
+    #[allow(unused)]
     spec_constants: Vec<SpecializationConstant>,
     sampling_pairs: FastHashSet<(naga::Handle<Resource>, naga::Handle<Resource>)>,
+    workgroup_size: [u32; 3],
 }
 
 #[derive(Debug)]
 pub struct Interface {
     features: wgt::Features,
+    limits: wgt::Limits,
     resources: naga::Arena<Resource>,
     entry_points: FastHashMap<(naga::ShaderStage, String), EntryPoint>,
 }
@@ -220,6 +225,10 @@ pub enum InputError {
 pub enum StageError {
     #[error("shader module is invalid")]
     InvalidModule,
+    #[error(
+        "shader entry point current workgroup size {current:?} must be less or equal to {limit:?}"
+    )]
+    InvalidComputeEntryPoint { current: [u32; 3], limit: [u32; 3] },
     #[error("unable to find entry point '{0}'")]
     MissingEntryPoint(String),
     #[error("shader global {0:?} is not available in the layout pipeline layout")]
@@ -382,11 +391,8 @@ impl Resource {
                 allowed_usage
             }
             ResourceType::Sampler { comparison } => match entry.ty {
-                BindingType::Sampler {
-                    filtering: _,
-                    comparison: cmp,
-                } => {
-                    if cmp == comparison {
+                BindingType::Sampler(ty) => {
+                    if (ty == wgt::SamplerBindingType::Comparison) == comparison {
                         GlobalUse::READ
                     } else {
                         return Err(BindingError::WrongSamplerComparison);
@@ -527,10 +533,11 @@ impl Resource {
                 has_dynamic_offset: false,
                 min_binding_size: Some(size),
             },
-            ResourceType::Sampler { comparison } => BindingType::Sampler {
-                filtering: true,
-                comparison,
-            },
+            ResourceType::Sampler { comparison } => BindingType::Sampler(if comparison {
+                wgt::SamplerBindingType::Comparison
+            } else {
+                wgt::SamplerBindingType::Filtering
+            }),
             ResourceType::Texture {
                 dim,
                 arrayed,
@@ -688,8 +695,10 @@ impl NumericType {
             | Tf::Bc3RgbaUnormSrgb
             | Tf::Bc7RgbaUnorm
             | Tf::Bc7RgbaUnormSrgb
-            | Tf::Etc2RgbA1Unorm
-            | Tf::Etc2RgbA1UnormSrgb
+            | Tf::Etc2Rgb8A1Unorm
+            | Tf::Etc2Rgb8A1UnormSrgb
+            | Tf::Etc2Rgba8Unorm
+            | Tf::Etc2Rgba8UnormSrgb
             | Tf::Astc4x4RgbaUnorm
             | Tf::Astc4x4RgbaUnormSrgb
             | Tf::Astc5x4RgbaUnorm
@@ -718,13 +727,13 @@ impl NumericType {
             | Tf::Astc12x10RgbaUnormSrgb
             | Tf::Astc12x12RgbaUnorm
             | Tf::Astc12x12RgbaUnormSrgb => (NumericDimension::Vector(Vs::Quad), Sk::Float),
-            Tf::Bc4RUnorm | Tf::Bc4RSnorm | Tf::EacRUnorm | Tf::EacRSnorm => {
+            Tf::Bc4RUnorm | Tf::Bc4RSnorm | Tf::EacR11Unorm | Tf::EacR11Snorm => {
                 (NumericDimension::Scalar, Sk::Float)
             }
-            Tf::Bc5RgUnorm | Tf::Bc5RgSnorm | Tf::EacRgUnorm | Tf::EacRgSnorm => {
+            Tf::Bc5RgUnorm | Tf::Bc5RgSnorm | Tf::EacRg11Unorm | Tf::EacRg11Snorm => {
                 (NumericDimension::Vector(Vs::Bi), Sk::Float)
             }
-            Tf::Bc6hRgbUfloat | Tf::Bc6hRgbSfloat | Tf::Etc2RgbUnorm | Tf::Etc2RgbUnormSrgb => {
+            Tf::Bc6hRgbUfloat | Tf::Bc6hRgbSfloat | Tf::Etc2Rgb8Unorm | Tf::Etc2Rgb8UnormSrgb => {
                 (NumericDimension::Vector(Vs::Tri), Sk::Float)
             }
         };
@@ -790,7 +799,7 @@ impl Interface {
         list: &mut Vec<Varying>,
         binding: Option<&naga::Binding>,
         ty: naga::Handle<naga::Type>,
-        arena: &naga::Arena<naga::Type>,
+        arena: &naga::UniqueArena<naga::Type>,
     ) {
         let numeric_ty = match arena[ty].inner {
             naga::TypeInner::Scalar { kind, width } => NumericType {
@@ -819,7 +828,11 @@ impl Interface {
                 return;
             }
             ref other => {
-                log::error!("Unexpected varying type: {:?}", other);
+                //Note: technically this should be at least `log::error`, but
+                // the reality is - every shader coming from `glslc` outputs an array
+                // of clip distances and hits this path :(
+                // So we lower it to `log::warn` to be less annoying.
+                log::warn!("Unexpected varying type: {:?}", other);
                 return;
             }
         };
@@ -850,6 +863,7 @@ impl Interface {
         module: &naga::Module,
         info: &naga::valid::ModuleInfo,
         features: wgt::Features,
+        limits: wgt::Limits,
     ) -> Self {
         let mut resources = naga::Arena::new();
         let mut resource_mapping = FastHashMap::default();
@@ -920,11 +934,19 @@ impl Interface {
                 }
             }
 
+            for key in info.sampling_set.iter() {
+                ep.sampling_pairs
+                    .insert((resource_mapping[&key.image], resource_mapping[&key.sampler]));
+            }
+
+            ep.workgroup_size = entry_point.workgroup_size;
+
             entry_points.insert((entry_point.stage, entry_point.name.clone()), ep);
         }
 
         Self {
             features,
+            limits,
             resources,
             entry_points,
         }
@@ -934,6 +956,7 @@ impl Interface {
         &self,
         given_layouts: Option<&[&BindEntryMap]>,
         derived_layouts: &mut [BindEntryMap],
+        shader_binding_sizes: &mut FastHashMap<naga::ResourceBinding, wgt::BufferSize>,
         entry_point_name: &str,
         stage_bit: wgt::ShaderStages,
         inputs: StageIo,
@@ -956,18 +979,31 @@ impl Interface {
         for &(handle, usage) in entry_point.resources.iter() {
             let res = &self.resources[handle];
             let result = match given_layouts {
-                Some(layouts) => layouts
-                    .get(res.bind.group as usize)
-                    .and_then(|map| map.get(&res.bind.binding))
-                    .ok_or(BindingError::Missing)
-                    .and_then(|entry| {
-                        if entry.visibility.contains(stage_bit) {
-                            Ok(entry)
-                        } else {
-                            Err(BindingError::Invisible)
+                Some(layouts) => {
+                    // update the required binding size for this buffer
+                    if let ResourceType::Buffer { size } = res.ty {
+                        match shader_binding_sizes.entry(res.bind.clone()) {
+                            Entry::Occupied(e) => {
+                                *e.into_mut() = size.max(*e.get());
+                            }
+                            Entry::Vacant(e) => {
+                                e.insert(size);
+                            }
                         }
-                    })
-                    .and_then(|entry| res.check_binding_use(entry, usage)),
+                    }
+                    layouts
+                        .get(res.bind.group as usize)
+                        .and_then(|map| map.get(&res.bind.binding))
+                        .ok_or(BindingError::Missing)
+                        .and_then(|entry| {
+                            if entry.visibility.contains(stage_bit) {
+                                Ok(entry)
+                            } else {
+                                Err(BindingError::Invisible)
+                            }
+                        })
+                        .and_then(|entry| res.check_binding_use(entry, usage))
+                }
                 None => derived_layouts
                     .get_mut(res.bind.group as usize)
                     .ok_or(BindingError::Missing)
@@ -1012,9 +1048,11 @@ impl Interface {
                         sample_type: wgt::TextureSampleType::Float { filterable },
                         ..
                     } => match sampler_layout.ty {
-                        wgt::BindingType::Sampler {
-                            filtering: true, ..
-                        } if !filterable => Some(FilteringError::NonFilterable),
+                        wgt::BindingType::Sampler(wgt::SamplerBindingType::Filtering)
+                            if !filterable =>
+                        {
+                            Some(FilteringError::NonFilterable)
+                        }
                         _ => None,
                     },
                     wgt::BindingType::Texture {
@@ -1035,6 +1073,25 @@ impl Interface {
                         error,
                     });
                 }
+            }
+        }
+
+        // check workgroup size limits
+        if shader_stage == naga::ShaderStage::Compute {
+            let max_workgroup_size_limits = [
+                self.limits.max_compute_workgroup_size_x,
+                self.limits.max_compute_workgroup_size_y,
+                self.limits.max_compute_workgroup_size_z,
+            ];
+
+            if entry_point.workgroup_size[0] > max_workgroup_size_limits[0]
+                || entry_point.workgroup_size[1] > max_workgroup_size_limits[1]
+                || entry_point.workgroup_size[2] > max_workgroup_size_limits[2]
+            {
+                return Err(StageError::InvalidComputeEntryPoint {
+                    current: entry_point.workgroup_size,
+                    limit: max_workgroup_size_limits,
+                });
             }
         }
 

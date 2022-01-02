@@ -154,7 +154,6 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     this._global.wrappedJSObject = global;
     this.threadActor = new ThreadActor(this, this._global);
     this.conn.addActor(this.threadActor);
-    this._attached = false;
     this._extraActors = {};
     // This is a hack in order to enable threadActor to be accessed from getFront
     this._extraActors.threadActor = this.threadActor;
@@ -189,7 +188,11 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
   },
 
   form: function() {
-    const response = { actor: this.actorID, title: this.title };
+    const response = {
+      actor: this.actorID,
+      title: this.title,
+      threadActor: this.threadActor.actorID,
+    };
 
     // Walk over target-scoped actors and add them to a new LazyPool.
     const actorPool = new LazyPool(this.conn);
@@ -206,16 +209,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     return { ...response, ...actors };
   },
 
-  attach: function(request) {
-    this._attached = true;
-
-    return { threadActor: this.threadActor.actorID };
-  },
-
   detach: function(request) {
-    if (!this._attached) {
-      return { error: "wrongState" };
-    }
     this.threadActor.destroy();
     return { type: "detached" };
   },

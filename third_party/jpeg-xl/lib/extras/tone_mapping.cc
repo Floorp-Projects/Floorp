@@ -98,30 +98,13 @@ Status ToneMapFrame(const std::pair<float, float> display_nits,
                                  TF_PQ().DisplayFromEncoded(df, e4)));
 
           const V ratio = new_luminance / luminance;
-          const V multiplier = ratio *
-                               Set(df, ib->metadata()->IntensityTarget()) *
-                               inv_max_display_nits;
+          const V normalizer =
+              Set(df, ib->metadata()->IntensityTarget()) * inv_max_display_nits;
 
-          red *= multiplier;
-          green *= multiplier;
-          blue *= multiplier;
-
-          const V gray = new_luminance * inv_max_display_nits;
-
-          // Desaturate out-of-gamut pixels.
-          V gray_mix = Zero(df);
-          for (const V val : {red, green, blue}) {
-            const V inv_val_minus_gray = Set(df, 1) / (val - gray);
-            const V bound1 = val * inv_val_minus_gray;
-            const V bound2 = bound1 - inv_val_minus_gray;
-            const V min_bound = Min(bound1, bound2);
-            const V max_bound = Max(bound1, bound2);
-            gray_mix = Clamp(gray_mix, min_bound, max_bound);
-          }
-          gray_mix = Clamp(gray_mix, Zero(df), Set(df, 1));
           for (V* const val : {&red, &green, &blue}) {
-            *val = IfThenElse(luminance < Set(df, 1e-6), gray,
-                              MulAdd(gray_mix, gray - *val, *val));
+            *val = IfThenElse(luminance <= Set(df, 1e-6f), new_luminance,
+                              *val * ratio) *
+                   normalizer;
           }
 
           Store(red, df, row_r + x);
@@ -130,6 +113,77 @@ Status ToneMapFrame(const std::pair<float, float> display_nits,
         }
       },
       "ToneMap"));
+
+  return true;
+}
+
+Status GamutMapFrame(ImageBundle* const ib, float preserve_saturation,
+                     ThreadPool* const pool) {
+  HWY_FULL(float) df;
+  using V = decltype(Zero(df));
+
+  ColorEncoding linear_rec2020;
+  linear_rec2020.SetColorSpace(ColorSpace::kRGB);
+  linear_rec2020.primaries = Primaries::k2100;
+  linear_rec2020.white_point = WhitePoint::kD65;
+  linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
+  JXL_RETURN_IF_ERROR(linear_rec2020.CreateICC());
+  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, pool));
+
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, ib->ysize(), ThreadPool::SkipInit(),
+      [&](const int y, const int thread) {
+        float* const JXL_RESTRICT row_r = ib->color()->PlaneRow(0, y);
+        float* const JXL_RESTRICT row_g = ib->color()->PlaneRow(1, y);
+        float* const JXL_RESTRICT row_b = ib->color()->PlaneRow(2, y);
+        for (size_t x = 0; x < ib->xsize(); x += Lanes(df)) {
+          V red = Load(df, row_r + x);
+          V green = Load(df, row_g + x);
+          V blue = Load(df, row_b + x);
+          const V luminance =
+              MulAdd(Set(df, 0.2627f), red,
+                     MulAdd(Set(df, 0.6780f), green, Set(df, 0.0593f) * blue));
+
+          // Desaturate out-of-gamut pixels. This is done by mixing each pixel
+          // with just enough gray of the target luminance to make all
+          // components non-negative.
+          // - For saturation preservation, if a component is still larger than
+          // 1 then the pixel is normalized to have a maximum component of 1.
+          // That will reduce its luminance.
+          // - For luminance preservation, getting all components below 1 is
+          // done by mixing in yet more gray. That will desaturate it further.
+          V gray_mix_saturation = Zero(df);
+          V gray_mix_luminance = Zero(df);
+          for (const V val : {red, green, blue}) {
+            const V inv_val_minus_gray = Set(df, 1) / (val - luminance);
+            gray_mix_saturation =
+                IfThenElse(val >= luminance, gray_mix_saturation,
+                           Max(gray_mix_saturation, val * inv_val_minus_gray));
+            gray_mix_luminance =
+                Max(gray_mix_luminance,
+                    IfThenElse(val <= luminance, gray_mix_saturation,
+                               (val - Set(df, 1)) * inv_val_minus_gray));
+          }
+          const V gray_mix =
+              Clamp(Set(df, preserve_saturation) *
+                            (gray_mix_saturation - gray_mix_luminance) +
+                        gray_mix_luminance,
+                    Zero(df), Set(df, 1));
+          for (V* const val : {&red, &green, &blue}) {
+            *val = MulAdd(gray_mix, luminance - *val, *val);
+          }
+          const V normalizer =
+              Set(df, 1) / Max(Set(df, 1), Max(red, Max(green, blue)));
+          for (V* const val : {&red, &green, &blue}) {
+            *val = *val * normalizer;
+          }
+
+          Store(red, df, row_r + x);
+          Store(green, df, row_g + x);
+          Store(blue, df, row_b + x);
+        }
+      },
+      "GamutMap"));
 
   return true;
 }
@@ -144,7 +198,8 @@ namespace jxl {
 
 namespace {
 HWY_EXPORT(ToneMapFrame);
-}
+HWY_EXPORT(GamutMapFrame);
+}  // namespace
 
 Status ToneMapTo(const std::pair<float, float> display_nits,
                  CodecInOut* const io, ThreadPool* const pool) {
@@ -153,6 +208,15 @@ Status ToneMapTo(const std::pair<float, float> display_nits,
     JXL_RETURN_IF_ERROR(tone_map_frame(display_nits, &ib, pool));
   }
   io->metadata.m.SetIntensityTarget(display_nits.second);
+  return true;
+}
+
+Status GamutMap(CodecInOut* const io, float preserve_saturation,
+                ThreadPool* const pool) {
+  const auto gamut_map_frame = HWY_DYNAMIC_DISPATCH(GamutMapFrame);
+  for (ImageBundle& ib : io->frames) {
+    JXL_RETURN_IF_ERROR(gamut_map_frame(&ib, preserve_saturation, pool));
+  }
   return true;
 }
 

@@ -17,11 +17,6 @@ button {
   text-shadow: none;
 }
 
-.button-box {
-  appearance: auto;
-  -moz-default-appearance: button-focus;
-}
-
 .button-text {
   margin: 0;
   margin-inline-start: 2px;
@@ -44,6 +39,12 @@ button:where(:hover:active, [open="true"]) {
 
 button:where([disabled="true"]) {
   color: GrayText;
+}
+
+/* .......... focused state .......... */
+
+button:where(:focus-visible) {
+  outline: auto;
 }
 
 /* ::::: menu buttons ::::: */

@@ -4037,7 +4037,6 @@ function runUnloadTests2()
        description + "TIP.beginInputTransactionForTests() should succeed");
 
     let oldSrc = iframe.src;
-    let parentWindow = window;
 
     iframe.addEventListener("load", function (aEvent) {
       ok(true, description + "dummy page is loaded");
@@ -4334,7 +4333,6 @@ async function runFocusNotificationTestAfterDrop() {
 
   const TIP = createTIP();
   let notifications = [];
-  let waitingNextNotification;
   function callback(aTIP, aNotification)
   {
     if (aTIP != TIP) {

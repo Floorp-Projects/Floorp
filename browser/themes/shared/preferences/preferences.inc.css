@@ -47,14 +47,6 @@
   #category-search>.category-icon {
     list-style-image: url(chrome://browser/skin/search.svg) !important;
   }
-  #handlersView{
-    background-color: #373636 !important;
-  }
-  
-  listheader {
-    background-color: #393535 !important; 
-  }
-  
   #category-privacy>.category-icon {
     list-style-image: url(chrome://browser/skin/lock.svg) !important;
   }
@@ -318,7 +310,7 @@
   }
 
   .sticky-container::before {
-    content: "Floorp の設定";
+    content: "Floorp Legacy";
     font-size: 24px;
     font-weight: 600;
     position: absolute !important;

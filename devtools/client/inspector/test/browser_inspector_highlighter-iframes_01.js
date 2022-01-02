@@ -86,5 +86,5 @@ add_task(async function() {
   );
 
   info("Waiting for element picker to deactivate.");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 });

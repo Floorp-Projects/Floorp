@@ -9,10 +9,14 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "VRGPUChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/GeckoProcessManagerWrappers.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -143,6 +147,22 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
     MOZ_ASSERT(rv);
 
     mGPUChild->Init();
+
+#ifdef MOZ_WIDGET_ANDROID
+    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    MOZ_ASSERT(launcherThread);
+    layers::SynchronousTask task(
+        "GeckoProcessManager::GetCompositorSurfaceManager");
+
+    launcherThread->Dispatch(NS_NewRunnableFunction(
+        "GeckoProcessManager::GetCompositorSurfaceManager", [&]() {
+          layers::AutoCompleteTask complete(&task);
+          mCompositorSurfaceManager =
+              java::GeckoProcessManager::GetCompositorSurfaceManager();
+        }));
+
+    task.Wait();
+#endif
   }
 
   if (mListener) {
@@ -226,6 +246,13 @@ void GPUProcessHost::DestroyProcess() {
   GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+java::CompositorSurfaceManager::Param
+GPUProcessHost::GetCompositorSurfaceManager() {
+  return mCompositorSurfaceManager;
+}
+#endif
 
 }  // namespace gfx
 }  // namespace mozilla

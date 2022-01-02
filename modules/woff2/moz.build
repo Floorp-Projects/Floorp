@@ -4,24 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("sources.mozbuild")
+
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: Text')
 
-UNIFIED_SOURCES += [
-    'src/table_tags.cc',
-    'src/variable_length.cc',
-    'src/woff2_common.cc',
-    'src/woff2_dec.cc',
-    'src/woff2_out.cc',
-]
+UNIFIED_SOURCES += woff2_sources
 
 EXPORTS.woff2 += [
     'include/woff2/decode.h',
     'include/woff2/encode.h',
     'include/woff2/output.h',
+    'RLBoxWOFF2Sandbox.h',
+
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
 Library('woff2')
+
+REQUIRES_UNIFIED_BUILD = True

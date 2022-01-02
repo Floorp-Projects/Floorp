@@ -111,6 +111,7 @@
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
 
   accent-color: var(--in-content-accent-color);
+  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -118,7 +119,6 @@
   :root {
     /* Keep these in sync with:
      *
-     *  * plaintext.css
      *  * nsXPLookAndFeel::GenericDarkColor
      *  * The default value of browser.display.foreground_color.dark and
      *    browser.display.background_color.dark
@@ -193,7 +193,7 @@
 
     --in-content-box-background: -moz-Dialog;
     --in-content-box-background-odd: -moz-Dialog;
-    --in-content-box-border-color: ThreeDShadow;
+    --in-content-box-border-color: -moz-DialogText;
     --in-content-box-info-background: -moz-Dialog;
 
     --in-content-item-hover: SelectedItem;
@@ -222,7 +222,7 @@
     --in-content-button-text-color: ButtonText;
     --in-content-button-background-hover: SelectedItem;
     --in-content-button-background-active: SelectedItem;
-    --in-content-button-border-color: ThreeDShadow;
+    --in-content-button-border-color: var(--in-content-button-text-color);
 
     --in-content-primary-button-text-color: SelectedItemText;
     --in-content-primary-button-text-color-hover: SelectedItem;
@@ -249,7 +249,6 @@
     --checkbox-checked-bgcolor: SelectedItem;
     --checkbox-checked-color: SelectedItemText;
     --checkbox-checked-border-color: SelectedItem;
-    --checkbox-checked-border-color-hover: SelectedItem;
     --checkbox-checked-hover-bgcolor: -moz-Field;
     --checkbox-checked-active-bgcolor: -moz-Field;
   }

@@ -33,8 +33,9 @@ class TRRService : public TRRServiceBase,
                    public nsSupportsWeakReference,
                    public AHostResolver {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIPROXYCONFIGCHANGEDCALLBACK
 
   TRRService();
   static TRRService* Get();
@@ -46,9 +47,10 @@ class TRRService : public TRRServiceBase,
   uint32_t ConfirmationState() { return mConfirmation.State(); }
 
   bool DisableIPv6() { return mDisableIPv6; }
-  nsresult GetURI(nsACString& result);
+  void GetURI(nsACString& result) override;
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
+  void StrictModeConfirm();
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb, const nsACString& aOriginSuffix,
@@ -77,6 +79,8 @@ class TRRService : public TRRServiceBase,
   // Returns a reference to a static string identifying the current DoH server
   // If the DoH server is not one of the built-in ones it will return "(other)"
   static const nsCString& ProviderKey();
+
+  void InitTRRConnectionInfo() override;
 
  private:
   virtual ~TRRService();
@@ -144,6 +148,7 @@ class TRRService : public TRRServiceBase,
     PrefChange,
     Retry,
     FailedLookups,
+    StrictMode,
     URIChange,
     CaptivePortalConnectivity,
     NetworkUp,
@@ -151,7 +156,7 @@ class TRRService : public TRRServiceBase,
     ConfirmFail,
   };
 
-  //                                 (FailedLookups/URIChange/NetworkUp)
+  //                            (FailedLookups/StrictMode/URIChange/NetworkUp)
   //                                    +-------------------------+
   // +-----------+                      |                         |
   // |   (Init)  |               +------v---------+             +-+--+
@@ -229,6 +234,8 @@ class TRRService : public TRRServiceBase,
     // String representation of consecutive failed lookups that triggered
     // confirmation.
     nsCString mFailedLookups;
+
+    void SetState(enum ConfirmationState aNewState);
 
    public:
     // Called when a confirmation completes successfully or when the

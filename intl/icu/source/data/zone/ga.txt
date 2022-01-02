@@ -9,9 +9,6 @@ ga{
         "Africa:Accra"{
             ec{"Accra"}
         }
-        "Africa:Addis_Ababa"{
-            ec{"Adas Ababa"}
-        }
         "Africa:Algiers"{
             ec{"Cathair na hAilgéire"}
         }
@@ -29,9 +26,6 @@ ga{
         }
         "Africa:Bissau"{
             ec{"Bissau"}
-        }
-        "Africa:Blantyre"{
-            ec{"Baile an tSaoir"}
         }
         "Africa:Brazzaville"{
             ec{"Brazzaville"}
@@ -64,7 +58,7 @@ ga{
             ec{"Douala"}
         }
         "Africa:El_Aaiun"{
-            ec{"El Aaiun"}
+            ec{"Láúine"}
         }
         "Africa:Freetown"{
             ec{"Freetown"}
@@ -90,9 +84,6 @@ ga{
         "Africa:Kigali"{
             ec{"Kigali"}
         }
-        "Africa:Kinshasa"{
-            ec{"Cinseasa"}
-        }
         "Africa:Lagos"{
             ec{"Lagos"}
         }
@@ -100,7 +91,7 @@ ga{
             ec{"Libreville"}
         }
         "Africa:Lome"{
-            ec{"Lome"}
+            ec{"Lomé"}
         }
         "Africa:Luanda"{
             ec{"Luanda"}
@@ -199,7 +190,7 @@ ga{
             ec{"Arúba"}
         }
         "America:Asuncion"{
-            ec{"Asúinseon"}
+            ec{"Asunción"}
         }
         "America:Bahia"{
             ec{"Bahia"}
@@ -270,11 +261,8 @@ ga{
         "America:Creston"{
             ec{"Creston"}
         }
-        "America:Cuiaba"{
-            ec{"Cuiabá"}
-        }
         "America:Curacao"{
-            ec{"Curaçao"}
+            ec{"Cúrasó"}
         }
         "America:Danmarkshavn"{
             ec{"Danmarkshavn"}
@@ -296,9 +284,6 @@ ga{
         }
         "America:Edmonton"{
             ec{"Edmonton"}
-        }
-        "America:Eirunepe"{
-            ec{"Eirunepé"}
         }
         "America:El_Salvador"{
             ec{"an tSalvadóir"}
@@ -338,9 +323,6 @@ ga{
         }
         "America:Halifax"{
             ec{"Halifax"}
-        }
-        "America:Havana"{
-            ec{"Havána"}
         }
         "America:Hermosillo"{
             ec{"Hermosillo"}
@@ -404,9 +386,6 @@ ga{
         }
         "America:Lower_Princes"{
             ec{"Lower Prince’s Quarter"}
-        }
-        "America:Maceio"{
-            ec{"Maceió"}
         }
         "America:Managua"{
             ec{"Managua"}
@@ -505,7 +484,7 @@ ga{
             ec{"Porto Velho"}
         }
         "America:Puerto_Rico"{
-            ec{"Portó Ríce"}
+            ec{"Pórtó Ríce"}
         }
         "America:Punta_Arenas"{
             ec{"Punta Arenas"}
@@ -531,12 +510,6 @@ ga{
         "America:Santa_Isabel"{
             ec{"Santa Isabel"}
         }
-        "America:Santarem"{
-            ec{"Santarém"}
-        }
-        "America:Santiago"{
-            ec{"Saintiagó"}
-        }
         "America:Santo_Domingo"{
             ec{"Santo Domingo"}
         }
@@ -559,7 +532,7 @@ ga{
             ec{"San Críostóir"}
         }
         "America:St_Lucia"{
-            ec{"St. Lucia"}
+            ec{"Saint Lucia"}
         }
         "America:St_Thomas"{
             ec{"St. Thomas"}
@@ -574,7 +547,7 @@ ga{
             ec{"Tegucigalpa"}
         }
         "America:Thule"{
-            ec{"Thule"}
+            ec{"Inis Tuile"}
         }
         "America:Thunder_Bay"{
             ec{"Thunder Bay"}
@@ -670,7 +643,7 @@ ga{
             ec{"Bairéin"}
         }
         "Asia:Baku"{
-            ec{"Baku"}
+            ec{"Baki"}
         }
         "Asia:Bangkok"{
             ec{"Bangkok"}
@@ -775,7 +748,7 @@ ga{
             ec{"Magadan"}
         }
         "Asia:Makassar"{
-            ec{"Makassar"}
+            ec{"Macasar"}
         }
         "Asia:Manila"{
             ec{"Mainile"}
@@ -809,6 +782,9 @@ ga{
         }
         "Asia:Qatar"{
             ec{"Catar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
@@ -1118,7 +1094,7 @@ ga{
             ec{"Vadús"}
         }
         "Europe:Vatican"{
-            ec{"Cathair na Vatacáine"}
+            ec{"an Vatacáin"}
         }
         "Europe:Vienna"{
             ec{"Vín"}
@@ -1186,9 +1162,6 @@ ga{
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
-        "Pacific:Easter"{
-            ec{"Oileán na Cásca"}
-        }
         "Pacific:Efate"{
             ec{"Efate"}
         }
@@ -1203,9 +1176,6 @@ ga{
         }
         "Pacific:Funafuti"{
             ec{"Funafuti"}
-        }
-        "Pacific:Galapagos"{
-            ec{"Galápagos"}
         }
         "Pacific:Gambier"{
             ec{"Gambier"}
@@ -1285,9 +1255,6 @@ ga{
         "Pacific:Truk"{
             ec{"Chuuk"}
         }
-        "Pacific:Wake"{
-            ec{"Oileán Wake"}
-        }
         "Pacific:Wallis"{
             ec{"Vailís"}
         }
@@ -1300,7 +1267,7 @@ ga{
             ls{"Am na hAfganastáine"}
         }
         "meta:Africa_Central"{
-            ls{"Am Lár na hAfraice"}
+            ls{"Am na hAfraice Láir"}
         }
         "meta:Africa_Eastern"{
             ls{"Am Oirthear na hAfraice"}
@@ -1334,9 +1301,9 @@ ga{
             ls{"Am Caighdeánach Lárnach Mheiriceá Thuaidh"}
         }
         "meta:America_Eastern"{
-            ld{"Am Samhraidh Oirthear Mheiriceá Thuaidh"}
-            lg{"Am Oirthear Mheiriceá Thuaidh"}
-            ls{"Am Caighdeánach Oirthear Mheiriceá Thuaidh"}
+            ld{"Am Samhraidh Oirthearach Mheiriceá Thuaidh"}
+            lg{"Am Oirthearach Mheiriceá Thuaidh"}
+            ls{"Am Caighdeánach Oirthearach Mheiriceá Thuaidh"}
         }
         "meta:America_Mountain"{
             ld{"Am Samhraidh Sléibhte Mheiriceá Thuaidh"}
@@ -1382,9 +1349,9 @@ ga{
             ls{"Am Caighdeánach na hAirgintíne"}
         }
         "meta:Argentina_Western"{
-            ld{"Am Samhraidh Iarthar na hAirgintíne"}
-            lg{"Am Iarthar na hAirgintíne"}
-            ls{"Am Caighdeánach Iarthar na hAirgintíne"}
+            ld{"Am Samhraidh Iartharach na hAirgintíne"}
+            lg{"Am Iartharach na hAirgintíne"}
+            ls{"Am Caighdeánach Iartharach na hAirgintíne"}
         }
         "meta:Armenia"{
             ld{"Am Samhraidh na hAirméine"}
@@ -1443,7 +1410,7 @@ ga{
             ls{"Am Caighdeánach Bhrasília"}
         }
         "meta:Brunei"{
-            ls{"Am Brúiné Darasalám"}
+            ls{"Am Bhrúiné Darasalám"}
         }
         "meta:Cape_Verde"{
             ld{"Am Samhraidh Rinn Verde"}
@@ -1498,10 +1465,10 @@ ga{
             ls{"Am Caighdeánach Chúba"}
         }
         "meta:Davis"{
-            ls{"Am Stáisiún Davis"}
+            ls{"Am Davis"}
         }
         "meta:DumontDUrville"{
-            ls{"Am Stáisiún Dumont-d’Urville"}
+            ls{"Am Dumont-d’Urville"}
         }
         "meta:East_Timor"{
             ls{"Am Thíomór Thoir"}
@@ -1555,7 +1522,7 @@ ga{
             ls{"Am Ghuáin na Fraince"}
         }
         "meta:French_Southern"{
-            ls{"Am Chríocha Francacha Deisceart an Domhain"}
+            ls{"Am Francach Dheisceart an Domhain agus an Antartaigh"}
         }
         "meta:GMT"{
             ls{"Meán-Am Greenwich"}
@@ -1565,7 +1532,7 @@ ga{
             ls{"Am Oileáin Galápagos"}
         }
         "meta:Gambier"{
-            ls{"Am Ghambier"}
+            ls{"Am Gambier"}
         }
         "meta:Georgia"{
             ld{"Am Samhraidh na Seoirsia"}
@@ -1716,7 +1683,7 @@ ga{
             ls{"Am Caighdeánach Oileán Mhuirís"}
         }
         "meta:Mawson"{
-            ls{"Am Stáisiún Mawson"}
+            ls{"Am Mawson"}
         }
         "meta:Mexico_Northwest"{
             ld{"Am Samhraidh Iarthuaisceart Mheicsiceo"}
@@ -1771,9 +1738,9 @@ ga{
             ls{"Am Caighdeánach Oileán Norfolk"}
         }
         "meta:Noronha"{
-            ld{"Am Samhraidh Fhernando de Noronha"}
-            lg{"Am Fhernando de Noronha"}
-            ls{"Am Caighdeánach Fhernando de Noronha"}
+            ld{"Am Samhraidh Fernando de Noronha"}
+            lg{"Am Fernando de Noronha"}
+            ls{"Am Caighdeánach Fernando de Noronha"}
         }
         "meta:North_Mariana"{
             ls{"Am na nOileán Máirianach Thuaidh"}
@@ -1823,7 +1790,7 @@ ga{
             ls{"Am Caighdeánach Saint-Pierre-et-Miquelon"}
         }
         "meta:Pitcairn"{
-            ls{"Am Oileán Pitcairn"}
+            ls{"Am Pitcairn"}
         }
         "meta:Ponape"{
             ls{"Am Phohnpei"}
@@ -1840,12 +1807,12 @@ ga{
             ls{"Am Réunion"}
         }
         "meta:Rothera"{
-            ls{"Am Stáisiún Rothera"}
+            ls{"Am Rothera"}
         }
         "meta:Sakhalin"{
-            ld{"Am Samhraidh Shakhalin"}
-            lg{"Am Shakhalin"}
-            ls{"Am Caighdeánach Shakhalin"}
+            ld{"Am Samhraidh Shacailín"}
+            lg{"Am Shacailín"}
+            ls{"Am Caighdeánach Shacailín"}
         }
         "meta:Samara"{
             ld{"Am Samhraidh Shamara"}
@@ -1873,15 +1840,15 @@ ga{
             ls{"Am Shuranam"}
         }
         "meta:Syowa"{
-            ls{"Am Stáisiún Syowa"}
+            ls{"Am Syowa"}
         }
         "meta:Tahiti"{
             ls{"Am Thaihítí"}
         }
         "meta:Taipei"{
-            ld{"Am Samhraidh Thaipei"}
-            lg{"Am Thaipei"}
-            ls{"Am Caighdeánach Thaipei"}
+            ld{"Am Samhraidh Taipei"}
+            lg{"Am Taipei"}
+            ls{"Am Caighdeánach Taipei"}
         }
         "meta:Tajikistan"{
             ls{"Am na Táidsíceastáine"}
@@ -1934,7 +1901,7 @@ ga{
             ls{"Am Caighdeánach Volgograd"}
         }
         "meta:Vostok"{
-            ls{"Am Stáisiún Vostok"}
+            ls{"Am Vostok"}
         }
         "meta:Wake"{
             ls{"Am Oileán Wake"}
@@ -1951,6 +1918,9 @@ ga{
             ld{"Am Samhraidh Yekaterinburg"}
             lg{"Am Yekaterinburg"}
             ls{"Am Caighdeánach Yekaterinburg"}
+        }
+        "meta:Yukon"{
+            ls{"Am Yukon"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"MAG{0}"}

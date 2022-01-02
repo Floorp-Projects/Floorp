@@ -8,7 +8,7 @@ if (SpecialPowers.useRemoteSubframes) {
 
 const CC = Components.Constructor;
 
-const TEST_DOMAIN = "http://example.net/";
+const TEST_DOMAIN = "https://example.net/";
 
 const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 

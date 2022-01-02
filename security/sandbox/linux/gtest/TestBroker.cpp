@@ -182,6 +182,16 @@ TEST_F(SandboxBrokerTest, SimpleRead) {
   EXPECT_EQ(c, '\0');
 }
 
+TEST_F(SandboxBrokerTest, BadFlags) {
+  int fd;
+
+  fd = Open("/dev/null", O_RDWR | O_ASYNC);
+  EXPECT_EQ(-EACCES, fd) << "O_ASYNC is banned.";
+
+  fd = Open("/dev/null", O_RDWR | 0x40000000);
+  EXPECT_EQ(-EACCES, fd) << "Unknown flag 0x40000000 is banned.";
+}
+
 TEST_F(SandboxBrokerTest, Access) {
   EXPECT_EQ(0, Access("/dev/null", F_OK));
   EXPECT_EQ(0, Access("/dev/null", R_OK));

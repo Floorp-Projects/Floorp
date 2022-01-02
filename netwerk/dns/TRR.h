@@ -54,7 +54,8 @@ class TRR : public Runnable,
   explicit TRR(AHostResolver* aResolver, bool aPB);
   // to verify a domain
   explicit TRR(AHostResolver* aResolver, nsACString& aHost, enum TrrType aType,
-               const nsACString& aOriginSuffix, bool aPB);
+               const nsACString& aOriginSuffix, bool aPB,
+               bool aUseFreshConnection);
 
   NS_IMETHOD Run() override;
   void Cancel(nsresult aStatus);
@@ -144,6 +145,9 @@ class TRR : public Runnable,
 
   // keep a copy of the originSuffix for the cases where mRec == nullptr */
   const nsCString mOriginSuffix;
+
+  // If true, we set LOAD_FRESH_CONNECTION on our channel's load flags.
+  bool mUseFreshConnection = false;
 };
 
 }  // namespace net

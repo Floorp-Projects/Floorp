@@ -13,8 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "chrome://remote/content/shared/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
+
+  Log: "chrome://remote/content/shared/Log.jsm",
   WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
 });
 
@@ -28,7 +29,11 @@ class WebSocketConnection {
    *     Reference to the httpd.js's connection needed for clean-up.
    */
   constructor(webSocket, httpdConnection) {
-    this.id = Services.uuid.generateUUID().toString();
+    this.id = Services.uuid
+      .generateUUID()
+      .toString()
+      .slice(1, -1);
+
     this.httpdConnection = httpdConnection;
 
     this.transport = new WebSocketTransport(webSocket);

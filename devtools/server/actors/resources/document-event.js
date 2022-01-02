@@ -57,9 +57,12 @@ class DocumentEventWatcher {
           // make the payload bigger for events where we either don't have a title yet,
           // or where we already had a chance to get the title.
           title: name === "dom-interactive" ? targetActor.title : undefined,
-          // only send `url` on dom loading so we don't make the payload bigger for
-          // other events
-          url: name === "dom-loading" ? targetActor.url : undefined,
+          // only send `url` on dom loading and dom-interactive so we don't make the
+          // payload bigger for other events
+          url:
+            name === "dom-loading" || name === "dom-interactive"
+              ? targetActor.url
+              : undefined,
           // only send `newURI` on will navigate so we don't make the payload bigger for
           // other events
           newURI: name === "will-navigate" ? newURI : null,

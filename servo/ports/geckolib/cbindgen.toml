@@ -157,7 +157,6 @@ include = [
   "TextOverflow",
   "MozControlCharacterVisibility",
   "RubyPosition",
-  "MozListReversed",
   "Owned",
   "OwnedOrNull",
   "Strong",
@@ -202,7 +201,8 @@ include = [
   "PaintOrder",
   "SVGPaintOrder",
   "ClipRectOrAuto",
-  "CounterSetOrReset",
+  "CounterReset",
+  "CounterSet",
   "CounterIncrement",
   "WritingMode",
   "Content",
@@ -234,6 +234,7 @@ include = [
   "PageSize",
   "DProperty",
   "ImageRendering",
+  "ScrollbarGutter",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -866,8 +867,6 @@ renaming_overrides_prefixing = true
 """
 
 "FontFamilyList" = """
-  // Whether the `fallback` generic is already on the family list.
-  inline bool ContainsFallback() const;
   static StyleFontFamilyList WithOneUnquotedFamily(const nsACString&);
   // Constructs a font family list with a list of names.
   static StyleFontFamilyList WithNames(nsTArray<StyleSingleFontFamily>&&);

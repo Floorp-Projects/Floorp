@@ -48,6 +48,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    "ConstraintValidation.h",
     "ElementInternals.h",
     "HTMLAllCollection.h",
     "HTMLAnchorElement.h",
@@ -131,6 +132,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "ConstraintValidation.cpp",
     "ElementInternals.cpp",
     "HTMLAllCollection.cpp",
     "HTMLAnchorElement.cpp",
@@ -255,6 +257,3 @@ FINAL_LIBRARY = "xul"
 
 if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
     DEFINES["MOZ_ANDROID_HLS_SUPPORT"] = True
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

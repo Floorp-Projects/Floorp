@@ -9,6 +9,7 @@
 
 #include "gfxTypes.h"
 #include "nsRect.h"
+#include "nsRectAbsolute.h"
 #include "gfxRect.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/RectAbsolute.h"
@@ -435,6 +436,18 @@ static bool TestUnion() {
   return true;
 }
 
+template <class RectType>
+static void TestUnionEmptyRects() {
+  RectType rect1(10, 10, 0, 50);
+  RectType rect2(5, 5, 40, 0);
+  EXPECT_TRUE(rect1.IsEmpty() && rect2.IsEmpty());
+
+  RectType dest = rect1.Union(rect2);
+  EXPECT_TRUE(dest.IsEmpty() && dest.IsEqualEdges(rect2))
+      << "Test the case where both rects are empty, and the result is the "
+         "same value passing into Union()";
+}
+
 static bool TestFiniteGfx() {
   float posInf = std::numeric_limits<float>::infinity();
   float negInf = -std::numeric_limits<float>::infinity();
@@ -578,6 +591,7 @@ TEST(Gfx, nsRect)
   TestIntersects<nsRect>();
   TestIntersection<nsRect>();
   TestUnion<nsRect>();
+  TestUnionEmptyRects<nsRect>();
   TestBug1135677<nsRect>();
   TestSetWH<nsRect>();
   TestSwap<nsRect>();
@@ -591,6 +605,7 @@ TEST(Gfx, nsIntRect)
   TestIntersects<nsIntRect>();
   TestIntersection<nsIntRect>();
   TestUnion<nsIntRect>();
+  TestUnionEmptyRects<nsIntRect>();
   TestBug1135677<nsIntRect>();
   TestSetWH<nsIntRect>();
   TestSwap<nsIntRect>();
@@ -604,11 +619,18 @@ TEST(Gfx, gfxRect)
   TestIntersects<gfxRect>();
   TestIntersection<gfxRect>();
   TestUnion<gfxRect>();
+  TestUnionEmptyRects<gfxRect>();
   TestBug1135677<gfxRect>();
   TestFiniteGfx();
   TestSetWH<gfxRect>();
   TestSwap<gfxRect>();
 }
+
+TEST(Gfx, nsRectAbsolute)
+{ TestUnionEmptyRects<nsRectAbsolute>(); }
+
+TEST(Gfx, IntRectAbsolute)
+{ TestUnionEmptyRects<IntRectAbsolute>(); }
 
 static void TestMoveInsideAndClamp(IntRect aSrc, IntRect aTarget,
                                    IntRect aExpected) {

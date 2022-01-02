@@ -55,6 +55,15 @@ class DecodedSurfaceProvider final : public ISurfaceProvider,
   // don't block layout or page load.
   TaskPriority Priority() const override { return TaskPriority::eLow; }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // WebRenderImageProvider implementation.
+  //////////////////////////////////////////////////////////////////////////////
+
+ public:
+  nsresult UpdateKey(layers::RenderRootStateManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources,
+                     wr::ImageKey& aKey) override;
+
  private:
   virtual ~DecodedSurfaceProvider();
 

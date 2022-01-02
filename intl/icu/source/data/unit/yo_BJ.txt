@@ -169,6 +169,11 @@ yo_BJ{
                 other{"{0} ɔd"}
             }
         }
+        light{
+            lumen{
+                other{"{0} Lúmɛ́nì"}
+            }
+        }
     }
     unitsShort{
         concentr{
@@ -236,7 +241,7 @@ yo_BJ{
         light{
             lumen{
                 dnam{"àmì lumɛ́ɛ̀nì"}
-                other{"{0} àmi lumɛ́ɛ̀nì"}
+                other{"{0} Lúmɛ́nì"}
             }
         }
         volume{

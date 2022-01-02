@@ -61,7 +61,14 @@ async function checkDownloadWithExtensionState(
     ? promiseDownloadFinished(publicList)
     : null;
 
+  // PDF should load using the internal viewer without downloading it.
+  let waitForLoad;
+  if (!shouldExpectDialog && type == "application/pdf") {
+    waitForLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  }
+
   await task();
+  await waitForLoad;
 
   let win;
   if (shouldExpectDialog) {
@@ -94,24 +101,36 @@ async function checkDownloadWithExtensionState(
     dialog.acceptDialog();
   }
 
-  // Wait for the download if it exists (may produce null).
-  let download = await downloadFinishedPromise;
-  if (download) {
-    // Check the download's extension is correct.
+  if (!shouldExpectDialog && type == "application/pdf") {
     is(
-      PathUtils.filename(download.target.path),
-      expectedName,
-      `Downloaded file should match ${expectedName}`
+      gURLBar.inputField.value,
+      "data:application/pdf,hello",
+      "url is correct for " + type
     );
-    gPathsToRemove.push(download.target.path);
-    let pathToRemove = download.target.path;
-    // Avoid one file interfering with subsequent files.
-    await publicList.removeFinished();
-    await IOUtils.remove(pathToRemove);
-  } else if (win) {
-    // We just cancel out for files that would end up without a path, as we'd
-    // prompt for a filename.
-    win.close();
+
+    let backPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+    gBrowser.goBack();
+    await backPromise;
+  } else {
+    // Wait for the download if it exists (may produce null).
+    let download = await downloadFinishedPromise;
+    if (download) {
+      // Check the download's extension is correct.
+      is(
+        PathUtils.filename(download.target.path),
+        expectedName,
+        `Downloaded file should match ${expectedName}`
+      );
+      gPathsToRemove.push(download.target.path);
+      let pathToRemove = download.target.path;
+      // Avoid one file interfering with subsequent files.
+      await publicList.removeFinished();
+      await IOUtils.remove(pathToRemove);
+    } else if (win) {
+      // We just cancel out for files that would end up without a path, as we'd
+      // prompt for a filename.
+      win.close();
+    }
   }
 
   return closedPromise;

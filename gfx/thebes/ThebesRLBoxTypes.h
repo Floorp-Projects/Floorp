@@ -9,23 +9,9 @@
 #include "mozilla/rlbox/rlbox_types.hpp"
 
 #ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-namespace rlbox {
-class rlbox_wasm2c_sandbox;
-}
-using rlbox_gr_sandbox_type = rlbox::rlbox_wasm2c_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(gr, wasm2c)
 #else
-using rlbox_gr_sandbox_type = rlbox::rlbox_noop_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(gr, noop)
 #endif
-
-using rlbox_sandbox_gr = rlbox::rlbox_sandbox<rlbox_gr_sandbox_type>;
-template <typename T>
-using sandbox_callback_gr = rlbox::sandbox_callback<T, rlbox_gr_sandbox_type>;
-template <typename T>
-using tainted_gr = rlbox::tainted<T, rlbox_gr_sandbox_type>;
-template <typename T>
-using tainted_opaque_gr = rlbox::tainted_opaque<T, rlbox_gr_sandbox_type>;
-template <typename T>
-using tainted_volatile_gr = rlbox::tainted_volatile<T, rlbox_gr_sandbox_type>;
-using rlbox::tainted_boolean_hint;
 
 #endif

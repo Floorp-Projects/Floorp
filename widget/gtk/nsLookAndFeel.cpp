@@ -31,7 +31,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "ScreenHelperGTK.h"
-#include "nsNativeBasicThemeGTK.h"
+#include "ScrollbarDrawing.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -47,6 +47,7 @@
 #include "nsCSSColorUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
@@ -402,9 +403,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
-    case ColorID::WindowBackground:
-    case ColorID::WidgetBackground:
-    case ColorID::TextBackground:
     case ColorID::Appworkspace:  // MDI background color
     case ColorID::Background:    // desktop background
     case ColorID::Window:
@@ -413,14 +411,10 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozCombobox:
       aColor = mMozWindowBackground;
       break;
-    case ColorID::WindowForeground:
-    case ColorID::WidgetForeground:
-    case ColorID::TextForeground:
     case ColorID::Windowtext:
     case ColorID::MozDialogtext:
       aColor = mMozWindowText;
       break;
-    case ColorID::WidgetSelectBackground:
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::MozDragtargetzone:
@@ -433,7 +427,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
         break;
       }
       [[fallthrough]];
-    case ColorID::WidgetSelectForeground:
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
       aColor = mTextSelectedText;
@@ -451,12 +444,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       break;
     case ColorID::MozCellhighlighttext:
       aColor = mMozCellHighlightText;
-      break;
-    case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-      break;
-    case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
       break;
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:
@@ -609,6 +596,9 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       break;
     case ColorID::MozNativehyperlinktext:
       aColor = mNativeHyperLinkText;
+      break;
+    case ColorID::MozNativevisitedhyperlinktext:
+      aColor = mNativeVisitedHyperLinkText;
       break;
     case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
@@ -1235,7 +1225,6 @@ void nsLookAndFeel::EnsureInit() {
 
   // gtk does non threadsafe refcounting
   MOZ_ASSERT(NS_IsMainThread());
-
   gboolean enableAnimations = false;
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
   mPrefersReducedMotion = !enableAnimations;
@@ -1303,9 +1292,6 @@ void nsLookAndFeel::EnsureInit() {
 
     if (pos) {
       *pos = i;
-      if (layout.mAtRight) {
-        *pos += TOOLBAR_BUTTONS;
-      }
     }
   }
 
@@ -1505,20 +1491,35 @@ void nsLookAndFeel::PerThemeData::Init() {
   mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
 
   // Make sure that the thumb is visible, at least.
-  const bool fallbackToUnthemedColors = !ShouldHonorThemeScrollbarColors() ||
-                                        !NS_GET_A(mThemedScrollbarThumb) ||
-                                        !NS_GET_A(mThemedScrollbarThumbHover) ||
-                                        !NS_GET_A(mThemedScrollbarThumbActive);
+  const bool fallbackToUnthemedColors = [&] {
+    if (!ShouldHonorThemeScrollbarColors()) {
+      return true;
+    }
+    // If any of the scrollbar thumb colors are fully transparent, fall back to
+    // non-native ones.
+    if (!NS_GET_A(mThemedScrollbarThumb) ||
+        !NS_GET_A(mThemedScrollbarThumbHover) ||
+        !NS_GET_A(mThemedScrollbarThumbActive)) {
+      return true;
+    }
+    // If the thumb and track are the same color and opaque, fall back to
+    // non-native colors as well.
+    if (mThemedScrollbar == mThemedScrollbarThumb &&
+        NS_GET_A(mThemedScrollbar) == 0xff) {
+      return true;
+    }
+    return false;
+  }();
+
   if (fallbackToUnthemedColors) {
     mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarThumb = widget::sScrollbarThumbColor.ToABGR();
-    mThemedScrollbarThumbHover =
-        nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
-            mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
+    mThemedScrollbarThumbHover = ThemeColors::AdjustUnthemedScrollbarThumbColor(
+        mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
     mThemedScrollbarThumbActive =
-        nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
-            mThemedScrollbarThumb, NS_EVENT_STATE_ACTIVE);
+        ThemeColors::AdjustUnthemedScrollbarThumbColor(mThemedScrollbarThumb,
+                                                       NS_EVENT_STATE_ACTIVE);
     mThemedScrollbarThumbInactive = mThemedScrollbarThumb;
   }
 
@@ -1827,6 +1828,9 @@ void nsLookAndFeel::PerThemeData::Init() {
   style = gtk_widget_get_style_context(linkButton);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_LINK, &color);
   mNativeHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
+
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_VISITED, &color);
+  mNativeVisitedHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
 
   // invisible character styles
   guint value;

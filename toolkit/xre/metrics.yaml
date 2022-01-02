@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+startup:
+  run_from_dmg_install_outcome:
+    type: labeled_boolean
+    labels:
+      - root_applications_dir_missing
+      - user_accepted_launch_existing
+      - user_declined_launch_existing
+      - user_declined_install_prompt
+      - non_privileged_install_failed
+      - privileged_install_failed
+      - installed_and_relaunched
+    description: >
+      The outcome after the app detected that it was running from DMG and
+      should offer to install and relaunch itself.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328#c1
+    notification_emails:
+      - jwatt@jwatt.org
+      - mbalfanz@mozilla.com
+    expires: "100"

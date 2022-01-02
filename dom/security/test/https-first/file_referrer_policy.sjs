@@ -37,7 +37,6 @@ function readQuery(testCase) {
 
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
-  // eslint-disable-next-line mozilla/reject-importGlobalProperties
   Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
   // Downgrade to test http/https -> HTTP referrer policy

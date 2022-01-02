@@ -32,7 +32,6 @@
 #include "builtin/Symbol.h"
 #include "builtin/WeakSetObject.h"
 #include "ds/IdValuePair.h"  // js::IdValuePair
-#include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS::IsConstructor
 #include "js/CharacterEncoding.h"
@@ -2134,8 +2133,7 @@ bool js::GetPropertyDescriptor(
 /* * */
 
 extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
-                                 MutableHandleId id,
-                                 js::PinningBehavior pin = js::DoNotPinAtom);
+                                 MutableHandleId id);
 
 // If a property or method is part of an experimental feature that can be
 // disabled at run-time by a preference, we keep it in the JSFunctionSpec /
@@ -2154,6 +2152,30 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
       id == NameToId(cx->names().cleanupSome)) {
     return true;
   }
+
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
+      (id == NameToId(cx->names().withAt) ||
+       id == NameToId(cx->names().withReversed) ||
+       id == NameToId(cx->names().withSorted) ||
+       id == NameToId(cx->names().withSpliced))) {
+    return true;
+  }
+#endif
+
+#ifdef ENABLE_NEW_SET_METHODS
+  if (key == JSProto_Set &&
+      !cx->realm()->creationOptions().getNewSetMethodsEnabled() &&
+      (id == NameToId(cx->names().union_) ||
+       id == NameToId(cx->names().difference) ||
+       id == NameToId(cx->names().intersection) ||
+       id == NameToId(cx->names().isSubsetOf) ||
+       id == NameToId(cx->names().isSupersetOf) ||
+       id == NameToId(cx->names().isDisjointFrom) ||
+       id == NameToId(cx->names().symmetricDifference))) {
+    return true;
+  }
+#endif
 
   return false;
 }

@@ -12,8 +12,7 @@
 #include "mozilla/dom/MIDIPortInterface.h"
 
 // Header file contents
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Actor representing the parent (PBackground thread) side of a MIDIPort object.
@@ -32,8 +31,8 @@ class MIDIPortParent final : public PMIDIPortParent, public MIDIPortInterface {
                               const bool aSysexEnabled);
   // Sends the current port status to the child actor. May also send message
   // buffer if required.
-  bool SendUpdateStatus(const MIDIPortDeviceState& aState,
-                        const MIDIPortConnectionState& aConnection);
+  bool SendUpdateStatus(const MIDIPortDeviceState& aDeviceState,
+                        const MIDIPortConnectionState& aConnectionState);
   uint32_t GetInternalId() const { return mInternalId; }
   void Teardown();
 
@@ -45,7 +44,7 @@ class MIDIPortParent final : public PMIDIPortParent, public MIDIPortInterface {
   nsTArray<MIDIMessage> mMessageQueue;
   const uint32_t mInternalId;
 };
-}  // namespace dom
-}  // namespace mozilla
+
+}  // namespace mozilla::dom
 
 #endif

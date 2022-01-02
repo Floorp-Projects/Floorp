@@ -40,9 +40,9 @@ fn main() {
     };
 
     let pretty = PrettyConfig::new()
-        .with_depth_limit(2)
-        .with_separate_tuple_members(true)
-        .with_enumerate_arrays(true);
+        .depth_limit(2)
+        .separate_tuple_members(true)
+        .enumerate_arrays(true);
     let s = to_string_pretty(&data, pretty).expect("Serialization failed");
 
     println!("{}", s);

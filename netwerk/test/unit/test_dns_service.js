@@ -4,10 +4,7 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
 const defaultOriginAttributes = {};
-const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
-const mainThread = threadManager.currentThread;
+const mainThread = Services.tm.currentThread;
 
 const overrideService = Cc[
   "@mozilla.org/network/native-dns-override;1"
@@ -74,8 +71,7 @@ add_task(async function test_idn_cname() {
 add_task(
   {
     skip_if: () =>
-      Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-        .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT,
+      Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT,
   },
   async function test_long_domain() {
     let listener = new Listener();

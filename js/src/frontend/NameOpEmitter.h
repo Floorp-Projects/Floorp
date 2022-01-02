@@ -9,12 +9,9 @@
 
 #include "mozilla/Attributes.h"
 
-#include <stdint.h>
-
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
-#include "js/TypeDecls.h"
-#include "vm/SharedStencil.h"  // GCThingIndex
+#include "vm/SharedStencil.h"     // GCThingIndex
 
 namespace js {
 namespace frontend {

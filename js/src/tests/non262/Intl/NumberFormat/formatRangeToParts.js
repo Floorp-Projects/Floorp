@@ -70,7 +70,7 @@ const tests = {
       {
         start: -1,
         end: -1,
-        result: [Shared.Approx("~\u061C"), Shared.MinusSign("-"), Shared.Integer("١")],
+        result: [Shared.Approx("~"), Shared.Literal("\u061C"), Shared.MinusSign("-"), Shared.Integer("١")],
       },
       {
         start: -1,
@@ -146,7 +146,7 @@ const tests = {
       {
         start: 1,
         end: 1,
-        result: [Shared.Approx("ca. "), Shared.Integer("1")],
+        result: [Shared.Approx("ca."), Shared.Integer("1")],
       },
     ],
   },
@@ -157,7 +157,7 @@ const tests = {
       {
         start: 1,
         end: 1,
-        result: [Shared.Approx("約 "), Shared.Integer("1")],
+        result: [Shared.Approx("約"), Shared.Integer("1")],
       },
     ],
   },

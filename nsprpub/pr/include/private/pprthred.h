@@ -301,9 +301,9 @@ NSPR_API(void) PR_OS2_UnsetFloatExcpHandler(EXCEPTIONREGISTRATIONRECORD* e);
 ---------------------------------------------------------------------------*/
 
 #ifdef XP_UNIX
-extern void PR_XLock(void);
-extern void PR_XUnlock(void);
-extern PRBool PR_XIsLocked(void);
+extern void _PR_XLock(void);
+extern void _PR_XUnlock(void);
+extern PRBool _PR_XIsLocked(void);
 #endif /* XP_UNIX */
 
 PR_END_EXTERN_C

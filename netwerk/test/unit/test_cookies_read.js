@@ -18,6 +18,9 @@ add_task(async () => {
     true
   );
 
+  // Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"
+  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+
   // Start the cookieservice, to force creation of a database.
   // Get the sessionCookies to join the initialization in cookie thread
   Services.cookiemgr.sessionCookies;
@@ -111,4 +114,6 @@ add_task(async () => {
     let host = i.toString() + ".com";
     Assert.equal(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
+
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });

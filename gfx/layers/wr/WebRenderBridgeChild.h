@@ -195,9 +195,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
                ImageContainer* aImageContainer = nullptr) override;
-  void UpdateTextureRegion(CompositableClient* aCompositable,
-                           const ThebesBufferData& aThebesBufferData,
-                           const nsIntRegion& aUpdatedRegion) override;
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
   bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
@@ -205,9 +202,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                                      TextureClient* aTexture) override;
   void UseTextures(CompositableClient* aCompositable,
                    const nsTArray<TimedTextureClient>& aTextures) override;
-  void UseComponentAlphaTextures(CompositableClient* aCompositable,
-                                 TextureClient* aClientOnBlack,
-                                 TextureClient* aClientOnWhite) override;
   void UpdateFwdTransactionId() override;
   uint64_t GetFwdTransactionId() override;
   bool InForwarderThread() override;

@@ -21,9 +21,9 @@ mi{
         it{"Ītariana"}
         ja{"Hapanihi"}
         mi{"te reo Māori"}
-        pt{"Pōtikī"}
-        pt_BR{"Pōtikī Parahi"}
-        pt_PT{"Pōtikī Uropi"}
+        pt{"Pōtukīhi"}
+        pt_BR{"Pōtukīhi Parahi"}
+        pt_PT{"Pōtukīhi Uropi"}
         ru{"Ruhiana"}
         und{"Reo Tē Mōhiotia"}
         zh{"Hainamana"}

@@ -1,6 +1,6 @@
 [package]
 name = "wgpu-hal"
-version = "0.10.1"
+version = "0.11.2"
 authors = ["wgpu developers"]
 edition = "2018"
 description = "WebGPU hardware abstraction layer"
@@ -22,6 +22,7 @@ renderdoc = ["libloading", "renderdoc-sys"]
 [dependencies]
 bitflags = "1.0"
 parking_lot = "0.11"
+profiling = { version = "1", default-features = false }
 raw-window-handle = "0.3"
 thiserror = "1"
 
@@ -51,7 +52,7 @@ range-alloc = { version = "0.1", optional = true }
 [dependencies.wgt]
 package = "wgpu-types"
 path = "../wgpu-types"
-version = "0.10"
+version = "0.11"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 egl = { package = "khronos-egl", version = "4.1", features = ["dynamic"], optional = true }
@@ -67,15 +68,20 @@ mtl = { package = "metal", version = "0.23.1" }
 objc = "0.2.5"
 core-graphics-types = "0.1"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2" }
+web-sys = { version = "0.3", features = ["Window", "HtmlCanvasElement", "WebGl2RenderingContext"] }
+js-sys = { version = "0.3" }
+
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-rev = "e226cf3"
-#version = "0.6"
+rev = "29571cc"
+#version = "0.7"
 
 [dev-dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-rev = "e226cf3"
-#version = "0.6"
+rev = "29571cc"
+#version = "0.7"
 features = ["wgsl-in"]
 
 [dev-dependencies]

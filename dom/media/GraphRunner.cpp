@@ -16,7 +16,7 @@
 #include "audio_thread_priority.h"
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidProcess.h"
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 
 namespace mozilla {
 
@@ -110,8 +110,8 @@ void PromoteRenderingThreadAndroid() {
           ("GraphRunner promoted thread priority: %d",
            java::sdk::Process::GetThreadPriority(java::sdk::Process::MyTid())));
 }
-};  // namespace
-#endif // MOZ_WIDGET_ANDROID
+};      // namespace
+#endif  // MOZ_WIDGET_ANDROID
 
 NS_IMETHODIMP GraphRunner::Run() {
 #ifndef XP_LINUX
@@ -121,7 +121,7 @@ NS_IMETHODIMP GraphRunner::Run() {
 
 #ifdef MOZ_WIDGET_ANDROID
   PromoteRenderingThreadAndroid();
-#endif // MOZ_WIDGET_ANDROID
+#endif  // MOZ_WIDGET_ANDROID
 
   nsCOMPtr<nsIThreadInternal> threadInternal = do_QueryInterface(mThread);
   threadInternal->SetObserver(mGraph);

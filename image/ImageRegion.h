@@ -13,6 +13,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
 #include "nsSize.h"
+#include "PLDHashTable.h"  // for PLDHashNumber
 
 namespace mozilla {
 namespace image {
@@ -237,6 +238,12 @@ class ImageIntRegion {
            mIsRestricted == aOther.mIsRestricted &&
            mRect.IsEqualEdges(aOther.mRect) &&
            (!mIsRestricted || mRestriction.IsEqualEdges(aOther.mRestriction));
+  }
+
+  PLDHashNumber Hash() const {
+    return HashGeneric(mRect.x, mRect.y, mRect.width, mRect.height,
+                       mRestriction.x, mRestriction.y, mRestriction.width,
+                       mRestriction.height, mExtendMode, mIsRestricted);
   }
 
   /* ImageIntRegion() : mIsRestricted(false) { } */

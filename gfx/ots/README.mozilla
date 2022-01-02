@@ -10,3 +10,4 @@ Additional files: README.mozilla, src/moz.build
 
 Additional patch: ots-visibility.patch (bug 711079).
 Additional patch: ots-lz4.patch
+Additional patch: ots-rlbox.patch (bug 1732201).

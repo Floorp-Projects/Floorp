@@ -717,10 +717,10 @@ zh{
     calendar{
         buddhist{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -731,12 +731,23 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             availableFormats{
                 Ed{"d日E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年MM月"}
                 GyMMMEd{"Gy年MM月d日E"}
                 GyMMMd{"Gy年MM月d日"}
+                GyMd{"Gy-M-d"}
                 M{"M月"}
                 MEd{"M-dE"}
                 MMMEd{"M月d日E"}
@@ -863,10 +874,10 @@ zh{
         }
         chinese{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 {
                     "rU年MMMdEEEE",
                     "d=hanidays",
@@ -886,6 +897,25 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                {
+                    "rMMMEEEEd",
+                    "d=hanidays",
+                }
+                {
+                    "rMMMd",
+                    "d=hanidays",
+                }
+                {
+                    "rMMMd",
+                    "d=hanidays",
+                }
+                "rMd",
+            }
             availableFormats{
                 Bh{"Bh时"}
                 Bhm{"Bh:mm"}
@@ -897,6 +927,9 @@ zh{
                 Gy{"rU年"}
                 GyMMM{"rU年MMM"}
                 GyMMMEd{"rU年MMMdE"}
+                GyMMMM{"rU年MMMM"}
+                GyMMMMEd{"rU年MMMdE"}
+                GyMMMMd{"rU年MMMMd"}
                 GyMMMd{"r年MMMd"}
                 H{"HH"}
                 Hm{"HH:mm"}
@@ -925,6 +958,8 @@ zh{
                 yyyyMMM{"rU年MMM"}
                 yyyyMMMEd{"rU年MMMdE"}
                 yyyyMMMM{"rU年MMMM"}
+                yyyyMMMMEd{"rU年MMMMdE"}
+                yyyyMMMMd{"rU年MMMMd"}
                 yyyyMMMd{"r年MMMd"}
                 yyyyMd{"r年MMMd"}
                 yyyyQQQ{"rU年QQQQ"}
@@ -1278,10 +1313,10 @@ zh{
         }
         coptic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年MM月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -1291,6 +1326,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             eras{
                 abbreviated{
@@ -1645,10 +1690,10 @@ zh{
         }
         ethiopic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年MM月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -1658,6 +1703,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             eras{
                 abbreviated{
@@ -1779,10 +1834,10 @@ zh{
         }
         generic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -1792,6 +1847,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 Bh{"Bh时"}
@@ -1806,9 +1871,11 @@ zh{
                 Ehm{"Ea h:mm"}
                 Ehms{"Ea h:mm:ss"}
                 Gy{"Gy年"}
+                GyMEEEEd{"Gy年M月d日EEEE"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
                 GyMMMd{"Gy年M月d日"}
+                GyMd{"Gy/M/d"}
                 H{"H时"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1983,10 +2050,10 @@ zh{
                 "下午",
             }
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
@@ -1996,6 +2063,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMEEEEd",
+                "yMd",
+                "yMd",
+                "yMd",
             }
             appendItems{
                 Timezone{"{1}{0}"}
@@ -2041,6 +2118,7 @@ zh{
                 ms{"mm:ss"}
                 y{"y年"}
                 yM{"y年M月"}
+                yMEEEEd{"y年M月d日EEEE"}
                 yMEd{"y/M/dE"}
                 yMM{"y年M月"}
                 yMMM{"y年M月"}
@@ -2489,19 +2567,29 @@ zh{
         }
         hebrew{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
-                "Gy-M-d",
+                "G y/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 Ed{"d日E"}
@@ -2509,6 +2597,7 @@ zh{
                 GyMMM{"Gy年MM月"}
                 GyMMMEd{"Gy年MM月d日E"}
                 GyMMMd{"Gy年MM月d日"}
+                GyMd{"G y/M/d"}
                 MEd{"M/dE"}
                 MMM{"LL"}
                 MMMEd{"M月d日E"}
@@ -2721,19 +2810,29 @@ zh{
         }
         indian{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年MM月d日EEEE",
                 "Gy年MM月d日",
                 "Gy年MM月d日",
-                "Gy/M/d",
+                "G y/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMEEEEd",
+                "GyMMd",
+                "GyMMd",
+                "GyMd",
             }
             availableFormats{
                 Ed{"d日E"}
@@ -2741,6 +2840,7 @@ zh{
                 GyMMM{"Gy年MM月"}
                 GyMMMEd{"Gy年MM月d日E"}
                 GyMMMd{"Gy年MM月d日"}
+                GyMd{"G y/M/d"}
                 MEd{"M/dE"}
                 MMM{"LL"}
                 MMMEd{"M月d日E"}
@@ -2929,10 +3029,10 @@ zh{
         }
         islamic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -2942,6 +3042,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 M{"M月"}
@@ -3051,10 +3161,10 @@ zh{
         }
         japanese{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -3065,12 +3175,23 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMMdd",
+            }
             availableFormats{
                 Ed{"d日E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
                 GyMMMd{"Gy年M月d日"}
+                GyMd{"Gy-MM-dd"}
                 H{"H时"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -3923,10 +4044,10 @@ zh{
         }
         roc{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -3937,6 +4058,16 @@ zh{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"d日E"}
@@ -3944,6 +4075,7 @@ zh{
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
                 GyMMMd{"Gy年M月d日"}
+                GyMd{"Gy/M/d"}
                 M{"M月"}
                 MEd{"M/dE"}
                 MMM{"LLL"}

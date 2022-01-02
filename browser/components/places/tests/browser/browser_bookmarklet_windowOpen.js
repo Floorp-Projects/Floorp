@@ -2,7 +2,7 @@
 
 let BASE_URL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
-  "http://example.com/"
+  "https://example.com/"
 );
 const TEST_URL = BASE_URL + "pageopeningwindow.html";
 const DUMMY_URL = BASE_URL + "bookmarklet_windowOpen_dummy.html";

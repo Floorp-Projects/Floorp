@@ -96,7 +96,7 @@ interface BaseAudioContext : EventTarget {
     OscillatorNode createOscillator();
 
     [NewObject, Throws]
-    PeriodicWave createPeriodicWave(Float32Array real,
-                                    Float32Array imag,
+    PeriodicWave createPeriodicWave(sequence<float> real,
+                                    sequence<float> imag,
                                     optional PeriodicWaveConstraints constraints = {});
 };

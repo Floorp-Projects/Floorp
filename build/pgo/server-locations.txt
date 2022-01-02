@@ -340,6 +340,9 @@ https://localhost:443
 # Bug 1402530
 http://localhost:80                 privileged
 
+http://localhost:9898
+http://localhost:9899
+
 # Host for testing APIs whitelisted for mozilla.org
 https://www.mozilla.org:443
 

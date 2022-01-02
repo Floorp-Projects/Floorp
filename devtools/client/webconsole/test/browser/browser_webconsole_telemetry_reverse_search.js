@@ -10,7 +10,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const TEST_URI = `data:text/html,<meta charset=utf8>Test reverse_search telemetry event`;
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test reverse_search telemetry event`;
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 const isMacOS = AppConstants.platform === "macosx";
 

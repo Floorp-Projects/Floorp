@@ -433,7 +433,7 @@ is{
         }
         LSL{
             "LSL",
-            "Lesotho Loti",
+            "lesótóskur lóti",
         }
         LTL{
             "LTL",
@@ -1307,6 +1307,10 @@ is{
         LRD{
             one{"líberískur dalur"}
             other{"líberískir dalir"}
+        }
+        LSL{
+            one{"lesótóskur lóti"}
+            other{"lesótóskir lótar"}
         }
         LTL{
             one{"litháískt lít"}

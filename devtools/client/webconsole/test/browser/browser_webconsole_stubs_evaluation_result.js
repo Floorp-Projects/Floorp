@@ -11,7 +11,7 @@ const {
   writeStubsToFile,
 } = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
-const TEST_URI = "data:text/html;charset=utf-8,stub generation";
+const TEST_URI = "data:text/html;charset=utf-8,<!DOCTYPE html>stub generation";
 const STUB_FILE = "evaluationResult.js";
 
 add_task(async function() {

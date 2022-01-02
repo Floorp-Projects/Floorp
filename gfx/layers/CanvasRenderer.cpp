@@ -87,17 +87,12 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
   const auto layersBackend = knowsCompositor->GetCompositorBackendType();
 
   switch (layersBackend) {
-    case LayersBackend::LAYERS_CLIENT:
-      MOZ_CRASH("Unexpected LayersBackend::LAYERS_CLIENT");
     case LayersBackend::LAYERS_LAST:
       MOZ_CRASH("Unexpected LayersBackend::LAYERS_LAST");
 
     case LayersBackend::LAYERS_NONE:
-    case LayersBackend::LAYERS_BASIC:
       return TextureType::Unknown;
 
-    case LayersBackend::LAYERS_D3D11:
-    case LayersBackend::LAYERS_OPENGL:
     case LayersBackend::LAYERS_WR:
       break;
   }

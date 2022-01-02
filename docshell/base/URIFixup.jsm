@@ -663,11 +663,12 @@ function checkAndFixPublicSuffix(info) {
 
   // Quick bailouts for most common cases, according to Alexa Top 1 million.
   if (
-    asciiHost.endsWith(".com") ||
-    asciiHost.endsWith(".net") ||
-    asciiHost.endsWith(".org") ||
-    asciiHost.endsWith(".ru") ||
-    asciiHost.endsWith(".de")
+    /^\w/.test(asciiHost) &&
+    (asciiHost.endsWith(".com") ||
+      asciiHost.endsWith(".net") ||
+      asciiHost.endsWith(".org") ||
+      asciiHost.endsWith(".ru") ||
+      asciiHost.endsWith(".de"))
   ) {
     return {
       suffix: asciiHost.substring(asciiHost.lastIndexOf(".") + 1),

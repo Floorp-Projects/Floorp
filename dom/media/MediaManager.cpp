@@ -68,7 +68,7 @@
 #  include "MediaEngineWebRTC.h"
 #  include "MediaEngineWebRTCAudio.h"
 #  include "browser_logging/WebRtcLog.h"
-#  include "webrtc/modules/audio_processing/include/audio_processing.h"
+#  include "modules/audio_processing/include/audio_processing.h"
 #endif
 
 #if defined(XP_WIN)
@@ -1975,20 +1975,18 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mAgcOn = false;
   mPrefs.mHPFOn = false;
   mPrefs.mNoiseOn = false;
-  mPrefs.mExtendedFilter = true;
-  mPrefs.mDelayAgnostic = true;
+  mPrefs.mTransientOn = false;
+  mPrefs.mResidualEchoOn = false;
   mPrefs.mFakeDeviceChangeEventOn = false;
+  mPrefs.mAgc2Forced = false;
 #ifdef MOZ_WEBRTC
-  mPrefs.mAec =
-      webrtc::EchoCancellation::SuppressionLevel::kModerateSuppression;
-  mPrefs.mAgc = webrtc::GainControl::Mode::kAdaptiveDigital;
-  mPrefs.mNoise = webrtc::NoiseSuppression::Level::kModerate;
-  mPrefs.mRoutingMode = webrtc::EchoControlMobile::RoutingMode::kSpeakerphone;
+  mPrefs.mAgc =
+      webrtc::AudioProcessing::Config::GainController1::Mode::kAdaptiveDigital;
+  mPrefs.mNoise =
+      webrtc::AudioProcessing::Config::NoiseSuppression::Level::kModerate;
 #else
-  mPrefs.mAec = 0;
   mPrefs.mAgc = 0;
   mPrefs.mNoise = 0;
-  mPrefs.mRoutingMode = 0;
 #endif
   mPrefs.mChannels = 0;  // max channels default
   nsresult rv;
@@ -2001,16 +1999,14 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
     }
   }
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
-      "agc: %s, hpf: %s, noise: %s, aec level: %d, agc level: %d, noise level: "
-      "%d, aec mobile routing mode: %d,"
-      "extended aec %s, delay_agnostic %s "
-      "channels %d",
+      "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
+      "level: %d, transient: %s, residual echo: %s, channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
-      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec,
-      mPrefs.mAgc, mPrefs.mNoise, mPrefs.mRoutingMode,
-      mPrefs.mExtendedFilter ? "on" : "off",
-      mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
+      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
+      mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
+      mPrefs.mTransientOn ? "on" : "off", mPrefs.mResidualEchoOn ? "on" : "off",
+      mPrefs.mChannels);
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
@@ -3248,7 +3244,7 @@ MediaEngine* MediaManager::GetBackend() {
     MOZ_RELEASE_ASSERT(
         !sHasShutdown);  // we should never create a new backend in shutdown
 #if defined(MOZ_WEBRTC)
-    mBackend = new MediaEngineWebRTC(mPrefs);
+    mBackend = new MediaEngineWebRTC();
 #else
     mBackend = new MediaEngineDefault();
 #endif
@@ -3429,15 +3425,14 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPrefBool(aBranch, "media.getusermedia.hpf_enabled", aData, &mPrefs.mHPFOn);
   GetPrefBool(aBranch, "media.getusermedia.noise_enabled", aData,
               &mPrefs.mNoiseOn);
-  GetPref(aBranch, "media.getusermedia.aec", aData, &mPrefs.mAec);
+  GetPrefBool(aBranch, "media.getusermedia.transient_enabled", aData,
+              &mPrefs.mTransientOn);
+  GetPrefBool(aBranch, "media.getusermedia.residual_echo_enabled", aData,
+              &mPrefs.mResidualEchoOn);
+  GetPrefBool(aBranch, "media.getusermedia.agc2_forced", aData,
+              &mPrefs.mAgc2Forced);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
-  GetPref(aBranch, "media.getusermedia.aecm_output_routing", aData,
-          &mPrefs.mRoutingMode);
-  GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData,
-              &mPrefs.mExtendedFilter);
-  GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData,
-              &mPrefs.mDelayAgnostic);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
   bool oldFakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
   GetPrefBool(aBranch, "media.ondevicechange.fakeDeviceChangeEvent.enabled",

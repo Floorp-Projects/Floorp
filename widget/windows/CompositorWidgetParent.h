@@ -45,12 +45,17 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
 
   bool HasGlass() const override;
 
+  nsSizeMode GetWindowSizeMode() const override;
+  bool GetWindowIsFullyOccluded() const override;
+
   mozilla::ipc::IPCResult RecvInitialize(
       const RemoteBackbufferHandles& aRemoteHandles) override;
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;
   mozilla::ipc::IPCResult RecvLeavePresentLock() override;
   mozilla::ipc::IPCResult RecvUpdateTransparency(
       const nsTransparencyMode& aMode) override;
+  mozilla::ipc::IPCResult RecvNotifyVisibilityUpdated(
+      const nsSizeMode& aSizeMode, const bool& aIsFullyOccluded) override;
   mozilla::ipc::IPCResult RecvClearTransparentWindow() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -74,6 +79,10 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   // Transparency handling.
   mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
       mTransparencyMode;
+
+  // Visibility handling.
+  mozilla::Atomic<nsSizeMode, MemoryOrdering::Relaxed> mSizeMode;
+  mozilla::Atomic<bool, MemoryOrdering::Relaxed> mIsFullyOccluded;
 
   std::unique_ptr<remote_backbuffer::Client> mRemoteBackbufferClient;
 };

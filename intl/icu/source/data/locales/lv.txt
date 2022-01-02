@@ -240,6 +240,17 @@ lv{
             }
         }
         minimalPairs{
+            case{
+                accusative{"palikt {0}"}
+                dative{"pietiks {0}"}
+                genitive{"{0} brauciens"}
+                locative{"izdarīts {0}"}
+                nominative{"pagājusi {0}"}
+            }
+            gender{
+                feminine{"gara {0}"}
+                masculine{"viens {0}"}
+            }
             ordinal{
                 other{"Dodieties {0}. pagriezienā pa labi."}
             }
@@ -446,6 +457,16 @@ lv{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -462,6 +483,7 @@ lv{
                 GyMMM{"y. 'g'. MMM G"}
                 GyMMMEd{"E, y. 'g'. d. MMM G"}
                 GyMMMd{"y. 'g'. d. MMM G"}
+                GyMd{"dd-MM-y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -599,6 +621,16 @@ lv{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -618,6 +650,7 @@ lv{
                 GyMMM{"G y. 'g'. MMM"}
                 GyMMMEd{"E, G y. 'g'. d. MMM"}
                 GyMMMd{"G y. 'g'. d. MMM"}
+                GyMd{"GGGGG dd-MM-y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -651,7 +684,7 @@ lv{
                 yMMMEd{"E, y. 'g'. d. MMM"}
                 yMMMM{"y. 'g'. MMMM"}
                 yMMMd{"y. 'g'. d. MMM"}
-                yMd{"y.MM.d."}
+                yMd{"d.MM.y."}
                 yQQQ{"y. 'g'. QQQ"}
                 yQQQQ{"y. 'g'. QQQQ"}
                 yw{
@@ -817,6 +850,21 @@ lv{
                 }
             }
             intervalFormats{
+                Gy{
+                    G{"G y. – G y."}
+                    y{"G y.–y."}
+                }
+                GyM{
+                    G{"GGGGG MM-y. – GGGGG MM-y."}
+                    M{"GGGGG MM-y. – MM-y."}
+                    y{"GGGGG MM-y. – MM-y."}
+                }
+                GyMEd{
+                    G{"GGGGG dd-MM-y., E – GGGGG dd-MM-y., E"}
+                    M{"GGGGG dd-MM-y., E – dd-MM-y., E"}
+                    d{"GGGGG dd-MM-y., E – dd-MM-y., E"}
+                    y{"GGGGG dd-MM-y., E – dd-MM-y., E"}
+                }
                 GyMMM{
                     G{"G y. 'gada' MMM – G y. 'gada' MMM"}
                     M{"G y. 'gada' MMM–MMM"}
@@ -833,6 +881,12 @@ lv{
                     M{"G y. 'gada' d. MMM – d. MMM"}
                     d{"G y. 'gada' d.–d. MMM"}
                     y{"G y. 'gada' d. MMM – y. 'gada' d. MMM"}
+                }
+                GyMd{
+                    G{"GGGGG dd-MM-y. – GGGGG dd-MM-y."}
+                    M{"GGGGG dd-MM-y. – dd-MM-y."}
+                    d{"GGGGG dd-MM-y. – dd-MM-y."}
+                    y{"GGGGG dd-MM-y. – dd-MM-y."}
                 }
                 H{
                     H{"HH–HH"}

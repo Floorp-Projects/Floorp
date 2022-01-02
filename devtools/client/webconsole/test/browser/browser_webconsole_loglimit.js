@@ -6,7 +6,7 @@
 // Test that messages are properly updated when the log limit is reached.
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Web Console test for " +
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for " +
   "Old messages are removed after passing devtools.hud.loglimit";
 
 add_task(async function() {

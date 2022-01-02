@@ -65,6 +65,18 @@ function nativeHorizontalWheelEventMsg() {
   );
 }
 
+function nativeArrowDownKey() {
+  switch (getPlatform()) {
+    case "windows":
+      return WIN_VK_DOWN;
+    case "mac":
+      return MAC_VK_DownArrow;
+  }
+  throw new Error(
+    "Native key events not supported on platform " + getPlatform()
+  );
+}
+
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
   if (aTarget.Window && aTarget instanceof aTarget.Window) {
@@ -395,7 +407,11 @@ async function synthesizeNativeWheel(
     aDeltaY,
     0,
     0,
-    0,
+    // Specify MOUSESCROLL_SCROLL_LINES if the test wants to run through wheel
+    // input code path on Mac since it's normal mouse wheel inputs.
+    SpecialPowers.getBoolPref("apz.test.mac.synth_wheel_input", false)
+      ? SpecialPowers.DOMWindowUtils.MOUSESCROLL_SCROLL_LINES
+      : 0,
     element,
     aObserver
   );

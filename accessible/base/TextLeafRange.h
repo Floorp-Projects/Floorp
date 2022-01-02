@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "AccAttributes.h"
 #include "nsDirection.h"
 #include "nsIAccessibleText.h"
 
@@ -34,6 +35,16 @@ class TextLeafPoint final {
    */
   TextLeafPoint() : mAcc(nullptr), mOffset(0) {}
 
+  /**
+   * Construct a TextLeafPoint representing the caret.
+   * The actual offset used for the caret differs depending on whether the
+   * caret is at the end of a line and the query being made. Thus, mOffset on
+   * the returned TextLeafPoint is not a valid offset.
+   */
+  static TextLeafPoint GetCaret(Accessible* aAcc) {
+    return TextLeafPoint(aAcc, nsIAccessibleText::TEXT_OFFSET_CARET);
+  }
+
   Accessible* mAcc;
   int32_t mOffset;
 
@@ -52,6 +63,21 @@ class TextLeafPoint final {
    * evaluates to false.
    */
   explicit operator bool() const { return !!mAcc; }
+
+  bool IsCaret() const {
+    return mOffset == nsIAccessibleText::TEXT_OFFSET_CARET;
+  }
+
+  bool IsCaretAtEndOfLine() const;
+
+  /**
+   * Get a TextLeafPoint at the actual caret offset.
+   * This should only be called on a TextLeafPoint created with GetCaret.
+   * If aAdjustAtEndOfLine is true, the point will be adjusted if the caret is
+   * at the end of a line so that word and line boundaries can be calculated
+   * correctly.
+   */
+  TextLeafPoint ActualizeCaret(bool aAdjustAtEndOfLine = true) const;
 
   /**
    * Find a boundary (word start, line start, etc.) in a specific direction.
@@ -83,6 +109,42 @@ class TextLeafPoint final {
    */
   TextLeafPoint FindPrevWordStartSameAcc(bool aIncludeOrigin) const;
   TextLeafPoint FindNextWordStartSameAcc(bool aIncludeOrigin) const;
+
+  /**
+   * Get the text attributes at this point.
+   * If aIncludeDefaults is true, default attributes on the HyperTextAccessible
+   * will be included.
+   */
+  already_AddRefed<AccAttributes> GetTextAttributes(
+      bool aIncludeDefaults = true) const;
+
+  /**
+   * Get Get the text attributes at this point in a LocalAccessible.
+   * This is used by GetTextAttributes. Most callers will want GetTextAttributes
+   * instead.
+   */
+  already_AddRefed<AccAttributes> GetTextAttributesLocalAcc(
+      bool aIncludeDefaults = true) const;
+
+  /**
+   * Find the start of a run of text attributes in a specific direction.
+   * A text attributes run is a span of text where the attributes are the same.
+   * If no boundary is found, the start/end of the container is returned
+   * (depending on the direction).
+   * If aIncludeorigin is true and this is at a boundary, this will be
+   * returned unchanged.
+   * aOriginAttrs allows the caller to supply the text attributes for this (as
+   * retrieved by GetTextAttributes). This can be used to avoid fetching the
+   * attributes twice if they are also to be used for something else; e.g.
+   * returning the attributes to a client. If aOriginAttrs is null, this method
+   * will fetch the attributes itself.
+   * aIncludeDefaults specifies whether aOriginAttrs includes default
+   * attributes.
+   */
+  TextLeafPoint FindTextAttrsStart(nsDirection aDirection,
+                                   bool aIncludeOrigin = false,
+                                   const AccAttributes* aOriginAttrs = nullptr,
+                                   bool aIncludeDefaults = true) const;
 
  private:
   bool IsEmptyLastLine() const;

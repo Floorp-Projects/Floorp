@@ -28,9 +28,6 @@ BEGIN_TEST(testParserAtom_empty) {
   const mozilla::Utf8Unit utf8[] = {};
   const char16_t char16[] = {};
 
-  const uint8_t bytes[] = {};
-  const js::LittleEndianChars leTwoByte(bytes);
-
   // Check that the well-known empty atom matches for different entry points.
   auto refIndex = TaggedParserAtomIndex::WellKnown::empty();
   CHECK(atomTable.internAscii(cx, ascii, 0) == refIndex);
@@ -56,9 +53,6 @@ BEGIN_TEST(testParserAtom_tiny1) {
   JS::Latin1Char latin1[] = {'a'};
   const mozilla::Utf8Unit utf8[] = {mozilla::Utf8Unit('a')};
   char16_t char16[] = {'a'};
-
-  const uint8_t bytes[] = {'a', 0};
-  const js::LittleEndianChars leTwoByte(bytes);
 
   auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&a, 1);
   CHECK(refIndex);
@@ -90,9 +84,6 @@ BEGIN_TEST(testParserAtom_tiny2) {
   const mozilla::Utf8Unit utf8[] = {mozilla::Utf8Unit('a'),
                                     mozilla::Utf8Unit('0')};
   char16_t char16[] = {'a', '0'};
-
-  const uint8_t bytes[] = {'a', 0, '0', 0};
-  const js::LittleEndianChars leTwoByte(bytes);
 
   auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 2);
   CHECK(refIndex);

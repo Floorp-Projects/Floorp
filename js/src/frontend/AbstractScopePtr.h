@@ -7,26 +7,18 @@
 #ifndef frontend_AbstractScopePtr_h
 #define frontend_AbstractScopePtr_h
 
-#include "mozilla/Maybe.h"
-#include "mozilla/Variant.h"
+#include <type_traits>
 
 #include "frontend/ScopeIndex.h"
-#include "gc/Barrier.h"
-#include "gc/Rooting.h"
-#include "gc/Tracer.h"
-#include "vm/Scope.h"
 #include "vm/ScopeKind.h"  // For ScopeKind
 
 namespace js {
 class Scope;
 class GlobalScope;
 class EvalScope;
-struct MemberInitializers;
-class GCMarker;
 
 namespace frontend {
 struct CompilationState;
-struct CompilationGCOutput;
 class ScopeStencil;
 }  // namespace frontend
 

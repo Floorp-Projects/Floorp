@@ -93,6 +93,11 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mParentBackend;
   }
 
+  WebRenderCompositor GetWebRenderCompositorType() const {
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor;
+  }
+
   bool SupportsTextureBlitting() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mSupportsTextureBlitting;
@@ -108,20 +113,13 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
-  bool SupportsTextureDirectMapping() const {
-    auto lock = mData.Lock();
-    return lock.ref().mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
-  }
-
   bool SupportsD3D11() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
-               layers::LayersBackend::LAYERS_D3D11 ||
-           (lock.ref().mTextureFactoryIdentifier.mParentBackend ==
-                layers::LayersBackend::LAYERS_WR &&
-            (lock.ref().mTextureFactoryIdentifier.mCompositorUseANGLE ||
-             lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor ==
-                 layers::WebRenderCompositor::D3D11));
+               layers::LayersBackend::LAYERS_WR &&
+           (lock.ref().mTextureFactoryIdentifier.mCompositorUseANGLE ||
+            lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor ==
+                layers::WebRenderCompositor::D3D11);
   }
 
   bool GetCompositorUseANGLE() const {
@@ -177,10 +175,6 @@ class KnowsCompositor {
   TextureFactoryIdentifier GetTextureFactoryIdentifier() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier;
-  }
-
-  bool DeviceCanReset() const {
-    return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC;
   }
 
   int32_t GetSerial() const { return mSerial; }

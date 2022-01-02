@@ -64,8 +64,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     # These are common packages for building Firefox for Android
     # (mobile/android) for all Debian-derived distros (such as Ubuntu).
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        "openjdk-8-jdk-headless",  # Android's `sdkmanager` requires Java 1.8 exactly.
-        "wget",  # For downloading the Android SDK and NDK.
         "libncurses5",  # For native debugging in Android Studio
     ]
 
@@ -114,7 +112,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.apt_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
 
         # 2. Android pieces.
-        self.ensure_java(mozconfig_builder)
         super().install_mobile_android_packages(
             mozconfig_builder, artifact_mode=artifact_mode
         )

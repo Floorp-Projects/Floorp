@@ -5,7 +5,7 @@
 
 // Test that console commands are autocompleted.
 
-const TEST_URI = `data:text/html;charset=utf-8,Test command autocomplete`;
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test command autocomplete`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

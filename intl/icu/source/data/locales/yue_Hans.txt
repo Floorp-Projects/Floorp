@@ -264,10 +264,10 @@ yue_Hans{
     calendar{
         buddhist{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -277,6 +277,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 Ed{"d日（E）"}
@@ -312,10 +322,10 @@ yue_Hans{
         }
         chinese{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 {
                     "rU年MMMdEEEE",
                     "d=hanidays",
@@ -334,6 +344,25 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                {
+                    "rMMMEEEEd",
+                    "d=hanidays",
+                }
+                {
+                    "rMMMd",
+                    "d=hanidays",
+                }
+                {
+                    "rMMMd",
+                    "d=hanidays",
+                }
+                "rMd",
             }
             availableFormats{
                 Ed{"d日E"}
@@ -798,10 +827,10 @@ yue_Hans{
         }
         dangi{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "U年MMMd日EEEE",
                 "U年MMMd日",
                 "U年MMMd日",
@@ -811,6 +840,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "UMMMEEEEd",
+                "UMMMd",
+                "UMMMd",
+                "UMd",
             }
             cyclicNameSets{
                 dayParts{
@@ -1107,10 +1146,10 @@ yue_Hans{
         }
         generic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年MM月d日EEEE",
                 "Gy年MM月d日",
                 "Gy年MM月d日",
@@ -1120,6 +1159,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMEEEEd",
+                "GyMMd",
+                "GyMMd",
+                "GyMd",
             }
             availableFormats{
                 Bh{"Bh时"}
@@ -1323,10 +1372,10 @@ yue_Hans{
                 "下午",
             }
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
@@ -1336,6 +1385,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMEEEEd",
+                "yMd",
+                "yMd",
+                "yMd",
             }
             appendItems{
                 Timezone{"{1}{0}"}
@@ -1844,10 +1903,10 @@ yue_Hans{
         }
         hebrew{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -1857,6 +1916,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             eras{
                 abbreviated{
@@ -2065,10 +2134,10 @@ yue_Hans{
         }
         islamic{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -2078,6 +2147,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 Ed{"d日（E）"}
@@ -2203,10 +2282,10 @@ yue_Hans{
         }
         japanese{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -2216,6 +2295,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyyMMdd",
             }
             availableFormats{
                 Ed{"d日E"}
@@ -2594,10 +2683,10 @@ yue_Hans{
         }
         roc{
             DateTimePatterns{
-                "zzzz ah:mm:ss",
-                "z ah:mm:ss",
-                "ah:mm:ss",
-                "ah:mm",
+                "zzzz HH:mm:ss",
+                "z HH:mm:ss",
+                "HH:mm:ss",
+                "HH:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
@@ -2607,6 +2696,16 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyyMd",
             }
             availableFormats{
                 E{"ccc"}

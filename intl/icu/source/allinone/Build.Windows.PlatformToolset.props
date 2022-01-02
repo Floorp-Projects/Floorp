@@ -56,4 +56,11 @@
     <!-- For example: MSBuild complains that the common project creates "icuuc62.dll" rather than "common.dll". However, this is intentional. -->
     <MSBuildWarningsAsMessages>MSB8012</MSBuildWarningsAsMessages>
   </PropertyGroup>
+  
+  <!-- This enables outputting the source code line when an error occurs (to make it easier to see what/where the issue is). -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <DiagnosticsFormat>Caret</DiagnosticsFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>

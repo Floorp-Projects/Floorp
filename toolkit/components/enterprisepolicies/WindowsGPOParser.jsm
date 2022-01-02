@@ -66,7 +66,9 @@ function registryToObject(wrk, policies) {
     for (let i = 0; i < wrk.valueCount; i++) {
       let name = wrk.getValueName(i);
       let value = readRegistryValue(wrk, name);
-      policies[name] = value;
+      if (value != undefined) {
+        policies[name] = value;
+      }
     }
   }
   if (wrk.childCount > 0) {
@@ -95,7 +97,14 @@ function registryToObject(wrk, policies) {
 function readRegistryValue(wrk, value) {
   switch (wrk.getValueType(value)) {
     case 7: // REG_MULTI_SZ
-      return wrk.readStringValue(value).replace(/\0/g, "\n");
+      // We only use REG_MULTI_SZ for JSON in the registry. By parsing it here,
+      // we get the benefit of having JSONSchemaValidator properly validate.
+      try {
+        return JSON.parse(wrk.readStringValue(value).replace(/\0/g, "\n"));
+      } catch (e) {
+        log.error(`Unable to parse JSON for ${value}`);
+        return undefined;
+      }
     case 2: // REG_EXPAND_SZ
     case wrk.TYPE_STRING:
       return wrk.readStringValue(value);

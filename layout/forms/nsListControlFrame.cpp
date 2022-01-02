@@ -217,8 +217,8 @@ void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
 
   // set up back stop colors and then ask L&F service for the real colors
   nscolor color = LookAndFeel::Color(
-      lastItemIsSelected ? LookAndFeel::ColorID::WidgetSelectForeground
-                         : LookAndFeel::ColorID::WidgetSelectBackground,
+      lastItemIsSelected ? LookAndFeel::ColorID::Selecteditem
+                         : LookAndFeel::ColorID::Selecteditemtext,
       this);
 
   nsCSSRendering::PaintFocus(presContext, aDrawTarget, fRect, color);
@@ -620,6 +620,9 @@ bool nsListControlFrame::SingleSelection(int32_t aClickedIndex,
     mComboboxFrame->UpdateRecentIndex(GetSelectedIndex());
   }
 
+#ifdef ACCESSIBILITY
+  nsCOMPtr<nsIContent> prevOption = GetCurrentOption();
+#endif
   bool wasChanged = false;
   // Get Current selection
   if (aDoToggle) {
@@ -634,17 +637,12 @@ bool nsListControlFrame::SingleSelection(int32_t aClickedIndex,
     return wasChanged;
   }
 
-#ifdef ACCESSIBILITY
-  bool isCurrentOptionChanged = mEndSelectionIndex != aClickedIndex;
-#endif
   mStartSelectionIndex = aClickedIndex;
   mEndSelectionIndex = aClickedIndex;
   InvalidateFocus();
 
 #ifdef ACCESSIBILITY
-  if (isCurrentOptionChanged) {
-    FireMenuItemActiveEvent();
-  }
+  FireMenuItemActiveEvent(prevOption);
 #endif
 
   return wasChanged;
@@ -766,15 +764,13 @@ bool nsListControlFrame::PerformSelection(int32_t aClickedIndex, bool aIsShift,
         mStartSelectionIndex = aClickedIndex;
       }
 #ifdef ACCESSIBILITY
-      bool isCurrentOptionChanged = mEndSelectionIndex != aClickedIndex;
+      nsCOMPtr<nsIContent> prevOption = GetCurrentOption();
 #endif
       mEndSelectionIndex = aClickedIndex;
       InvalidateFocus();
 
 #ifdef ACCESSIBILITY
-      if (isCurrentOptionChanged) {
-        FireMenuItemActiveEvent();
-      }
+      FireMenuItemActiveEvent(prevOption);
 #endif
     } else if (aIsControl) {
       wasChanged = SingleSelection(aClickedIndex, true);  // might destroy us
@@ -1289,6 +1285,10 @@ nsListControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) {
     mComboboxFrame->UpdateRecentIndex(NS_SKIP_NOTIFY_INDEX);
   }
 
+#ifdef ACCESSIBILITY
+  nsCOMPtr<nsIContent> prevOption = GetCurrentOption();
+#endif
+
   AutoWeakFrame weakFrame(this);
   ScrollToIndex(aNewIndex);
   if (!weakFrame.IsAlive()) {
@@ -1299,7 +1299,9 @@ nsListControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) {
   InvalidateFocus();
 
 #ifdef ACCESSIBILITY
-  FireMenuItemActiveEvent();
+  if (aOldIndex != aNewIndex) {
+    FireMenuItemActiveEvent(prevOption);
+  }
 #endif
 }
 
@@ -1355,7 +1357,7 @@ void nsListControlFrame::AboutToDropDown() {
       return;
     }
 #ifdef ACCESSIBILITY
-    FireMenuItemActiveEvent();  // Inform assistive tech what got focus
+    FireMenuItemActiveEvent(nullptr);  // Inform assistive tech what got focus
 #endif
   }
   mItemSelectionStarted = false;
@@ -1579,17 +1581,25 @@ bool nsListControlFrame::IgnoreMouseEventForSelection(dom::Event* aEvent) {
 }
 
 #ifdef ACCESSIBILITY
-void nsListControlFrame::FireMenuItemActiveEvent() {
-  if (mFocused != this && !IsInDropDownMode()) {
+void nsListControlFrame::FireMenuItemActiveEvent(nsIContent* aPreviousOption) {
+  if ((mFocused != this && !IsInDropDownMode()) ||
+      (IsInDropDownMode() && !mComboboxFrame->IsDroppedDown())) {
     return;
   }
 
-  nsCOMPtr<nsIContent> optionContent = GetCurrentOption();
-  if (!optionContent) {
+  nsIContent* optionContent = GetCurrentOption();
+  if (aPreviousOption == optionContent) {
+    // No change
     return;
   }
 
-  FireDOMEvent(u"DOMMenuItemActive"_ns, optionContent);
+  if (aPreviousOption) {
+    FireDOMEvent(u"DOMMenuItemInactive"_ns, aPreviousOption);
+  }
+
+  if (optionContent) {
+    FireDOMEvent(u"DOMMenuItemActive"_ns, optionContent);
+  }
 }
 #endif
 
@@ -2311,6 +2321,9 @@ void nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
   AutoWeakFrame weakFrame(this);
   bool wasChanged = false;
   if (aIsControlOrMeta && !aIsShift && aCharCode != ' ') {
+#ifdef ACCESSIBILITY
+    nsCOMPtr<nsIContent> prevOption = GetCurrentOption();
+#endif
     mStartSelectionIndex = aNewIndex;
     mEndSelectionIndex = aNewIndex;
     InvalidateFocus();
@@ -2320,7 +2333,7 @@ void nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
     }
 
 #ifdef ACCESSIBILITY
-    FireMenuItemActiveEvent();
+    FireMenuItemActiveEvent(prevOption);
 #endif
   } else if (mControlSelectMode && aCharCode == ' ') {
     wasChanged = SingleSelection(aNewIndex, true);

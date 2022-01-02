@@ -101,11 +101,19 @@ add_task(async function test_validation() {
     [
       {
         object: "unknown",
-        extra: { step: "started", error: "ERROR_CORRUPT_FILE" },
+        extra: {
+          step: "started",
+          error: "ERROR_CORRUPT_FILE",
+          install_origins: "0",
+        },
       },
       {
         object: "unknown",
-        extra: { step: "started", error: "ERROR_CORRUPT_FILE" },
+        extra: {
+          step: "started",
+          error: "ERROR_CORRUPT_FILE",
+          install_origins: "0",
+        },
       },
     ],
     "Got the expected install telemetry events for the corrupted dictionaries"
@@ -114,10 +122,13 @@ add_task(async function test_validation() {
   Assert.deepEqual(
     amInstallEvents.filter(evt => evt.extra.addon_id === addon.id),
     [
-      { object: "dictionary", extra: { step: "started", addon_id: addon.id } },
       {
         object: "dictionary",
-        extra: { step: "completed", addon_id: addon.id },
+        extra: { step: "started", addon_id: addon.id, install_origins: "0" },
+      },
+      {
+        object: "dictionary",
+        extra: { step: "completed", addon_id: addon.id, install_origins: "0" },
       },
     ],
     "Got the expected install telemetry events for the first installed dictionary"
@@ -126,10 +137,13 @@ add_task(async function test_validation() {
   Assert.deepEqual(
     amInstallEvents.filter(evt => evt.extra.addon_id === addon2.id),
     [
-      { object: "dictionary", extra: { step: "started", addon_id: addon2.id } },
       {
         object: "dictionary",
-        extra: { step: "completed", addon_id: addon2.id },
+        extra: { step: "started", addon_id: addon2.id, install_origins: "0" },
+      },
+      {
+        object: "dictionary",
+        extra: { step: "completed", addon_id: addon2.id, install_origins: "0" },
       },
     ],
     "Got the expected install telemetry events for the second installed dictionary"

@@ -134,6 +134,16 @@ void NodeChannel::SetOtherPid(int32_t aNewPid) {
   }
 }
 
+#ifdef XP_MACOSX
+void NodeChannel::SetMachTaskPort(task_t aTask) {
+  AssertIOThread();
+
+  if (!mClosed) {
+    mChannel->SetOtherMachTask(aTask);
+  }
+}
+#endif
+
 void NodeChannel::SendEventMessage(UniquePtr<IPC::Message> aMessage) {
   // Make sure we're not sending a message with one of our special internal
   // types ,as those should only be sent using the corresponding methods on

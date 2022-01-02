@@ -358,6 +358,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mUseRegularPrincipal = aData.useRegularPrincipal();
   info.mHasStorageAccessPermissionGranted =
       aData.hasStorageAccessPermissionGranted();
+  info.mIsThirdPartyContextToTopWindow = aData.isThirdPartyContextToTopWindow();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   net::CookieJarSettings::Deserialize(aData.cookieJarSettings(),
@@ -688,6 +689,21 @@ void RemoteWorkerChild::ErrorPropagationOnMainThread(
   GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
+void RemoteWorkerChild::NotifyLock(bool aCreated) {
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [self = RefPtr(this), aCreated] {
+        auto launcherData = self->mLauncherData.Access();
+
+        if (!launcherData->mIPCActive) {
+          return;
+        }
+
+        Unused << self->SendNotifyLock(aCreated);
+      });
+
+  GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+}
+
 void RemoteWorkerChild::FlushReportsOnMainThread(
     nsIConsoleReportCollector* aReporter) {
   AssertIsOnMainThread();
@@ -998,7 +1014,8 @@ IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
     ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve) {
   MOZ_ASSERT(mIsServiceWorker);
   MOZ_ASSERT(
-      aArgs.type() != ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs,
+      aArgs.type() !=
+          ServiceWorkerOpArgs::TParentToChildServiceWorkerFetchEventOpArgs,
       "FetchEvent operations should be sent via PFetchEventOp(Proxy) actors!");
 
   MaybeReportServiceWorkerShutdownProgress(aArgs);
@@ -1047,31 +1064,20 @@ RemoteWorkerChild::MaybeSendSetServiceWorkerSkipWaitingFlag() {
 /**
  * PFetchEventOpProxy methods
  */
-PFetchEventOpProxyChild* RemoteWorkerChild::AllocPFetchEventOpProxyChild(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
-  RefPtr<FetchEventOpProxyChild> actor = new FetchEventOpProxyChild();
-
-  return actor.forget().take();
+already_AddRefed<PFetchEventOpProxyChild>
+RemoteWorkerChild::AllocPFetchEventOpProxyChild(
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
+  return RefPtr{new FetchEventOpProxyChild()}.forget();
 }
 
 IPCResult RemoteWorkerChild::RecvPFetchEventOpProxyConstructor(
     PFetchEventOpProxyChild* aActor,
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_ASSERT(aActor);
 
   (static_cast<FetchEventOpProxyChild*>(aActor))->Initialize(aArgs);
 
   return IPC_OK();
-}
-
-bool RemoteWorkerChild::DeallocPFetchEventOpProxyChild(
-    PFetchEventOpProxyChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  RefPtr<FetchEventOpProxyChild> actor =
-      dont_AddRef(static_cast<FetchEventOpProxyChild*>(aActor));
-
-  return true;
 }
 
 }  // namespace dom

@@ -28,6 +28,10 @@ panel {
 menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
+
+  /* Native menus are always light */
+  color-scheme: light;
+
   /* We set the background-color / border here so that it doesn't interfere with native styling. */
   background-color: Menu;
   border: 1px solid ThreeDShadow;
@@ -40,6 +44,8 @@ menupopup {
   menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
+    color-scheme: unset;
+
     /* Force a rounded-rect dropshadow to appear. */
     -moz-window-shadow: cliprounded;
 
@@ -113,44 +119,6 @@ panel[type="arrow"][side="right"] {
 panel[type="arrow"].panel-no-padding::part(content) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border-radius */
-}
-
-:is(panel, menupopup)::part(arrow) {
-  -moz-context-properties: fill, stroke;
-  fill: var(--arrowpanel-background);
-  stroke: var(--arrowpanel-border-color);
-}
-
-:is(panel, menupopup)[side="top"]::part(arrow),
-:is(panel, menupopup)[side="bottom"]::part(arrow) {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
-  position: relative;
-  margin-inline: 10px;
-}
-
-:is(panel, menupopup)[side="top"]::part(arrow) {
-  margin-bottom: -5px;
-}
-
-:is(panel, menupopup)[side="bottom"]::part(arrow) {
-  transform: scaleY(-1);
-  margin-top: -5px;
-}
-
-:is(panel, menupopup)[side="left"]::part(arrow),
-:is(panel, menupopup)[side="right"]::part(arrow) {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
-  position: relative;
-  margin-block: 10px;
-}
-
-:is(panel, menupopup)[side="left"]::part(arrow) {
-  margin-right: -5px;
-}
-
-:is(panel, menupopup)[side="right"]::part(arrow) {
-  transform: scaleX(-1);
-  margin-left: -5px;
 }
 
 /* rules for popups associated with menulists */

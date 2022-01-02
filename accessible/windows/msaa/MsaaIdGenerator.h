@@ -12,6 +12,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace a11y {
@@ -38,6 +39,12 @@ class sdnAccessible;
  */
 class MsaaIdGenerator {
  public:
+  ~MsaaIdGenerator() {
+    if (mReleaseIDTimer) {
+      mReleaseIDTimer->Cancel();
+    }
+  }
+
   uint32_t GetID();
   void ReleaseID(NotNull<MsaaAccessible*> aMsaaAcc);
   void ReleaseID(NotNull<sdnAccessible*> aSdnAcc);
@@ -56,6 +63,8 @@ class MsaaIdGenerator {
 
  private:
   UniquePtr<IDSet> mIDSet;
+  nsTArray<uint32_t> mIDsToRelease;
+  nsCOMPtr<nsITimer> mReleaseIDTimer;
 };
 
 }  // namespace a11y

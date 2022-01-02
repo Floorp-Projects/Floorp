@@ -4,10 +4,6 @@
 
 /* import-globals-from preferences.js */
 
-var { ContextualIdentityService } = ChromeUtils.import(
-  "resource://gre/modules/ContextualIdentityService.jsm"
-);
-
 const defaultContainerIcon = "fingerprint";
 const defaultContainerColor = "blue";
 

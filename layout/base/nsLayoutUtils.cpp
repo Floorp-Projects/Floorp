@@ -52,7 +52,7 @@
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/dom/UIEvent.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
@@ -1365,45 +1365,19 @@ nsIScrollableFrame* nsLayoutUtils::GetScrollableFrameFor(
 /* static */
 SideBits nsLayoutUtils::GetSideBitsForFixedPositionContent(
     const nsIFrame* aFixedPosFrame) {
-  return GetSideBitsAndAdjustAnchorForFixedPositionContent(
-      nullptr, aFixedPosFrame, nullptr, nullptr);
-}
-
-/* static */
-SideBits nsLayoutUtils::GetSideBitsAndAdjustAnchorForFixedPositionContent(
-    const nsIFrame* aViewportFrame, const nsIFrame* aFixedPosFrame,
-    LayerPoint* aAnchor, const Rect* aAnchorRect) {
   SideBits sides = SideBits::eNone;
-  if (aFixedPosFrame != aViewportFrame) {
+  if (aFixedPosFrame) {
     const nsStylePosition* position = aFixedPosFrame->StylePosition();
     if (!position->mOffset.Get(eSideRight).IsAuto()) {
       sides |= SideBits::eRight;
-      if (!position->mOffset.Get(eSideLeft).IsAuto()) {
-        sides |= SideBits::eLeft;
-        if (aAnchor) {
-          aAnchor->x = aAnchorRect->x + aAnchorRect->width / 2.f;
-        }
-      } else {
-        if (aAnchor) {
-          aAnchor->x = aAnchorRect->XMost();
-        }
-      }
-    } else if (!position->mOffset.Get(eSideLeft).IsAuto()) {
+    }
+    if (!position->mOffset.Get(eSideLeft).IsAuto()) {
       sides |= SideBits::eLeft;
     }
     if (!position->mOffset.Get(eSideBottom).IsAuto()) {
       sides |= SideBits::eBottom;
-      if (!position->mOffset.Get(eSideTop).IsAuto()) {
-        sides |= SideBits::eTop;
-        if (aAnchor) {
-          aAnchor->y = aAnchorRect->y + aAnchorRect->height / 2.f;
-        }
-      } else {
-        if (aAnchor) {
-          aAnchor->y = aAnchorRect->YMost();
-        }
-      }
-    } else if (!position->mOffset.Get(eSideTop).IsAuto()) {
+    }
+    if (!position->mOffset.Get(eSideTop).IsAuto()) {
       sides |= SideBits::eTop;
     }
   }
@@ -1543,10 +1517,9 @@ nsRect nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
   WritingMode wm = aScrolledFrame->GetWritingMode();
   // Potentially override the frame's direction to use the direction found
   // by ScrollFrameHelper::GetScrolledFrameDir()
-  wm.SetDirectionFromBidiLevel(
-      aDirection == StyleDirection::Rtl
-          ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-          : mozilla::intl::Bidi::EmbeddingLevel::LTR());
+  wm.SetDirectionFromBidiLevel(aDirection == StyleDirection::Rtl
+                                   ? mozilla::intl::BidiEmbeddingLevel::RTL()
+                                   : mozilla::intl::BidiEmbeddingLevel::LTR());
 
   nscoord x1 = aScrolledFrameOverflowArea.x,
           x2 = aScrolledFrameOverflowArea.XMost(),
@@ -3362,6 +3335,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         metrics->EndPartialBuild(updateState);
       } else {
         // Partial updates are disabled.
+        DL_LOGI("Partial updates are disabled");
         metrics->mPartialUpdateResult = PartialUpdateResult::Failed;
         metrics->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
       }
@@ -3377,6 +3351,8 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       }
 
       if (doFullRebuild) {
+        DL_LOGI("Starting full display list build, root frame: %p",
+                builder->RootReferenceFrame());
         list->DeleteAll(builder);
         list->RestoreState();
 
@@ -3392,6 +3368,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         builder->LeavePresShell(aFrame, list);
         metrics->EndFullBuild();
 
+        DL_LOGI("Finished full display list build");
         updateState = PartialUpdateResult::Updated;
       }
     }
@@ -5556,7 +5533,7 @@ nscoord nsLayoutUtils::AppUnitWidthOfStringBidi(const char16_t* aString,
                                                 gfxContext& aContext) {
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    mozilla::intl::Bidi::EmbeddingLevel level =
+    mozilla::intl::BidiEmbeddingLevel level =
         nsBidiPresUtils::BidiLevelFromStyle(aFrame->Style());
     return nsBidiPresUtils::MeasureTextWidth(
         aString, aLength, level, presContext, aContext, aFontMetrics);
@@ -5636,7 +5613,7 @@ void nsLayoutUtils::DrawString(const nsIFrame* aFrame,
 
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    mozilla::intl::Bidi::EmbeddingLevel level =
+    mozilla::intl::BidiEmbeddingLevel level =
         nsBidiPresUtils::BidiLevelFromStyle(aComputedStyle);
     rv = nsBidiPresUtils::RenderText(aString, aLength, level, presContext,
                                      *aContext, aContext->GetDrawTarget(),
@@ -6608,26 +6585,32 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
         imgIContainer::FRAME_CURRENT, samplingFilter, aFlags);
   }
 
-  // If the dest rect contains the fill rect, then we are only displaying part
-  // of the vector image. We need to calculate the restriction region to avoid
-  // drawing more than we need, and sampling outside the desired bounds.
-  LayerIntRect clipRect = SnapRectForImage(itm, scaleFactors, aFillRect);
-  if (destRect.Contains(clipRect)) {
-    LayerIntRect restrictRect = destRect.Intersect(clipRect);
-    restrictRect.MoveBy(-destRect.TopLeft());
+  // We only use the region rect with blob recordings. This is because when we
+  // rasterize an SVG image in process, we always create a complete
+  // rasterization of the whole image which can be given to any caller, while
+  // we support partial rasterization with the blob recordings.
+  if (aFlags & imgIContainer::FLAG_RECORD_BLOB) {
+    // If the dest rect contains the fill rect, then we are only displaying part
+    // of the vector image. We need to calculate the restriction region to avoid
+    // drawing more than we need, and sampling outside the desired bounds.
+    LayerIntRect clipRect = SnapRectForImage(itm, scaleFactors, aFillRect);
+    if (destRect.Contains(clipRect)) {
+      LayerIntRect restrictRect = destRect.Intersect(clipRect);
+      restrictRect.MoveBy(-destRect.TopLeft());
 
-    if (restrictRect.Width() < 1) {
-      restrictRect.SetWidth(1);
-    }
-    if (restrictRect.Height() < 1) {
-      restrictRect.SetHeight(1);
-    }
+      if (restrictRect.Width() < 1) {
+        restrictRect.SetWidth(1);
+      }
+      if (restrictRect.Height() < 1) {
+        restrictRect.SetHeight(1);
+      }
 
-    if (restrictRect.X() != 0 || restrictRect.Y() != 0 ||
-        restrictRect.Size() != destRect.Size()) {
-      IntRect sampleRect = restrictRect.ToUnknownRect();
-      aRegion = Some(ImageIntRegion::CreateWithSamplingRestriction(
-          sampleRect, sampleRect, ExtendMode::CLAMP));
+      if (restrictRect.X() != 0 || restrictRect.Y() != 0 ||
+          restrictRect.Size() != destRect.Size()) {
+        IntRect sampleRect = restrictRect.ToUnknownRect();
+        aRegion = Some(ImageIntRegion::CreateWithSamplingRestriction(
+            sampleRect, sampleRect, ExtendMode::CLAMP));
+      }
     }
   }
 
@@ -9580,7 +9563,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
 /* static */
 void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
                                       LookAndFeel::FontID aFontID,
-                                      const nsFont* aDefaultVariableFont,
+                                      const nsFont& aDefaultVariableFont,
                                       const Document* aDocument) {
   gfxFontStyle fontStyle;
   nsAutoString systemFontName;
@@ -9640,7 +9623,7 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
       //
       // This matches historical Windows behavior and other browsers.
       auto newSize =
-          aDefaultVariableFont->size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
+          aDefaultVariableFont.size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
       aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
     }
   }

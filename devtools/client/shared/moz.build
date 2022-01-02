@@ -24,8 +24,6 @@ DIRS += [
 DevToolsModules(
     "async-store-helper.js",
     "autocomplete-popup.js",
-    "browser-loader-mocks.js",
-    "browser-loader.js",
     "css-angle.js",
     "curl.js",
     "demangle.js",

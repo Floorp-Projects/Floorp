@@ -6,7 +6,7 @@
 "use strict";
 
 const MESSAGE = "React Error";
-const TEST_URI = `data:text/html;charset=utf8,<script>
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
   const x = new Error("${MESSAGE}");
   x.stack = "a@http://exampl.com:1:1\\n" +
     "grouped@http://react.js:1:1\\n" +

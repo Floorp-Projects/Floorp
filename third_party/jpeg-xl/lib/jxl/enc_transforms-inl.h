@@ -23,24 +23,6 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
-template <size_t ROWS, size_t COLS>
-struct DoIDCT {
-  template <typename To>
-  void operator()(float* JXL_RESTRICT from, const To& to,
-                  float* JXL_RESTRICT scratch_space) {
-    ComputeScaledIDCT<ROWS, COLS>()(from, to, scratch_space);
-  }
-};
-
-template <size_t N>
-struct DoIDCT<N, N> {
-  template <typename To>
-  void operator()(float* JXL_RESTRICT from, const To& to,
-                  float* JXL_RESTRICT scratch_space) const {
-    ComputeTransposedScaledIDCT<N>()(from, to, scratch_space);
-  }
-};
-
 // Inverse of ReinterpretingDCT.
 template <size_t DCT_ROWS, size_t DCT_COLS, size_t LF_ROWS, size_t LF_COLS,
           size_t ROWS, size_t COLS>
@@ -68,7 +50,8 @@ HWY_INLINE void ReinterpretingIDCT(const float* input,
 
   // ROWS, COLS <= 8, so we can put scratch space on the stack.
   HWY_ALIGN float scratch_space[ROWS * COLS];
-  DoIDCT<ROWS, COLS>()(block, DCTTo(output, output_stride), scratch_space);
+  ComputeScaledIDCT<ROWS, COLS>()(block, DCTTo(output, output_stride),
+                                  scratch_space);
 }
 
 template <size_t S>
@@ -435,7 +418,7 @@ void AFVTransformFromPixels(const float* JXL_RESTRICT pixels,
     }
   }
   // 4x4 DCT of the block with same y and different x.
-  ComputeTransposedScaledDCT<4>()(
+  ComputeScaledDCT<4, 4>()(
       DCTFrom(pixels + afv_y * 4 * pixels_stride + (afv_x == 1 ? 0 : 4),
               pixels_stride),
       block, scratch_space);
@@ -545,7 +528,7 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
       for (size_t y = 0; y < 2; y++) {
         for (size_t x = 0; x < 2; x++) {
           HWY_ALIGN float block[4 * 4];
-          ComputeTransposedScaledDCT<4>()(
+          ComputeScaledDCT<4, 4>()(
               DCTFrom(pixels + y * 4 * pixels_stride + x * 4, pixels_stride),
               block, scratch_space);
           for (size_t iy = 0; iy < 4; iy++) {
@@ -574,8 +557,8 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
     }
     case Type::DCT16X16: {
       PROFILER_ZONE("DCT 16");
-      ComputeTransposedScaledDCT<16>()(DCTFrom(pixels, pixels_stride),
-                                       coefficients, scratch_space);
+      ComputeScaledDCT<16, 16>()(DCTFrom(pixels, pixels_stride), coefficients,
+                                 scratch_space);
       break;
     }
     case Type::DCT16X8: {
@@ -616,14 +599,14 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
     }
     case Type::DCT32X32: {
       PROFILER_ZONE("DCT 32");
-      ComputeTransposedScaledDCT<32>()(DCTFrom(pixels, pixels_stride),
-                                       coefficients, scratch_space);
+      ComputeScaledDCT<32, 32>()(DCTFrom(pixels, pixels_stride), coefficients,
+                                 scratch_space);
       break;
     }
     case Type::DCT: {
       PROFILER_ZONE("DCT 8");
-      ComputeTransposedScaledDCT<8>()(DCTFrom(pixels, pixels_stride),
-                                      coefficients, scratch_space);
+      ComputeScaledDCT<8, 8>()(DCTFrom(pixels, pixels_stride), coefficients,
+                               scratch_space);
       break;
     }
     case Type::AFV0: {
@@ -648,8 +631,8 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
     }
     case Type::DCT64X64: {
       PROFILER_ZONE("DCT 64x64");
-      ComputeTransposedScaledDCT<64>()(DCTFrom(pixels, pixels_stride),
-                                       coefficients, scratch_space);
+      ComputeScaledDCT<64, 64>()(DCTFrom(pixels, pixels_stride), coefficients,
+                                 scratch_space);
       break;
     }
     case Type::DCT64X32: {
@@ -666,8 +649,8 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
     }
     case Type::DCT128X128: {
       PROFILER_ZONE("DCT 128x128");
-      ComputeTransposedScaledDCT<128>()(DCTFrom(pixels, pixels_stride),
-                                        coefficients, scratch_space);
+      ComputeScaledDCT<128, 128>()(DCTFrom(pixels, pixels_stride), coefficients,
+                                   scratch_space);
       break;
     }
     case Type::DCT128X64: {
@@ -684,8 +667,8 @@ HWY_MAYBE_UNUSED void TransformFromPixels(const AcStrategy::Type strategy,
     }
     case Type::DCT256X256: {
       PROFILER_ZONE("DCT 256x256");
-      ComputeTransposedScaledDCT<256>()(DCTFrom(pixels, pixels_stride),
-                                        coefficients, scratch_space);
+      ComputeScaledDCT<256, 256>()(DCTFrom(pixels, pixels_stride), coefficients,
+                                   scratch_space);
       break;
     }
     case Type::DCT256X128: {

@@ -59,6 +59,13 @@ void SendFOGData(ipc::ByteBuf&& buf);
  */
 RefPtr<GenericPromise> FlushAndUseFOGData();
 
+/**
+ * ** Test-only Method **
+ *
+ * Trigger GPU-process test instrumentation.
+ */
+void TestTriggerGPUMetrics();
+
 }  // namespace glean
 }  // namespace mozilla
 

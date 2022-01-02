@@ -244,9 +244,9 @@ already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
 
   if (eventGroup & (1 << AccEvent::eCaretMoveEvent)) {
     AccCaretMoveEvent* cm = downcast_accEvent(aEvent);
-    xpEvent = new xpcAccCaretMoveEvent(type, ToXPC(acc), ToXPCDocument(doc),
-                                       node, fromUser, cm->GetCaretOffset(),
-                                       cm->IsSelectionCollapsed());
+    xpEvent = new xpcAccCaretMoveEvent(
+        type, ToXPC(acc), ToXPCDocument(doc), node, fromUser,
+        cm->GetCaretOffset(), cm->IsSelectionCollapsed(), cm->IsAtEndOfLine());
     return xpEvent.forget();
   }
 

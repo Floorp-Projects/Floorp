@@ -18,13 +18,51 @@ const TARGET_PAGE = ROOT + "dummy.html";
  */
 function getToolbarsFromBrowserContent(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [], async function() {
-    return {
-      toolbar: content.toolbar.visible,
-      menubar: content.menubar.visible,
-      personalbar: content.personalbar.visible,
-      statusbar: content.statusbar.visible,
-      locationbar: content.locationbar.visible,
-    };
+    // This is still chrome context.
+    // Inject a script that runs on content context, and gather the result.
+
+    let script = content.document.createElement("script");
+    script.textContent = `
+let bars = [
+  "toolbar",
+  "menubar",
+  "personalbar",
+  "statusbar",
+  "scrollbars",
+  "locationbar",
+];
+
+for (let bar of bars) {
+  let node = document.createElement("span");
+  node.id = bar;
+  node.textContent = window[bar].visible;
+  document.body.appendChild(node);
+}
+`;
+    content.document.body.appendChild(script);
+
+    let result = {};
+
+    let bars = [
+      "toolbar",
+      "menubar",
+      "personalbar",
+      "statusbar",
+      "scrollbars",
+      "locationbar",
+    ];
+
+    for (let bar of bars) {
+      let node = content.document.getElementById(bar);
+      let value = node.textContent;
+      if (value !== "true" && value !== "false") {
+        throw new Error("bar visibility isn't set");
+      }
+      result[bar] = value === "true";
+      node.remove();
+    }
+
+    return result;
   });
 }
 
@@ -43,6 +81,7 @@ function getToolbarsFromWindowChrome(win) {
     menubar: win.menubar.visible,
     personalbar: win.personalbar.visible,
     statusbar: win.statusbar.visible,
+    scrollbars: win.scrollbars.visible,
     locationbar: win.locationbar.visible,
   };
 }
@@ -67,19 +106,42 @@ function testDefaultToolbars(toolbars) {
     toolbars.statusbar,
     "statusbar should be visible on default window.open()"
   );
+  ok(
+    toolbars.scrollbars,
+    "scrollbars should be visible on default window.open()"
+  );
   ok(toolbars.toolbar, "toolbar should be visible on default window.open()");
 }
 
 /**
- * Tests toolbar visibility when opening a window with non default parameters
- * on the content context.
- *
- * Ensure that locationbar can't be hidden in the content context, see bug#337344.
+ * Tests toolbar visibility when opening a popup window on the content context,
+ * and reading the value from context context.
  *
  * @param toolbars
  *        the visibility state of the toolbar elements
  */
-function testNonDefaultContentToolbars(toolbars) {
+function testNonDefaultContentToolbarsFromContent(toolbars) {
+  // Accessing BarProp.visible from content context should return false for
+  // popup, regardless of the each feature value in window.open parameter.
+  ok(!toolbars.locationbar, "locationbar.visible should be false for popup");
+  ok(!toolbars.menubar, "menubar.visible should be false for popup");
+  ok(!toolbars.personalbar, "personalbar.visible should be false for popup");
+  ok(!toolbars.statusbar, "statusbar.visible should be false for popup");
+  ok(!toolbars.scrollbars, "scrollbars.visible should be false for popup");
+  ok(!toolbars.toolbar, "toolbar.visible should be false for popup");
+}
+
+/**
+ * Tests toolbar visibility when opening a popup window on the content context,
+ * and reading the value from chrome context.
+ *
+ * @param toolbars
+ *        the visibility state of the toolbar elements
+ */
+function testNonDefaultContentToolbarsFromChrome(toolbars) {
+  // Accessing BarProp.visible from chrome context should return the
+  // actual visibility.
+
   // Locationbar should always be visible on content context
   ok(
     toolbars.locationbar,
@@ -92,6 +154,10 @@ function testNonDefaultContentToolbars(toolbars) {
   );
   // statusbar will report visible=true even when it's hidden because of bug#55820
   todo(!toolbars.statusbar, "statusbar shouldn't be visible when status=no");
+  ok(
+    toolbars.scrollbars,
+    "scrollbars should be visible even with scrollbars=no"
+  );
   ok(!toolbars.toolbar, "toolbar shouldn't be visible when toolbar=no");
 }
 
@@ -114,6 +180,10 @@ function testNonDefaultChromeToolbars(toolbars) {
     "personalbar should not be visible with personalbar=no"
   );
   ok(!toolbars.statusbar, "statusbar should not be visible with status=no");
+  ok(
+    toolbars.scrollbars,
+    "scrollbars should be visible even with scrollbars=no"
+  );
   ok(!toolbars.toolbar, "toolbar should not be visible with toolbar=no");
 }
 
@@ -162,13 +232,13 @@ add_task(async function() {
 
       let popupBrowser = popupWindow.gBrowser.selectedBrowser;
 
-      // Test toolbars visibility
+      // Test toolbars visibility value from content.
       let popupToolbars = await getToolbarsFromBrowserContent(popupBrowser);
-      testNonDefaultContentToolbars(popupToolbars);
+      testNonDefaultContentToolbarsFromContent(popupToolbars);
 
-      // Ensure that chrome toolbars agree with content
+      // Test toolbars visibility value from chrome.
       let chromeToolbars = getToolbarsFromWindowChrome(popupWindow);
-      testNonDefaultContentToolbars(chromeToolbars);
+      testNonDefaultContentToolbarsFromChrome(chromeToolbars);
 
       // Close the new window
       await BrowserTestUtils.closeWindow(popupWindow);
@@ -202,11 +272,10 @@ add_task(async function() {
       // No need to wait for this window to load, since it's loading about:blank
       let popupBrowser = popupWindow.gBrowser.selectedBrowser;
       let popupToolbars = await getToolbarsFromBrowserContent(popupBrowser);
-      testNonDefaultContentToolbars(popupToolbars);
+      testNonDefaultContentToolbarsFromContent(popupToolbars);
 
-      // Ensure that chrome toolbars agree with content
       let chromeToolbars = getToolbarsFromWindowChrome(popupWindow);
-      testNonDefaultContentToolbars(chromeToolbars);
+      testNonDefaultContentToolbarsFromChrome(chromeToolbars);
 
       // Close the new window
       await BrowserTestUtils.closeWindow(popupWindow);

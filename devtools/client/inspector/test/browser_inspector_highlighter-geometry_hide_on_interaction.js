@@ -56,7 +56,7 @@ add_task(async function() {
   ok("Highlighter was hidden when using the node picker");
 
   // stop the node picker
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 
   info("Check that selecting another node does hide the highlighter");
   onHighlighterShown = onHighlighterShown = getOnceHighlighterShown(inspector);

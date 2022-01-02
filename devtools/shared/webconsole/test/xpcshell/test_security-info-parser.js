@@ -4,8 +4,6 @@
 
 // Test that NetworkHelper.parseSecurityInfo returns correctly formatted object.
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
     return require("devtools/shared/webconsole/network-helper");

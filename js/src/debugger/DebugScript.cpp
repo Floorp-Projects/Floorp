@@ -350,7 +350,7 @@ void DebugScript::trace(JSTracer* trc) {
 /* static */
 void DebugAPI::removeDebugScript(JSFreeOp* fop, JSScript* script) {
   if (script->hasDebugScript()) {
-    if (IsAboutToBeFinalizedUnbarriered(&script)) {
+    if (IsAboutToBeFinalizedUnbarriered(script)) {
       // The script is dying and all breakpoint data will be cleaned up.
       return;
     }

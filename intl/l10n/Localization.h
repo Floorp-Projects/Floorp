@@ -12,6 +12,9 @@
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
+#include "nsIScriptError.h"
+#include "nsContentUtils.h"
+#include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -21,6 +24,53 @@
 
 namespace mozilla {
 namespace intl {
+
+// The state where the application contains incomplete localization resources
+// is much more common than for other types of core resources.
+//
+// In result, our localization is designed to handle missing resources
+// gracefully, and we need a more fine-tuned way to communicate those problems
+// to developers.
+//
+// In particular, we want developers and early adopters to be able to reason
+// about missing translations, without bothering end user in production, where
+// the user cannot react to that.
+//
+// We currently differentiate between nightly/dev-edition builds or automation
+// where we report the errors, and beta/release, where we silence them.
+//
+// A side effect of the conditional model of strict vs loose error handling is
+// that we don't have a way to write integration tests for behavior we expect
+// out of production environment. See bug 1741430.
+[[maybe_unused]] static bool MaybeReportErrorsToGecko(
+    const nsTArray<nsCString>& aErrors, ErrorResult& aRv,
+    nsIGlobalObject* aGlobal) {
+  if (!aErrors.IsEmpty()) {
+    if (xpc::IsInAutomation()) {
+      aRv.ThrowInvalidStateError(aErrors.ElementAt(0));
+      return true;
+    }
+
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+    dom::Document* doc = nullptr;
+    if (aGlobal) {
+      nsPIDOMWindowInner* innerWindow = aGlobal->AsInnerWindow();
+      if (innerWindow) {
+        doc = innerWindow->GetExtantDoc();
+      }
+    }
+
+    for (const auto& error : aErrors) {
+      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(error),
+                                                  nsIScriptError::warningFlag,
+                                                  "l10n"_ns, doc);
+      printf_stderr("%s\n", error.get());
+    }
+#endif
+  }
+
+  return false;
+}
 
 class Localization : public nsIObserver,
                      public nsWrapperCache,

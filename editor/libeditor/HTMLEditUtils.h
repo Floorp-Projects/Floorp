@@ -6,6 +6,12 @@
 #ifndef mozilla_HTMLEditUtils_h
 #define mozilla_HTMLEditUtils_h
 
+/**
+ * This header declares/defines static helper methods as members of
+ * HTMLEditUtils.  If you want to create or look for helper trivial classes for
+ * HTMLEditor, see HTMLEditHelpers.h.
+ */
+
 #include "mozilla/Attributes.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"

@@ -10,7 +10,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsMemoryReporterManager.h"
-#include "nsNetCID.h"
 #include "nsWhitespaceTokenizer.h"
 
 #include <cstdio>
@@ -43,7 +42,7 @@ class StatReader {
     nsAutoString fileContent;
     nsresult rv = ReadFile(fileContent);
     NS_ENSURE_SUCCESS(rv, rv);
-    // We first extract the filename
+    // We first extract the file or thread name
     int32_t startPos = fileContent.RFindChar('(');
     if (startPos == -1) {
       return NS_ERROR_FAILURE;
@@ -53,7 +52,7 @@ class StatReader {
       return NS_ERROR_FAILURE;
     }
     int32_t len = endPos - (startPos + 1);
-    aInfo.filename.Assign(Substring(fileContent, startPos + 1, len));
+    mName.Assign(Substring(fileContent, startPos + 1, len));
 
     // now we can use the tokenizer for the rest of the file
     nsWhitespaceTokenizer tokenizer(Substring(fileContent, endPos + 2));
@@ -77,13 +76,13 @@ class StatReader {
       case 13:
         // Amount of time that this process has been scheduled
         // in user mode, measured in clock ticks
-        aInfo.cpuUser = GetCPUTime(aToken, &rv);
+        aInfo.cpuTime += GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       case 14:
         // Amount of time that this process has been scheduled
         // in kernel mode, measured in clock ticks
-        aInfo.cpuKernel = GetCPUTime(aToken, &rv);
+        aInfo.cpuTime += GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
     }
@@ -120,7 +119,7 @@ class StatReader {
   base::ProcessId mPid;
   int32_t mMaxIndex;
   nsCString mFilepath;
-  ProcInfo mProcInfo;
+  nsString mName;
 
  private:
   // Reads the stat file and puts its content in a nsString.
@@ -175,9 +174,8 @@ class ThreadInfoReader final : public StatReader {
 
     aInfo.tid = mTid;
     // Copying over the data we got from StatReader::ParseProc()
-    aInfo.cpuKernel = info.cpuKernel;
-    aInfo.cpuUser = info.cpuUser;
-    aInfo.name.Assign(info.filename);
+    aInfo.cpuTime = info.cpuTime;
+    aInfo.name.Assign(mName);
     return NS_OK;
   }
 
@@ -193,114 +191,100 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
     return rv;
   }
 
-  *aResult = (info.cpuKernel + info.cpuUser) / PR_NSEC_PER_MSEC;
+  *aResult = info.cpuTime / PR_NSEC_PER_MSEC;
   return NS_OK;
 }
 
-RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
-  auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
-  RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get stream transport service");
-    holder->Reject(rv, __func__);
-    return promise;
+nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
+    nsTArray<ProcInfoRequest>&& aRequests) {
+  ProcInfoPromise::ResolveOrRejectValue result;
+
+  HashMap<base::ProcessId, ProcInfo> gathered;
+  if (!gathered.reserve(aRequests.Length())) {
+    result.SetReject(NS_ERROR_OUT_OF_MEMORY);
+    return result;
+  }
+  for (const auto& request : aRequests) {
+    // opening the stat file and reading its content
+    StatReader reader(request.pid);
+    ProcInfo info;
+    nsresult rv = reader.ParseProc(info);
+    if (NS_FAILED(rv)) {
+      // Can't read data for this proc.
+      // Probably either a sandboxing issue or a race condition, e.g.
+      // the process has been just been killed. Regardless, skip process.
+      continue;
+    }
+
+    // The 'Memory' value displayed in the system monitor is resident -
+    // shared. statm contains more fields, but we're only interested in
+    // the first three.
+    static const int MAX_FIELD = 3;
+    size_t VmSize, resident, shared;
+    info.memory = 0;
+    FILE* f = fopen(nsPrintfCString("/proc/%u/statm", request.pid).get(), "r");
+    if (f) {
+      int nread = fscanf(f, "%zu %zu %zu", &VmSize, &resident, &shared);
+      fclose(f);
+      if (nread == MAX_FIELD) {
+        info.memory = (resident - shared) * getpagesize();
+      }
+    }
+
+    // Extra info
+    info.pid = request.pid;
+    info.childId = request.childId;
+    info.type = request.processType;
+    info.origin = request.origin;
+    info.windows = std::move(request.windowInfo);
+
+    // Let's look at the threads
+    nsCString taskPath;
+    taskPath.AppendPrintf("/proc/%u/task", request.pid);
+    DIR* dirHandle = opendir(taskPath.get());
+    if (!dirHandle) {
+      // For some reason, we have no data on the threads for this process.
+      // Most likely reason is that we have just lost a race condition and
+      // the process is dead.
+      // Let's stop here and ignore the entire process.
+      continue;
+    }
+    auto cleanup = mozilla::MakeScopeExit([&] { closedir(dirHandle); });
+
+    // If we can't read some thread info, we ignore that thread.
+    dirent* entry;
+    while ((entry = readdir(dirHandle)) != nullptr) {
+      if (entry->d_name[0] == '.') {
+        continue;
+      }
+      // Threads have a stat file, like processes.
+      nsAutoCString entryName(entry->d_name);
+      int32_t tid = entryName.ToInteger(&rv);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+      ThreadInfoReader reader(request.pid, tid);
+      ThreadInfo threadInfo;
+      rv = reader.ParseThread(threadInfo);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+      info.threads.AppendElement(threadInfo);
+    }
+
+    if (!gathered.put(request.pid, std::move(info))) {
+      result.SetReject(NS_ERROR_OUT_OF_MEMORY);
+      return result;
+    }
   }
 
-  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__,
-      [holder = std::move(holder), requests = std::move(aRequests)]() {
-        HashMap<base::ProcessId, ProcInfo> gathered;
-        if (!gathered.reserve(requests.Length())) {
-          holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
-          return;
-        }
-        for (const auto& request : requests) {
-          // opening the stat file and reading its content
-          StatReader reader(request.pid);
-          ProcInfo info;
-          nsresult rv = reader.ParseProc(info);
-          if (NS_FAILED(rv)) {
-            // Can't read data for this proc.
-            // Probably either a sandboxing issue or a race condition, e.g.
-            // the process has been just been killed. Regardless, skip process.
-            continue;
-          }
-
-          // The 'Memory' value displayed in the system monitor is resident -
-          // shared. statm contains more fields, but we're only interested in
-          // the first three.
-          static const int MAX_FIELD = 3;
-          size_t VmSize, resident, shared;
-          info.memory = 0;
-          FILE* f =
-              fopen(nsPrintfCString("/proc/%u/statm", request.pid).get(), "r");
-          if (f) {
-            int nread = fscanf(f, "%zu %zu %zu", &VmSize, &resident, &shared);
-            fclose(f);
-            if (nread == MAX_FIELD) {
-              info.memory = (resident - shared) * getpagesize();
-            }
-          }
-
-          // Extra info
-          info.pid = request.pid;
-          info.childId = request.childId;
-          info.type = request.processType;
-          info.origin = request.origin;
-          info.windows = std::move(request.windowInfo);
-
-          // Let's look at the threads
-          nsCString taskPath;
-          taskPath.AppendPrintf("/proc/%u/task", request.pid);
-          DIR* dirHandle = opendir(taskPath.get());
-          if (!dirHandle) {
-            // For some reason, we have no data on the threads for this process.
-            // Most likely reason is that we have just lost a race condition and
-            // the process is dead.
-            // Let's stop here and ignore the entire process.
-            continue;
-          }
-          auto cleanup = mozilla::MakeScopeExit([&] { closedir(dirHandle); });
-
-          // If we can't read some thread info, we ignore that thread.
-          dirent* entry;
-          while ((entry = readdir(dirHandle)) != nullptr) {
-            if (entry->d_name[0] == '.') {
-              continue;
-            }
-            // Threads have a stat file, like processes.
-            nsAutoCString entryName(entry->d_name);
-            int32_t tid = entryName.ToInteger(&rv);
-            if (NS_FAILED(rv)) {
-              continue;
-            }
-            ThreadInfoReader reader(request.pid, tid);
-            ThreadInfo threadInfo;
-            rv = reader.ParseThread(threadInfo);
-            if (NS_FAILED(rv)) {
-              continue;
-            }
-            info.threads.AppendElement(threadInfo);
-          }
-
-          if (!gathered.put(request.pid, std::move(info))) {
-            holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
-            return;
-          }
-        }
-
-        // ... and we're done!
-        holder->Resolve(std::move(gathered), __func__);
-      });
-
-  rv = target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the LoadDataRunnable.");
-  }
-  return promise;
+  // ... and we're done!
+  result.SetResolve(std::move(gathered));
+  return result;
 }
 
 }  // namespace mozilla

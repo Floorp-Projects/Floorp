@@ -18,11 +18,11 @@
 
 #include "base/message_loop.h"
 #include "base/task.h"
-#include "chrome/common/file_descriptor_set_posix.h"
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace IPC {
 
@@ -58,6 +58,12 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   bool Unsound_IsClosed() const;
   uint32_t Unsound_NumQueuedMessages() const;
 
+#if defined(OS_MACOSX)
+  void SetOtherMachTask(task_t task);
+
+  void StartAcceptingMachPorts(Mode mode);
+#endif
+
  private:
   void Init(Mode mode, Listener* listener);
   bool CreatePipe(Mode mode);
@@ -74,6 +80,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
 #if defined(OS_MACOSX)
   void CloseDescriptors(uint32_t pending_fd_id);
+
+  // Called on a Message immediately before it is sent/recieved to transfer
+  // handles to the remote process, or accept handles from the remote process.
+  bool AcceptMachPorts(Message& msg);
+  bool TransferMachPorts(Message& msg);
 #endif
 
   void OutputQueuePush(mozilla::UniquePtr<Message> msg);
@@ -123,7 +134,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // it's big enough.
   static constexpr size_t kControlBufferHeaderSize = 32;
   static constexpr size_t kControlBufferSize =
-      FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
+      IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
       kControlBufferHeaderSize;
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
@@ -151,17 +162,22 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
     uint32_t id;
-    RefPtr<FileDescriptorSet> fds;
-
-    PendingDescriptors() : id(0) {}
-    PendingDescriptors(uint32_t id, FileDescriptorSet* fds)
-        : id(id), fds(fds) {}
+    nsTArray<mozilla::UniqueFileHandle> handles;
   };
 
   std::list<PendingDescriptors> pending_fds_;
 
   // A generation ID for RECEIVED_FD messages.
   uint32_t last_pending_fd_id_;
+
+  // Whether or not to accept mach ports from a remote process, and whether this
+  // process is the privileged side of a IPC::Channel which can transfer mach
+  // ports.
+  bool accept_mach_ports_ = false;
+  bool privileged_ = false;
+
+  // If available, the task port for the remote process.
+  mozilla::UniqueMachSendRight other_task_;
 #endif
 
   // This variable is updated so it matches output_queue_.Count(), except we can

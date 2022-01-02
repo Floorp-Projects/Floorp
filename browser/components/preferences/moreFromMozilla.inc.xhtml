@@ -9,36 +9,54 @@
   <vbox id="moreFromMozillaCategory"
     class="subcategory"
     data-hidden-from-search="true"
+    hidden="true"
     data-category="paneMoreFromMozilla">
     <html:h1 class="title" data-l10n-id="pane-more-from-mozilla-title" />
     <html:p class="subtitle" data-l10n-id="pane-more-from-mozilla-subtitle" />
-    <!-- Mozilla Products -->
-    <vbox class="list-item">
+  </vbox>
+</html:template>
+<html:template id="simple">
+  <vbox class="list-item simple">
+    <hbox>
       <label>
-        <html:h2 id="firefox-mobile" class="product-title" data-l10n-id="firefox-mobile-title" />
+        <html:h2 class="product-title" />
       </label>
-      <html:p class="description" data-l10n-id="firefox-mobile-description" />
-      <hbox>
-        <button id="fxMobile" class="primary small-button" data-l10n-id="button-firefox-mobile" />
-      </hbox>
-    </vbox>
-    <vbox class="list-item">
-      <label>
-        <html:h2 id="mozilla-vpn" class="product-title" data-l10n-id="mozilla-vpn-title" />
+    </hbox>
+    <hbox>
+      <html:p class="description" />
+      <html:a class="text-link wants-telemetry" hidden="true" />
+    </hbox>
+    <html:div>
+      <button class="primary small-button" hidden="true" />
+    </html:div>
+    <html:div class="qr-code-box" hidden="true">
+      <label class="qr-code-title-label">
+        <html:h3 class="qr-code-box-title" />
       </label>
-      <html:p class="description" data-l10n-id="mozilla-vpn-description" />
-      <hbox>
-        <button id="mozillaVPN" class="primary small-button" data-l10n-id="button-mozilla-vpn" />
-      </hbox>
-    </vbox>
-    <vbox class="list-item">
-      <label>
-        <html:h2 id="mozilla-rally" class="product-title" data-l10n-id="mozilla-rally-title" />
-      </label>
-      <html:p class="description" data-l10n-id="mozilla-rally-description" />
-      <hbox>
-        <button id="mozillaRally" class="primary small-button" data-l10n-id="button-mozilla-rally" />
-      </hbox>
-    </vbox>
+      <html:img class="qr-code-box-image" role="presentation" />
+      <html:a class="wants-telemetry qr-code-button text-link" target="_blank"/>
+    </html:div>
+  </vbox>
+</html:template>
+
+<html:template id="advanced">
+  <vbox class="list-item advanced">
+    <hbox class="product-img">
+      <vbox class="product-info" flex="1">
+        <label>
+          <html:h2 class="product-title" />
+        </label>
+        <html:p class="description" />
+        <html:a class="text-link wants-telemetry" hidden="true" />
+        <html:div><button class="primary small-button" hidden="true"/></html:div>
+      </vbox>
+      <html:div class="qr-code-box" hidden="true">
+        <html:div class="qr-code-top-box">
+          <html:h3 class="qr-code-box-title" />
+          <html:img class="qr-code-box-image" role="presentation" />
+        </html:div>
+        <html:a class="qr-code-button text-link wants-telemetry" target="_blank" />
+      </html:div>
+    </hbox>
   </vbox>
 </html:template>

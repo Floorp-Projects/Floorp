@@ -115,6 +115,11 @@ class Accessible {
    */
   virtual Accessible* EmbeddedChildAt(uint32_t aIndex) = 0;
 
+  /**
+   * Return index of the given embedded accessible child.
+   */
+  virtual int32_t IndexOfEmbeddedChild(Accessible* aChild) = 0;
+
   // Methods that potentially access a cache.
 
   /*
@@ -146,6 +151,21 @@ class Accessible {
    */
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) = 0;
+
+  /**
+   * Return all states of accessible (including ARIA states).
+   */
+  virtual uint64_t State() = 0;
+
+  /**
+   * Return the start offset of the embedded object within the parent
+   * HyperTextAccessibleBase.
+   */
+  virtual uint32_t StartOffset();
+
+  // Methods that interact with content.
+
+  virtual void TakeFocus() const = 0;
 
   // Type "is" methods
 

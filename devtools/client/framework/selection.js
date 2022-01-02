@@ -192,6 +192,8 @@ Selection.prototype = {
       return;
     }
 
+    this.emit("node-front-will-unset");
+
     this._isSlotted = isSlotted;
     this._nodeFront = nodeFront;
 

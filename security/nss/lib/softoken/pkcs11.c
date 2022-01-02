@@ -75,7 +75,6 @@ static char libraryDescription_space[33];
  * failure so that there are at most 60 login attempts per minute.
  */
 static PRIntervalTime loginWaitTime;
-static PRUint32 minSessionObjectHandle = 1U;
 
 #define __PASTE(x, y) x##y
 
@@ -1672,8 +1671,6 @@ sftk_handleObject(SFTKObject *object, SFTKSession *session)
 {
     SFTKSlot *slot = session->slot;
     SFTKAttribute *attribute;
-    SFTKObject *duplicateObject = NULL;
-    CK_OBJECT_HANDLE handle;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_BBOOL cktrue = CK_TRUE;
     CK_RV crv;
@@ -1711,30 +1708,13 @@ sftk_handleObject(SFTKObject *object, SFTKSession *session)
      * token objects and will have a token object handle assigned to
      * them by a call to sftk_mkHandle in the handler for each object
      * class, invoked below.
-     *
+     *  
      * It may be helpful to note/remember that
      * sftk_narrowToXxxObject uses sftk_isToken,
      * sftk_isToken examines the sign bit of the object's handle, but
      * sftk_isTrue(...,CKA_TOKEN) examines the CKA_TOKEN attribute.
      */
-    do {
-        PRUint32 wrappedAround;
-
-        duplicateObject = NULL;
-        PZ_Lock(slot->objectLock);
-        wrappedAround = slot->sessionObjectHandleCount & SFTK_TOKEN_MASK;
-        handle = slot->sessionObjectHandleCount & ~SFTK_TOKEN_MASK;
-        if (!handle) /* don't allow zero handle */
-            handle = minSessionObjectHandle;
-        slot->sessionObjectHandleCount = (handle + 1U) | wrappedAround;
-        /* Is there already a session object with this handle? */
-        if (wrappedAround) {
-            sftkqueue_find(duplicateObject, handle, slot->sessObjHashTable,
-                           slot->sessObjHashSize);
-        }
-        PZ_Unlock(slot->objectLock);
-    } while (duplicateObject != NULL);
-    object->handle = handle;
+    object->handle = sftk_getNextHandle(slot);
 
     /* get the object class */
     attribute = sftk_FindAttribute(object, CKA_CLASS);
@@ -2875,10 +2855,15 @@ SFTK_SlotInit(char *configdir, char *updatedir, char *updateID,
         goto mem_loser;
 
     slot->sessionIDCount = 0;
-    slot->sessionObjectHandleCount = minSessionObjectHandle;
+    slot->sessionObjectHandleCount = NSC_MIN_SESSION_OBJECT_HANDLE;
     slot->slotID = slotID;
     sftk_setStringName(params->slotdes ? params->slotdes : sftk_getDefSlotName(slotID), slot->slotDescription,
                        sizeof(slot->slotDescription), PR_TRUE);
+    crv = sftk_InitSession(&slot->moduleObjects, slot, slotID, NULL, NULL,
+                           CKF_SERIAL_SESSION);
+    if (crv != CKR_OK) {
+        goto loser;
+    }
 
     /* call the reinit code to set everything that changes between token
      * init calls */
@@ -2886,6 +2871,12 @@ SFTK_SlotInit(char *configdir, char *updatedir, char *updateID,
                           params, moduleIndex);
     if (crv != CKR_OK) {
         goto loser;
+    }
+    if (sftk_isFIPS(slotID)) {
+        crv = sftk_CreateValidationObjects(slot);
+        if (crv != CKR_OK) {
+            goto loser;
+        }
     }
     crv = sftk_RegisterSlot(slot, moduleIndex);
     if (crv != CKR_OK) {
@@ -3031,6 +3022,8 @@ SFTK_DestroySlotData(SFTKSlot *slot)
     unsigned int i;
 
     SFTK_ShutdownSlot(slot);
+
+    sftk_ClearSession(&slot->moduleObjects);
 
     if (slot->tokObjHashTable) {
         PL_HashTableDestroy(slot->tokObjHashTable);
@@ -3262,6 +3255,7 @@ nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     CK_RV crv = CKR_OK;
     SECStatus rv;
     CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *)pReserved;
+    PRBool destroy_freelist_on_error = PR_TRUE;
     int i;
     unsigned int moduleIndex = isFIPS ? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE;
 
@@ -3341,7 +3335,14 @@ nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
                                          "disabled FIPS mode");
                 }
             }
+            /* if we have a peer open, we don't want to destroy the freelist
+             * from under the peer if we fail, the free list will be
+             * destroyed in that case when the C_Finalize is called for
+             * the peer */
+            destroy_freelist_on_error = PR_FALSE;
         }
+        /* allow us to create objects in SFTK_SlotInit */
+        sftk_InitFreeLists();
 
         for (i = 0; i < paramStrings.token_count; i++) {
             crv = SFTK_SlotInit(paramStrings.configdir,
@@ -3355,8 +3356,9 @@ nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     loser:
         sftk_freeParams(&paramStrings);
     }
-    if (CKR_OK == crv) {
-        sftk_InitFreeLists();
+    if (destroy_freelist_on_error && (CKR_OK != crv)) {
+        /* idempotent. If the list are already freed, this is a noop */
+        sftk_CleanupFreeLists();
     }
 
 #ifndef NO_FORK_CHECK

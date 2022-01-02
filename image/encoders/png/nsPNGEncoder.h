@@ -39,9 +39,10 @@ class nsPNGEncoder final : public imgIEncoder {
   ~nsPNGEncoder();
   nsresult ParseOptions(const nsAString& aOptions, bool* useTransparency,
                         bool* skipFirstFrame, uint32_t* numAnimatedFrames,
-                        uint32_t* numIterations, uint32_t* frameDispose,
-                        uint32_t* frameBlend, uint32_t* frameDelay,
-                        uint32_t* offsetX, uint32_t* offsetY);
+                        uint32_t* numIterations, int* zlibLevel, int* filters,
+                        uint32_t* frameDispose, uint32_t* frameBlend,
+                        uint32_t* frameDelay, uint32_t* offsetX,
+                        uint32_t* offsetY);
   void ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
                           uint32_t aPixelWidth, bool aUseTransparency);
   void StripAlpha(const uint8_t* aSrc, uint8_t* aDest, uint32_t aPixelWidth);

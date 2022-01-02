@@ -276,6 +276,12 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
 };
 
 template <>
+struct ParamTraits<mozilla::APZScrollAnimationType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::APZScrollAnimationType, mozilla::APZScrollAnimationType::No,
+          mozilla::APZScrollAnimationType::TriggeredByUserInput> {};
+
+template <>
 struct ParamTraits<mozilla::layers::RepaintRequest>
     : BitfieldHelper<mozilla::layers::RepaintRequest> {
   typedef mozilla::layers::RepaintRequest paramType;
@@ -295,8 +301,8 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aMsg, aParam.mTransformToAncestorScale);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
+    WriteParam(aMsg, aParam.mScrollAnimationType);
     WriteParam(aMsg, aParam.mIsRootContent);
-    WriteParam(aMsg, aParam.mIsAnimationInProgress);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
   }
 
@@ -316,10 +322,9 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
             ReadParam(aMsg, aIter, &aResult->mTransformToAncestorScale) &&
             ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
             ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollAnimationType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRootContent) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult,
-                                &paramType::SetIsAnimationInProgress) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsScrollInfoLayer));
   }
@@ -487,34 +492,29 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
     WriteParam(aMsg, aParam.mWebRenderCompositor);
     WriteParam(aMsg, aParam.mParentProcessType);
     WriteParam(aMsg, aParam.mMaxTextureSize);
-    WriteParam(aMsg, aParam.mSupportsTextureDirectMapping);
     WriteParam(aMsg, aParam.mCompositorUseANGLE);
     WriteParam(aMsg, aParam.mCompositorUseDComp);
     WriteParam(aMsg, aParam.mUseCompositorWnd);
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
-    WriteParam(aMsg, aParam.mUsingAdvancedLayers);
     WriteParam(aMsg, aParam.mSyncHandle);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    bool result =
-        ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
-        ReadParam(aMsg, aIter, &aResult->mWebRenderBackend) &&
-        ReadParam(aMsg, aIter, &aResult->mWebRenderCompositor) &&
-        ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
-        ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsTextureDirectMapping) &&
-        ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
-        ReadParam(aMsg, aIter, &aResult->mCompositorUseDComp) &&
-        ReadParam(aMsg, aIter, &aResult->mUseCompositorWnd) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
-        ReadParam(aMsg, aIter, &aResult->mUsingAdvancedLayers) &&
-        ReadParam(aMsg, aIter, &aResult->mSyncHandle);
+    bool result = ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
+                  ReadParam(aMsg, aIter, &aResult->mWebRenderBackend) &&
+                  ReadParam(aMsg, aIter, &aResult->mWebRenderCompositor) &&
+                  ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
+                  ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
+                  ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
+                  ReadParam(aMsg, aIter, &aResult->mCompositorUseDComp) &&
+                  ReadParam(aMsg, aIter, &aResult->mUseCompositorWnd) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
+                  ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
   }
 };
@@ -656,30 +656,6 @@ struct ParamTraits<mozilla::layers::ZoomConstraints> {
             ReadParam(aMsg, aIter, &aResult->mAllowDoubleTapZoom) &&
             ReadParam(aMsg, aIter, &aResult->mMinZoom) &&
             ReadParam(aMsg, aIter, &aResult->mMaxZoom));
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::layers::EventRegions> {
-  typedef mozilla::layers::EventRegions paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mHitRegion);
-    WriteParam(aMsg, aParam.mDispatchToContentHitRegion);
-    WriteParam(aMsg, aParam.mNoActionRegion);
-    WriteParam(aMsg, aParam.mHorizontalPanRegion);
-    WriteParam(aMsg, aParam.mVerticalPanRegion);
-    WriteParam(aMsg, aParam.mDTCRequiresTargetConfirmation);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mHitRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mDTCRequiresTargetConfirmation));
   }
 };
 
@@ -848,7 +824,7 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
     WriteParam(aMsg, aParam.mUseSoftwareWebRender);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderD3D11);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderOGL);
-    WriteParam(aMsg, aParam.mUseAdvancedLayers);
+    WriteParam(aMsg, aParam.mUseWebGPU);
     WriteParam(aMsg, aParam.mInitiallyPaused);
   }
 
@@ -858,7 +834,7 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
            ReadParam(aMsg, aIter, &aResult->mUseSoftwareWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderD3D11) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderOGL) &&
-           ReadParam(aMsg, aIter, &aResult->mUseAdvancedLayers) &&
+           ReadParam(aMsg, aIter, &aResult->mUseWebGPU) &&
            ReadParam(aMsg, aIter, &aResult->mInitiallyPaused);
   }
 };
@@ -897,54 +873,6 @@ struct ParamTraits<mozilla::layers::ScrollbarData> {
            ReadParam(aMsg, aIter, &aResult->mScrollTrackStart) &&
            ReadParam(aMsg, aIter, &aResult->mScrollTrackLength) &&
            ReadParam(aMsg, aIter, &aResult->mTargetViewId);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::layers::SimpleLayerAttributes::FixedPositionData>
-    : public PlainOldDataSerializer<
-          mozilla::layers::SimpleLayerAttributes::FixedPositionData> {};
-
-template <>
-struct ParamTraits<mozilla::layers::SimpleLayerAttributes::StickyPositionData>
-    : public PlainOldDataSerializer<
-          mozilla::layers::SimpleLayerAttributes::StickyPositionData> {};
-
-template <>
-struct ParamTraits<mozilla::layers::SimpleLayerAttributes> {
-  typedef mozilla::layers::SimpleLayerAttributes paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mTransform);
-    WriteParam(aMsg, aParam.mTransformIsPerspective);
-    WriteParam(aMsg, aParam.mPostXScale);
-    WriteParam(aMsg, aParam.mPostYScale);
-    WriteParam(aMsg, aParam.mContentFlags);
-    WriteParam(aMsg, aParam.mOpacity);
-    WriteParam(aMsg, aParam.mIsFixedPosition);
-    WriteParam(aMsg, aParam.mAsyncZoomContainerId);
-    WriteParam(aMsg, aParam.mScrollbarData);
-    WriteParam(aMsg, aParam.mMixBlendMode);
-    WriteParam(aMsg, aParam.mForceIsolatedGroup);
-    WriteParam(aMsg, aParam.mFixedPositionData);
-    WriteParam(aMsg, aParam.mStickyPositionData);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mTransform) &&
-           ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective) &&
-           ReadParam(aMsg, aIter, &aResult->mPostXScale) &&
-           ReadParam(aMsg, aIter, &aResult->mPostYScale) &&
-           ReadParam(aMsg, aIter, &aResult->mContentFlags) &&
-           ReadParam(aMsg, aIter, &aResult->mOpacity) &&
-           ReadParam(aMsg, aIter, &aResult->mIsFixedPosition) &&
-           ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId) &&
-           ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
-           ReadParam(aMsg, aIter, &aResult->mMixBlendMode) &&
-           ReadParam(aMsg, aIter, &aResult->mForceIsolatedGroup) &&
-           ReadParam(aMsg, aIter, &aResult->mFixedPositionData) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyPositionData);
   }
 };
 

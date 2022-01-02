@@ -38,7 +38,6 @@ pref("devtools.browserconsole.contentMessages", true);
 pref("devtools.webconsole.input.editorWidth", 800);
 pref("devtools.webconsole.input.editorOnboarding", true);
 pref("devtools.webconsole.input.context", false);
-pref("devtools.contenttoolbox.webconsole.input.context", false);
 
 global.loader = {
   lazyServiceGetter: () => {},

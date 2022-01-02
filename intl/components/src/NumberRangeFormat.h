@@ -21,14 +21,6 @@ struct UPluralRules;
 
 namespace mozilla::intl {
 
-#ifndef U_HIDE_DRAFT_API
-// UNumberRangeFormatter requires ICU draft API. And because we try to reduce
-// direct access to ICU definitions, add a separate pre-processor definition to
-// guard the access to number range formatting instead of directly using
-// U_HIDE_DRAFT_API.
-#  define MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
-#endif
-
 /**
  * NumberRangeFormatOptions supports the same set of options as
  * NumberFormatOptions and additionally allows to control how to display ranges.
@@ -108,7 +100,6 @@ class NumberRangeFormat final {
   NumberRangeFormat(const NumberRangeFormat&) = delete;
   NumberRangeFormat& operator=(const NumberRangeFormat&) = delete;
 
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   ~NumberRangeFormat();
 
   /**
@@ -225,7 +216,6 @@ class NumberRangeFormat final {
   UNumberRangeFormatter* mNumberRangeFormatter = nullptr;
   UFormattedNumberRange* mFormattedNumberRange = nullptr;
   bool mFormatForUnit = false;
-  bool mFormatWithApprox = false;
 
   Result<Ok, ICUError> initialize(std::string_view aLocale,
                                   const NumberRangeFormatOptions& aOptions);
@@ -240,7 +230,6 @@ class NumberRangeFormat final {
   Result<std::u16string_view, ICUError> formatResultToParts(
       Maybe<double> start, bool startIsNegative, Maybe<double> end,
       bool endIsNegative, NumberPartVector& parts) const;
-#endif
 };
 
 }  // namespace mozilla::intl

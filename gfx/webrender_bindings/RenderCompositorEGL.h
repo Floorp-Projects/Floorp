@@ -19,7 +19,8 @@ class RenderCompositorEGL : public RenderCompositor {
   static UniquePtr<RenderCompositor> Create(
       const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
-  explicit RenderCompositorEGL(const RefPtr<widget::CompositorWidget>& aWidget);
+  explicit RenderCompositorEGL(const RefPtr<widget::CompositorWidget>& aWidget,
+                               RefPtr<gl::GLContext>&& aGL);
   virtual ~RenderCompositorEGL();
 
   bool BeginFrame() override;
@@ -28,7 +29,7 @@ class RenderCompositorEGL : public RenderCompositor {
   bool Resume() override;
   bool IsPaused() override;
 
-  gl::GLContext* gl() const override;
+  gl::GLContext* gl() const override { return mGL; }
 
   bool MakeCurrent() override;
 
@@ -51,6 +52,8 @@ class RenderCompositorEGL : public RenderCompositor {
   EGLSurface CreateEGLSurface();
 
   void DestroyEGLSurface();
+
+  RefPtr<gl::GLContext> mGL;
 
   EGLSurface mEGLSurface;
 #ifdef MOZ_WIDGET_ANDROID

@@ -13,6 +13,7 @@
 #endif
 
 #include "DrawTargetSkia.h"
+#include "PathSkia.h"
 #include "ScaledFontBase.h"
 
 #if defined(WIN32)
@@ -477,6 +478,7 @@ bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
     case BackendType::NONE:
     case BackendType::BACKEND_LAST:
     case BackendType::WEBRENDER_TEXT:
+    case BackendType::WEBGL:
       return false;
     case BackendType::CAIRO:
     case BackendType::SKIA:
@@ -562,10 +564,10 @@ already_AddRefed<UnscaledFont> Factory::CreateUnscaledFontFromFontDescriptor(
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForMacFont(
     CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
     const DeviceColor& aFontSmoothingBackgroundColor, bool aUseFontSmoothing,
-    bool aApplySyntheticBold) {
-  return MakeAndAddRef<ScaledFontMac>(aCGFont, aUnscaledFont, aSize, false,
-                                      aFontSmoothingBackgroundColor,
-                                      aUseFontSmoothing, aApplySyntheticBold);
+    bool aApplySyntheticBold, bool aHasColorGlyphs) {
+  return MakeAndAddRef<ScaledFontMac>(
+      aCGFont, aUnscaledFont, aSize, false, aFontSmoothingBackgroundColor,
+      aUseFontSmoothing, aApplySyntheticBold, aHasColorGlyphs);
 }
 #endif
 

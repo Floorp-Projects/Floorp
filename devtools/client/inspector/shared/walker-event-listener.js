@@ -32,11 +32,11 @@ class WalkerEventListener {
    * Clean up function.
    */
   destroy() {
-    this._inspector.commands.targetCommand.unwatchTargets(
-      [this._inspector.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    this._inspector.commands.targetCommand.unwatchTargets({
+      types: [this._inspector.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
+    });
 
     const targets = this._inspector.commands.targetCommand.getAllTargets([
       this._inspector.commands.targetCommand.TYPES.FRAME,
@@ -52,18 +52,18 @@ class WalkerEventListener {
   }
 
   _init() {
-    this._inspector.commands.targetCommand.watchTargets(
-      [this._inspector.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    this._inspector.commands.targetCommand.watchTargets({
+      types: [this._inspector.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
+    });
   }
 
   async _onTargetAvailable({ targetFront }) {
     const inspectorFront = await targetFront.getFront("inspector");
     // In case of multiple fast navigations, the front may already be destroyed,
     // in such scenario bail out and ignore this short lived target.
-    if (inspectorFront.isDestroyed()) {
+    if (inspectorFront.isDestroyed() || !this._listenerMap) {
       return;
     }
     const { walker } = inspectorFront;

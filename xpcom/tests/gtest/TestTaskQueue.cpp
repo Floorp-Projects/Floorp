@@ -17,11 +17,14 @@ using namespace mozilla;
 TEST(TaskQueue, EventOrder)
 {
   RefPtr<TaskQueue> tq1 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR), true);
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestTaskQueue tq1", true);
   RefPtr<TaskQueue> tq2 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR), true);
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestTaskQueue tq2", true);
   RefPtr<TaskQueue> tq3 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR), true);
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestTaskQueue tq3", true);
 
   bool errored = false;
   int counter = 0;
@@ -86,7 +89,8 @@ TEST(TaskQueue, EventOrder)
 TEST(TaskQueue, GetCurrentSerialEventTarget)
 {
   RefPtr<TaskQueue> tq1 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR), false);
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestTaskQueue GetCurrentSerialEventTarget", false);
   Unused << tq1->Dispatch(NS_NewRunnableFunction(
       "TestTaskQueue::TestCurrentSerialEventTarget::TestBody", [tq1]() {
         nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();

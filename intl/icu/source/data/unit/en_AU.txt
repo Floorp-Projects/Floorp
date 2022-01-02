@@ -86,6 +86,14 @@ en_AU{
             }
         }
         duration{
+            century{
+                dnam{"C."}
+                one{"{0}C."}
+                other{"{0}C."}
+            }
+            microsecond{
+                dnam{"μsec."}
+            }
             millisecond{
                 dnam{"msec."}
             }
@@ -111,6 +119,9 @@ en_AU{
                 one{"{0}°C"}
                 other{"{0}°C"}
             }
+            generic{
+                dnam{"°"}
+            }
         }
         volume{
             bushel{
@@ -126,6 +137,31 @@ en_AU{
                 dnam{"dL"}
                 one{"{0}dL"}
                 other{"{0}dL"}
+            }
+            dessert-spoon{
+                dnam{"dsp US"}
+                one{"{0}dsp US"}
+                other{"{0}dsp US"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dsp Imp."}
+                one{"{0}dsp-Imp."}
+                other{"{0}dsp-Imp."}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp. fl oz"}
+            }
+            gallon{
+                dnam{"gal. US"}
+                one{"{0}gal. US"}
+                other{"{0}gal. US"}
+                per{"{0}/gal. US"}
+            }
+            gallon-imperial{
+                dnam{"gal."}
+                one{"{0}gal."}
+                other{"{0}gal."}
+                per{"{0}/gal."}
             }
             hectoliter{
                 dnam{"hL"}
@@ -146,6 +182,14 @@ en_AU{
                 dnam{"mL"}
                 one{"{0}mL"}
                 other{"{0}mL"}
+            }
+            quart{
+                dnam{"qt US"}
+                one{"{0}qt US"}
+                other{"{0}qt US"}
+            }
+            quart-imperial{
+                dnam{"qt Imp."}
             }
         }
     }

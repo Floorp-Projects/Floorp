@@ -33,7 +33,6 @@ const {
   FX_OAUTH_CLIENT_ID,
   ON_PROFILE_CHANGE_NOTIFICATION,
   PREF_LAST_FXA_USER,
-  SCOPE_OLD_SYNC,
   WEBCHANNEL_ID,
   log,
   logPII,
@@ -610,6 +609,8 @@ FxAccountsWebChannelHelpers.prototype = {
     // So we just remove field names we know aren't handled.
     let newCredentials = {
       device: null, // Force a brand new device registration.
+      // We force the re-encryption of the send tab keys using the new sync key after the password change
+      encryptedSendTabKeys: null,
     };
     for (let name of Object.keys(credentials)) {
       if (
@@ -623,14 +624,6 @@ FxAccountsWebChannelHelpers.prototype = {
       }
     }
     await this._fxAccounts._internal.updateUserAccountData(newCredentials);
-    // Force the keys derivation, to be able to register a send-tab command
-    // in updateDeviceRegistration (but it's not clear we really do need to
-    // force keys here - see bug 1580398 for more)
-    try {
-      await this._fxAccounts.keys.getKeyForScope(SCOPE_OLD_SYNC);
-    } catch (e) {
-      log.error("getKeyForScope errored", e);
-    }
     await this._fxAccounts._internal.updateDeviceRegistration();
   },
 

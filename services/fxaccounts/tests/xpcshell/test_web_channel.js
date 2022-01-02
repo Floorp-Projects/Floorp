@@ -1269,6 +1269,7 @@ add_task(async function test_helpers_change_password() {
             Assert.ok(credentials.hasOwnProperty("unwrapBKey"));
             Assert.ok(credentials.hasOwnProperty("device"));
             Assert.equal(null, credentials.device);
+            Assert.equal(null, credentials.encryptedSendTabKeys);
             // "foo" isn't a field known by storage, so should be dropped.
             Assert.ok(!credentials.hasOwnProperty("foo"));
             wasCalled.updateUserAccountData = true;

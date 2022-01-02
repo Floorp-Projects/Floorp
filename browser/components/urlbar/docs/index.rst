@@ -36,6 +36,7 @@ Table of Contents
    overview
    utilities
    telemetry
+   firefox-suggest-telemetry
    debugging
    experiments
    dynamic-result-types

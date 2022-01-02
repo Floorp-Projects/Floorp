@@ -4,8 +4,7 @@
 "use strict";
 
 let { runOnce } = ChromeUtils.import(
-  "resource:///modules/policies/Policies.jsm",
-  null
+  "resource:///modules/policies/Policies.jsm"
 );
 
 let runCount = 0;

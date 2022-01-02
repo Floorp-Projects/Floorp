@@ -5,7 +5,7 @@
 // Test for the docshell active state of local and remote browsers.
 
 const kTestPage =
-  "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  "https://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
 function promiseNewTabSwitched() {
   return new Promise(resolve => {

@@ -248,6 +248,16 @@ eu{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h('r')('a')'k'"}
                 Bhm{"B h:mm"}
@@ -264,6 +274,7 @@ eu{
                 GyMMM{"G. 'aroko' y('e')'ko' MMMM"}
                 GyMMMEd{"G. 'aroko' y('e')'ko' MMMM d, EEEE"}
                 GyMMMd{"G. 'aroko' y('e')'ko' MMMM d"}
+                GyMd{"y-MM-dd (GGGGG)"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -329,11 +340,11 @@ eu{
                     y{"G y, MMM d – G y, MMM d"}
                 }
                 H{
-                    H{"HH–HH"}
+                    H{"HH – HH"}
                 }
                 Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
                 }
                 Hmv{
                     H{"HH:mm–HH:mm v"}
@@ -370,16 +381,16 @@ eu{
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
-                    h{"h–h a"}
+                    h{"h – h a"}
                 }
                 hm{
-                    a{":h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm – h:mm a"}
+                    m{"h:mm – h:mm a"}
                 }
                 hmv{
                     a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
+                    h{"h:mm – h:mm a v"}
                     m{"h:mm–h:mm a v"}
                 }
                 hv{
@@ -450,6 +461,16 @@ eu{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} ({1})"}
@@ -662,6 +683,10 @@ eu{
                 abbreviated%variant{
                     "G.a.a.",
                     "G.a.",
+                }
+                narrow{
+                    "a",
+                    "o",
                 }
                 wide{
                     "K.a.",
@@ -1353,6 +1378,11 @@ eu{
         }
         quarter-narrow{
             dn{"hiruhil."}
+            relative{
+                "-1"{"aurreko hiruhil."}
+                "0"{"hiruhil. hau"}
+                "1"{"hurrengo hiruhil."}
+            }
             relativeTime{
                 future{
                     one{"{0} hiruhileko barru"}
@@ -1366,6 +1396,11 @@ eu{
         }
         quarter-short{
             dn{"hiruhil."}
+            relative{
+                "-1"{"aurreko hiruhil."}
+                "0"{"hiruhil. hau"}
+                "1"{"hurrengo hiruhil."}
+            }
             relativeTime{
                 future{
                     one{"{0} hiruhileko barru"}

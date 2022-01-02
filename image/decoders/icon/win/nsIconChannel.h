@@ -8,6 +8,7 @@
 #define mozilla_image_encoders_icon_win_nsIconChannel_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MozPromise.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -18,18 +19,17 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
 #include "nsIInputStreamPump.h"
-#include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
-#include "nsIIconURI.h"
 
-#include <windows.h>
-
-class nsIFile;
+namespace mozilla::ipc {
+class ByteBuf;
+}
 
 class nsIconChannel final : public nsIChannel, public nsIStreamListener {
-  ~nsIconChannel();
-
  public:
+  using ByteBufPromise =
+      mozilla::MozPromise<mozilla::ipc::ByteBuf, nsresult, true>;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
@@ -40,13 +40,14 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
 
   nsresult Init(nsIURI* uri);
 
- protected:
-  class IconAsyncOpenTask;
-  class IconSyncOpenTask;
+  /// Obtains an icon in Windows ICO format as a ByteBuf instead
+  /// of a channel. For use with IPC.
+  static RefPtr<ByteBufPromise> GetIconAsync(nsIURI* aURI);
 
-  void OnAsyncError(nsresult aStatus);
-  void FinishAsyncOpen(HICON aIcon, nsresult aStatus);
-  nsresult EnsurePipeCreated(uint32_t aIconSize, bool aNonBlocking);
+ private:
+  ~nsIconChannel();
+
+  nsresult StartAsyncOpen();
 
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
@@ -56,27 +57,8 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 
   nsCOMPtr<nsIInputStreamPump> mPump;
-  nsCOMPtr<nsIInputStream> mInputStream;
-  nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsIEventTarget> mListenerTarget;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile** aLocalFile,
-                                  uint32_t* aDesiredImageSize,
-                                  nsCString& aContentType,
-                                  nsCString& aFileExtension);
-  nsresult GetHIcon(bool aNonBlocking, HICON* hIcon);
-  nsresult GetHIconFromFile(bool aNonBlocking, HICON* hIcon);
-  nsresult GetHIconFromFile(nsIFile* aLocalFile, const nsAutoString& aPath,
-                            UINT aInfoFlags, HICON* hIcon);
-  [[nodiscard]] nsresult MakeInputStream(nsIInputStream** _retval,
-                                         bool aNonBlocking, HICON aIcon);
-
-  // Functions specific to Vista and above
- protected:
-  nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* hIcon);
-
- private:
   bool mCanceled = false;
 };
 

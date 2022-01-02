@@ -224,6 +224,8 @@ class WindowGlobalParent final : public WindowContext,
 
   uint32_t GetBFCacheStatus() { return mBFCacheStatus; }
 
+  bool HasActivePeerConnections();
+
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,
@@ -294,6 +296,11 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint32_t& aOnFlags,
                                                   const uint32_t& aOffFlags);
+
+  // This IPC method is to notify the parent process that the caller process
+  // creates the first active peer connection (aIsAdded = true) or closes the
+  // last active peer connection (aIsAdded = false).
+  mozilla::ipc::IPCResult RecvUpdateActivePeerConnectionStatus(bool aIsAdded);
 
  public:
   mozilla::ipc::IPCResult RecvSetSingleChannelId(
@@ -386,6 +393,11 @@ class WindowGlobalParent final : public WindowContext,
   bool mSentPageUseCounters = false;
 
   uint32_t mBFCacheStatus = 0;
+
+  // If this WindowGlobalParent is a top window, this field indicates how many
+  // child processes have active peer connections for this window and its
+  // descendants.
+  uint32_t mNumOfProcessesWithActivePeerConnections = 0;
 
   // mSingleChannelId records whether the loadgroup contains a single request
   // with an id. If there is one channel in the loadgroup and it has an id then

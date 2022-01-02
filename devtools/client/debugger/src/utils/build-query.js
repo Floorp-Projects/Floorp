@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import escapeRegExp from "lodash/escapeRegExp";
+function escapeRegExp(str) {
+  const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+  return str.replace(reRegExpChar, "\\$&");
+}
 
 /**
  * Ignore doing outline matches for less than 3 whitespaces
@@ -48,12 +51,18 @@ export default function buildQuery(
   }
 
   let query = originalQuery;
-  if (ignoreSpaces) {
-    query = ignoreWhiteSpace(query);
-  }
 
+  // If we don't want to do a regexMatch, we need to escape all regex related characters
+  // so they would actually match.
   if (!regexMatch) {
     query = escapeRegExp(query);
+  }
+
+  // ignoreWhiteSpace might return a negative lookbehind, and in such case, we want it
+  // to be consumed as a RegExp part by the callsite, so this needs to be called after
+  // the regexp is escaped.
+  if (ignoreSpaces) {
+    query = ignoreWhiteSpace(query);
   }
 
   query = wholeMatch(query, wholeWord);

@@ -367,7 +367,7 @@ class remoteGtestOptions(argparse.ArgumentParser):
         self.add_argument(
             "--package",
             dest="package",
-            default="org.mozilla.geckoview.test",
+            default="org.mozilla.geckoview.test_runner",
             help="Package name of test app.",
         )
         self.add_argument(

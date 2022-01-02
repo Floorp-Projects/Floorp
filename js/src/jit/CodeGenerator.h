@@ -189,13 +189,21 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                               Register copyreg, size_t argvSrcOffset,
                               size_t argvDstOffset);
   void emitPopArguments(Register extraStackSize);
+  void emitPushArguments(Register argcreg, Register extraStackSpace,
+                         Register copyreg);
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,
                                 Register scratch, size_t argvSrcOffset);
   void emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace);
   void emitPushArguments(LApplyArgsObj* apply, Register extraStackSpace);
   void emitPushArguments(LApplyArrayGeneric* apply, Register extraStackSpace);
+  void emitPushArguments(LConstructArgsGeneric* construct,
+                         Register extraStackSpace);
   void emitPushArguments(LConstructArrayGeneric* construct,
                          Register extraStackSpace);
+
+  template <class GetInlinedArgument>
+  void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,
+                              ValueOperand output);
 
   void visitNewArrayCallVM(LNewArray* lir);
   void visitNewObjectVMCall(LNewObject* lir);

@@ -11,7 +11,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(DataList)
 
 namespace mozilla::dom {
 
-HTMLDataListElement::~HTMLDataListElement() = default;
+HTMLDataListElement::~HTMLDataListElement() {
+  MOZ_ASSERT(HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR));
+}
 
 JSObject* HTMLDataListElement::WrapNode(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {

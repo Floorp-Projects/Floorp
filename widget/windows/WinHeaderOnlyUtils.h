@@ -12,15 +12,14 @@
 #include <winnt.h>
 #include <winternl.h>
 #include <objbase.h>
-
 #include <stdlib.h>
+#include <tuple>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
@@ -645,13 +644,13 @@ class ModuleVersion final {
 
   operator uint64_t() const { return AsInteger(); }
 
-  Tuple<uint16_t, uint16_t, uint16_t, uint16_t> AsTuple() const {
+  std::tuple<uint16_t, uint16_t, uint16_t, uint16_t> AsTuple() const {
     uint16_t major = static_cast<uint16_t>((mVersion >> 48) & 0xFFFFU);
     uint16_t minor = static_cast<uint16_t>((mVersion >> 32) & 0xFFFFU);
     uint16_t patch = static_cast<uint16_t>((mVersion >> 16) & 0xFFFFU);
     uint16_t build = static_cast<uint16_t>(mVersion & 0xFFFFU);
 
-    return MakeTuple(major, minor, patch, build);
+    return {major, minor, patch, build};
   }
 
   explicit operator bool() const { return !!mVersion; }
@@ -735,6 +734,59 @@ inline LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
   }
 
   return elevationType;
+}
+
+inline bool HasPackageIdentity() {
+  if (!IsWin8OrLater()) {
+    return false;
+  }
+
+  HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+  if (!kernel32Dll) {
+    return false;
+  }
+
+  typedef LONG(WINAPI * GetCurrentPackageIdProc)(UINT32*, BYTE*);
+  GetCurrentPackageIdProc pGetCurrentPackageId =
+      (GetCurrentPackageIdProc)::GetProcAddress(kernel32Dll,
+                                                "GetCurrentPackageId");
+
+  // If there was any package identity to retrieve, we get
+  // ERROR_INSUFFICIENT_BUFFER. If there had been no package identity it
+  // would instead return APPMODEL_ERROR_NO_PACKAGE.
+  UINT32 packageNameSize = 0;
+  return pGetCurrentPackageId &&
+         (pGetCurrentPackageId(&packageNameSize, nullptr) ==
+          ERROR_INSUFFICIENT_BUFFER);
+}
+
+inline UniquePtr<wchar_t[]> GetPackageFamilyName() {
+  HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+  if (!kernel32Dll) {
+    return nullptr;
+  }
+
+  typedef LONG(WINAPI * GetCurrentPackageFamilyNameProc)(UINT32*, PWSTR);
+  GetCurrentPackageFamilyNameProc pGetCurrentPackageFamilyName =
+      (GetCurrentPackageFamilyNameProc)::GetProcAddress(
+          kernel32Dll, "GetCurrentPackageFamilyName");
+  if (!pGetCurrentPackageFamilyName) {
+    return nullptr;
+  }
+
+  UINT32 packageNameSize = 0;
+  if (pGetCurrentPackageFamilyName(&packageNameSize, nullptr) !=
+      ERROR_INSUFFICIENT_BUFFER) {
+    return nullptr;
+  }
+
+  UniquePtr<wchar_t[]> packageIdentity = MakeUnique<wchar_t[]>(packageNameSize);
+  if (pGetCurrentPackageFamilyName(&packageNameSize, packageIdentity.get()) !=
+      ERROR_SUCCESS) {
+    return nullptr;
+  }
+
+  return packageIdentity;
 }
 
 }  // namespace mozilla

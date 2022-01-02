@@ -141,7 +141,7 @@ async function test_save_change(testData) {
 
       // Submit the form.
       info(`submit the password-only form`);
-      let formSubmittedPromise = listenForTestNotification("FormSubmit");
+      let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
       await SpecialPowers.spawn(browser, [], async function() {
         let doc = this.content.document;
         doc.getElementById("form-basic-submit").click();

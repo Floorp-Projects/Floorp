@@ -1,0 +1,14 @@
+/**
+ * tesla.com - Footer links are not functional
+ * Bug #1740542 - https://bugzilla.mozilla.org/show_bug.cgi?id=1740542
+ * WebCompat issue #92483 - https://webcompat.com/issues/92483
+ */
+
+.template-landing-page:not(.tcl-scroll-snapping--off) .tds-footer {
+  margin-top: 0;
+  position: fixed;
+}
+
+.tds-shell {
+  min-block-size: -moz-available;
+}

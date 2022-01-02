@@ -1883,6 +1883,9 @@ ka{
             lg{"ეკატერინბურგის დრო"}
             ls{"ეკატერინბურგის სტანდარტული დრო"}
         }
+        "meta:Yukon"{
+            ls{"იუკონის დრო"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

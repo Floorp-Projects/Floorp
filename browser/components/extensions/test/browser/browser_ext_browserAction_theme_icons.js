@@ -21,9 +21,10 @@ async function testBrowserAction(extension, expectedIcon) {
   let browserActionWidget = getBrowserActionWidget(extension);
   await promiseAnimationFrame();
   let browserActionButton = browserActionWidget.forWindow(window).node;
+  let image = getListStyleImage(browserActionButton);
   ok(
-    getListStyleImage(browserActionButton).includes(expectedIcon),
-    `Expected browser action icon to be ${expectedIcon}`
+    image.includes(expectedIcon),
+    `Expected browser action icon (${image}) to be ${expectedIcon}`
   );
 }
 
@@ -256,6 +257,11 @@ add_task(async function browseraction_theme_icons_overflow_panel() {
       },
     ],
   });
+
+  // Ensure we show the menupanel at least once. This makes sure that the
+  // elements we're going to query the style of are in the flat tree.
+  document.getElementById("nav-bar-overflow-button").click();
+
   await testStaticTheme({
     themeData,
     expectedIcon: "light",

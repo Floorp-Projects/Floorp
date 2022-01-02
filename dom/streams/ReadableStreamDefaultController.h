@@ -144,9 +144,6 @@ extern void SetupReadableStreamDefaultControllerFromUnderlyingSource(
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-extern already_AddRefed<Promise> DefaultUndefinedPromise(
-    const ReadableStreamDefaultController* aController, ErrorResult& aRv);
-
 extern void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);

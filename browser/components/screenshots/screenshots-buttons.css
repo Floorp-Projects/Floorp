@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.all-buttons-container button {
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 46px 46px;
+  border: 1px solid transparent;
+  height: 100%;
+  min-width: 90px;
+  padding: 46px 5px 5px;
+}
+
+.all-buttons-container button:hover {
+  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
+}
+
+.all-buttons-container .full-page {
+  background-image: url("chrome://browser/content/screenshots/menu-fullpage.svg");
+}
+
+.all-buttons-container .visible-page {
+  background-image: url("chrome://browser/content/screenshots/menu-visible.svg");
+}
+
+.full-page, .visible-page {
+  -moz-context-properties: fill, stroke;
+  fill: buttonText;
+  stroke: #00fdff;
+}

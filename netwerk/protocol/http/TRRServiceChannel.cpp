@@ -26,6 +26,7 @@
 #include "TRRLoadInfo.h"
 #include "ReferrerInfo.h"
 #include "TRR.h"
+#include "TRRService.h"
 
 namespace mozilla {
 namespace net {
@@ -192,12 +193,6 @@ TRRServiceChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAutoCString scheme;
-  mURI->GetScheme(scheme);
-  if (!scheme.LowerCaseEqualsLiteral("https")) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsresult rv = NS_CheckPortSafety(mURI);
   if (NS_FAILED(rv)) {
     ReleaseListeners();
@@ -226,7 +221,9 @@ nsresult TRRServiceChannel::MaybeResolveProxyAndBeginConnect() {
   // at this point. The only time we know mProxyInfo already is if we're
   // proxying a non-http protocol like ftp. We don't need to discover proxy
   // settings if we are never going to make a network connection.
-  if (!mProxyInfo &&
+  // If mConnectionInfo is already supplied, we don't need to do proxy
+  // resolution again.
+  if (!mProxyInfo && !mConnectionInfo &&
       !(mLoadFlags & (nsICachingChannel::LOAD_ONLY_FROM_CACHE |
                       nsICachingChannel::LOAD_NO_NETWORK_IO)) &&
       NS_SUCCEEDED(ResolveProxy())) {
@@ -415,7 +412,6 @@ nsresult TRRServiceChannel::BeginConnect() {
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC_OE, !isHttps);
   } else if (mConnectionInfo) {
     LOG(("TRRServiceChannel %p Using channel supplied connection info", this));
-    Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
   } else {
     LOG(("TRRServiceChannel %p Using default connection info", this));
 
@@ -459,22 +455,6 @@ nsresult TRRServiceChannel::BeginConnect() {
     }
   }
 
-  // Force-Reload should reset the persistent connection pool for this host
-  if (mLoadFlags & LOAD_FRESH_CONNECTION) {
-    // just the initial document resets the whole pool
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-      gHttpHandler->AltServiceCache()->ClearAltServiceMappings();
-      rv = gHttpHandler->ConnMgr()->DoShiftReloadConnectionCleanupWithConnInfo(
-          mConnectionInfo);
-      if (NS_FAILED(rv)) {
-        LOG((
-            "TRRServiceChannel::BeginConnect "
-            "DoShiftReloadConnectionCleanupWithConnInfo failed: %08x [this=%p]",
-            static_cast<uint32_t>(rv), this));
-      }
-    }
-  }
-
   if (mCanceled) {
     return mStatus;
   }
@@ -515,6 +495,17 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
+
+  if (mLoadFlags & LOAD_FRESH_CONNECTION) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_TRR_CONNECTION_CYCLE_COUNT, 1);
+    nsresult rv =
+        gHttpHandler->ConnMgr()->DoSingleConnectionCleanup(mConnectionInfo);
+    LOG(
+        ("TRRServiceChannel::BeginConnect "
+         "DoSingleConnectionCleanup succeeded=%d %08x [this=%p]",
+         NS_SUCCEEDED(rv), static_cast<uint32_t>(rv), this));
+  }
 
   return Connect();
 }

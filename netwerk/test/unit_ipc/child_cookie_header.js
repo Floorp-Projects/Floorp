@@ -4,6 +4,7 @@
 
 function inChildProcess() {
   return (
+    // eslint-disable-next-line mozilla/use-services
     Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
       .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
   );

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>
+const gConnections = [];
+
+window.addEventListener("message", event => {
+  const ackTarget = window.parent ? window.parent : window;
+  switch (event.data) {
+    case "push-peer-connection":
+      gConnections.push(new RTCPeerConnection());
+      ackTarget.postMessage("ack", "*");
+      break;
+    case "pop-peer-connection":
+      gConnections.pop().close();
+      ackTarget.postMessage("ack", "*");
+      break;
+  }
+});
+
+window.addEventListener("DOMContentLoaded", function(ev) {
+  document.getElementById("msg").innerText = location.host;
+});
+</script>
+</head>
+<body><div id="msg"></div></body>
+</html>

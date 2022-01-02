@@ -177,11 +177,11 @@ var highlighterTestSpec = protocol.generateActorSpec({
         value: RetVal("string"),
       },
     },
-    setInspectorActorID: {
-      request: {
-        inspectorActorID: Arg(0, "string"),
+    getTabbingOrderHighlighterData: {
+      request: {},
+      response: {
+        value: RetVal("json"),
       },
-      response: {},
     },
   },
 });
@@ -355,7 +355,14 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     }
 
     const root = pauseOverlay.getElement("root");
-    return root.getAttribute("hidden") !== "true";
+    const toolbar = pauseOverlay.getElement("toolbar");
+
+    return (
+      root.getAttribute("hidden") !== "true" &&
+      root.getAttribute("overlay") == "true" &&
+      toolbar.getAttribute("hidden") !== "true" &&
+      !!toolbar.getTextContent()
+    );
   },
 
   /**
@@ -381,12 +388,8 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
    * @returns {EyeDropper}
    */
   _getEyeDropper() {
-    if (!this._inspectorActorID) {
-      console.error(
-        "_inspectorActorID is not set, make sure setInspectorActorID was called"
-      );
-    }
-    const inspectorActor = this.conn.getActor(this._inspectorActorID);
+    const form = this.targetActor.form();
+    const inspectorActor = this.conn._getOrCreateActor(form.inspectorActor);
     return inspectorActor?._eyeDropper;
   },
 
@@ -425,10 +428,58 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     return color;
   },
 
-  // This will be automatically called as part of the initialization of the
-  // HighlighterTestActor.
-  setInspectorActorID(inspectorActorID) {
-    this._inspectorActorID = inspectorActorID;
+  /**
+   * Get the TabbingOrderHighlighter for the associated targetActor
+   *
+   * @returns {TabbingOrderHighlighter}
+   */
+  _getTabbingOrderHighlighter() {
+    const form = this.targetActor.form();
+    const accessibilityActor = this.conn._getOrCreateActor(
+      form.accessibilityActor
+    );
+
+    if (!accessibilityActor) {
+      return null;
+    }
+    // We use `_tabbingOrderHighlighter` since it's the cached value; `tabbingOrderHighlighter`
+    // is a getter that will create the highlighter when called (if it does not exist yet).
+    return accessibilityActor.walker?._tabbingOrderHighlighter;
+  },
+
+  /**
+   * Get a representation of the NodeTabbingOrderHighlighters created by the
+   * TabbingOrderHighlighter of a given targetActor.
+   *
+   * @returns {Array<String>} An array which will contain as many entry as they are
+   *          NodeTabbingOrderHighlighters displayed.
+   *          Each item will be of the form `nodename[#id]: index`.
+   *          For example:
+   *          [
+   *            `button#top-btn-1 : 1`,
+   *            `html : 2`,
+   *            `button#iframe-btn-1 : 3`,
+   *            `button#iframe-btn-2 : 4`,
+   *            `button#top-btn-2 : 5`,
+   *          ]
+   */
+  getTabbingOrderHighlighterData() {
+    const highlighter = this._getTabbingOrderHighlighter();
+    if (!highlighter) {
+      return [];
+    }
+
+    const nodeTabbingOrderHighlighters = [
+      ...highlighter._highlighter._highlighters.values(),
+    ].filter(h => h.getElement("root").getAttribute("hidden") !== "true");
+
+    return nodeTabbingOrderHighlighters.map(h => {
+      let nodeStr = h.currentNode.nodeName.toLowerCase();
+      if (h.currentNode.id) {
+        nodeStr = `${nodeStr}#${h.currentNode.id}`;
+      }
+      return `${nodeStr} : ${h.getElement("root").getTextContent()}`;
+    });
   },
 });
 exports.HighlighterTestActor = HighlighterTestActor;
@@ -442,11 +493,6 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
     // The currently active highlighter is obtained by calling a custom getter
     // provided manually after requesting TestFront. See `getHighlighterTestFront(toolbox)`
     this._highlighter = null;
-  }
-
-  async initialize() {
-    const inspectorFront = await this.targetFront.getFront("inspector");
-    await this.setInspectorActorID(inspectorFront.actorID);
   }
 
   /**

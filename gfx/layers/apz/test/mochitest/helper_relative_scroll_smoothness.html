@@ -3,8 +3,10 @@
 <meta charset="utf-8">
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
 <title>What happens if main thread scrolls?</title>
 <style>
 html, body { margin: 0; }
@@ -29,6 +31,7 @@ body {
 </style>
 
 <script>
+const searchParams = new URLSearchParams(location.search);
 var intervalId;
 // Start periodic content expansions after we get a scroll event triggered by
 // a key press in test() function below, otherwise we may have same scroll
@@ -42,7 +45,20 @@ window.addEventListener("scroll",  () => {
     document.documentElement.style.backgroundPosition = `0px ${offset}px`;
     document.body.style.height = `${initialBodyHeight + offset}px`;
 
-    window.scrollBy(0, 10);
+    switch (searchParams.get("scroll-method")) {
+      case "scrollBy":
+        window.scrollBy(0, 10);
+        break;
+      case "scrollTop":
+        document.scrollingElement.scrollTop += 10;
+        break;
+      case "scrollTo":
+        window.scrollTo(0, window.scrollY + 10);
+        break;
+      default:
+        ok(false, "Unsupported scroll method: " + searchParams.get("scroll-method"));
+        break;
+    }
 
     // Simulate some jank.
     var freezeDurationInMilliseconds = 100;
@@ -70,7 +86,24 @@ async function test() {
   // sending arrow down keys for 1500ms will cause some jank.
   const timeAtStart = performance.now();
   while (performance.now() - timeAtStart < 1500) {
-    synthesizeKey("KEY_ArrowDown");
+    switch (searchParams.get("input-type")) {
+      case "key":
+        synthesizeKey("KEY_ArrowDown");
+        break;
+      case "native-key":
+        const DownArrowKeyCode = nativeArrowDownKey();
+        ok(synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+                               DownArrowKeyCode, {}  /* no modifier */,
+                               "", ""),
+          "Dispatched an down arrow key event");
+        break;
+      case "wheel":
+        synthesizeNativeWheel(window, 50, 50, 0, -50);
+        break;
+      default:
+        ok(false, "Unsupported input type: " + searchParams.get("input-type"));
+        break;
+    }
     await promiseFrame(window);
   }
 
@@ -87,13 +120,13 @@ async function test() {
     }
     ok(
       record.scrollOffsetY > previousRecord.scrollOffsetY,
-      "scroll offset should be strictly monotonically increasing" +
+      "scroll offset should be strictly monotonically increasing " +
       "previous offset: " + previousRecord.scrollOffsetY +
       ", offset: " + record.scrollOffsetY
     );
     ok(
       record.sampledTimeStamp > previousRecord.sampledTimeStamp,
-      "sampled time stamp should be strictly monotonically increasing" +
+      "sampled time stamp should be strictly monotonically increasing " +
       "previous timestamp: " + previousRecord.sampledTimeStamp +
       ", timestamp: " + record.sampledTimeStamp
     );
@@ -101,8 +134,24 @@ async function test() {
   }
 }
 
-waitUntilApzStable()
-.then(test)
-.then(subtestDone, subtestFailed);
+function isOnChaosMode() {
+  const env = SpecialPowers.Cc["@mozilla.org/process/environment;1"]
+                           .getService(SpecialPowers.Ci.nsIEnvironment);
+  return env.get("MOZ_CHAOSMODE");
+}
 
+if (searchParams.get("input-type") == "native-key" &&
+    getPlatform() != "mac" && getPlatform() != "windows") {
+  ok(true, "Skipping test because native key events are not supported on " +
+     getPlatform());
+  subtestDone();
+} else if (searchParams.get("input-type") == "native-key" &&
+           getPlatform() == "mac" && isOnChaosMode()) {
+  ok(true, "Skipping native-key tests on verify runs on Mac");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
 </script>

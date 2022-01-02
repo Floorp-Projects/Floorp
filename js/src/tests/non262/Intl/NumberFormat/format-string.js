@@ -113,9 +113,9 @@ for (let {value, expected} of tests) {
     ".1e-999999999",
     ".1e+999999999",
 
-    // We limit positive exponents to 99'999 (inclusive).
-    "1e+99999",
-    "1e+999999",
+    // We limit positive exponents to 9'999'999 (inclusive).
+    "1e+9999999",
+    "1e+99999999",
 
     // Int32 overflow when computing the exponent.
     ".1e-2147483649",
@@ -128,9 +128,9 @@ for (let {value, expected} of tests) {
     assertThrowsInstanceOf(() => nf.format(value), RangeError);
   }
 
-  // We allow up to ±99'999.
-  assertEq(nf.format(".1e-99999"), "0");
-  assertEq(nf.format(".1e+99999"), "1" + "0".repeat(99999 - 1));
+  // We allow up to ±9'999'999.
+  assertEq(nf.format(".1e-9999999"), "0");
+  assertEq(nf.format(".1e+9999999"), "1" + "0".repeat(9_999_999 - 1));
 
   // Negative exponents are even valid up to -999'999'998
   assertEq(nf.format(".1e-999999998"), "0");

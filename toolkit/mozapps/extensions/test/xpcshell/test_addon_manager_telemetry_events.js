@@ -158,6 +158,7 @@ add_task(async function test_basic_telemetry_events() {
       extra: {
         addon_id: "basic@test.extension",
         step: "started",
+        install_origins: "0",
         ...FAKE_INSTALL_TELEMETRY_INFO,
       },
     },
@@ -168,6 +169,7 @@ add_task(async function test_basic_telemetry_events() {
       extra: {
         addon_id: "basic@test.extension",
         step: "completed",
+        install_origins: "0",
         ...FAKE_INSTALL_TELEMETRY_INFO,
       },
     },
@@ -376,12 +378,22 @@ add_task(async function test_update_telemetry_events() {
       {
         method: "install",
         object,
-        extra: { addon_id, step: "started", ...FAKE_INSTALL_TELEMETRY_INFO },
+        extra: {
+          addon_id,
+          step: "started",
+          install_origins: "0",
+          ...FAKE_INSTALL_TELEMETRY_INFO,
+        },
       },
       {
         method: "install",
         object,
-        extra: { addon_id, step: "completed", ...FAKE_INSTALL_TELEMETRY_INFO },
+        extra: {
+          addon_id,
+          step: "completed",
+          install_origins: "0",
+          ...FAKE_INSTALL_TELEMETRY_INFO,
+        },
       },
     ],
     "Got the expected addonsManager.install events"

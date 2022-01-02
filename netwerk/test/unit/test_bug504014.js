@@ -53,11 +53,9 @@ var invalid_URIs = [
 ];
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
   for (var i = 0; i < valid_URIs.length; i++) {
     try {
-      ios.newURI(valid_URIs[i]);
+      Services.io.newURI(valid_URIs[i]);
     } catch (e) {
       do_throw("cannot create URI:" + valid_URIs[i]);
     }
@@ -65,7 +63,7 @@ function run_test() {
 
   for (var i = 0; i < invalid_URIs.length; i++) {
     try {
-      ios.newURI(invalid_URIs[i]);
+      Services.io.newURI(invalid_URIs[i]);
       do_throw("should throw: " + invalid_URIs[i]);
     } catch (e) {
       Assert.equal(e.result, Cr.NS_ERROR_MALFORMED_URI);

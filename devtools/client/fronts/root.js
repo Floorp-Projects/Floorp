@@ -166,15 +166,22 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       const processWorkers = await Promise.all(
         processes.map(async processDescriptorFront => {
           // Ignore parent process
-          if (processDescriptorFront.isParent) {
+          if (processDescriptorFront.isParentProcessDescriptor) {
             return [];
           }
-          const front = await processDescriptorFront.getTarget();
-          if (!front) {
-            return [];
+          try {
+            const front = await processDescriptorFront.getTarget();
+            if (!front) {
+              return [];
+            }
+            const response = await front.listWorkers();
+            return response.workers;
+          } catch (e) {
+            if (e.message.includes("Connection closed")) {
+              return [];
+            }
+            throw e;
           }
-          const response = await front.listWorkers();
-          return response.workers;
         })
       );
 
@@ -238,7 +245,6 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
     const descriptorFront = await super.getTab(packet);
 
-    // Should be called before setLocalTab.
     // Will flag TabDescriptor used by WebExtension codebase.
     if (filter?.isWebExtension) {
       descriptorFront.setIsForWebExtension(true);

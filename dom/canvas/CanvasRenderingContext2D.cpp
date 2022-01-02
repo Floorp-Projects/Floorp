@@ -12,7 +12,7 @@
 
 #include "nsContentUtils.h"
 
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/SVGImageContext.h"
@@ -61,6 +61,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
+#include "DrawTargetWebgl.h"
 
 #include <algorithm>
 
@@ -1312,7 +1313,8 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   RefPtr<DrawTarget> newTarget;
   RefPtr<PersistentBufferProvider> newProvider;
 
-  if (!TrySharedTarget(newTarget, newProvider) &&
+  if (!TryAcceleratedTarget(newTarget, newProvider) &&
+      !TrySharedTarget(newTarget, newProvider) &&
       !TryBasicTarget(newTarget, newProvider)) {
     gfxCriticalError(
         CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(GetSize())))
@@ -1423,6 +1425,18 @@ static WindowRenderer* WindowRendererFromCanvasElement(
   return nsContentUtils::WindowRendererForDocument(aCanvasElement->OwnerDoc());
 }
 
+bool CanvasRenderingContext2D::TryAcceleratedTarget(
+    RefPtr<gfx::DrawTarget>& aOutDT,
+    RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
+  aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
+  if (!aOutDT) {
+    return false;
+  }
+
+  aOutProvider = new PersistentBufferProviderAccelerated(aOutDT);
+  return true;
+}
+
 bool CanvasRenderingContext2D::TrySharedTarget(
     RefPtr<gfx::DrawTarget>& aOutDT,
     RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
@@ -1433,9 +1447,7 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  if (mBufferProvider &&
-      (mBufferProvider->GetType() == LayersBackend::LAYERS_CLIENT ||
-       mBufferProvider->GetType() == LayersBackend::LAYERS_WR)) {
+  if (mBufferProvider && mBufferProvider->IsShared()) {
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
     // provider.
@@ -1483,6 +1495,13 @@ bool CanvasRenderingContext2D::TryBasicTarget(
 
   aOutProvider = new PersistentBufferProviderBasic(aOutDT);
   return true;
+}
+
+ClientWebGLContext* CanvasRenderingContext2D::AsWebgl() {
+  if (mBufferProvider) {
+    return mBufferProvider->AsWebgl();
+  }
+  return nullptr;
 }
 
 PresShell* CanvasRenderingContext2D::GetPresShell() {
@@ -3504,11 +3523,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
   using ContextState = CanvasRenderingContext2D::ContextState;
 
   virtual void SetText(const char16_t* aText, int32_t aLength,
-                       mozilla::intl::Bidi::Direction aDirection) override {
+                       mozilla::intl::BidiDirection aDirection) override {
     mFontgrp->UpdateUserFonts();  // ensure user font generation is current
     // adjust flags for current direction run
     gfx::ShapedTextFlags flags = mTextRunFlags;
-    if (aDirection == mozilla::intl::Bidi::Direction::RTL) {
+    if (aDirection == mozilla::intl::BidiDirection::RTL) {
       flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
     } else {
       flags &= ~gfx::ShapedTextFlags::TEXT_IS_RTL;
@@ -3875,8 +3894,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // bounding boxes before rendering anything
   aError = nsBidiPresUtils::ProcessText(
       textToDraw.get(), textToDraw.Length(),
-      isRTL ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-            : mozilla::intl::Bidi::EmbeddingLevel::LTR(),
+      isRTL ? mozilla::intl::BidiEmbeddingLevel::RTL()
+            : mozilla::intl::BidiEmbeddingLevel::LTR(),
       presShell->GetPresContext(), processor, nsBidiPresUtils::MODE_MEASURE,
       nullptr, 0, &totalWidthCoord, &mBidiEngine);
   if (aError.Failed()) {
@@ -4018,8 +4037,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
 
   aError = nsBidiPresUtils::ProcessText(
       textToDraw.get(), textToDraw.Length(),
-      isRTL ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-            : mozilla::intl::Bidi::EmbeddingLevel::LTR(),
+      isRTL ? mozilla::intl::BidiEmbeddingLevel::RTL()
+            : mozilla::intl::BidiEmbeddingLevel::LTR(),
       presShell->GetPresContext(), processor, nsBidiPresUtils::MODE_DRAW,
       nullptr, 0, nullptr, &mBidiEngine);
 
@@ -4912,9 +4931,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     }
   }
   if (op == CompositionOp::OP_OVER &&
-      (!mBufferProvider ||
-       (mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT &&
-        mBufferProvider->GetType() != LayersBackend::LAYERS_WR))) {
+      (!mBufferProvider || !mBufferProvider->IsShared())) {
     thebes = gfxContext::CreateOrNull(mTarget);
     MOZ_ASSERT(thebes);  // already checked the draw target above
                          // (in SupportsAzureContentForDrawTarget)

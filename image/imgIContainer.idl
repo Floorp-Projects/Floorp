@@ -48,6 +48,7 @@ namespace image {
 
 class ImageRegion;
 class ImageIntRegion;
+class WebRenderImageProvider;
 struct Orientation;
 struct Resolution;
 
@@ -70,6 +71,7 @@ native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
 native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
+[ptr] native WebRenderImageProvider(mozilla::image::WebRenderImageProvider);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native WindowRenderer(mozilla::WindowRenderer);
 native Orientation(mozilla::image::Orientation);
@@ -168,9 +170,9 @@ interface imgIContainer : nsISupports
   readonly attribute boolean animated;
 
   /**
-   * Producer ID for image containers created by this image.
+   * Provider ID for image providers created by this image.
    */
-  [infallible] readonly attribute unsigned long producerId;
+  [infallible] readonly attribute unsigned long providerId;
 
   /**
    * Flags for imgIContainer operations.
@@ -324,13 +326,11 @@ interface imgIContainer : nsISupports
                                                          in uint32_t aFlags);
 
   /**
-   * Attempts to create an ImageContainer (and Image) containing the current
-   * frame at the given size. Match the requested size is best effort; it's
-   * not guaranteed that the surface you get will be a perfect match. (Some
-   * reasons you may get a surface of a different size include: if you
-   * requested upscaling, or if downscale-during-decode is disabled.)
-   *
-   * Avoid calling this unless you're actually going to layerize this image.
+   * Attempts to find a WebRenderImageProvider containing the current frame at
+   * the given size. Match the requested size is best effort; it's not
+   * guaranteed that the surface you get will be a perfect match. (Some reasons
+   * you may get a surface of a different size include: if you requested
+   * upscaling, or if downscale-during-decode is disabled.)
    *
    * @param aRenderer The WindowRenderer which will be used to render the
    *                  ImageContainer.
@@ -341,16 +341,16 @@ interface imgIContainer : nsISupports
    * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
    *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
    *               are supported.
-   * @param aContainer Return value for ImageContainer for the current frame.
-   *                   May be null depending on the draw result.
+   * @param aProvider Return value for WebRenderImageProvider for the current
+   *                  frame. May be null depending on the draw result.
    * @return The draw result for the current frame.
    */
-  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in WindowRenderer aRenderer,
-                                                             [const] in nsIntSize aSize,
-                                                             [const] in MaybeSVGImageContext aSVGContext,
-                                                             [const] in MaybeImageIntRegion aRegion,
-                                                             in uint32_t aFlags,
-                                                             out ImageContainer aOutContainer);
+  [noscript, notxpcom] ImgDrawResult getImageProvider(in WindowRenderer aRenderer,
+                                                      [const] in nsIntSize aSize,
+                                                      [const] in MaybeSVGImageContext aSVGContext,
+                                                      [const] in MaybeImageIntRegion aRegion,
+                                                      in uint32_t aFlags,
+                                                      out WebRenderImageProvider aProvider);
 
   /**
    * Draw the requested frame of this image onto the context specified.

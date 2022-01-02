@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,<p>hello world" +
+  "data:text/html;charset=utf8,<!DOCTYPE html><p>hello world" +
   "<button onclick='foobar.explode()'>click!</button>";
 
 add_task(async function() {

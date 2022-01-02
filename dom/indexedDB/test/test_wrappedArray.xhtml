@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1509168
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
 
-    let evilarr = new iwin.Uint8ClampedArray(3);
+    let evilarr = new window.iwin.Uint8ClampedArray(3);
 
     try {
       window.indexedDB.cmp(evilarr, undefined);

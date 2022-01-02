@@ -51,11 +51,13 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   bool SendStateChangeEvent(const uint64_t& aID, const uint64_t& aState,
                             const bool& aEnabled);
   bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
-                          const bool& aIsSelectionCollapsed);
+                          const bool& aIsSelectionCollapsed,
+                          const bool& aIsAtEndOfLine);
   bool SendCaretMoveEvent(const uint64_t& aID,
                           const LayoutDeviceIntRect& aCaretRect,
                           const int32_t& aOffset,
-                          const bool& aIsSelectionCollapsed);
+                          const bool& aIsSelectionCollapsed,
+                          const bool& aIsAtEndOfLine);
   bool SendFocusEvent(const uint64_t& aID);
   bool SendFocusEvent(const uint64_t& aID,
                       const LayoutDeviceIntRect& aCaretRect);
@@ -173,22 +175,24 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   struct SerializedCaretMove final : public DeferredEvent {
     SerializedCaretMove(DocAccessibleChild* aTarget, uint64_t aID,
                         const LayoutDeviceIntRect& aCaretRect, int32_t aOffset,
-                        bool aIsSelectionCollapsed)
+                        bool aIsSelectionCollapsed, bool aIsAtEndOfLine)
         : DeferredEvent(aTarget),
           mID(aID),
           mCaretRect(aCaretRect),
           mOffset(aOffset),
-          mIsSelectionCollapsed(aIsSelectionCollapsed) {}
+          mIsSelectionCollapsed(aIsSelectionCollapsed),
+          mIsAtEndOfLine(aIsAtEndOfLine) {}
 
     void Dispatch(DocAccessibleChild* aIPCDoc) override {
-      Unused << aIPCDoc->SendCaretMoveEvent(mID, mCaretRect, mOffset,
-                                            mIsSelectionCollapsed);
+      Unused << aIPCDoc->SendCaretMoveEvent(
+          mID, mCaretRect, mOffset, mIsSelectionCollapsed, mIsAtEndOfLine);
     }
 
     uint64_t mID;
     LayoutDeviceIntRect mCaretRect;
     int32_t mOffset;
     bool mIsSelectionCollapsed;
+    bool mIsAtEndOfLine;
   };
 
   struct SerializedFocus final : public DeferredEvent {

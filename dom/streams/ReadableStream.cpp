@@ -23,6 +23,7 @@
 #include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
+#include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
@@ -509,216 +510,6 @@ void ReadableStreamAddReadRequest(ReadableStream* aStream,
   aStream->GetReader()->ReadRequests().insertBack(aReadRequest);
 }
 
-// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-// Step 12.3
-struct ReadableStreamDefaultTeeReadRequest final : public ReadRequest {
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ReadableStreamDefaultTeeReadRequest,
-                                           ReadRequest)
-
-  RefPtr<TeeState> mTeeState;
-
-  explicit ReadableStreamDefaultTeeReadRequest(TeeState* aTeeState)
-      : mTeeState(aTeeState) {}
-
-  virtual void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                          ErrorResult& aRv) override {
-    // Step 1.
-    class ReadableStreamDefaultTeeReadRequestChunkSteps
-        : public MicroTaskRunnable {
-      RefPtr<TeeState> mTeeState;
-      JS::PersistentRooted<JS::Value> mChunk;
-
-     public:
-      ReadableStreamDefaultTeeReadRequestChunkSteps(
-          JSContext* aCx, TeeState* aTeeState, JS::Handle<JS::Value> aChunk)
-          : mTeeState(aTeeState), mChunk(aCx, aChunk) {}
-
-      void Run(AutoSlowOperation& aAso) override {
-        AutoJSAPI jsapi;
-        if (NS_WARN_IF(
-                !jsapi.Init(mTeeState->GetStream()->GetParentObject()))) {
-          return;
-        }
-        JSContext* cx = jsapi.cx();
-        // Step Numbering below is relative to Chunk steps Microtask:
-        //
-        // Step 1.
-        mTeeState->SetReading(false);
-
-        // Step 2.
-        JS::RootedValue chunk1(cx, mChunk);
-        JS::RootedValue chunk2(cx, mChunk);
-
-        // Step 3. Skipped until we implement cloneForBranch2 path.
-        MOZ_RELEASE_ASSERT(!mTeeState->CloneForBranch2());
-
-        // Step 4.
-        if (!mTeeState->Canceled1()) {
-          IgnoredErrorResult rv;
-          ReadableStreamDefaultControllerEnqueue(
-              cx, mTeeState->Branch1()->Controller(), chunk1, rv);
-          (void)NS_WARN_IF(rv.Failed());
-        }
-
-        // Step 5.
-        if (!mTeeState->Canceled2()) {
-          IgnoredErrorResult rv;
-          ReadableStreamDefaultControllerEnqueue(
-              cx, mTeeState->Branch2()->Controller(), chunk2, rv);
-          (void)NS_WARN_IF(rv.Failed());
-        }
-      }
-
-      bool Suppressed() override {
-        nsIGlobalObject* global = mTeeState->GetStream()->GetParentObject();
-        return global && global->IsInSyncOperation();
-      }
-    };
-
-    RefPtr<ReadableStreamDefaultTeeReadRequestChunkSteps> task =
-        MakeRefPtr<ReadableStreamDefaultTeeReadRequestChunkSteps>(
-            aCx, mTeeState, aChunk);
-    CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
-  }
-
-  virtual void CloseSteps(JSContext* aCx, ErrorResult& aRv) override {
-    // Step Numbering below is relative to 'close steps' of
-    // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-    //
-    // Step 1.
-    mTeeState->SetReading(false);
-
-    // Step 2.
-    if (!mTeeState->Canceled1()) {
-      ReadableStreamDefaultControllerClose(
-          aCx, mTeeState->Branch1()->Controller(), aRv);
-      if (aRv.Failed()) {
-        return;
-      }
-    }
-
-    // Step 3.
-    if (!mTeeState->Canceled2()) {
-      ReadableStreamDefaultControllerClose(
-          aCx, mTeeState->Branch2()->Controller(), aRv);
-      if (aRv.Failed()) {
-        return;
-      }
-    }
-
-    // Step 4.
-    if (!mTeeState->Canceled1() || !mTeeState->Canceled2()) {
-      mTeeState->CancelPromise()->MaybeResolveWithUndefined();
-    }
-  }
-
-  virtual void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
-                          ErrorResult& aRv) override {
-    mTeeState->SetReading(false);
-  }
-
- protected:
-  virtual ~ReadableStreamDefaultTeeReadRequest() = default;
-};
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeReadRequest)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    ReadableStreamDefaultTeeReadRequest, ReadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    ReadableStreamDefaultTeeReadRequest, ReadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultTeeReadRequest, ReadRequest)
-NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultTeeReadRequest, ReadRequest)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeeReadRequest)
-NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
-
-static already_AddRefed<Promise> PromiseResolvedWithUndefined(
-    nsIGlobalObject* global, ErrorResult& aRv) {
-  RefPtr<Promise> returnPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  returnPromise->MaybeResolveWithUndefined();
-  return returnPromise.forget();
-}
-
-// Implementation of the Pull algorithm steps for ReadableStreamDefaultTee,
-// from
-// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-// Step 12.
-class ReadableStreamDefaultTeePullAlgorithm final
-    : public UnderlyingSourcePullCallbackHelper {
-  RefPtr<TeeState> mTeeState;
-
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
-      ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-
-  explicit ReadableStreamDefaultTeePullAlgorithm(TeeState* aTeeState)
-      : mTeeState(aTeeState) {}
-
-  virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamDefaultController& aController,
-      ErrorResult& aRv) override {
-    // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-    // Pull Algorithm Steps:
-
-    // Step 12.1:
-    if (mTeeState->Reading()) {
-      return PromiseResolvedWithUndefined(aController.GetParentObject(), aRv);
-    }
-
-    // Step 12.2:
-    mTeeState->SetReading(true);
-
-    // Step 12.3:
-    RefPtr<ReadRequest> readRequest =
-        new ReadableStreamDefaultTeeReadRequest(mTeeState);
-
-    // Step 12.4:
-    ReadableStreamDefaultReaderRead(aCx, mTeeState->GetReader(), readRequest,
-                                    aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-
-    // Step 12.5
-    return PromiseResolvedWithUndefined(aController.GetParentObject(), aRv);
-  }
-
- protected:
-  ~ReadableStreamDefaultTeePullAlgorithm() = default;
-};
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeePullAlgorithm)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    ReadableStreamDefaultTeePullAlgorithm, UnderlyingSourcePullCallbackHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTeeState)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultTeePullAlgorithm,
-                         UnderlyingSourcePullCallbackHelper)
-NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultTeePullAlgorithm,
-                          UnderlyingSourcePullCallbackHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeePullAlgorithm)
-NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourcePullCallbackHelper)
-
 class ReadableStreamDefaultTeeCancelAlgorithm final
     : public UnderlyingSourceCancelCallbackHelper {
   RefPtr<TeeState> mTeeState;
@@ -889,8 +680,11 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   }
 
   // Step 12:
-  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm =
+  RefPtr<ReadableStreamDefaultTeePullAlgorithm> pullAlgorithm =
       new ReadableStreamDefaultTeePullAlgorithm(teeState);
+
+  // Link pull algorithm into tee state for use in readRequest
+  teeState->SetPullAlgorithm(pullAlgorithm);
 
   // Step 13.
   RefPtr<UnderlyingSourceCancelCallbackHelper> cancel1Algorithm =

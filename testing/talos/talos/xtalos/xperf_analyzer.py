@@ -652,7 +652,7 @@ class ClassicEvent(XPerfEvent):
 
 
 class SessionStoreWindowRestored(ClassicEvent):
-    """ The Firefox session store window restored event """
+    """The Firefox session store window restored event"""
 
     def __init__(self):
         super(SessionStoreWindowRestored, self).__init__(

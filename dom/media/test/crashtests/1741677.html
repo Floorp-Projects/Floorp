@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html class="reftest-wait">
+<script>
+  const script = `
+    navigator.mediaCapabilities.decodingInfo({
+      type: 'file',
+      audio: { contentType: "audio/flac" }
+    }).then(postMessage("done"));
+  `;
+  let worker = new Worker(URL.createObjectURL(new Blob([script])));
+  // Stop test completion and crash from racing each other.
+  worker.onmessage = () => document.documentElement.removeAttribute("class");
+</script>
+</html>

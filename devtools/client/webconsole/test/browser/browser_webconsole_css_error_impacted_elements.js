@@ -24,7 +24,7 @@ httpServer.registerPathHandler(`/`, function(request, response) {
     </html>`);
 });
 
-const TEST_URI = `data:text/html,<meta charset=utf8>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
   <style>
     button {
       cursor: unknownCursor;

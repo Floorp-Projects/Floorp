@@ -1205,26 +1205,23 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   js::wasm::ReportSimdAnalysis("shift -> variable shift");
 #  endif
 
-  LDefinition tempReg0 = LDefinition::BogusTemp();
-  LDefinition tempReg1 = LDefinition::BogusTemp();
+  LDefinition tempReg = LDefinition::BogusTemp();
   switch (ins->simdOp()) {
     case wasm::SimdOp::I8x16Shl:
     case wasm::SimdOp::I8x16ShrS:
     case wasm::SimdOp::I8x16ShrU:
     case wasm::SimdOp::I64x2ShrS:
-      tempReg0 = temp();
-      tempReg1 = tempSimd128();
+      tempReg = tempSimd128();
       break;
     default:
-      tempReg0 = temp();
       break;
   }
 
   // Reusing the input if possible is never detrimental.
   LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
   LAllocation rhsAlloc = useRegisterAtStart(rhs);
-  auto* lir = new (alloc())
-      LWasmVariableShiftSimd128(lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
+  auto* lir =
+      new (alloc()) LWasmVariableShiftSimd128(lhsDestAlloc, rhsAlloc, tempReg);
   defineReuseInput(lir, ins, LWasmVariableShiftSimd128::LhsDest);
 #else
   MOZ_CRASH("No SIMD");

@@ -123,7 +123,6 @@ namespace jit {
   _(NewArray)                     \
   _(NewIterator)                  \
   _(NewCallObject)                \
-  _(CreateThisWithTemplate)       \
   _(Lambda)                       \
   _(LambdaArrow)                  \
   _(FunctionWithProto)            \
@@ -135,6 +134,7 @@ namespace jit {
   _(BigIntAsUintN)                \
   _(CreateArgumentsObject)        \
   _(CreateInlinedArgumentsObject) \
+  _(Rest)                         \
   _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -795,14 +795,6 @@ class RNewIterator final : public RInstruction {
                              SnapshotIterator& iter) const override;
 };
 
-class RCreateThisWithTemplate final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(CreateThisWithTemplate, 1)
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
 class RLambda final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(Lambda, 2)
@@ -923,6 +915,16 @@ class RCreateInlinedArgumentsObject final : public RInstruction {
     // +1 for the callee.
     return numActuals() + 2;
   }
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RRest final : public RInstruction {
+  uint32_t numFormals_;
+
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(Rest, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

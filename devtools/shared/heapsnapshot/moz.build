@@ -57,6 +57,3 @@ DevToolsModules(
     "HeapSnapshotFileUtils.js",
     "shortest-paths.js",
 )
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

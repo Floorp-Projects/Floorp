@@ -170,11 +170,9 @@ class WorkerPrivate final : public RelativeTimeline {
   }
 
   bool ExtensionAPIAllowed() {
-    // This method should never be actually called if the extension background
-    // service worker is disabled by pref.
-    MOZ_ASSERT(
-        StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup());
-    return mExtensionAPIAllowed;
+    return (
+        StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
+        mExtensionAPIAllowed);
   }
 
   void SetIsDebuggerRegistered(bool aDebuggerRegistered) {
@@ -741,6 +739,14 @@ class WorkerPrivate final : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
+  const mozilla::ipc::PrincipalInfo& GetPartitionedPrincipalInfo() const {
+    return *mLoadInfo.mPartitionedPrincipalInfo;
+  }
+
+  uint32_t GetPrincipalHashValue() const {
+    return mLoadInfo.mPrincipalHashValue;
+  }
+
   const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {
@@ -752,6 +758,8 @@ class WorkerPrivate final : public RelativeTimeline {
     AssertIsOnMainThread();
     return mLoadInfo.mWindow;
   }
+
+  nsPIDOMWindowInner* GetAncestorWindow() const;
 
   nsIContentSecurityPolicy* GetCSP() const {
     AssertIsOnMainThread();
@@ -832,6 +840,15 @@ class WorkerPrivate final : public RelativeTimeline {
   // Determine if the SW testing per-window flag is set by devtools
   bool ServiceWorkersTestingInWindow() const {
     return mLoadInfo.mServiceWorkersTestingInWindow;
+  }
+
+  bool ShouldResistFingerprinting() const {
+    return mLoadInfo.mShouldResistFingerprinting;
+  }
+
+  // Determin if the worker was created under a third-party context.
+  bool IsThirdPartyContextToTopWindow() const {
+    return mLoadInfo.mIsThirdPartyContextToTopWindow;
   }
 
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
@@ -1008,6 +1025,15 @@ class WorkerPrivate final : public RelativeTimeline {
       const nsILoadInfo::CrossOriginOpenerPolicy aAgentClusterOpenerPolicy);
 
   ~WorkerPrivate();
+
+  struct AgentClusterIdAndCoop {
+    nsID mId;
+    nsILoadInfo::CrossOriginOpenerPolicy mCoop;
+  };
+
+  static AgentClusterIdAndCoop ComputeAgentClusterIdAndCoop(
+      WorkerPrivate* aParent, WorkerKind aWorkerKind,
+      WorkerLoadInfo* aLoadInfo);
 
   bool MayContinueRunning() {
     AssertIsOnWorkerThread();
@@ -1283,7 +1309,7 @@ class WorkerPrivate final : public RelativeTimeline {
     uint32_t mDebuggerEventLoopLevel;
 
     uint32_t mErrorHandlerRecursionCount;
-    uint32_t mNextTimeoutId;
+    int32_t mNextTimeoutId;
 
     // Tracks the current setTimeout/setInterval nesting level.
     // When there isn't a TimeoutHandler on the stack, this will be 0.

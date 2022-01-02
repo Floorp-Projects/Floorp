@@ -114,7 +114,7 @@ already_AddRefed<Image> ImageFactory::CreateImage(
   }
 #endif
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     static const size_t sMaxTruncatedLength = 1024;
     nsAutoCString spec;
     aURI->GetSpec(spec);

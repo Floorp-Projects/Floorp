@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ron"
-version = "0.6.5"
+version = "0.7.0"
 authors = ["Christopher Durham <cad97@cad97.com>", "Dzmitry Malyshau <kvarkus@gmail.com>", "Thomas Schaller <torkleyy@gmail.com>"]
 exclude = ["bors.toml", ".travis.yml"]
 description = "Rusty Object Notation"

@@ -133,7 +133,7 @@ public:
 class T_CTEST_EXPORT_API UPerfTest {
 public:
     UBool run();
-    UBool runTest( char* name = NULL, char* par = NULL ); // not to be overidden
+    UBool runTest( char* name = NULL, char* par = NULL ); // not to be overridden
         
     virtual void usage( void ) ;
     
@@ -158,7 +158,7 @@ protected:
     void init(UOption addOptions[], int32_t addOptionsCount,
               UErrorCode& status);
 
-    virtual UPerfFunction* runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL ); // overide !
+    virtual UPerfFunction* runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL ); // override !
 
     virtual UBool runTestLoop( char* testname, char* par );
 

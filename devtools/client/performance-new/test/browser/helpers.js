@@ -302,20 +302,19 @@ async function openPopupAndEnsureCloses(window, callback) {
 /**
  * This function overwrites the default profiler.firefox.com URL for tests. This
  * ensures that the tests do not attempt to access external URLs.
- * @param {string} url
+ * The origin needs to be on the allowlist in validateProfilerWebChannelUrl,
+ * otherwise the WebChannel won't work. ("http://example.com" is on that list.)
+ *
+ * @param {string} origin - For example: http://example.com
+ * @param {string} pathname - For example: /my/testing/frontend.html
  * @returns {Promise}
  */
-function setProfilerFrontendUrl(url) {
-  info(
-    "Setting the profiler URL to the fake frontend. Note that this doesn't currently " +
-      "support the WebChannels, so expect a few error messages about the WebChannel " +
-      "URLs not being correct."
-  );
+function setProfilerFrontendUrl(origin, pathname) {
   return SpecialPowers.pushPrefEnv({
     set: [
       // Make sure observer and testing function run in the same process
-      ["devtools.performance.recording.ui-base-url", url],
-      ["devtools.performance.recording.ui-base-url-path", ""],
+      ["devtools.performance.recording.ui-base-url", origin],
+      ["devtools.performance.recording.ui-base-url-path", pathname],
     ],
   });
 }
@@ -623,6 +622,16 @@ function _adaptCustomPresetExpectationToCustomBuild(fixture) {
 }
 
 /**
+ * Get the content of the preset description.
+ * @param {Element} devtoolsDocument
+ * @returns {string}
+ */
+function getDevtoolsCustomPresetContent(devtoolsDocument) {
+  return devtoolsDocument.querySelector(".perf-presets-custom").innerText;
+}
+/* exported getDevtoolsCustomPresetContent */
+
+/**
  * This checks if the content of the preset description equals the fixture in
  * string form.
  * @param {Element} devtoolsDocument
@@ -633,7 +642,7 @@ function checkDevtoolsCustomPresetContent(devtoolsDocument, fixture) {
   fixture = fixture.replace(/^\s+/gm, "").trim();
   // This removes unavailable features from the fixture content.
   fixture = _adaptCustomPresetExpectationToCustomBuild(fixture);
-  is(devtoolsDocument.querySelector(".perf-presets-custom").innerText, fixture);
+  is(getDevtoolsCustomPresetContent(devtoolsDocument), fixture);
 }
 /* exported checkDevtoolsCustomPresetContent */
 

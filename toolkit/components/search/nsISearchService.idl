@@ -302,6 +302,20 @@ interface nsISearchService : nsISupports
   Promise addPolicyEngine(in jsval details);
 
   /**
+   * Updates an existing engine for enterprises.
+   *
+   * @param details
+   *        An object that simulates the WebExtension manifest structure:
+   *
+   *        {iconURL} Optional
+   *        {description} Optional
+   *        {chrome_settings_overrides} This should contain a {search_provider}
+   *                                    structure that mimics the WebExtension
+   *                                    manifest structure.
+   */
+  Promise updatePolicyEngine(in jsval details);
+
+  /**
    * Adds a new search engine defined by the user.
    *
    * @param name

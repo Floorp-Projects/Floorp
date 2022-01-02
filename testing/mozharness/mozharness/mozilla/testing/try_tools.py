@@ -85,7 +85,7 @@ class TryToolsMixin(TransferMixin):
         return msg
 
     def _extract_try_args(self, msg):
-        """ Returns a list of args from a try message, for parsing """
+        """Returns a list of args from a try message, for parsing"""
         if not msg:
             return None
         all_try_args = None

@@ -64,7 +64,7 @@ JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
   JS::Rooted<JS::Value> elementValue(aCx);
   {
     nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
-      if (!domElement) {
+    if (!domElement) {
       return nullptr;
     }
 
@@ -73,7 +73,7 @@ JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
     JSAutoRealm ar(aCx, globalObject);
 
     nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
-                                              /* aAllowWrapping = */ true);
+                                             /* aAllowWrapping = */ true);
     if (NS_FAILED(rv)) {
       return nullptr;
     }

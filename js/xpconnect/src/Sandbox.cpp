@@ -1223,8 +1223,20 @@ nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
   }
 #endif
 
+  // Create a clone of the expanded principal to be used for the call to
+  // SetRequestContextWithPrincipal (to prevent the CSP and expanded
+  // principal instances to keep each other alive indefinitely, see
+  // Bug 1741600).
+  //
+  // This may not be necessary anymore once Bug 1548468 will move CSP
+  // off ExpandedPrincipal.
+  RefPtr<ExpandedPrincipal> clonedPrincipal = ExpandedPrincipal::Create(
+      expanded->AllowList(), expanded->OriginAttributesRef());
+  MOZ_ASSERT(clonedPrincipal);
+
   csp = new nsCSPContext();
-  MOZ_TRY(csp->SetRequestContextWithPrincipal(expanded, selfURI, u""_ns, 0));
+  MOZ_TRY(
+      csp->SetRequestContextWithPrincipal(clonedPrincipal, selfURI, u""_ns, 0));
 
   MOZ_TRY(csp->AppendPolicy(baseCSP, false, false));
 

@@ -640,7 +640,7 @@ void JitcodeGlobalTable::traceWeak(JSRuntime* rt, JSTracer* trc) {
 }
 
 bool JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc) {
-  if (!IsMarkedUnbarriered(trc->runtime(), &jitcode_)) {
+  if (!IsMarkedUnbarriered(trc->runtime(), jitcode_)) {
     TraceManuallyBarrieredEdge(trc, &jitcode_,
                                "jitcodglobaltable-baseentry-jitcode");
     return true;
@@ -650,11 +650,11 @@ bool JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc) {
 
 bool JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread(
     JSRuntime* rt) {
-  return IsMarkedUnbarriered(rt, &jitcode_);
+  return IsMarkedUnbarriered(rt, jitcode_);
 }
 
 bool JitcodeGlobalEntry::BaselineEntry::trace(JSTracer* trc) {
-  if (!IsMarkedUnbarriered(trc->runtime(), &script_)) {
+  if (!IsMarkedUnbarriered(trc->runtime(), script_)) {
     TraceManuallyBarrieredEdge(trc, &script_,
                                "jitcodeglobaltable-baselineentry-script");
     return true;
@@ -672,7 +672,7 @@ bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
 
   JSRuntime* rt = trc->runtime();
   for (unsigned i = 0; i < numScripts(); i++) {
-    if (!IsMarkedUnbarriered(rt, &sizedScriptList()->pairs[i].script)) {
+    if (!IsMarkedUnbarriered(rt, sizedScriptList()->pairs[i].script)) {
       TraceManuallyBarrieredEdge(trc, &sizedScriptList()->pairs[i].script,
                                  "jitcodeglobaltable-ionentry-script");
       tracedAny = true;

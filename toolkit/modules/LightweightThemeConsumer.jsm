@@ -6,10 +6,6 @@ var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
-const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-
 ChromeUtils.defineModuleGetter(
   this,
   "AppConstants",
@@ -27,6 +23,12 @@ ChromeUtils.defineModuleGetter(
   "ThemeVariableMap",
   "resource:///modules/ThemeVariableMap.jsm"
 );
+
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+
+// On Linux, the default theme picks up the right colors from dark GTK themes.
+const DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME =
+  AppConstants.platform == "linux";
 
 const toolkitVariableMap = [
   [
@@ -265,13 +267,11 @@ LightweightThemeConsumer.prototype = {
   _update(themeData) {
     this._lastData = themeData;
 
-    // In Linux, the default theme picks up the right colors from dark GTK themes.
     const useDarkTheme =
       themeData.darkTheme &&
       this.darkThemeMediaQuery?.matches &&
       (themeData.darkTheme.id != DEFAULT_THEME_ID ||
-        AppConstants.platform != "linux");
-
+        !DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME);
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
@@ -287,15 +287,10 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme-image");
     }
 
-    root.toggleAttribute(
-      "lwtheme-mozlightdark",
-      theme.id == DEFAULT_THEME_ID ||
-        theme.id == LIGHT_THEME_ID ||
-        theme.id == DARK_THEME_ID
-    );
     this._setExperiment(active, themeData.experiment, theme.experimental);
-    _setImage(root, active, "--lwt-header-image", theme.headerURL);
+    _setImage(this._win, root, active, "--lwt-header-image", theme.headerURL);
     _setImage(
+      this._win,
       root,
       active,
       "--lwt-additional-images",
@@ -304,8 +299,10 @@ LightweightThemeConsumer.prototype = {
     _setProperties(root, active, theme);
 
     if (theme.id != DEFAULT_THEME_ID || useDarkTheme) {
+      _determineToolbarAndContentTheme(this._doc, theme);
       root.setAttribute("lwtheme", "true");
     } else {
+      _determineToolbarAndContentTheme(this._doc, null);
       root.removeAttribute("lwtheme");
       root.removeAttribute("lwthemetextcolor");
     }
@@ -403,7 +400,7 @@ function _getContentProperties(doc, active, data) {
   return properties;
 }
 
-function _setImage(aRoot, aActive, aVariableName, aURLs) {
+function _setImage(aWin, aRoot, aActive, aVariableName, aURLs) {
   if (aURLs && !Array.isArray(aURLs)) {
     aURLs = [aURLs];
   }
@@ -411,7 +408,7 @@ function _setImage(aRoot, aActive, aVariableName, aURLs) {
     aRoot,
     aActive,
     aVariableName,
-    aURLs && aURLs.map(v => `url("${v.replace(/"/g, '\\"')}")`).join(",")
+    aURLs && aURLs.map(v => `url(${aWin.CSS.escape(v)})`).join(", ")
   );
 }
 
@@ -423,8 +420,63 @@ function _setProperty(elem, active, variableName, value) {
   }
 }
 
+function _determineToolbarAndContentTheme(aDoc, aTheme) {
+  function prefValue(aColor, aIsForeground = false) {
+    if (typeof aColor != "object") {
+      aColor = _cssColorToRGBA(aDoc, aColor);
+    }
+    return _isColorDark(aColor.r, aColor.g, aColor.b) == aIsForeground ? 1 : 0;
+  }
+
+  let toolbarTheme = (function() {
+    if (!aTheme) {
+      if (!DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME) {
+        return 1;
+      }
+      return 2;
+    }
+    // We prefer looking at toolbar background first (if it's opaque) because
+    // some text colors can be dark enough for our heuristics, but still
+    // contrast well enough with a dark background, see bug 1743010.
+    if (aTheme.toolbarColor) {
+      let color = _cssColorToRGBA(aDoc, aTheme.toolbarColor);
+      if (color.a == 1) {
+        return prefValue(color);
+      }
+    }
+    if (aTheme.toolbar_text) {
+      return prefValue(aTheme.toolbar_text, /* aIsForeground = */ true);
+    }
+    // It'd seem sensible to try looking at the "frame" background (accentcolor),
+    // but we don't because some themes that use background images leave it to
+    // black, see bug 1741931.
+    //
+    // Fall back to black as per the textcolor processing above.
+    return prefValue(aTheme.textcolor || "black", /* aIsForeground = */ true);
+  })();
+
+  let contentTheme = (function() {
+    if (!aTheme) {
+      return 2;
+    }
+    if (aTheme.ntp_background) {
+      // We don't care about transparency here as ntp background can't have
+      // transparency (alpha channel is dropped).
+      return prefValue(aTheme.ntp_background);
+    }
+    if (aTheme.ntp_text) {
+      return prefValue(aTheme.ntp_text, /* aIsForeground = */ true);
+    }
+    return 2;
+  })();
+
+  Services.prefs.setIntPref("browser.theme.toolbar-theme", toolbarTheme);
+  Services.prefs.setIntPref("browser.theme.content-theme", contentTheme);
+}
+
 function _setProperties(root, active, themeData) {
   let propertyOverrides = new Map();
+  let doc = root.ownerDocument;
 
   for (let map of [toolkitVariableMap, ThemeVariableMap]) {
     for (let [cssVarName, definition] of map) {
@@ -436,16 +488,13 @@ function _setProperties(root, active, themeData) {
         isColor = true,
       } = definition;
       let elem = optionalElementID
-        ? root.ownerDocument.getElementById(optionalElementID)
+        ? doc.getElementById(optionalElementID)
         : root;
       let val = propertyOverrides.get(lwtProperty) || themeData[lwtProperty];
       if (isColor) {
-        val = _cssColorToRGBA(root.ownerDocument, val);
+        val = _cssColorToRGBA(doc, val);
         if (!val && fallbackProperty) {
-          val = _cssColorToRGBA(
-            root.ownerDocument,
-            themeData[fallbackProperty]
-          );
+          val = _cssColorToRGBA(doc, themeData[fallbackProperty]);
         }
         if (processColor) {
           val = processColor(val, elem, propertyOverrides);
@@ -480,7 +529,6 @@ function _rgbaToString(parsedColor) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-// There is a second copy of this in ThemeVariableMap.jsm.
 function _isColorDark(r, g, b) {
   return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 127;
 }

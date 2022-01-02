@@ -1880,6 +1880,9 @@ ps{
             lg{"یکاټیرینبرګ وخت"}
             ls{"د ياکيټرنبرګ معياري وخت"}
         }
+        "meta:Yukon"{
+            ls{"د یوکون وخت"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

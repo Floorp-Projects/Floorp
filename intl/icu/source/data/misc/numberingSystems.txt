@@ -413,6 +413,11 @@ numberingSystems:table(nofallback){
             desc{"𑓐𑓑𑓒𑓓𑓔𑓕𑓖𑓗𑓘𑓙"}
             radix:int{10}
         }
+        tnsa{
+            algorithmic:int{0}
+            desc{"𖫀𖫁𖫂𖫃𖫄𖫅𖫆𖫇𖫈𖫉"}
+            radix:int{10}
+        }
         vaii{
             algorithmic:int{0}
             desc{"꘠꘡꘢꘣꘤꘥꘦꘧꘨꘩"}

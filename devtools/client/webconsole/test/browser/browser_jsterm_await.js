@@ -6,7 +6,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Web Console test top-level await";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test top-level await";
 
 add_task(async function() {
   // Enable await mapping.

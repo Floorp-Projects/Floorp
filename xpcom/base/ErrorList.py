@@ -648,6 +648,8 @@ with modules["FILES"]:
     errors["NS_ERROR_FILE_ACCESS_DENIED"] = FAILURE(21)
     errors["NS_ERROR_FILE_FS_CORRUPTED"] = FAILURE(22)
     errors["NS_ERROR_FILE_DEVICE_FAILURE"] = FAILURE(23)
+    errors["NS_ERROR_FILE_DEVICE_TEMPORARY_FAILURE"] = FAILURE(24)
+    errors["NS_ERROR_FILE_INVALID_HANDLE"] = FAILURE(25)
 
     errors["NS_SUCCESS_FILE_DIRECTORY_EMPTY"] = SUCCESS(1)
     # Result codes used by nsIDirectoryServiceProvider2

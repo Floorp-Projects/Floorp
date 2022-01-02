@@ -972,6 +972,12 @@ void CodeGenerator::visitBitNotI(LBitNotI* ins) {
   masm.Mvn(toWRegister(output), toWOperand(input));
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+  masm.Mvn(vixl::Register(output, 64), vixl::Register(input, 64));
+}
+
 void CodeGenerator::visitBitOpI(LBitOpI* ins) {
   const ARMRegister lhs = toWRegister(ins->getOperand(0));
   const Operand rhs = toWOperand(ins->getOperand(1));
@@ -2687,7 +2693,7 @@ void CodeGenerator::visitWasmExtendU32Index(LWasmExtendU32Index* lir) {
   // canonical form.
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
-  masm.assertCanonicalInt32(output);
+  masm.debugAssertCanonicalInt32(output);
 }
 
 void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index* lir) {
@@ -2695,7 +2701,7 @@ void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index* lir) {
   // canonical form.
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
-  masm.assertCanonicalInt32(output);
+  masm.debugAssertCanonicalInt32(output);
 }
 
 void CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch* comp) {

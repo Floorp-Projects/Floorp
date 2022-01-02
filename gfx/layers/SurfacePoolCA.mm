@@ -78,7 +78,7 @@ void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
 
   aFn();
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     PROFILER_MARKER_TEXT(
         "SurfacePool", GRAPHICS, MarkerTiming::IntervalUntilNowFrom(before),
         nsPrintfCString("%d -> %d in use | %d -> %d waiting for | %d -> %d "

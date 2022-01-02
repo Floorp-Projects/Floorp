@@ -535,7 +535,8 @@ static LONG WINAPI WasmTrapHandler(LPEXCEPTION_POINTERS exception) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
-  if (!HandleTrap(exception->ContextRecord, TlsContext.get())) {
+  JSContext* cx = TlsContext.get();  // Cold signal handling code
+  if (!HandleTrap(exception->ContextRecord, cx)) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
@@ -710,7 +711,8 @@ static void WasmTrapHandler(int signum, siginfo_t* info, void* context) {
     AutoHandlingTrap aht;
     MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS ||
                        signum == kWasmTrapSignal);
-    if (HandleTrap((CONTEXT*)context, TlsContext.get())) {
+    JSContext* cx = TlsContext.get();  // Cold signal handling code
+    if (HandleTrap((CONTEXT*)context, cx)) {
       return;
     }
   }
@@ -960,7 +962,8 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
     return false;
   }
 
-  jit::JitActivation* activation = TlsContext.get()->activation()->asJit();
+  JSContext* cx = TlsContext.get();  // Cold simulator helper function
+  jit::JitActivation* activation = cx->activation()->asJit();
   activation->startWasmTrap(Trap::OutOfBounds, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;
@@ -981,7 +984,8 @@ bool wasm::HandleIllegalInstruction(const RegisterState& regs,
     return false;
   }
 
-  jit::JitActivation* activation = TlsContext.get()->activation()->asJit();
+  JSContext* cx = TlsContext.get();  // Cold simulator helper function
+  jit::JitActivation* activation = cx->activation()->asJit();
   activation->startWasmTrap(trap, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;

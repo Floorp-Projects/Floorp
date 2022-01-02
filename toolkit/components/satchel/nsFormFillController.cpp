@@ -281,6 +281,12 @@ nsFormFillController::MarkAsLoginManagerField(HTMLInputElement* aInput) {
     if (focusedContent == aInput) {
       if (!mFocusedInput) {
         MaybeStartControllingInput(aInput);
+      } else {
+        // If we change who is responsible for searching the autocomplete
+        // result, notify the controller that the previous result is not valid
+        // anymore.
+        nsCOMPtr<nsIAutoCompleteController> controller = mController;
+        controller->ResetInternalState();
       }
     }
   }
@@ -317,7 +323,13 @@ nsFormFillController::MarkAsAutofillField(HTMLInputElement* aInput) {
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
     if (focusedContent == aInput) {
-      MaybeStartControllingInput(aInput);
+      if (!mFocusedInput) {
+        MaybeStartControllingInput(aInput);
+      } else {
+        // See `MarkAsLoginManagerField` for why this is needed.
+        nsCOMPtr<nsIAutoCompleteController> controller = mController;
+        controller->ResetInternalState();
+      }
     }
   }
 

@@ -111,6 +111,9 @@ Result<Ok, nsresult> AutoMemMap::initWithHandle(const FileDescriptor& file,
   addr = MapViewOfFile(
       handle_, prot == PR_PROT_READONLY ? FILE_MAP_READ : FILE_MAP_ALL_ACCESS,
       0, 0, size);
+  if (!addr) {
+    return Err(NS_ERROR_FAILURE);
+  }
 
   return Ok();
 }

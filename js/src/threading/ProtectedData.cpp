@@ -77,14 +77,9 @@ void CheckZone<Helper>::check() const {
     return;
   }
 
-  if (zone->usedByHelperThread()) {
-    // This may only be accessed by the helper thread using this zone.
-    MOZ_ASSERT(zone->ownedByCurrentHelperThread());
-  } else {
-    // The main thread is permitted access to all zones. These accesses
-    // are threadsafe if the zone is not in use by a helper thread.
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(TlsContext.get()->runtime()));
-  }
+  // The main thread is permitted access to all zones. These accesses
+  // are threadsafe if the zone is not in use by a helper thread.
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(TlsContext.get()->runtime()));
 }
 
 template class CheckZone<AllowedHelperThread::None>;
@@ -125,18 +120,7 @@ void CheckArenaListAccess<Helper>::check() const {
     return;
   }
 
-  JSRuntime* rt = TlsContext.get()->runtime();
   if (zone->isAtomsZone()) {
-    // The main thread can access the atoms arenas if it holds all the atoms
-    // table locks.
-    if (rt->currentThreadHasAtomsTableAccess()) {
-      return;
-    }
-
-    // Otherwise we must hold the GC lock if parallel parsing is running.
-    if (rt->isOffThreadParseRunning()) {
-      rt->gc.assertCurrentThreadHasLockedGC();
-    }
     return;
   }
 

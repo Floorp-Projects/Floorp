@@ -399,6 +399,39 @@ class imgMemoryReporter final : public nsIMemoryReporter {
                                     /* aRadix = */ 16);
       }
 
+      if (counter.Key().Region()) {
+        const ImageIntRegion& region = counter.Key().Region().ref();
+        const gfx::IntRect& rect = region.Rect();
+        surfacePathPrefix.AppendLiteral(", region:[ rect=(");
+        surfacePathPrefix.AppendInt(rect.x);
+        surfacePathPrefix.AppendLiteral(",");
+        surfacePathPrefix.AppendInt(rect.y);
+        surfacePathPrefix.AppendLiteral(") ");
+        surfacePathPrefix.AppendInt(rect.width);
+        surfacePathPrefix.AppendLiteral("x");
+        surfacePathPrefix.AppendInt(rect.height);
+        if (region.IsRestricted()) {
+          const gfx::IntRect& restrict = region.Restriction();
+          if (restrict == rect) {
+            surfacePathPrefix.AppendLiteral(", restrict=rect");
+          } else {
+            surfacePathPrefix.AppendLiteral(", restrict=(");
+            surfacePathPrefix.AppendInt(restrict.x);
+            surfacePathPrefix.AppendLiteral(",");
+            surfacePathPrefix.AppendInt(restrict.y);
+            surfacePathPrefix.AppendLiteral(") ");
+            surfacePathPrefix.AppendInt(restrict.width);
+            surfacePathPrefix.AppendLiteral("x");
+            surfacePathPrefix.AppendInt(restrict.height);
+          }
+        }
+        if (region.GetExtendMode() != gfx::ExtendMode::CLAMP) {
+          surfacePathPrefix.AppendLiteral(", extendMode=");
+          surfacePathPrefix.AppendInt(int32_t(region.GetExtendMode()));
+        }
+        surfacePathPrefix.AppendLiteral("]");
+      }
+
       if (counter.Key().SVGContext()) {
         const SVGImageContext& context = counter.Key().SVGContext().ref();
         surfacePathPrefix.AppendLiteral(", svgContext:[ ");
@@ -633,34 +666,29 @@ static void NewRequestAndEntry(bool aForcePrincipalCheckForCacheEntry,
 
 static bool ShouldRevalidateEntry(imgCacheEntry* aEntry, nsLoadFlags aFlags,
                                   bool aHasExpired) {
-  bool bValidateEntry = false;
-
   if (aFlags & nsIRequest::LOAD_BYPASS_CACHE) {
     return false;
   }
-
   if (aFlags & nsIRequest::VALIDATE_ALWAYS) {
-    bValidateEntry = true;
-  } else if (aEntry->GetMustValidate()) {
-    bValidateEntry = true;
-  } else if (aHasExpired) {
+    return true;
+  }
+  if (aEntry->GetMustValidate()) {
+    return true;
+  }
+  if (aHasExpired) {
     // The cache entry has expired...  Determine whether the stale cache
     // entry can be used without validation...
-    if (aFlags &
-        (nsIRequest::VALIDATE_NEVER | nsIRequest::VALIDATE_ONCE_PER_SESSION)) {
-      // VALIDATE_NEVER and VALIDATE_ONCE_PER_SESSION allow stale cache
-      // entries to be used unless they have been explicitly marked to
-      // indicate that revalidation is necessary.
-      bValidateEntry = false;
-
-    } else if (!(aFlags & nsIRequest::LOAD_FROM_CACHE)) {
-      // LOAD_FROM_CACHE allows a stale cache entry to be used... Otherwise,
-      // the entry must be revalidated.
-      bValidateEntry = true;
+    if (aFlags & (nsIRequest::LOAD_FROM_CACHE | nsIRequest::VALIDATE_NEVER |
+                  nsIRequest::VALIDATE_ONCE_PER_SESSION)) {
+      // LOAD_FROM_CACHE, VALIDATE_NEVER and VALIDATE_ONCE_PER_SESSION allow
+      // stale cache entries to be used unless they have been explicitly marked
+      // to indicate that revalidation is necessary.
+      return false;
     }
+    // Entry is expired, revalidate.
+    return true;
   }
-
-  return bValidateEntry;
+  return false;
 }
 
 /* Call content policies on cached images that went through a redirect */
@@ -2176,15 +2204,6 @@ void imgLoader::RemoveFromUncachedImages(imgRequest* aRequest) {
   mUncachedImages.Remove(aRequest);
 }
 
-bool imgLoader::PreferLoadFromCache(nsIURI* aURI) const {
-  // If we are trying to load an image from a protocol that doesn't support
-  // caching (e.g. thumbnails via the moz-page-thumb:// protocol, or icons via
-  // the moz-extension:// protocol), load it directly from the cache to prevent
-  // re-decoding the image. See Bug 1373258.
-  // TODO: Bug 1406134
-  return aURI->SchemeIs("moz-page-thumb") || aURI->SchemeIs("moz-extension");
-}
-
 #define LOAD_FLAGS_CACHE_MASK \
   (nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FROM_CACHE)
 
@@ -2306,9 +2325,6 @@ nsresult imgLoader::LoadImage(
   // Get the default load flags from the loadgroup (if possible)...
   if (aLoadGroup) {
     aLoadGroup->GetLoadFlags(&requestFlags);
-    if (PreferLoadFromCache(aURI)) {
-      requestFlags |= nsIRequest::LOAD_FROM_CACHE;
-    }
   }
   //
   // Merge the default load flags with those passed in via aLoadFlags.
@@ -2648,10 +2664,6 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
-
-  if (PreferLoadFromCache(uri)) {
-    requestFlags |= nsIRequest::LOAD_FROM_CACHE;
-  }
 
   RefPtr<imgCacheEntry> entry;
 

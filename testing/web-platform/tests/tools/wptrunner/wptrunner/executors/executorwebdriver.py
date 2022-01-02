@@ -26,6 +26,8 @@ from .protocol import (BaseProtocolPart,
                        GenerateTestReportProtocolPart,
                        SetPermissionProtocolPart,
                        VirtualAuthenticatorProtocolPart,
+                       WindowProtocolPart,
+                       SPCTransactionsProtocolPart,
                        DebugProtocolPart)
 
 from webdriver.client import Session
@@ -201,6 +203,17 @@ class WebDriverCookiesProtocolPart(CookiesProtocolPart):
         self.logger.info("Deleting all cookies")
         return self.webdriver.send_session_command("DELETE", "cookie")
 
+class WebDriverWindowProtocolPart(WindowProtocolPart):
+    def setup(self):
+        self.webdriver = self.parent.webdriver
+
+    def minimize(self):
+        self.logger.info("Minimizing")
+        return self.webdriver.window.minimize()
+
+    def set_rect(self, rect):
+        self.logger.info("Restoring")
+        self.webdriver.window.rect = rect
 
 class WebDriverSendKeysProtocolPart(SendKeysProtocolPart):
     def setup(self):
@@ -299,6 +312,15 @@ class WebDriverVirtualAuthenticatorProtocolPart(VirtualAuthenticatorProtocolPart
         return self.webdriver.send_session_command("POST", "webauthn/authenticator/%s/uv" % authenticator_id, uv)
 
 
+class WebDriverSPCTransactionsProtocolPart(SPCTransactionsProtocolPart):
+    def setup(self):
+        self.webdriver = self.parent.webdriver
+
+    def set_spc_transaction_mode(self, mode):
+        body = {"mode": mode}
+        return self.webdriver.send_session_command("POST", "secure-payment-confirmation/set-mode", body)
+
+
 class WebDriverDebugProtocolPart(DebugProtocolPart):
     def load_devtools(self):
         raise NotImplementedError()
@@ -311,11 +333,13 @@ class WebDriverProtocol(Protocol):
                   WebDriverClickProtocolPart,
                   WebDriverCookiesProtocolPart,
                   WebDriverSendKeysProtocolPart,
+                  WebDriverWindowProtocolPart,
                   WebDriverActionSequenceProtocolPart,
                   WebDriverTestDriverProtocolPart,
                   WebDriverGenerateTestReportProtocolPart,
                   WebDriverSetPermissionProtocolPart,
                   WebDriverVirtualAuthenticatorProtocolPart,
+                  WebDriverSPCTransactionsProtocolPart,
                   WebDriverDebugProtocolPart]
 
     def __init__(self, executor, browser, capabilities, **kwargs):

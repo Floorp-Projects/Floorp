@@ -29,16 +29,8 @@
 #include <stdint.h>
 #include <string_view>
 
+struct UFormattedValue;
 namespace mozilla::intl {
-
-static inline const char* IcuLocale(const char* aLocale) {
-  // Return the empty string if the input is exactly equal to the string "und".
-  const char* locale = aLocale;
-  if (!std::strcmp(locale, "und")) {
-    locale = "";  // ICU root locale
-  }
-  return locale;
-}
 
 static inline const char* AssertNullTerminatedString(Span<const char> aSpan) {
   // Intentionally check one past the last character, because we expect that the
@@ -60,6 +52,26 @@ static inline const char* AssertNullTerminatedString(std::string_view aView) {
   MOZ_ASSERT(std::strlen(aView.data()) == aView.size());
 
   return aView.data();
+}
+
+/**
+ * Map the "und" locale to an empty string, which the ICU uses internally.
+ */
+static inline const char* IcuLocale(const char* aLocale) {
+  // Return the empty string if the input is exactly equal to the string "und".
+  const char* locale = aLocale;
+  if (!std::strcmp(locale, "und")) {
+    locale = "";  // ICU root locale
+  }
+  return locale;
+}
+
+/**
+ * Ensure a locale is null-terminated, and map the "und" locale to an empty
+ * string, which the ICU uses internally.
+ */
+static inline const char* IcuLocale(Span<const char> aLocale) {
+  return IcuLocale(AssertNullTerminatedString(aLocale));
 }
 
 using ICUResult = Result<Ok, ICUError>;
@@ -220,7 +232,7 @@ class nsTArrayToBufferAdapter {
    * Ensures the buffer has enough space to accommodate |size| elements.
    */
   [[nodiscard]] bool reserve(size_t size) {
-    // Use faillible behavior here.
+    // Use fallible behavior here.
     return mArray.SetCapacity(size, fallible);
   }
 
@@ -278,8 +290,9 @@ static ICUResult FillBufferWithICUCall(AutoTArray<CharType, N>& array,
 #endif
 
 /**
- * ICU4C works with UTF-16 strings, but consumers of mozilla::intl may require
- * UTF-8 strings.
+ * Fill a UTF-8 or a UTF-16 buffer with a UTF-16 span. ICU4C mostly uses UTF-16
+ * internally, but different consumers may have different situations with their
+ * buffers.
  */
 template <typename Buffer>
 [[nodiscard]] bool FillBuffer(Span<const char16_t> utf16Span,
@@ -320,24 +333,73 @@ template <typename Buffer>
 }
 
 /**
+ * Fill a UTF-8 or a UTF-16 buffer with a UTF-8 span. ICU4C mostly uses UTF-16
+ * internally, but different consumers may have different situations with their
+ * buffers.
+ */
+template <typename Buffer>
+[[nodiscard]] bool FillBuffer(Span<const char> utf8Span, Buffer& targetBuffer) {
+  static_assert(std::is_same_v<typename Buffer::CharType, char> ||
+                std::is_same_v<typename Buffer::CharType, unsigned char> ||
+                std::is_same_v<typename Buffer::CharType, char16_t>);
+
+  if constexpr (std::is_same_v<typename Buffer::CharType, char> ||
+                std::is_same_v<typename Buffer::CharType, unsigned char>) {
+    size_t amount = utf8Span.Length();
+    if (!targetBuffer.reserve(amount)) {
+      return false;
+    }
+    for (size_t i = 0; i < amount; i++) {
+      targetBuffer.data()[i] =
+          // Static cast in case of a mismatch between `unsigned char` and
+          // `char`
+          static_cast<typename Buffer::CharType>(utf8Span[i]);
+    }
+    targetBuffer.written(amount);
+  }
+  if constexpr (std::is_same_v<typename Buffer::CharType, char16_t>) {
+    if (!targetBuffer.reserve(utf8Span.Length() + 1)) {
+      return false;
+    }
+
+    size_t amount = ConvertUtf8toUtf16(
+        utf8Span, Span(targetBuffer.data(), targetBuffer.capacity()));
+
+    targetBuffer.written(amount);
+  }
+
+  return true;
+}
+
+/**
  * It is convenient for callers to be able to pass in UTF-8 strings to the API.
  * This function can be used to convert that to a stack-allocated UTF-16
- * mozilla::Vector that can then be passed into ICU calls.
+ * mozilla::Vector that can then be passed into ICU calls. The string will be
+ * null terminated.
  */
 template <size_t StackSize>
 [[nodiscard]] static bool FillUTF16Vector(
     Span<const char> utf8Span,
     mozilla::Vector<char16_t, StackSize>& utf16TargetVec) {
   // Per ConvertUtf8toUtf16: The length of aDest must be at least one greater
-  // than the length of aSource
+  // than the length of aSource. This additional length will be used for null
+  // termination.
   if (!utf16TargetVec.reserve(utf8Span.Length() + 1)) {
     return false;
   }
+
   // ConvertUtf8toUtf16 fills the buffer with the data, but the length of the
-  // vector is unchanged. The call to resizeUninitialized notifies the vector of
-  // how much was written.
-  return utf16TargetVec.resizeUninitialized(ConvertUtf8toUtf16(
-      utf8Span, Span(utf16TargetVec.begin(), utf16TargetVec.capacity())));
+  // vector is unchanged.
+  size_t length = ConvertUtf8toUtf16(
+      utf8Span, Span(utf16TargetVec.begin(), utf16TargetVec.capacity()));
+
+  // Assert that the last element is free for writing a null terminator.
+  MOZ_ASSERT(length < utf16TargetVec.capacity());
+  utf16TargetVec.begin()[length] = '\0';
+
+  // The call to resizeUninitialized notifies the vector of how much was written
+  // exclusive of the null terminated character.
+  return utf16TargetVec.resizeUninitialized(length);
 }
 
 /**
@@ -378,15 +440,7 @@ class Enumeration {
     return *this;
   }
 
-  // TODO(#1715800) - Extending from std::iterator was deprecated in C++17.
-  // Instead define the iterator traits directly in the class.
-  class Iterator
-      : public std::iterator<std::input_iterator_tag,
-                             const CharType*,  // "value_type"
-                             void,             // "difference_type" (unused)
-                             void,             // "pointer" (unused)
-                             T  // "reference" - Value returned in iterator
-                             > {
+  class Iterator {
     Enumeration& mEnumeration;
     // `Nothing` signifies that no enumeration has been loaded through ICU yet.
     Maybe<int32_t> mIteration = Nothing{};
@@ -394,6 +448,10 @@ class Enumeration {
     int32_t mNextLength = 0;
 
    public:
+    using value_type = const CharType*;
+    using reference = T;
+    using iterator_category = std::input_iterator_tag;
+
     explicit Iterator(Enumeration& aEnumeration, bool aIsBegin)
         : mEnumeration(aEnumeration) {
       if (aIsBegin) {
@@ -544,6 +602,110 @@ class AvailableLocalesEnumeration final {
   Iterator end() const { return Iterator(mLocalesCount); }
 };
 
+/**
+ * A helper class to wrap calling ICU function in cpp file so we don't have to
+ * include the ICU header here.
+ */
+class FormattedResult {
+ protected:
+  static Result<Span<const char16_t>, ICUError> ToSpanImpl(
+      const UFormattedValue* value);
+};
+
+/**
+ * A RAII class to hold the formatted value of format result.
+ *
+ * The caller will need to create this AutoFormattedResult on the stack, with
+ * the following parameters:
+ * 1. Native ICU type.
+ * 2. An ICU function which opens the result.
+ * 3. An ICU function which can get the result as UFormattedValue.
+ * 4. An ICU function which closes the result.
+ *
+ * After the object is created, caller needs to call IsValid() method to check
+ * if the native object has been created properly, and then passes this
+ * object to other format interfaces.
+ * The format result will be stored in this object, the caller can use ToSpan()
+ * method to get the formatted string.
+ *
+ * The methods GetFormatted() and Value() are private methods since they expose
+ * native ICU types. If the caller wants to call these methods, the caller needs
+ * to register itself as a friend class in AutoFormattedResult.
+ *
+ * The formatted value and the native ICU object will be released once this
+ * class is destructed.
+ */
+template <typename T, T*(Open)(UErrorCode*),
+          const UFormattedValue*(GetValue)(const T*, UErrorCode*),
+          void(Close)(T*)>
+class MOZ_RAII AutoFormattedResult : FormattedResult {
+ public:
+  AutoFormattedResult() {
+    mFormatted = Open(&mError);
+    if (U_FAILURE(mError)) {
+      mFormatted = nullptr;
+    }
+  }
+  ~AutoFormattedResult() {
+    if (mFormatted) {
+      Close(mFormatted);
+    }
+  }
+
+  AutoFormattedResult(const AutoFormattedResult& other) = delete;
+  AutoFormattedResult& operator=(const AutoFormattedResult& other) = delete;
+
+  AutoFormattedResult(AutoFormattedResult&& other) = delete;
+  AutoFormattedResult& operator=(AutoFormattedResult&& other) = delete;
+
+  /**
+   * Check if the native UFormattedDateInterval was created successfully.
+   */
+  bool IsValid() const { return !!mFormatted; }
+
+  /**
+   *  Get error code if IsValid() returns false.
+   */
+  ICUError GetError() const { return ToICUError(mError); }
+
+  /**
+   * Get the formatted result.
+   */
+  Result<Span<const char16_t>, ICUError> ToSpan() const {
+    if (!IsValid()) {
+      return Err(GetError());
+    }
+
+    const UFormattedValue* value = Value();
+    if (!value) {
+      return Err(ICUError::InternalError);
+    }
+
+    return ToSpanImpl(value);
+  }
+
+ private:
+  friend class DateIntervalFormat;
+  friend class ListFormat;
+  T* GetFormatted() const { return mFormatted; }
+
+  const UFormattedValue* Value() const {
+    if (!IsValid()) {
+      return nullptr;
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    const UFormattedValue* value = GetValue(mFormatted, &status);
+    if (U_FAILURE(status)) {
+      return nullptr;
+    }
+
+    return value;
+  };
+
+  T* mFormatted = nullptr;
+  UErrorCode mError = U_ZERO_ERROR;
+};
 }  // namespace mozilla::intl
 
 #endif /* intl_components_ICUUtils_h */

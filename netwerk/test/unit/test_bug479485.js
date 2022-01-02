@@ -1,7 +1,7 @@
 "use strict";
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var ios = Services.io;
 
   var test_port = function(port, exception_expected) {
     dump((port || "no port provided") + "\n");

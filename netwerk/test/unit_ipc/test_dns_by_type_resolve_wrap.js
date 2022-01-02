@@ -2,8 +2,6 @@
 
 let h2Port;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function setup() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment

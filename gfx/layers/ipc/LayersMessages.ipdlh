@@ -46,7 +46,6 @@ using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::LayoutDeviceRect from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
@@ -54,7 +53,7 @@ using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
-using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
+[MoveOnly] using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
@@ -78,11 +77,6 @@ struct TargetConfig {
   nsIntRegion clearRegion;
 };
 
-// Create a shadow layer for |layer|
-struct OpCreatePaintedLayer    { LayerHandle layer; };
-struct OpCreateContainerLayer  { LayerHandle layer; };
-struct OpCreateRefLayer        { LayerHandle layer; };
-
 struct OpAttachCompositable {
   LayerHandle layer;
   CompositableHandle compositable;
@@ -91,11 +85,6 @@ struct OpAttachCompositable {
 struct OpAttachAsyncCompositable {
   LayerHandle layer;
   CompositableHandle compositable;
-};
-
-struct ThebesBufferData {
-  IntRect rect;
-  IntPoint rotation;
 };
 
 struct CubicBezierFunction {

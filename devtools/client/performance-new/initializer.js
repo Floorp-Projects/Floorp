@@ -12,6 +12,7 @@
  * @typedef {import("./@types/perf").PanelWindow} PanelWindow
  * @typedef {import("./@types/perf").Store} Store
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
+ * @typedef {import("./@types/perf").ProfileCaptureResult} ProfileCaptureResult
  * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 "use strict";
@@ -22,7 +23,7 @@
   // the section on "Do not overload require" for more information.
 
   const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/client/shared/browser-loader.js"
+    "resource://devtools/shared/loader/browser-loader.js"
   );
   const browserLoader = BrowserLoader({
     baseURI: "resource://devtools/client/performance-new/",
@@ -64,13 +65,17 @@ const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const {
-  openProfilerAndDisplayProfile,
+  openProfilerTab,
   sharedLibrariesFromProfile,
 } = require("devtools/client/performance-new/browser");
 const { createLocalSymbolicationService } = ChromeUtils.import(
   "resource://devtools/client/performance-new/symbolication.jsm.js"
 );
-const { presets, getProfilerViewModeForCurrentPreset } = ChromeUtils.import(
+const {
+  presets,
+  getProfilerViewModeForCurrentPreset,
+  registerProfileCaptureForBrowser,
+} = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
@@ -112,6 +117,8 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   const l10n = new FluentL10n();
   await l10n.init([
     "devtools/client/perftools.ftl",
+    // For -brand-shorter-name used in some profiler preset descriptions.
+    "branding/brand.ftl",
     // Needed for the onboarding UI
     "devtools/client/toolbox-options.ftl",
     "browser/branding/brandings.ftl",
@@ -140,9 +147,16 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       objdirs,
       perfFront
     );
-    openProfilerAndDisplayProfile(
-      profile,
-      profilerViewMode,
+    const browser = openProfilerTab(profilerViewMode);
+
+    /**
+     * @type {ProfileCaptureResult}
+     */
+    const profileCaptureResult = { type: "SUCCESS", profile };
+
+    registerProfileCaptureForBrowser(
+      browser,
+      profileCaptureResult,
       symbolicationService
     );
   };

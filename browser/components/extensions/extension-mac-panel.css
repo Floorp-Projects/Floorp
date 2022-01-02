@@ -3,11 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  border-radius: 3.5px;
-}
-
-@media (-moz-proton) {
-body {
   border-radius: 8px;
-}
 }

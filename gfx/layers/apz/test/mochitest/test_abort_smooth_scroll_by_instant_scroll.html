@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Test to make sure an on-going smooth scroll is aborted by a new
+           instant absolute scroll operation</title>
+    <meta charset="utf-8">
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/paint_listener.js"></script>
+    <script src="apz_test_utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div style="height: 100000px;"></div>
+<script type="application/javascript">
+async function test() {
+  // Trigger a smooth scroll.
+  document.scrollingElement.scrollTo({ top: 90000, behavior: "smooth" });
+  // Need to wait for a scroll event here since with the very small
+  // layout.css.scroll-behavior.spring-constant value it's possible that the
+  // scroll position hasn't yet been changed after a promiseApzFlushedRepaints
+  // call.
+  await waitForScrollEvent(window);
+  await promiseApzFlushedRepaints();
+
+  ok(document.scrollingElement.scrollTop > 0,
+     "Should have scrolled. scroll position: " + document.scrollingElement.scrollTop);
+
+  // Trigger an instant scroll.
+  document.scrollingElement.scrollTo({ top: 0, behavior: "instant" });
+  is(document.scrollingElement.scrollTop,  0,
+     "The previous smooth scroll operation should have been superseded by " +
+     "the instant scroll");
+
+  // Double check after a repaint request.
+  await promiseApzFlushedRepaints();
+  is(document.scrollingElement.scrollTop,  0,
+     "The scroll postion should have stayed after a repaint request");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Use a very small spring constant value for smooth scrolling so that the
+// smooth scrollling keeps running at least for a few seconds.
+pushPrefs([["layout.css.scroll-behavior.spring-constant", 1]])
+.then(waitUntilApzStable)
+.then(test)
+.then(SimpleTest.finish, SimpleTest.finishWithFailure);
+
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 
 // Test that disabling autocomplete for console
 
-const TEST_URI = `data:text/html;charset=utf-8,Test command autocomplete`;
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test command autocomplete`;
 
 add_task(async function() {
   // Run with autocomplete preference as false

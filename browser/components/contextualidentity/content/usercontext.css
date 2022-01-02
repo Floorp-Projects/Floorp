@@ -114,14 +114,12 @@
   -moz-box-align: center;
 }
 
-@media (-moz-proton) {
 .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
   background-color: var(--identity-icon-color);
   height: 2px;
   border-radius: 2px;
   margin: -3px 2px 0;
 }
-} /*** END proton ***/
 
 .userContext-icon-inprefs {
   margin-inline: 4px 10px;

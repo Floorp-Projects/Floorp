@@ -120,25 +120,18 @@ class Suggestions {
     if (!result) {
       return null;
     }
-    let d = new Date();
-    let pad = number => number.toString().padStart(2, "0");
-    let date =
-      `${d.getFullYear()}${pad(d.getMonth() + 1)}` +
-      `${pad(d.getDate())}${pad(d.getHours())}`;
-    let icon = await this._fetchIcon(result.icon);
     return {
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
-      url: result.url.replace("%YYYYMMDDHH%", date),
-      click_url: result.click_url.replace("%YYYYMMDDHH%", date),
-      // impression_url doesn't have any parameters
+      url: result.url,
+      click_url: result.click_url,
       impression_url: result.impression_url,
       block_id: result.id,
       advertiser: result.advertiser.toLocaleLowerCase(),
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       score: SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
-      icon,
+      icon: await this._fetchIcon(result.icon),
     };
   }
 
@@ -194,7 +187,7 @@ class Suggestions {
     return longerPhrase || trimmedQuery;
   }
 
-  /*
+  /**
    * An onboarding dialog can be shown to the users who are enrolled into
    * the QuickSuggest experiments or rollouts. This behavior is controlled
    * by the pref `browser.urlbar.quicksuggest.shouldShowOnboardingDialog`
@@ -204,8 +197,16 @@ class Suggestions {
    * wait for a few restarts before showing the QuickSuggest dialog. This can
    * be remotely configured by Nimbus through
    * `quickSuggestShowOnboardingDialogAfterNRestarts`, the default is 0.
+   *
+   * @returns {boolean}
+   *   True if the dialog was shown and false if not.
    */
   async maybeShowOnboardingDialog() {
+    // The call to this method races scenario initialization on startup, and the
+    // Nimbus variables we rely on below depend on the scenario, so wait for it
+    // to be initialized.
+    await UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
+
     // If quicksuggest is not available, the onboarding dialog is configured to
     // be skipped, the user has already seen the dialog, or has otherwise opted
     // in already, then we won't show the quicksuggest onboarding.
@@ -213,21 +214,19 @@ class Suggestions {
       !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
       !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-      UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+      UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
     ) {
-      return;
+      return false;
     }
 
-    // Wait a number of restarts after the user will have seen the mr1 onboarding dialog
-    // before showing the quicksuggest one.
+    // Wait a number of restarts before showing the dialog.
     let restartsSeen = UrlbarPrefs.get(RESTARTS_PREF);
     if (
       restartsSeen <
       UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
     ) {
       UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
-      return;
+      return false;
     }
 
     let win = BrowserWindowTracker.getTopWindow();
@@ -263,15 +262,10 @@ class Suggestions {
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
-    // Record the user's opt-in choice on the user prefs branch regardless of
-    // what it was. These prefs are sticky, so they'll retain their user-branch
-    // values regardless of what the particular defaults were at the time. See
-    // UrlbarPrefs for details.
-    //
-    // Opting in enables both kinds of results and data collection.
+    // Record the user's opt-in choice on the user branch. This pref is sticky,
+    // so it will retain its user-branch value regardless of what the particular
+    // default was at the time.
     let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT;
-    UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", optedIn);
-    UrlbarPrefs.set("suggest.quicksuggest.sponsored", optedIn);
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
     switch (params.choice) {
@@ -306,6 +300,8 @@ class Suggestions {
       "opt_in_dialog",
       params.choice
     );
+
+    return true;
   }
 
   /**
@@ -464,7 +460,7 @@ class Suggestions {
    *   The icon's remote settings path.
    */
   async _fetchIcon(path) {
-    if (!path) {
+    if (!path || !this._rs) {
       return null;
     }
     let record = (

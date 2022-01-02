@@ -30,21 +30,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[1], root);
     SetScrollHandoff(layers[2], root);
 
-    // Set up the event regions over a 200x200 area. The root layer has the
-    // whole 200x200 as the hit region; layers[1] has the left half and
-    // layers[2] has the bottom half. The bottom-left 100x100 area is also
-    // in the d-t-c region for both layers[1] and layers[2] (but layers[2] is
-    // on top so it gets the events by default if the main thread doesn't
-    // respond).
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 200, 200)));
-    APZTestAccess::SetEventRegions(*root, regions);
-    regions.mDispatchToContentHitRegion =
-        nsIntRegion(IntRect(0, 100, 100, 100));
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 200));
-    APZTestAccess::SetEventRegions(*layers[1], regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
-    APZTestAccess::SetEventRegions(*layers[2], regions);
-
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
@@ -59,77 +44,9 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     CreateScrollData(treeShape, layerVisibleRegions);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
 
-    // Set up the event regions so that the child thebes layer is positioned far
-    // away from the scrolling container layer.
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-    APZTestAccess::SetEventRegions(*root, regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 150, 100, 100));
-    APZTestAccess::SetEventRegions(*layers[1], regions);
-
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
-  }
-
-  void CreateObscuringLayerTree() {
-    const char* treeShape = "x(x(x)x)";
-    // LayerID               0 1 2 3
-    // 0 is the root.
-    // 1 is a parent scrollable layer.
-    // 2 is a child scrollable layer.
-    // 3 is the Obscurer, who ruins everything.
-    nsIntRegion layerVisibleRegions[] = {
-        // x coordinates are uninteresting
-        nsIntRegion(IntRect(0, 0, 200, 200)),   // [0, 200]
-        nsIntRegion(IntRect(0, 0, 200, 200)),   // [0, 200]
-        nsIntRegion(IntRect(0, 100, 200, 50)),  // [100, 150]
-        nsIntRegion(IntRect(0, 100, 200, 100))  // [100, 200]
-    };
-    CreateScrollData(treeShape, layerVisibleRegions);
-
-    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
-                              CSSRect(0, 0, 200, 200));
-    SetScrollableFrameMetrics(layers[1],
-                              ScrollableLayerGuid::START_SCROLL_ID + 1,
-                              CSSRect(0, 0, 200, 300));
-    SetScrollableFrameMetrics(layers[2],
-                              ScrollableLayerGuid::START_SCROLL_ID + 2,
-                              CSSRect(0, 0, 200, 100));
-    SetScrollHandoff(layers[2], layers[1]);
-    SetScrollHandoff(layers[1], root);
-
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 200, 200)));
-    APZTestAccess::SetEventRegions(*root, regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 200, 300));
-    APZTestAccess::SetEventRegions(*layers[1], regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
-    APZTestAccess::SetEventRegions(*layers[2], regions);
-
-    registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
-    UpdateHitTestingTree();
-    rootApzc = ApzcOf(root);
-  }
-
-  void CreateBug1119497LayerTree() {
-    const char* treeShape = "x(xx)";
-    // LayerID               0 12
-    // 0 is the root and has an APZC
-    // 1 is behind 2 and has an APZC
-    // 2 entirely covers 1 and should take all the input events, but has no APZC
-    // so hits to 2 should go to to the root APZC
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-    };
-    CreateScrollData(treeShape, layerVisibleRegions);
-
-    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[1],
-                              ScrollableLayerGuid::START_SCROLL_ID + 1);
-
-    registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
-    UpdateHitTestingTree();
   }
 
   void CreateBug1117712LayerTree() {
@@ -161,12 +78,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 1,
                               CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[3], layers[2]);
-
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 10, 10)));
-    APZTestAccess::SetEventRegions(*layers[2], regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*layers[3], regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();
@@ -249,7 +160,7 @@ TEST_F(APZEventRegionsTesterMock, HitRegionImmediateResponse) {
   check.Call("Tapped on left this time");
 }
 
-TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
+TEST_F(APZEventRegionsTesterMock, HitRegionAccumulatesChildren) {
   CreateEventRegionsLayerTree2();
 
   // Tap in the area of the child layer that's not directly included in the
@@ -259,39 +170,11 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   EXPECT_CALL(*mcc,
               HandleTap(TapType::eSingleTap, _, _, rootApzc->GetGuid(), _))
       .Times(1);
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
-TEST_F(APZEventRegionsTesterMock, Obscuration) {
-  CreateObscuringLayerTree();
-  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-
-  UpdateHitTestingTree();
-
-  RefPtr<TestAsyncPanZoomController> parent = ApzcOf(layers[1]);
-  TestAsyncPanZoomController* child = ApzcOf(layers[2]);
-
-  Pan(parent, 75, 25, PanOptions::NoFling);
-
-  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2);
-  IAPZHitTester::HitTestResult hit =
-      manager->GetTargetAPZC(ScreenPoint(50, 75));
-  EXPECT_EQ(child, hit.mTargetApzc.get());
-  EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
-}
-
-TEST_F(APZEventRegionsTester, Bug1119497) {
-  CreateBug1119497LayerTree();
-
-  IAPZHitTester::HitTestResult hit =
-      manager->GetTargetAPZC(ScreenPoint(50, 50));
-  // We should hit layers[2], so |result| will be eVisibleToHitTest but there's
-  // no actual APZC on layers[2], so it will be the APZC of the root layer.
-  EXPECT_EQ(ApzcOf(layers[0]), hit.mTargetApzc.get());
-  EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
-}
-
-TEST_F(APZEventRegionsTester, Bug1117712) {
+TEST_F(APZEventRegionsTesterMock, Bug1117712) {
   CreateBug1117712LayerTree();
 
   TestAsyncPanZoomController* apzc2 = ApzcOf(layers[2]);
@@ -299,6 +182,9 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   // These touch events should hit the dispatch-to-content region of layers[3]
   // and so get queued with that APZC as the tentative target.
   uint64_t inputBlockId = 0;
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   Tap(manager, ScreenIntPoint(55, 5), TimeDuration::FromMilliseconds(100),
       nullptr, &inputBlockId);
   // But now we tell the APZ that really it hit layers[2], and expect the tap

@@ -16,10 +16,6 @@
 namespace mozilla {
 namespace layers {
 
-bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend,
-                                  bool aSupportsTextureDirectMapping);
-
 class BufferTextureData : public TextureData {
  public:
   // ShmemAllocator needs to implement IShmemAllocator and IsSameProcess,

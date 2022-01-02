@@ -18,7 +18,10 @@
       "compiler-rt-cross-compile.patch",
       "revert-llvmorg-13-init-7827-g2a078c307204.patch",
       "revert-llvmorg-13-init-8182-gc2297544c047.patch",
+      "revert-llvmorg-13-init-16621-g323049329939.patch",
+      "llvmorg-14-init-2833-gbadcd5858972.patch",
       "llvmorg-14-init-6706-g6404f4b5af39.patch",
+      "llvmorg-14-init-9105-g3c47c5ca13b8.patch",
       "compiler-rt-13-no-codesign.patch",
       "revert-ga478b0a199f4.patch"
     ]

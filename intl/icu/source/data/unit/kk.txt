@@ -160,6 +160,11 @@ kk{
             }
         }
         concentr{
+            item{
+                dnam{"элемент"}
+                one{"{0} элемент"}
+                other{"{0} элемент"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} карат"}
@@ -426,6 +431,11 @@ kk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"киловатт-сағат/100 километр"}
+                one{"{0} киловатт-сағат/100 километр"}
+                other{"{0} киловатт-сағат/100 километр"}
+            }
             newton{
                 dnam{"ньютон"}
                 one{"{0} ньютон"}
@@ -1118,6 +1128,11 @@ kk{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"элемент"}
+                one{"{0} элемент"}
+                other{"{0} элемент"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1178,6 +1193,13 @@ kk{
                 dnam{"ж."}
                 one{"{0} ж."}
                 other{"{0} ж."}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт-сағ/100 км"}
+                one{"{0} кВт-сағ/100 км"}
+                other{"{0} кВт-сағ/100 км"}
             }
         }
         length{
@@ -1445,6 +1467,11 @@ kk{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"элемент"}
+                one{"{0} элемент"}
+                other{"{0} элемент"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} кар."}
@@ -1711,6 +1738,11 @@ kk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт-сағ/100 км"}
+                one{"{0} кВт-сағ/100 км"}
+                other{"{0} кВт-сағ/100 км"}
+            }
             newton{
                 dnam{"Н"}
                 one{"{0} Н"}

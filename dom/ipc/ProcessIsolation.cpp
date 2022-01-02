@@ -460,6 +460,8 @@ static bool ShouldIsolateSite(nsIPrincipal* aPrincipal,
 
       static constexpr nsLiteralCString kHighValuePermissions[] = {
           mozilla::dom::kHighValueCOOPPermission,
+          mozilla::dom::kHighValueHasSavedLoginPermission,
+          mozilla::dom::kHighValueIsLoggedInPermission,
       };
 
       for (const auto& type : kHighValuePermissions) {
@@ -905,6 +907,83 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
       break;
   }
   return options;
+}
+
+void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
+                            const nsACString& aPermissionType) {
+  RefPtr<PermissionManager> perms = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!perms)) {
+    return;
+  }
+
+  // We can't act on non-content principals, so if the load was sandboxed, try
+  // to use the unsandboxed precursor principal to add the highValue permission.
+  nsCOMPtr<nsIPrincipal> resultOrPrecursor(aResultPrincipal);
+  if (!aResultPrincipal->GetIsContentPrincipal()) {
+    resultOrPrecursor = aResultPrincipal->GetPrecursorPrincipal();
+    if (!resultOrPrecursor) {
+      return;
+    }
+  }
+
+  // Use the site-origin principal as we want to add the permission for the
+  // entire site, rather than a specific subdomain, as process isolation acts on
+  // a site granularity.
+  nsAutoCString siteOrigin;
+  if (NS_FAILED(resultOrPrecursor->GetSiteOrigin(siteOrigin))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> sitePrincipal =
+      BasePrincipal::CreateContentPrincipal(siteOrigin);
+  if (!sitePrincipal || !sitePrincipal->GetIsContentPrincipal()) {
+    return;
+  }
+
+  MOZ_LOG(dom::gProcessIsolationLog, LogLevel::Verbose,
+          ("Adding %s Permission for site '%s'", aPermissionType.BeginReading(),
+           siteOrigin.get()));
+
+  uint32_t expiration = 0;
+  if (aPermissionType.Equals(mozilla::dom::kHighValueCOOPPermission)) {
+    expiration = StaticPrefs::fission_highValue_coop_expiration();
+  } else if (aPermissionType.Equals(
+                 mozilla::dom::kHighValueHasSavedLoginPermission) ||
+             aPermissionType.Equals(
+                 mozilla::dom::kHighValueIsLoggedInPermission)) {
+    expiration = StaticPrefs::fission_highValue_login_expiration();
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unknown permission type");
+  }
+
+  // XXX: Would be nice if we could use `TimeStamp` here, but there's
+  // unfortunately no convenient way to recover a time in milliseconds since the
+  // unix epoch from `TimeStamp`.
+  int64_t expirationTime =
+      (PR_Now() / PR_USEC_PER_MSEC) + (int64_t(expiration) * PR_MSEC_PER_SEC);
+  Unused << perms->AddFromPrincipal(
+      sitePrincipal, aPermissionType, nsIPermissionManager::ALLOW_ACTION,
+      nsIPermissionManager::EXPIRE_TIME, expirationTime);
+}
+
+void AddHighValuePermission(const nsACString& aOrigin,
+                            const nsACString& aPermissionType) {
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv =
+      ssm->CreateContentPrincipalFromOrigin(aOrigin, getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  AddHighValuePermission(principal, aPermissionType);
+}
+
+bool IsIsolateHighValueSiteEnabled() {
+  return mozilla::FissionAutostart() &&
+         WebContentIsolationStrategy(
+             StaticPrefs::fission_webContentIsolationStrategy()) ==
+             WebContentIsolationStrategy::IsolateHighValue;
 }
 
 }  // namespace mozilla::dom

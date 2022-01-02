@@ -336,7 +336,7 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
             }
         }
         '0'..='9' => consume_number(input),
-        'a'..='z' | 'A'..='Z' | '_' => {
+        'a'..='z' | 'A'..='Z' => {
             let (word, rest) = consume_any(input, |c| c.is_ascii_alphanumeric() || c == '_');
             (Token::Word(word), rest)
         }
@@ -558,24 +558,24 @@ impl<'a> Lexer<'a> {
         Ok(pair)
     }
 
-    // TODO relocate storage texture specifics
+    pub(super) fn next_storage_access(&mut self) -> Result<crate::StorageAccess, Error<'a>> {
+        let (ident, span) = self.next_ident_with_span()?;
+        match ident {
+            "read" => Ok(crate::StorageAccess::LOAD),
+            "write" => Ok(crate::StorageAccess::STORE),
+            "read_write" => Ok(crate::StorageAccess::LOAD | crate::StorageAccess::STORE),
+            _ => Err(Error::UnknownAccess(span)),
+        }
+    }
+
     pub(super) fn next_format_generic(
         &mut self,
     ) -> Result<(crate::StorageFormat, crate::StorageAccess), Error<'a>> {
         self.expect(Token::Paren('<'))?;
         let (ident, ident_span) = self.next_ident_with_span()?;
         let format = conv::map_storage_format(ident, ident_span)?;
-        let access = if self.skip(Token::Separator(',')) {
-            let (raw, span) = self.next_ident_with_span()?;
-            match raw {
-                "read" => crate::StorageAccess::LOAD,
-                "write" => crate::StorageAccess::STORE,
-                "read_write" => crate::StorageAccess::all(),
-                _ => return Err(Error::UnknownAccess(span)),
-            }
-        } else {
-            crate::StorageAccess::LOAD
-        };
+        self.expect(Token::Separator(','))?;
+        let access = self.next_storage_access()?;
         self.expect(Token::Paren('>'))?;
         Ok((format, access))
     }
@@ -655,6 +655,7 @@ fn test_tokens() {
     );
     sub_test("No¾", &[Token::Word("No"), Token::Unknown('¾')]);
     sub_test("No好", &[Token::Word("No"), Token::Unknown('好')]);
+    sub_test("_No", &[Token::Unknown('_'), Token::Word("No")]);
     sub_test("\"\u{2}ПЀ\u{0}\"", &[Token::String("\u{2}ПЀ\u{0}")]); // https://github.com/gfx-rs/naga/issues/90
 }
 

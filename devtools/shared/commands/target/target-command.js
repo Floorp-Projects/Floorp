@@ -23,6 +23,7 @@ const {
 } = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class TargetCommand extends EventEmitter {
+  #selectedTargetFront;
   /**
    * This class helps managing, iterating over and listening for Targets.
    *
@@ -55,7 +56,7 @@ class TargetCommand extends EventEmitter {
     this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
       this
     );
-    if (this.descriptorFront.isLocalTab) {
+    if (this.descriptorFront.isTabDescriptor) {
       this.descriptorFront.on(
         "remoteness-change",
         this.onLocalTabRemotenessChange
@@ -78,12 +79,14 @@ class TargetCommand extends EventEmitter {
     // time watchTargets is called.
     this._pendingWatchTargetInitialization = new Map();
 
-    // Listeners for target creation and destruction
+    // Listeners for target creation, destruction and selection
     this._createListeners = new EventEmitter();
     this._destroyListeners = new EventEmitter();
+    this._selectListeners = new EventEmitter();
 
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+    this._onTargetSelected = this._onTargetSelected.bind(this);
 
     this.legacyImplementation = {
       process: new LegacyProcessesWatcher(
@@ -126,14 +129,22 @@ class TargetCommand extends EventEmitter {
     //                but we wait for the watcher actor to notify us about it
     //                via target-available-form avent.
     this._gotFirstTopLevelTarget = false;
-    this.commands = commands;
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
+  }
+
+  get selectedTargetFront() {
+    return this.#selectedTargetFront || this.targetFront;
   }
 
   // Called whenever a new Target front is available.
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
   async _onTargetAvailable(targetFront) {
+    // We put the `commands` on the targetFront so it can be retrieved from any front easily.
+    // Without this, protocol.js fronts won't have any easy access to it.
+    // Ideally, Fronts would all be migrated to commands and we would no longer need this hack.
+    targetFront.commands = this.commands;
+
     // If the new target is a top level target, we are target switching.
     // Target-switching is only triggered for "local-tab" browsing-context
     // targets which should always have the topLevelTarget flag initialized
@@ -171,6 +182,7 @@ class TargetCommand extends EventEmitter {
       // Update the reference to the memoized top level target
       this.targetFront = targetFront;
       this.descriptorFront.setTarget(targetFront);
+      this.#selectedTargetFront = null;
 
       if (isFirstTarget && this.isServerTargetSwitchingEnabled()) {
         this._gotFirstTopLevelTarget = true;
@@ -297,6 +309,17 @@ class TargetCommand extends EventEmitter {
     });
     this._targets.delete(targetFront);
 
+    // If the destroyed target was the selected one, we need to do some cleanup
+    if (this.#selectedTargetFront == targetFront) {
+      // If we're doing a targetSwitch, simply nullify #selectedTargetFront
+      if (isTargetSwitching) {
+        this.#selectedTargetFront = null;
+      } else {
+        // Otherwise we want to select the top level target
+        this.selectTarget(this.targetFront);
+      }
+    }
+
     if (shouldDestroyTargetFront) {
       // When calling targetFront.destroy(), we will first call TargetFrontMixin.destroy,
       // which will try to call `detach` RDP method.
@@ -307,7 +330,28 @@ class TargetCommand extends EventEmitter {
       targetFront.baseFrontClassDestroy();
 
       targetFront.destroy();
+
+      // Delete the attribute we set from _onTargetAvailable so that we avoid leaking commands
+      // if any target front is leaked.
+      delete targetFront.commands;
     }
+  }
+
+  /**
+   *
+   * @param {TargetFront} targetFront
+   */
+  async _onTargetSelected(targetFront) {
+    if (this.#selectedTargetFront == targetFront) {
+      // Target is already selected, we can bail out.
+      return;
+    }
+
+    this.#selectedTargetFront = targetFront;
+    const targetType = this.getTargetType(targetFront);
+    await this._selectListeners.emitAsync(targetType, {
+      targetFront,
+    });
   }
 
   _setListening(type, value) {
@@ -339,11 +383,11 @@ class TargetCommand extends EventEmitter {
    *          optional targetTypeOrTrait
    */
   hasTargetWatcherSupport(targetTypeOrTrait) {
-    // If the top level target is a parent process, we're in the browser console or browser toolbox.
-    // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
+    // If we're in the browser console or browser toolbox and the browser
+    // toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.descriptorFront.isParentProcessDescriptor &&
+      this.descriptorFront.isBrowserProcessDescriptor &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;
@@ -451,6 +495,10 @@ class TargetCommand extends EventEmitter {
     this.targetFront.setIsTopLevel(true);
     this._gotFirstTopLevelTarget = true;
 
+    // See _onTargetAvailable. As this target isn't going through that method
+    // we have to replicate doing that here.
+    this.targetFront.commands = this.commands;
+
     // Add the top-level target to the list of targets.
     this._targets.add(this.targetFront);
   }
@@ -458,9 +506,13 @@ class TargetCommand extends EventEmitter {
   _computeTargetTypes() {
     let types = [];
 
-    if (this.descriptorFront.isLocalTab) {
+    // We also check for watcher support as some xpcshell tests uses legacy APIs and don't support frames.
+    if (
+      this.descriptorFront.isTabDescriptor &&
+      this.hasTargetWatcherSupport(TargetCommand.TYPES.FRAME)
+    ) {
       types = [TargetCommand.TYPES.FRAME];
-    } else if (this.descriptorFront.isParentProcessDescriptor) {
+    } else if (this.descriptorFront.isBrowserProcessDescriptor) {
       const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
         BROWSERTOOLBOX_FISSION_ENABLED
       );
@@ -534,11 +586,7 @@ class TargetCommand extends EventEmitter {
 
   getTargetType(target) {
     const { typeName } = target;
-    // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
-    if (
-      typeName == "windowGlobalTarget" ||
-      typeName == "browsingContextTarget"
-    ) {
+    if (typeName == "windowGlobalTarget") {
       return TargetCommand.TYPES.FRAME;
     }
 
@@ -588,22 +636,45 @@ class TargetCommand extends EventEmitter {
   /**
    * Listen for the creation and/or destruction of target fronts matching one of the provided types.
    *
-   * @param {Array<String>} types
+   * @param {Object} options
+   * @param {Array<String>} options.types
    *        The type of target to listen for. Constant of TargetCommand.TYPES.
-   * @param {Function} onAvailable
-   *        Callback fired when a target has been just created or was already available.
-   *        The function is called with the following arguments:
+   * @param {Function} options.onAvailable
+   *        Mandatory callback fired when a target has been just created or was already available.
+   *        The function is called with a single object argument containing the following properties:
    *        - {TargetFront} targetFront: The target Front
    *        - {Boolean} isTargetSwitching: Is this target relates to a navigation and
    *                    this replaced a previously available target, this flag will be true
-   * @param {Function} onDestroy
-   *        Callback fired in case of target front destruction.
+   * @param {Function} options.onDestroyed
+   *        Optional callback fired in case of target front destruction.
    *        The function is called with the same arguments than onAvailable.
+   * @param {Function} options.onSelected
+   *        Optional callback fired when a given target is selected from the iframe picker
+   *        The function is called with a single object argument containing the following properties:
+   *        - {TargetFront} targetFront: The target Front
    */
-  async watchTargets(types, onAvailable, onDestroy) {
+  async watchTargets(options = {}) {
+    const availableOptions = [
+      "types",
+      "onAvailable",
+      "onDestroyed",
+      "onSelected",
+    ];
+    const unsupportedKeys = Object.keys(options).filter(
+      key => !availableOptions.includes(key)
+    );
+    if (unsupportedKeys.length > 0) {
+      throw new Error(
+        `TargetCommand.watchTargets does not expect the following options: ${unsupportedKeys.join(
+          ", "
+        )}`
+      );
+    }
+
+    const { types, onAvailable, onDestroyed, onSelected } = options;
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetCommand.watchTargets expects a function as second argument"
+        "TargetCommand.watchTargets expects a function for the onAvailable option"
       );
     }
 
@@ -667,8 +738,11 @@ class TargetCommand extends EventEmitter {
 
     for (const type of types) {
       this._createListeners.on(type, onAvailable);
-      if (onDestroy) {
-        this._destroyListeners.on(type, onDestroy);
+      if (onDestroyed) {
+        this._destroyListeners.on(type, onDestroyed);
+      }
+      if (onSelected) {
+        this._selectListeners.on(type, onSelected);
       }
     }
 
@@ -680,10 +754,28 @@ class TargetCommand extends EventEmitter {
    * Stop listening for the creation and/or destruction of a given type of target fronts.
    * See `watchTargets()` for documentation of the arguments.
    */
-  unwatchTargets(types, onAvailable, onDestroy) {
+  unwatchTargets(options = {}) {
+    const availableOptions = [
+      "types",
+      "onAvailable",
+      "onDestroyed",
+      "onSelected",
+    ];
+    const unsupportedKeys = Object.keys(options).filter(
+      key => !availableOptions.includes(key)
+    );
+    if (unsupportedKeys.length > 0) {
+      throw new Error(
+        `TargetCommand.unwatchTargets does not expect the following options: ${unsupportedKeys.join(
+          ", "
+        )}`
+      );
+    }
+
+    const { types, onAvailable, onDestroyed, onSelected } = options;
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetCommand.unwatchTargets expects a function as second argument"
+        "TargetCommand.unwatchTargets expects a function for the onAvailable option"
       );
     }
 
@@ -695,8 +787,11 @@ class TargetCommand extends EventEmitter {
       }
 
       this._createListeners.off(type, onAvailable);
-      if (onDestroy) {
-        this._destroyListeners.off(type, onDestroy);
+      if (onDestroyed) {
+        this._destroyListeners.off(type, onDestroyed);
+      }
+      if (onSelected) {
+        this._selectListeners.off(type, onSelected);
       }
     }
     this._pendingWatchTargetInitialization.delete(onAvailable);
@@ -723,19 +818,56 @@ class TargetCommand extends EventEmitter {
   }
 
   /**
+   * Retrieve all the target fronts in the selected target tree (including the selected
+   * target itself).
+   *
+   * @param {Array<String>} types
+   *        The types of target to retrieve. Array of TargetCommand.TYPES
+   * @return {Promise<Array<TargetFront>>} Promise that resolves to an array of target fronts.
+   */
+  async getAllTargetsInSelectedTargetTree(types) {
+    const allTargets = this.getAllTargets(types);
+    if (this.isTopLevelTargetSelected()) {
+      return allTargets;
+    }
+
+    const targets = [this.selectedTargetFront];
+    for (const target of allTargets) {
+      const isInSelectedTree = await target.isTargetAnAncestor(
+        this.selectedTargetFront
+      );
+
+      if (isInSelectedTree) {
+        targets.push(target);
+      }
+    }
+    return targets;
+  }
+
+  /**
    * For all the target fronts of given types, retrieve all the target-scoped fronts of the given types.
    *
    * @param {Array<String>} targetTypes
    *        The types of target to iterate over. Constant of TargetCommand.TYPES.
    * @param {String} frontType
    *        The type of target-scoped front to retrieve. It can be "inspector", "console", "thread",...
+   * @param {Object} options
+   * @param {Boolean} options.onlyInSelectedTargetTree
+   *        Set to true to only get the fronts for targets who are in the "targets tree"
+   *        of the selected target.
    */
-  async getAllFronts(targetTypes, frontType) {
+  async getAllFronts(
+    targetTypes,
+    frontType,
+    { onlyInSelectedTargetTree = false } = {}
+  ) {
     if (!Array.isArray(targetTypes) || !targetTypes?.length) {
       throw new Error("getAllFronts expects a non-empty array of target types");
     }
     const promises = [];
-    const targets = this.getAllTargets(targetTypes);
+    const targets = !onlyInSelectedTargetTree
+      ? this.getAllTargets(targetTypes)
+      : await this.getAllTargetsInSelectedTargetTree(targetTypes);
     for (const target of targets) {
       // For still-attaching worker targets, the threadFront may not yet be available,
       // whereas TargetMixin.getFront will throw if the actorID isn't available in targetForm.
@@ -831,8 +963,82 @@ class TargetCommand extends EventEmitter {
     await this._onTargetAvailable(newTarget);
   }
 
+  /**
+   * Called when the user selects a frame in the iframe picker.
+   *
+   * @param {WindowGlobalTargetFront} targetFront
+   *        The target front we want the toolbox to focus on.
+   */
+  selectTarget(targetFront) {
+    return this._onTargetSelected(targetFront);
+  }
+
+  /**
+   * Returns true if the top-level frame is the selected one
+   *
+   * @returns {Boolean}
+   */
+  isTopLevelTargetSelected() {
+    return this.selectedTargetFront === this.targetFront;
+  }
+
+  /**
+   * Returns true if a non top-level frame is the selected one in the iframe picker.
+   *
+   * @returns {Boolean}
+   */
+  isNonTopLevelTargetSelected() {
+    return this.selectedTargetFront !== this.targetFront;
+  }
+
   isTargetRegistered(targetFront) {
     return this._targets.has(targetFront);
+  }
+
+  getParentTarget(targetFront) {
+    // Note that there is three temporary edgecases:
+    // * Until bug 1741927 is fixed and we remove non-EFT codepath entirely,
+    //   we may receive a `parentInnerWindowId` that doesn't relate to any target.
+    //   This happens when the parent document of the targetFront is a document loaded in the
+    //   same process as its parent document. In such scenario, and only when EFT is disabled,
+    //   we won't instantiate a target for the parent document of the targetFront.
+    // * `parentInnerWindowId` could be null in some case like for tabs in the MBT
+    //   we should report the top level target as parent. That's what `getParentWindowGlobalTarget` does.
+    //   Once we can stop using getParentWindowGlobalTarget for the other edgecase we will be able to
+    //   replace it with such fallback: `return this.targetFront;`.
+    //   browser_target_command_frames.js will help you get things right.
+    // @backward-compat { version 96 } Fx 96 started exposing `parentInnerWindowId`
+    // * And backward compat. This targetForm attribute is new. Once we drop 95 support,
+    //   we can simply remove this last bullet point as the other two edgecase may still be valid.
+    const { parentInnerWindowId } = targetFront.targetForm;
+    if (parentInnerWindowId) {
+      const targets = this.getAllTargets([TargetCommand.TYPES.FRAME]);
+      const parent = targets.find(
+        target => target.innerWindowId == parentInnerWindowId
+      );
+      // Until EFT is the only codepath supported (bug 1741927), we will fallback to `getParentWindowGlobalTarget`
+      // as we may not have a target if the parent is an iframe running in the same process as its parent.
+      if (parent) {
+        return parent;
+      }
+    }
+
+    // Note that all callsites which care about FRAME additional target
+    // should all have a toolbox using the watcher actor.
+    // It should be: MBT, regular tab toolbox and web extension.
+    // The others which still don't support watcher don't spawn FRAME targets:
+    // browser content toolbox and service workers.
+
+    // @backward-compat { version 96 } WebExtension targets only support the
+    // watcher starting with version 96. This if block can be fully removed when
+    // version 96 hits the release channel (cf. comment above).
+    if (!this.watcherFront) {
+      return null;
+    }
+
+    return this.watcherFront.getParentWindowGlobalTarget(
+      targetFront.browsingContextID
+    );
   }
 
   isDestroyed() {
@@ -854,7 +1060,9 @@ class TargetCommand extends EventEmitter {
     this.stopListening();
     this._createListeners.off();
     this._destroyListeners.off();
+    this._selectListeners.off();
 
+    this.#selectedTargetFront = null;
     this._isDestroyed = true;
   }
 }

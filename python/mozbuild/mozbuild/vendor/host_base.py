@@ -21,7 +21,7 @@ class BaseHost:
                 [
                     "git",
                     "clone",
-                    self.manifest["origin"]["url"],
+                    self.manifest["vendoring"]["url"],
                     self.manifest["origin"]["name"],
                 ],
                 stdout=subprocess.PIPE,

@@ -1120,7 +1120,7 @@ void SerializeString(const nsCString& aInput, nsAString& aValue) {
 
 }  // namespace
 
-void URLParams::Serialize(nsAString& aValue) const {
+void URLParams::Serialize(nsAString& aValue, bool aEncode) const {
   aValue.Truncate();
   bool first = true;
 
@@ -1133,9 +1133,15 @@ void URLParams::Serialize(nsAString& aValue) const {
 
     // XXX Actually, it's not necessary to build a new string object. Generally,
     // such cases could just convert each codepoint one-by-one.
-    SerializeString(NS_ConvertUTF16toUTF8(mParams[i].mKey), aValue);
-    aValue.Append('=');
-    SerializeString(NS_ConvertUTF16toUTF8(mParams[i].mValue), aValue);
+    if (aEncode) {
+      SerializeString(NS_ConvertUTF16toUTF8(mParams[i].mKey), aValue);
+      aValue.Append('=');
+      SerializeString(NS_ConvertUTF16toUTF8(mParams[i].mValue), aValue);
+    } else {
+      aValue.Append(mParams[i].mKey);
+      aValue.Append('=');
+      aValue.Append(mParams[i].mValue);
+    }
   }
 }
 

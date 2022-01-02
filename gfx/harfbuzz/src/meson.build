@@ -3,7 +3,7 @@ hb_version_h = configure_file(
                input: 'hb-version.h.in',
                output: 'hb-version.h',
                install: true,
-               install_dir: join_paths(get_option('includedir'), meson.project_name()))
+               install_dir: get_option('includedir') / meson.project_name())
 
 # Base and default-included sources and headers
 hb_base_sources = files(
@@ -147,6 +147,7 @@ hb_base_sources = files(
   'hb-ot-tag-table.hh',
   'hb-ot-tag.cc',
   'hb-ot-var-avar-table.hh',
+  'hb-ot-var-common.hh',
   'hb-ot-var-fvar-table.hh',
   'hb-ot-var-gvar-table.hh',
   'hb-ot-var-hvar-table.hh',
@@ -290,8 +291,13 @@ hb_gobject_headers = files(
   'hb-gobject-structs.h',
 )
 
-ragel = find_program('ragel', required: false)
-if not ragel.found()
+ragel = find_program('ragel', version: '6.10', required: false)
+has_ragel = ragel.found()
+if not has_ragel and get_option('ragel_subproject')
+    ragel = subproject('ragel').get_variable('ragel')
+    has_ragel = true
+endif
+if not has_ragel
   warning('You have to install ragel if you are going to develop HarfBuzz itself')
 else
   ragel_helper = find_program('gen-ragel-artifacts.py')
@@ -301,7 +307,7 @@ else
       build_by_default: true,
       input: rl,
       output: hh,
-      command: [ragel_helper, '@OUTPUT@', meson.current_source_dir(), '@INPUT@'],
+      command: [ragel_helper, ragel, '@OUTPUT@', meson.current_source_dir(), '@INPUT@'],
     )
   endforeach
 endif
@@ -340,7 +346,7 @@ endif
 if conf.get('HAVE_GRAPHITE2', 0) == 1
   hb_sources += hb_graphite2_sources
   hb_headers += hb_graphite2_headers
-  harfbuzz_deps += [graphite2_dep]
+  harfbuzz_deps += [graphite2_dep, graphite_dep]
 endif
 
 if conf.get('HAVE_GLIB', 0) == 1
@@ -357,7 +363,6 @@ endif
 if conf.get('HAVE_DIRECTWRITE', 0) == 1
   hb_sources += hb_directwrite_sources
   hb_headers += hb_directwrite_headers
-  harfbuzz_deps += directwrite_dep
   # hb-directwrite needs a C++ linker
   libharfbuzz_link_language = 'cpp'
 endif
@@ -483,10 +488,12 @@ if get_option('tests').enabled()
     'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
     'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
     'test-iter': ['test-iter.cc', 'hb-static.cc'],
-    'test-meta': ['test-meta.cc', 'hb-static.cc'],
+    'test-map': ['test-map.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
+    'test-set': ['test-set.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
+    'test-vector': ['test-vector.cc', 'hb-static.cc'],
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
   }
   foreach name, source : compiled_tests
@@ -562,7 +569,7 @@ cmake_config.set('have_gobject', '@0@'.format(have_gobject))
 configure_file(input: 'harfbuzz-config.cmake.in',
   output: 'harfbuzz-config.cmake',
   configuration: cmake_config,
-  install_dir: join_paths(get_option('libdir'), 'cmake', 'harfbuzz'),
+  install_dir: get_option('libdir') / 'cmake' / 'harfbuzz',
 )
 
 libharfbuzz_gobject_dep = null_dep
@@ -572,14 +579,12 @@ if have_gobject
   h_templ = configure_file(
     input: 'hb-gobject-enums.h.tmpl',
     output: 'hb-gobject-enums-tmp.h.tmpl',
-    configuration: configuration_data(),
-    format: 'cmake')
+    copy: true)
 
   cc_templ = configure_file(
     input: 'hb-gobject-enums.cc.tmpl',
     output: 'hb-gobject-enums-tmp.cc.tmpl',
-    configuration: configuration_data(),
-    format: 'cmake')
+    copy: true)
 
   enums = gnome.mkenums('hb-gobject',
     sources: hb_headers,
@@ -600,7 +605,7 @@ if have_gobject
     output: 'hb-gobject-enums.h',
     command: [find_program('fix_get_types.py'), '@INPUT@', '@OUTPUT@'],
     install: true,
-    install_dir: join_paths(get_option('prefix'), get_option('includedir'), meson.project_name()),
+    install_dir: get_option('prefix') / get_option('includedir') / meson.project_name(),
   )
 
   hb_gobject_sources += [enum_c]
@@ -651,16 +656,10 @@ if have_gobject
                     '--cflags-end'])
   endif
 
-  if build_gir
-    libharfbuzz_gobject_sources = hb_gen_files_gir
-  else
-    libharfbuzz_gobject_sources = hb_gobject_sources
-  endif
-
   libharfbuzz_gobject_dep = declare_dependency(
     link_with: libharfbuzz_gobject,
     include_directories: incsrc,
-    sources: libharfbuzz_gobject_sources,
+    sources: build_gir ? hb_gen_files_gir : hb_gobject_sources,
     dependencies: [glib_dep, gobject_dep])
 
   pkgmod.generate(libharfbuzz_gobject,
@@ -701,21 +700,13 @@ if get_option('tests').enabled()
   env.set('HBHEADERS', ' '.join(HBHEADERS))
 
   if cpp.get_id() != 'msvc' and not meson.is_cross_build() # ensure the local tools are usable
-    if meson.version().version_compare('>=0.55')
-      dist_check_script += 'check-libstdc++'
-    endif
-    dist_check_script += ['check-static-inits', 'check-symbols']
+    dist_check_script += ['check-libstdc++', 'check-static-inits', 'check-symbols']
   endif
 
   foreach name : dist_check_script
-    if name == 'check-symbols'
-      test_depends = defs_list
-    else
-      test_depends = []
-    endif
     test(name, find_program(name + '.py'),
       env: env,
-      depends: test_depends,
+      depends: name == 'check-symbols' ? defs_list : [],
       suite: ['src'],
     )
   endforeach

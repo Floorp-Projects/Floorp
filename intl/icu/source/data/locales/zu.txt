@@ -238,6 +238,16 @@ zu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -413,6 +423,16 @@ zu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -432,6 +452,7 @@ zu{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1097,10 +1118,6 @@ zu{
         hour-narrow{
             dn{"Ihora"}
             relativeTime{
-                future{
-                    one{"ehoreni elingu-{0} elizayo"}
-                    other{"emahoreni angu-{0} ezayo"}
-                }
                 past{
                     one{"{0} ihora eledlule"}
                     other{"{0} amahora edlule"}
@@ -1667,9 +1684,6 @@ zu{
             dn{"usuku lwenyanga"}
         }
         weekdayOfMonth-narrow{
-            dn{"usuku lwenyanga"}
-        }
-        weekdayOfMonth-short{
             dn{"usuku lwenyanga"}
         }
         year{

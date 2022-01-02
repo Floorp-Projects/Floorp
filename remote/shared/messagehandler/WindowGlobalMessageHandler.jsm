@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXT_DESCRIPTOR_TYPES:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
 });
@@ -23,6 +25,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * MessageHandler network.
  */
 class WindowGlobalMessageHandler extends MessageHandler {
+  constructor() {
+    super(...arguments);
+
+    this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
+  }
+
   /**
    * Returns the WindowGlobalMessageHandler module path.
    *
@@ -55,9 +63,65 @@ class WindowGlobalMessageHandler extends MessageHandler {
     return context.id;
   }
 
+  get innerWindowId() {
+    return this._innerWindowId;
+  }
+
+  async applyInitialSessionDataItems(sessionDataItems) {
+    if (!Array.isArray(sessionDataItems)) {
+      return;
+    }
+
+    for (const sessionDataItem of sessionDataItems) {
+      const {
+        moduleName,
+        category,
+        contextDescriptor,
+        value,
+      } = sessionDataItem;
+      if (this._isRelevantContext(contextDescriptor)) {
+        await this.handleCommand({
+          moduleName,
+          commandName: "_applySessionData",
+          params: {
+            category,
+            // TODO: We might call _applySessionData several times for the same
+            // moduleName & category, but with different values. Instead we can
+            // use the fact that _applySessionData supports arrays of values,
+            // though it will make the implementation more complex.
+            added: [value],
+          },
+          destination: {
+            type: WindowGlobalMessageHandler.type,
+          },
+        });
+      }
+    }
+  }
+
   forwardCommand(command) {
     throw new Error(
       `Cannot forward commands from a "WINDOW_GLOBAL" MessageHandler`
     );
+  }
+
+  _isRelevantContext(contextDescriptor) {
+    // Once we allow to filter on browsing contexts, the contextDescriptor would
+    // for instance contain a browserId on top of a type. For instance:
+    //
+    //  {
+    //     type: CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT
+    //     id: ${someBrowserId}
+    //   }
+    //
+    // To check if the current WindowGlobalMessageHandler matches this context
+    // descriptor, we would run the following additional check:
+    //
+    //   contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.BROWSER_ELEMENT &&
+    //     contextDescriptor.id === this._context.browserId
+    //
+    // (reminder: here _context is the BrowsingContext passed as a constructor
+    //  argument to WindowGlobalMessageHandler).
+    return contextDescriptor.type === CONTEXT_DESCRIPTOR_TYPES.ALL;
   }
 }

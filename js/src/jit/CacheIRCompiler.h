@@ -10,6 +10,8 @@
 #include "mozilla/Maybe.h"
 
 #include "jit/CacheIR.h"
+#include "jit/CacheIRReader.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/JitOptions.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
@@ -22,11 +24,14 @@ class BigInt;
 namespace js {
 
 class TypedArrayObject;
+enum class UnaryMathFunction : uint8_t;
 
 namespace jit {
 
 class BaselineCacheIRCompiler;
+class ICCacheIRStub;
 class IonCacheIRCompiler;
+class IonScript;
 
 enum class ICStubEngine : uint8_t;
 
@@ -848,7 +853,7 @@ class MOZ_RAII CacheIRCompiler {
 
   using AtomicsReadWriteModify64Fn = JS::BigInt* (*)(JSContext*,
                                                      TypedArrayObject*, size_t,
-                                                     JS::BigInt*);
+                                                     const JS::BigInt*);
 
   template <AtomicsReadWriteModify64Fn fn>
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(ObjOperandId objId,
@@ -1028,6 +1033,11 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
       scratch_.emplace(alloc, masm);
       scratchReg_ = scratch_.ref();
     }
+  }
+  AutoScratchRegisterMaybeOutput(CacheRegisterAllocator& alloc,
+                                 MacroAssembler& masm) {
+    scratch_.emplace(alloc, masm);
+    scratchReg_ = scratch_.ref();
   }
 
   Register get() const { return scratchReg_; }

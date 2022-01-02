@@ -224,7 +224,7 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
                                      0x04, 0xF9, 0x05, 0xF7};
               // Can't use AppendElements on an array here, so just do range
               // based loading.
-              for (auto& s : msg) {
+              for (const auto& s : msg) {
                 msgs.AppendElement(s);
               }
               nsTArray<MIDIMessage> newMsgs;

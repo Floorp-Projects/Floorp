@@ -36,7 +36,7 @@ cppunit:
     treeherder-symbol: cppunit
     target:
         by-test-platform:
-            android-em-7.*: geckoview-androidTest.apk
+            android-em-7.*: geckoview-test_runner.apk
             default: null
     tier: default
     run-on-projects: built-projects
@@ -57,7 +57,7 @@ gtest:
             default: built-projects
     target:
         by-test-platform:
-            android-em-7.*: geckoview-androidTest.apk
+            android-em-7.*: geckoview-test_runner.apk
             default: null
     tier:
         by-test-platform:
@@ -97,7 +97,7 @@ jittest:
                 default: true
     target:
         by-test-platform:
-            android-.*: geckoview-androidTest.apk
+            android-.*: geckoview-test_runner.apk
             default: null
     tier:
         by-test-platform:
@@ -123,7 +123,7 @@ jittest-all:
                 default: None
     target:
         by-test-platform:
-            android-.*: geckoview-androidTest.apk
+            android-.*: geckoview-test_runner.apk
             default: null
     tier:
         by-test-platform:

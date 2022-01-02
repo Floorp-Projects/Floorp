@@ -4,24 +4,28 @@
 
 package org.mozilla.gecko.process;
 
-import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.IBinder;
-import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.collection.ArrayMap;
 import androidx.collection.ArraySet;
 import androidx.collection.SimpleArrayMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoNetworkManager;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.GeckoThread.FileDescriptors;
+import org.mozilla.gecko.GeckoThread.ParcelFileDescriptors;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.TelemetryUtils;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.CompositorSurfaceManager;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.process.ServiceAllocator.PriorityLevel;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -58,6 +62,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
   public void getEditableParent(
       final IGeckoEditableChild child, final long contentId, final long tabId) {
     nativeGetEditableParent(child, contentId, tabId);
+  }
+
+  @WrapForJNI
+  public static CompositorSurfaceManager getCompositorSurfaceManager() {
+    final Selector selector = new Selector(GeckoProcessType.GPU);
+    final GpuProcessConnection conn =
+        (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
+    return conn.getCompositorSurfaceManager();
   }
 
   /** Gecko uses this class to uniquely identify a process managed by GeckoProcessManager. */
@@ -105,7 +117,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @Override
     public int hashCode() {
-      return 31 * mType.hashCode() + mPid;
+      return Arrays.hashCode(new Object[] {mType, mPid});
     }
   }
 
@@ -207,6 +219,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       final IChildProcess child = IChildProcess.Stub.asInterface(service);
       try {
         mPid = child.getPid();
+        onBinderConnected(child);
       } catch (final DeadObjectException e) {
         unbindService();
 
@@ -230,6 +243,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         mPendingBind = null;
       }
     }
+
+    // Subclasses of ChildConnection can override this method to make any IChildProcess calls
+    // specific to their process type immediately after connection.
+    protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {}
 
     @Override
     protected void onReleaseResources() {
@@ -258,6 +275,23 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     protected void onAppBackground() {
       setPriorityLevel(PriorityLevel.BACKGROUND);
+    }
+  }
+
+  private static final class GpuProcessConnection extends NonContentConnection {
+    private CompositorSurfaceManager mCompositorSurfaceManager;
+
+    public GpuProcessConnection(@NonNull final ServiceAllocator allocator) {
+      super(allocator, GeckoProcessType.GPU);
+    }
+
+    @Override
+    protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {
+      mCompositorSurfaceManager = new CompositorSurfaceManager(child.getCompositorSurfaceManager());
+    }
+
+    public CompositorSurfaceManager getCompositorSurfaceManager() {
+      return mCompositorSurfaceManager;
     }
   }
 
@@ -487,7 +521,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
               "PID is invalid even though our caller just successfully retrieved it after binding");
         }
 
-        mContentPids.put(Integer.valueOf(pid), (ContentConnection) conn);
+        mContentPids.put(pid, (ContentConnection) conn);
       }
     }
 
@@ -498,7 +532,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         throw new IllegalArgumentException("Selector is not for content!");
       }
 
-      return mContentPids.get(Integer.valueOf(selector.getPid()));
+      return mContentPids.get(selector.getPid());
     }
 
     /** Unconditionally create a new content connection for the specified priority. */
@@ -551,6 +585,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       if (connection == null) {
         if (type == GeckoProcessType.SOCKET) {
           connection = new SocketProcessConnection(mServiceAllocator);
+        } else if (type == GeckoProcessType.GPU) {
+          connection = new GpuProcessConnection(mServiceAllocator);
         } else {
           connection = new NonContentConnection(mServiceAllocator, type);
         }
@@ -657,23 +693,30 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       final int crashFd,
       final int crashAnnotationFd) {
     final GeckoResult<Integer> result = new GeckoResult<>();
-    final Bundle extras = GeckoThread.getActiveExtras();
-    final int flags = filterFlagsForChild(GeckoThread.getActiveFlags());
+    final StartInfo info =
+        new StartInfo(
+            type,
+            GeckoThread.InitInfo.builder()
+                .args(args)
+                .userSerialNumber(System.getenv("MOZ_ANDROID_USER_SERIAL_NUMBER"))
+                .extras(GeckoThread.getActiveExtras())
+                .flags(filterFlagsForChild(GeckoThread.getActiveFlags()))
+                .fds(
+                    FileDescriptors.builder()
+                        .prefs(prefsFd)
+                        .prefMap(prefMapFd)
+                        .ipc(ipcFd)
+                        .crashReporter(crashFd)
+                        .crashAnnotation(crashAnnotationFd)
+                        .build())
+                .build());
 
     XPCOMEventTarget.runOnLauncherThread(
         () -> {
-          INSTANCE.start(
-              result,
-              type,
-              args,
-              extras,
-              flags,
-              prefsFd,
-              prefMapFd,
-              ipcFd,
-              crashFd,
-              crashAnnotationFd,
-              /* isRetry */ false);
+          INSTANCE
+              .start(info)
+              .accept(result::complete, result::completeExceptionally)
+              .finally_(info.pfds::close);
         });
 
     return result;
@@ -683,261 +726,139 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     return flags & GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
   }
 
-  private void start(
-      final GeckoResult<Integer> result,
-      final GeckoProcessType type,
-      final String[] args,
-      final Bundle extras,
-      final int flags,
-      final int prefsFd,
-      final int prefMapFd,
-      final int ipcFd,
-      final int crashFd,
-      final int crashAnnotationFd,
-      final boolean isRetry) {
-    start(
-        result,
-        type,
-        args,
-        extras,
-        flags,
-        prefsFd,
-        prefMapFd,
-        ipcFd,
-        crashFd,
-        crashAnnotationFd,
-        isRetry, /* prevException */
-        null);
+  private static class StartInfo {
+    final GeckoProcessType type;
+    final String crashHandler;
+    final GeckoThread.InitInfo init;
+
+    final ParcelFileDescriptors pfds;
+
+    private StartInfo(final GeckoProcessType type, final GeckoThread.InitInfo initInfo) {
+      this.type = type;
+      this.init = initInfo;
+      crashHandler =
+          GeckoAppShell.getCrashHandlerService() != null
+              ? GeckoAppShell.getCrashHandlerService().getName()
+              : null;
+      // The native side owns the File Descriptors so we cannot call adopt here.
+      pfds = ParcelFileDescriptors.from(initInfo.fds);
+    }
   }
 
-  private void start(
-      final GeckoResult<Integer> result,
-      final GeckoProcessType type,
-      final String[] args,
-      final Bundle extras,
-      final int flags,
-      final int prefsFd,
-      final int prefMapFd,
-      final int ipcFd,
-      final int crashFd,
-      final int crashAnnotationFd,
-      final boolean isRetry,
-      final RemoteException prevException) {
+  private static final int MAX_RETRIES = 3;
+
+  private GeckoResult<Integer> start(final StartInfo info) {
+    return start(info, new ArrayList<>());
+  }
+
+  private GeckoResult<Integer> retry(
+      final StartInfo info, final List<Throwable> retryLog, final Throwable error) {
+    retryLog.add(error);
+
+    if (error instanceof StartException) {
+      final StartException startError = (StartException) error;
+      if (startError.errorCode == IChildProcess.STARTED_BUSY) {
+        // This process is owned by a different runtime, so we can't use
+        // it. We will keep retrying indefinitely until we find a non-busy process.
+        // Note: this strategy is pretty bad, we go through each process in
+        // sequence until one works, the multiple runtime case is test-only
+        // for now, so that's ok. We can improve on this if we eventually
+        // end up needing something fancier.
+        return start(info, retryLog);
+      }
+    }
+
+    // If we couldn't unbind there's something very wrong going on and we bail
+    // immediately.
+    if (retryLog.size() >= MAX_RETRIES || error instanceof UnbindException) {
+      return GeckoResult.fromException(fromRetryLog(retryLog));
+    }
+
+    return start(info, retryLog);
+  }
+
+  private String serializeLog(final List<Throwable> retryLog) {
+    if (retryLog == null || retryLog.size() == 0) {
+      return "Empty log.";
+    }
+
+    final StringBuilder message = new StringBuilder();
+
+    for (final Throwable error : retryLog) {
+      if (error instanceof UnbindException) {
+        message.append("Could not unbind: ");
+      } else if (error instanceof StartException) {
+        message.append("Cannot restart child: ");
+      } else {
+        message.append("Error while binding: ");
+      }
+      message.append(error);
+      message.append(";");
+    }
+
+    return message.toString();
+  }
+
+  private RuntimeException fromRetryLog(final List<Throwable> retryLog) {
+    return new RuntimeException(serializeLog(retryLog), retryLog.get(retryLog.size() - 1));
+  }
+
+  private GeckoResult<Integer> start(final StartInfo info, final List<Throwable> retryLog) {
+    return startInternal(info).then(GeckoResult::fromValue, error -> retry(info, retryLog, error));
+  }
+
+  private static class StartException extends RuntimeException {
+    public final int errorCode;
+
+    public StartException(final int errorCode, final int pid) {
+      super("Could not start process, errorCode: " + errorCode + " PID: " + pid);
+      this.errorCode = errorCode;
+    }
+  }
+
+  private GeckoResult<Integer> startInternal(final StartInfo info) {
     XPCOMEventTarget.assertOnLauncherThread();
 
-    final ChildConnection connection = mConnections.getConnectionForStart(type);
-    final GeckoResult<IChildProcess> childResult = connection.bind();
-
-    childResult.accept(
-        childProcess -> {
-          start(
-              result,
-              connection,
-              childProcess,
-              type,
-              args,
-              extras,
-              flags,
-              prefsFd,
-              prefMapFd,
-              ipcFd,
-              crashFd,
-              crashAnnotationFd,
-              isRetry,
-              prevException);
-        },
-        error -> {
-          final StringBuilder builder = new StringBuilder("Cannot bind child process: ");
-          builder.append(error.toString());
-          if (prevException != null) {
-            builder.append("; Previous exception: ");
-            builder.append(prevException.toString());
-          }
-
-          builder.append("; Type: ");
-          builder.append(type.toString());
-
-          final RuntimeException exception = new RuntimeException(builder.toString(), error);
-          Log.e(LOGTAG, "Could not bind to process", exception);
-          result.completeExceptionally(exception);
-        });
+    final ChildConnection connection = mConnections.getConnectionForStart(info.type);
+    return connection
+        .bind()
+        .map(
+            child -> {
+              final int result =
+                  child.start(
+                      this,
+                      mInstanceId,
+                      info.init.args,
+                      info.init.extras,
+                      info.init.flags,
+                      info.init.userSerialNumber,
+                      info.crashHandler,
+                      info.pfds.prefs,
+                      info.pfds.prefMap,
+                      info.pfds.ipc,
+                      info.pfds.crashReporter,
+                      info.pfds.crashAnnotation);
+              if (result == IChildProcess.STARTED_OK) {
+                return connection.getPid();
+              } else {
+                throw new StartException(result, connection.getPid());
+              }
+            })
+        .then(GeckoResult::fromValue, error -> handleBindError(connection, error));
   }
 
-  private void acceptUnbindFailure(
-      @NonNull final GeckoResult<Void> unbindResult,
-      @NonNull final GeckoResult<Integer> finalResult,
-      final RemoteException exception,
-      @NonNull final GeckoProcessType type,
-      final boolean isRetry) {
-    unbindResult.accept(
-        null,
-        error -> {
-          final StringBuilder builder = new StringBuilder("Failed to unbind");
-          if (isRetry) {
-            builder.append(": ");
-          } else {
-            builder.append(" before child restart: ");
-          }
-
-          builder.append(error.toString());
-          if (exception != null) {
-            builder.append("; In response to RemoteException: ");
-            builder.append(exception.toString());
-          }
-
-          builder.append("; Type = ");
-          builder.append(type.toString());
-
-          finalResult.completeExceptionally(new RuntimeException(builder.toString()));
-        });
+  private GeckoResult<Integer> handleBindError(
+      final ChildConnection connection, final Throwable error) {
+    return connection
+        .unbind()
+        .then(
+            unused -> GeckoResult.fromException(error),
+            unbindError -> GeckoResult.fromException(new UnbindException(unbindError)));
   }
 
-  private void start(
-      final GeckoResult<Integer> result,
-      final ChildConnection connection,
-      final IChildProcess child,
-      final GeckoProcessType type,
-      final String[] args,
-      final Bundle extras,
-      final int flags,
-      final int prefsFd,
-      final int prefMapFd,
-      final int ipcFd,
-      final int crashFd,
-      final int crashAnnotationFd,
-      final boolean isRetry,
-      final RemoteException prevException) {
-    XPCOMEventTarget.assertOnLauncherThread();
-
-    final ParcelFileDescriptor prefsPfd =
-        (prefsFd >= 0) ? ParcelFileDescriptor.adoptFd(prefsFd) : null;
-    final ParcelFileDescriptor prefMapPfd =
-        (prefMapFd >= 0) ? ParcelFileDescriptor.adoptFd(prefMapFd) : null;
-    final ParcelFileDescriptor ipcPfd = ParcelFileDescriptor.adoptFd(ipcFd);
-    final ParcelFileDescriptor crashPfd =
-        (crashFd >= 0) ? ParcelFileDescriptor.adoptFd(crashFd) : null;
-    final ParcelFileDescriptor crashAnnotationPfd =
-        (crashAnnotationFd >= 0) ? ParcelFileDescriptor.adoptFd(crashAnnotationFd) : null;
-
-    int started = IChildProcess.STARTED_FAIL;
-    RemoteException exception = null;
-    final String userSerialNumber = System.getenv("MOZ_ANDROID_USER_SERIAL_NUMBER");
-    final String crashHandler =
-        GeckoAppShell.getCrashHandlerService() != null
-            ? GeckoAppShell.getCrashHandlerService().getName()
-            : null;
-    try {
-      started =
-          child.start(
-              this,
-              mInstanceId,
-              args,
-              extras,
-              flags,
-              userSerialNumber,
-              crashHandler,
-              prefsPfd,
-              prefMapPfd,
-              ipcPfd,
-              crashPfd,
-              crashAnnotationPfd);
-    } catch (final RemoteException e) {
-      exception = e;
+  private static class UnbindException extends RuntimeException {
+    public UnbindException(final Throwable cause) {
+      super(cause);
     }
-
-    if (crashAnnotationPfd != null) {
-      crashAnnotationPfd.detachFd();
-    }
-    if (crashPfd != null) {
-      crashPfd.detachFd();
-    }
-    ipcPfd.detachFd();
-    if (prefMapPfd != null) {
-      prefMapPfd.detachFd();
-    }
-    if (prefsPfd != null) {
-      prefsPfd.detachFd();
-    }
-
-    if (started == IChildProcess.STARTED_OK) {
-      result.complete(connection.getPid());
-      return;
-    } else if (started == IChildProcess.STARTED_BUSY) {
-      // This process is owned by a different runtime, so we can't use
-      // it. Let's try another process.
-      // Note: this strategy is pretty bad, we go through each process in
-      // sequence until one works, the multiple runtime case is test-only
-      // for now, so that's ok. We can improve on this if we eventually
-      // end up needing something fancier.
-      Log.w(LOGTAG, "Trying a different process");
-      connection
-          .unbind()
-          .accept(
-              unused ->
-                  start(
-                      result,
-                      type,
-                      args,
-                      extras,
-                      flags,
-                      prefsFd,
-                      prefMapFd,
-                      ipcFd,
-                      crashFd,
-                      crashAnnotationFd, /* isRetry */
-                      false));
-      return;
-    }
-
-    // Whether retrying or not, we should always unbind connection so that it gets cleaned up.
-    final GeckoResult<Void> unbindResult = connection.unbind();
-
-    // We always complete result exceptionally if the unbind fails
-    acceptUnbindFailure(unbindResult, result, exception, type, isRetry);
-
-    if (isRetry) {
-      // If we've already retried, just assemble an error message and completeExceptionally.
-      Log.e(LOGTAG, "Cannot restart child " + type.toString());
-      final StringBuilder builder = new StringBuilder("Cannot restart child.");
-      if (prevException != null) {
-        builder.append(" Initial RemoteException: ");
-        builder.append(prevException.toString());
-      }
-      if (exception != null) {
-        builder.append(" Second RemoteException: ");
-        builder.append(exception.toString());
-      }
-      if (exception == null && prevException == null) {
-        builder.append(" No exceptions thrown; type = ");
-        builder.append(type.toString());
-      }
-
-      final RuntimeException completionException = new RuntimeException(builder.toString());
-      unbindResult.accept(
-          v -> {
-            result.completeExceptionally(completionException);
-          });
-      return;
-    }
-
-    // Attempt to retry the connection once we've finished unbinding.
-    Log.w(LOGTAG, "Attempting to kill running child " + type.toString());
-    final RemoteException captureException = exception;
-    unbindResult.accept(
-        v -> {
-          start(
-              result,
-              type,
-              args,
-              extras,
-              flags,
-              prefsFd,
-              prefMapFd,
-              ipcFd,
-              crashFd,
-              crashAnnotationFd, /* isRetry */
-              true,
-              captureException);
-        });
   }
 } // GeckoProcessManager

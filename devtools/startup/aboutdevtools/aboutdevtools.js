@@ -22,9 +22,8 @@ const GA_PARAMETERS = [
   ["utm_medium", "onboarding"],
 ];
 
-const KEY_SHORTCUTS_STRINGS =
-  "chrome://devtools-startup/locale/key-shortcuts.properties";
-const keyShortcutsBundle = Services.strings.createBundle(KEY_SHORTCUTS_STRINGS);
+const KEY_SHORTCUTS_STRINGS = "devtools/startup/key-shortcuts.ftl";
+const keyShortcutsBundle = new Localization([KEY_SHORTCUTS_STRINGS], true);
 
 // URL constructor doesn't support about: scheme,
 // we have to use http in order to have working searchParams.
@@ -35,7 +34,8 @@ const tabid = parseInt(url.searchParams.get("tabid"), 10);
 function getToolboxShortcut() {
   const modifier = Services.appinfo.OS == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+";
   return (
-    modifier + keyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey")
+    modifier +
+    keyShortcutsBundle.formatValueSync("devtools-commandkey-toggle-toolbox")
   );
 }
 

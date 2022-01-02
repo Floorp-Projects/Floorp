@@ -66,6 +66,7 @@
 
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
+#include "vm/ArgumentsObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"
@@ -331,6 +332,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   mozilla::TimeStamp startTime;
   if (measuringTime) {
     cx->setIsMeasuringExecutionTime(true);
+    cx->setIsExecuting(true);
     startTime = ReallyNow();
   }
   auto timerEnd = mozilla::MakeScopeExit([&]() {
@@ -338,6 +340,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
       mozilla::TimeDuration delta = ReallyNow() - startTime;
       cx->realm()->timers.executionTime += delta;
       cx->setIsMeasuringExecutionTime(false);
+      cx->setIsExecuting(false);
     }
   });
 
@@ -3325,13 +3328,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(OptimizeSpreadCall) {
       ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+      MutableHandleValue rval = REGS.stackHandleAt(-1);
 
-      bool optimized = false;
-      if (!OptimizeSpreadCall(cx, val, &optimized)) {
+      if (!OptimizeSpreadCall(cx, val, rval)) {
         goto error;
       }
-
-      PUSH_BOOLEAN(optimized);
     }
     END_CASE(OptimizeSpreadCall)
 
@@ -3562,8 +3563,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(SetAliasedVar) {
       EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
       EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
-      SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1],
-                             CheckTDZ);
+      MOZ_ASSERT(!IsUninitializedLexical(obj.aliasedBinding(ec)));
+      obj.setAliasedBinding(ec, REGS.sp[-1]);
     }
     END_CASE(SetAliasedVar)
 
@@ -3600,8 +3601,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(InitAliasedLexical) {
       EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
       EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
-      SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1],
-                             DontCheckTDZ);
+      obj.setAliasedBinding(ec, REGS.sp[-1]);
     }
     END_CASE(InitAliasedLexical)
 
@@ -4335,10 +4335,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(ImportMeta)
 
     CASE(DynamicImport) {
+      ReservedRooted<Value> options(&rootValue0, REGS.sp[-1]);
+      REGS.sp--;
+
       ReservedRooted<Value> specifier(&rootValue1);
       POP_COPY_TO(specifier);
 
-      JSObject* promise = StartDynamicModuleImport(cx, script, specifier);
+      JSObject* promise =
+          StartDynamicModuleImport(cx, script, specifier, options);
       if (!promise) goto error;
 
       PUSH_OBJECT(*promise);
@@ -4991,7 +4995,10 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
   return true;
 }
 
-bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
+static bool OptimizeArraySpreadCall(JSContext* cx, HandleObject obj,
+                                    MutableHandleValue result) {
+  MOZ_ASSERT(result.isUndefined());
+
   // Optimize spread call by skipping spread operation when following
   // conditions are met:
   //   * the argument is an array
@@ -5000,14 +5007,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
   //   * the array's prototype is Array.prototype
   //   * Array.prototype[@@iterator] is not modified
   //   * %ArrayIteratorPrototype%.next is not modified
-  if (!arg.isObject()) {
-    *optimized = false;
-    return true;
-  }
-
-  RootedObject obj(cx, &arg.toObject());
   if (!IsPackedArray(obj)) {
-    *optimized = false;
     return true;
   }
 
@@ -5016,11 +5016,112 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
     return false;
   }
 
-  return stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), optimized);
+  bool optimized;
+  if (!stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), &optimized)) {
+    return false;
+  }
+  if (!optimized) {
+    return true;
+  }
+
+  result.setObject(*obj);
+  return true;
+}
+
+static bool OptimizeArgumentsSpreadCall(JSContext* cx, HandleObject obj,
+                                        MutableHandleValue result) {
+  MOZ_ASSERT(result.isUndefined());
+
+  // Optimize spread call by skipping the spread operation when the following
+  // conditions are met:
+  //   * the argument is an arguments object
+  //   * the arguments object has no deleted elements
+  //   * arguments.length is not overridden
+  //   * arguments[@@iterator] is not overridden
+  //   * %ArrayIteratorPrototype%.next is not modified
+
+  if (!obj->is<ArgumentsObject>()) {
+    return true;
+  }
+
+  Handle<ArgumentsObject*> args = obj.as<ArgumentsObject>();
+  if (args->isAnyElementDeleted() || args->hasOverriddenLength() ||
+      args->hasOverriddenIterator()) {
+    return true;
+  }
+
+  ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+  if (!stubChain) {
+    return false;
+  }
+
+  bool optimized;
+  if (!stubChain->tryOptimizeArrayIteratorNext(cx, &optimized)) {
+    return false;
+  }
+  if (!optimized) {
+    return true;
+  }
+
+  auto* array = ArrayFromArgumentsObject(cx, args);
+  if (!array) {
+    return false;
+  }
+
+  result.setObject(*array);
+  return true;
+}
+
+bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
+                            MutableHandleValue result) {
+  // This function returns |undefined| if the spread operation can't be
+  // optimized.
+  result.setUndefined();
+
+  if (!arg.isObject()) {
+    return true;
+  }
+
+  RootedObject obj(cx, &arg.toObject());
+  if (!OptimizeArraySpreadCall(cx, obj, result)) {
+    return false;
+  }
+  if (result.isObject()) {
+    return true;
+  }
+  if (!OptimizeArgumentsSpreadCall(cx, obj, result)) {
+    return false;
+  }
+  if (result.isObject()) {
+    return true;
+  }
+
+  MOZ_ASSERT(result.isUndefined());
+  return true;
+}
+
+ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
+                                          Handle<ArgumentsObject*> args) {
+  MOZ_ASSERT(!args->hasOverriddenLength());
+  MOZ_ASSERT(!args->isAnyElementDeleted());
+
+  uint32_t length = args->initialLength();
+  auto* array = NewDenseFullyAllocatedArray(cx, length);
+  if (!array) {
+    return nullptr;
+  }
+  array->setDenseInitializedLength(length);
+
+  for (uint32_t index = 0; index < length; index++) {
+    const Value& v = args->element(index);
+    array->initDenseElement(index, v);
+  }
+
+  return array;
 }
 
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
-                                 jsbytecode* pc) {
+                                 const jsbytecode* pc) {
   if (JSOp(*pc) == JSOp::NewObject) {
     RootedShape shape(cx, script->getShape(pc));
     return PlainObject::createWithShape(cx, shape);
@@ -5034,6 +5135,13 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
                                              gc::AllocKind allocKind,
                                              gc::AllocSite* site) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
+
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != shape->realm()) {
+    MOZ_ASSERT(cx->compartment() == shape->compartment());
+    ar.emplace(cx, shape);
+  }
+
   gc::InitialHeap initialHeap = site->initialHeap();
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
@@ -5042,20 +5150,15 @@ JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
                                               gc::AllocKind allocKind,
                                               gc::InitialHeap initialHeap) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
-  gc::AllocSite* site = cx->zone()->optimizedAllocSite();
-  return NativeObject::create(cx, allocKind, initialHeap, shape, site);
-}
 
-JSObject* js::CreateThisWithTemplate(JSContext* cx,
-                                     HandleObject templateObject) {
   mozilla::Maybe<AutoRealm> ar;
-  if (cx->realm() != templateObject->nonCCWRealm()) {
-    MOZ_ASSERT(cx->compartment() == templateObject->compartment());
-    ar.emplace(cx, templateObject);
+  if (cx->realm() != shape->realm()) {
+    MOZ_ASSERT(cx->compartment() == shape->compartment());
+    ar.emplace(cx, shape);
   }
 
-  RootedShape shape(cx, templateObject->shape());
-  return PlainObject::createWithShape(cx, shape);
+  gc::AllocSite* site = cx->zone()->optimizedAllocSite();
+  return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
 
 ArrayObject* js::NewArrayOperation(

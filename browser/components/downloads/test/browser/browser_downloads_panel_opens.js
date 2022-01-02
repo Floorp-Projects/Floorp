@@ -25,6 +25,58 @@ add_task(async function test_downloads_panel_opens() {
 });
 
 /**
+ * Make sure the downloads panel _does not_ open automatically if we set the
+ * pref telling it not to do that.
+ */
+add_task(async function test_downloads_panel_opening_pref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.alwaysOpenPanel", false],
+    ],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+  });
+
+  info("creating a download and setting it to in progress");
+  await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_DOWNLOADING }]);
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  let downloads = await publicList.getAll();
+  downloads[0].stopped = false;
+
+  // Make sure we remove that download at the end of the test.
+  let oldShowEventNotification = DownloadsIndicatorView.showEventNotification;
+  registerCleanupFunction(async () => {
+    for (let download of downloads) {
+      await publicList.remove(download);
+    }
+    DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
+  });
+
+  // Instead of the panel opening, the download notification should be shown.
+  let promiseDownloadStartedNotification = new Promise(resolve => {
+    DownloadsIndicatorView.showEventNotification = aType => {
+      if (aType == "start") {
+        resolve();
+      }
+    };
+  });
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  is(
+    DownloadsPanel.isPanelShowing,
+    false,
+    "Panel state should indicate it is not preparing to be opened"
+  );
+
+  info("waiting for download to start");
+  await promiseDownloadStartedNotification;
+
+  is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+});
+
+/**
  * Make sure the downloads panel opens automatically with new download, only if  no other downloads are in progress.
  */
 add_task(async function test_downloads_panel_remains_closed() {

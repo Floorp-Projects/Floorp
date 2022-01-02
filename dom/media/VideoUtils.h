@@ -185,7 +185,8 @@ enum class MediaThreadType {
                // others
   PLATFORM_DECODER,  // MediaDataDecoder
   PLATFORM_ENCODER,  // MediaDataEncoder
-  WEBRTC_DECODER,
+  WEBRTC_CALL_THREAD,
+  WEBRTC_WORKER,
   MDSM,  // MediaDecoderStateMachine
 };
 // Returns the thread pool that is shared amongst all decoder state machines

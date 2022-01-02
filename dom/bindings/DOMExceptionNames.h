@@ -9,7 +9,7 @@
 
 // XXXbz This list sort of duplicates the DOM4_MSG_DEF bits of domerr.msg,
 // except that has various extra errors that are not in specs
-// (e.g. InvalidPointerId) and has multiple definitions for the same error
+// (e.g. EncodingError) and has multiple definitions for the same error
 // name using different messages, which we don't need because we get the
 // message passed in.  We should try to convert all consumers of the "extra"
 // error codes in there to these APIs, remove the extra bits, and just

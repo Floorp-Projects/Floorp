@@ -520,7 +520,11 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, false, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
+  // This is not initiated by window.open call in content context, and we
+  // don't need to propagate isPopupRequested out-parameter to the resulting
+  // browsing context.
+  bool unused = false;
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, &unused);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -697,17 +701,19 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   SizeSpec sizeSpec;
   CalcSizeSpec(features, hasChromeParent, sizeSpec);
 
+  bool isPopupRequested = false;
+
   // Make sure we calculate the chromeFlags *before* we push the
   // callee context onto the context stack so that
   // the calculation sees the actual caller when doing its
   // security checks.
-  if (isCallerChrome && XRE_IsParentProcess()) {
-    chromeFlags = CalculateChromeFlagsForSystem(
-        features, sizeSpec, aDialog, uriToLoadIsChrome, hasChromeParent);
+  if (hasChromeParent && isCallerChrome && XRE_IsParentProcess()) {
+    chromeFlags =
+        CalculateChromeFlagsForSystem(features, aDialog, uriToLoadIsChrome);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
+    chromeFlags = CalculateChromeFlagsForContent(features, &isPopupRequested);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -839,11 +845,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
       nsCOMPtr<nsIWindowProvider> provider = do_GetInterface(parentTreeOwner);
       if (provider) {
-        rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
-                                     sizeSpec.WidthSpecified(), uriToLoad, name,
-                                     featuresStr, aForceNoOpener,
-                                     aForceNoReferrer, aLoadState, &windowIsNew,
-                                     getter_AddRefs(newBC));
+        rv = provider->ProvideWindow(
+            openWindowInfo, chromeFlags, aCalledFromJS, uriToLoad, name,
+            featuresStr, aForceNoOpener, aForceNoReferrer, isPopupRequested,
+            aLoadState, &windowIsNew, getter_AddRefs(newBC));
 
         if (NS_SUCCEEDED(rv) && newBC) {
           nsCOMPtr<nsIDocShell> newDocShell = newBC->GetDocShell();
@@ -1684,7 +1689,7 @@ nsresult nsWindowWatcher::URIfromURL(const nsACString& aURL,
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
     uint32_t aInitialFlags, const WindowFeatures& aFeatures,
-    const SizeSpec& aSizeSpec, bool* presenceFlag, bool aHasChromeParent) {
+    bool* presenceFlag) {
   uint32_t chromeFlags = aInitialFlags;
 
   if (aFeatures.GetBoolWithDefault("titlebar", false, presenceFlag)) {
@@ -1719,68 +1724,21 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
     chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
   }
 
-  if (aHasChromeParent) {
-    return chromeFlags;
-  }
-
-  // Web content isn't allowed to control UI visibility separately, but only
-  // whether to open a popup or not.
-  //
-  // The above code is still necessary to calculate `presenceFlag`.
-  // (`ShouldOpenPopup` early returns and doesn't check all feature)
-
-  if (ShouldOpenPopup(aFeatures, aSizeSpec)) {
-    // Flags for opening a popup, that doesn't have the following:
-    //   * nsIWebBrowserChrome::CHROME_TOOLBAR
-    //   * nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR
-    //   * nsIWebBrowserChrome::CHROME_MENUBAR
-    return aInitialFlags | nsIWebBrowserChrome::CHROME_TITLEBAR |
-           nsIWebBrowserChrome::CHROME_WINDOW_CLOSE |
-           nsIWebBrowserChrome::CHROME_LOCATIONBAR |
-           nsIWebBrowserChrome::CHROME_STATUSBAR |
-           nsIWebBrowserChrome::CHROME_WINDOW_RESIZE |
-           nsIWebBrowserChrome::CHROME_WINDOW_MIN |
-           nsIWebBrowserChrome::CHROME_SCROLLBARS;
-  }
-
-  // Otherwise open the current/new tab in the current/new window
-  // (depends on browser.link.open_newwindow).
-  return aInitialFlags | nsIWebBrowserChrome::CHROME_ALL;
+  return chromeFlags;
 }
 
 // static
-uint32_t nsWindowWatcher::EnsureFlagsSafeForContent(uint32_t aChromeFlags,
-                                                    bool aChromeURL) {
-  aChromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-  aChromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
-  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
-  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
-  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
-  /* Untrusted script is allowed to pose modal windows with a chrome
-     scheme. This check could stand to be better. But it effectively
-     prevents untrusted script from opening modal windows in general
-     while still allowing alerts and the like. */
-  if (!aChromeURL) {
-    aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL |
-                      nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
-  }
-
-  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
-    aChromeFlags &= ~nsIWebBrowserChrome::CHROME_DEPENDENT;
-  }
-
-  return aChromeFlags;
-}
-
-// static
-bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
-                                      const SizeSpec& aSizeSpec) {
+bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
   if (aFeatures.IsEmpty()) {
     return false;
   }
 
-  // Follow Google Chrome's behavior that opens a popup depending on
-  // the following features.
+  // NOTE: This is different than chrome-only "popup" feature that is handled
+  //       in nsWindowWatcher::CalculateChromeFlagsForSystem.
+  if (aFeatures.Exists("popup")) {
+    return aFeatures.GetBool("popup");
+  }
+
   if (!aFeatures.GetBoolWithDefault("location", false) &&
       !aFeatures.GetBoolWithDefault("toolbar", false)) {
     return true;
@@ -1802,11 +1760,6 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
     return true;
   }
 
-  // Follow Safari's behavior that opens a popup when width is specified.
-  if (aSizeSpec.WidthSpecified()) {
-    return true;
-  }
-
   return false;
 }
 
@@ -1815,20 +1768,22 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
  * from a child process. The feature string can only control whether to open a
  * new tab or a new popup.
  * @param aFeatures a string containing a list of named features
- * @param aSizeSpec the result of CalcSizeSpec
+ * @param aIsPopupRequested an out parameter that indicates whether a popup
+ *        is requested by aFeatures
  * @return the chrome bitmask
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
-    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec) {
-  if (aFeatures.IsEmpty()) {
+    const WindowFeatures& aFeatures, bool* aIsPopupRequested) {
+  if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures)) {
+    // Open the current/new tab in the current/new window
+    // (depends on browser.link.open_newwindow).
     return nsIWebBrowserChrome::CHROME_ALL;
   }
 
-  uint32_t chromeFlags = CalculateChromeFlagsHelper(
-      nsIWebBrowserChrome::CHROME_WINDOW_BORDERS, aFeatures, aSizeSpec);
-
-  return EnsureFlagsSafeForContent(chromeFlags);
+  // Open a minimal popup.
+  *aIsPopupRequested = true;
+  return nsIWebBrowserChrome::CHROME_MINIMAL_POPUP;
 }
 
 /**
@@ -1837,13 +1792,11 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
  * @param aFeatures a string containing a list of named chrome features
  * @param aDialog affects the assumptions made about unnamed features
  * @param aChromeURL true if the window is being sent to a chrome:// URL
- * @param aHasChromeParent true if the parent window is privileged
  * @return the chrome bitmask
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
-    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec, bool aDialog,
-    bool aChromeURL, bool aHasChromeParent) {
+    const WindowFeatures& aFeatures, bool aDialog, bool aChromeURL) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
@@ -1875,8 +1828,8 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
   }
 
   /* Next, allow explicitly named options to override the initial settings */
-  chromeFlags = CalculateChromeFlagsHelper(chromeFlags, aFeatures, aSizeSpec,
-                                           &presenceFlag, aHasChromeParent);
+  chromeFlags =
+      CalculateChromeFlagsHelper(chromeFlags, aFeatures, &presenceFlag);
 
   // Determine whether the window is a private browsing window
   if (aFeatures.GetBoolWithDefault("private", false, &presenceFlag)) {
@@ -2001,11 +1954,6 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
   /* missing
      chromeFlags->copy_history
    */
-
-  // Check security state for use in determing window dimensions
-  if (!aHasChromeParent) {
-    chromeFlags = EnsureFlagsSafeForContent(chromeFlags, aChromeURL);
-  }
 
   return chromeFlags;
 }
@@ -2461,7 +2409,6 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
 int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                                uint32_t aChromeFlags,
                                                bool aCalledFromJS,
-                                               bool aWidthSpecified,
                                                bool aIsForPrinting) {
   // These windows are not actually visible to the user, so we return the thing
   // that we can always handle.
@@ -2517,16 +2464,16 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
     }
 
     if (restrictionPref == 2) {
-      // Only continue if there are no width feature and no special
-      // chrome flags - with the exception of the remoteness and private flags,
-      // which might have been automatically flipped by Gecko.
+      // Only continue if there is no special chrome flags - with the exception
+      // of the remoteness and private flags, which might have been
+      // automatically flipped by Gecko.
       int32_t uiChromeFlags = aChromeFlags;
       uiChromeFlags &= ~(nsIWebBrowserChrome::CHROME_REMOTE_WINDOW |
                          nsIWebBrowserChrome::CHROME_FISSION_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
-      if (uiChromeFlags != nsIWebBrowserChrome::CHROME_ALL || aWidthSpecified) {
+      if (uiChromeFlags != nsIWebBrowserChrome::CHROME_ALL) {
         return nsIBrowserDOMWindow::OPEN_NEWWINDOW;
       }
     }

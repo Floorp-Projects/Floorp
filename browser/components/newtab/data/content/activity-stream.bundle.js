@@ -3186,7 +3186,8 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex + 1}) .ds-column-grid > :nth-child(${componentIndex + 1})`; // NB: Splitting on "," doesn't work with strings with commas, but
           // we're okay with not supporting those selectors
 
-          rule.selectorText = selectors.split(",").map(selector => prefix + (selector[0] === ":" ? "" : " ") + selector).join(","); // CSSOM silently ignores bad selectors, so we'll be noisy instead
+          rule.selectorText = selectors.split(",").map(selector => prefix + ( // Assume :pseudo-classes are for component instead of descendant
+          selector[0] === ":" ? "" : " ") + selector).join(","); // CSSOM silently ignores bad selectors, so we'll be noisy instead
 
           if (rule.selectorText === DUMMY_CSS_SELECTOR) {
             console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
@@ -5837,7 +5838,10 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     const wasCollapsed = prevProps.pref.collapsed;
 
     if ( // Don't send impression stats for the empty state
-    props.rows.length && (props.rows !== prevProps.rows && !isCollapsed || wasCollapsed && !isCollapsed)) {
+    props.rows.length && ( // We only want to send impression stats if the content of the cards has changed
+    // and the section is not collapsed...
+    props.rows !== prevProps.rows && !isCollapsed || // or if we are expanding a section that was collapsed.
+    wasCollapsed && !isCollapsed)) {
       this.sendImpressionStatsOrAddListener();
     }
   }
@@ -13689,18 +13693,27 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
     });
   }
 
+  get showLoadMore() {
+    const {
+      loadMoreEnabled,
+      data,
+      loadMoreThreshold
+    } = this.props;
+    return loadMoreEnabled && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
+  }
+
   renderCards() {
     let {
       items
     } = this.props;
     const {
-      loadMoreEnabled,
-      lastCardMessageEnabled
+      lastCardMessageEnabled,
+      loadMoreThreshold
     } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
 
-    if (loadMoreEnabled && !this.state.moreLoaded) {
-      items = 12; // We don't want to show this until after load more has been clicked.
+    if (this.showLoadMore) {
+      items = loadMoreThreshold; // We don't want to show this until after load more has been clicked.
 
       showLastCardMessage = false;
     }
@@ -13773,9 +13786,6 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
 
     const isEmpty = data.recommendations.length === 0;
-    const {
-      loadMoreEnabled
-    } = this.props;
     return /*#__PURE__*/external_React_default.a.createElement("div", null, this.props.title && /*#__PURE__*/external_React_default.a.createElement("div", {
       className: "ds-header"
     }, /*#__PURE__*/external_React_default.a.createElement("div", {
@@ -13790,7 +13800,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       status: data.status,
       dispatch: this.props.dispatch,
       feed: this.props.feed
-    })) : this.renderCards(), loadMoreEnabled && !this.state.moreLoaded && /*#__PURE__*/external_React_default.a.createElement("button", {
+    })) : this.renderCards(), this.showLoadMore && /*#__PURE__*/external_React_default.a.createElement("button", {
       className: "ASRouterButton primary ds-card-grid-load-more-button",
       onClick: this.loadMoreClicked,
       "data-l10n-id": "newtab-pocket-load-more-stories-button"
@@ -13804,7 +13814,8 @@ CardGrid_CardGrid.defaultProps = {
   // Number of stories to display
   enable_video_playheads: false,
   lastCardMessageEnabled: false,
-  saveToPocketCard: false
+  saveToPocketCard: false,
+  loadMoreThreshold: 12
 };
 
 /***/ }),

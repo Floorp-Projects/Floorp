@@ -5,10 +5,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoEngine.h"
+#include "libwebrtcglue/SystemTime.h"
 #include "video_engine/desktop_capture_impl.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "system_wrappers/include/clock.h"
 #ifdef WEBRTC_ANDROID
-#  include "webrtc/modules/video_capture/video_capture.h"
+#  include "modules/video_capture/video_capture.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -23,7 +24,6 @@ mozilla::LazyLogModule gVideoEngineLog("VideoEngine");
 #define LOG(args) MOZ_LOG(gVideoEngineLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gVideoEngineLog, mozilla::LogLevel::Debug)
 
-int VideoEngine::sId = 0;
 #if defined(ANDROID)
 int VideoEngine::SetAndroidObjects() {
   LOG(("%s", __PRETTY_FUNCTION__));
@@ -43,12 +43,11 @@ int VideoEngine::SetAndroidObjects() {
 }
 #endif
 
-void VideoEngine::CreateVideoCapture(int32_t& id,
-                                     const char* deviceUniqueIdUTF8) {
+int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
   LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(deviceUniqueIdUTF8);
 
-  id = GenerateId();
+  int32_t id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d", mCaptureDevInfo.TypeName(), id));
 
   for (auto& it : mCaps) {
@@ -57,7 +56,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
         strcmp(it.second.VideoCapture()->CurrentDeviceName(),
                deviceUniqueIdUTF8) == 0) {
       mIdMap.emplace(id, it.first);
-      return;
+      return id;
     }
   }
 
@@ -86,7 +85,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
     if (result == NS_OK) {
       entry = CaptureEntry(id, captureModule);
     } else {
-      return;
+      return -1;
     }
 #  else
     entry = CaptureEntry(id, webrtc::DesktopCaptureImpl::Create(
@@ -99,6 +98,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
   }
   mCaps.emplace(id, std::move(entry));
   mIdMap.emplace(id, id);
+  return id;
 }
 
 int VideoEngine::ReleaseVideoCapture(const int32_t id) {
@@ -139,7 +139,7 @@ int VideoEngine::ReleaseVideoCapture(const int32_t id) {
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
 VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   LOG(("%s", __PRETTY_FUNCTION__));
-  int64_t currentTime = 0;
+  webrtc::Timestamp currentTime = webrtc::Timestamp::Micros(0);
 
   const char* capDevTypeName =
       webrtc::CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
@@ -152,21 +152,22 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
       return mDeviceInfo;
     }
     // Screen sharing cache is invalidated after the expiration time
-    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-    LOG(("Checking expiry, fetched current time of: %" PRId64, currentTime));
-    LOG(("device cache expiration is %" PRId64, mExpiryTimeInMs));
-    if (currentTime <= mExpiryTimeInMs) {
+    currentTime = WebrtcSystemTime();
+    LOG(("Checking expiry, fetched current time of: %" PRId64,
+         currentTime.ms()));
+    LOG(("device cache expiration is %" PRId64, mExpiryTime.ms()));
+    if (currentTime <= mExpiryTime) {
       LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
       return mDeviceInfo;
     }
   }
 
-  if (currentTime == 0) {
-    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-    LOG(("Fetched current time of: %" PRId64, currentTime));
+  if (currentTime.IsZero()) {
+    currentTime = WebrtcSystemTime();
+    LOG(("Fetched current time of: %" PRId64, currentTime.ms()));
   }
-  mExpiryTimeInMs = currentTime + kCacheExpiryPeriodMs;
-  LOG(("new device cache expiration is %" PRId64, mExpiryTimeInMs));
+  mExpiryTime = currentTime + webrtc::TimeDelta::Millis(kCacheExpiryPeriodMs);
+  LOG(("new device cache expiration is %" PRId64, mExpiryTime.ms()));
   LOG(("creating a new VideoCaptureDeviceInfo of type %s", capDevTypeName));
 
   switch (mCaptureDevInfo.type) {
@@ -248,6 +249,7 @@ bool VideoEngine::WithEntry(
 int32_t VideoEngine::GenerateId() {
   // XXX Something better than this (a map perhaps, or a simple boolean TArray,
   // given the number in-use is O(1) normally!)
+  static int sId = 0;
   return mId = sId++;
 }
 

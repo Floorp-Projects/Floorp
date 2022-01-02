@@ -367,6 +367,10 @@ so{
             "LRD",
             "Doolarka Liberiya",
         }
+        LSL{
+            "LSL",
+            "Lesotho Loti",
+        }
         LVR{
             "LVR",
             "Rubalka Latfiya",
@@ -677,6 +681,10 @@ so{
         }
     }
     Currencies%narrow{
+        AFN{"؋"}
+        AMD{"֏"}
+        AZN{"₼"}
+        GHS{"GH₵"}
         VEF{"Bs"}
     }
     CurrencyPlurals{
@@ -1050,6 +1058,10 @@ so{
         LRD{
             one{"doolarka Liberiya"}
             other{"doolarka Liberiya"}
+        }
+        LSL{
+            one{"Lesotho loti"}
+            other{"Lesotho lotis"}
         }
         LVR{
             one{"rubalka Latvia"}

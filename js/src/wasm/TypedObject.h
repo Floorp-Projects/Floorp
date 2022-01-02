@@ -129,7 +129,7 @@ class TypedObject : public JSObject {
   uint8_t* typedMem() const;
 
   template <typename V>
-  void visitReferences(JSContext* cx, V& visitor);
+  void visitReferences(V& visitor);
 
   void initDefault();
 

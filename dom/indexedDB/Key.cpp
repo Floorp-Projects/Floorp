@@ -28,6 +28,7 @@
 #include "mozilla/intl/Collator.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ReverseIterator.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"
 #include "nsAlgorithm.h"

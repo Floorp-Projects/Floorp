@@ -98,7 +98,7 @@ parent_process = psutil.Process(os.getpid()).parent()
 
 
 def check_parent():
-    """ Checks if parent process is still alive, and exits if not """
+    """Checks if parent process is still alive, and exits if not"""
     if not parent_process.is_running():
         print("websocket/process bridge exiting because parent process is gone")
         reactor.stop()

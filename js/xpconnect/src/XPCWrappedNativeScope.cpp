@@ -267,10 +267,10 @@ void XPCWrappedNativeScope::SuspectAllWrappers(
   }
 }
 
-void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
+void XPCWrappedNativeScope::UpdateWeakPointersAfterGC(JSTracer* trc) {
   // Sweep waivers.
   if (mWaiverWrapperMap) {
-    mWaiverWrapperMap->Sweep();
+    mWaiverWrapperMap->UpdateWeakPointers(trc);
   }
 
   if (!js::IsCompartmentZoneSweepingOrCompacting(mCompartment)) {
@@ -299,10 +299,10 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
        iter.next()) {
     XPCWrappedNative* wrapper = iter.get().value();
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
-    JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
-    MOZ_ASSERT(!obj || obj == wrapper->GetFlatJSObjectPreserveColor());
-    MOZ_ASSERT_IF(obj, JS::GetCompartment(obj) == mCompartment);
-    if (!obj) {
+    if (JS_UpdateWeakPointerAfterGCUnbarriered(trc, &obj)) {
+      MOZ_ASSERT(obj == wrapper->GetFlatJSObjectPreserveColor());
+      MOZ_ASSERT(JS::GetCompartment(obj) == mCompartment);
+    } else {
       iter.remove();
     }
   }
@@ -312,10 +312,10 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
   for (auto i = mWrappedNativeProtoMap->ModIter(); !i.done(); i.next()) {
     XPCWrappedNativeProto* proto = i.get().value();
     JSObject* obj = proto->GetJSProtoObjectPreserveColor();
-    JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
-    MOZ_ASSERT_IF(obj, JS::GetCompartment(obj) == mCompartment);
-    MOZ_ASSERT(!obj || obj == proto->GetJSProtoObjectPreserveColor());
-    if (!obj) {
+    if (JS_UpdateWeakPointerAfterGCUnbarriered(trc, &obj)) {
+      MOZ_ASSERT(JS::GetCompartment(obj) == mCompartment);
+      MOZ_ASSERT(obj == proto->GetJSProtoObjectPreserveColor());
+    } else {
       i.remove();
     }
   }

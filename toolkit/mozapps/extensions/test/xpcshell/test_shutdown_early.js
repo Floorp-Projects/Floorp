@@ -11,7 +11,6 @@ const { TelemetryEnvironment } = ChromeUtils.import(
 // when startup is interrupted very early.
 add_task(async function test_shutdown_immediately_after_startup() {
   // Set as migrated to prevent sync DB load at startup.
-  Services.prefs.setBoolPref("extensions.incognito.migrated", true);
   Services.prefs.setCharPref("extensions.lastAppVersion", "42");
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42");
 

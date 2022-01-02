@@ -66,7 +66,7 @@ bool is_in_render_thread() {
 }
 
 bool gecko_profiler_thread_is_being_profiled() {
-  return profiler_thread_is_being_profiled();
+  return profiler_thread_is_being_profiled(ThreadProfilingFeatures::Any);
 }
 
 bool is_glcontext_gles(void* const glcontext_ptr) {
@@ -221,7 +221,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
     CompositorThread()->Dispatch(NS_NewRunnableFunction(
         "SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
           auto endTime = TimeStamp::Now();
-          if (profiler_thread_is_being_profiled()) {
+          if (profiler_thread_is_being_profiled_for_markers()) {
             PROFILER_MARKER("CONTENT_FULL_PAINT_TIME", GRAPHICS,
                             MarkerTiming::Interval(startTime, endTime),
                             ContentBuildMarker);
@@ -421,6 +421,7 @@ void WebRenderBridgeParent::Destroy() {
     mWebRenderBridgeRef->Clear();
     mWebRenderBridgeRef = nullptr;
   }
+  mCompositables.clear();
   ClearResources();
 }
 
@@ -1633,6 +1634,8 @@ void WebRenderBridgeParent::UpdateProfilerUI() {
 void WebRenderBridgeParent::UpdateParameters() {
   uint32_t count = gfxVars::WebRenderBatchingLookback();
   mApi->SetBatchingLookback(count);
+  mApi->SetInt(wr::IntParameter::BatchedUploadThreshold,
+               gfxVars::WebRenderBatchedUploadThreshold());
 
   mBlobTileSize = gfxVars::WebRenderBlobTileSize();
 }
@@ -2733,9 +2736,9 @@ TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
 
   TextureFactoryIdentifier ident(
       mApi->GetBackendType(), mApi->GetCompositorType(), XRE_GetProcessType(),
-      mApi->GetMaxTextureSize(), false, mApi->GetUseANGLE(),
-      mApi->GetUseDComp(), mAsyncImageManager->UseCompositorWnd(), false, false,
-      false, mApi->GetSyncHandle());
+      mApi->GetMaxTextureSize(), mApi->GetUseANGLE(), mApi->GetUseDComp(),
+      mAsyncImageManager->UseCompositorWnd(), false, false, false,
+      mApi->GetSyncHandle());
   return ident;
 }
 

@@ -20,6 +20,7 @@ pub fn map_built_in(word: &str, span: Span) -> Result<crate::BuiltIn, Error<'_>>
         // vertex
         "vertex_index" => crate::BuiltIn::VertexIndex,
         "instance_index" => crate::BuiltIn::InstanceIndex,
+        "view_index" => crate::BuiltIn::ViewIndex,
         // fragment
         "front_facing" => crate::BuiltIn::FrontFacing,
         "frag_depth" => crate::BuiltIn::FragDepth,
@@ -198,6 +199,20 @@ pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
         // bits
         "countOneBits" => Mf::CountOneBits,
         "reverseBits" => Mf::ReverseBits,
+        "extractBits" => Mf::ExtractBits,
+        "insertBits" => Mf::InsertBits,
+        // data packing
+        "pack4x8snorm" => Mf::Pack4x8snorm,
+        "pack4x8unorm" => Mf::Pack4x8unorm,
+        "pack2x16snorm" => Mf::Pack2x16snorm,
+        "pack2x16unorm" => Mf::Pack2x16unorm,
+        "pack2x16float" => Mf::Pack2x16float,
+        // data unpacking
+        "unpack4x8snorm" => Mf::Unpack4x8snorm,
+        "unpack4x8unorm" => Mf::Unpack4x8unorm,
+        "unpack2x16snorm" => Mf::Unpack2x16snorm,
+        "unpack2x16unorm" => Mf::Unpack2x16unorm,
+        "unpack2x16float" => Mf::Unpack2x16float,
         _ => return None,
     })
 }

@@ -62,10 +62,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   bool IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                       mozilla::StyleAppearance aAppearance);
 
-  // Accessors to widget-specific state information
-
-  bool IsDisabled(nsIFrame* aFrame, mozilla::EventStates aEventStates);
-
   // RTL chrome direction
   static bool IsFrameRTL(nsIFrame* aFrame);
 
@@ -77,20 +73,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   }
 
   bool IsButtonTypeMenu(nsIFrame* aFrame);
-
-  // checkbox:
-  bool IsChecked(nsIFrame* aFrame) {
-    return GetCheckedOrSelected(aFrame, false);
-  }
-
-  // radiobutton:
-  bool IsSelected(nsIFrame* aFrame) {
-    return GetCheckedOrSelected(aFrame, true);
-  }
-
-  static bool IsFocused(nsIFrame* aFrame) {
-    return CheckBooleanAttr(aFrame, nsGkAtoms::focused);
-  }
 
   // scrollbar button:
   int32_t GetScrollbarButtonType(nsIFrame* aFrame);
@@ -147,8 +129,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   bool IsHorizontal(nsIFrame* aFrame);
 
   // progressbar:
-  bool IsIndeterminateProgress(nsIFrame* aFrame,
-                               mozilla::EventStates aEventStates);
   bool IsVerticalProgress(nsIFrame* aFrame);
 
   // meter:
@@ -172,9 +152,6 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   // Helpers for progressbar.
   static double GetProgressValue(nsIFrame* aFrame);
   static double GetProgressMaxValue(nsIFrame* aFrame);
-
-  bool GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected);
-  bool GetIndeterminate(nsIFrame* aFrame);
 
   bool QueueAnimatedContentForRefresh(nsIContent* aContent,
                                       uint32_t aMinimumFrameRate);

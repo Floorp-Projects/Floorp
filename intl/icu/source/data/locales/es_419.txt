@@ -176,12 +176,22 @@ es_419{
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d 'de' MMM 'de' y G",
-                "dd/MM/yy GGGGG",
+                "d/M/y GGGGG",
                 "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMdd",
             }
             availableFormats{
                 GyMMM{"MMM 'de' y G"}
@@ -201,21 +211,7 @@ es_419{
                     y{"y–y G"}
                 }
                 GyM{
-                    G{"MM/y GGGGG – MM/y GGGGG"}
-                    M{"MM/y – MM/y GGGGG"}
                     y{"MM/y – MM/y GGGGG"}
-                }
-                GyMEd{
-                    G{"E dd/MM/y GGGGG – E dd/MM/y GGGGG"}
-                    M{"E dd/MM/y – E dd/MM/y GGGGG"}
-                    d{"E dd/MM/y – E dd/MM/y GGGGG"}
-                    y{"E dd/MM/y – E dd/MM/y GGGGG"}
-                }
-                GyMd{
-                    G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
-                    M{"dd/MM/y – dd/MM/y GGGGG"}
-                    d{"dd/MM/y – dd/MM/y GGGGG"}
-                    y{"dd/MM/y – dd/MM/y GGGGG"}
                 }
                 MEd{
                     M{"E, d/M–E, d/M"}
@@ -228,6 +224,11 @@ es_419{
                 MMMd{
                     M{"d 'de' MMM–d 'de' MMM"}
                 }
+                Md{
+                    M{"d/M–d/M"}
+                    d{"d/M–d/M"}
+                }
+                fallback{"{0}–{1}"}
                 yM{
                     M{"M/y – M/y GGGGG"}
                     y{"M/y – M/y GGGGG"}
@@ -258,7 +259,17 @@ es_419{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             availableFormats{
                 EHm{"E, HH:mm"}
@@ -267,11 +278,12 @@ es_419{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmsvvvv{"HH:mm:ss vvvv"}
+                Hmv{"HH:mm v"}
                 MMMdd{"dd-MMM"}
                 yMEd{"E d/M/y"}
-                yMMM{"MMM 'de' y"}
-                yMMMEd{"E, d 'de' MMM 'de' y"}
-                yMMMd{"d 'de' MMM 'de' y"}
+                yMMMEd{"E, d MMM y"}
                 yQQQ{"QQQ 'de' y"}
             }
             dayNames{
@@ -287,15 +299,6 @@ es_419{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "dom.",
-                        "lun.",
-                        "mar.",
-                        "mié.",
-                        "jue.",
-                        "vie.",
-                        "sáb.",
-                    }
                     narrow{
                         "D",
                         "L",
@@ -349,6 +352,10 @@ es_419{
                     M{"d 'de' MMM – d 'de' MMM"}
                     d{"d – d 'de' MMM"}
                 }
+                Md{
+                    M{"d/M–d/M"}
+                    d{"d/M–d/M"}
+                }
                 h{
                     a{"h a–h a"}
                 }
@@ -357,6 +364,10 @@ es_419{
                 }
                 hv{
                     a{"h a–h a v"}
+                }
+                yM{
+                    M{"M/y–M/y"}
+                    y{"M/y–M/y"}
                 }
                 yMEd{
                     M{"E, d/M/y–E, d/M/y"}
@@ -379,39 +390,10 @@ es_419{
                     d{"d – d 'de' MMM 'de' y"}
                     y{"d 'de' MMM 'de' y – d 'de' MMM 'de' y"}
                 }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sep.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sep.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
-                    }
+                yMd{
+                    M{"d/M/y–d/M/y"}
+                    d{"d/M/y–d/M/y"}
+                    y{"d/M/y–d/M/y"}
                 }
             }
             quarters{
@@ -730,6 +712,30 @@ es_419{
         quotationStart{"“"}
     }
     fields{
+        day-narrow{
+            relativeTime{
+                future{
+                    one{"dentro de {0} día"}
+                    other{"dentro de {0} días"}
+                }
+                past{
+                    one{"hace {0} día"}
+                    other{"hace {0} días"}
+                }
+            }
+        }
+        day-short{
+            relativeTime{
+                future{
+                    one{"dentro de {0} día"}
+                    other{"dentro de {0} días"}
+                }
+                past{
+                    one{"hace {0} día"}
+                    other{"hace {0} días"}
+                }
+            }
+        }
         dayOfYear-narrow{
             dn{"día del año"}
         }

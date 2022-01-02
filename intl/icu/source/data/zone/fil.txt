@@ -1572,7 +1572,7 @@ fil{
             ls{"Standard na Oras sa Hovd"}
         }
         "meta:India"{
-            ls{"Standard na Oras sa Bhutan"}
+            ls{"Standard na Oras sa India"}
         }
         "meta:Indian_Ocean"{
             ls{"Oras sa Indian Ocean"}
@@ -1897,6 +1897,9 @@ fil{
             ld{"Oras sa Tag-init ng Yekaterinburg"}
             lg{"Oras sa Yekaterinburg"}
             ls{"Standard na Oras sa Yekaterinburg"}
+        }
+        "meta:Yukon"{
+            ls{"Yukon Time"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import hashlib
 import io
 import itertools
@@ -15,6 +16,7 @@ import string
 import sys
 import textwrap
 
+import pytest
 from mozfile.mozfile import NamedTemporaryFile
 from mozunit import main
 
@@ -32,6 +34,7 @@ from mozbuild.util import (
     HierarchicalStringList,
     EnumString,
     EnumStringComparisonError,
+    ReadOnlyDict,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithAction,
     StrictOrderingOnAppendListWithFlagsFactory,
@@ -925,6 +928,33 @@ class TestHexDump(unittest.TestCase):
                 "10  57 56 55                                          |WVU             |\n",
             ],
         )
+
+
+def test_read_only_dict():
+    d = ReadOnlyDict(foo="bar")
+    with pytest.raises(Exception):
+        d["foo"] = "baz"
+
+    with pytest.raises(Exception):
+        d.update({"foo": "baz"})
+
+    with pytest.raises(Exception):
+        del d["foo"]
+
+    # ensure copy still works
+    d_copy = d.copy()
+    assert d == d_copy
+    # TODO Returning a dict here feels like a bug, but there are places in-tree
+    # relying on this behaviour.
+    assert isinstance(d_copy, dict)
+
+    d_copy = copy.copy(d)
+    assert d == d_copy
+    assert isinstance(d_copy, ReadOnlyDict)
+
+    d_copy = copy.deepcopy(d)
+    assert d == d_copy
+    assert isinstance(d_copy, ReadOnlyDict)
 
 
 if __name__ == "__main__":

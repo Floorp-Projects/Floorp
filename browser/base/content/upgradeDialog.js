@@ -20,11 +20,6 @@ const SCREEN_STRINGS = [
   {
     title: "upgrade-dialog-start-title",
     subtitle: "upgrade-dialog-start-subtitle",
-    primary: "upgrade-dialog-start-primary-button",
-    secondary: "upgrade-dialog-start-secondary-button",
-  },
-  {
-    title: "upgrade-dialog-colorway-title",
     primary: "upgrade-dialog-colorway-primary-button",
     secondary: "upgrade-dialog-colorway-secondary-button",
   },
@@ -132,6 +127,11 @@ function triggerTransition(callback) {
 
 // Hook up dynamic behaviors of the dialog.
 function onLoad(ready) {
+  // Testing doesn't have time to overwrite this new window's random method.
+  if (Cu.isInAutomation) {
+    Math.random = () => 0;
+  }
+
   const { body } = document;
   const logo = document.querySelector(".logo");
   const title = document.getElementById("title");
@@ -274,8 +274,6 @@ function onLoad(ready) {
     });
 
     // Update content and backdrop for theme screen.
-    body.classList.remove("confetti");
-    logo.classList.add("hidden");
     colorways.classList.remove("hidden");
     adjustModalBackdrop();
 
@@ -300,7 +298,10 @@ function onLoad(ready) {
     logo.classList.remove("hidden");
     colorways.remove();
     checkbox.remove();
+  }
 
+  // Handle checkbox being checked.
+  function handleCheckbox() {
     // Revert both homepage and newtab if still checked (potentially doing
     // nothing if each pref is already the default value).
     if (checkbox.firstElementChild.checked) {
@@ -337,23 +338,18 @@ function onLoad(ready) {
 
       recordEvent("show", `${SCREEN_STRINGS.length}-screens`);
       await document.l10n.ready;
+
+      // Make sure we have the previous theme before randomly selecting new one.
+      await gPrevTheme;
+      toFocus = showColorways();
     } else {
       // Handle actions and setup for not-first and not-last screens.
       const { l10nId } = target.dataset;
       switch (l10nId) {
-        // Prepare the colorway screen.
-        case "upgrade-dialog-start-primary-button":
-          toFocus = showColorways();
-          break;
-
-        // Skip colorway screen.
-        case "upgrade-dialog-start-secondary-button":
-          current++;
-          break;
-
         // New theme is confirmed, so don't revert to previous.
         case "upgrade-dialog-colorway-primary-button":
           gPrevTheme = null;
+          handleCheckbox();
           removeColorways();
           break;
 

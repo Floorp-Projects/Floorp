@@ -25,10 +25,11 @@ add_task(async function() {
   await targetCommand.startListening();
 
   const targets = [];
-  await targetCommand.watchTargets(targetCommand.ALL_TYPES, async function({
-    targetFront,
-  }) {
-    targets.push(targetFront);
+  await targetCommand.watchTargets({
+    types: targetCommand.ALL_TYPES,
+    onAvailable: async function({ targetFront }) {
+      targets.push(targetFront);
+    },
   });
   is(targets.length, 3, "Got expected number of targets");
 

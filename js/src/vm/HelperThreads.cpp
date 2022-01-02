@@ -13,18 +13,15 @@
 
 #include <algorithm>
 
-#include "frontend/BytecodeCompilation.h"  // frontend::{CompileGlobalScriptToExtensibleStencil, FireOnNewScript, FireOnNewScripts}
+#include "frontend/BytecodeCompilation.h"  // frontend::{CompileGlobalScriptToExtensibleStencil, FireOnNewScript}
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, CompilationGCOutput, BorrowingCompilationStencil}
-#include "frontend/ParserAtom.h"          // frontend::ParserAtomsTable
-#include "gc/GC.h"                        // gc::MergeRealms
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::DecodeOptions, JS::ReadOnlyCompileOptions
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/experimental/JSStencil.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
-#include "js/GlobalObject.h"
 #include "js/HelperThreadAPI.h"
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadToken, JS::OffThreadCompileCallback
 #include "js/SourceText.h"
@@ -41,7 +38,6 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
-#include "vm/Xdr.h"
 #include "wasm/WasmGenerator.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -497,11 +493,14 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-struct MOZ_RAII AutoSetContextParse {
-  explicit AutoSetContextParse(ParseTask* task) {
-    TlsContext.get()->setParseTask(task);
+struct MOZ_RAII AutoSetContextOffThreadFrontendErrors {
+  explicit AutoSetContextOffThreadFrontendErrors(
+      OffThreadFrontendErrors* errors) {
+    TlsContext.get()->setOffThreadFrontendErrors(errors);
   }
-  ~AutoSetContextParse() { TlsContext.get()->setParseTask(nullptr); }
+  ~AutoSetContextOffThreadFrontendErrors() {
+    TlsContext.get()->setOffThreadFrontendErrors(nullptr);
+  }
 };
 
 AutoSetHelperThreadContext::AutoSetHelperThreadContext(
@@ -525,29 +524,15 @@ AutoSetHelperThreadContext::~AutoSetHelperThreadContext() {
   cx = nullptr;
 }
 
-static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
-                                             JSCLASS_GLOBAL_FLAGS,
-                                             &JS::DefaultGlobalClassOps};
-
 ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
-    : kind(kind),
-      options(cx),
-      parseGlobal(nullptr),
-      callback(callback),
-      callbackData(callbackData),
-      overRecursed(false),
-      outOfMemory(false) {
+    : kind(kind), options(cx), callback(callback), callbackData(callbackData) {
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
   MOZ_ASSERT(!cx->isHelperThreadContext());
-
-  MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
-  MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
 }
 
-bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
-                     JSObject* global) {
+bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   if (!this->options.copy(cx, options)) {
@@ -555,17 +540,13 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options,
   }
 
   runtime = cx->runtime();
-  parseGlobal = global;
 
   return true;
 }
 
-void ParseTask::activate(JSRuntime* rt) {
-  rt->addParseTaskRef();
-  if (parseGlobal) {
-    rt->setUsedByHelperThread(parseGlobal->zone());
-  }
-}
+void ParseTask::activate(JSRuntime* rt) { rt->addParseTaskRef(); }
+
+void ParseTask::deactivate(JSRuntime* rt) { rt->decParseTaskRef(); }
 
 ParseTask::~ParseTask() = default;
 
@@ -573,18 +554,6 @@ void ParseTask::trace(JSTracer* trc) {
   if (runtime != trc->runtime()) {
     return;
   }
-
-  if (parseGlobal) {
-    Zone* zone = MaybeForwarded(parseGlobal)->zoneFromAnyThread();
-    if (zone->usedByHelperThread()) {
-      MOZ_ASSERT(!zone->isCollecting());
-      return;
-    }
-  }
-
-  TraceNullableRoot(trc, &parseGlobal, "ParseTask::parseGlobal");
-  scripts.trace(trc);
-  sourceObjects.trace(trc);
 
   if (stencilInput_) {
     stencilInput_->trace(trc);
@@ -606,20 +575,12 @@ size_t ParseTask::sizeOfExcludingThis(
   // TODO: 'errors' requires adding support to `CompileError`. They are not
   // common though.
 
-  return options.sizeOfExcludingThis(mallocSizeOf) +
-         scripts.sizeOfExcludingThis(mallocSizeOf) +
-         sourceObjects.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
+  return options.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
          stencilSize + extensibleStencilSize +
          gcOutput_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
-#ifdef DEBUG
-  if (parseGlobal) {
-    runtime->incOffThreadParsesRunning();
-  }
-#endif
-
   runTask(locked);
 
   // The callback is invoked while we are still off thread.
@@ -628,12 +589,6 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   // FinishOffThreadScript will need to be called on the script to
   // migrate it into the correct compartment.
   HelperThreadState().parseFinishedList(locked).insertBack(this);
-
-#ifdef DEBUG
-  if (parseGlobal) {
-    runtime->decOffThreadParsesRunning();
-  }
-#endif
 }
 
 void ParseTask::runTask(AutoLockHelperThreadState& lock) {
@@ -644,32 +599,14 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   JSContext* cx = TlsContext.get();
 
   AutoSetContextRuntime ascr(runtime);
-  AutoSetContextParse parsetask(this);
+  AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors);
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
-
-  Zone* zone = nullptr;
-  if (parseGlobal) {
-    zone = parseGlobal->zoneFromAnyThread();
-    zone->setHelperThreadOwnerContext(cx);
-  }
-
-  auto resetOwnerContext = mozilla::MakeScopeExit([&] {
-    if (zone) {
-      zone->setHelperThreadOwnerContext(nullptr);
-    }
-  });
-
-  Maybe<AutoRealm> ar;
-  if (parseGlobal) {
-    ar.emplace(cx, parseGlobal);
-  }
 
   parse(cx);
 
   MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
   cx->tempLifoAlloc().freeAll();
   cx->frontendCollectionPool().purge();
-  cx->atomsZoneFreeLists().clear();
 }
 
 template <typename Unit>
@@ -697,22 +634,21 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, *stencilInput_, data, scopeKind);
+  if (!stencilInput_) {
+    return;
   }
 
-  if (extensibleStencil_) {
-    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                         gcOutput_)) {
-      extensibleStencil_ = nullptr;
-    }
+  extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+      cx, *stencilInput_, data, scopeKind);
+
+  if (!extensibleStencil_) {
+    return;
   }
 
-  if (options.useOffThreadParseGlobal) {
-    (void)instantiateStencils(cx);
+  frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                       gcOutput_)) {
+    extensibleStencil_.reset();
   }
 }
 
@@ -741,11 +677,12 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, *stencilInput_, data, scopeKind);
+  if (!stencilInput_) {
+    return;
   }
+
+  extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+      cx, *stencilInput_, data, scopeKind);
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
@@ -763,21 +700,6 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
     frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
     result = frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
                                            gcOutput_);
-  }
-
-  // Whatever happens to the top-level script compilation (even if it fails),
-  // we must finish initializing the SSO.  This is because there may be valid
-  // inner scripts observable by the debugger which reference the partially-
-  // initialized SSO.
-  if (gcOutput_.sourceObject) {
-    sourceObjects.infallibleAppend(gcOutput_.sourceObject);
-  }
-
-  if (result) {
-    MOZ_ASSERT(gcOutput_.script);
-    MOZ_ASSERT_IF(gcOutput_.module,
-                  gcOutput_.module->script() == gcOutput_.script);
-    scripts.infallibleAppend(gcOutput_.script);
   }
 
   return result;
@@ -807,22 +729,20 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   options.setModule();
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ =
-        frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
+  if (!stencilInput_) {
+    return;
   }
 
-  if (extensibleStencil_) {
-    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                         gcOutput_)) {
-      extensibleStencil_ = nullptr;
-    }
+  extensibleStencil_ =
+      frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
+  if (!extensibleStencil_) {
+    return;
   }
 
-  if (options.useOffThreadParseGlobal) {
-    (void)instantiateStencils(cx);
+  frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                       gcOutput_)) {
+    extensibleStencil_.reset();
   }
 }
 
@@ -838,9 +758,6 @@ ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
 void ScriptDecodeTask::parse(JSContext* cx) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
-  RootedScript resultScript(cx);
-  Rooted<ScriptSourceObject*> sourceObject(cx);
-
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
   if (!stencilInput_) {
     return;
@@ -855,10 +772,13 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     return;
   }
 
-  XDRStencilDecoder decoder(cx, range);
-  JS::DecodeOptions options(stencilInput_->options);
-  XDRResult res = decoder.codeStencil(options, *stencil_);
-  if (!res.isOk()) {
+  // NOTE: Decoding can fail for either internal errors (eg. OOM), or because
+  // the data is invalid. In either case, fail the task by clearing out the
+  // stencil. We ignore the normal return value since helper-threads do not have
+  // JS exceptions to propagate.
+  bool succeeded = false;
+  (void)stencil_->deserializeStencils(cx, *stencilInput_, range, &succeeded);
+  if (!succeeded) {
     stencil_.reset();
     return;
   }
@@ -866,10 +786,6 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
                                        gcOutput_)) {
     stencil_.reset();
-  }
-
-  if (stencilInput_->options.useOffThreadParseGlobal) {
-    (void)instantiateStencils(cx);
   }
 }
 
@@ -948,19 +864,8 @@ static void WaitForOffThreadParses(JSRuntime* rt,
 #endif
 }
 
-void js::WaitForOffThreadParses(JSRuntime* rt) {
-  AutoLockHelperThreadState lock;
-  WaitForOffThreadParses(rt, lock);
-}
-
 void js::CancelOffThreadParses(JSRuntime* rt) {
   AutoLockHelperThreadState lock;
-
-#ifdef DEBUG
-  for (const auto& task : HelperThreadState().parseWaitingOnGC(lock)) {
-    MOZ_ASSERT(!task->runtimeMatches(rt));
-  }
-#endif
 
   // Instead of forcibly canceling pending parse tasks, just wait for all
   // scheduled and in progress ones to complete. Otherwise the final GC may not
@@ -994,121 +899,11 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
 #endif
 }
 
-bool js::OffThreadParsingMustWaitForGC(JSRuntime* rt) {
-  // Off thread parsing can't occur during incremental collections on the
-  // atoms zone, to avoid triggering barriers. (Outside the atoms zone, the
-  // compilation will use a new zone that is never collected.) If an
-  // atoms-zone GC is in progress, hold off on executing the parse task until
-  // the atoms-zone GC completes (see EnqueuePendingParseTasksAfterGC).
-  return rt->activeGCInAtomsZone();
-}
-
-static bool EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global,
-                              JSProtoKey key) {
-  if (!GlobalObject::ensureConstructor(cx, global, key)) {
-    return false;
-  }
-
-  // Set the used-as-prototype flag here because we can't GC in mergeRealms.
-  RootedObject proto(cx, &global->getPrototype(key));
-  return JSObject::setIsUsedAsPrototype(cx, proto);
-}
-
-// Initialize all classes potentially created during parsing for use in parser
-// data structures, template objects, &c.
-static bool EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind) {
-  Handle<GlobalObject*> global = cx->global();
-
-  if (!EnsureConstructor(cx, global, JSProto_Function)) {
-    return false;  // needed by functions, also adds object literals' proto
-  }
-
-  if (!EnsureConstructor(cx, global, JSProto_Array)) {
-    return false;  // needed by array literals
-  }
-
-  if (!EnsureConstructor(cx, global, JSProto_RegExp)) {
-    return false;  // needed by regular expression literals
-  }
-
-  if (!EnsureConstructor(cx, global, JSProto_GeneratorFunction)) {
-    return false;  // needed by function*() {}
-  }
-
-  if (!EnsureConstructor(cx, global, JSProto_AsyncFunction)) {
-    return false;  // needed by async function() {}
-  }
-
-  if (!EnsureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
-    return false;  // needed by async function*() {}
-  }
-
-  if (kind == ParseTaskKind::Module) {
-    // Set the used-as-prototype flag on the prototype objects because we can't
-    // GC in mergeRealms.
-    bool setUsedAsPrototype = true;
-    if (!GlobalObject::ensureModulePrototypesCreated(cx, global,
-                                                     setUsedAsPrototype)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-class MOZ_RAII AutoSetCreatedForHelperThread {
-  Zone* zone;
-
- public:
-  explicit AutoSetCreatedForHelperThread(JSObject* global)
-      : zone(global ? global->zone() : nullptr) {
-    if (zone) {
-      zone->setCreatedForHelperThread();
-    }
-  }
-
-  void forget() { zone = nullptr; }
-
-  ~AutoSetCreatedForHelperThread() {
-    if (zone) {
-      zone->clearUsedByHelperThread();
-    }
-  }
-};
-
-static JSObject* CreateGlobalForOffThreadParse(JSContext* cx,
-                                               const gc::AutoSuppressGC& nogc) {
-  JS::Realm* currentRealm = cx->realm();
-
-  JS::RealmOptions realmOptions(currentRealm->creationOptions(),
-                                currentRealm->behaviors());
-
-  auto& creationOptions = realmOptions.creationOptions();
-
-  creationOptions.setInvisibleToDebugger(true)
-      .setMergeable(true)
-      .setNewCompartmentAndZone();
-
-  // Don't falsely inherit the host's global trace hook.
-  creationOptions.setTrace(nullptr);
-
-  return JS_NewGlobalObject(cx, &parseTaskGlobalClass,
-                            currentRealm->principals(),
-                            JS::DontFireOnNewGlobalHook, realmOptions);
-}
-
 static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
   AutoLockHelperThreadState lock;
 
-  bool mustWait = task->options.useOffThreadParseGlobal &&
-                  OffThreadParsingMustWaitForGC(cx->runtime());
-  bool result;
-  if (mustWait) {
-    result = HelperThreadState().parseWaitingOnGC(lock).append(std::move(task));
-  } else {
-    result =
-        HelperThreadState().submitTask(cx->runtime(), std::move(task), lock);
-  }
+  bool result =
+      HelperThreadState().submitTask(cx->runtime(), std::move(task), lock);
 
   if (!result) {
     ReportOutOfMemory(cx);
@@ -1138,21 +933,7 @@ static JS::OffThreadToken* StartOffThreadParseTask(
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
   AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-  JSObject* global = nullptr;
-  if (options.useOffThreadParseGlobal) {
-    global = CreateGlobalForOffThreadParse(cx, nogc);
-    if (!global) {
-      return nullptr;
-    }
-  }
-
-  // Mark the global's zone as created for a helper thread. This prevents it
-  // from being collected until clearUsedByHelperThread() is called after
-  // parsing is complete. If this function exits due to error this state is
-  // cleared automatically.
-  AutoSetCreatedForHelperThread createdForHelper(global);
-
-  if (!task->init(cx, options, global)) {
+  if (!task->init(cx, options)) {
     return nullptr;
   }
 
@@ -1160,8 +941,6 @@ static JS::OffThreadToken* StartOffThreadParseTask(
   if (!QueueOffThreadParseTask(cx, std::move(task))) {
     return nullptr;
   }
-
-  createdForHelper.forget();
 
   // Return an opaque pointer to caller so that it may query/cancel the task
   // before the callback is fired.
@@ -1203,7 +982,6 @@ static JS::OffThreadToken* StartOffThreadCompileToStencilInternal(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
     void* callbackData) {
-  MOZ_ASSERT(!options.useOffThreadParseGlobal);
   auto task = cx->make_unique<CompileToStencilTask<Unit>>(cx, srcBuf, callback,
                                                           callbackData);
   if (!task) {
@@ -1285,32 +1063,10 @@ JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
   return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
-void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
-  MOZ_ASSERT(!OffThreadParsingMustWaitForGC(rt));
-
-  AutoLockHelperThreadState lock;
-
-  GlobalHelperThreadState::ParseTaskVector& waiting =
-      HelperThreadState().parseWaitingOnGC(lock);
-  for (size_t i = 0; i < waiting.length(); i++) {
-    if (!waiting[i]->runtimeMatches(rt)) {
-      continue;
-    }
-
-    {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      if (!HelperThreadState().submitTask(rt, std::move(waiting[i]), lock)) {
-        oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
-      }
-    }
-    HelperThreadState().remove(waiting, &i);
-  }
-}
-
 #ifdef DEBUG
 bool js::CurrentThreadIsParseThread() {
   JSContext* cx = TlsContext.get();
-  return cx->isHelperThreadContext() && cx->parseTask();
+  return cx->isHelperThreadContext() && cx->offThreadFrontendErrors();
 }
 #endif
 
@@ -1621,7 +1377,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       promiseHelperTasks_.sizeOfExcludingThis(mallocSizeOf) +
       parseWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       parseFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
-      parseWaitingOnGC_.sizeOfExcludingThis(mallocSizeOf) +
       compressionPendingList_.sizeOfExcludingThis(mallocSizeOf) +
       compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
@@ -1634,9 +1389,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
   for (auto task : parseFinishedList_) {
-    htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
-  }
-  for (const auto& task : parseWaitingOnGC_) {
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
 
@@ -1865,7 +1617,18 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetIonCompileTask(
     return nullptr;
   }
 
-  return highestPriorityPendingIonCompile(lock);
+  return highestPriorityPendingIonCompile(lock,
+                                          /* checkExecutionStatus */ true);
+}
+
+HelperThreadTask* GlobalHelperThreadState::maybeGetLowPrioIonCompileTask(
+    const AutoLockHelperThreadState& lock) {
+  if (!canStartIonCompileTask(lock)) {
+    return nullptr;
+  }
+
+  return highestPriorityPendingIonCompile(lock,
+                                          /* checkExecutionStatus */ false);
 }
 
 bool GlobalHelperThreadState::canStartIonCompileTask(
@@ -1892,19 +1655,26 @@ bool GlobalHelperThreadState::canStartIonFreeTask(
 }
 
 jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(
-    const AutoLockHelperThreadState& lock) {
+    const AutoLockHelperThreadState& lock, bool checkExecutionStatus) {
   auto& worklist = ionWorklist(lock);
   MOZ_ASSERT(!worklist.empty());
 
   // Get the highest priority IonCompileTask which has not started compilation
   // yet.
-  size_t index = 0;
-  for (size_t i = 1; i < worklist.length(); i++) {
-    if (IonCompileTaskHasHigherPriority(worklist[i], worklist[index])) {
+  size_t index = worklist.length();
+  for (size_t i = 0; i < worklist.length(); i++) {
+    if (checkExecutionStatus && !worklist[i]->isMainThreadRunningJS()) {
+      continue;
+    }
+    if (i < index ||
+        IonCompileTaskHasHigherPriority(worklist[i], worklist[index])) {
       index = i;
     }
   }
 
+  if (index == worklist.length()) {
+    return nullptr;
+  }
   jit::IonCompileTask* task = worklist[index];
   worklist.erase(&worklist[index]);
   return task;
@@ -2006,15 +1776,6 @@ bool GlobalHelperThreadState::canStartGCParallelTask(
                               maxGCParallelThreads(lock), lock);
 }
 
-static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
-  // Mark the zone as no longer in use by a helper thread, and available
-  // to be collected by the GC.
-  if (task->parseGlobal) {
-    rt->clearUsedByHelperThread(task->parseGlobal->zoneFromAnyThread());
-  }
-  rt->decParseTaskRef();
-}
-
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
   // The token is really a ParseTask* which should be in the finished list.
@@ -2040,120 +1801,24 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   Rooted<UniquePtr<ParseTask>> parseTask(
       cx, removeFinishedParseTask(cx, kind, token));
 
-  if (parseTask->options.useOffThreadParseGlobal) {
-    // Make sure we have all the constructors we need for the prototype
-    // remapping below, since we can't GC while that's happening.
-    if (!EnsureParserCreatedClasses(cx, kind)) {
-      LeaveParseTaskZone(cx->runtime(), parseTask.get().get());
-      return nullptr;
-    }
-
-    mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
-
-    for (auto& script : parseTask->scripts) {
-      cx->releaseCheck(script);
-    }
-
-    if (kind == ParseTaskKind::Module) {
-      if (parseTask->scripts.length() > 0) {
-        MOZ_ASSERT(parseTask->scripts[0]->isModule());
-        parseTask->scripts[0]->module()->fixEnvironmentsAfterRealmMerge();
-      }
-    }
-
-    // Finish initializing ScriptSourceObject now that we are back on
-    // main-thread and in the correct realm.
-    for (auto& sourceObject : parseTask->sourceObjects) {
-      RootedScriptSourceObject sso(cx, sourceObject);
-
-      const JS::InstantiateOptions instantiateOptions(parseTask->options);
-      if (!ScriptSourceObject::initFromOptions(cx, sso, instantiateOptions)) {
-        return nullptr;
-      }
-
-      if (!sso->source()->tryCompressOffThread(cx)) {
-        return nullptr;
-      }
-    }
-  } else {
-    // GC things should be allocated in finishSingleParseTask, after
-    // calling finishParseTaskCommon.
-    MOZ_ASSERT(parseTask->scripts.length() == 0);
-    MOZ_ASSERT(parseTask->sourceObjects.length() == 0);
-  }
-
   // Report out of memory errors eagerly, or errors could be malformed.
-  if (parseTask->outOfMemory) {
+  if (parseTask->errors.outOfMemory) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
   // Report any error or warnings generated during the parse.
-  for (size_t i = 0; i < parseTask->errors.length(); i++) {
-    parseTask->errors[i]->throwError(cx);
+  for (UniquePtr<CompileError>& error : parseTask->errors.errors) {
+    error->throwError(cx);
   }
-  if (parseTask->overRecursed) {
+  if (parseTask->errors.overRecursed) {
     ReportOverRecursed(cx);
   }
   if (cx->isExceptionPending()) {
     return nullptr;
   }
 
-  if (parseTask->options.useOffThreadParseGlobal) {
-    if (coverage::IsLCovEnabled()) {
-      if (!generateLCovSources(cx, parseTask.get().get())) {
-        return nullptr;
-      }
-    }
-  }
-
   return std::move(parseTask.get());
-}
-
-// Generate initial LCovSources for generated inner functions.
-bool GlobalHelperThreadState::generateLCovSources(JSContext* cx,
-                                                  ParseTask* parseTask) {
-  Rooted<GCVector<JSScript*>> workList(cx, GCVector<JSScript*>(cx));
-
-  if (!workList.appendAll(parseTask->scripts)) {
-    return false;
-  }
-
-  RootedScript elem(cx);
-  while (!workList.empty()) {
-    elem = workList.popCopy();
-
-    // Initialize LCov data for the script.
-    if (!coverage::InitScriptCoverage(cx, elem)) {
-      return false;
-    }
-
-    // Add inner-function scripts to the work-list.
-    for (JS::GCCellPtr gcThing : elem->gcthings()) {
-      if (!gcThing.is<JSObject>()) {
-        continue;
-      }
-      JSObject* obj = &gcThing.as<JSObject>();
-
-      if (!obj->is<JSFunction>()) {
-        continue;
-      }
-      JSFunction* fun = &obj->as<JSFunction>();
-
-      // Ignore asm.js functions
-      if (!fun->isInterpreted()) {
-        continue;
-      }
-
-      MOZ_ASSERT(fun->hasBytecode(),
-                 "No lazy scripts exist when collecting coverage");
-      if (!workList.append(fun->nonLazyScript())) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 JSScript* GlobalHelperThreadState::finishSingleParseTask(
@@ -2168,43 +1833,13 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
   JS::RootedScript script(cx);
 
   // Finish main-thread initialization of scripts.
-  if (parseTask->options.useOffThreadParseGlobal) {
-    if (parseTask->scripts.length() > 0) {
-      script = parseTask->scripts[0];
-    }
+  MOZ_ASSERT(parseTask->stencil_.get() || parseTask->extensibleStencil_.get());
 
-    if (!script) {
-      // No error was reported, but no script produced. Assume we hit out of
-      // memory.
-      MOZ_ASSERT(false, "Expected script");
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    if (kind == ParseTaskKind::Module) {
-      // See: InstantiateTopLevel in frontend/Stencil.cpp.
-      MOZ_ASSERT(script->isModule());
-      RootedModuleObject module(cx, script->module());
-      if (!ModuleObject::Freeze(cx, module)) {
-        return nullptr;
-      }
-    }
-
-    // The Debugger only needs to be told about the topmost script that was
-    // compiled.
-    const JS::InstantiateOptions instantiateOptions(parseTask->options);
-    frontend::FireOnNewScript(cx, instantiateOptions, script);
-  } else {
-    MOZ_ASSERT(parseTask->stencil_.get() ||
-               parseTask->extensibleStencil_.get());
-
-    if (!parseTask->instantiateStencils(cx)) {
-      return nullptr;
-    }
-
-    MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
-    script = parseTask->scripts[0];
+  if (!parseTask->instantiateStencils(cx)) {
+    return nullptr;
   }
+
+  script = parseTask->gcOutput_.script;
 
   // Start the incremental-XDR encoder.
   if (startEncoding == StartEncoding::Yes) {
@@ -2248,12 +1883,8 @@ GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
   MOZ_ASSERT(parseTask->extensibleStencil_.get());
 
   auto stencil = cx->make_unique<frontend::CompilationStencil>(
-      parseTask->stencilInput_->source);
+      std::move(parseTask->extensibleStencil_));
   if (!stencil) {
-    return nullptr;
-  }
-
-  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
     return nullptr;
   }
 
@@ -2348,17 +1979,12 @@ frontend::CompilationStencil* GlobalHelperThreadState::finishStencilParseTask(
     return nullptr;
   }
 
-  MOZ_ASSERT(!parseTask->options.useOffThreadParseGlobal);
   MOZ_ASSERT(parseTask->extensibleStencil_);
 
   UniquePtr<frontend::CompilationStencil> stencil =
       cx->make_unique<frontend::CompilationStencil>(
-          parseTask->stencilInput_->source);
+          std::move(parseTask->extensibleStencil_));
   if (!stencil) {
-    return nullptr;
-  }
-
-  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
     return nullptr;
   }
 
@@ -2372,26 +1998,13 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
 
   ParseTask* task = static_cast<ParseTask*>(token);
 
-  // Check pending queues to see if we can simply remove the task.
-  GlobalHelperThreadState::ParseTaskVector& waitingOnGC =
-      HelperThreadState().parseWaitingOnGC(lock);
-  for (size_t i = 0; i < waitingOnGC.length(); i++) {
-    if (task == waitingOnGC[i]) {
-      MOZ_ASSERT(task->kind == kind);
-      MOZ_ASSERT(task->runtimeMatches(rt));
-      task->parseGlobal->zoneFromAnyThread()->clearUsedByHelperThread();
-      HelperThreadState().remove(waitingOnGC, &i);
-      return;
-    }
-  }
-
   GlobalHelperThreadState::ParseTaskVector& worklist =
       HelperThreadState().parseWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
     if (task == worklist[i]) {
       MOZ_ASSERT(task->kind == kind);
       MOZ_ASSERT(task->runtimeMatches(rt));
-      LeaveParseTaskZone(rt, task);
+      task->deactivate(rt);
       HelperThreadState().remove(worklist, &i);
       return;
     }
@@ -2431,24 +2044,8 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
 void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
                                                ParseTask* parseTask) {
   MOZ_ASSERT(!parseTask->isInList());
-  LeaveParseTaskZone(rt, parseTask);
+  parseTask->deactivate(rt);
   js_delete(parseTask);
-}
-
-void GlobalHelperThreadState::mergeParseTaskRealm(JSContext* cx,
-                                                  ParseTask* parseTask,
-                                                  Realm* dest) {
-  MOZ_ASSERT(parseTask->parseGlobal);
-
-  // After we call LeaveParseTaskZone() it's not safe to GC until we have
-  // finished merging the contents of the parse task's realm into the
-  // destination realm.
-  JS::AutoAssertNoGC nogc(cx);
-
-  LeaveParseTaskZone(cx->runtime(), parseTask);
-
-  // Move the parsed script and all its contents into the desired realm.
-  gc::MergeRealms(parseTask->parseGlobal->as<GlobalObject>().realm(), dest);
 }
 
 bool JSContext::addPendingCompileError(js::CompileError** error) {
@@ -2456,28 +2053,28 @@ bool JSContext::addPendingCompileError(js::CompileError** error) {
   if (!errorPtr) {
     return false;
   }
-  if (!parseTask_->errors.append(std::move(errorPtr))) {
+  if (!errors_->errors.append(std::move(errorPtr))) {
     ReportOutOfMemory(this);
     return false;
   }
-  *error = parseTask_->errors.back().get();
+  *error = errors_->errors.back().get();
   return true;
 }
 
 bool JSContext::isCompileErrorPending() const {
-  return parseTask_->errors.length() > 0;
+  return errors_->errors.length() > 0;
 }
 
 void JSContext::addPendingOverRecursed() {
-  if (parseTask_) {
-    parseTask_->overRecursed = true;
+  if (errors_) {
+    errors_->overRecursed = true;
   }
 }
 
 void JSContext::addPendingOutOfMemory() {
   // Keep in sync with recoverFromOutOfMemory.
-  if (parseTask_) {
-    parseTask_->outOfMemory = true;
+  if (errors_) {
+    errors_->outOfMemory = true;
   }
 }
 
@@ -2693,9 +2290,6 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
   for (auto parseTask : parseFinishedList_) {
     parseTask->trace(trc);
   }
-  for (auto& parseTask : parseWaitingOnGC_) {
-    parseTask->trace(trc);
-  }
 }
 
 // Definition of helper thread tasks.
@@ -2708,6 +2302,7 @@ const GlobalHelperThreadState::Selector GlobalHelperThreadState::selectors[] = {
     &GlobalHelperThreadState::maybeGetPromiseHelperTask,
     &GlobalHelperThreadState::maybeGetParseTask,
     &GlobalHelperThreadState::maybeGetCompressionTask,
+    &GlobalHelperThreadState::maybeGetLowPrioIonCompileTask,
     &GlobalHelperThreadState::maybeGetIonFreeTask,
     &GlobalHelperThreadState::maybeGetWasmTier2CompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask};

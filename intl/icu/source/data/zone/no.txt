@@ -1971,6 +1971,9 @@ no{
             lg{"tidssone for Jekaterinburg"}
             ls{"normaltid for Jekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"tidssone for Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

@@ -229,6 +229,16 @@ fr_CA{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMdd",
+            }
             availableFormats{
                 Bh{"h 'h' B"}
                 Bhm{"h 'h' mm B"}
@@ -239,6 +249,7 @@ fr_CA{
                 EHms{"E HH 'h' mm 'min' ss 's'"}
                 Ehm{"E h 'h' mm a"}
                 Ehms{"E h 'h' mm 'min' ss 's' a"}
+                GyMd{"y-MM-dd GGGGG"}
                 H{"HH 'h'"}
                 Hm{"HH 'h' mm"}
                 Hms{"HH 'h' mm 'min' ss 's'"}
@@ -366,6 +377,7 @@ fr_CA{
                 EHms{"E HH 'h' mm 'min' ss 's'"}
                 Ehm{"E h 'h' mm a"}
                 Ehms{"E h 'h' mm 'min' ss 's' a"}
+                GyMd{"y-MM-dd GGGGG"}
                 Hm{"HH 'h' mm"}
                 Hms{"HH 'h' mm 'min' ss 's'"}
                 Hmsv{"HH 'h' mm 'min' ss 's' v"}
@@ -746,6 +758,7 @@ fr_CA{
                 "{1} {0}",
             }
             availableFormats{
+                GyMd{"y-MM-dd GGGGG"}
                 MEd{"E d MMM"}
                 Md{"MM-dd"}
                 yyyyM{"y-MM GGGGG"}
@@ -838,6 +851,7 @@ fr_CA{
         braille{"braille"}
         bullets_stars{"puces/astérisques"}
         dash_connector{"tirets/connecteurs"}
+        emoji{"émoji"}
         ideographic_desc_characters{"symboles de description sinographique"}
         keycap{"dessus de touche"}
         sign_standard_symbols{"signe ou symbole"}

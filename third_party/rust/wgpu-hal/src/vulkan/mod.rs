@@ -31,7 +31,7 @@ mod conv;
 mod device;
 mod instance;
 
-use std::{borrow::Borrow, ffi::CStr, sync::Arc};
+use std::{borrow::Borrow, ffi::CStr, num::NonZeroU32, sync::Arc};
 
 use arrayvec::ArrayVec;
 use ash::{
@@ -84,8 +84,9 @@ struct InstanceShared {
     drop_guard: Option<DropGuard>,
     flags: crate::InstanceFlags,
     debug_utils: Option<DebugUtils>,
-    get_physical_device_properties: Option<vk::KhrGetPhysicalDeviceProperties2Fn>,
+    get_physical_device_properties: Option<khr::GetPhysicalDeviceProperties2>,
     entry: ash::Entry,
+    has_nv_optimus: bool,
 }
 
 pub struct Instance {
@@ -163,6 +164,7 @@ struct PrivateCapabilities {
     can_present: bool,
     non_coherent_map_mask: wgt::BufferAddress,
     robust_buffer_access: bool,
+    robust_image_access: bool,
 }
 
 bitflags::bitflags!(
@@ -208,6 +210,7 @@ struct RenderPassKey {
     colors: ArrayVec<ColorAttachmentKey, { crate::MAX_COLOR_TARGETS }>,
     depth_stencil: Option<DepthStencilAttachmentKey>,
     sample_count: u32,
+    multiview: Option<NonZeroU32>,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -226,6 +229,82 @@ struct FramebufferKey {
     sample_count: u32,
 }
 
+bitflags::bitflags! {
+    pub struct UpdateAfterBindTypes: u8 {
+        const UNIFORM_BUFFER = 0x1;
+        const STORAGE_BUFFER = 0x2;
+        const SAMPLED_TEXTURE = 0x4;
+        const STORAGE_TEXTURE = 0x8;
+    }
+}
+
+impl UpdateAfterBindTypes {
+    pub fn from_limits(limits: &wgt::Limits, phd_limits: &vk::PhysicalDeviceLimits) -> Self {
+        let mut uab_types = UpdateAfterBindTypes::empty();
+        uab_types.set(
+            UpdateAfterBindTypes::UNIFORM_BUFFER,
+            limits.max_uniform_buffers_per_shader_stage
+                > phd_limits.max_per_stage_descriptor_uniform_buffers,
+        );
+        uab_types.set(
+            UpdateAfterBindTypes::STORAGE_BUFFER,
+            limits.max_storage_buffers_per_shader_stage
+                > phd_limits.max_per_stage_descriptor_storage_buffers,
+        );
+        uab_types.set(
+            UpdateAfterBindTypes::SAMPLED_TEXTURE,
+            limits.max_sampled_textures_per_shader_stage
+                > phd_limits.max_per_stage_descriptor_sampled_images,
+        );
+        uab_types.set(
+            UpdateAfterBindTypes::STORAGE_TEXTURE,
+            limits.max_storage_textures_per_shader_stage
+                > phd_limits.max_per_stage_descriptor_storage_images,
+        );
+        uab_types
+    }
+
+    fn from_features(features: &adapter::PhysicalDeviceFeatures) -> Self {
+        let mut uab_types = UpdateAfterBindTypes::empty();
+        if let Some(vk_12) = features.vulkan_1_2 {
+            uab_types.set(
+                UpdateAfterBindTypes::UNIFORM_BUFFER,
+                vk_12.descriptor_binding_uniform_buffer_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_BUFFER,
+                vk_12.descriptor_binding_storage_buffer_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::SAMPLED_TEXTURE,
+                vk_12.descriptor_binding_sampled_image_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_TEXTURE,
+                vk_12.descriptor_binding_storage_image_update_after_bind != 0,
+            );
+        } else if let Some(di) = features.descriptor_indexing {
+            uab_types.set(
+                UpdateAfterBindTypes::UNIFORM_BUFFER,
+                di.descriptor_binding_uniform_buffer_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_BUFFER,
+                di.descriptor_binding_storage_buffer_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::SAMPLED_TEXTURE,
+                di.descriptor_binding_sampled_image_update_after_bind != 0,
+            );
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_TEXTURE,
+                di.descriptor_binding_storage_image_update_after_bind != 0,
+            );
+        }
+        uab_types
+    }
+}
+
 struct DeviceShared {
     raw: ash::Device,
     handle_is_owned: bool,
@@ -233,6 +312,7 @@ struct DeviceShared {
     extension_fns: DeviceExtensionFunctions,
     vendor_id: u32,
     timestamp_period: f32,
+    uab_types: UpdateAfterBindTypes,
     downlevel_flags: wgt::DownlevelFlags,
     private_caps: PrivateCapabilities,
     workarounds: Workarounds,
@@ -256,12 +336,13 @@ pub struct Queue {
     swapchain_fn: khr::Swapchain,
     device: Arc<DeviceShared>,
     family_index: u32,
-    /// This special semaphore is used to synchronize GPU work of
-    /// everything on a queue with... itself. Yikes!
-    /// It's required by the confusing portion of the spec to be signalled
-    /// by last submission and waited by the present.
-    relay_semaphore: vk::Semaphore,
-    relay_active: bool,
+    /// We use a redundant chain of semaphores to pass on the signal
+    /// from submissions to the last present, since it's required by the
+    /// specification.
+    /// It would be correct to use a single semaphore there, but
+    /// https://gitlab.freedesktop.org/mesa/mesa/-/issues/5508
+    relay_semaphores: [vk::Semaphore; 2],
+    relay_index: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -294,6 +375,7 @@ impl Texture {
 #[derive(Debug)]
 pub struct TextureView {
     raw: vk::ImageView,
+    layers: NonZeroU32,
     attachment: FramebufferAttachment,
 }
 
@@ -313,6 +395,7 @@ pub struct BindGroupLayout {
     raw: vk::DescriptorSetLayout,
     desc_count: gpu_descriptor::DescriptorTotalCount,
     types: Box<[(vk::DescriptorType, u32)]>,
+    requires_update_after_bind: bool,
 }
 
 #[derive(Debug)]
@@ -369,9 +452,13 @@ pub struct CommandBuffer {
 }
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ShaderModule {
     Raw(vk::ShaderModule),
-    Intermediate(crate::NagaShader),
+    Intermediate {
+        naga_shader: crate::NagaShader,
+        runtime_checks: bool,
+    },
 }
 
 #[derive(Debug)]
@@ -481,7 +568,7 @@ impl crate::Queue<Api> for Queue {
 
         let mut fence_raw = vk::Fence::null();
         let mut vk_timeline_info;
-        let mut semaphores = [self.relay_semaphore, vk::Semaphore::null()];
+        let mut signal_semaphores = [vk::Semaphore::null(), vk::Semaphore::null()];
         let signal_values;
 
         if let Some((fence, value)) = signal_fence {
@@ -489,7 +576,7 @@ impl crate::Queue<Api> for Queue {
             match *fence {
                 Fence::TimelineSemaphore(raw) => {
                     signal_values = [!0, value];
-                    semaphores[1] = raw;
+                    signal_semaphores[1] = raw;
                     vk_timeline_info = vk::TimelineSemaphoreSubmitInfo::builder()
                         .signal_semaphore_values(&signal_values);
                     vk_info = vk_info.push_next(&mut vk_timeline_info);
@@ -512,19 +599,26 @@ impl crate::Queue<Api> for Queue {
         }
 
         let wait_stage_mask = [vk::PipelineStageFlags::TOP_OF_PIPE];
-        if self.relay_active {
-            vk_info = vk_info
-                .wait_semaphores(&semaphores[..1])
-                .wait_dst_stage_mask(&wait_stage_mask);
-        }
-        self.relay_active = true;
-        let signal_count = if semaphores[1] == vk::Semaphore::null() {
+        let sem_index = match self.relay_index {
+            Some(old_index) => {
+                vk_info = vk_info
+                    .wait_semaphores(&self.relay_semaphores[old_index..old_index + 1])
+                    .wait_dst_stage_mask(&wait_stage_mask);
+                (old_index + 1) % self.relay_semaphores.len()
+            }
+            None => 0,
+        };
+        self.relay_index = Some(sem_index);
+        signal_semaphores[0] = self.relay_semaphores[sem_index];
+
+        let signal_count = if signal_semaphores[1] == vk::Semaphore::null() {
             1
         } else {
             2
         };
-        vk_info = vk_info.signal_semaphores(&semaphores[..signal_count]);
+        vk_info = vk_info.signal_semaphores(&signal_semaphores[..signal_count]);
 
+        profiling::scope!("vkQueueSubmit");
         self.device
             .raw
             .queue_submit(self.raw, &[vk_info.build()], fence_raw)?;
@@ -540,24 +634,24 @@ impl crate::Queue<Api> for Queue {
 
         let swapchains = [ssc.raw];
         let image_indices = [texture.index];
-        let semaphores = [self.relay_semaphore];
         let mut vk_info = vk::PresentInfoKHR::builder()
             .swapchains(&swapchains)
             .image_indices(&image_indices);
 
-        if self.relay_active {
-            vk_info = vk_info.wait_semaphores(&semaphores);
-            self.relay_active = false;
+        if let Some(old_index) = self.relay_index.take() {
+            vk_info = vk_info.wait_semaphores(&self.relay_semaphores[old_index..old_index + 1]);
         }
 
-        let suboptimal = self
-            .swapchain_fn
-            .queue_present(self.raw, &vk_info)
-            .map_err(|error| match error {
-                vk::Result::ERROR_OUT_OF_DATE_KHR => crate::SurfaceError::Outdated,
-                vk::Result::ERROR_SURFACE_LOST_KHR => crate::SurfaceError::Lost,
-                _ => crate::DeviceError::from(error).into(),
-            })?;
+        let suboptimal = {
+            profiling::scope!("vkQueuePresentKHR");
+            self.swapchain_fn
+                .queue_present(self.raw, &vk_info)
+                .map_err(|error| match error {
+                    vk::Result::ERROR_OUT_OF_DATE_KHR => crate::SurfaceError::Outdated,
+                    vk::Result::ERROR_SURFACE_LOST_KHR => crate::SurfaceError::Lost,
+                    _ => crate::DeviceError::from(error).into(),
+                })?
+        };
         if suboptimal {
             log::warn!("Suboptimal present of frame {}", texture.index);
         }

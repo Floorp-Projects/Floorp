@@ -5,15 +5,13 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let h2Port;
 let trrServer;
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
@@ -49,7 +47,7 @@ add_task(async function testHTTPSSVC() {
     );
   }
 
-  let [, inRecord] = await new TRRDNSListener("test.httpssvc.com", {
+  let { inRecord } = await new TRRDNSListener("test.httpssvc.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
@@ -266,7 +264,7 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  let [, , inStatus] = await new TRRDNSListener("no-ip-host.com", {
+  let { inStatus } = await new TRRDNSListener("no-ip-host.com", {
     expectedSuccess: false,
   });
   Assert.ok(
@@ -303,9 +301,9 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus] = await new TRRDNSListener("loop.com", {
+  ({ inStatus } = await new TRRDNSListener("loop.com", {
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -328,9 +326,9 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus] = await new TRRDNSListener("empty.com", {
+  ({ inStatus } = await new TRRDNSListener("empty.com", {
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -371,7 +369,7 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  let [, , inStatus2] = await new TRRDNSListener("multi.com", {
+  let { inStatus: inStatus2 } = await new TRRDNSListener("multi.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
   });
@@ -404,10 +402,10 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("order.com", {
+  ({ inStatus: inStatus2 } = await new TRRDNSListener("order.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
@@ -433,10 +431,10 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("duplicate.com", {
+  ({ inStatus: inStatus2 } = await new TRRDNSListener("duplicate.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
@@ -463,10 +461,10 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("mandatory.com", {
+  ({ inStatus: inStatus2 } = await new TRRDNSListener("mandatory.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
   // mandatory svcparam
@@ -504,9 +502,9 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("mandatory2.com", {
+  ({ inStatus: inStatus2 } = await new TRRDNSListener("mandatory2.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  }));
 
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should succeed`);
 
@@ -527,10 +525,10 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("no-alias.com", {
+  ({ inStatus: inStatus2 } = await new TRRDNSListener("no-alias.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
-  });
+  }));
 
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
@@ -552,9 +550,9 @@ add_task(async function test_aliasform() {
   });
 
   let inRecord;
-  [, inRecord, inStatus2] = await new TRRDNSListener("service.com", {
+  ({ inRecord, inStatus: inStatus2 } = await new TRRDNSListener("service.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  }));
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should work`);
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);
@@ -562,7 +560,7 @@ add_task(async function test_aliasform() {
 });
 
 add_task(async function testNegativeResponse() {
-  let [, , inStatus] = await new TRRDNSListener("negative_test.com", {
+  let { inStatus } = await new TRRDNSListener("negative_test.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
   });
@@ -588,10 +586,10 @@ add_task(async function testNegativeResponse() {
   });
 
   // Should still be failed because a negative response is from DNS cache.
-  [, , inStatus] = await new TRRDNSListener("negative_test.com", {
+  ({ inStatus } = await new TRRDNSListener("negative_test.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
     expectedSuccess: false,
-  });
+  }));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -605,9 +603,9 @@ add_task(async function testNegativeResponse() {
   }
 
   let inRecord;
-  [, inRecord, inStatus] = await new TRRDNSListener("negative_test.com", {
+  ({ inRecord, inStatus } = await new TRRDNSListener("negative_test.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  }));
   Assert.ok(Components.isSuccessCode(inStatus), `${inStatus} should work`);
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);

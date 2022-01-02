@@ -271,6 +271,9 @@ def _parse_one(testcase, terms, xul_tester):
             # This directive marks the test as module code.
             testcase.is_module = True
             pos += 1
+        elif parts[pos] == "test262-raw":
+            testcase.is_test262_raw = True
+            pos += 1
         elif parts[pos] == "async":
             # This directive marks the test as async.
             testcase.is_async = True
@@ -295,6 +298,7 @@ def _build_manifest_script_entry(script_name, test):
                     or term.startswith("error:")
                     or term.startswith("ignore-flag(")
                     or term.startswith("shell-option(")
+                    or term == "test262-raw"
                 )
             ]
         )
@@ -306,6 +310,8 @@ def _build_manifest_script_entry(script_name, test):
         properties.append("module")
     if test.is_async:
         properties.append("async")
+    if test.is_test262_raw:
+        properties.append("test262_raw")
     line.append("script")
     script = script_name
     if properties:

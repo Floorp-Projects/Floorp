@@ -11,7 +11,7 @@
 // - tab key when there is not visible autocomplete suggestion insert a tab
 // See Bug 812618, 1479521 and 1334130.
 
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 <head>
   <script>
     window.testBugAA = "hello world";

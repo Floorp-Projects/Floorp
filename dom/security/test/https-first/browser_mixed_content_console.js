@@ -34,7 +34,7 @@ function on_console_message(msgObj) {
   // The first console message is:
   // "HTTPS-First Mode: Upgrading insecure request
   // ‘http://example.com/browser/dom/security/test/https-first/file_mixed_content_console.html’ to use ‘https’"
-  if (message.includes("HTTPS-First Mode:")) {
+  if (message.includes("HTTPS-First Mode: Upgrading insecure request")) {
     ok(message.includes("Upgrading insecure request"), "request got upgraded");
     ok(
       message.includes(

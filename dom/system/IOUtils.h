@@ -27,6 +27,8 @@
 #include "nsTArray.h"
 #include "prio.h"
 
+class nsFileStream;
+
 namespace mozilla {
 
 /**
@@ -106,12 +108,13 @@ class IOUtils final {
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions);
 
-  static already_AddRefed<Promise> Touch(
+  static already_AddRefed<Promise> SetModificationTime(
       GlobalObject& aGlobal, const nsAString& aPath,
       const Optional<int64_t>& aModification);
 
-  static already_AddRefed<Promise> GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath);
+  static already_AddRefed<Promise> GetChildren(
+      GlobalObject& aGlobal, const nsAString& aPath,
+      const GetChildrenOptions& aOptions);
 
   static already_AddRefed<Promise> SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
@@ -124,6 +127,10 @@ class IOUtils final {
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
+
+  static RefPtr<SyncReadFile> OpenFileForSyncReading(GlobalObject& aGlobal,
+                                                     const nsAString& aPath,
+                                                     ErrorResult& aRv);
 
   class JsBuffer;
 
@@ -190,7 +197,7 @@ class IOUtils final {
    *         error.
    */
   static Result<JsBuffer, IOError> ReadSync(nsIFile* aFile,
-                                            const uint32_t aOffset,
+                                            const uint64_t aOffset,
                                             const Maybe<uint32_t> aMaxBytes,
                                             const bool aDecompress,
                                             BufferKind aBufferKind);
@@ -322,8 +329,8 @@ class IOUtils final {
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> TouchSync(nsIFile* aFile,
-                                            const Maybe<int64_t>& aNewModTime);
+  static Result<int64_t, IOError> SetModificationTimeSync(
+      nsIFile* aFile, const Maybe<int64_t>& aNewModTime);
 
   /**
    * Returns the immediate children of the directory at |aFile|, if any.
@@ -333,7 +340,8 @@ class IOUtils final {
    * @return An array of absolute paths identifying the children of |aFile|.
    *         If there are no children, an empty array. Otherwise, an error.
    */
-  static Result<nsTArray<nsString>, IOError> GetChildrenSync(nsIFile* aFile);
+  static Result<nsTArray<nsString>, IOError> GetChildrenSync(
+      nsIFile* aFile, bool aIgnoreAbsent);
 
   /**
    * Set the permissions of the given file.
@@ -669,6 +677,31 @@ class IOUtils::JsBuffer final {
   JS::UniqueChars mBuffer;
 
   JsBuffer(BufferKind aBufferKind, size_t aCapacity);
+};
+
+class SyncReadFile : public nsISupports, public nsWrapperCache {
+ public:
+  SyncReadFile(nsISupports* aParent, RefPtr<nsFileStream>&& aStream,
+               int64_t aSize);
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SyncReadFile)
+
+  nsISupports* GetParentObject() const { return mParent; }
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+  int64_t Size() const { return mSize; }
+  void ReadBytesInto(const Uint8Array&, const int64_t, ErrorResult& aRv);
+  void Close();
+
+ private:
+  virtual ~SyncReadFile();
+
+  nsCOMPtr<nsISupports> mParent;
+  RefPtr<nsFileStream> mStream;
+  int64_t mSize = 0;
 };
 
 }  // namespace dom

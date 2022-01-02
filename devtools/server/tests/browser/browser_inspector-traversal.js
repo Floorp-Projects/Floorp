@@ -270,7 +270,7 @@ add_task(async function testLongValue() {
   SimpleTest.registerCleanupFunction(async function() {
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const WalkerActor = require("devtools/server/actors/inspector/walker");
       WalkerActor.setValueSummaryLength(
@@ -284,7 +284,7 @@ add_task(async function testLongValue() {
     [],
     function() {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const testSummaryLength = 10;
       const WalkerActor = require("devtools/server/actors/inspector/walker");

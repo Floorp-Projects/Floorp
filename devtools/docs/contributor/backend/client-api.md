@@ -77,13 +77,8 @@ function attachToTab() {
     // Find the active tab.
     let targetFront = tabs.find(tab => tab.selected);
 
-    // Attach to the tab.
-    targetFront.attach().then(() => {
-      // Now the targetFront is ready and can be used.
-
-      // Attach listeners for client events.
-      targetFront.on("tabNavigated", onTab);
-    });
+    // Attach listeners for client events.
+    targetFront.on("tabNavigated", onTab);
   });
 }
 ```
@@ -169,8 +164,6 @@ async function debugTab() {
   const tabs = await client.mainRoot.listTabs();
   // Find the active tab.
   let targetFront = tabs.find(tab => tab.selected);
-  // Attach to the tab.
-  await targetFront.attach();
   // Attach to the thread (context).
   const threadFront = await targetFront.attachThread();
   // Attach listeners for thread events.

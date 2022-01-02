@@ -158,7 +158,7 @@ add_task(async function test_webext_contentscript_iframe_subframe_privileges() {
     manifest: {
       "permissions": ["storage"],
       "content_scripts": [{
-        "matches": ["http://example.com/*"],
+        "matches": ["https://example.com/*"],
         "js": ["contentscript.js"],
       }],
       web_accessible_resources: [
@@ -188,7 +188,7 @@ add_task(async function test_webext_contentscript_iframe_subframe_privileges() {
 
   await extension.startup();
 
-  let win = window.open("http://example.com");
+  let win = window.open("https://example.com");
 
   await extension.awaitFinish("webext-contentscript-subframe-privileges");
 

@@ -1438,7 +1438,7 @@ async function getAllAdjustedQuadsForContentPageElement(
     [inBrowsingContextSelector, useTopWindowAsBoundary],
     (_selector, _useTopWindowAsBoundary) => {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const { getAdjustedQuads } = require("devtools/shared/layout/utils");
 

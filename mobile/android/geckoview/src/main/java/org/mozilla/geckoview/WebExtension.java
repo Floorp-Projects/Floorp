@@ -15,6 +15,7 @@ import androidx.annotation.UiThread;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -809,10 +810,7 @@ public class WebExtension {
 
     @Override
     public int hashCode() {
-      int result = 17;
-      result = 31 * result + (webExtensionId != null ? webExtensionId.hashCode() : 0);
-      result = 31 * result + (nativeApp != null ? nativeApp.hashCode() : 0);
-      return result;
+      return Arrays.hashCode(new Object[] {webExtensionId, nativeApp});
     }
   }
 
@@ -1525,6 +1523,8 @@ public class WebExtension {
       public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
       /** The extension did not have the expected ID. */
       public static final int ERROR_INCORRECT_ID = -7;
+      /** The extension did not have the expected ID. */
+      public static final int ERROR_INVALID_DOMAIN = -8;
       /** The extension install was canceled. */
       public static final int ERROR_USER_CANCELED = -100;
       /** The extension install was postponed until restart. */
@@ -1569,6 +1569,7 @@ public class WebExtension {
           ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED,
           ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE,
           ErrorCodes.ERROR_INCORRECT_ID,
+          ErrorCodes.ERROR_INVALID_DOMAIN,
           ErrorCodes.ERROR_USER_CANCELED,
           ErrorCodes.ERROR_POSTPONED,
         })

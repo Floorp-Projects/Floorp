@@ -9,6 +9,7 @@
 
 #include <vector>
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/AnimationInfo.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/UniquePtr.h"
@@ -16,6 +17,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTHashSet.h"
 #include "ImageTypes.h"
+#include "ImgDrawResult.h"
 #include "DisplayItemClip.h"
 
 namespace mozilla {
@@ -44,6 +46,7 @@ class WebRenderCanvasData;
 class WebRenderCanvasRenderer;
 class WebRenderCanvasRendererAsync;
 class WebRenderImageData;
+class WebRenderImageProviderData;
 class WebRenderFallbackData;
 class WebRenderLocalCanvasData;
 class RenderRootStateManager;
@@ -69,7 +72,7 @@ class WebRenderUserData {
   static bool SupportsAsyncUpdate(nsIFrame* aFrame);
 
   static bool ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType aType,
-                                        ContainerProducerID aProducerId);
+                                        image::ImageProviderId aProviderId);
 
   NS_INLINE_DECL_REFCOUNTING(WebRenderUserData)
 
@@ -78,6 +81,7 @@ class WebRenderUserData {
                     nsIFrame* aFrame);
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
+  virtual WebRenderImageProviderData* AsImageProviderData() { return nullptr; }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
   virtual WebRenderCanvasData* AsCanvasData() { return nullptr; }
   virtual WebRenderLocalCanvasData* AsLocalCanvasData() { return nullptr; }
@@ -93,7 +97,7 @@ class WebRenderUserData {
     eRemote,
     eGroup,
     eMask,
-    eBlobImage,  // SVG image
+    eImageProvider,  // ImageLib
   };
 
   virtual UserDataType GetType() = 0;
@@ -169,8 +173,6 @@ class WebRenderImageData : public WebRenderUserData {
 
   bool IsAsync() { return mPipelineId.isSome(); }
 
-  bool UsingSharedSurface(ContainerProducerID aProducerId) const;
-
   void ClearImageKey();
 
  protected:
@@ -179,33 +181,32 @@ class WebRenderImageData : public WebRenderUserData {
   RefPtr<ImageClient> mImageClient;
   Maybe<wr::PipelineId> mPipelineId;
   RefPtr<ImageContainer> mContainer;
-  // The key can be owned by a shared surface that is used by several elements.
-  // when this is the case the shared surface is responsible for managing the
-  // destruction of the key.
-  // TODO: we surely can come up with a simpler/safer way to model this.
-  bool mOwnsKey;
 };
 
-/// Holds some data used to share blob recordings from VectorImages with the
-/// parent process.
-class WebRenderBlobImageData : public WebRenderUserData {
+/// Holds some data used to share ImageLib results with the parent process.
+/// This may be either in the form of a blob recording or a rasterized surface.
+class WebRenderImageProviderData final : public WebRenderUserData {
  public:
-  WebRenderBlobImageData(RenderRootStateManager* aManager,
-                         nsDisplayItem* aItem);
-  WebRenderBlobImageData(RenderRootStateManager* aManager,
-                         uint32_t aDisplayItemKey, nsIFrame* aFrame);
-  virtual ~WebRenderBlobImageData() {}
+  WebRenderImageProviderData(RenderRootStateManager* aManager,
+                             nsDisplayItem* aItem);
+  WebRenderImageProviderData(RenderRootStateManager* aManager,
+                             uint32_t aDisplayItemKey, nsIFrame* aFrame);
+  ~WebRenderImageProviderData() override;
 
-  UserDataType GetType() override { return UserDataType::eBlobImage; }
-  static UserDataType Type() { return UserDataType::eBlobImage; }
-  Maybe<wr::BlobImageKey> GetImageKey() { return mKey; }
+  WebRenderImageProviderData* AsImageProviderData() override { return this; }
+  UserDataType GetType() override { return UserDataType::eImageProvider; }
+  static UserDataType Type() { return UserDataType::eImageProvider; }
 
-  Maybe<wr::BlobImageKey> UpdateImageKey(
-      ImageContainer* aContainer, wr::IpcResourceUpdateQueue& aResources);
+  Maybe<wr::ImageKey> UpdateImageKey(image::WebRenderImageProvider* aProvider,
+                                     image::ImgDrawResult aDrawResult,
+                                     wr::IpcResourceUpdateQueue& aResources);
+
+  bool Invalidate(image::ImageProviderId aProviderId) const;
 
  protected:
-  Maybe<wr::BlobImageKey> mKey;
-  RefPtr<ImageContainer> mContainer;
+  RefPtr<image::WebRenderImageProvider> mProvider;
+  Maybe<wr::ImageKey> mKey;
+  image::ImgDrawResult mDrawResult;
 };
 
 /// Used for fallback rendering.

@@ -80,11 +80,19 @@ async function testPref(aIsPrefEnabled) {
 }
 
 add_task(async function runTests() {
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.cookie.sameSite.laxByDefault", false]],
+  });
+
   let tests = [true, false];
 
   // First, we test the scenario that the first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.firstparty.isolate", true]],
+    set: [
+      ["privacy.firstparty.isolate", true],
+      ["dom.security.https_first", false],
+    ],
   });
 
   for (let enabled of tests) {
@@ -110,4 +118,6 @@ add_task(async function runTests() {
     // the opener page has the same origin with the target page.
     await testPref(false);
   }
+
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
 });

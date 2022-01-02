@@ -24,7 +24,7 @@ ha{
         053{"Tsibarai na Austraila da New Zealand da maƙota"}
         054{"Tsibirai na New Guinea da Fiji da maƙota"}
         057{"Yankin Micronesiya"}
-        061{"tsibiri"}
+        061{"Tsibiri"}
         142{"Asiya"}
         143{"Asiya ta Tsakiya"}
         145{"Yammacin Asiya"}
@@ -136,7 +136,7 @@ ha{
         GY{"Guyana"}
         HK{"Babban Yankin Mulkin Hong Kong na Ƙasar Sin"}
         HM{"Tsibirin Heard da McDonald"}
-        HN{"Honduras"}
+        HN{"Yankin Honduras"}
         HR{"Kurowaishiya"}
         HT{"Haiti"}
         HU{"Hungari"}
@@ -197,7 +197,7 @@ ha{
         MU{"Moritus"}
         MV{"Maldibi"}
         MW{"Malawi"}
-        MX{"Makasiko"}
+        MX{"Mesiko"}
         MY{"Malaisiya"}
         MZ{"Mozambik"}
         NA{"Namibiya"}

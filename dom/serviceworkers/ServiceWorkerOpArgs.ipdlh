@@ -65,17 +65,31 @@ struct ServiceWorkerMessageEventOpArgs {
   ClonedOrErrorMessageData clonedData;
 };
 
-struct ServiceWorkerFetchEventOpArgs {
+struct ServiceWorkerFetchEventOpArgsCommon {
   nsCString workerScriptSpec;
   IPCInternalRequest internalRequest;
   nsString clientId;
   nsString resultingClientId;
   bool isNonSubresourceRequest;
+  // Is navigation preload enabled for this fetch? If true, if some
+  // preloadResponse was not already provided in this structure, then it's
+  // expected that a PreloadResponse message will eventually be sent.
+  bool preloadNavigation;
   // Failure injection helper; non-NS_OK values indicate that the event, instead
   // of dispatching should instead return a `CancelInterceptionArgs` response
   // with this nsresult.  This value originates from
   // `nsIServiceWorkerInfo::testingInjectCancellation`.
   nsresult testingInjectCancellation;
+};
+
+struct ParentToParentServiceWorkerFetchEventOpArgs {
+  ServiceWorkerFetchEventOpArgsCommon common;
+  ParentToParentInternalResponse? preloadResponse;
+};
+
+struct ParentToChildServiceWorkerFetchEventOpArgs {
+  ServiceWorkerFetchEventOpArgsCommon common;
+  ParentToChildInternalResponse? preloadResponse;
 };
 
 union ServiceWorkerOpArgs {
@@ -87,7 +101,7 @@ union ServiceWorkerOpArgs {
   ServiceWorkerPushSubscriptionChangeEventOpArgs;
   ServiceWorkerNotificationEventOpArgs;
   ServiceWorkerMessageEventOpArgs;
-  ServiceWorkerFetchEventOpArgs;
+  ParentToChildServiceWorkerFetchEventOpArgs;
 };
 
 /**
@@ -104,8 +118,14 @@ struct FetchEventTimeStamps {
   TimeStamp fetchHandlerFinish;
 };
 
-struct IPCSynthesizeResponseArgs {
-  IPCInternalResponse internalResponse;
+struct ChildToParentSynthesizeResponseArgs {
+  ChildToParentInternalResponse internalResponse;
+  FetchEventRespondWithClosure closure;
+  FetchEventTimeStamps timeStamps;
+};
+
+struct ParentToParentSynthesizeResponseArgs {
+  ParentToParentInternalResponse internalResponse;
   FetchEventRespondWithClosure closure;
   FetchEventTimeStamps timeStamps;
 };
@@ -119,8 +139,14 @@ struct CancelInterceptionArgs {
   FetchEventTimeStamps timeStamps;
 };
 
-union IPCFetchEventRespondWithResult {
-  IPCSynthesizeResponseArgs;
+union ChildToParentFetchEventRespondWithResult {
+  ChildToParentSynthesizeResponseArgs;
+  ResetInterceptionArgs;
+  CancelInterceptionArgs;
+};
+
+union ParentToParentFetchEventRespondWithResult {
+  ParentToParentSynthesizeResponseArgs;
   ResetInterceptionArgs;
   CancelInterceptionArgs;
 };

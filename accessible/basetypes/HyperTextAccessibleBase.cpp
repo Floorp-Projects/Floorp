@@ -5,6 +5,7 @@
 
 #include "HyperTextAccessibleBase.h"
 
+#include "AccAttributes.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
@@ -142,9 +143,10 @@ void HyperTextAccessibleBase::TextSubstring(int32_t aStartOffset,
 }
 
 bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
-              int32_t* aStartOffset, int32_t* aEndOffset) {
+                                     int32_t* aStartOffset,
+                                     int32_t* aEndOffset) {
   MOZ_ASSERT(!aStartOffset == !aEndOffset,
-                 "Offsets should be both defined or both undefined!");
+             "Offsets should be both defined or both undefined!");
 
   int32_t childIdx = GetChildIndexAtOffset(aOffset);
   if (childIdx == -1) {
@@ -180,17 +182,16 @@ TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
   return TextLeafPoint(child, offset);
 }
 
-uint32_t HyperTextAccessibleBase::TransformOffset(Accessible* aDescendant,
-                                                  uint32_t aOffset,
-                                                  bool aIsEndOffset) const {
+std::pair<bool, int32_t> HyperTextAccessibleBase::TransformOffset(
+    Accessible* aDescendant, int32_t aOffset, bool aIsEndOffset) const {
   const Accessible* thisAcc = Acc();
   // From the descendant, go up and get the immediate child of this hypertext.
-  uint32_t offset = aOffset;
+  int32_t offset = aOffset;
   Accessible* descendant = aDescendant;
   while (descendant) {
     Accessible* parent = descendant->Parent();
     if (parent == thisAcc) {
-      return GetChildOffset(descendant) + offset;
+      return {true, GetChildOffset(descendant) + offset};
     }
 
     // This offset no longer applies because the passed-in text object is not
@@ -209,9 +210,10 @@ uint32_t HyperTextAccessibleBase::TransformOffset(Accessible* aDescendant,
     descendant = parent;
   }
 
-  // If the given a11y point cannot be mapped into offset relative this
-  // hypertext offset then return length as fallback value.
-  return CharacterCount();
+  // The given a11y point cannot be mapped to an offset relative to this
+  // hypertext accessible. Return the start or the end depending on whether this
+  // is a start ofset or an end offset, thus clipping to the relevant endpoint.
+  return {false, aIsEndOffset ? static_cast<int32_t>(CharacterCount()) : 0};
 }
 
 void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
@@ -231,48 +233,66 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
 
   switch (aBoundaryType) {
     case nsIAccessibleText::BOUNDARY_CHAR:
-      // XXX Add handling for caret at end of wrapped line.
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        TextLeafPoint caret = TextLeafPoint::GetCaret(Acc());
+        if (caret.IsCaretAtEndOfLine()) {
+          // The caret is at the end of the line. Return no character.
+          *aStartOffset = *aEndOffset = static_cast<int32_t>(adjustedOffset);
+          return;
+        }
+      }
       CharAt(adjustedOffset, aText, aStartOffset, aEndOffset);
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
     case nsIAccessibleText::BOUNDARY_LINE_START:
-      TextLeafPoint origStart =
-          ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
-      TextLeafPoint end;
-      Accessible* childAcc = GetChildAtOffset(adjustedOffset);
-      if (childAcc && childAcc->IsHyperText()) {
-        // We're searching for boundaries enclosing an embedded object.
-        // An embedded object might contain several boundaries itself.
-        // Thus, we must ensure we search for the end boundary from the last
-        // text in the subtree, not just the first.
-        // For example, if the embedded object is a link and it contains two
-        // words, but the second word expands beyond the link, we want to
-        // include the part of the second word which is outside of the link.
-        end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
-                              /* aDescendToEnd */ true);
+      TextLeafPoint origStart, end;
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        origStart = end = TextLeafPoint::GetCaret(Acc());
       } else {
-        end = origStart;
+        origStart = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+        Accessible* childAcc = GetChildAtOffset(adjustedOffset);
+        if (childAcc && childAcc->IsHyperText()) {
+          // We're searching for boundaries enclosing an embedded object.
+          // An embedded object might contain several boundaries itself.
+          // Thus, we must ensure we search for the end boundary from the last
+          // text in the subtree, not just the first.
+          // For example, if the embedded object is a link and it contains two
+          // words, but the second word expands beyond the link, we want to
+          // include the part of the second word which is outside of the link.
+          end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
+                                /* aDescendToEnd */ true);
+        } else {
+          end = origStart;
+        }
       }
       TextLeafPoint start = origStart.FindBoundary(aBoundaryType, eDirPrevious,
                                                    /* aIncludeOrigin */ true);
-      *aStartOffset =
-          static_cast<int32_t>(TransformOffset(start.mAcc, start.mOffset,
-                                               /* aIsEndOffset */ false));
-      if (*aStartOffset == static_cast<int32_t>(CharacterCount()) &&
-          (*aStartOffset > static_cast<int32_t>(adjustedOffset) ||
-           start != origStart)) {
-        // start is before this HyperTextAccessible. In that case,
-        // Transformoffset will return CharacterCount(), but we want to
-        // clip to the start of this HyperTextAccessible, not the end.
-        *aStartOffset = 0;
-      }
+      bool ok;
+      std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
+                                                    /* aIsEndOffset */ false);
       end = end.FindBoundary(aBoundaryType, eDirNext);
-      *aEndOffset =
-          static_cast<int32_t>(TransformOffset(end.mAcc, end.mOffset,
-                                               /* aIsEndOffset */ true));
+      std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
+                                                  /* aIsEndOffset */ true);
       TextSubstring(*aStartOffset, *aEndOffset, aText);
       return;
   }
+}
+
+int32_t HyperTextAccessibleBase::CaretOffset() const {
+  TextLeafPoint point = TextLeafPoint::GetCaret(const_cast<Accessible*>(Acc()))
+                            .ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+  if (point.mOffset == 0 && point.mAcc == Acc()) {
+    // If a text box is empty, there will be no children, so point.mAcc will be
+    // this HyperText.
+    return 0;
+  }
+  auto [ok, htOffset] =
+      TransformOffset(point.mAcc, point.mOffset, /* aIsEndOffset */ false);
+  if (!ok) {
+    // The caret is not within this HyperText.
+    return -1;
+  }
+  return htOffset;
 }
 
 bool HyperTextAccessibleBase::IsValidOffset(int32_t aOffset) {
@@ -290,6 +310,81 @@ bool HyperTextAccessibleBase::IsValidRange(int32_t aStartOffset,
 
 Accessible* HyperTextAccessibleBase::LinkAt(uint32_t aIndex) {
   return Acc()->EmbeddedChildAt(aIndex);
+}
+
+int32_t HyperTextAccessibleBase::LinkIndexOf(Accessible* aLink) {
+  return Acc()->IndexOfEmbeddedChild(aLink);
+}
+
+already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
+    bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+    int32_t* aEndOffset) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  *aStartOffset = *aEndOffset = 0;
+  index_t offset = ConvertMagicOffset(aOffset);
+  if (!offset.IsValid() || offset > CharacterCount()) {
+    NS_ERROR("Wrong in offset!");
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  Accessible* originAcc = GetChildAtOffset(offset);
+  if (!originAcc) {
+    // Offset 0 is correct offset when accessible has empty text. Include
+    // default attributes if they were requested, otherwise return empty set.
+    if (offset == 0) {
+      if (aIncludeDefAttrs) {
+        return DefaultTextAttributes();
+      }
+    }
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  if (!originAcc->IsText()) {
+    // This is an embedded object. One or more consecutive embedded objects
+    // form a single attrs run with no attributes.
+    *aStartOffset = aOffset;
+    *aEndOffset = aOffset + 1;
+    Accessible* parent = originAcc->Parent();
+    if (!parent) {
+      return RefPtr{new AccAttributes()}.forget();
+    }
+    int32_t originIdx = originAcc->IndexInParent();
+    if (originIdx > 0) {
+      // Check for embedded objects before the origin.
+      for (uint32_t idx = originIdx - 1;; --idx) {
+        Accessible* sibling = parent->ChildAt(idx);
+        if (sibling->IsText()) {
+          break;
+        }
+        --*aStartOffset;
+        if (idx == 0) {
+          break;
+        }
+      }
+    }
+    // Check for embedded objects after the origin.
+    for (uint32_t idx = originIdx + 1;; ++idx) {
+      Accessible* sibling = parent->ChildAt(idx);
+      if (!sibling || sibling->IsText()) {
+        break;
+      }
+      ++*aEndOffset;
+    }
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  TextLeafPoint origin = ToTextLeafPoint(static_cast<int32_t>(offset));
+  RefPtr<AccAttributes> attributes = origin.GetTextAttributes(aIncludeDefAttrs);
+  TextLeafPoint start = origin.FindTextAttrsStart(
+      eDirPrevious, /* aIncludeOrigin */ true, attributes, aIncludeDefAttrs);
+  bool ok;
+  std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
+                                                /* aIsEndOffset */ false);
+  TextLeafPoint end = origin.FindTextAttrsStart(
+      eDirNext, /* aIncludeOrigin */ false, attributes, aIncludeDefAttrs);
+  std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
+                                              /* aIsEndOffset */ true);
+  return attributes.forget();
 }
 
 }  // namespace mozilla::a11y

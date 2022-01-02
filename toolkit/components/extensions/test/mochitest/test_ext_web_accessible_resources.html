@@ -230,7 +230,7 @@ add_task(async function test_web_accessible_resources() {
     manifest: {
       content_scripts: [
         {
-          matches: ["http://example.com/"],
+          matches: ["https://example.com/"],
           js: ["content_script.js"],
           run_at: "document_idle",
         },
@@ -274,7 +274,7 @@ add_task(async function test_web_accessible_resources() {
 
   await extension.awaitMessage("ready");
 
-  let win = window.open("http://example.com/");
+  let win = window.open("https://example.com/");
 
   await extension.awaitFinish("web-accessible-resources");
 

@@ -65,10 +65,14 @@ fn signed_cert_timestamp(fd: *mut PRFileDesc) -> Option<Vec<u8>> {
     let sct_nss = unsafe { SSL_PeerSignedCertTimestamps(fd) };
     match NonNull::new(sct_nss as *mut SECItem) {
         Some(sct_ptr) => {
-            let sct_slice = unsafe {
-                slice::from_raw_parts(sct_ptr.as_ref().data, sct_ptr.as_ref().len as usize)
-            };
-            Some(sct_slice.to_owned())
+            if unsafe { sct_ptr.as_ref().len == 0 || sct_ptr.as_ref().data.is_null() } {
+                Some(Vec::new())
+            } else {
+                let sct_slice = unsafe {
+                    slice::from_raw_parts(sct_ptr.as_ref().data, sct_ptr.as_ref().len as usize)
+                };
+                Some(sct_slice.to_owned())
+            }
         }
         None => None,
     }

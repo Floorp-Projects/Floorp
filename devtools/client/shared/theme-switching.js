@@ -6,7 +6,7 @@
 "use strict";
 (function() {
   const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const { gDevTools } = require("devtools/client/framework/devtools");
   const {
@@ -118,8 +118,14 @@
     switchTheme(getTheme());
   }
 
-  if (documentElement.hasAttribute("force-theme")) {
-    switchTheme(documentElement.getAttribute("force-theme"));
+  // Check if the current document or the embedder of the document enforces a
+  // theme.
+  const forcedTheme =
+    documentElement.getAttribute("force-theme") ||
+    window.top.document.documentElement.getAttribute("force-theme");
+
+  if (forcedTheme) {
+    switchTheme(forcedTheme);
   } else {
     switchTheme(getTheme());
 

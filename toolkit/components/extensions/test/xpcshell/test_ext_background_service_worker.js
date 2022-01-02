@@ -418,7 +418,7 @@ add_task(async function test_serviceworker_lifecycle_events() {
   info(
     "trigger delayed call to nsIServiceWorkerManager.registerForAddonPrincipal"
   );
-  extension.extension.emit("start-background-page");
+  extension.extension.emit("start-background-script");
 
   info("Force activate the extension worker");
   const newSwReg = swm.getRegistrationByPrincipal(

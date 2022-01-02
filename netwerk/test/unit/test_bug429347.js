@@ -1,7 +1,7 @@
 "use strict";
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var ios = Services.io;
 
   var uri1 = ios.newURI("http://example.com#bar");
   var uri2 = ios.newURI("http://example.com/#bar");

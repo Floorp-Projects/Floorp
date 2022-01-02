@@ -331,6 +331,10 @@ ceb{
             "LRD",
             "Liberian Dollar",
         }
+        LSL{
+            "LSL",
+            "Lesotho Loti",
+        }
         LYD{
             "LYD",
             "Libyan Dinar",
@@ -956,6 +960,10 @@ ceb{
         LRD{
             one{"Liberian dollar"}
             other{"Mga Liberian dollar"}
+        }
+        LSL{
+            one{"Lesotho loti"}
+            other{"Mga Lesotho loti"}
         }
         LYD{
             one{"Libyan dinar"}

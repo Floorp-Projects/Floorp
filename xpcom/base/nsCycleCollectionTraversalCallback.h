@@ -31,7 +31,7 @@ class NS_NO_VTABLE nsCycleCollectionTraversalCallback {
                    uint64_t aCompartmentAddress = 0) = 0;
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) = 0;
-  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aThing) = 0;
+  NS_IMETHOD_(void) NoteJSChild(JS::GCCellPtr aThing) = 0;
   NS_IMETHOD_(void)
   NoteNativeChild(void* aChild, nsCycleCollectionParticipant* aHelper) = 0;
 

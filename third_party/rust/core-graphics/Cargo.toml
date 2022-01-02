@@ -12,7 +12,7 @@
 
 [package]
 name = "core-graphics"
-version = "0.22.2"
+version = "0.22.3"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Core Graphics for macOS"
 homepage = "https://github.com/servo/core-graphics-rs"

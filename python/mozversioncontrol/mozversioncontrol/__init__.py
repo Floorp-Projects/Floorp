@@ -197,7 +197,7 @@ class Repository(object):
         """
 
     @abc.abstractmethod
-    def get_outgoing_files(self, diff_filter, upstream="default"):
+    def get_outgoing_files(self, diff_filter, upstream):
         """Return a list of changed files compared to upstream.
 
         ``diff_filter`` works the same as `get_changed_files`.
@@ -431,8 +431,14 @@ class HgRepository(Repository):
             template = self._files_template(diff_filter)
             return self._run("log", "-r", rev, "-T", template).splitlines()
 
-    def get_outgoing_files(self, diff_filter="ADM", upstream="default"):
+    def get_outgoing_files(self, diff_filter="ADM", upstream=None):
         template = self._files_template(diff_filter)
+
+        if not upstream:
+            return self._run(
+                "log", "-r", "draft() and ancestors(.)", "--template", template
+            ).split()
+
         return self._run(
             "outgoing",
             "-r",
@@ -586,10 +592,10 @@ class GitRepository(Repository):
 
         return self._run(*cmd).splitlines()
 
-    def get_outgoing_files(self, diff_filter="ADM", upstream="default"):
+    def get_outgoing_files(self, diff_filter="ADM", upstream=None):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
 
-        not_condition = "--remotes" if upstream == "default" else upstream
+        not_condition = upstream if upstream else "--remotes"
 
         files = self._run(
             "log",

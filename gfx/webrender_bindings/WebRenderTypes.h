@@ -20,6 +20,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
 #include "Units.h"
+#include "nsIWidgetListener.h"
 
 namespace mozilla {
 
@@ -103,10 +104,10 @@ inline gfx::SurfaceFormat ImageFormatToSurfaceFormat(ImageFormat aFormat) {
 }
 
 // This extra piece of data is used to differentiate when spatial nodes that are
-// created by Gecko that have the same mFrame and PerFrameKey. This currently only
-// occurs with sticky display list items that are also zoomable, which results in
-// Gecko creating both a sticky spatial node, and then a property animated reference
-// frame for APZ
+// created by Gecko that have the same mFrame and PerFrameKey. This currently
+// only occurs with sticky display list items that are also zoomable, which
+// results in Gecko creating both a sticky spatial node, and then a property
+// animated reference frame for APZ
 enum class SpatialKeyKind : uint32_t {
   Transform,
   Perspective,
@@ -116,9 +117,10 @@ enum class SpatialKeyKind : uint32_t {
   APZ,
 };
 
-// Construct a unique, persistent spatial key based on the frame tree pointer, per-frame key
-// and a spatial key kind. For now, this covers all the ways Gecko creates spatial nodes.
-// In future, we may need to be more clever with the SpatialKeyKind.
+// Construct a unique, persistent spatial key based on the frame tree pointer,
+// per-frame key and a spatial key kind. For now, this covers all the ways Gecko
+// creates spatial nodes. In future, we may need to be more clever with the
+// SpatialKeyKind.
 inline wr::SpatialTreeItemKey SpatialKey(uint64_t aFrame, uint32_t aPerFrameKey,
                                          SpatialKeyKind aKind) {
   return wr::SpatialTreeItemKey{
@@ -138,7 +140,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
 
   ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = 0;
@@ -150,7 +152,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
                   gfx::SurfaceFormat aFormat,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
@@ -162,7 +164,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
                   gfx::SurfaceFormat aFormat, OpacityType aOpacity,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
@@ -869,6 +871,22 @@ static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
   synthetic_italics.angle =
       int16_t(std::min(std::max(aDegrees, -89.0f), 89.0f) * 256.0f);
   return synthetic_italics;
+}
+
+static inline wr::WindowSizeMode ToWrWindowSizeMode(nsSizeMode aSizeMode) {
+  switch (aSizeMode) {
+    case nsSizeMode_Normal:
+      return wr::WindowSizeMode::Normal;
+    case nsSizeMode_Minimized:
+      return wr::WindowSizeMode::Minimized;
+    case nsSizeMode_Maximized:
+      return wr::WindowSizeMode::Maximized;
+    case nsSizeMode_Fullscreen:
+      return wr::WindowSizeMode::Fullscreen;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tried to convert invalid size mode.");
+      return wr::WindowSizeMode::Invalid;
+  }
 }
 
 }  // namespace wr

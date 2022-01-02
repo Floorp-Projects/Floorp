@@ -95,6 +95,10 @@ def checking(what, callback=None):
 #   passing $PATH (for example) as an element.
 # - `bootstrap` is a path relative to the bootstrap root path (e.g ~/.mozbuild)
 #   where to find the program if it's bootstrapped.
+# - `validate` is a callback function that takes a path and returns True if
+#   the program at that location is appropriate or not, or False if not.
+#   when the callback returns False, check_prog ignores the program and goes
+#   on to the next from the `progs` list.
 #
 # - `bootstrap_search_path` is not an argument that users of the template are
 #   supposed to pass. See the override of check_prog in top-level moz.configure.
@@ -115,6 +119,7 @@ def check_prog(
     paths=None,
     bootstrap=None,
     when=None,
+    validate=None,
     bootstrap_search_path=None,
 ):
     if input is not None:
@@ -186,6 +191,9 @@ def check_prog(
         for prog in value or progs:
             log.debug("%s: Looking for %s", var.lower(), quote(prog))
             result = find_program(prog, paths)
+            if validate and result and not validate(result):
+                log.debug("%s: %s found but didn't work", var.lower(), quote(result))
+                continue
             if result:
                 return result
 

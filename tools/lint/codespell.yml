@@ -35,7 +35,6 @@ codespell:
         - python/mach/docs/
         - python/mozlint/
         - remote/doc/
-        - remote/marionette/doc/
         - security/manager/locales/en-US/
         - services/sync/locales/en-US/
         - taskcluster/docs/

@@ -85,4 +85,11 @@ var WebNavigationFrames = {
     visit(bc);
     return frames.map(getFrameDetail);
   },
+
+  getFromWindow(target) {
+    if (target instanceof Window) {
+      return getFrameId(BrowsingContext.getFromWindow(target));
+    }
+    return -1;
+  },
 };

@@ -142,11 +142,11 @@ class LegacyWorkersWatcher {
     this.target = this.targetCommand.targetFront;
 
     if (this.target.isParentProcess) {
-      await this.targetCommand.watchTargets(
-        [this.targetCommand.TYPES.PROCESS],
-        this._onProcessAvailable,
-        this._onProcessDestroyed
-      );
+      await this.targetCommand.watchTargets({
+        types: [this.targetCommand.TYPES.PROCESS],
+        onAvailable: this._onProcessAvailable,
+        onDestroyed: this._onProcessDestroyed,
+      });
 
       // The ParentProcessTarget front is considered to be a FRAME instead of a PROCESS.
       // So process it manually here.
@@ -199,11 +199,11 @@ class LegacyWorkersWatcher {
   unlisten({ isTargetSwitching } = {}) {
     // Stop listening for new process targets.
     if (this.target.isParentProcess) {
-      this.targetCommand.unwatchTargets(
-        [this.targetCommand.TYPES.PROCESS],
-        this._onProcessAvailable,
-        this._onProcessDestroyed
-      );
+      this.targetCommand.unwatchTargets({
+        types: [this.targetCommand.TYPES.PROCESS],
+        onAvailable: this._onProcessAvailable,
+        onDestroyed: this._onProcessDestroyed,
+      });
     } else if (this._isServiceWorkerWatcher) {
       this._legacyProcessesWatcher.unlisten();
     }

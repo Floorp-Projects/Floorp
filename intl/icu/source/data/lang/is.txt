@@ -101,7 +101,7 @@ is{
         chp{"sípevíska"}
         chr{"Cherokee-mál"}
         chy{"sjeyen"}
-        ckb{"sorani-kúrdíska"}
+        ckb{"miðkúrdíska"}
         co{"korsíska"}
         cop{"koptíska"}
         cr{"krí"}
@@ -401,6 +401,7 @@ is{
         raj{"rajastaní"}
         rap{"rapanúí"}
         rar{"rarótongska"}
+        rhg{"rohingja"}
         rm{"rómanska"}
         rn{"rúndí"}
         ro{"rúmenska"}

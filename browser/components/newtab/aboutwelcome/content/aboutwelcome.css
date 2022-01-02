@@ -469,6 +469,9 @@ body[lwt-newtab-brighttext] {
   margin-inline-start: 0;
   margin-top: 9px;
 }
+.onboardingContainer .tiles-theme-section legend {
+  cursor: default;
+}
 .onboardingContainer .tiles-container {
   margin: 10px auto;
 }

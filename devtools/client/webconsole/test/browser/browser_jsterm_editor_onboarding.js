@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Test onboarding UI";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test onboarding UI";
 const EDITOR_UI_PREF = "devtools.webconsole.input.editor";
 const EDITOR_ONBOARDING_PREF = "devtools.webconsole.input.editorOnboarding";
 

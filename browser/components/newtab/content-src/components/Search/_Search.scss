@@ -95,6 +95,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     box-shadow: $shadow-card;
     border: 1px solid transparent;
     border-radius: 8px;
+    color: var(--newtab-text-primary-color);
+    -moz-context-properties: fill;
+    fill: var(--newtab-text-secondary-color);
 
     &:dir(rtl) {
       background-position-x: right $search-icon-padding;
@@ -336,6 +339,12 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     border: 0;
     box-shadow: $context-menu-shadow;
     transform: translateY($textbox-shadow-size);
+    background-color: var(--newtab-background-color);
+
+    .contentSearchHeader {
+      color: var(--newtab-text-secondary-color);
+      background-color: var(--newtab-background-color-secondary);
+    }
 
     .contentSearchHeader,
     .contentSearchSettingsButton {
@@ -343,11 +352,32 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     .contentSearchSuggestionsList {
+      color: var(--newtab-text-primary-color);
       border: 0;
     }
 
     .contentSearchOneOffsTable {
       border-top: solid 1px var(--newtab-border-color);
+      background-color: var(--newtab-background-color);
+    }
+
+    .contentSearchSearchWithHeaderSearchText {
+      color: var(--newtab-text-primary-color);
+    }
+
+    .contentSearchSuggestionRow {
+      &.selected {
+        background: var(--newtab-element-hover-color);
+        color: var(--newtab-text-primary-color);
+
+        &:active {
+          background: var(--newtab-element-active-color);
+        }
+
+        .historyIcon {
+          fill: var(--newtab-text-secondary-color);
+        }
+      }
     }
 
     .contentSearchOneOffItem {
@@ -371,6 +401,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     .contentSearchSettingsButton {
       &:hover {
         background: var(--newtab-element-hover-color);
+        color: var(--newtab-text-primary-color);
       }
     }
   }

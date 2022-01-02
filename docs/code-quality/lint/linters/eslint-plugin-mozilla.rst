@@ -44,6 +44,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/reject-chromeutils-import-params
    eslint-plugin-mozilla/reject-importGlobalProperties
    eslint-plugin-mozilla/reject-osfile
+   eslint-plugin-mozilla/reject-scriptableunicodeconverter
    eslint-plugin-mozilla/reject-some-requires
    eslint-plugin-mozilla/use-cc-etc
    eslint-plugin-mozilla/use-chromeutils-import

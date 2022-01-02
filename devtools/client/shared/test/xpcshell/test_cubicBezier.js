@@ -5,7 +5,6 @@
 
 // Tests the CubicBezier API in the CubicBezierWidget module
 
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 var {
   CubicBezier,
   parseTimingFunction,

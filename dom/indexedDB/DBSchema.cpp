@@ -15,6 +15,7 @@
 #include "js/StructuredClone.h"
 #include "mozIStorageConnection.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ProfilerLabels.h"
 #include "nsDebug.h"
 #include "nsError.h"

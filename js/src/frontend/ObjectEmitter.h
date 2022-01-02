@@ -13,15 +13,13 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "frontend/BytecodeOffset.h"  // BytecodeOffset
-#include "frontend/EmitterScope.h"    // EmitterScope
-#include "frontend/NameOpEmitter.h"   // NameOpEmitter
-#include "frontend/ParseNode.h"       // AccessorType
-#include "frontend/ParserAtom.h"      // TaggedParserAtomIndex
-#include "frontend/TDZCheckCache.h"   // TDZCheckCache
-#include "vm/BytecodeUtil.h"          // JSOp
-#include "vm/NativeObject.h"          // PlainObject
-#include "vm/Scope.h"                 // LexicalScope
+#include "frontend/EmitterScope.h"   // EmitterScope
+#include "frontend/NameOpEmitter.h"  // NameOpEmitter
+#include "frontend/ParseNode.h"      // AccessorType
+#include "frontend/ParserAtom.h"     // TaggedParserAtomIndex
+#include "frontend/TDZCheckCache.h"  // TDZCheckCache
+#include "vm/Opcodes.h"              // JSOp
+#include "vm/Scope.h"                // LexicalScope
 
 namespace js {
 

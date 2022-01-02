@@ -416,13 +416,12 @@ void Shmem::Dealloc(PrivateIPDLCaller, SharedMemory* aSegment) {
 
 #endif  // if defined(DEBUG)
 
-UniquePtr<IPC::Message> Shmem::ShareTo(PrivateIPDLCaller,
-                                       base::ProcessId aTargetPid,
-                                       int32_t routingId) {
+UniquePtr<IPC::Message> Shmem::MkCreatedMessage(PrivateIPDLCaller,
+                                                int32_t routingId) {
   AssertInvariants();
 
   auto msg = MakeUnique<ShmemCreated>(routingId, mId, mSize, mSegment->Type());
-  if (!mSegment->ShareHandle(aTargetPid, msg.get())) {
+  if (!mSegment->WriteHandle(msg.get())) {
     return nullptr;
   }
   // close the handle to the segment after it is shared
@@ -430,8 +429,8 @@ UniquePtr<IPC::Message> Shmem::ShareTo(PrivateIPDLCaller,
   return msg;
 }
 
-UniquePtr<IPC::Message> Shmem::UnshareFrom(PrivateIPDLCaller,
-                                           int32_t routingId) {
+UniquePtr<IPC::Message> Shmem::MkDestroyedMessage(PrivateIPDLCaller,
+                                                  int32_t routingId) {
   AssertInvariants();
   return MakeUnique<ShmemDestroyed>(routingId, mId);
 }

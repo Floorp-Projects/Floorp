@@ -275,54 +275,38 @@ static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
   *aEndOffset = -1;
   int32_t startOffset = 0, endOffset = 0;
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return nullptr;
-    }
-
-    RefPtr<AccAttributes> attributes =
-        text->TextAttributes(false, aOffset, &startOffset, &endOffset);
-
-    *aStartOffset = startOffset;
-    *aEndOffset = endOffset;
-
-    return ConvertToAtkTextAttributeSet(attributes);
-  }
-
-  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText));
-  if (!proxy) {
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
     return nullptr;
   }
 
-  RefPtr<AccAttributes> attrs;
-  proxy->TextAttributes(false, aOffset, &attrs, &startOffset, &endOffset);
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return nullptr;
+  }
+
+  RefPtr<AccAttributes> attributes =
+      text->TextAttributes(false, aOffset, &startOffset, &endOffset);
+
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
-  return ConvertToAtkTextAttributeSet(attrs);
+
+  return ConvertToAtkTextAttributeSet(attributes);
 }
 
 static AtkAttributeSet* getDefaultAttributesCB(AtkText* aText) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return nullptr;
-    }
-
-    RefPtr<AccAttributes> attributes = text->DefaultTextAttributes();
-    return ConvertToAtkTextAttributeSet(attributes);
-  }
-
-  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText));
-  if (!proxy) {
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
     return nullptr;
   }
 
-  RefPtr<AccAttributes> attrs;
-  proxy->DefaultTextAttributes(&attrs);
-  return ConvertToAtkTextAttributeSet(attrs);
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return nullptr;
+  }
+
+  RefPtr<AccAttributes> attributes = text->DefaultTextAttributes();
+  return ConvertToAtkTextAttributeSet(attributes);
 }
 
 static void getCharacterExtentsCB(AtkText* aText, gint aOffset, gint* aX,

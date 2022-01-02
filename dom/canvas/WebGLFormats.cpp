@@ -1078,15 +1078,15 @@ UniquePtr<FormatUsageAuthority> FormatUsageAuthority::CreateForWebGL2(
   fnAllowES3TexFormat(FOO(RGBA32I), true, false);
   fnAllowES3TexFormat(FOO(RGBA32UI), true, false);
 
-  // GLES 3.0.4, p133, table 3.14
-  // p151:
-  //   Depth textures and the depth components of depth/stencil textures can be
-  //   treated as `RED` textures during texture filtering and application.
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16), true, true);
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24), true, true);
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, true);
-  fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8), true, true);
-  fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8), true, true);
+  // Sized depth or depth-stencil formats are not filterable
+  // per GLES 3.0.6 p161.
+  // Specifically, they're texture-incomplete if depth-compare:none and
+  // not NEAREST.
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8), true, false);
+  fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8), true, false);
 
 #undef FOO
 

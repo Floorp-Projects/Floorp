@@ -17,7 +17,7 @@ using namespace mozilla;
 /***************************************************************************/
 // implement JSObject2WrappedJSMap...
 
-void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC() {
+void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(JSTracer* trc) {
   // Check all wrappers and update their JSObject pointer if it has been
   // moved. Release any wrappers whose weakly held JSObject has died.
 
@@ -29,7 +29,7 @@ void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC() {
     // Walk the wrapper chain and update all JSObjects.
     while (wrapper) {
       if (wrapper->IsSubjectToFinalization()) {
-        wrapper->UpdateObjectPointerAfterGC();
+        wrapper->UpdateObjectPointerAfterGC(trc);
         if (!wrapper->GetJSObjectPreserveColor()) {
           dying.AppendElement(dont_AddRef(wrapper));
         }
@@ -38,12 +38,8 @@ void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC() {
     }
 
     // Remove or update the JSObject key in the table if necessary.
-    JSObject* obj = iter.get().key().unbarrieredGet();
-    JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
-    if (!obj) {
+    if (!JS_UpdateWeakPointerAfterGC(trc, &iter.get().mutableKey())) {
       iter.remove();
-    } else {
-      iter.get().mutableKey() = obj;
     }
   }
 }

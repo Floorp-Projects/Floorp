@@ -48,7 +48,8 @@ AntiTracking._createTask({
       });
     SpecialPowers.wrap(document).clearUserGestureActivation();
   },
-  extraPrefs: null,
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  extraPrefs: [["network.cookie.sameSite.laxByDefault", false]],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,

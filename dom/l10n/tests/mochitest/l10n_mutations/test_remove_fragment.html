@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test L10n Mutations for removing fragment</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    let div = document.createElement("div");
+    let div2 = document.createElement("div");
+
+    let elem = document.createElement("p");
+    let elem2 = document.createElement("p");
+    let elem3 = document.createElement("p");
+    let elem4 = document.createElement("p");
+
+    document.l10n.setAttributes(elem, "crash-reports-title");
+    document.l10n.setAttributes(elem2, "crash-reports-title");
+    document.l10n.setAttributes(elem3, "crash-reports-title");
+    document.l10n.setAttributes(elem4, "crash-reports-title");
+
+    div.appendChild(elem);
+    div.appendChild(elem2);
+    div.appendChild(elem3);
+    div.appendChild(elem4);
+
+    document.body.appendChild(div);
+
+    is(elem.textContent.length, 0);
+    is(elem2.textContent.length, 0);
+    is(elem3.textContent.length, 0);
+    is(elem4.textContent.length, 0);
+
+    document.body.removeChild(div);
+
+    div2.appendChild(elem);
+    div2.appendChild(elem3);
+
+    document.body.appendChild(div2);
+
+    // 1. `elem` should be localized since it is in DOM.
+    await SimpleTest.waitForCondition(() => elem.textContent.length > 0);
+
+    // 2. `elem2` was removed before l10n frame, so it should remain not localized.
+    is(elem2.textContent.length, 0);
+
+    // 3. `elem3` was added/removed/re-added so it should become localized.
+    await SimpleTest.waitForCondition(() => elem3.textContent.length > 0);
+
+    // 4. `elem4` was not re-added, so it shouldn't be localized.
+    is(elem4.textContent.length, 0);
+
+    document.body.appendChild(div);
+    // 5. Now we re-added `elem4` to DOM so it should get localized.
+    await SimpleTest.waitForCondition(() => elem4.textContent.length > 0);
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+</body>
+</html>

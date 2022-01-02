@@ -134,7 +134,7 @@ void URLSearchParams::Delete(const nsAString& aName) {
 void URLSearchParams::DeleteAll() { mParams->DeleteAll(); }
 
 void URLSearchParams::Serialize(nsAString& aValue) const {
-  mParams->Serialize(aValue);
+  mParams->Serialize(aValue, true);
 }
 
 void URLSearchParams::NotifyObserver() {

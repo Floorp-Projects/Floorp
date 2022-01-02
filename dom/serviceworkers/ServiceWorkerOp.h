@@ -9,6 +9,7 @@
 
 #include <functional>
 
+#include "mozilla/dom/ServiceWorkerOpPromise.h"
 #include "nsISupportsImpl.h"
 
 #include "ServiceWorkerEvents.h"
@@ -173,6 +174,14 @@ class FetchEventOp final : public ExtendableEventOp,
   // Must be set to `nullptr` on the worker thread because `Promise`'s
   // destructor must be called on the worker thread.
   RefPtr<Promise> mHandled;
+
+  // Must be set to `nullptr` on the worker thread because `Promise`'s
+  // destructor must be called on the worker thread.
+  RefPtr<Promise> mPreloadResponse;
+
+  // Holds the callback that resolves mPreloadResponse.
+  MozPromiseRequestHolder<FetchEventPreloadResponsePromise>
+      mPreloadResponsePromiseRequestHolder;
 
   TimeStamp mFetchHandlerStart;
   TimeStamp mFetchHandlerFinish;

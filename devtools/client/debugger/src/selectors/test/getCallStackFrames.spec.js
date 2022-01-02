@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { getCallStackFrames } from "../getCallStackFrames";
-import { pullAt } from "lodash";
 import { insertResources, createInitial } from "../../utils/resource";
 
 describe("getCallStackFrames selector", () => {
@@ -155,25 +154,9 @@ describe("getCallStackFrames selector", () => {
         state.selectedSource
       );
 
-      const babelFrames = pullAt(frames, [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-      ]);
-      const otherFrames = frames;
+      // frames from 1-8 and 10-17 are babel frames.
+      const babelFrames = [...frames.slice(1, 7), ...frames.slice(10, 7)];
+      const otherFrames = frames.filter(frame => !babelFrames.includes(frame));
 
       expect(babelFrames).toEqual(
         Array(babelFrames.length).fill(

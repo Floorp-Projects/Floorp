@@ -43,10 +43,6 @@ class ContentProcessTargetFront extends TargetMixin(
     return `(pid ${this.processID}) Content Process`;
   }
 
-  attach() {
-    return Promise.resolve();
-  }
-
   reconfigure() {
     // Toolbox and options panel are calling this method but Worker Target can't be
     // reconfigured. So we ignore this call here.

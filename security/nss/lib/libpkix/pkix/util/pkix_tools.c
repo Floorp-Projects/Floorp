@@ -1073,6 +1073,7 @@ pkix_CacheCert_Lookup(
                                    (PKIX_PL_Object *)cert,
                                    plContext),
                                   PKIX_LISTAPPENDITEMFAILED);
+                           *pFound = PKIX_TRUE;
                         } else {
                             PKIX_DECREF(selectorError);
                         }

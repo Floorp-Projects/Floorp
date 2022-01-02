@@ -134,6 +134,206 @@ class InspectorCommand {
     // Descending sort the list by count, i.e. second element of the arrays
     return sortSuggestions(mergedSuggestions);
   }
+
+  /**
+   * Find a nodeFront from an array of selectors. The last item of the array is the selector
+   * for the element in its owner document, and the previous items are selectors to iframes
+   * that lead to the frame where the searched node lives in.
+   *
+   * For example, with the following markup
+   * <html>
+   *  <iframe id="level-1" src="…">
+   *    <iframe id="level-2" src="…">
+   *      <h1>Waldo</h1>
+   *    </iframe>
+   *  </iframe>
+   *
+   * If you want to retrieve the `<h1>` nodeFront, `selectors` would be:
+   * [
+   *   "#level-1",
+   *   "#level-2",
+   *   "h1",
+   * ]
+   *
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object.
+   *        Several selectors can be needed if the element is nested in frames
+   *        and not directly in the root document.
+   * @param {Integer} timeoutInMs
+   *        The maximum number of ms the function should run (defaults to 5000).
+   *        If it exceeds this, the returned promise will resolve with `null`.
+   * @return {Promise<NodeFront|null>} a promise that resolves when the node front is found
+   *        for selection using inspector tools. It resolves with the deepest frame document
+   *        that could be retrieved when the "final" nodeFront couldn't be found in the page.
+   *        It resolves with `null` when the function runs for more than timeoutInMs.
+   */
+  async findNodeFrontFromSelectors(nodeSelectors, timeoutInMs = 5000) {
+    if (
+      !nodeSelectors ||
+      !Array.isArray(nodeSelectors) ||
+      nodeSelectors.length === 0
+    ) {
+      console.warn(
+        "findNodeFrontFromSelectors expect a non-empty array but got",
+        nodeSelectors
+      );
+      return null;
+    }
+
+    const { walker } = await this.commands.targetCommand.targetFront.getFront(
+      "inspector"
+    );
+    const querySelectors = async nodeFront => {
+      const selector = nodeSelectors.shift();
+      if (!selector) {
+        return nodeFront;
+      }
+      nodeFront = await nodeFront.walkerFront.querySelector(
+        nodeFront,
+        selector
+      );
+      // It's possible the containing iframe isn't available by the time
+      // walkerFront.querySelector is called, which causes the re-selected node to be
+      // unavailable. There also isn't a way for us to know when all iframes on the page
+      // have been created after a reload. Because of this, we should should bail here.
+      if (!nodeFront) {
+        return null;
+      }
+
+      if (nodeSelectors.length > 0) {
+        if (!nodeFront.isShadowHost) {
+          await this.#waitForFrameLoad(nodeFront);
+        }
+
+        const { nodes } = await walker.children(nodeFront);
+
+        // If there are remaining selectors to process, they will target a document or a
+        // document-fragment under the current node. Whether the element is a frame or
+        // a web component, it can only contain one document/document-fragment, so just
+        // select the first one available.
+        nodeFront = nodes.find(node => {
+          const { nodeType } = node;
+          return (
+            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+            nodeType === Node.DOCUMENT_NODE
+          );
+        });
+
+        // The iframe selector might have matched an element which is not an
+        // iframe in the new page (or an iframe with no document?). In this
+        // case, bail out and fallback to the root body element.
+        if (!nodeFront) {
+          return null;
+        }
+      }
+      const childrenNodeFront = await querySelectors(nodeFront);
+      return childrenNodeFront || nodeFront;
+    };
+    const rootNodeFront = await walker.getRootNode();
+
+    // Since this is only used for re-setting a selection after a page reloads, we can
+    // put a timeout, in case there's an iframe that would take too much time to load,
+    // and prevent the markup view to be populated.
+    const onTimeout = new Promise(res => setTimeout(res, timeoutInMs)).then(
+      () => null
+    );
+    const onQuerySelectors = querySelectors(rootNodeFront);
+    return Promise.race([onTimeout, onQuerySelectors]);
+  }
+
+  /**
+   * Wait for the given NodeFront child document to be loaded.
+   *
+   * @param {NodeFront} A nodeFront representing a frame
+   */
+  async #waitForFrameLoad(nodeFront) {
+    const domLoadingPromises = [];
+
+    // if the flag isn't true, we don't know for sure if the iframe will be remote
+    // or not; when the nodeFront was created, the iframe might still have been loading
+    // and in such case, its associated window can be an initial document.
+    // Luckily, once EFT is enabled everywhere we can remove this call and only wait
+    // for the associated target.
+    if (!nodeFront.useChildTargetToFetchChildren) {
+      domLoadingPromises.push(nodeFront.waitForFrameLoad());
+    }
+
+    const {
+      onResource: onDomInteractiveResource,
+    } = await this.commands.resourceCommand.waitForNextResource(
+      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        // We might be in a case where the children document is already loaded (i.e. we
+        // would already have received the dom-interactive resource), so it's important
+        // to _not_ ignore existing resource.
+        predicate: resource =>
+          resource.name == "dom-interactive" &&
+          resource.targetFront !== nodeFront.targetFront &&
+          resource.targetFront.browsingContextID == nodeFront.browsingContextID,
+      }
+    );
+    const newTargetResolveValue = Symbol();
+    domLoadingPromises.push(
+      onDomInteractiveResource.then(() => newTargetResolveValue)
+    );
+
+    // Here we wait for any promise to resolve first. `waitForFrameLoad` might throw
+    // (if the iframe does end up being remote), so we don't want to use `Promise.race`.
+    const loadResult = await Promise.any(domLoadingPromises);
+
+    // The Node may have `useChildTargetToFetchChildren` set to false because the
+    // child document was still loading when fetching its form. But it may happen that
+    // the Node ends up being a remote iframe.
+    // When this happen we will try to call `waitForFrameLoad` which will throw, but
+    // we will be notified about the new target.
+    // This is the special edge case we are trying to handle here.
+    // We want WalkerFront.children to consider this as an iframe with a dedicated target.
+    if (loadResult == newTargetResolveValue) {
+      nodeFront._form.useChildTargetToFetchChildren = true;
+    }
+  }
+
+  /**
+   * Get the full array of selectors from the topmost document, going through
+   * iframes.
+   * For example, given the following markup:
+   *
+   * <html>
+   *   <body>
+   *     <iframe src="...">
+   *       <html>
+   *         <body>
+   *           <h1 id="sub-document-title">Title of sub document</h1>
+   *         </body>
+   *       </html>
+   *     </iframe>
+   *   </body>
+   * </html>
+   *
+   * If this function is called with the NodeFront for the h1#sub-document-title element,
+   * it will return something like: ["body > iframe", "#sub-document-title"]
+   *
+   * @param {NodeFront} nodeFront: The nodefront to get the selectors for
+   * @returns {Promise<Array<String>>} A promise that resolves with an array of selectors (strings)
+   */
+  async getNodeFrontSelectorsFromTopDocument(nodeFront) {
+    const selectors = [];
+
+    let currentNode = nodeFront;
+    while (currentNode) {
+      // Get the selector for the node inside its document
+      const selector = await currentNode.getUniqueSelector();
+      selectors.unshift(selector);
+
+      // Retrieve the node's document/shadowRoot nodeFront so we can get its parent
+      // (so if we're in an iframe, we'll get the <iframe> node front, and if we're in a
+      // shadow dom document, we'll get the host).
+      const rootNode = currentNode.getOwnerRootNodeFront();
+      currentNode = rootNode?.parentOrHost();
+    }
+
+    return selectors;
+  }
 }
 
 // This is a fork of the server sort:

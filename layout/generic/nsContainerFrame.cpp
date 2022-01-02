@@ -439,9 +439,9 @@ DeviceColor nsDisplaySelectionOverlay::ComputeColor() const {
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
     colorID = LookAndFeel::ColorID::Highlight;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
-    colorID = LookAndFeel::ColorID::TextSelectBackgroundAttention;
+    colorID = LookAndFeel::ColorID::TextSelectAttentionBackground;
   } else {
-    colorID = LookAndFeel::ColorID::TextSelectBackgroundDisabled;
+    colorID = LookAndFeel::ColorID::TextSelectDisabledBackground;
   }
 
   return ApplyTransparencyIfNecessary(

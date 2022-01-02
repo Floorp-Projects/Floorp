@@ -219,7 +219,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   //
   // A reference to the session object is held until this function has
   // returned.
-  void NotifyCompositorSessionLost(
+  virtual void NotifyCompositorSessionLost(
       mozilla::layers::CompositorSession* aSession);
 
   already_AddRefed<mozilla::CompositorVsyncDispatcher>
@@ -720,7 +720,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
  protected:
   static nsAutoString debug_GuiEventToString(
       mozilla::WidgetGUIEvent* aGuiEvent);
-  static bool debug_WantPaintFlashing();
 
   static void debug_DumpInvalidate(FILE* aFileOut, nsIWidget* aWidget,
                                    const LayoutDeviceIntRect* aRect,

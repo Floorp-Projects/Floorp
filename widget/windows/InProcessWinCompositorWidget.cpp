@@ -228,9 +228,6 @@ InProcessWinCompositorWidget::EndBackBufferDrawing() {
 
 bool InProcessWinCompositorWidget::InitCompositor(
     layers::Compositor* aCompositor) {
-  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_BASIC) {
-    DeviceManagerDx::Get()->InitializeDirectDraw();
-  }
   return true;
 }
 
@@ -278,6 +275,22 @@ void InProcessWinCompositorWidget::UpdateTransparency(
   if (mTransparencyMode == eTransparencyTransparent) {
     EnsureTransparentSurface();
   }
+}
+
+void InProcessWinCompositorWidget::NotifyVisibilityUpdated(
+    nsSizeMode aSizeMode, bool aIsFullyOccluded) {
+  mSizeMode = aSizeMode;
+  mIsFullyOccluded = aIsFullyOccluded;
+}
+
+nsSizeMode InProcessWinCompositorWidget::GetWindowSizeMode() const {
+  nsSizeMode sizeMode = mSizeMode;
+  return sizeMode;
+}
+
+bool InProcessWinCompositorWidget::GetWindowIsFullyOccluded() const {
+  bool isFullyOccluded = mIsFullyOccluded;
+  return isFullyOccluded;
 }
 
 bool InProcessWinCompositorWidget::HasGlass() const {

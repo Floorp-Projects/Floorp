@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -20,6 +21,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -106,6 +108,9 @@ public class GeckoThread extends Thread {
     }
   }
 
+  // -1 denotes an invalid or missing File Descriptor
+  private static final int INVALID_FD = -1;
+
   private static final NativeQueue sNativeQueue = new NativeQueue(State.INITIAL, State.RUNNING);
 
   /* package */ static NativeQueue getNativeQueue() {
@@ -143,29 +148,281 @@ public class GeckoThread extends Thread {
       1 << 2; // Enable native crash reporting.
 
   /* package */ static final String EXTRA_ARGS = "args";
-  private static final String EXTRA_PREFS_FD = "prefsFd";
-  private static final String EXTRA_PREF_MAP_FD = "prefMapFd";
-  private static final String EXTRA_IPC_FD = "ipcFd";
-  private static final String EXTRA_CRASH_FD = "crashFd";
-  private static final String EXTRA_CRASH_ANNOTATION_FD = "crashAnnotationFd";
 
   private boolean mInitialized;
   private InitInfo mInitInfo;
 
-  public static class InitInfo {
-    public String[] args;
-    public Bundle extras;
-    public int flags;
-    public Map<String, Object> prefs;
-    public String userSerialNumber;
+  public static final class ParcelFileDescriptors {
+    public final @Nullable ParcelFileDescriptor prefs;
+    public final @Nullable ParcelFileDescriptor prefMap;
+    public final @NonNull ParcelFileDescriptor ipc;
+    public final @Nullable ParcelFileDescriptor crashReporter;
+    public final @Nullable ParcelFileDescriptor crashAnnotation;
 
-    public boolean xpcshell;
-    public String outFilePath;
-    public int prefsFd;
-    public int prefMapFd;
-    public int ipcFd;
-    public int crashFd;
-    public int crashAnnotationFd;
+    private ParcelFileDescriptors(final Builder builder) {
+      prefs = builder.prefs;
+      prefMap = builder.prefMap;
+      ipc = builder.ipc;
+      crashReporter = builder.crashReporter;
+      crashAnnotation = builder.crashAnnotation;
+    }
+
+    public FileDescriptors detach() {
+      return FileDescriptors.builder()
+          .prefs(detach(prefs))
+          .prefMap(detach(prefMap))
+          .ipc(detach(ipc))
+          .crashReporter(detach(crashReporter))
+          .crashAnnotation(detach(crashAnnotation))
+          .build();
+    }
+
+    private static int detach(final ParcelFileDescriptor pfd) {
+      if (pfd == null) {
+        return INVALID_FD;
+      }
+      return pfd.detachFd();
+    }
+
+    public void close() {
+      close(prefs, prefMap, ipc, crashReporter, crashAnnotation);
+    }
+
+    private static void close(final ParcelFileDescriptor... pfds) {
+      for (final ParcelFileDescriptor pfd : pfds) {
+        if (pfd != null) {
+          try {
+            pfd.close();
+          } catch (final IOException ex) {
+            // Nothing we can do about this really.
+            Log.w(LOGTAG, "Failed to close File Descriptors.", ex);
+          }
+        }
+      }
+    }
+
+    public static ParcelFileDescriptors from(final FileDescriptors fds) {
+      return ParcelFileDescriptors.builder()
+          .prefs(from(fds.prefs))
+          .prefMap(from(fds.prefMap))
+          .ipc(from(fds.ipc))
+          .crashReporter(from(fds.crashReporter))
+          .crashAnnotation(from(fds.crashAnnotation))
+          .build();
+    }
+
+    private static ParcelFileDescriptor from(final int fd) {
+      if (fd == INVALID_FD) {
+        return null;
+      }
+      try {
+        return ParcelFileDescriptor.fromFd(fd);
+      } catch (final IOException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static class Builder {
+      ParcelFileDescriptor prefs;
+      ParcelFileDescriptor prefMap;
+      ParcelFileDescriptor ipc;
+      ParcelFileDescriptor crashReporter;
+      ParcelFileDescriptor crashAnnotation;
+
+      private Builder() {}
+
+      public ParcelFileDescriptors build() {
+        return new ParcelFileDescriptors(this);
+      }
+
+      public Builder prefs(final ParcelFileDescriptor prefs) {
+        this.prefs = prefs;
+        return this;
+      }
+
+      public Builder prefMap(final ParcelFileDescriptor prefMap) {
+        this.prefMap = prefMap;
+        return this;
+      }
+
+      public Builder ipc(final ParcelFileDescriptor ipc) {
+        this.ipc = ipc;
+        return this;
+      }
+
+      public Builder crashReporter(final ParcelFileDescriptor crashReporter) {
+        this.crashReporter = crashReporter;
+        return this;
+      }
+
+      public Builder crashAnnotation(final ParcelFileDescriptor crashAnnotation) {
+        this.crashAnnotation = crashAnnotation;
+        return this;
+      }
+    }
+  }
+
+  public static final class FileDescriptors {
+    final int prefs;
+    final int prefMap;
+    final int ipc;
+    final int crashReporter;
+    final int crashAnnotation;
+
+    private FileDescriptors(final Builder builder) {
+      prefs = builder.prefs;
+      prefMap = builder.prefMap;
+      ipc = builder.ipc;
+      crashReporter = builder.crashReporter;
+      crashAnnotation = builder.crashAnnotation;
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static class Builder {
+      int prefs = INVALID_FD;
+      int prefMap = INVALID_FD;
+      int ipc = INVALID_FD;
+      int crashReporter = INVALID_FD;
+      int crashAnnotation = INVALID_FD;
+
+      private Builder() {}
+
+      public FileDescriptors build() {
+        return new FileDescriptors(this);
+      }
+
+      public Builder prefs(final int prefs) {
+        this.prefs = prefs;
+        return this;
+      }
+
+      public Builder prefMap(final int prefMap) {
+        this.prefMap = prefMap;
+        return this;
+      }
+
+      public Builder ipc(final int ipc) {
+        this.ipc = ipc;
+        return this;
+      }
+
+      public Builder crashReporter(final int crashReporter) {
+        this.crashReporter = crashReporter;
+        return this;
+      }
+
+      public Builder crashAnnotation(final int crashAnnotation) {
+        this.crashAnnotation = crashAnnotation;
+        return this;
+      }
+    }
+  }
+
+  public static class InitInfo {
+    public final String[] args;
+    public final Bundle extras;
+    public final int flags;
+    public final Map<String, Object> prefs;
+    public final String userSerialNumber;
+
+    public final boolean xpcshell;
+    public final String outFilePath;
+
+    public final FileDescriptors fds;
+
+    private InitInfo(final Builder builder) {
+      final List<String> result = new ArrayList<>(builder.mArgs.length);
+
+      boolean xpcshell = false;
+      for (final String argument : builder.mArgs) {
+        if ("-xpcshell".equals(argument)) {
+          xpcshell = true;
+        } else {
+          result.add(argument);
+        }
+      }
+      this.xpcshell = xpcshell;
+
+      args = result.toArray(new String[0]);
+
+      extras = builder.mExtras != null ? new Bundle(builder.mExtras) : new Bundle(3);
+      flags = builder.mFlags;
+      prefs = builder.mPrefs;
+      userSerialNumber = builder.mUserSerialNumber;
+
+      outFilePath = xpcshell ? builder.mOutFilePath : null;
+
+      if (builder.mFds != null) {
+        fds = builder.mFds;
+      } else {
+        fds = FileDescriptors.builder().build();
+      }
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static class Builder {
+      private String[] mArgs;
+      private Bundle mExtras;
+      private int mFlags;
+      private Map<String, Object> mPrefs;
+      private String mUserSerialNumber;
+
+      private String mOutFilePath;
+
+      private FileDescriptors mFds;
+
+      // Prevent direct instantiation
+      private Builder() {}
+
+      public InitInfo build() {
+        return new InitInfo(this);
+      }
+
+      public Builder args(final String[] args) {
+        mArgs = args;
+        return this;
+      }
+
+      public Builder extras(final Bundle extras) {
+        mExtras = extras;
+        return this;
+      }
+
+      public Builder flags(final int flags) {
+        mFlags = flags;
+        return this;
+      }
+
+      public Builder prefs(final Map<String, Object> prefs) {
+        mPrefs = prefs;
+        return this;
+      }
+
+      public Builder userSerialNumber(final String userSerialNumber) {
+        mUserSerialNumber = userSerialNumber;
+        return this;
+      }
+
+      public Builder outFilePath(final String outFilePath) {
+        mOutFilePath = outFilePath;
+        return this;
+      }
+
+      public Builder fds(final FileDescriptors fds) {
+        mFds = fds;
+        return this;
+      }
+    }
   }
 
   private static class StateGeckoResult extends GeckoResult<Void> {
@@ -185,7 +442,7 @@ public class GeckoThread extends Thread {
   @WrapForJNI
   private static boolean isChildProcess() {
     final InitInfo info = INSTANCE.mInitInfo;
-    return info != null && info.extras.getInt(EXTRA_IPC_FD, -1) != -1;
+    return info != null && info.fds.ipc != INVALID_FD;
   }
 
   public static boolean init(final InitInfo info) {
@@ -203,29 +460,6 @@ public class GeckoThread extends Thread {
     sInitTimer = new TelemetryUtils.UptimeTimer("GV_STARTUP_RUNTIME_MS");
 
     mInitInfo = info;
-
-    mInitInfo.extras = (info.extras != null) ? new Bundle(info.extras) : new Bundle(3);
-
-    if (info.prefsFd > 0) {
-      mInitInfo.extras.putInt(EXTRA_PREFS_FD, info.prefsFd);
-    }
-
-    if (info.prefMapFd > 0) {
-      mInitInfo.extras.putInt(EXTRA_PREF_MAP_FD, info.prefMapFd);
-    }
-
-    if (info.ipcFd > 0) {
-      mInitInfo.extras.putInt(EXTRA_IPC_FD, info.ipcFd);
-    }
-
-    if (info.crashFd > 0) {
-      mInitInfo.extras.putInt(EXTRA_CRASH_FD, info.crashFd);
-    }
-
-    if (info.crashAnnotationFd > 0) {
-      mInitInfo.extras.putInt(EXTRA_CRASH_ANNOTATION_FD, info.crashAnnotationFd);
-    }
-
     mInitialized = true;
     notifyAll();
     return true;
@@ -278,7 +512,7 @@ public class GeckoThread extends Thread {
 
   private String[] getMainProcessArgs() {
     final Context context = GeckoAppShell.getApplicationContext();
-    final ArrayList<String> args = new ArrayList<String>();
+    final ArrayList<String> args = new ArrayList<>();
 
     // argv[0] is the program name, which for us is the package name.
     args.add(context.getPackageName());
@@ -307,7 +541,7 @@ public class GeckoThread extends Thread {
       args.add(arg);
     }
 
-    return args.toArray(new String[args.size()]);
+    return args.toArray(new String[0]);
   }
 
   public static @Nullable Bundle getActiveExtras() {
@@ -442,11 +676,11 @@ public class GeckoThread extends Thread {
     // And go.
     GeckoLoader.nativeRun(
         args,
-        mInitInfo.extras.getInt(EXTRA_PREFS_FD, -1),
-        mInitInfo.extras.getInt(EXTRA_PREF_MAP_FD, -1),
-        mInitInfo.extras.getInt(EXTRA_IPC_FD, -1),
-        mInitInfo.extras.getInt(EXTRA_CRASH_FD, -1),
-        mInitInfo.extras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1),
+        mInitInfo.fds.prefs,
+        mInitInfo.fds.prefMap,
+        mInitInfo.fds.ipc,
+        mInitInfo.fds.crashReporter,
+        mInitInfo.fds.crashAnnotation,
         isChildProcess ? false : mInitInfo.xpcshell,
         isChildProcess ? null : mInitInfo.outFilePath);
 

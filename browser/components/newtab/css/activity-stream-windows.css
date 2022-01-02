@@ -8,7 +8,6 @@ html {
 }
 
 /* New Tab Page */
-@-moz-document url("about:newtab"), url("about:home") {
 
   body {
     margin: 0;
@@ -122,68 +121,9 @@ html {
     --newtab-card-background-color: var(--newtab-topsites-background-color) !important;
     --newtab-card-hairline-color: var(--newtab-topsites-background-color) !important;
   }
-}
-
-/* Private Browsing Page */
-@-moz-document url("about:privatebrowsing") {
-  html.private {
-    --in-content-page-color: #000d !important;
-    --in-content-text-color: #000 !important;
-    --in-content-page-background: #f5f5f5 !important;
+  .logo-and-wordmark{
+    display: none !important;
   }
-
-  .wordmark {
-    fill: #737373 !important;
-  }
-
-  .info {
-    background-color: #fff !important;
-    background-image: url(../icons/incognito.svg) !important;
-  }
-
-  .search-handoff-button {
-    background-color: #fff !important;
-    color: #000 !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html.private {
-      --in-content-page-color: #fffd !important;
-      --in-content-text-color: #fff !important;
-      --in-content-page-background: #242424 !important;
-    }
-
-    .wordmark {
-      fill: #f5f5f5 !important;
-    }
-
-    .info {
-      background-color: #2b2b2b !important;
-    }
-
-    .search-handoff-button {
-      background-color: #424242 !important;
-      color: #fff !important;
-    }
-  }
-
-  .fake-textbox {
-    color: inherit !important;
-  }
-
-  .search-handoff-button {
-    border: 0 !important;
-    border-radius: 4px !important;
-    height: 44px !important;
-    transition: box-shadow .2s ease-in-out !important;
-    box-shadow: 0px 1.6px 3.6px rgb(0 0 0 / 13%), 0px 0px 2.9px rgb(0 0 0 / 11%) !important;
-  }
-
-  .search-handoff-button:hover {
-    box-shadow: 0px 3.2px 7.2px rgb(0 0 0 / 13%), 0px 0px 3.8px rgb(0 0 0 / 11%) !important;
-  }
-}
-
 *,
 *::before,
 *::after {
@@ -647,6 +587,8 @@ main.has-snippet {
 
 .non-collapsible-section {
   padding: 0 25px;
+  position: relative;
+  bottom: 30px;
 }
 
 .prefs-button button {
@@ -777,7 +719,8 @@ main.has-snippet {
 }
 
 .top-site-outer {
-  width: 120px;
+  width: 128px;
+  height: 128px;
   padding: 20px 16px 4px;
   border-radius: 8px;
   display: inline-block;
@@ -1328,7 +1271,10 @@ main.has-snippet {
 .topics ul li:last-child::after {
   content: none;
 }
-
+.logo-and-wordmark {
+  position: relative;
+  bottom: 30px;
+}
 .search-wrapper {
   padding: 34px 0 38px;
 }
@@ -1340,6 +1286,7 @@ main.has-snippet {
   display: flex;
   justify-content: center;
   margin-bottom: 48px;
+  display: none !important;
 }
 .search-wrapper .logo-and-wordmark .logo {
   background: url("chrome://branding/content/about-logo.png") no-repeat center;
@@ -2325,6 +2272,8 @@ main.has-snippet {
 
 .collapsible-section {
   padding: 10px 25px;
+  position: relative;
+  top: 43px;
 }
 .collapsible-section .section-title-container {
   margin: 0;
@@ -5128,3 +5077,157 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   align-self: flex-end;
   display: flex;
 }
+  /** Activity Stream - Search Focus Border: like URL *************************/
+  /* At DarkMode, Color */
+  body[style*="--newtab-background-color:rgba(28, 27, 34, 1);"],
+  body[style*="--newtab-background-color:rgba(42, 42, 46, 1);"],
+  body[style*="--newtab-background-color: rgba(42, 42, 46, 1);"],
+  body[style*="--newtab-background-color: rgba(43, 42, 51, 1);"] {
+    /* inner */
+    --newtab-focus-border: rgba(
+      0,
+      221,
+      255,
+      0.5
+    ) !important; /* Original: #B5D3FF, Better color-mix(in srgb, #B5D3FF 70%, transparent) */
+    --newtab-focus-border-selected: rgba(0, 221, 255, 0.5) !important; /* Original: #B5D3FF */
+
+    /* For Nightly */
+    --newtab-primary-action-background: var(--newtab-focus-border) !important;
+  }
+
+  /** Activity Stream - Web Site Icon: full size ******************************/
+  .top-site-outer .tile {
+    overflow: hidden;
+  }
+
+  .top-site-outer .tile .icon-wrapper {
+    width: 100% !important; /* Original: 48px */
+    height: 100% !important; /* Original: 48px */
+  }
+
+  /** Activity Stream - Animate ***********************************************/
+  @media (prefers-reduced-motion: no-preference) {
+    :root {
+      --animation-easing-function: cubic-bezier(0.07, 0.95, 0, 1);
+    }
+
+    /* Background */
+    .top-site-outer,
+    #searchSubmit,
+    button.icon,
+    button.close-button {
+      transition: background 1.5s var(--animation-easing-function);
+    }
+    .top-site-outer:hover,
+    #searchSubmit:hover,
+    button.icon:hover,
+    button.close-button:hover {
+      transition: background 0.5s var(--animation-easing-function);
+    }
+
+    /* Search Bar */
+    .search-inner-wrapper input {
+      transition: 1s var(--animation-easing-function);
+      transition-property: border-color, box-shadow;
+    }
+    .search-wrapper .search-inner-wrapper:active input,
+    .search-wrapper input:focus {
+      transition: border-color 0.5s var(--animation-easing-function), box-shadow 1s var(--animation-easing-function);
+    }
+    .search-wrapper .search-inner-wrapper:hover input {
+      border-color: var(--newtab-primary-action-background) !important;
+      transition: border-color 0.5s var(--animation-easing-function);
+    }
+  }
+
+  /** Activity Stream - Home Search Bar looks like proton *********************/
+  /* Dropdown Colors */
+  #root {
+    --newtab-search-background-color: rgba(255, 255, 255, 1); /* Same as light theme's --panel-background */
+
+    /* Set search dropdown background */
+    --newtab-search-dropdown-header-color: var(--newtab-search-background-color) !important;
+    --newtab-search-dropdown-color: var(--newtab-search-background-color) !important;
+    --newtab-element-hover-color: color-mix(in srgb, currentColor 9%, transparent) !important;
+  }
+
+  @media (-moz-toolbar-prefers-color-scheme: dark), (prefers-color-scheme: dark) {
+    #root {
+      /* Default Dark Mode */
+      --newtab-search-background-color: rgba(66, 65, 77, 1); /* Same as dark theme's --panel-background */
+    }
+  }
+  .activity-stream[lwt-sidebar]:not([style*="--newtab-background-color: rgba(43, 42, 51, 1);"]) #root {
+    /* Light weight theme */
+    --newtab-search-background-color: var(--lwt-sidebar-background-color);
+  }
+
+  /* Padding */
+  #searchSuggestionTable {
+    border-radius: 4px !important;
+    -moz-window-shadow: cliprounded;
+  }
+
+  .contentSearchSuggestionTable .contentSearchOneOffItem {
+    width: 32px !important;
+    height: 32px !important;
+
+    /* Margin */
+    margin-block: 5px !important;
+    margin-inline-start: 5px !important;
+    margin-inline-end: 8px !important;
+
+    /* Border */
+    border-radius: 4px !important;
+    border-image: none !important; /* Original: linear-gradient(transparent 18%, var(--newtab-border-secondary-color) 18%, var(--newtab-border-secondary-color) 82%, transparent 82%) 1; */
+    border-inline-end: none !important; /* Original: 1px solid; */
+  }
+
+  #contentSearchSettingsButton::before {
+    content: url("chrome://global/skin/icons/settings.svg") !important;
+    display: -moz-inline-box;
+
+    /* Color */
+    -moz-context-properties: fill, fill-opacity !important;
+    fill: currentColor !important;
+
+    /* Align */
+    margin-inline-end: 5px;
+    vertical-align: -25%;
+  }
+
+  /* Pointer */
+  .contentSearchSuggestionTable .contentSearchOneOffItem,
+  #contentSearchSettingsButton {
+    cursor: pointer;
+  }
+
+  /*- Fix Color For Nightly --------------------------------------------------*/
+  .contentSearchSuggestionTable,
+  .contentSearchHeaderRow,
+  .contentSearchHeader,
+  .contentSearchSuggestionsContainer {
+    color: var(--newtab-text-primary-color) !important;
+    background: var(--newtab-search-background-color) !important;
+  }
+
+  .contentSearchSuggestionTable .contentSearchSuggestionRow.selected,
+  .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
+    color: var(--newtab-text-primary-color) !important;
+  }
+
+  .contentSearchSuggestionTable .contentSearchSuggestionRow.selected,
+  .contentSearchSuggestionTable .contentSearchSettingsButton:hover,
+  .contentSearchSuggestionTable .contentSearchOneOffItem.selected {
+    background: var(--newtab-element-hover-color) !important;
+  }
+
+  .contentSearchSuggestionTable .contentSearchSuggestionRow.selected:active,
+  .contentSearchSuggestionTable .contentSearchOneOffItem:active {
+    background: var(--newtab-element-active-color) !important;
+  }
+
+  .contentSearchSuggestionTable .contentSearchSuggestionRow.selected .historyIcon {
+    fill: var(--newtab-icon-secondary-color) !important;
+  }

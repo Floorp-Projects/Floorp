@@ -78,7 +78,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsDisplayItemTypes.h"
 #include "nsPresContext.h"
 #include "nsTHashSet.h"
@@ -404,16 +404,16 @@ struct IntrinsicSize {
 };
 
 // Pseudo bidi embedding level indicating nonexistence.
-static const mozilla::intl::Bidi::EmbeddingLevel kBidiLevelNone =
-    mozilla::intl::Bidi::EmbeddingLevel(0xff);
+static const mozilla::intl::BidiEmbeddingLevel kBidiLevelNone =
+    mozilla::intl::BidiEmbeddingLevel(0xff);
 
 struct FrameBidiData {
-  mozilla::intl::Bidi::EmbeddingLevel baseLevel;
-  mozilla::intl::Bidi::EmbeddingLevel embeddingLevel;
+  mozilla::intl::BidiEmbeddingLevel baseLevel;
+  mozilla::intl::BidiEmbeddingLevel embeddingLevel;
   // The embedding level of virtual bidi formatting character before
   // this frame if any. kBidiLevelNone is used to indicate nonexistence
   // or unnecessity of such virtual character.
-  mozilla::intl::Bidi::EmbeddingLevel precedingControl;
+  mozilla::intl::BidiEmbeddingLevel precedingControl;
 };
 
 }  // namespace mozilla
@@ -1330,11 +1330,11 @@ class nsIFrame : public nsQueryFrame {
     return bidiData;
   }
 
-  mozilla::intl::Bidi::EmbeddingLevel GetBaseLevel() const {
+  mozilla::intl::BidiEmbeddingLevel GetBaseLevel() const {
     return GetBidiData().baseLevel;
   }
 
-  mozilla::intl::Bidi::EmbeddingLevel GetEmbeddingLevel() const {
+  mozilla::intl::BidiEmbeddingLevel GetEmbeddingLevel() const {
     return GetBidiData().embeddingLevel;
   }
 

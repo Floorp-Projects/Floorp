@@ -125,19 +125,25 @@ add_task(async function test_unload_extension_during_background_page_startup() {
 
   let bgStartupPromise = new Promise(resolve => {
     function onBackgroundPageDone(eventName) {
-      extension.extension.off("background-page-started", onBackgroundPageDone);
-      extension.extension.off("background-page-aborted", onBackgroundPageDone);
+      extension.extension.off(
+        "background-script-started",
+        onBackgroundPageDone
+      );
+      extension.extension.off(
+        "background-script-aborted",
+        onBackgroundPageDone
+      );
 
-      if (eventName === "background-page-aborted") {
-        info("Background page startup was interrupted");
+      if (eventName === "background-script-aborted") {
+        info("Background script startup was interrupted");
         resolve("bg_aborted");
       } else {
-        info("Background page startup finished normally");
+        info("Background script startup finished normally");
         resolve("bg_fully_loaded");
       }
     }
-    extension.extension.on("background-page-started", onBackgroundPageDone);
-    extension.extension.on("background-page-aborted", onBackgroundPageDone);
+    extension.extension.on("background-script-started", onBackgroundPageDone);
+    extension.extension.on("background-script-aborted", onBackgroundPageDone);
   });
 
   let bgStartingPromise = new Promise(resolve => {

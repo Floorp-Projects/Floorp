@@ -265,6 +265,20 @@ extern JS_PUBLIC_API void* StealArrayBufferContents(JSContext* cx,
  */
 extern JS_PUBLIC_API void SetLargeArrayBuffersEnabled(bool enable);
 
+/**
+ * Copy data from one array buffer to another.
+ *
+ * Both fromBuffer and toBuffer must be ArrayBufferObjectMaybeShared.
+ *
+ * The API for this is modelled on CopyDataBlockBytes from the spec:
+ * https://tc39.es/ecma262/#sec-copydatablockbytes
+ */
+extern JS_PUBLIC_API void ArrayBufferCopyData(JSContext* cx,
+                                              Handle<JSObject*> toBlock,
+                                              size_t toIndex,
+                                              Handle<JSObject*> fromBlock,
+                                              size_t fromIndex, size_t count);
+
 }  // namespace JS
 
 #endif /* js_ArrayBuffer_h */

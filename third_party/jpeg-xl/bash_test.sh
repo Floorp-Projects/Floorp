@@ -86,13 +86,34 @@ test_copyright() {
 
 # Check that we don't use "%zu" or "%zd" in format string for size_t.
 test_printf_size_t() {
+  local ret=0
   if grep -n -E '%[0-9]*z[udx]' \
       $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$'); then
     echo "Don't use '%zu' or '%zd' in a format string, instead use " \
       "'%\" PRIuS \"' or '%\" PRIdS \"'." >&2
-    return 1
+    ret=1
   fi
-  return 0
+
+  local f
+  for f in $(git ls-files | grep -E "\.cc$" | xargs grep 'PRI[udx]S' |
+      cut -f 1 -d : | uniq); do
+    if ! grep -F printf_macros.h "$f" >/dev/null; then
+      echo "$f: Add lib/jxl/base/printf_macros.h for PRI.S, or use other " \
+        "types for code outside lib/jxl library." >&2
+      ret=1
+    fi
+  done
+
+  for f in $(git ls-files | grep -E "\.h$" | grep -v -F printf_macros.h |
+      xargs grep -n 'PRI[udx]S'); do
+    # Having PRIuS / PRIdS in a header file means that printf_macros.h may
+    # be included before a system header, in particular before gtest headers.
+    # those may re-define PRIuS unconditionally causing a compile error.
+    echo "$f: Don't use PRI.S in header files. Sorry."
+    ret=1
+  done
+
+  return ${ret}
 }
 
 # Check that "dec_" code doesn't depend on "enc_" headers.

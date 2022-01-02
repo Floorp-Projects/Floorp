@@ -7,8 +7,9 @@
 #ifndef MOZILLA_GFX_COMPOSITORMANAGERCHILD_H
 #define MOZILLA_GFX_COMPOSITORMANAGERCHILD_H
 
-#include <stddef.h>              // for size_t
-#include <stdint.h>              // for uint32_t, uint64_t
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint32_t, uint64_t
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/RefPtr.h"      // for already_AddRefed
 #include "mozilla/StaticPtr.h"   // for StaticRefPtr
@@ -49,9 +50,17 @@ class CompositorManagerChild : public PCompositorManagerChild {
     return sInstance;
   }
 
+  // Threadsafe way to get the compositor process ID.
+  static base::ProcessId GetOtherPid() { return sOtherPid; }
+
   bool CanSend() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mCanSend;
+  }
+
+  bool SameProcess() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mSameProcess;
   }
 
   uint32_t GetNextResourceId() {
@@ -85,6 +94,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
 
  private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
+  static Atomic<base::ProcessId> sOtherPid;
 
   CompositorManagerChild(CompositorManagerParent* aParent,
                          uint64_t aProcessToken, uint32_t aNamespace);
@@ -102,6 +112,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
   uint32_t mNamespace;
   uint32_t mResourceId;
   bool mCanSend;
+  bool mSameProcess;
 };
 
 }  // namespace layers

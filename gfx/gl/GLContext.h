@@ -53,7 +53,6 @@ namespace mozilla {
 
 namespace gl {
 class GLBlitHelper;
-class GLBlitTextureImageHelper;
 class GLLibraryEGL;
 class GLReadTexImageHelper;
 class SharedSurface;
@@ -3579,7 +3578,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
  public:
   GLBlitHelper* BlitHelper();
-  GLBlitTextureImageHelper* BlitTextureImageHelper();
   GLReadTexImageHelper* ReadTexImageHelper();
 
   // Assumes shares are created by all sharing with the same global context.

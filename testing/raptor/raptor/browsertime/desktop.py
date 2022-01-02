@@ -23,7 +23,7 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
         binary_path = self.config["binary"]
         LOG.info("binary_path: {}".format(binary_path))
 
-        args_list = ["--viewPort", "1024x768"]
+        args_list = ["--viewPort", "1280x1024"]
 
         if self.config["app"] in (
             "chrome",

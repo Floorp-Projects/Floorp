@@ -24,7 +24,7 @@ ping”, not total for the whole application lifetime.
 
 Structure:
 
-.. code-block:: javascript
+.. code-block::
 
     {
       "v": 10, // ping format version

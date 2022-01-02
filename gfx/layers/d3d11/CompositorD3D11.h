@@ -96,10 +96,6 @@ class CompositorD3D11 : public Compositor {
   const char* Name() const override { return "Direct3D 11"; }
 #endif
 
-  LayersBackend GetBackendType() const override {
-    return LayersBackend::LAYERS_D3D11;
-  }
-
   // For TextureSourceProvider.
   ID3D11Device* GetD3D11Device() const override { return mDevice; }
 

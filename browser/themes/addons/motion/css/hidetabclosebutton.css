@@ -1,0 +1,13 @@
+/* Hide tab close button when mouse not hovering over it */
+.tab-close-button {
+  transform: translateY(32px) !important;
+  margin-inline-start: -16px !important;
+  transition-property: margin, transform !important;
+  transition-duration: 200ms !important;
+  transition-timing-function: cubic-bezier(1, 0, 0, 1) !important;
+}
+
+:-moz-any(.tabbrowser-tab:hover:hover, .tabbrowser-tab[visuallyselected]) .tab-close-button {
+  transform: none !important;
+  margin-inline-start: 0 !important;
+}

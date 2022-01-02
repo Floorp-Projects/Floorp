@@ -343,6 +343,9 @@ struct Cell;
  */
 namespace TuningDefaults {
 
+/* JSGC_MAX_BYTES */
+static const size_t GCMaxBytes = 0xffffffff;
+
 /* JSGC_ALLOCATION_THRESHOLD */
 static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
 
@@ -675,6 +678,9 @@ class GCSchedulingTunables {
   void setLowFrequencyHeapGrowth(double value);
   void setMinEmptyChunkCount(uint32_t value);
   void setMaxEmptyChunkCount(uint32_t value);
+
+  static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
+  static bool kilobytesToBytes(uint32_t value, size_t* bytesOut);
 };
 
 class GCSchedulingState {
@@ -778,15 +784,6 @@ class HeapSize {
       parent_->removeBytes(nbytes, wasSwept);
     }
   }
-
-  /* Pair to adoptArenas. Adopts the attendant usage statistics. */
-  void adopt(HeapSize& source) {
-    // Skip retainedBytes_: we never adopt zones that are currently being
-    // collected.
-    bytes_ += source.bytes_;
-    source.retainedBytes_ = 0;
-    source.bytes_ = 0;
-  }
 };
 
 // Heap size thresholds used to trigger GC. This is an abstract base class for
@@ -799,18 +796,15 @@ class HeapThreshold {
         sliceBytes_(SIZE_MAX) {}
 
   // The threshold at which to start a new incremental collection.
-  //
-  // TODO: This is currently read off-thread during parsing, but at some point
-  // we should be able to make this MainThreadData<>.
-  AtomicByteCount startBytes_;
+  MainThreadOrGCTaskData<size_t> startBytes_;
 
   // The threshold at which start a new non-incremental collection or finish an
   // ongoing collection non-incrementally.
-  size_t incrementalLimitBytes_;
+  MainThreadData<size_t> incrementalLimitBytes_;
 
   // The threshold at which to trigger a slice during an ongoing incremental
   // collection.
-  size_t sliceBytes_;
+  MainThreadData<size_t> sliceBytes_;
 
  public:
   size_t startBytes() const { return startBytes_; }
@@ -820,7 +814,8 @@ class HeapThreshold {
   size_t incrementalBytesRemaining(const HeapSize& heapSize) const;
 
   void setSliceThreshold(ZoneAllocator* zone, const HeapSize& heapSize,
-                         const GCSchedulingTunables& tunables);
+                         const GCSchedulingTunables& tunables,
+                         bool waitingOnBGTask);
   void clearSliceThreshold() { sliceBytes_ = SIZE_MAX; }
   bool hasSliceThreshold() const { return sliceBytes_ != SIZE_MAX; }
 

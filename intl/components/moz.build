@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
     "src/Bidi.h",
+    "src/BidiEmbeddingLevel.h",
     "src/Calendar.h",
     "src/Collator.h",
     "src/Currency.h",
@@ -12,6 +13,7 @@ EXPORTS.mozilla.intl = [
     "src/DateTimeFormat.h",
     "src/DateTimePart.h",
     "src/DateTimePatternGenerator.h",
+    "src/FormatBuffer.h",
     "src/ICU4CGlue.h",
     "src/ICU4CLibrary.h",
     "src/ICUError.h",
@@ -25,12 +27,14 @@ EXPORTS.mozilla.intl = [
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",
     "src/RelativeTimeFormat.h",
+    "src/Script.h",
     "src/String.h",
     "src/TimeZone.h",
 ]
 
 UNIFIED_SOURCES += [
     "src/Bidi.cpp",
+    "src/BidiEmbeddingLevel.cpp",
     "src/Calendar.cpp",
     "src/Collator.cpp",
     "src/Currency.cpp",
@@ -52,6 +56,7 @@ UNIFIED_SOURCES += [
     "src/NumberRangeFormat.cpp",
     "src/PluralRules.cpp",
     "src/RelativeTimeFormat.cpp",
+    "src/Script.cpp",
     "src/String.cpp",
     "src/TimeZone.cpp",
 ]

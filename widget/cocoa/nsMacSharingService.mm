@@ -178,6 +178,7 @@ nsMacSharingService::ShareUrl(const nsAString& aServiceName, const nsAString& aP
     if ([pageUrl.scheme hasPrefix:@"http"]) {
       [shareActivity setWebpageURL:pageUrl];
     }
+    [shareActivity setEligibleForHandoff:NO];
     [shareActivity setTitle:pageTitle];
     [shareActivity becomeCurrent];
 

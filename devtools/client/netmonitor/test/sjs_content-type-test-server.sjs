@@ -148,6 +148,20 @@ function handleRequest(request, response) {
           response.finish();
           break;
         }
+        case "xhtml": {
+          response.setStatusLine(request.httpVersion, status, "OK");
+          response.setHeader(
+            "Content-Type",
+            "application/xhtml+xml; charset=utf-8",
+            false
+          );
+          setAllowOriginHeaders();
+          setCacheHeaders();
+          setCookieHeaders();
+          response.write("<p>Hello XHTML!</p>");
+          response.finish();
+          break;
+        }
         case "html-long": {
           const str = new Array(102400 /* 100 KB in bytes */).join(".");
           response.setStatusLine(request.httpVersion, status, "OK");

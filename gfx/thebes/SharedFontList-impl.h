@@ -252,8 +252,10 @@ class FontList {
     if (aIndex >= mReadOnlyShmems.Length()) {
       // Block index out of range
       *aOut = base::SharedMemory::NULLHandle();
+      return;
     }
-    if (!mReadOnlyShmems[aIndex]->ShareToProcess(aPid, aOut)) {
+    *aOut = mReadOnlyShmems[aIndex]->CloneHandle();
+    if (!*aOut) {
       MOZ_CRASH("failed to share block");
     }
   }

@@ -81,7 +81,9 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
@@ -1618,6 +1620,20 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowInner::nsIScriptGlobalObject
 //*****************************************************************************
 
+bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
+  if (mDoc) {
+    return nsContentUtils::ShouldResistFingerprinting(mDoc);
+  }
+  return nsIScriptGlobalObject::ShouldResistFingerprinting();
+}
+
+uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
+  if (mDoc) {
+    return mDoc->NodePrincipal()->GetHashValue();
+  }
+  return 0;
+}
+
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {
   // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
   // we're called on an inactive inner window.
@@ -1850,6 +1866,16 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     }
   }
 
+  nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
+
+  nsresult rv = StoragePrincipalHelper::GetPrincipal(
+      this,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
+      getter_AddRefs(foreignPartitionedPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Verify the final ClientSource principal matches the final document
   // principal.  The ClientChannelHelper handles things like network
   // redirects, but there are other ways the document principal can change.
@@ -1866,7 +1892,8 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     auto principalOrErr = mClientSource->Info().GetPrincipal();
     nsCOMPtr<nsIPrincipal> clientPrincipal =
         principalOrErr.isOk() ? principalOrErr.unwrap() : nullptr;
-    if (!clientPrincipal || !clientPrincipal->Equals(mDoc->NodePrincipal())) {
+    if (!clientPrincipal ||
+        !clientPrincipal->Equals(foreignPartitionedPrincipal)) {
       mClientSource.reset();
     }
   }
@@ -1890,7 +1917,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   if (!mClientSource) {
     mClientSource = ClientManager::CreateSource(
         ClientType::Window, EventTargetFor(TaskCategory::Other),
-        mDoc->NodePrincipal());
+        foreignPartitionedPrincipal);
     MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
 
@@ -1929,7 +1956,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
       mClientSource.reset();
       mClientSource = ClientManager::CreateSource(
           ClientType::Window, EventTargetFor(TaskCategory::Other),
-          mDoc->NodePrincipal());
+          foreignPartitionedPrincipal);
       MOZ_DIAGNOSTIC_ASSERT(mClientSource);
       newClientSource = true;
     }
@@ -2017,11 +2044,10 @@ void nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = true;
   aVisitor.mForceContentDispatch = true;  // FIXME! Bug 329119
   if (msg == eResize && aVisitor.mEvent->IsTrusted()) {
-    // QIing to window so that we can keep the old behavior also in case
-    // a child window is handling resize.
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
-    if (window) {
+    // Checking whether the event target is an inner window or not, so we can
+    // keep the old behavior also in case a child window is handling resize.
+    if (aVisitor.mEvent->mOriginalTarget &&
+        aVisitor.mEvent->mOriginalTarget->IsInnerWindow()) {
       mIsHandlingResizeEvent = true;
     }
   } else if (msg == eMouseDown && aVisitor.mEvent->IsTrusted()) {
@@ -2599,33 +2625,32 @@ bool nsGlobalWindowInner::CrossOriginIsolated() const {
 
 void nsPIDOMWindowInner::AddPeerConnection() {
   MOZ_ASSERT(NS_IsMainThread());
-  mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections++
-                  : mTotalActivePeerConnections++;
   ++mActivePeerConnections;
   if (mActivePeerConnections == 1 && mWindowGlobalChild) {
-    mWindowGlobalChild->BlockBFCacheFor(BFCacheStatus::ACTIVE_PEER_CONNECTION);
+    mWindowGlobalChild->SendUpdateActivePeerConnectionStatus(
+        /*aIsAdded*/ true);
   }
 }
 
 void nsPIDOMWindowInner::RemovePeerConnection() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections
-                             : mTotalActivePeerConnections);
   MOZ_ASSERT(mActivePeerConnections > 0);
-
-  mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections--
-                  : mTotalActivePeerConnections--;
   --mActivePeerConnections;
   if (mActivePeerConnections == 0 && mWindowGlobalChild) {
-    mWindowGlobalChild->UnblockBFCacheFor(
-        BFCacheStatus::ACTIVE_PEER_CONNECTION);
+    mWindowGlobalChild->SendUpdateActivePeerConnectionStatus(
+        /*aIsAdded*/ false);
   }
 }
 
 bool nsPIDOMWindowInner::HasActivePeerConnections() {
   MOZ_ASSERT(NS_IsMainThread());
-  return mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections
-                         : mTotalActivePeerConnections;
+  WindowContext* wc = GetWindowContext();
+  if (!wc) {
+    return false;
+  }
+
+  WindowContext* topWindowContext = wc->TopWindowContext();
+  return topWindowContext && topWindowContext->GetHasActivePeerConnections();
 }
 
 void nsPIDOMWindowInner::AddMediaKeysInstance(MediaKeys* aMediaKeys) {
@@ -3911,8 +3936,7 @@ void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
                                 ? ScrollMode::SmoothMsd
                                 : ScrollMode::Instant;
 
-    sf->ScrollByCSSPixels(scrollDelta, scrollMode,
-                          mozilla::ScrollOrigin::Relative);
+    sf->ScrollByCSSPixels(scrollDelta, scrollMode);
   }
 }
 
@@ -6241,7 +6265,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   const char* reason = GetTimeoutReasonString(timeout);
 
   nsCString str;
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     TimeDuration originalInterval = timeout->When() - timeout->SubmitTime();
     str.Append(reason);
     str.Append(" with interval ");
@@ -7713,6 +7737,7 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mMayHavePaintEventListener(false),
       mMayHaveTouchEventListener(false),
       mMayHaveSelectionChangeEventListener(false),
+      mMayHaveFormSelectEventListener(false),
       mMayHaveMouseEnterLeaveEventListener(false),
       mMayHavePointerEnterLeaveEventListener(false),
       mMayHaveBeforeInputEventListenerForTelemetry(false),

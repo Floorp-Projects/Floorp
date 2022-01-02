@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,<meta charset=utf8>Test LongString hang";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html><meta charset=utf8>Test LongString hang";
 
 const LONGSTRING = `foobar${"a".repeat(
   9000

@@ -10,6 +10,8 @@ with Files('**'):
 EXPORTS.webp += [
     'src/webp/decode.h',
     'src/webp/demux.h',
+    'src/webp/encode.h',
+    'src/webp/format_constants.h',
     'src/webp/mux_types.h',
     'src/webp/types.h',
 ]
@@ -18,6 +20,7 @@ DIRS += [
     'src/dec',
     'src/demux',
     'src/dsp',
+    'src/enc',
     'src/moz',
     'src/utils',
 ]

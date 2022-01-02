@@ -16,10 +16,12 @@ add_task(async function() {
   await front.attach();
   // Implement the minimal mock, doing nothing to make toggleRecordingAllocationStacks pass
   const commands = {
-    targetConfigurationCommand: {
-      supports() {
+    targetCommand: {
+      hasTargetWatcherSupport() {
         return true;
       },
+    },
+    targetConfigurationCommand: {
       updateConfiguration() {},
     },
   };

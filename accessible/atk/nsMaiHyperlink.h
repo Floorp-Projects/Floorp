@@ -40,6 +40,14 @@ class MaiHyperlink {
     return mHyperlink ? mHyperlink->AsRemote() : nullptr;
   }
 
+  Accessible* Acc() {
+    if (!mHyperlink) {
+      return nullptr;
+    }
+    NS_ASSERTION(mHyperlink->IsLink(), "Why isn't it a link!");
+    return mHyperlink;
+  }
+
  protected:
   Accessible* mHyperlink;
   AtkHyperlink* mMaiAtkHyperlink;

@@ -10,7 +10,6 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 const UTF8 = "UTF-8";
 const UTF16 = "UTF-16";
-const CHARSET_ANNO = PlacesUtils.CHARSET_ANNO;
 
 const TEST_URI = "http://foo.com";
 const TEST_BOOKMARKED_URI = "http://bar.com";

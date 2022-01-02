@@ -278,15 +278,9 @@ ia2Accessible::get_states(AccessibleStates* aStates) {
 
   // XXX: bug 344674 should come with better approach that we have here.
 
-  if (!Acc()) {
-    *aStates = IA2_STATE_DEFUNCT;
-    return S_OK;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    // XXX Not supported for RemoteAccessible yet. However, don't return
-    // E_NOTIMPL because returning an error here will cause screen readers to
-    // assume defunct.
+    *aStates = IA2_STATE_DEFUNCT;
     return S_OK;
   }
 

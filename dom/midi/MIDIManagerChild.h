@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PMIDIManagerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Actor implementation for the Child side of MIDIManager (represented in DOM by
@@ -33,7 +32,6 @@ class MIDIManagerChild final : public PMIDIManagerChild {
   bool mShutdown;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MIDIManagerChild_h

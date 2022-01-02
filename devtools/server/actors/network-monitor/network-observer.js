@@ -89,7 +89,7 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  */
 function matchRequest(channel, filters) {
   // Log everything if no filter is specified
-  if (!filters.browserId && !filters.window) {
+  if (!filters.browserId && !filters.window && !filters.addonId) {
     return true;
   }
 
@@ -143,6 +143,13 @@ function matchRequest(channel, filters) {
     ) {
       return true;
     }
+  }
+
+  if (
+    filters.addonId &&
+    channel?.loadInfo.loadingPrincipal.addonId === filters.addonId
+  ) {
+    return true;
   }
 
   return false;

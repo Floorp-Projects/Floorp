@@ -33,6 +33,7 @@
 #include "vm/Printer.h"         // QuoteString
 #include "vm/SelfHosting.h"     // CallSelfHostedFunction
 #include "vm/Stack.h"           // FixedInvokeArgs
+#include "vm/StaticStrings.h"   // StaticStrings
 #include "vm/StringType.h"      // NewStringCopy{N,Z}, ToString
 #include "vm/SymbolType.h"      // Symbol
 

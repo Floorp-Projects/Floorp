@@ -372,6 +372,17 @@ class FunctionCompiler {
     return ins;
   }
 
+  template <class T>
+  MDefinition* binary(MDefinition* lhs, MDefinition* rhs, MIRType type,
+                      MWasmBinaryBitwise::SubOpcode subOpc) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+    T* ins = T::New(alloc(), lhs, rhs, type, subOpc);
+    curBlock_->add(ins);
+    return ins;
+  }
+
   MDefinition* ursh(MDefinition* lhs, MDefinition* rhs, MIRType type) {
     if (inDeadCode()) {
       return nullptr;
@@ -725,6 +736,15 @@ class FunctionCompiler {
 
     MOZ_ASSERT(lhs->type() == MIRType::Simd128 &&
                rhs->type() == MIRType::Int32);
+
+    int32_t maskBits;
+    if (MacroAssembler::MustMaskShiftCountSimd128(op, &maskBits)) {
+      MConstant* mask = MConstant::New(alloc(), Int32Value(maskBits));
+      curBlock_->add(mask);
+      auto* rhs2 = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
+      curBlock_->add(rhs2);
+      rhs = rhs2;
+    }
 
     auto* ins = MWasmShiftSimd128::New(alloc(), lhs, rhs, op);
     curBlock_->add(ins);
@@ -1758,7 +1778,7 @@ class FunctionCompiler {
       callee = CalleeDesc::wasmTable(table, funcTypeId);
     }
 
-    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Indirect);
     ArgTypeVector args(funcType);
     ResultType resultType = ResultType::Vector(funcType.results());
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
@@ -1779,7 +1799,7 @@ class FunctionCompiler {
       return true;
     }
 
-    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Import);
     auto callee = CalleeDesc::import(globalDataOffset);
     ArgTypeVector args(funcType);
     ResultType resultType = ResultType::Vector(funcType.results());
@@ -1868,7 +1888,7 @@ class FunctionCompiler {
         const ABIResult& result = iter.cur();
         if (result.onStack()) {
           MOZ_ASSERT(iter.remaining() > 1);
-          if (result.type().isReference()) {
+          if (result.type().isRefRepr()) {
             auto* loc = MWasmDerivedPointer::New(alloc(), stackResultPointer_,
                                                  result.stackOffset());
             curBlock_->add(loc);
@@ -3199,9 +3219,22 @@ static bool EmitBitNot(FunctionCompiler& f, ValType operandType) {
   return true;
 }
 
+static bool EmitBitwiseAndOrXor(FunctionCompiler& f, ValType operandType,
+                                MIRType mirType,
+                                MWasmBinaryBitwise::SubOpcode subOpc) {
+  MDefinition* lhs;
+  MDefinition* rhs;
+  if (!f.iter().readBinary(operandType, &lhs, &rhs)) {
+    return false;
+  }
+
+  f.iter().setResult(f.binary<MWasmBinaryBitwise>(lhs, rhs, mirType, subOpc));
+  return true;
+}
+
 template <typename MIRClass>
-static bool EmitBitwise(FunctionCompiler& f, ValType operandType,
-                        MIRType mirType) {
+static bool EmitShift(FunctionCompiler& f, ValType operandType,
+                      MIRType mirType) {
   MDefinition* lhs;
   MDefinition* rhs;
   if (!f.iter().readBinary(operandType, &lhs, &rhs)) {
@@ -5042,15 +5075,18 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(
             EmitRem(f, ValType::I32, MIRType::Int32, Op(op.b0) == Op::I32RemU));
       case uint16_t(Op::I32And):
-        CHECK(EmitBitwise<MBitAnd>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I32, MIRType::Int32,
+                                  MWasmBinaryBitwise::SubOpcode::And));
       case uint16_t(Op::I32Or):
-        CHECK(EmitBitwise<MBitOr>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I32, MIRType::Int32,
+                                  MWasmBinaryBitwise::SubOpcode::Or));
       case uint16_t(Op::I32Xor):
-        CHECK(EmitBitwise<MBitXor>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I32, MIRType::Int32,
+                                  MWasmBinaryBitwise::SubOpcode::Xor));
       case uint16_t(Op::I32Shl):
-        CHECK(EmitBitwise<MLsh>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitShift<MLsh>(f, ValType::I32, MIRType::Int32));
       case uint16_t(Op::I32ShrS):
-        CHECK(EmitBitwise<MRsh>(f, ValType::I32, MIRType::Int32));
+        CHECK(EmitShift<MRsh>(f, ValType::I32, MIRType::Int32));
       case uint16_t(Op::I32ShrU):
         CHECK(EmitUrsh(f, ValType::I32, MIRType::Int32));
       case uint16_t(Op::I32Rotl):
@@ -5077,15 +5113,18 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(
             EmitRem(f, ValType::I64, MIRType::Int64, Op(op.b0) == Op::I64RemU));
       case uint16_t(Op::I64And):
-        CHECK(EmitBitwise<MBitAnd>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I64, MIRType::Int64,
+                                  MWasmBinaryBitwise::SubOpcode::And));
       case uint16_t(Op::I64Or):
-        CHECK(EmitBitwise<MBitOr>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I64, MIRType::Int64,
+                                  MWasmBinaryBitwise::SubOpcode::Or));
       case uint16_t(Op::I64Xor):
-        CHECK(EmitBitwise<MBitXor>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitBitwiseAndOrXor(f, ValType::I64, MIRType::Int64,
+                                  MWasmBinaryBitwise::SubOpcode::Xor));
       case uint16_t(Op::I64Shl):
-        CHECK(EmitBitwise<MLsh>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitShift<MLsh>(f, ValType::I64, MIRType::Int64));
       case uint16_t(Op::I64ShrS):
-        CHECK(EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64));
+        CHECK(EmitShift<MRsh>(f, ValType::I64, MIRType::Int64));
       case uint16_t(Op::I64ShrU):
         CHECK(EmitUrsh(f, ValType::I64, MIRType::Int64));
       case uint16_t(Op::I64Rotl):

@@ -99,7 +99,7 @@ LOCAL_INCLUDES += [
     "/media/webrtc/",
     "/netwerk/base/",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 LOCAL_INCLUDES += ["/third_party/msgpack/include"]
@@ -172,9 +172,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     "mozwebidlcodegen/test/python.ini",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-    # Suppress warnings in third-party code.
+if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += [
         "-Wno-maybe-uninitialized",
     ]

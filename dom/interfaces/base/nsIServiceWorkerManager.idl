@@ -217,6 +217,14 @@ interface nsIServiceWorkerManager : nsISupports
   Promise registerForAddonPrincipal(in nsIPrincipal aPrincipal);
 
   /**
+   * Get an extension background service worker registration for a
+   * given extension principal, return an nsIServiceWorkerRegistrationInfo
+   * if one exists (or null if no registration has been found).
+   */
+  void getRegistrationForAddonPrincipal(in nsIPrincipal aPrincipal,
+                                        [optional, retval] out nsIServiceWorkerRegistrationInfo regInfo);
+
+  /**
    * Unregister an existing ServiceWorker registration for `aScope`.
    * It keeps aCallback alive until the operation is concluded.
    */

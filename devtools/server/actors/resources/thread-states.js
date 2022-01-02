@@ -48,9 +48,6 @@ class BreakpointWatcher {
    *          This will be called for each resource.
    */
   async watch(targetActor, { onAvailable }) {
-    // Force attaching the target in order to ensure it instantiates the ThreadActor
-    targetActor.attach();
-
     const { threadActor } = targetActor;
     this.threadActor = threadActor;
     this.onAvailable = onAvailable;

@@ -178,7 +178,7 @@ class PermissionStore {
       await this.migrateFrom(oldStore);
       migrationWasSuccessful = true;
     } catch (e) {
-      if (!e.becauseNoSuchFile) {
+      if (!(e instanceof DOMException && e.name == "NotFoundError")) {
         Cu.reportError(e);
       }
     }

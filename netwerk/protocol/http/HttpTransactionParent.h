@@ -74,6 +74,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
                                              const nsCString& aResourceUrl,
                                              const nsCString& aRequestString);
+  mozilla::ipc::IPCResult RecvEarlyHint(const nsCString& aValue);
 
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
 

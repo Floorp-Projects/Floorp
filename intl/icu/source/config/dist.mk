@@ -38,7 +38,7 @@ DISTY_DAT:=$(firstword $(wildcard data/out/tmp/icudt$(SO_TARGET_VERSION_MAJOR)*.
 
 DISTY_FILES_SRC=$(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP)
 DISTY_FILES=$(DISTY_FILES_SRC) $(DISTY_DOC_ZIP)
-# colon-equals because we watn to run this once!
+# colon-equals because we want to run this once!
 EXCLUDES_FILE:=$(shell mktemp)
 
 $(DISTY_FILE_DIR):

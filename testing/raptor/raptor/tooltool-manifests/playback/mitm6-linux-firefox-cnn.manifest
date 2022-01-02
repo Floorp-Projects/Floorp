@@ -1,8 +1,8 @@
 [
   {
-    "size": 52350354,
+    "size": 21536340,
     "visibility": "public",
-    "digest": "0992fb48eec8a53d4af213f5c5015af5de34dfbb057fecf223d7202f19599e1eb41a58257932f616493d100e6b75da2cdc7745eb673ed6b7579953ba3c4eb879",
+    "digest": "28feb0edff87a243edac6c651f15474f828b2cf005c725aa5f47df0819494fc6caf3438cd940318010a2b2847be92199ff5355bc59e8ae115a18c77eb4af17f7",
     "algorithm": "sha512",
     "filename": "mitm6-linux-firefox-cnn.zip"
   }

@@ -6,6 +6,9 @@
 # automatically converted to platform-specific code at build time using the
 # `glean_parser` PyPI package.
 
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
@@ -23,3 +26,19 @@ power:
     notification_emails:
       - florian@mozilla.com
     expires: never
+
+  total_gpu_time_ms:
+    type: counter
+    description: >
+      Total GPU time used by all processes in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    no_lint:
+      - COMMON_PREFIX

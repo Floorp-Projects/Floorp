@@ -65,6 +65,10 @@ public class SpeechSynthesisService {
           @Override
           public void run() {
             final TextToSpeech tss = getTTS();
+            if (tss == null) {
+              Log.w(LOGTAG, "TextToSpeech is not initialized");
+              return;
+            }
             final Locale defaultLocale =
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
                     ? tss.getDefaultLanguage()

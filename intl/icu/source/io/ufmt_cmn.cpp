@@ -143,7 +143,7 @@ ufmt_uto64(const UChar     *buffer,
     uint64_t        result;
     
     
-    /* intialize parameters */
+    /* initialize parameters */
     limit     = buffer + *len;
     count     = 0;
     result    = 0;
@@ -175,7 +175,7 @@ ufmt_utop(const UChar     *buffer,
         uint8_t bytes[sizeof(void*)];
     } result;
     
-    /* intialize variables */
+    /* initialize variables */
     count      = 0;
     offset     = 0;
     result.ptr = NULL;

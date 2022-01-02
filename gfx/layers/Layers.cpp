@@ -25,7 +25,7 @@
 #include "mozilla/ArrayIterator.h"  // for ArrayIterator
 #include "mozilla/DebugOnly.h"      // for DebugOnly
 #include "mozilla/Logging.h"  // for LogLevel, LogLevel::Debug, MOZ_LOG_TEST
-#include "mozilla/ProfilerMarkers.h"  // for profiler_thread_is_being_profiled, PROFILER_MARKER_TEXT
+#include "mozilla/ProfilerMarkers.h"  // for profiler_thread_is_being_profiled_for_markers, PROFILER_MARKER_TEXT
 #include "mozilla/ScrollPositionUpdate.h"  // for ScrollPositionUpdate
 #include "mozilla/Telemetry.h"             // for AccumulateTimeDelta
 #include "mozilla/TelemetryHistogramEnums.h"  // for KEYPRESS_PRESENT_LATENCY, SCROLL_PRESENT_LATENCY
@@ -83,11 +83,6 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
 }
 #endif
 
-//--------------------------------------------------
-// LayerManager
-
-void SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget) {}
-
 IntRect ToOutsideIntRect(const gfxRect& aRect) {
   return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
@@ -98,7 +93,7 @@ void RecordCompositionPayloadsPresented(
   if (aPayloads.Length()) {
     TimeStamp presented = aCompositionEndTime;
     for (const CompositionPayload& payload : aPayloads) {
-      if (profiler_thread_is_being_profiled()) {
+      if (profiler_thread_is_being_profiled_for_markers()) {
         MOZ_RELEASE_ASSERT(payload.mType <= kHighestCompositionPayloadType);
         nsAutoCString name(
             kCompositionPayloadTypeNames[uint8_t(payload.mType)]);

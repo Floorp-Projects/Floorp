@@ -50,7 +50,7 @@ And of course, in case of doubt, ask!
 
 Our entries are prefixed with `DEVTOOLS_`. For example:
 
-```json
+```
   "DEVTOOLS_DOM_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",

@@ -207,9 +207,9 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                     case "div":
                       var row = results[category.id][group][test_id][structure];
                       var testName = [category.id, group, test_id, structure].join("-");
-                      (testName in knownFailures.value || testName in platformFailures.value ? todo_is : is)(
+                      (knownFailures.value[testName] || platformFailures.value[testName] ? todo_is : is)(
                         row.valscore, 1, "Browserscope richtext2 value: " + testName);
-                      (testName in knownFailures.select || testName in platformFailures.select ? todo_is : is)(
+                      (knownFailures.select[testName] || platformFailures.select[testName] ? todo_is : is)(
                         row.selscore, 1, "Browserscope richtext2 selection: " + testName);
                     }
                   }

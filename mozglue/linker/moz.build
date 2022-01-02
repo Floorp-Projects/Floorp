@@ -26,9 +26,6 @@ FINAL_LIBRARY = "mozglue"
 
 TEST_DIRS += ["tests"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 DEFINES["XZ_USE_CRC64"] = 1
 
 USE_LIBS += [

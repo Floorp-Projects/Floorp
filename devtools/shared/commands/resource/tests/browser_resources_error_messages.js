@@ -10,7 +10,7 @@
 const httpServer = createTestHTTPServer();
 httpServer.registerPathHandler(`/test_page_errors.html`, (req, res) => {
   res.setStatusLine(req.httpVersion, 200, "OK");
-  res.write(`<meta charset=utf8>Test Error Messages`);
+  res.write(`<!DOCTYPE html><meta charset=utf8>Test Error Messages`);
 });
 
 const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/test_page_errors.html`;

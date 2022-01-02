@@ -38,6 +38,7 @@ class ClassList {
     this.inspector.on("markupmutation", this.onMutations);
 
     this.classListProxyNode = this.inspector.panelDoc.createElement("div");
+    this.previewClasses = "";
   }
 
   destroy() {
@@ -72,11 +73,13 @@ class ClassList {
     if (!CLASSES.has(this.currentNode)) {
       // Use the proxy node to get a clean list of classes.
       this.classListProxyNode.className = this.currentNode.className;
-      const nodeClasses = [
-        ...new Set([...this.classListProxyNode.classList]),
-      ].map(name => {
-        return { name, isApplied: true };
-      });
+      const nodeClasses = [...new Set([...this.classListProxyNode.classList])]
+        .filter(
+          className => !this.previewClasses.split(" ").includes(className)
+        )
+        .map(name => {
+          return { name, isApplied: true };
+        });
 
       CLASSES.set(this.currentNode, nodeClasses);
     }
@@ -89,10 +92,15 @@ class ClassList {
    * enabled classes are added.
    */
   get currentClassesPreview() {
-    return this.currentClasses
+    const currentClasses = this.currentClasses
       .filter(({ isApplied }) => isApplied)
-      .map(({ name }) => name)
-      .join(" ");
+      .map(({ name }) => name);
+    const previewClasses = this.previewClasses
+      .split(" ")
+      .filter(previewClass => !currentClasses.includes(previewClass))
+      .filter(item => item !== "");
+
+    return currentClasses.concat(previewClasses).join(" ");
   }
 
   /**
@@ -121,6 +129,7 @@ class ClassList {
    */
   addClassName(classNameString) {
     this.classListProxyNode.className = classNameString;
+    this.eraseClassPreview();
     return Promise.all(
       [...new Set([...this.classListProxyNode.classList])].map(name => {
         return this.addClass(name);
@@ -210,6 +219,17 @@ class ClassList {
       "class",
       this.currentNode
     );
+  }
+
+  previewClass(inputClasses) {
+    if (this.previewClasses !== inputClasses) {
+      this.previewClasses = inputClasses;
+      this.applyClassState();
+    }
+  }
+
+  eraseClassPreview() {
+    this.previewClass("");
   }
 }
 

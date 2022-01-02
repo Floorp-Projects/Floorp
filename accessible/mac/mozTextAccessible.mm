@@ -77,14 +77,9 @@ inline NSString* ToNSString(id aValue) {
     // grammar, or spelling. We query the attribute value here in order
     // to find the correct string to return.
     RefPtr<AccAttributes> attributes;
-    if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-      HyperTextAccessible* text = acc->AsHyperText();
-      if (text && text->IsTextRole()) {
-        attributes = text->DefaultTextAttributes();
-      }
-    } else {
-      RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-      proxy->DefaultTextAttributes(&attributes);
+    HyperTextAccessibleBase* text = mGeckoAccessible->AsHyperTextBase();
+    if (text && mGeckoAccessible->IsTextRole()) {
+      attributes = text->DefaultTextAttributes();
     }
 
     nsAutoString invalidStr;

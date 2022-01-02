@@ -352,7 +352,7 @@ void nsHyphenationManager::ShareHyphDictToProcess(
     return;
   }
 
-  hyph->ShareToProcess(aPid, aOutHandle, aOutSize);
+  hyph->CloneHandle(aOutHandle, aOutSize);
 }
 
 size_t nsHyphenationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {

@@ -14,13 +14,13 @@
 //      therefore this leads to a `MemoryInitKind.ImplicitlyInitialized` action, exactly like a read would.
 
 use smallvec::SmallVec;
-use std::{iter, ops::Range};
+use std::{fmt, iter, ops::Range};
 
 mod buffer;
-//mod texture;
+mod texture;
 
 pub(crate) use buffer::{BufferInitTracker, BufferInitTrackerAction};
-//pub(crate) use texture::{TextureInitRange, TextureInitTracker, TextureInitTrackerAction};
+pub(crate) use texture::{TextureInitRange, TextureInitTracker, TextureInitTrackerAction};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum MemoryInitKind {
@@ -28,12 +28,6 @@ pub(crate) enum MemoryInitKind {
     ImplicitlyInitialized,
     // The memory range is going to be read, therefore needs to ensure prior initialization.
     NeedsInitializedMemory,
-    // The memory going to be discarded and regarded therefore regarded uninitialized.
-    // TODO: This is tricky to implement: Discards needs to be resolved within AND between command buffers!
-    //       Being able to do this would be quite nice because then we could mark any resource uninitialized at any point in time.
-    //       Practically speaking however, discard can only ever happen for single rendertarget surfaces.
-    //       Considering this, this could potentially be implemented differently since we don't really need to care about ranges of memory.
-    //DiscardMemory,
 }
 
 // Most of the time a resource is either fully uninitialized (one element) or initialized (zero elements).
@@ -46,7 +40,7 @@ pub(crate) struct InitTracker<Idx: Ord + Copy + Default> {
     uninitialized_ranges: UninitializedRangeVec<Idx>,
 }
 
-pub(crate) struct InitTrackerDrain<'a, Idx: Ord + Copy> {
+pub(crate) struct InitTrackerDrain<'a, Idx: fmt::Debug + Ord + Copy> {
     uninitialized_ranges: &'a mut UninitializedRangeVec<Idx>,
     drain_range: Range<Idx>,
     first_index: usize,
@@ -55,7 +49,7 @@ pub(crate) struct InitTrackerDrain<'a, Idx: Ord + Copy> {
 
 impl<'a, Idx> Iterator for InitTrackerDrain<'a, Idx>
 where
-    Idx: Ord + Copy,
+    Idx: fmt::Debug + Ord + Copy,
 {
     type Item = Range<Idx>;
 
@@ -78,7 +72,6 @@ where
             if num_affected == 0 {
                 return None;
             }
-
             let first_range = &mut self.uninitialized_ranges[self.first_index];
 
             // Split one "big" uninitialized range?
@@ -116,9 +109,20 @@ where
     }
 }
 
+impl<'a, Idx> Drop for InitTrackerDrain<'a, Idx>
+where
+    Idx: fmt::Debug + Ord + Copy,
+{
+    fn drop(&mut self) {
+        if self.next_index <= self.first_index {
+            for _ in self {}
+        }
+    }
+}
+
 impl<Idx> InitTracker<Idx>
 where
-    Idx: Ord + Copy + Default,
+    Idx: fmt::Debug + Ord + Copy + Default,
 {
     pub(crate) fn new(size: Idx) -> Self {
         Self {
@@ -126,35 +130,13 @@ where
         }
     }
 
-    // Search smallest range.end which is bigger than bound in O(log n) (with n being number of uninitialized ranges)
-    fn lower_bound(&self, bound: Idx) -> usize {
-        // This is equivalent to, except that it may return an out of bounds index instead of
-        //self.uninitialized_ranges.iter().position(|r| r.end > bound)
-
-        // In future Rust versions this operation can be done with partition_point
-        // See https://github.com/rust-lang/rust/pull/73577/
-        let mut left = 0;
-        let mut right = self.uninitialized_ranges.len();
-
-        while left != right {
-            let mid = left + (right - left) / 2;
-            let value = unsafe { self.uninitialized_ranges.get_unchecked(mid) };
-
-            if value.end <= bound {
-                left = mid + 1;
-            } else {
-                right = mid;
-            }
-        }
-
-        left
-    }
-
     // Checks if there's any uninitialized ranges within a query.
     // If there are any, the range returned a the subrange of the query_range that contains all these uninitialized regions.
     // Returned range may be larger than necessary (tradeoff for making this function O(log n))
     pub(crate) fn check(&self, query_range: Range<Idx>) -> Option<Range<Idx>> {
-        let index = self.lower_bound(query_range.start);
+        let index = self
+            .uninitialized_ranges
+            .partition_point(|r| r.end <= query_range.start);
         self.uninitialized_ranges
             .get(index)
             .map(|start_range| {
@@ -179,9 +161,10 @@ where
     }
 
     // Drains uninitialized ranges in a query range.
-    #[must_use]
     pub(crate) fn drain(&mut self, drain_range: Range<Idx>) -> InitTrackerDrain<Idx> {
-        let index = self.lower_bound(drain_range.start);
+        let index = self
+            .uninitialized_ranges
+            .partition_point(|r| r.end <= drain_range.start);
         InitTrackerDrain {
             drain_range,
             uninitialized_ranges: &mut self.uninitialized_ranges,
@@ -189,10 +172,38 @@ where
             next_index: index,
         }
     }
+}
 
-    // Clears uninitialized ranges in a query range.
-    pub(crate) fn clear(&mut self, range: Range<Idx>) {
-        self.drain(range).for_each(drop);
+impl InitTracker<u32> {
+    // Makes a single entry uninitialized if not already uninitialized
+    #[allow(dead_code)]
+    pub(crate) fn discard(&mut self, pos: u32) {
+        // first range where end>=idx
+        let r_idx = self.uninitialized_ranges.partition_point(|r| r.end < pos);
+        if let Some(r) = self.uninitialized_ranges.get(r_idx) {
+            // Extend range at end
+            if r.end == pos {
+                // merge with next?
+                if let Some(right) = self.uninitialized_ranges.get(r_idx + 1) {
+                    if right.start == pos + 1 {
+                        self.uninitialized_ranges[r_idx] = r.start..right.end;
+                        self.uninitialized_ranges.remove(r_idx + 1);
+                        return;
+                    }
+                }
+                self.uninitialized_ranges[r_idx] = r.start..(pos + 1);
+            } else if r.start > pos {
+                // may still extend range at beginning
+                if r.start == pos + 1 {
+                    self.uninitialized_ranges[r_idx] = pos..r.end;
+                } else {
+                    // previous range end must be smaller than idx, therefore no merge possible
+                    self.uninitialized_ranges.push(pos..(pos + 1));
+                }
+            }
+        } else {
+            self.uninitialized_ranges.push(pos..(pos + 1));
+        }
     }
 }
 
@@ -200,7 +211,7 @@ where
 mod test {
     use std::ops::Range;
 
-    type Tracker = super::InitTracker<usize>;
+    type Tracker = super::InitTracker<u32>;
 
     #[test]
     fn check_for_newly_created_tracker() {
@@ -212,9 +223,9 @@ mod test {
     }
 
     #[test]
-    fn check_for_cleared_tracker() {
+    fn check_for_drained_tracker() {
         let mut tracker = Tracker::new(10);
-        tracker.clear(0..10);
+        tracker.drain(0..10);
         assert_eq!(tracker.check(0..10), None);
         assert_eq!(tracker.check(0..3), None);
         assert_eq!(tracker.check(3..4), None);
@@ -225,9 +236,9 @@ mod test {
     fn check_for_partially_filled_tracker() {
         let mut tracker = Tracker::new(25);
         // Two regions of uninitialized memory
-        tracker.clear(0..5);
-        tracker.clear(10..15);
-        tracker.clear(20..25);
+        tracker.drain(0..5);
+        tracker.drain(10..15);
+        tracker.drain(20..25);
 
         assert_eq!(tracker.check(0..25), Some(5..25)); // entire range
 
@@ -241,17 +252,17 @@ mod test {
     }
 
     #[test]
-    fn clear_already_cleared() {
+    fn drain_already_drained() {
         let mut tracker = Tracker::new(30);
-        tracker.clear(10..20);
+        tracker.drain(10..20);
 
         // Overlapping with non-cleared
-        tracker.clear(5..15); // Left overlap
-        tracker.clear(15..25); // Right overlap
-        tracker.clear(0..30); // Inner overlap
+        tracker.drain(5..15); // Left overlap
+        tracker.drain(15..25); // Right overlap
+        tracker.drain(0..30); // Inner overlap
 
         // Clear fully cleared
-        tracker.clear(0..30);
+        tracker.drain(0..30);
 
         assert_eq!(tracker.check(0..30), None);
     }
@@ -275,22 +286,66 @@ mod test {
     fn drain_splits_ranges_correctly() {
         let mut tracker = Tracker::new(1337);
         assert_eq!(
-            tracker.drain(21..42).collect::<Vec<Range<usize>>>(),
+            tracker.drain(21..42).collect::<Vec<Range<u32>>>(),
             vec![21..42]
         );
         assert_eq!(
-            tracker.drain(900..1000).collect::<Vec<Range<usize>>>(),
+            tracker.drain(900..1000).collect::<Vec<Range<u32>>>(),
             vec![900..1000]
         );
 
         // Splitted ranges.
         assert_eq!(
-            tracker.drain(5..1003).collect::<Vec<Range<usize>>>(),
+            tracker.drain(5..1003).collect::<Vec<Range<u32>>>(),
             vec![5..21, 42..900, 1000..1003]
         );
         assert_eq!(
-            tracker.drain(0..1337).collect::<Vec<Range<usize>>>(),
+            tracker.drain(0..1337).collect::<Vec<Range<u32>>>(),
             vec![0..5, 1003..1337]
         );
+    }
+
+    #[test]
+    fn discard_adds_range_on_cleared() {
+        let mut tracker = Tracker::new(10);
+        tracker.drain(0..10);
+        tracker.discard(0);
+        tracker.discard(5);
+        tracker.discard(9);
+        assert_eq!(tracker.check(0..1), Some(0..1));
+        assert_eq!(tracker.check(1..5), None);
+        assert_eq!(tracker.check(5..6), Some(5..6));
+        assert_eq!(tracker.check(6..9), None);
+        assert_eq!(tracker.check(9..10), Some(9..10));
+    }
+
+    #[test]
+    fn discard_does_nothing_on_uncleared() {
+        let mut tracker = Tracker::new(10);
+        tracker.discard(0);
+        tracker.discard(5);
+        tracker.discard(9);
+        assert_eq!(tracker.uninitialized_ranges.len(), 1);
+        assert_eq!(tracker.uninitialized_ranges[0], 0..10);
+    }
+
+    #[test]
+    fn discard_extends_ranges() {
+        let mut tracker = Tracker::new(10);
+        tracker.drain(3..7);
+        tracker.discard(2);
+        tracker.discard(7);
+        assert_eq!(tracker.uninitialized_ranges.len(), 2);
+        assert_eq!(tracker.uninitialized_ranges[0], 0..3);
+        assert_eq!(tracker.uninitialized_ranges[1], 7..10);
+    }
+
+    #[test]
+    fn discard_merges_ranges() {
+        let mut tracker = Tracker::new(10);
+        tracker.drain(3..4);
+        tracker.discard(3);
+        assert_eq!(tracker.uninitialized_ranges.len(), 1);
+        assert_eq!(tracker.uninitialized_ranges[0], 0..10);
     }
 }

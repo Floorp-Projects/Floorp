@@ -4,7 +4,6 @@
 
 import { showMenu } from "../../../context-menu/menu";
 import { copyToTheClipboard } from "../../../utils/clipboard";
-import { kebabCase } from "lodash";
 
 const blackboxString = "ignoreContextItem.ignore";
 const unblackboxString = "ignoreContextItem.unignore";
@@ -12,7 +11,7 @@ const unblackboxString = "ignoreContextItem.unignore";
 function formatMenuElement(labelString, click, disabled = false) {
   const label = L10N.getStr(labelString);
   const accesskey = L10N.getStr(`${labelString}.accesskey`);
-  const id = `node-menu-${kebabCase(label)}`;
+  const id = `node-menu-${labelString}`;
   return {
     id,
     label,

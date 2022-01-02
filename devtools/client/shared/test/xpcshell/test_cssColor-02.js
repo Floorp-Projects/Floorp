@@ -9,7 +9,6 @@
  * potentially be a little flaky due to the precision of different color representations.
  */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { colorUtils } = require("devtools/shared/css/color");
 const getFixtureColorData = require("resource://test/helper_color_data.js");
 

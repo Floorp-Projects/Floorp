@@ -1,11 +1,11 @@
 ﻿# confusables.txt
-# Date: 2020-02-13, 01:38:49 GMT
-# © 2020 Unicode®, Inc.
+# Date: 2021-05-29, 22:09:29 GMT
+# © 2021 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # Unicode Security Mechanisms for UTS #39
-# Version: 13.0.0
+# Version: 14.0.0
 #
 # For documentation and usage, see http://www.unicode.org/reports/tr39
 #
@@ -593,7 +593,7 @@ FF40 ;	0027 ;	MA	#* ( ｀ → ' ) FULLWIDTH GRAVE ACCENT → APOSTROPHE	# →‘
 02B9 ;	0027 ;	MA	# ( ʹ → ' ) MODIFIER LETTER PRIME → APOSTROPHE	# 
 0374 ;	0027 ;	MA	# ( ʹ → ' ) GREEK NUMERAL SIGN → APOSTROPHE	# →′→
 02C8 ;	0027 ;	MA	# ( ˈ → ' ) MODIFIER LETTER VERTICAL LINE → APOSTROPHE	# 
-02CA ;	0027 ;	MA	# ( ˊ → ' ) MODIFIER LETTER ACUTE ACCENT → APOSTROPHE	# →΄→→ʹ→
+02CA ;	0027 ;	MA	# ( ˊ → ' ) MODIFIER LETTER ACUTE ACCENT → APOSTROPHE	# →ʹ→→′→
 02CB ;	0027 ;	MA	# ( ˋ → ' ) MODIFIER LETTER GRAVE ACCENT → APOSTROPHE	# →｀→→‘→
 02F4 ;	0027 ;	MA	#* ( ˴ → ' ) MODIFIER LETTER MIDDLE GRAVE ACCENT → APOSTROPHE	# →ˋ→→｀→→‘→
 02BB ;	0027 ;	MA	# ( ʻ → ' ) MODIFIER LETTER TURNED COMMA → APOSTROPHE	# →‘→
@@ -1071,7 +1071,7 @@ A714 ;	02EB ;	MA	#* ( ꜔ → ˫ ) MODIFIER LETTER MID LEFT-STEM TONE BAR → MO
 25CB ;	00B0 ;	MA	#* ( ○ → ° ) WHITE CIRCLE → DEGREE SIGN	# →◦→→∘→
 25E6 ;	00B0 ;	MA	#* ( ◦ → ° ) WHITE BULLET → DEGREE SIGN	# →∘→
 
-235C ;	00B0 0332 ;	MA	#* ( ⍜ → °̲ ) APL FUNCTIONAL SYMBOL CIRCLE UNDERBAR → DEGREE SIGN, COMBINING LOW LINE	# →○̲→
+235C ;	00B0 0332 ;	MA	#* ( ⍜ → °̲ ) APL FUNCTIONAL SYMBOL CIRCLE UNDERBAR → DEGREE SIGN, COMBINING LOW LINE	# →○̲→→∘̲→
 
 2364 ;	00B0 0308 ;	MA	#* ( ⍤ → °̈ ) APL FUNCTIONAL SYMBOL JOT DIAERESIS → DEGREE SIGN, COMBINING DIAERESIS	# →◦̈→→∘̈→
 
@@ -2371,7 +2371,7 @@ A6B1 ;	2C75 ;	MA	# ( ꚱ → Ⱶ ) BAMUM LETTER NDAA → LATIN CAPITAL LETTER HA
 A795 ;	A727 ;	MA	# ( ꞕ → ꜧ ) LATIN SMALL LETTER H WITH PALATAL HOOK → LATIN SMALL LETTER HENG	# 
 
 02DB ;	0069 ;	MA	#* ( ˛ → i ) OGONEK → LATIN SMALL LETTER I	# →ͺ→→ι→→ι→
-2373 ;	0069 ;	MA	#* ( ⍳ → i ) APL FUNCTIONAL SYMBOL IOTA → LATIN SMALL LETTER I	# →ɩ→
+2373 ;	0069 ;	MA	#* ( ⍳ → i ) APL FUNCTIONAL SYMBOL IOTA → LATIN SMALL LETTER I	# →ι→
 FF49 ;	0069 ;	MA	# ( ｉ → i ) FULLWIDTH LATIN SMALL LETTER I → LATIN SMALL LETTER I	# →і→
 2170 ;	0069 ;	MA	# ( ⅰ → i ) SMALL ROMAN NUMERAL ONE → LATIN SMALL LETTER I	# 
 2139 ;	0069 ;	MA	# ( ℹ → i ) INFORMATION SOURCE → LATIN SMALL LETTER I	# 

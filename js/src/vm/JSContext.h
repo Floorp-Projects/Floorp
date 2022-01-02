@@ -15,6 +15,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "ds/TraceableFifo.h"
+#include "frontend/NameCollections.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
 #include "js/CharacterEncoding.h"
@@ -57,7 +58,6 @@ class DebugModeOSRVolatileJitFrameIter;
 }  // namespace jit
 
 namespace gc {
-class AutoCheckCanAccessAtomsDuringGC;
 class AutoSuppressNurseryCellAlloc;
 }  // namespace gc
 
@@ -83,7 +83,7 @@ class MOZ_RAII AutoCycleDetector {
 
 struct AutoResolving;
 
-struct ParseTask;
+struct OffThreadFrontendErrors;  // vm/HelperThreadState.h
 
 class InternalJobQueue : public JS::JobQueue {
  public:
@@ -187,15 +187,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // need to take its address.
   uint32_t allocsThisZoneSinceMinorGC_;
 
-  // Free lists for parallel allocation in the atoms zone on helper threads.
-  js::ContextData<js::gc::FreeLists*> atomsZoneFreeLists_;
-
   js::ContextData<JSFreeOp> defaultFreeOp_;
 
   // Thread that the JSContext is currently running on, if in use.
   js::ThreadId currentThread_;
 
-  js::ParseTask* parseTask_;
+  js::OffThreadFrontendErrors* errors_;
 
   // When a helper thread is using a context, it may need to periodically
   // free unused memory.
@@ -204,6 +201,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Are we currently timing execution? This flag ensures that we do not
   // double-count execution time in reentrant situations.
   js::ContextData<bool> measuringExecutionTime_;
+
+  // This variable is used by the HelperThread scheduling to update the priority
+  // of task based on whether JavaScript is being executed on the main thread.
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> isExecuting_;
 
  public:
   // This is used by helper threads to change the runtime their context is
@@ -229,6 +230,15 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     measuringExecutionTime_ = value;
   }
 
+  // While JSContexts are meant to be used on a single thread, this reference is
+  // meant to be shared to helper thread tasks. This is used by helper threads
+  // to change the priority of tasks based on whether JavaScript is executed on
+  // the main thread.
+  const mozilla::Atomic<bool, mozilla::ReleaseAcquire>& isExecutingRef() const {
+    return isExecuting_;
+  }
+  void setIsExecuting(bool value) { isExecuting_ = value; }
+
 #ifdef DEBUG
   bool isInitialized() const { return kind_ != js::ContextKind::Uninitialized; }
 #endif
@@ -244,11 +254,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::gc::FreeLists& freeLists() {
     MOZ_ASSERT(freeLists_);
     return *freeLists_;
-  }
-
-  js::gc::FreeLists& atomsZoneFreeLists() {
-    MOZ_ASSERT(atomsZoneFreeLists_);
-    return *atomsZoneFreeLists_;
   }
 
   template <typename T>
@@ -343,8 +348,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   inline void leaveRealm(JS::Realm* oldRealm);
 
-  void setParseTask(js::ParseTask* parseTask) { parseTask_ = parseTask; }
-  js::ParseTask* parseTask() const { return parseTask_; }
+  void setOffThreadFrontendErrors(js::OffThreadFrontendErrors* errors) {
+    errors_ = errors;
+  }
+  js::OffThreadFrontendErrors* offThreadFrontendErrors() const {
+    return errors_;
+  }
 
   bool isNurseryAllocSuppressed() const { return nurserySuppressions_; }
 
@@ -378,9 +387,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   js::AtomsTable& atoms() { return runtime_->atoms(); }
 
-  const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) {
-    return runtime_->atomsZone(access);
-  }
+  const JS::Zone* atomsZone() { return runtime_->atomsZone(); }
 
   js::SymbolRegistry& symbolRegistry() { return runtime_->symbolRegistry(); }
 
@@ -616,12 +623,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Some code cannot tolerate compacting GC so it can be disabled temporarily
   // with AutoDisableCompactingGC which uses this counter.
   js::ContextData<unsigned> compactingDisabledCount;
-
-  bool canCollectAtoms() const {
-    // TODO: We may be able to improve this by collecting if
-    // !isOffThreadParseRunning() (bug 1468422).
-    return !runtime()->hasHelperThreadZones();
-  }
 
  private:
   // Pools used for recycling name maps and vectors when parsing and
@@ -1143,22 +1144,6 @@ class MOZ_RAII AutoLockScriptData {
 #endif
     }
   }
-};
-
-// A token used to prove you can safely access the atoms zone. This zone is
-// accessed by the main thread and by off-thread parsing. There are two
-// situations in which it is safe:
-//
-//  - the current thread holds all atoms table locks (off-thread parsing may be
-//    running and must also take one of these locks for access)
-//
-//  - the GC is running and is collecting the atoms zone (this cannot be started
-//    while off-thread parsing is happening)
-class MOZ_STACK_CLASS AutoAccessAtomsZone {
- public:
-  MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockAllAtoms& lock) {}
-  MOZ_IMPLICIT AutoAccessAtomsZone(
-      const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
 };
 
 class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {

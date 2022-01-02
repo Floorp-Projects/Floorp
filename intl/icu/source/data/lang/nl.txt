@@ -46,6 +46,7 @@ nl{
         ang{"Oudengels"}
         anp{"Angika"}
         ar{"Arabisch"}
+        ar_001{"modern standaard Arabisch"}
         arc{"Aramees"}
         arn{"Mapudungun"}
         aro{"Araona"}
@@ -403,6 +404,7 @@ nl{
         niu{"Niueaans"}
         njo{"Ao Naga"}
         nl{"Nederlands"}
+        nl_BE{"Vlaams"}
         nmg{"Ngumba"}
         nn{"Noors - Nynorsk"}
         nnh{"Ngiemboon"}
@@ -457,6 +459,7 @@ nl{
         rap{"Rapanui"}
         rar{"Rarotongan"}
         rgn{"Romagnol"}
+        rhg{"Rohingya"}
         rif{"Riffijns"}
         rm{"Reto-Romaans"}
         rn{"Kirundi"}
@@ -668,6 +671,7 @@ nl{
         Chrs{"Chorasmisch"}
         Cirt{"Cirth"}
         Copt{"Koptisch"}
+        Cpmn{"Cypro-Minoïsch"}
         Cprt{"Cyprisch"}
         Cyrl{"Cyrillisch"}
         Cyrs{"Oudkerkslavisch Cyrillisch"}
@@ -766,6 +770,7 @@ nl{
         Orya{"Odia"}
         Osge{"Osage"}
         Osma{"Osmanya"}
+        Ougr{"Oud Oeigoers"}
         Palm{"Palmyreens"}
         Pauc{"Pau Cin Hau"}
         Perm{"Oudpermisch"}
@@ -816,9 +821,12 @@ nl{
         Thai{"Thai"}
         Tibt{"Tibetaans"}
         Tirh{"Tirhuta"}
+        Tnsa{"Tangsa"}
+        Toto{"Totoschrift"}
         Ugar{"Ugaritisch"}
         Vaii{"Vai"}
         Visp{"Zichtbare spraak"}
+        Vith{"Vithkuqi"}
         Wara{"Varang Kshiti"}
         Wcho{"Wancho"}
         Wole{"Woleai"}
@@ -1023,6 +1031,7 @@ nl{
             thai{"Thaise cijfers"}
             tibt{"Tibetaanse cijfers"}
             tirh{"Tirhuta cijfers"}
+            tnsa{"Tangsa cijfers"}
             traditional{"Traditionele cijfers"}
             vaii{"Vai-cijfers"}
             wara{"Warang Citi cijfers"}
@@ -1044,6 +1053,7 @@ nl{
         ARANES{"Aranees"}
         AREVELA{"Oost-Armeens"}
         AREVMDA{"West-Armeens"}
+        ARKAIKA{"Archaïsch Esperanto"}
         ASANTE{"Asante"}
         AUVERN{"Auvern"}
         BAKU1926{"Eenvormig Turkse Latijnse alfabet"}
@@ -1102,6 +1112,7 @@ nl{
         PAHAWH3{"Pahawh3"}
         PAHAWH4{"Pahawh4"}
         PAMAKA{"Pamaka"}
+        PEANO{"Latijn zonder flexie"}
         PETR1708{"Petr1708"}
         PINYIN{"Pinyin"}
         POLYTON{"Polytonaal"}
@@ -1123,6 +1134,8 @@ nl{
         SURSILV{"Sursilvan"}
         SUTSILV{"Sutsilvan"}
         TARASK{"Taraskievica-spelling"}
+        TONGYONG{"Tongyong"}
+        TUNUMIIT{"Tunumiisiut"}
         UCCOR{"Eenvormige spelling"}
         UCRCOR{"Eenvormig herziene spelling"}
         ULSTER{"Ulster"}
@@ -1130,6 +1143,7 @@ nl{
         VAIDIKA{"Vaidika"}
         VALENCIA{"Valenciaans"}
         VALLADER{"Vallader"}
+        VECDRUKA{"Vecā druka"}
         VIVARAUP{"Vivaraup"}
         WADEGILE{"Wade-Giles-romanisering"}
         XSISTEMO{"X-sistemo"}

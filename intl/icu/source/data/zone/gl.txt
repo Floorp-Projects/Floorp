@@ -1902,6 +1902,9 @@ gl{
             lg{"Horario de Ekaterimburgo"}
             ls{"Horario estándar de Ekaterimburgo"}
         }
+        "meta:Yukon"{
+            ls{"Horario de Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

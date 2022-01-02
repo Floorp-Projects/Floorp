@@ -68,7 +68,6 @@ void MacIOSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
                             mSurface->GetDevicePixelHeight());
   aInfo.format =
       mSurface->HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = true;
   aInfo.canExposeMappedData = false;

@@ -68,6 +68,14 @@ function dispatchKeyEvent(Input, key, type, modifiers = 0) {
   });
 }
 
+async function getEvents() {
+  const events = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    return content.wrappedJSObject.allEvents;
+  });
+  info(`Events: ${JSON.stringify(events)}`);
+  return events;
+}
+
 function getInputContent() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const input = content.document.querySelector("input");
@@ -75,10 +83,22 @@ function getInputContent() {
   });
 }
 
+function checkEvent(event, type, key, property, expectedValue) {
+  let expected = { type, key };
+  expected[property] = expectedValue;
+  checkProperties(expected, event, "Event");
+}
+
 async function checkInputContent(expectedValue, expectedCaret) {
   const { value, caret } = await getInputContent();
   is(value, expectedValue, "Check input content");
   is(caret, expectedCaret, "Check position of input caret");
+}
+
+function checkProperties(expectedObj, targetObj, message = "Compare objects") {
+  for (const prop in expectedObj) {
+    is(targetObj[prop], expectedObj[prop], message + `: check ${prop}`);
+  }
 }
 
 function keyForPlatform() {
@@ -112,6 +132,14 @@ async function checkBackspace(Input, expected, modifiers = 0) {
   info("Send Backspace");
   await sendRawKey(Input, "Backspace", modifiers);
   await checkInputContent(expected, expected.length);
+}
+
+async function resetEvents() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.resetEvents();
+    const events = content.wrappedJSObject.allEvents;
+    is(events.length, 0, "List of events should be empty");
+  });
 }
 
 function resetInput(value = "") {

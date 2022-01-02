@@ -262,7 +262,7 @@ Expanded principal
 
 An expanded principal is specified as an array of origins:
 
-.. code:: brush:
+.. code::
 
    ["http://mozilla.org", "http://moz.org"]
 

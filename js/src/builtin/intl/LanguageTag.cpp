@@ -26,7 +26,7 @@ namespace intl {
       return false;
     }
 
-    if (mozilla::intl::LocaleParser::tryParse(chars, result).isOk()) {
+    if (mozilla::intl::LocaleParser::TryParse(chars, result).isOk()) {
       return true;
     }
   }
@@ -48,13 +48,13 @@ bool ParseStandaloneLanguageTag(HandleLinearString str,
             str->latin1Range(nogc))) {
       return false;
     }
-    result.set<Latin1Char>(str->latin1Range(nogc));
+    result.Set<Latin1Char>(str->latin1Range(nogc));
   } else {
     if (!mozilla::intl::IsStructurallyValidLanguageTag<char16_t>(
             str->twoByteRange(nogc))) {
       return false;
     }
-    result.set<char16_t>(str->twoByteRange(nogc));
+    result.Set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
@@ -69,13 +69,13 @@ bool ParseStandaloneScriptTag(HandleLinearString str,
             str->latin1Range(nogc))) {
       return false;
     }
-    result.set<Latin1Char>(str->latin1Range(nogc));
+    result.Set<Latin1Char>(str->latin1Range(nogc));
   } else {
     if (!mozilla::intl::IsStructurallyValidScriptTag<char16_t>(
             str->twoByteRange(nogc))) {
       return false;
     }
-    result.set<char16_t>(str->twoByteRange(nogc));
+    result.Set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
@@ -90,13 +90,13 @@ bool ParseStandaloneRegionTag(HandleLinearString str,
             str->latin1Range(nogc))) {
       return false;
     }
-    result.set<Latin1Char>(str->latin1Range(nogc));
+    result.Set<Latin1Char>(str->latin1Range(nogc));
   } else {
     if (!mozilla::intl::IsStructurallyValidRegionTag<char16_t>(
             str->twoByteRange(nogc))) {
       return false;
     }
-    result.set<char16_t>(str->twoByteRange(nogc));
+    result.Set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
@@ -157,27 +157,27 @@ JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
   mozilla::intl::LanguageSubtag languageTag;
   if (str->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
-    languageTag.set<Latin1Char>(str->latin1Range(nogc));
+    languageTag.Set<Latin1Char>(str->latin1Range(nogc));
   } else {
     JS::AutoCheckCannotGC nogc;
-    languageTag.set<char16_t>(str->twoByteRange(nogc));
+    languageTag.Set<char16_t>(str->twoByteRange(nogc));
   }
 
   if (!isLowerCase) {
     // The language subtag is canonicalized to lower case.
-    languageTag.toLowerCase();
+    languageTag.ToLowerCase();
   }
 
   // Reject the input if the canonical tag contains more than just a single
   // language subtag.
-  if (mozilla::intl::Locale::complexLanguageMapping(languageTag)) {
+  if (mozilla::intl::Locale::ComplexLanguageMapping(languageTag)) {
     return nullptr;
   }
 
   // Take care to replace deprecated subtags with their preferred values.
   JSString* result;
-  if (mozilla::intl::Locale::languageMapping(languageTag) || !isLowerCase) {
-    result = NewStringCopy<CanGC>(cx, languageTag.span());
+  if (mozilla::intl::Locale::LanguageMapping(languageTag) || !isLowerCase) {
+    result = NewStringCopy<CanGC>(cx, languageTag.Span());
   } else {
     result = str;
   }

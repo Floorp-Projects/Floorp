@@ -134,12 +134,19 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void Notify(imgIRequest*, int32_t aType, const nsIntRect* aData);
 
   /**
+   * Returns whether we should replace an element with an image corresponding to
+   * its 'content' CSS property.
+   */
+  static bool ShouldCreateImageFrameForContent(const mozilla::dom::Element&,
+                                               const ComputedStyle&);
+
+  /**
    * Function to test whether given an element and its style, that element
    * should get an image frame.  Note that this method is only used by the
    * frame constructor; it's only here because it uses gIconLoad for now.
    */
   static bool ShouldCreateImageFrameFor(const mozilla::dom::Element&,
-                                        ComputedStyle&);
+                                        const ComputedStyle&);
 
   ImgDrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                    const nsRect& aDirtyRect, nsPoint aPt,

@@ -29,7 +29,7 @@ nsTextToSubURI::ConvertAndEscape(const nsACString& aCharset,
   }
   nsresult rv;
   nsAutoCString intermediate;
-  Tie(rv, Ignore) = encoding->Encode(aText, intermediate);
+  std::tie(rv, std::ignore) = encoding->Encode(aText, intermediate);
   if (NS_FAILED(rv)) {
     aOut.Truncate();
     return rv;

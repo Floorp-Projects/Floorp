@@ -278,6 +278,10 @@ class VectorPool : public CollectionPool<RepresentativeVector,
   }
 };
 
+using AtomVector = Vector<TrivialTaggedParserAtomIndex, 24, SystemAllocPolicy>;
+
+using FunctionBoxVector = Vector<FunctionBox*, 24, SystemAllocPolicy>;
+
 class NameCollectionPool {
   InlineTablePool<AtomIndexMap> mapPool_;
   VectorPool<AtomVector> atomVectorPool_;

@@ -3,9 +3,7 @@
 var testpath = "/bug1054739";
 
 function run_test() {
-  let intlPrefs = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefService)
-    .getBranch("intl.");
+  let intlPrefs = Services.prefs.getBranch("intl.");
 
   let oldAcceptLangPref = intlPrefs.getCharPref("accept_languages");
 

@@ -19,8 +19,17 @@ job-defaults:
             - name: public/build/geckoview-androidTest.apk
               path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
               type: file
+            - name: public/build/geckoview-test_runner.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/apk/withGeckoBinaries/debug/test_runner-withGeckoBinaries-debug.apk
+              type: file
+            - name: public/build/geckoview-test_runner.aab
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/bundle/withGeckoBinariesDebug/test_runner-withGeckoBinaries-debug.aab
+              type: file
             - name: public/build/geckoview_example.apk
               path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+              type: file
+            - name: public/build/geckoview_example.aab
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/bundle/withGeckoBinariesDebug/geckoview_example-withGeckoBinaries-debug.aab
               type: file
             - name: public/build
               path: /builds/worker/artifacts/
@@ -35,6 +44,7 @@ job-defaults:
         toolchain:
             - android-ndk-linux
             - android-sdk-linux
+            - linux64-jdk
             - linux64-rust-android
             - linux64-rust-size
             - linux64-cbindgen
@@ -895,27 +905,3 @@ android-x86_64-gcp/debug:
             - android-gradle-dependencies
     optimization:
         skip-unless-backstop: null
-
-android-x86_64-asan-fuzzing/opt:
-    description: "Android 5.0 x86-64 Fuzzing Opt ASAN"
-    index:
-        job-name: android-x86_64-fuzzing-asan
-    treeherder:
-        platform: android-5-0-x86_64/asan
-        symbol: Bof
-    worker-type: b-linux-large
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: x86_64-fuzzing-asan
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang-android-cross
-            - linux64-sccache
-            - android-gradle-dependencies
-    optimization:
-        skip-unless-expanded: null

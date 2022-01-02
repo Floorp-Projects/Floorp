@@ -99,7 +99,7 @@ ms{
         cho{"Choctaw"}
         chr{"Cherokee"}
         chy{"Cheyenne"}
-        ckb{"Kurdi Sorani"}
+        ckb{"Kurdi Tengah"}
         co{"Corsica"}
         cop{"Coptic"}
         crh{"Turki Krimea"}
@@ -353,6 +353,7 @@ ms{
         quc{"Kʼicheʼ"}
         rap{"Rapanui"}
         rar{"Rarotonga"}
+        rhg{"Rohingya"}
         rm{"Romansh"}
         rn{"Rundi"}
         ro{"Romania"}
@@ -484,6 +485,7 @@ ms{
         en_US{"Inggeris A.S."}
     }
     Languages%variant{
+        ckb{"Kurdi, Sorani"}
         ps{"Pushto"}
         ug{"Uighur"}
     }

@@ -189,6 +189,28 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   }
 
   /**
+   * Returns the owner DocumentElement|ShadowRootElement NodeFront for this NodeFront,
+   * or null if such element can't be found.
+   *
+   * @returns {NodeFront|null}
+   */
+  getOwnerRootNodeFront() {
+    let currentNode = this;
+    while (currentNode) {
+      if (
+        currentNode.isShadowRoot ||
+        currentNode.nodeType === Node.DOCUMENT_NODE
+      ) {
+        return currentNode;
+      }
+
+      currentNode = currentNode.parentNode();
+    }
+
+    return null;
+  }
+
+  /**
    * Process a mutation entry as returned from the walker's `getMutations`
    * request.  Only tries to handle changes of the node's contents
    * themselves (character data and attribute changes), the walker itself
@@ -271,6 +293,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.baseURI;
   }
 
+  get browsingContextID() {
+    return this._form.browsingContextID;
+  }
+
   get className() {
     return this.getAttribute("class") || "";
   }
@@ -286,10 +312,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       return false;
     }
 
-    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
-    // we still need to check for `remoteFrame` when connecting to older server.
-    // When 94 is in release, we can check useChildTargetToFetchChildren only
-    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
+    return this._form.useChildTargetToFetchChildren;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;

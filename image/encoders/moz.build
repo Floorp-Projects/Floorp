@@ -9,4 +9,5 @@ DIRS += [
     "png",
     "jpeg",
     "bmp",
+    "webp",
 ]

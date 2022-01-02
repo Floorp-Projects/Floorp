@@ -87,10 +87,14 @@ en_001{
                 one{"{0} kilowatt-hour"}
             }
         }
-        graphics{
-            dot{
-                other{"{0} dots"}
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt-hour per 100 kilometres"}
+                one{"{0} kilowatt-hour per 100 kilometres"}
+                other{"{0} kilowatt-hours per 100 kilometres"}
             }
+        }
+        graphics{
             dot-per-centimeter{
                 dnam{"dots per centimetre"}
                 one{"{0} dot per centimetre"}
@@ -164,9 +168,6 @@ en_001{
             }
         }
         mass{
-            grain{
-                other{"{0} grains"}
-            }
             metric-ton{
                 dnam{"tonnes"}
                 one{"{0} tonne"}
@@ -252,12 +253,6 @@ en_001{
                 one{"{0} dessertspoon"}
                 other{"{0} dessertspoons"}
             }
-            dram{
-                other{"{0} drams"}
-            }
-            drop{
-                other{"{0} drops"}
-            }
             fluid-ounce{
                 dnam{"US fluid ounces"}
                 one{"{0} US fluid ounce"}
@@ -280,9 +275,6 @@ en_001{
                 one{"{0} hectolitre"}
                 other{"{0} hectolitres"}
             }
-            jigger{
-                other{"{0} jiggers"}
-            }
             liter{
                 dnam{"litres"}
                 one{"{0} litre"}
@@ -298,9 +290,6 @@ en_001{
                 dnam{"millilitres"}
                 one{"{0} millilitre"}
                 other{"{0} millilitres"}
-            }
-            pinch{
-                other{"{0} pinches"}
             }
             quart{
                 dnam{"US quarts"}
@@ -321,6 +310,11 @@ en_001{
             }
         }
         concentr{
+            karat{
+                dnam{"carat"}
+                one{"{0}ct"}
+                other{"{0}ct"}
+            }
             milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0}mg/dl"}
@@ -394,6 +388,21 @@ en_001{
                 one{"{0}dl"}
                 other{"{0}dl"}
             }
+            dessert-spoon{
+                dnam{"US dsp"}
+                one{"{0}US dsp"}
+                other{"{0}US dsp"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dsp"}
+                one{"{0}dsp"}
+                other{"{0}dsp"}
+            }
+            fluid-ounce-imperial{
+                dnam{"fl oz"}
+                one{"{0}fl oz"}
+                other{"{0}fl oz"}
+            }
             gallon{
                 dnam{"US gal"}
                 one{"{0}galUS"}
@@ -411,6 +420,9 @@ en_001{
                 one{"{0}hl"}
                 other{"{0}hl"}
             }
+            jigger{
+                other{"{0}jiggers"}
+            }
             liter{
                 dnam{"litre"}
                 one{"{0}l"}
@@ -426,6 +438,11 @@ en_001{
                 dnam{"ml"}
                 one{"{0}ml"}
                 other{"{0}ml"}
+            }
+            quart-imperial{
+                dnam{"qt"}
+                one{"{0}qt"}
+                other{"{0}qt"}
             }
         }
     }

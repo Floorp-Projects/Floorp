@@ -36,9 +36,8 @@ function makeChan(url) {
 }
 
 function new_file_channel(file) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   return NetUtil.newChannel({
-    uri: ios.newFileURI(file),
+    uri: Services.io.newFileURI(file),
     loadUsingSystemPrincipal: true,
   });
 }

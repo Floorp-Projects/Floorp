@@ -24,7 +24,9 @@
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
  /**
-   * Reads up to |maxBytes| of the file at |path| according to |opts|.
+   * Reads up to |opts.maxBytes| of the file at |path| according to |opts|.
+   *
+   * NB: The maximum file size that can be read is UINT32_MAX.
    *
    * @param path An absolute file path.
    *
@@ -36,6 +38,8 @@ namespace IOUtils {
    * Reads the UTF-8 text file located at |path| and returns the decoded
    * contents as a |DOMString|.
    *
+   * NB: The maximum file size that can be read is UINT32_MAX.
+   *
    * @param path An absolute file path.
    *
    * @return Resolves with the file contents encoded as a string, otherwise
@@ -45,6 +49,8 @@ namespace IOUtils {
   /**
    * Read the UTF-8 text file located at |path| and return the contents
    * parsed as JSON into a JS value.
+   *
+   * NB: The maximum file size that can be read is UINT32_MAX.
    *
    * @param path An absolute path.
    *
@@ -155,7 +161,9 @@ namespace IOUtils {
   /**
    * Updates the |modification| time for the file at |path|.
    *
-   * @param path         An absolute file path identifying the file to touch.
+   * @param path         An absolute file path identifying the file whose
+   *                     modification time is to be set. This file must exist
+   *                     and will not be created.
    * @param modification An optional modification time for the file expressed in
    *                     milliseconds since the Unix epoch
    *                     (1970-01-01T00:00:00Z). The current system time is used
@@ -165,11 +173,10 @@ namespace IOUtils {
    *         milliseconds since the Unix epoch, otherwise rejects with a
    *         DOMException.
    */
-  Promise<long long> touch(DOMString path, optional long long modification);
+  Promise<long long> setModificationTime(DOMString path, optional long long modification);
   /**
    * Retrieves a (possibly empty) list of immediate children of the directory at
-   * |path|. If the file at |path| is not a directory, this method resolves with
-   * an empty list.
+   * |path|.
    *
    * @param path An absolute file path.
    *
@@ -177,7 +184,7 @@ namespace IOUtils {
    *         children of the directory at |path|, otherwise rejects with a
    *         DOMException.
    */
-  Promise<sequence<DOMString>> getChildren(DOMString path);
+  Promise<sequence<DOMString>> getChildren(DOMString path, optional GetChildrenOptions options = {});
   /**
    * Set the permissions of the file at |path|.
    *
@@ -214,6 +221,49 @@ partial namespace IOUtils {
   readonly attribute any profileBeforeChange;
 };
 
+[Exposed=Worker]
+partial namespace IOUtils {
+  /**
+   * Synchronously opens the file at |path|. This API is only available in workers.
+   *
+   * @param path An absolute file path.
+   *
+   * @return A |SyncReadFile| object for the file.
+   */
+  [Throws]
+  SyncReadFile openFileForSyncReading(DOMString path);
+};
+
+/**
+ * An object representing an open file, allowing parts of the file contents to be
+ * read synchronously. Only available in workers.
+ */
+[ChromeOnly, Exposed=Worker]
+interface SyncReadFile {
+  /**
+   * The file size, in bytes.
+   */
+  readonly attribute long long size;
+
+  /**
+   * Synchronously read |dest.length| bytes at offset |offset| into |dest|.
+   * Throws if the file has been closed already or if the read would be out-of-bounds.
+   *
+   * @param dest   A Uint8Array whose entire contents will be overwritten with
+   *               bytes read from the file.
+   * @param offset The file offset at which the read range begins. (The length of the
+   *               range is given by |dest.length|.)
+   */
+  [Throws]
+  void readBytesInto(Uint8Array dest, long long offset);
+
+  /**
+   * Close the file. Subsequent calls to readBytesInto will throw.
+   * If the file is not closed manually, it will be closed once this object is GC'ed.
+   */
+  void close();
+};
+
 /**
  * Options to be passed to the |IOUtils.readUTF8| method.
  */
@@ -234,7 +284,7 @@ dictionary ReadOptions : ReadUTF8Options {
    * The offset into the file to read from. If unspecified, the file will be read
    * from the start.
    */
-  unsigned long offset = 0;
+  unsigned long long offset = 0;
 
   /**
    * The max bytes to read from the file at path. If unspecified, the entire
@@ -360,6 +410,16 @@ dictionary CopyOptions {
    * If true, copy the source recursively.
    */
   boolean recursive = false;
+};
+
+/**
+ * Options to be passed to the |IOUtils.getChildren| method.
+ */
+dictionary GetChildrenOptions {
+  /**
+   * If true, no error will be reported if the target file is missing.
+   */
+  boolean ignoreAbsent = false;
 };
 
 /**

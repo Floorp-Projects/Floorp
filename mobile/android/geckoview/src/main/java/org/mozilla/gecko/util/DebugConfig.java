@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
@@ -75,42 +75,60 @@ public class DebugConfig {
     }
   }
 
-  public void mergeIntoInitInfo(final @NonNull GeckoThread.InitInfo info) {
-    if (env != null) {
-      Log.d(LOGTAG, "Adding environment variables from debug config: " + env);
-
-      if (info.extras == null) {
-        info.extras = new Bundle();
-      }
-
-      int c = 0;
-      while (info.extras.getString("env" + c) != null) {
-        c += 1;
-      }
-
-      for (final Map.Entry<String, String> entry : env.entrySet()) {
-        info.extras.putString("env" + c, entry.getKey() + "=" + entry.getValue());
-        c += 1;
-      }
+  @Nullable
+  public Bundle mergeIntoExtras(final @Nullable Bundle extras) {
+    if (env == null) {
+      return extras;
     }
 
-    if (args != null) {
-      Log.d(LOGTAG, "Adding arguments from debug config: " + args);
+    Log.d(LOGTAG, "Adding environment variables from debug config: " + env);
 
-      final ArrayList<String> combinedArgs = new ArrayList<>();
-      combinedArgs.addAll(Arrays.asList(info.args));
-      combinedArgs.addAll(args);
+    final Bundle result = extras != null ? extras : new Bundle();
 
-      info.args = combinedArgs.toArray(new String[combinedArgs.size()]);
+    int c = 0;
+    while (result.getString("env" + c) != null) {
+      c += 1;
     }
 
-    if (prefs != null) {
-      Log.d(LOGTAG, "Adding prefs from debug config: " + prefs);
-
-      final Map<String, Object> combinedPrefs = new HashMap<>();
-      combinedPrefs.putAll(info.prefs);
-      combinedPrefs.putAll(prefs);
-      info.prefs = Collections.unmodifiableMap(prefs);
+    for (final Map.Entry<String, String> entry : env.entrySet()) {
+      result.putString("env" + c, entry.getKey() + "=" + entry.getValue());
+      c += 1;
     }
+
+    return result;
+  }
+
+  @Nullable
+  public String[] mergeIntoArgs(final @Nullable String[] initArgs) {
+    if (args == null) {
+      return initArgs;
+    }
+
+    Log.d(LOGTAG, "Adding arguments from debug config: " + args);
+
+    final ArrayList<String> combinedArgs = new ArrayList<>();
+    if (initArgs != null) {
+      combinedArgs.addAll(Arrays.asList(initArgs));
+    }
+    combinedArgs.addAll(args);
+
+    return combinedArgs.toArray(new String[combinedArgs.size()]);
+  }
+
+  @Nullable
+  public Map<String, Object> mergeIntoPrefs(final @Nullable Map<String, Object> initPrefs) {
+    if (prefs == null) {
+      return initPrefs;
+    }
+
+    Log.d(LOGTAG, "Adding prefs from debug config: " + prefs);
+
+    final Map<String, Object> combinedPrefs = new HashMap<>();
+    if (initPrefs != null) {
+      combinedPrefs.putAll(initPrefs);
+    }
+    combinedPrefs.putAll(prefs);
+
+    return Collections.unmodifiableMap(combinedPrefs);
   }
 }

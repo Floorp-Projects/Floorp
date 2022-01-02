@@ -222,7 +222,6 @@ void MultipartImage::SetProgressTracker(ProgressTracker* aTracker) {
 }
 
 nsresult MultipartImage::OnImageDataAvailable(nsIRequest* aRequest,
-                                              nsISupports* aContext,
                                               nsIInputStream* aInStr,
                                               uint64_t aSourceOffset,
                                               uint32_t aCount) {
@@ -232,18 +231,15 @@ nsresult MultipartImage::OnImageDataAvailable(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   RefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    nextPart->OnImageDataAvailable(aRequest, aContext, aInStr, aSourceOffset,
-                                   aCount);
+    nextPart->OnImageDataAvailable(aRequest, aInStr, aSourceOffset, aCount);
   } else {
-    InnerImage()->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                       aSourceOffset, aCount);
+    InnerImage()->OnImageDataAvailable(aRequest, aInStr, aSourceOffset, aCount);
   }
 
   return NS_OK;
 }
 
 nsresult MultipartImage::OnImageDataComplete(nsIRequest* aRequest,
-                                             nsISupports* aContext,
                                              nsresult aStatus, bool aLastPart) {
   // Note that this method is special in that we forward it to the next part if
   // one exists, and *not* the current part.
@@ -251,9 +247,9 @@ nsresult MultipartImage::OnImageDataComplete(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   RefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    nextPart->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
+    nextPart->OnImageDataComplete(aRequest, aStatus, aLastPart);
   } else {
-    InnerImage()->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
+    InnerImage()->OnImageDataComplete(aRequest, aStatus, aLastPart);
   }
 
   return NS_OK;

@@ -8,7 +8,6 @@ import logging
 import os
 
 import pytest
-from mach.logging import LoggingManager
 from responses import RequestsMock, logger as rsps_logger
 
 from gecko_taskgraph.generator import TaskGraphGenerator
@@ -33,11 +32,6 @@ def datadir():
 
 @pytest.fixture(scope="session")
 def create_tgg(responses, datadir):
-
-    # Setup logging.
-    lm = LoggingManager()
-    lm.add_terminal_logging()
-
     def inner(parameters=None, overrides=None):
         params = parameters_loader(parameters, strict=False, overrides=overrides)
         tgg = TaskGraphGenerator(None, params)

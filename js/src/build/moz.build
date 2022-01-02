@@ -48,6 +48,9 @@ if CONFIG["JS_HAS_INTL_API"]:
         "icu",
     ]
 
+if CONFIG["MOZ_ICU4X"]:
+    USE_LIBS += ["icu4xdata"]
+
 USE_LIBS += [
     "nspr",
     "zlib",
@@ -74,6 +77,18 @@ if CONFIG["OS_ARCH"] == "SunOS":
         "dl",
         "nsl",
         "socket",
+    ]
+
+# Version string comparison is generally wrong, but by the time it would
+# actually matter, either bug 1489995 would be fixed, or the build would
+# require version >= 1.57.
+if (
+    CONFIG["OS_ARCH"] == "WINNT"
+    and CONFIG["RUSTC_VERSION"]
+    and CONFIG["RUSTC_VERSION"] >= "1.57.0"
+):
+    OS_LIBS += [
+        "bcrypt",
     ]
 
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:

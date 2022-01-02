@@ -1037,6 +1037,20 @@ static LoadedScript* GetLoadedScriptOrNull(
   return script;
 }
 
+bool HostGetSupportedImportAssertions(JSContext* aCx,
+                                      JS::ImportAssertionVector& aValues) {
+  MOZ_ASSERT(aValues.empty());
+
+  if (!aValues.reserve(1)) {
+    JS_ReportOutOfMemory(aCx);
+    return false;
+  }
+
+  aValues.infallibleAppend(JS::ImportAssertion::Type);
+
+  return true;
+}
+
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
 JSObject* HostResolveImportedModule(JSContext* aCx,
                                     JS::Handle<JS::Value> aReferencingPrivate,
@@ -1284,6 +1298,7 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
+  JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
 
   Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
                                        "javascript.options.dynamicImport",
@@ -2533,10 +2548,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
 
-    // NOTE: Regardless of using stencil XDR or not, we use off-thread parse
-    //       global and instantiate off-thread, to avoid regressing performance.
-    options.useOffThreadParseGlobal = true;
-
     size_t length =
         aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
     if (!JS::CanDecodeOffThread(cx, options, length)) {
@@ -3724,7 +3735,7 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
   UniquePtr<Decoder> unicodeDecoder;
 
   const Encoding* encoding;
-  Tie(encoding, Ignore) = Encoding::ForBOM(data);
+  std::tie(encoding, std::ignore) = Encoding::ForBOM(data);
   if (encoding) {
     unicodeDecoder = encoding->NewDecoderWithBOMRemoval();
   }

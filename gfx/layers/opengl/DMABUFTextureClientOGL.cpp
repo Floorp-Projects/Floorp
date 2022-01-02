@@ -57,7 +57,6 @@ bool DMABUFTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
 void DMABUFTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight());
   aInfo.format = mSurface->GetFormat();
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = true;
   aInfo.canExposeMappedData = false;

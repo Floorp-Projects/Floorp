@@ -141,6 +141,8 @@ HttpChannelChild::~HttpChannelChild() {
   }
 #endif
 
+  mEventQ->NotifyReleasingOwner();
+
   ReleaseMainThreadOnlyReferences();
 }
 
@@ -484,7 +486,7 @@ void HttpChannelChild::OnStartRequest(
     mSuspendedByWaitingForPermissionCookie = true;
     mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
         this, [self = UnsafePtr<HttpChannelChild>(this)]() {
-          self->DoOnStartRequest(self, nullptr);
+          self->DoOnStartRequest(self);
         }));
     return;
   }
@@ -495,7 +497,7 @@ void HttpChannelChild::OnStartRequest(
         nsHttpHandler::IsHttp3SupportedByServer(mResponseHead.get());
   }
 
-  DoOnStartRequest(this, nullptr);
+  DoOnStartRequest(this);
 }
 
 void HttpChannelChild::ProcessOnAfterLastPart(const nsresult& aStatus) {
@@ -543,8 +545,7 @@ void HttpChannelChild::OnAfterLastPart(const nsresult& aStatus) {
   }
 }
 
-void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
-                                        nsISupports* aContext) {
+void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest) {
   nsresult rv;
 
   LOG(("HttpChannelChild::DoOnStartRequest [this=%p]\n", this));
@@ -666,7 +667,7 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
     return;
   }
 
-  DoOnDataAvailable(this, nullptr, stringStream, aOffset, aCount);
+  DoOnDataAvailable(this, stringStream, aOffset, aCount);
   stringStream->Close();
 
   // TODO: Bug 1523916 backpressure needs to take into account if the data is
@@ -756,7 +757,6 @@ void HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress,
 }
 
 void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          nsIInputStream* aStream,
                                          uint64_t aOffset, uint32_t aCount) {
   AUTO_PROFILER_LABEL("HttpChannelChild::DoOnDataAvailable", NETWORK);
@@ -867,7 +867,7 @@ void HttpChannelChild::OnStopRequest(
   mCacheReadStart = aTiming.cacheReadStart();
   mCacheReadEnd = aTiming.cacheReadEnd();
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
     nsAutoCString contentType;
@@ -904,7 +904,7 @@ void HttpChannelChild::OnStopRequest(
     // so make sure this goes out of scope before then.
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-    DoOnStopRequest(this, aChannelStatus, nullptr);
+    DoOnStopRequest(this, aChannelStatus);
     // DoOnStopRequest() calls ReleaseListeners()
   }
 }
@@ -978,8 +978,7 @@ void HttpChannelChild::CollectOMTTelemetry() {
 }
 
 void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
-                                       nsresult aChannelStatus,
-                                       nsISupports* aContext) {
+                                       nsresult aChannelStatus) {
   AUTO_PROFILER_LABEL("HttpChannelChild::DoOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::DoOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
@@ -1357,7 +1356,7 @@ void HttpChannelChild::Redirect1Begin(
 
   ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
     nsAutoCString contentType;
@@ -1664,7 +1663,7 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
    */
 
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -1990,7 +1989,7 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   gHttpHandler->OnOpeningRequest(this);
 
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -3027,6 +3026,11 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
             NS_DISPATCH_NORMAL);
       },
       []() { NS_WARNING("Failed to create SocketProcessBridgeChild"); });
+}
+
+NS_IMETHODIMP
+HttpChannelChild::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
+  return NS_OK;
 }
 
 }  // namespace net

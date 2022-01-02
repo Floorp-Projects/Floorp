@@ -6,10 +6,10 @@ add_task(async function thumbnails_bg_destroy_browser() {
     set: [["dom.ipc.processCount", 1]],
   });
 
-  let url1 = "http://example.com/1";
+  let url1 = "https://example.com/1";
   ok(!thumbnailExists(url1), "First file should not exist yet.");
 
-  let url2 = "http://example.com/2";
+  let url2 = "https://example.com/2";
   ok(!thumbnailExists(url2), "Second file should not exist yet.");
 
   let defaultTimeout = BackgroundPageThumbs._destroyBrowserTimeout;

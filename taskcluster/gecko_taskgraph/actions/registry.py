@@ -25,7 +25,7 @@ Action = namedtuple("Action", ["order", "cb_name", "permission", "action_builder
 
 
 def is_json(data):
-    """ Return ``True``, if ``data`` is a JSON serializable data structure. """
+    """Return ``True``, if ``data`` is a JSON serializable data structure."""
     try:
         json.dumps(data)
     except ValueError:

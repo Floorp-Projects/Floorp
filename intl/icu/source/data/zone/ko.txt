@@ -1931,6 +1931,9 @@ ko{
             lg{"예카테린부르크 시간"}
             ls{"예카테린부르크 표준시"}
         }
+        "meta:Yukon"{
+            ls{"유콘 시간"}
+        }
         fallbackFormat{"{1}({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

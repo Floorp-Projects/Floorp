@@ -733,6 +733,13 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   surface->LockVAAPIData(mCodecContext, mFrame, mLib);
   surface->SetYUVColorSpace(GetFrameColorSpace());
 
+  if (mLib->av_frame_get_color_range) {
+    auto range = mLib->av_frame_get_color_range(mFrame);
+    surface->SetColorRange(range == AVCOL_RANGE_JPEG
+                               ? gfx::ColorRange::FULL
+                               : gfx::ColorRange::LIMITED);
+  }
+
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
       TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
@@ -762,6 +769,13 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
                        RESULT_DETAIL("dmabuf allocation error"));
   }
   surface->SetYUVColorSpace(GetFrameColorSpace());
+
+  if (mLib->av_frame_get_color_range) {
+    auto range = mLib->av_frame_get_color_range(mFrame);
+    surface->SetColorRange(range == AVCOL_RANGE_JPEG
+                               ? gfx::ColorRange::FULL
+                               : gfx::ColorRange::LIMITED);
+  }
 
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),

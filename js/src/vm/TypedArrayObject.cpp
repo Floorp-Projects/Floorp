@@ -2819,7 +2819,7 @@ bool JS::ArrayBufferOrView::isDetached() const {
 }
 
 JS::TypedArray_base JS::TypedArray_base::fromObject(JSObject* unwrapped) {
-  if (unwrapped->is<TypedArrayObject>()) {
+  if (unwrapped && unwrapped->is<TypedArrayObject>()) {
     return TypedArray_base(unwrapped);
   }
   return TypedArray_base(nullptr);

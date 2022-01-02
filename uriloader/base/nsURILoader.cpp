@@ -42,6 +42,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "nsContentUtils.h"
@@ -151,7 +152,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
     return NS_OK;
   }
 
-  rv = DispatchContent(request, nullptr);
+  rv = DispatchContent(request);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08" PRIX32,
        m_targetStreamListener.get(), static_cast<uint32_t>(rv)));
@@ -223,8 +224,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
   return NS_OK;
 }
 
-nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
-                                             nsISupports* aCtxt) {
+nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   LOG(("[0x%p] nsDocumentOpenInfo::DispatchContent for type '%s'", this,
        mContentType.get()));
 
@@ -267,6 +267,41 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
   }
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
+
+  // For a PDF, check if it will be handled internally. If so, treat it as a
+  // non-attachment by clearing 'forceExternalHandling' again. This allows it
+  // open a PDF directly instead of downloading it first. It may still
+  // end up being handled by a helper app depending anyway on the later checks.
+  if (forceExternalHandling &&
+      mContentType.LowerCaseEqualsASCII(APPLICATION_PDF) &&
+      StaticPrefs::browser_download_improvements_to_download_panel()) {
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+    // But only do this for top-level documents for now. Otherwise, google
+    // documents don't export or print properly.
+    RefPtr<dom::BrowsingContext> browsingContext;
+    loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+    if (!browsingContext->IsSubframe()) {
+      nsCOMPtr<nsIMIMEInfo> mimeInfo;
+
+      nsCOMPtr<nsIMIMEService> mimeSvc(
+          do_GetService(NS_MIMESERVICE_CONTRACTID));
+      NS_ENSURE_TRUE(mimeSvc, NS_ERROR_FAILURE);
+      mimeSvc->GetFromTypeAndExtension(nsLiteralCString(APPLICATION_PDF), ""_ns,
+                                       getter_AddRefs(mimeInfo));
+
+      if (mimeInfo) {
+        int32_t action = nsIMIMEInfo::saveToDisk;
+        mimeInfo->GetPreferredAction(&action);
+
+        bool alwaysAsk = true;
+        mimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+        forceExternalHandling =
+            alwaysAsk || action != nsIMIMEInfo::handleInternally;
+      }
+    }
+  }
 
   if (!forceExternalHandling) {
     //

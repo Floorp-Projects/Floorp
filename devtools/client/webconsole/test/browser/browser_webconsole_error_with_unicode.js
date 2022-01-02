@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<script>\u6e2c</script>";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html><script>\u6e2c</script>";
 const EXPECTED_REPORT = "ReferenceError: \u6e2c is not defined";
 
 add_task(async function() {

@@ -95,15 +95,14 @@ class nsCaseTransformTextRunFactory : public nsTransformingTextRunFactory {
                               gfxMissingFontRecorder* aMFR) override;
 
   // Perform a transformation on the given string, writing the result into
-  // aConvertedString. If aAllUppercase is true, the transform is (global)
-  // upper-casing, and aLanguage is used to determine any language-specific
-  // behavior; otherwise, an nsTransformedTextRun should be passed in
-  // as aTextRun and its styles will be used to determine the transform(s)
-  // to be applied.
+  // aConvertedString. If aGlobalTransform is passed, the transform is global
+  // and aLanguage is used to determine any language-specific behavior;
+  // otherwise, an nsTransformedTextRun should be passed in as aTextRun and its
+  // styles will be used to determine the transform(s) to be applied.
   // If such an input textrun is provided, then its line-breaks and styles
   // will be copied to the output arrays, which must also be provided by
-  // the caller. For the global upper-casing usage (no input textrun),
-  // these are ignored.
+  // the caller. For the global transform usage (no input textrun), these are
+  // ignored.
   // If aCaseTransformsOnly is true, then only the upper/lower/capitalize
   // transformations are performed; full-width and full-size-kana are ignored.
   // If `aTextRun` is not nullptr and characters which are styled with setting
@@ -113,7 +112,8 @@ class nsCaseTransformTextRunFactory : public nsTransformingTextRunFactory {
   // whose `nsTransformedCharStyle::mMaskPassword` is set to false are
   // transformed normally.
   static bool TransformString(
-      const nsAString& aString, nsString& aConvertedString, bool aAllUppercase,
+      const nsAString& aString, nsString& aConvertedString,
+      const mozilla::Maybe<mozilla::StyleTextTransform>& aGlobalTransform,
       bool aCaseTransformsOnly, const nsAtom* aLanguage,
       nsTArray<bool>& aCharsToMergeArray, nsTArray<bool>& aDeletedCharsArray,
       const nsTransformedTextRun* aTextRun = nullptr,

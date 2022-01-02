@@ -688,6 +688,7 @@ keyTypeData:table(nofallback){
             thai{""}
             tibt{""}
             tirh{""}
+            tnsa{""}
             traditional{"traditio"}
             vaii{""}
             wara{""}

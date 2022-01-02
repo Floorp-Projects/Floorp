@@ -57,9 +57,9 @@ child:
   async DeliverFrame(CaptureEngine capEngine, int streamId,
                      Shmem buffer, VideoFrameProperties props);
   async DeviceChange();
-  async ReplyNumberOfCaptureDevices(int numdev);
-  async ReplyNumberOfCapabilities(int numdev);
-  async ReplyAllocateCaptureDevice(int numdev);
+  async ReplyNumberOfCaptureDevices(int deviceCount);
+  async ReplyNumberOfCapabilities(int capabilityCount);
+  async ReplyAllocateCapture(int captureId);
   async ReplyGetCaptureCapability(VideoCaptureCapability cap);
   async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary);
   async ReplyFailure();
@@ -72,14 +72,15 @@ parent:
 
   async GetCaptureCapability(CaptureEngine engine, nsCString unique_idUTF8,
                              int capability_number);
-  async GetCaptureDevice(CaptureEngine engine, int num);
+  async GetCaptureDevice(CaptureEngine engine, int deviceIndex);
 
-  async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8,
-                              uint64_t windowID);
-  async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
-  async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
-  async FocusOnSelectedSource(CaptureEngine engine, int numdev);
-  async StopCapture(CaptureEngine engine, int numdev);
+  async AllocateCapture(CaptureEngine engine, nsCString unique_idUTF8,
+                        uint64_t windowID);
+  async ReleaseCapture(CaptureEngine engine, int captureId);
+  async StartCapture(CaptureEngine engine, int captureId,
+                     VideoCaptureCapability capability);
+  async FocusOnSelectedSource(CaptureEngine engine, int captureId);
+  async StopCapture(CaptureEngine engine, int captureId);
   // transfers frame back
   async ReleaseFrame(Shmem s);
 

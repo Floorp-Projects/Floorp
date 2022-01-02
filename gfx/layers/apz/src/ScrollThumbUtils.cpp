@@ -118,6 +118,15 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   // content up, should result in moving the scroll thumb down.
   ParentLayerCoord translation = -asyncScroll * mUnitlessThumbRatio;
 
+  // The translation we computed is in the scroll frame's ParentLayer space.
+  // This includes the full cumulative resolution, even if we are a subframe.
+  // However, the resulting transform is used in a context where the scrollbar
+  // is already subject to the resolutions of enclosing scroll frames. To avoid
+  // double application of these enclosing resolutions, divide them out, leaving
+  // only the local resolution if any.
+  translation /= (mMetrics.GetCumulativeResolution().scale /
+                  mMetrics.GetPresShellResolution());
+
   // When scaling the thumb to account for the async zoom, keep the position
   // of the start of the thumb (which corresponds to the scroll offset)
   // constant.

@@ -8,6 +8,7 @@ EXPORTS += [
     "BackstagePass.h",
     "XPCJSMemoryReporter.h",
     "xpcObjectHelper.h",
+    "XPCPrefableContextOptions.h",
     "xpcpublic.h",
     "XPCSelfHostedShmem.h",
 ]
@@ -74,6 +75,6 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow", "-Werror=format"]
+    CXXFLAGS += ["-Werror=format"]
 
 REQUIRES_UNIFIED_BUILD = True

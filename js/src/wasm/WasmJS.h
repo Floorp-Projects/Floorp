@@ -149,7 +149,7 @@ bool CodeCachingAvailable(JSContext* cx);
 bool ThreadsAvailable(JSContext* cx);
 
 #define WASM_FEATURE(NAME, ...) bool NAME##Available(JSContext* cx);
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 // Privileged content that can access experimental intrinsics

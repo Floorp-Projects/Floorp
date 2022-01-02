@@ -153,10 +153,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-:is(panel, menupopup)::part(arrow) {
-  display: none;
-}
-
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   #tabbrowser-tabs {
     /* Without this, the tabs container width extends beyond the window width */
@@ -313,8 +309,10 @@ toolbar[customizing] #whats-new-menu-button {
 
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-buttonbox-container,
-:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
+/* Hide the TabsToolbar titlebar controls if the menubar is permanently shown.
+ * (That is, if the menu bar doesn't autohide, and we're not in a fullscreen or
+ * popup window.) */
+:root:not([chromehidden~="menubar"], [inFullscreen]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > :is(.titlebar-buttonbox-container, .titlebar-spacer),
 %endif
 %ifndef MOZ_WIDGET_COCOA
 %ifndef MOZ_WIDGET_GTK
@@ -800,11 +798,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #pageActionButton[multiple-children] ~ .urlbar-page-action {
     display: none;
   }
-
-  @media (-moz-proton) {
-    #pageActionButton[multiple-children] {
-      visibility: visible;
-    }
+  #pageActionButton[multiple-children] {
+    visibility: visible;
   }
 }
 @media (max-width: 550px) {
@@ -1244,12 +1239,10 @@ toolbarpaletteitem[dragover] {
   display: -moz-box;
 }
 
-@media (-moz-proton) {
 #customization-lwtheme-button > .box-inherit > .button-menu-dropmarker,
 #customization-uidensity-button > .box-inherit > .button-menu-dropmarker {
   display: -moz-box;
 }
-} /*** END proton ***/
 
 toolbarpaletteitem[place="palette"] {
   -moz-box-orient: vertical;
@@ -1409,19 +1402,16 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   visibility: hidden;
 }
 
-.previewStack[rendering=true] > .previewRendering {
-  visibility: visible;
-}
-
 .printPreviewBrowser {
   visibility: collapse;
   opacity: 1;
 }
 
+.previewStack[rendering=true] > .previewRendering,
 .previewStack[previewtype="source"] > .printPreviewBrowser[previewtype="source"],
 .previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"],
 .previewStack[previewtype="simplified"] > .printPreviewBrowser[previewtype="simplified"] {
-  visibility: visible;
+  visibility: inherit;
 }
 
 .previewStack[rendering=true] > .printPreviewBrowser {
@@ -1556,10 +1546,8 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 }
 
-@media (-moz-proton) {
 .dialogBox {
   border-radius: 8px;
-}
 }
 
 .dialogBox[resizable="true"] {

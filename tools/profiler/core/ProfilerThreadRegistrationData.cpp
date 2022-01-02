@@ -49,7 +49,7 @@ static void profiler_add_js_marker(const char* aMarkerName,
 }
 
 static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
-  if (!profiler_thread_is_being_profiled()) {
+  if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
   }
 
@@ -94,11 +94,11 @@ static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
       info.size, info.inNursery);
 }
 
-void ThreadRegistrationLockedRWFromAnyThread::
-    SetIsBeingProfiledWithProfiledThreadData(
-        ProfiledThreadData* aProfiledThreadData, const PSAutoLock&) {
-  MOZ_ASSERT(!mIsBeingProfiled);
-  mIsBeingProfiled = true;
+void ThreadRegistrationLockedRWFromAnyThread::SetProfilingFeaturesAndData(
+    ThreadProfilingFeatures aProfilingFeatures,
+    ProfiledThreadData* aProfiledThreadData, const PSAutoLock&) {
+  MOZ_ASSERT(mProfilingFeatures == ThreadProfilingFeatures::NotProfiled);
+  mProfilingFeatures = aProfilingFeatures;
 
   MOZ_ASSERT(!mProfiledThreadData);
   MOZ_ASSERT(aProfiledThreadData);
@@ -112,13 +112,16 @@ void ThreadRegistrationLockedRWFromAnyThread::
   }
 
   // Check invariants.
-  MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
-  MOZ_ASSERT((mJSContext && mIsBeingProfiled) == !!mJsFrameBuffer);
+  MOZ_ASSERT((mProfilingFeatures != ThreadProfilingFeatures::NotProfiled) ==
+             !!mProfiledThreadData);
+  MOZ_ASSERT((mJSContext &&
+              (mProfilingFeatures != ThreadProfilingFeatures::NotProfiled)) ==
+             !!mJsFrameBuffer);
 }
 
-void ThreadRegistrationLockedRWFromAnyThread::
-    ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&) {
-  mIsBeingProfiled = false;
+void ThreadRegistrationLockedRWFromAnyThread::ClearProfilingFeaturesAndData(
+    const PSAutoLock&) {
+  mProfilingFeatures = ThreadProfilingFeatures::NotProfiled;
   mProfiledThreadData = nullptr;
 
   if (mJsFrameBuffer) {
@@ -127,8 +130,11 @@ void ThreadRegistrationLockedRWFromAnyThread::
   }
 
   // Check invariants.
-  MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
-  MOZ_ASSERT((mJSContext && mIsBeingProfiled) == !!mJsFrameBuffer);
+  MOZ_ASSERT((mProfilingFeatures != ThreadProfilingFeatures::NotProfiled) ==
+             !!mProfiledThreadData);
+  MOZ_ASSERT((mJSContext &&
+              (mProfilingFeatures != ThreadProfilingFeatures::NotProfiled)) ==
+             !!mJsFrameBuffer);
 }
 
 void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
@@ -137,7 +143,8 @@ void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
   mJSContext = aJSContext;
 
   if (mProfiledThreadData) {
-    MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
+    MOZ_ASSERT((mProfilingFeatures != ThreadProfilingFeatures::NotProfiled) ==
+               !!mProfiledThreadData);
     // We now have a JSContext, and the thread is already being profiled,
     // allocate a JsFramesBuffer to allow profiler-unlocked on-thread sampling.
     MOZ_ASSERT(!mJsFrameBuffer);
@@ -149,7 +156,9 @@ void ThreadRegistrationLockedRWOnThread::SetJSContext(JSContext* aJSContext) {
   js::SetContextProfilingStack(aJSContext, &ProfilingStackRef());
 
   // Check invariants.
-  MOZ_ASSERT((mJSContext && mIsBeingProfiled) == !!mJsFrameBuffer);
+  MOZ_ASSERT((mJSContext &&
+              (mProfilingFeatures != ThreadProfilingFeatures::NotProfiled)) ==
+             !!mJsFrameBuffer);
 }
 
 void ThreadRegistrationLockedRWOnThread::ClearJSContext() {
@@ -161,7 +170,9 @@ void ThreadRegistrationLockedRWOnThread::ClearJSContext() {
   }
 
   // Check invariants.
-  MOZ_ASSERT((mJSContext && mIsBeingProfiled) == !!mJsFrameBuffer);
+  MOZ_ASSERT((mJSContext &&
+              (mProfilingFeatures != ThreadProfilingFeatures::NotProfiled)) ==
+             !!mJsFrameBuffer);
 }
 
 void ThreadRegistrationLockedRWOnThread::PollJSSampling() {

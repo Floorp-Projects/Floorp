@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/MIDIPortBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class MIDIPortInfo;
 /**
  * Base class for MIDIPort Parent/Child Actors. Makes sure both sides of the
@@ -44,7 +43,6 @@ class MIDIPortInterface {
   bool mShuttingDown;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MIDIPortInterface_h

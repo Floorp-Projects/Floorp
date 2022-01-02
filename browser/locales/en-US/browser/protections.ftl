@@ -71,16 +71,14 @@ mobile-app-card-content = Use the mobile browser with built-in protection agains
 mobile-app-links = { -brand-product-name } Browser for <a data-l10n-name="android-mobile-inline-link">Android</a> and <a data-l10n-name="ios-mobile-inline-link">iOS</a>
 
 lockwise-title = Never forget a password again
-lockwise-title-logged-in2 = Password Management
-lockwise-header-content = { -lockwise-brand-name } securely stores your passwords in your browser.
+passwords-title-logged-in = Manage your passwords
+passwords-header-content = { -brand-product-name } securely stores your passwords in your browser.
 lockwise-header-content-logged-in = Securely store and sync your passwords to all your devices.
-protection-report-save-passwords-button = Save Passwords
-  .title = Save Passwords on { -lockwise-brand-short-name }
-protection-report-manage-passwords-button = Manage Passwords
-  .title = Manage Passwords on { -lockwise-brand-short-name }
-lockwise-mobile-app-title = Take your passwords everywhere
-lockwise-no-logins-card-content = Use passwords saved in { -brand-short-name } on any device.
-lockwise-app-links = { -lockwise-brand-name } for <a data-l10n-name="lockwise-android-inline-link">Android</a> and <a data-l10n-name="lockwise-ios-inline-link">iOS</a>
+protection-report-passwords-save-passwords-button = Save Passwords
+  .title = Save Passwords
+protection-report-passwords-manage-passwords-button = Manage Passwords
+  .title = Manage Passwords
+
 
 # Variables:
 # $count (Number) - Number of passwords exposed in data breaches.

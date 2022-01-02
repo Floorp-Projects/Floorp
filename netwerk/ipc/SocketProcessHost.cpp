@@ -38,7 +38,7 @@ bool SocketProcessHost::sLaunchWithMacSandbox = false;
 SocketProcessHost::SocketProcessHost(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_Socket),
       mListener(aListener),
-      mTaskFactory(this),
+      mTaskFactory(Some(this)),
       mLaunchPhase(LaunchPhase::Unlaunched),
       mShutdownRequested(false),
       mChannelClosed(false) {
@@ -78,6 +78,18 @@ bool SocketProcessHost::Launch() {
   return true;
 }
 
+static void HandleErrorAfterDestroy(
+    RefPtr<SocketProcessHost::Listener>&& aListener) {
+  if (!aListener) {
+    return;
+  }
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "HandleErrorAfterDestroy", [listener = std::move(aListener)]() {
+        listener->OnProcessLaunchComplete(nullptr, false);
+      }));
+}
+
 void SocketProcessHost::OnChannelConnected(int32_t peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -88,8 +100,13 @@ void SocketProcessHost::OnChannelConnected(int32_t peer_pid) {
   RefPtr<Runnable> runnable;
   {
     MonitorAutoLock lock(mMonitor);
-    runnable = mTaskFactory.NewRunnableMethod(
-        &SocketProcessHost::OnChannelConnectedTask);
+    if (!mTaskFactory) {
+      HandleErrorAfterDestroy(std::move(mListener));
+      return;
+    }
+    runnable =
+        (*mTaskFactory)
+            .NewRunnableMethod(&SocketProcessHost::OnChannelConnectedTask);
   }
   NS_DispatchToMainThread(runnable);
 }
@@ -103,8 +120,12 @@ void SocketProcessHost::OnChannelError() {
   RefPtr<Runnable> runnable;
   {
     MonitorAutoLock lock(mMonitor);
-    runnable =
-        mTaskFactory.NewRunnableMethod(&SocketProcessHost::OnChannelErrorTask);
+    if (!mTaskFactory) {
+      HandleErrorAfterDestroy(std::move(mListener));
+      return;
+    }
+    runnable = (*mTaskFactory)
+                   .NewRunnableMethod(&SocketProcessHost::OnChannelErrorTask);
   }
   NS_DispatchToMainThread(runnable);
 }
@@ -223,7 +244,7 @@ void SocketProcessHost::OnChannelClosed() {
 void SocketProcessHost::DestroyProcess() {
   {
     MonitorAutoLock lock(mMonitor);
-    mTaskFactory.RevokeAll();
+    mTaskFactory.reset();
   }
 
   GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(

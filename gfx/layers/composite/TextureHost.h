@@ -21,6 +21,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersTypes.h"      // for LayerRenderState, etc
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/TextureSourceProvider.h"
 #include "mozilla/mozalloc.h"  // for operator delete
 #include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"  // for UniquePtr
@@ -68,8 +69,6 @@ class TextureHostOGL;
 class TextureReadLock;
 class TextureSourceOGL;
 class TextureSourceD3D11;
-class TextureSourceBasic;
-class TextureSourceProvider;
 class DataTextureSource;
 class PTextureParent;
 class TextureParent;
@@ -140,22 +139,16 @@ class TextureSource : public RefCounted<TextureSource> {
     return nullptr;
   }
   virtual TextureSourceD3D11* AsSourceD3D11() { return nullptr; }
-  virtual TextureSourceBasic* AsSourceBasic() { return nullptr; }
   /**
    * Cast to a DataTextureSurce.
    */
   virtual DataTextureSource* AsDataTextureSource() { return nullptr; }
-  virtual WrappingTextureSourceYCbCrBasic* AsWrappingTextureSourceYCbCrBasic() {
-    return nullptr;
-  }
 
   /**
    * Overload this if the TextureSource supports big textures that don't fit in
    * one device texture and must be tiled internally.
    */
   virtual BigImageIterator* AsBigImageIterator() { return nullptr; }
-
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
 
   virtual void Unbind() {}
 
@@ -195,9 +188,6 @@ class TextureSource : public RefCounted<TextureSource> {
 
   int NumCompositableRefs() const { return mCompositableCount; }
 
-  // Some texture sources could wrap the cpu buffer to gpu directly. Then,
-  // we could get better performance of texture uploading.
-  virtual bool IsDirectMap() { return false; }
   // The direct-map cpu buffer should be alive when gpu uses it. And it
   // should not be updated while gpu reads it. This Sync() function
   // implements this synchronized behavior by allowing us to check if
@@ -409,19 +399,9 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    * Factory method.
    */
   static already_AddRefed<TextureHost> Create(
-      const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
       ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
       TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId);
-
-  /**
-   * Lock the texture host for compositing.
-   */
-  virtual bool Lock() { return true; }
-  /**
-   * Unlock the texture host after compositing. Lock() and Unlock() should be
-   * called in pair.
-   */
-  virtual void Unlock() {}
 
   /**
    * Lock the texture host for compositing without using compositor.
@@ -464,57 +444,11 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   }
 
   /**
-   * Called during the transaction. The TextureSource may or may not be
-   * composited.
-   *
-   * Note that this is called outside of lock/unlock.
-   */
-  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) {}
-
-  /**
-   * Called at composition time, just before compositing the TextureSource
-   * composited.
-   *
-   * Note that this is called only withing lock/unlock.
-   */
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) = 0;
-
-  /**
-   * Called when preparing the rendering pipeline for advanced-layers. This is
-   * a lockless version of BindTextureSource.
-   */
-  virtual bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) {
-    return false;
-  }
-
-  /**
    * Called when another TextureHost will take over.
    */
   virtual void UnbindTextureSource();
 
   virtual bool IsValid() { return true; }
-
-  /**
-   * Is called before compositing if the shared data has changed since last
-   * composition.
-   * This method should be overload in cases like when we need to do a texture
-   * upload for example.
-   *
-   * @param aRegion The region that has been changed, if nil, it means that the
-   * entire surface should be updated.
-   */
-  void Updated(const nsIntRegion* aRegion = nullptr);
-
-  /**
-   * Sets this TextureHost's compositor. A TextureHost can change compositor
-   * on certain occasions, in particular if it belongs to an async Compositable.
-   * aCompositor can be null, in which case the TextureHost must cleanup  all
-   * of its device textures.
-   *
-   * Setting mProvider from this callback implicitly causes the texture to
-   * be locked for an extra frame after being detached from a compositable.
-   */
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
 
   /**
    * Should be overridden in order to deallocate the data that is associated
@@ -571,7 +505,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   static PTextureParent* CreateIPDLActor(
       HostIPCAllocator* aAllocator, const SurfaceDescriptor& aSharedData,
-      const ReadLockDescriptor& aDescriptor, LayersBackend aLayersBackend,
+      ReadLockDescriptor&& aDescriptor, LayersBackend aLayersBackend,
       TextureFlags aFlags, uint64_t aSerial,
       const wr::MaybeExternalImageId& aExternalImageId);
   static bool DestroyIPDLActor(PTextureParent* actor);
@@ -608,19 +542,10 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   virtual const char* Name() { return "TextureHost"; }
 
   /**
-   * Indicates whether the TextureHost implementation is backed by an
-   * in-memory buffer. The consequence of this is that locking the
-   * TextureHost does not contend with locking the texture on the client side.
-   */
-  virtual bool HasIntermediateBuffer() const { return false; }
-
-  /**
    * Returns true if the TextureHost can be released before the rendering is
    * completed, otherwise returns false.
    */
-  virtual bool NeedsDeferredDeletion() const {
-    return !HasIntermediateBuffer();
-  }
+  virtual bool NeedsDeferredDeletion() const { return true; }
 
   void AddCompositableRef() {
     ++mCompositableCount;
@@ -643,7 +568,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   void SetLastFwdTransactionId(uint64_t aTransactionId);
 
-  void DeserializeReadLock(const ReadLockDescriptor& aDesc,
+  void DeserializeReadLock(ReadLockDescriptor&& aDesc,
                            ISurfaceAllocator* aAllocator);
   void SetReadLocked();
 
@@ -722,11 +647,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   virtual MacIOSurface* GetMacIOSurface() { return nullptr; }
 
-  virtual bool IsDirectMap() { return false; }
-
   virtual bool NeedsYFlip() const;
-
-  TextureSourceProvider* GetProvider() const { return mProvider; }
 
   virtual void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) {}
 
@@ -770,10 +691,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   void RecycleTexture(TextureFlags aFlags);
 
-  virtual void MaybeNotifyUnlocked() {}
-
-  virtual void UpdatedInternal(const nsIntRegion* Region) {}
-
   /**
    * Called when mCompositableCount becomes from 0 to 1.
    */
@@ -788,7 +705,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   void CallNotifyNotUsed();
 
   PTextureParent* mActor;
-  RefPtr<TextureSourceProvider> mProvider;
   RefPtr<TextureReadLock> mReadLock;
   TextureFlags mFlags;
   int mCompositableCount;
@@ -826,20 +742,9 @@ class BufferTextureHost : public TextureHost {
 
   virtual size_t GetBufferSize() = 0;
 
-  bool Lock() override;
-
-  void Unlock() override;
-
-  void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
-
-  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
-  bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
-
   void UnbindTextureSource() override;
 
   void DeallocateDeviceData() override;
-
-  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   /**
    * Return the format that is exposed to the compositor when calling
@@ -859,8 +764,6 @@ class BufferTextureHost : public TextureHost {
   gfx::IntSize GetSize() const override { return mSize; }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
-
-  bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
 
   bool NeedsDeferredDeletion() const override {
     return TextureHost::NeedsDeferredDeletion() || UseExternalTextures();
@@ -886,34 +789,16 @@ class BufferTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
-  void ReadUnlock() override;
-  bool IsDirectMap() override {
-    return mFirstSource && mFirstSource->IsDirectMap();
-  };
-
-  bool CanUnlock() { return !mFirstSource || mFirstSource->Sync(false); }
   void DisableExternalTextures() { mUseExternalTextures = false; }
 
  protected:
   bool UseExternalTextures() const { return mUseExternalTextures; }
-  bool Upload(nsIntRegion* aRegion = nullptr);
-  bool UploadIfNeeded();
-  bool MaybeUpload(nsIntRegion* aRegion);
-  bool EnsureWrappingTextureSource();
-
-  void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
-  void MaybeNotifyUnlocked() override;
 
   BufferDescriptor mDescriptor;
   RefPtr<Compositor> mCompositor;
-  RefPtr<DataTextureSource> mFirstSource;
-  nsIntRegion mMaybeUpdatedRegion;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  uint32_t mUpdateSerial;
   bool mLocked;
-  bool mNeedsFullUpdate;
-  bool mHasIntermediateBuffer;
   bool mUseExternalTextures;
 
   class DataTextureSourceYCbCrBasic;
@@ -978,25 +863,6 @@ class MemoryTextureHost : public BufferTextureHost {
 
  protected:
   uint8_t* mBuffer;
-};
-
-class MOZ_STACK_CLASS AutoLockTextureHost {
- public:
-  explicit AutoLockTextureHost(TextureHost* aTexture) : mTexture(aTexture) {
-    mLocked = mTexture ? mTexture->Lock() : false;
-  }
-
-  ~AutoLockTextureHost() {
-    if (mTexture && mLocked) {
-      mTexture->Unlock();
-    }
-  }
-
-  bool Failed() { return mTexture && !mLocked; }
-
- private:
-  RefPtr<TextureHost> mTexture;
-  bool mLocked;
 };
 
 class MOZ_STACK_CLASS AutoLockTextureHostWithoutCompositor {

@@ -10,6 +10,24 @@ hy{
     units{
         acceleration{
             g-force{
+                case{
+                    ablative{
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                    dative{
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                    instrumental{
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                    locative{
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                }
                 dnam{"ազատ անկման արագացում"}
                 one{"{0} g"}
                 other{"{0} g"}
@@ -22,26 +40,116 @@ hy{
         }
         angle{
             arc-minute{
+                case{
+                    ablative{
+                        one{"{0} րոպեից"}
+                        other{"{0} րոպեից"}
+                    }
+                    dative{
+                        one{"{0} րոպեին"}
+                        other{"{0} րոպեին"}
+                    }
+                    instrumental{
+                        one{"{0} րոպեով"}
+                        other{"{0} րոպեով"}
+                    }
+                    locative{
+                        one{"{0} րոպեում"}
+                        other{"{0} րոպեում"}
+                    }
+                }
                 dnam{"րոպեներ"}
                 one{"{0} րոպե"}
                 other{"{0} րոպե"}
             }
             arc-second{
+                case{
+                    ablative{
+                        one{"{0} վայրկյանից"}
+                        other{"{0} վայրկյանից"}
+                    }
+                    dative{
+                        one{"{0} վայրկյանին"}
+                        other{"{0} վայրկյանին"}
+                    }
+                    instrumental{
+                        one{"{0} վայրկյանով"}
+                        other{"{0} վայրկյանով"}
+                    }
+                    locative{
+                        one{"{0} վայրկյանում"}
+                        other{"{0} վայրկյանում"}
+                    }
+                }
                 dnam{"վայրկյաններ"}
                 one{"{0} վայրկյան"}
                 other{"{0} վայրկյան"}
             }
             degree{
+                case{
+                    ablative{
+                        one{"{0} աստիճանից"}
+                        other{"{0} աստիճանից"}
+                    }
+                    dative{
+                        one{"{0} աստիճանին"}
+                        other{"{0} աստիճանին"}
+                    }
+                    instrumental{
+                        one{"{0} աստիճանով"}
+                        other{"{0} աստիճանով"}
+                    }
+                    locative{
+                        one{"{0} աստիճանում"}
+                        other{"{0} աստիճանում"}
+                    }
+                }
                 dnam{"աստիճաններ"}
                 one{"{0} աստիճան"}
                 other{"{0} աստիճան"}
             }
             radian{
+                case{
+                    ablative{
+                        one{"{0} ռադիանից"}
+                        other{"{0} ռադիանից"}
+                    }
+                    dative{
+                        one{"{0} ռադիանին"}
+                        other{"{0} ռադիանին"}
+                    }
+                    instrumental{
+                        one{"{0} ռադիանով"}
+                        other{"{0} ռադիանով"}
+                    }
+                    locative{
+                        one{"{0} ռադիանում"}
+                        other{"{0} ռադիանում"}
+                    }
+                }
                 dnam{"ռադիաններ"}
                 one{"{0} ռադիան"}
                 other{"{0} ռադիան"}
             }
             revolution{
+                case{
+                    ablative{
+                        one{"{0} պտույտից"}
+                        other{"{0} պտույտից"}
+                    }
+                    dative{
+                        one{"{0} պտույտին"}
+                        other{"{0} պտույտին"}
+                    }
+                    instrumental{
+                        one{"{0} պտույտով"}
+                        other{"{0} պտույտով"}
+                    }
+                    locative{
+                        one{"{0} պտույտում"}
+                        other{"{0} պտույտում"}
+                    }
+                }
                 dnam{"պտույտներ"}
                 one{"{0} պտույտ"}
                 other{"{0} պտույտ"}
@@ -59,6 +167,24 @@ hy{
                 other{"{0} դունամ"}
             }
             hectare{
+                case{
+                    ablative{
+                        one{"{0} հեկտարից"}
+                        other{"{0} հեկտարից"}
+                    }
+                    dative{
+                        one{"{0} հեկտարին"}
+                        other{"{0} հեկտարին"}
+                    }
+                    instrumental{
+                        one{"{0} հեկտարով"}
+                        other{"{0} հեկտարով"}
+                    }
+                    locative{
+                        one{"{0} հեկտարում"}
+                        other{"{0} հեկտարում"}
+                    }
+                }
                 dnam{"հեկտարներ"}
                 one{"{0} հեկտար"}
                 other{"{0} հեկտար"}
@@ -160,7 +286,30 @@ hy{
             }
         }
         concentr{
+            item{
+                dnam{"միույթ"}
+                one{"{0} միույթ"}
+                other{"{0} միույթ"}
+            }
             karat{
+                case{
+                    ablative{
+                        one{"{0} կարատից"}
+                        other{"{0} կարատից"}
+                    }
+                    dative{
+                        one{"{0} կարատին"}
+                        other{"{0} կարատին"}
+                    }
+                    instrumental{
+                        one{"{0} կարատով"}
+                        other{"{0} կարատով"}
+                    }
+                    locative{
+                        one{"{0} կարատում"}
+                        other{"{0} կարատում"}
+                    }
+                }
                 dnam{"կարատ"}
                 one{"{0} կարատ"}
                 other{"{0} կարատ"}
@@ -176,26 +325,116 @@ hy{
                 other{"{0} միլիմոլ լիտրի վրա"}
             }
             mole{
+                case{
+                    ablative{
+                        one{"{0} մոլից"}
+                        other{"{0} մոլից"}
+                    }
+                    dative{
+                        one{"{0} մոլին"}
+                        other{"{0} մոլին"}
+                    }
+                    instrumental{
+                        one{"{0} մոլով"}
+                        other{"{0} մոլով"}
+                    }
+                    locative{
+                        one{"{0} մոլում"}
+                        other{"{0} մոլում"}
+                    }
+                }
                 dnam{"մոլեր"}
                 one{"{0} մոլ"}
                 other{"{0} մոլ"}
             }
             percent{
+                case{
+                    ablative{
+                        one{"{0} տոկոսից"}
+                        other{"{0} տոկոսից"}
+                    }
+                    dative{
+                        one{"{0} տոկոսին"}
+                        other{"{0} տոկոսին"}
+                    }
+                    instrumental{
+                        one{"{0} տոկոսով"}
+                        other{"{0} տոկոսով"}
+                    }
+                    locative{
+                        one{"{0} տոկոսում"}
+                        other{"{0} տոկոսում"}
+                    }
+                }
                 dnam{"տոկոս"}
                 one{"{0} տոկոս"}
                 other{"{0} տոկոս"}
             }
             permille{
+                case{
+                    ablative{
+                        one{"{0} պրոմիլից"}
+                        other{"{0} պրոմիլից"}
+                    }
+                    dative{
+                        one{"{0} պրոմիլին"}
+                        other{"{0} պրոմիլին"}
+                    }
+                    instrumental{
+                        one{"{0} պրոմիլով"}
+                        other{"{0} պրոմիլով"}
+                    }
+                    locative{
+                        one{"{0} պրոմիլում"}
+                        other{"{0} պրոմիլում"}
+                    }
+                }
                 dnam{"պրոմիլ"}
                 one{"{0} պրոմիլ"}
                 other{"{0} պրոմիլ"}
             }
             permillion{
+                case{
+                    ablative{
+                        one{"{0} մասնիկից միլիոնի վրա"}
+                        other{"{0} մասնիկից միլիոնի վրա"}
+                    }
+                    dative{
+                        one{"{0} մասնիկին միլիոնի վրա"}
+                        other{"{0} մասնիկին միլիոնի վրա"}
+                    }
+                    instrumental{
+                        one{"{0} մասնիկով միլիոնի վրա"}
+                        other{"{0} մասնիկով միլիոնի վրա"}
+                    }
+                    locative{
+                        one{"{0} մասնիկում միլիոնի վրա"}
+                        other{"{0} մասնիկում միլիոնի վրա"}
+                    }
+                }
                 dnam{"մասնիկներ միլիոնի վրա"}
                 one{"{0} մասնիկ միլիոնի վրա"}
                 other{"{0} մասնիկ միլիոնի վրա"}
             }
             permyriad{
+                case{
+                    ablative{
+                        one{"{0} պերմիրիադից"}
+                        other{"{0} պերմիրիադից"}
+                    }
+                    dative{
+                        one{"{0} պերմիրիադին"}
+                        other{"{0} պերմիրիադին"}
+                    }
+                    instrumental{
+                        one{"{0} պերմիրիադով"}
+                        other{"{0} պերմիրիադով"}
+                    }
+                    locative{
+                        one{"{0} պերմիրիադում"}
+                        other{"{0} պերմիրիադում"}
+                    }
+                }
                 dnam{"պերմիրիադ"}
                 one{"{0} պերմիրիադ"}
                 other{"{0} պերմիրիադ"}
@@ -232,11 +471,47 @@ hy{
         }
         digital{
             bit{
+                case{
+                    ablative{
+                        one{"{0} բիթից"}
+                        other{"{0} բիթից"}
+                    }
+                    dative{
+                        one{"{0} բիթին"}
+                        other{"{0} բիթին"}
+                    }
+                    instrumental{
+                        one{"{0} բիթով"}
+                        other{"{0} բիթով"}
+                    }
+                    locative{
+                        one{"{0} բիթում"}
+                        other{"{0} բիթում"}
+                    }
+                }
                 dnam{"բիթեր"}
                 one{"{0} բիթ"}
                 other{"{0} բիթ"}
             }
             byte{
+                case{
+                    ablative{
+                        one{"{0} բայթից"}
+                        other{"{0} բայթից"}
+                    }
+                    dative{
+                        one{"{0} բայթին"}
+                        other{"{0} բայթին"}
+                    }
+                    instrumental{
+                        one{"{0} բայթով"}
+                        other{"{0} բայթով"}
+                    }
+                    locative{
+                        one{"{0} բայթում"}
+                        other{"{0} բայթում"}
+                    }
+                }
                 dnam{"բայթեր"}
                 one{"{0} բայթ"}
                 other{"{0} բայթ"}
@@ -289,22 +564,94 @@ hy{
         }
         duration{
             century{
+                case{
+                    ablative{
+                        one{"{0} դարից"}
+                        other{"{0} դարից"}
+                    }
+                    dative{
+                        one{"{0} դարին"}
+                        other{"{0} դարին"}
+                    }
+                    instrumental{
+                        one{"{0} դարով"}
+                        other{"{0} դարով"}
+                    }
+                    locative{
+                        one{"{0} դարում"}
+                        other{"{0} դարում"}
+                    }
+                }
                 dnam{"դարեր"}
                 one{"{0} դար"}
                 other{"{0} դար"}
             }
             day{
+                case{
+                    ablative{
+                        one{"{0} օրից"}
+                        other{"{0} օր"}
+                    }
+                    dative{
+                        one{"{0} օրվան"}
+                        other{"{0} օր"}
+                    }
+                    instrumental{
+                        one{"{0} օր"}
+                        other{"{0} օր"}
+                    }
+                    locative{
+                        one{"{0} օր"}
+                        other{"{0} օր"}
+                    }
+                }
                 dnam{"օրեր"}
                 one{"{0} օր"}
                 other{"{0} օր"}
                 per{"օրական {0}"}
             }
             decade{
+                case{
+                    ablative{
+                        one{"{0} տասնամյակից"}
+                        other{"{0} տասնամյակից"}
+                    }
+                    dative{
+                        one{"{0} տասնամյակին"}
+                        other{"{0} տասնամյակին"}
+                    }
+                    instrumental{
+                        one{"{0} տասնամյակով"}
+                        other{"{0} տասնամյակով"}
+                    }
+                    locative{
+                        one{"{0} տասնամյակում"}
+                        other{"{0} տասնամյակում"}
+                    }
+                }
                 dnam{"տասնամյակներ"}
                 one{"{0} տասնամյակ"}
                 other{"{0} տասնամյակ"}
             }
             hour{
+                case{
+                    ablative{
+                        one{"{0} ժամից"}
+                        other{"{0} ժամից"}
+                    }
+                    dative{
+                        one{"{0} ժամին"}
+                        other{"{0} ժամին"}
+                    }
+                    instrumental{
+                        one{"{0} ժամով"}
+                        other{"{0} ժամով"}
+                    }
+                    locative{
+                        one{"{0} ժամում"}
+                        other{"{0} ժամում"}
+                    }
+                }
                 dnam{"ժամեր"}
                 one{"{0} ժամ"}
                 other{"{0} ժամ"}
@@ -321,12 +668,48 @@ hy{
                 other{"{0} միլիվայրկյան"}
             }
             minute{
+                case{
+                    ablative{
+                        one{"{0} րոպեից"}
+                        other{"{0} րոպեից"}
+                    }
+                    dative{
+                        one{"{0} րոպեին"}
+                        other{"{0} րոպեին"}
+                    }
+                    instrumental{
+                        one{"{0} րոպեով"}
+                        other{"{0} րոպեով"}
+                    }
+                    locative{
+                        one{"{0} րոպեում"}
+                        other{"{0} րոպեում"}
+                    }
+                }
                 dnam{"րոպեներ"}
                 one{"{0} րոպե"}
                 other{"{0} րոպե"}
                 per{"{0} րոպեում"}
             }
             month{
+                case{
+                    ablative{
+                        one{"{0} ամսից"}
+                        other{"{0} ամսից"}
+                    }
+                    dative{
+                        one{"{0} ամսին"}
+                        other{"{0} ամսին"}
+                    }
+                    instrumental{
+                        one{"{0} ամսով"}
+                        other{"{0} ամսով"}
+                    }
+                    locative{
+                        one{"{0} ամսում"}
+                        other{"{0} ամսում"}
+                    }
+                }
                 dnam{"ամիսներ"}
                 one{"{0} ամիս"}
                 other{"{0} ամիս"}
@@ -338,18 +721,72 @@ hy{
                 other{"{0} նանովայրկյան"}
             }
             second{
+                case{
+                    ablative{
+                        one{"{0} վայրկյանից"}
+                        other{"{0} վայրկյանից"}
+                    }
+                    dative{
+                        one{"{0} վայրկյանին"}
+                        other{"{0} վայրկյանին"}
+                    }
+                    instrumental{
+                        one{"{0} վայրկյանով"}
+                        other{"{0} վայրկյանով"}
+                    }
+                    locative{
+                        one{"{0} վայրկյանում"}
+                        other{"{0} վայրկյանում"}
+                    }
+                }
                 dnam{"վայրկյաններ"}
                 one{"{0} վայրկյան"}
                 other{"{0} վայրկյան"}
                 per{"{0} վայրկյանում"}
             }
             week{
+                case{
+                    ablative{
+                        one{"{0} շաբաթից"}
+                        other{"{0} շաբաթից"}
+                    }
+                    dative{
+                        one{"{0} շաբաթվան"}
+                        other{"{0} շաբաթվան"}
+                    }
+                    instrumental{
+                        one{"{0} շաբաթով"}
+                        other{"{0} շաբաթով"}
+                    }
+                    locative{
+                        one{"{0} շաբաթում"}
+                        other{"{0} շաբաթում"}
+                    }
+                }
                 dnam{"շաբաթներ"}
                 one{"{0} շաբաթ"}
                 other{"{0} շաբաթ"}
                 per{"շաբաթական {0}"}
             }
             year{
+                case{
+                    ablative{
+                        one{"{0} տարուց"}
+                        other{"{0} տարուց"}
+                    }
+                    dative{
+                        one{"{0} տարուն"}
+                        other{"{0} տարուն"}
+                    }
+                    instrumental{
+                        one{"{0} տարով"}
+                        other{"{0} տարով"}
+                    }
+                    locative{
+                        one{"{0} տարում"}
+                        other{"{0} տարում"}
+                    }
+                }
                 dnam{"տարիներ"}
                 one{"{0} տարի"}
                 other{"{0} տարի"}
@@ -358,6 +795,24 @@ hy{
         }
         electric{
             ampere{
+                case{
+                    ablative{
+                        one{"{0} ամպերից"}
+                        other{"{0} ամպերից"}
+                    }
+                    dative{
+                        one{"{0} ամպերին"}
+                        other{"{0} ամպերին"}
+                    }
+                    instrumental{
+                        one{"{0} ամպերով"}
+                        other{"{0} ամպերով"}
+                    }
+                    locative{
+                        one{"{0} ամպերում"}
+                        other{"{0} ամպերում"}
+                    }
+                }
                 dnam{"ամպերներ"}
                 one{"{0} ամպեր"}
                 other{"{0} ամպեր"}
@@ -368,11 +823,47 @@ hy{
                 other{"{0} միլիամպեր"}
             }
             ohm{
+                case{
+                    ablative{
+                        one{"{0} օհմից"}
+                        other{"{0} օհմից"}
+                    }
+                    dative{
+                        one{"{0} օհմին"}
+                        other{"{0} օհմին"}
+                    }
+                    instrumental{
+                        one{"{0} օհմով"}
+                        other{"{0} օհմով"}
+                    }
+                    locative{
+                        one{"{0} օհմում"}
+                        other{"{0} օհմում"}
+                    }
+                }
                 dnam{"օհմեր"}
                 one{"{0} օհմ"}
                 other{"{0} օհմ"}
             }
             volt{
+                case{
+                    ablative{
+                        one{"{0} վոլտից"}
+                        other{"{0} վոլտից"}
+                    }
+                    dative{
+                        one{"{0} վոլտին"}
+                        other{"{0} վոլտին"}
+                    }
+                    instrumental{
+                        one{"{0} վոլտով"}
+                        other{"{0} վոլտով"}
+                    }
+                    locative{
+                        one{"{0} վոլտում"}
+                        other{"{0} վոլտում"}
+                    }
+                }
                 dnam{"վոլտեր"}
                 one{"{0} վոլտ"}
                 other{"{0} վոլտ"}
@@ -385,6 +876,24 @@ hy{
                 other{"{0} բրիտանական ջերմային միավոր"}
             }
             calorie{
+                case{
+                    ablative{
+                        one{"{0} կալորիայից"}
+                        other{"{0} կալորիայից"}
+                    }
+                    dative{
+                        one{"{0} կալորիային"}
+                        other{"{0} կալորիային"}
+                    }
+                    instrumental{
+                        one{"{0} կալորիայով"}
+                        other{"{0} կալորիայով"}
+                    }
+                    locative{
+                        one{"{0} կալորիայում"}
+                        other{"{0} կալորիայում"}
+                    }
+                }
                 dnam{"կալորիաներ"}
                 one{"{0} կալորիա"}
                 other{"{0} կալորիա"}
@@ -400,6 +909,24 @@ hy{
                 other{"{0} կալորիա"}
             }
             joule{
+                case{
+                    ablative{
+                        one{"{0} ջոուլից"}
+                        other{"{0} ջոուլից"}
+                    }
+                    dative{
+                        one{"{0} ջոուլին"}
+                        other{"{0} ջոուլին"}
+                    }
+                    instrumental{
+                        one{"{0} ջոուլով"}
+                        other{"{0} ջոուլով"}
+                    }
+                    locative{
+                        one{"{0} ջոուլում"}
+                        other{"{0} ջոուլում"}
+                    }
+                }
                 dnam{"ջոուլներ"}
                 one{"{0} ջոուլ"}
                 other{"{0} ջոուլ"}
@@ -426,7 +953,30 @@ hy{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"կիլովատտ-ժամ 100 կիլոմետրի վրա"}
+                one{"{0} կիլովատտ-ժամ 100 կիլոմետրի վրա"}
+                other{"{0} կիլովատտ-ժամ 100 կիլոմետրի վրա"}
+            }
             newton{
+                case{
+                    ablative{
+                        one{"{0} նյուտոնից"}
+                        other{"{0} նյուտոնից"}
+                    }
+                    dative{
+                        one{"{0} նյուտոնին"}
+                        other{"{0} նյուտոնին"}
+                    }
+                    instrumental{
+                        one{"{0} նյուտոնով"}
+                        other{"{0} նյուտոնով"}
+                    }
+                    locative{
+                        one{"{0} նյուտոնում"}
+                        other{"{0} նյուտոնում"}
+                    }
+                }
                 dnam{"նյուտոններ"}
                 one{"{0} նյուտոն"}
                 other{"{0} նյուտոն"}
@@ -444,6 +994,24 @@ hy{
                 other{"{0} գիգահերց"}
             }
             hertz{
+                case{
+                    ablative{
+                        one{"{0} հերցից"}
+                        other{"{0} հերցից"}
+                    }
+                    dative{
+                        one{"{0} հերցին"}
+                        other{"{0} հերցին"}
+                    }
+                    instrumental{
+                        one{"{0} հերցով"}
+                        other{"{0} հերցով"}
+                    }
+                    locative{
+                        one{"{0} հերցում"}
+                        other{"{0} հերցում"}
+                    }
+                }
                 dnam{"հերցեր"}
                 one{"{0} հերց"}
                 other{"{0} հերց"}
@@ -484,6 +1052,24 @@ hy{
                 other{"{0} մեգափիքսել"}
             }
             pixel{
+                case{
+                    ablative{
+                        one{"{0} փիքսելից"}
+                        other{"{0} փիքսելներից"}
+                    }
+                    dative{
+                        one{"{0} փիքսելին"}
+                        other{"{0} փիքսելներին"}
+                    }
+                    instrumental{
+                        one{"{0} փիքսելով"}
+                        other{"{0} փիքսելներով"}
+                    }
+                    locative{
+                        one{"{0} փիքսելում"}
+                        other{"{0} փիքսելներում"}
+                    }
+                }
                 dnam{"փիքսելներ"}
                 one{"{0} փիքսել"}
                 other{"{0} փիքսել"}
@@ -516,6 +1102,16 @@ hy{
                 one{"{0} դեցիմետր"}
                 other{"{0} դեցիմետր"}
             }
+            earth-radius{
+                dnam{"երկրային շառավիղ"}
+                one{"{0} երկրային շառավիղ"}
+                other{"{0} երկրային շառավիղ"}
+            }
+            fathom{
+                dnam{"ծովային սաժեններ"}
+                one{"{0} ծովային սաժեն"}
+                other{"{0} ծովային սաժեն"}
+            }
             foot{
                 dnam{"ֆուտեր"}
                 one{"{0} ֆուտ"}
@@ -523,6 +1119,7 @@ hy{
                 per{"{0} ֆուտի վրա"}
             }
             furlong{
+                dnam{"ֆուրլոնգ"}
                 one{"{0} ֆուրլոնգ"}
                 other{"{0} ֆուրլոնգ"}
             }
@@ -544,6 +1141,24 @@ hy{
                 other{"{0} լուսատարի"}
             }
             meter{
+                case{
+                    ablative{
+                        one{"{0} մետրից"}
+                        other{"{0} մետրից"}
+                    }
+                    dative{
+                        one{"{0} մետրին"}
+                        other{"{0} մետրին"}
+                    }
+                    instrumental{
+                        one{"{0} մետրով"}
+                        other{"{0} մետրով"}
+                    }
+                    locative{
+                        one{"{0} մետրում"}
+                        other{"{0} մետրում"}
+                    }
+                }
                 dnam{"մետրեր"}
                 one{"{0} մետր"}
                 other{"{0} մետր"}
@@ -560,6 +1175,24 @@ hy{
                 other{"{0} մղոն"}
             }
             mile-scandinavian{
+                case{
+                    ablative{
+                        one{"{0} սկանդինավյան մղոնից"}
+                        other{"{0} սկանդինավյան մղոնից"}
+                    }
+                    dative{
+                        one{"{0} սկանդինավյան մղոնին"}
+                        other{"{0} սկանդինավյան մղոնին"}
+                    }
+                    instrumental{
+                        one{"{0} սկանդինավյան մղոնով"}
+                        other{"{0} սկանդինավյան մղոնով"}
+                    }
+                    locative{
+                        one{"{0} սկանդինավյան մղոնում"}
+                        other{"{0} սկանդինավյան մղոնում"}
+                    }
+                }
                 dnam{"սկանդինավյան մղոններ"}
                 one{"{0} սկանդինավյան մղոն"}
                 other{"{0} սկանդինավյան մղոն"}
@@ -607,11 +1240,70 @@ hy{
         }
         light{
             candela{
+                case{
+                    ablative{
+                        one{"{0} կանդելայից"}
+                        other{"{0} կանդելայից"}
+                    }
+                    dative{
+                        one{"{0} կանդելային"}
+                        other{"{0} կանդելային"}
+                    }
+                    instrumental{
+                        one{"{0} կանդելայով"}
+                        other{"{0} կանդելայով"}
+                    }
+                    locative{
+                        one{"{0} կանդելայում"}
+                        other{"{0} կանդելայում"}
+                    }
+                }
                 dnam{"կանդելա"}
                 one{"{0} կանդելա"}
                 other{"{0} կանդելա"}
             }
+            lumen{
+                case{
+                    ablative{
+                        one{"{0} լյումենից"}
+                        other{"{0} լյումենից"}
+                    }
+                    dative{
+                        one{"{0} լյումենին"}
+                        other{"{0} լյումենին"}
+                    }
+                    instrumental{
+                        one{"{0} լյումենով"}
+                        other{"{0} լյումենով"}
+                    }
+                    locative{
+                        one{"{0} լյումենում"}
+                        other{"{0} լյումենում"}
+                    }
+                }
+                dnam{"լյումեն"}
+                one{"{0} լյումեն"}
+                other{"{0} լյումեն"}
+            }
             lux{
+                case{
+                    ablative{
+                        one{"{0} լյուքսից"}
+                        other{"{0} լյուքսից"}
+                    }
+                    dative{
+                        one{"{0} լյուքսին"}
+                        other{"{0} լյուքսին"}
+                    }
+                    instrumental{
+                        one{"{0} լյուքսով"}
+                        other{"{0} լյուքսով"}
+                    }
+                    locative{
+                        one{"{0} լյուքսում"}
+                        other{"{0} լյուքսում"}
+                    }
+                }
                 dnam{"լյուքսեր"}
                 one{"{0} լյուքս"}
                 other{"{0} լյուքս"}
@@ -624,6 +1316,24 @@ hy{
         }
         mass{
             carat{
+                case{
+                    ablative{
+                        one{"{0} կարատից"}
+                        other{"{0} կարատից"}
+                    }
+                    dative{
+                        one{"{0} կարատին"}
+                        other{"{0} կարատին"}
+                    }
+                    instrumental{
+                        one{"{0} կարատով"}
+                        other{"{0} կարատով"}
+                    }
+                    locative{
+                        one{"{0} կարատում"}
+                        other{"{0} կարատում"}
+                    }
+                }
                 dnam{"կարատներ"}
                 one{"{0} կարատ"}
                 other{"{0} կարատ"}
@@ -644,18 +1354,72 @@ hy{
                 other{"{0} գրան"}
             }
             gram{
+                case{
+                    ablative{
+                        one{"{0} գրամից"}
+                        other{"{0} գրամից"}
+                    }
+                    dative{
+                        one{"{0} գրամին"}
+                        other{"{0} գրամին"}
+                    }
+                    instrumental{
+                        one{"{0} գրամով"}
+                        other{"{0} գրամով"}
+                    }
+                    locative{
+                        one{"{0} գրամում"}
+                        other{"{0} գրամում"}
+                    }
+                }
                 dnam{"գրամներ"}
                 one{"{0} գրամ"}
                 other{"{0} գրամ"}
                 per{"{0} գրամի վրա"}
             }
             kilogram{
+                case{
+                    ablative{
+                        one{"{0} կիլոգրամից"}
+                        other{"{0} կիլոգրամից"}
+                    }
+                    dative{
+                        one{"{0} կիլոգրամին"}
+                        other{"{0} կիլոգրամին"}
+                    }
+                    instrumental{
+                        one{"{0} կիլոգրամով"}
+                        other{"{0} կիլոգրամով"}
+                    }
+                    locative{
+                        one{"{0} կիլոգրամում"}
+                        other{"{0} կիլոգրամում"}
+                    }
+                }
                 dnam{"կիլոգրամներ"}
                 one{"{0} կիլոգրամ"}
                 other{"{0} կիլոգրամ"}
                 per{"{0} կիլոգրամի վրա"}
             }
             metric-ton{
+                case{
+                    ablative{
+                        one{"{0} տոննայից"}
+                        other{"{0} տոննայից"}
+                    }
+                    dative{
+                        one{"{0} տոննային"}
+                        other{"{0} տոննային"}
+                    }
+                    instrumental{
+                        one{"{0} տոննայով"}
+                        other{"{0} տոննայով"}
+                    }
+                    locative{
+                        one{"{0} տոննայում"}
+                        other{"{0} տոննայում"}
+                    }
+                }
                 dnam{"տոննաներ"}
                 one{"{0} տոննա"}
                 other{"{0} տոննա"}
@@ -693,6 +1457,7 @@ hy{
                 other{"{0} արեգակնային զանգված"}
             }
             stone{
+                dnam{"սթոուն"}
                 one{"{0} սթոուն"}
                 other{"{0} սթոուն"}
             }
@@ -729,6 +1494,24 @@ hy{
                 other{"{0} միլիվատտ"}
             }
             watt{
+                case{
+                    ablative{
+                        one{"{0} վատտից"}
+                        other{"{0} վատտից"}
+                    }
+                    dative{
+                        one{"{0} վատտին"}
+                        other{"{0} վատտին"}
+                    }
+                    instrumental{
+                        one{"{0} վատտով"}
+                        other{"{0} վատտով"}
+                    }
+                    locative{
+                        one{"{0} վատտում"}
+                        other{"{0} վատտում"}
+                    }
+                }
                 dnam{"վատտեր"}
                 one{"{0} վատտ"}
                 other{"{0} վատտ"}
@@ -736,11 +1519,47 @@ hy{
         }
         pressure{
             atmosphere{
+                case{
+                    ablative{
+                        one{"{0} մթնոլորտից"}
+                        other{"{0} մթնոլորտից"}
+                    }
+                    dative{
+                        one{"{0} մթնոլորտին"}
+                        other{"{0} մթնոլորտին"}
+                    }
+                    instrumental{
+                        one{"{0} մթնոլորտով"}
+                        other{"{0} մթնոլորտով"}
+                    }
+                    locative{
+                        one{"{0} մթնոլորտում"}
+                        other{"{0} մթնոլորտում"}
+                    }
+                }
                 dnam{"մթնոլորտներ"}
                 one{"{0} մթնոլորտ"}
                 other{"{0} մթնոլորտ"}
             }
             bar{
+                case{
+                    ablative{
+                        one{"{0} բարից"}
+                        other{"{0} բարից"}
+                    }
+                    dative{
+                        one{"{0} բարին"}
+                        other{"{0} բարին"}
+                    }
+                    instrumental{
+                        one{"{0} բարով"}
+                        other{"{0} բարով"}
+                    }
+                    locative{
+                        one{"{0} բարում"}
+                        other{"{0} բարում"}
+                    }
+                }
                 dnam{"բարեր"}
                 one{"{0} բար"}
                 other{"{0} բար"}
@@ -776,6 +1595,24 @@ hy{
                 other{"{0} միլիմետր սնդիկի սյուն"}
             }
             pascal{
+                case{
+                    ablative{
+                        one{"{0} պասկալից"}
+                        other{"{0} պասկալից"}
+                    }
+                    dative{
+                        one{"{0} պասկալին"}
+                        other{"{0} պասկալին"}
+                    }
+                    instrumental{
+                        one{"{0} պասկալով"}
+                        other{"{0} պասկալով"}
+                    }
+                    locative{
+                        one{"{0} պասկալում"}
+                        other{"{0} պասկալում"}
+                    }
+                }
                 dnam{"պասկալներ"}
                 one{"{0} պասկալ"}
                 other{"{0} պասկալ"}
@@ -810,6 +1647,24 @@ hy{
         }
         temperature{
             celsius{
+                case{
+                    ablative{
+                        one{"{0} աստիճանից ըստ Ցելսիուսի"}
+                        other{"{0} աստիճանից ըստ Ցելսիուսի"}
+                    }
+                    dative{
+                        one{"{0} աստիճանին ըստ Ցելսիուսի"}
+                        other{"{0} աստիճանին ըստ Ցելսիուսի"}
+                    }
+                    instrumental{
+                        one{"{0} աստիճանով ըստ Ցելսիուսի"}
+                        other{"{0} աստիճանով ըստ Ցելսիուսի"}
+                    }
+                    locative{
+                        one{"{0} աստիճանում ըստ Ցելսիուսի"}
+                        other{"{0} աստիճանում ըստ Ցելսիուսի"}
+                    }
+                }
                 dnam{"աստիճաններ ըստ Ցելսիուսի"}
                 one{"{0} աստիճան ըստ Ցելսիուսի"}
                 other{"{0} աստիճան ըստ Ցելսիուսի"}
@@ -820,11 +1675,47 @@ hy{
                 other{"{0} աստիճան ըստ Ֆարենհայթի"}
             }
             generic{
+                case{
+                    ablative{
+                        one{"{0} աստիճանից"}
+                        other{"{0} աստիճանից"}
+                    }
+                    dative{
+                        one{"{0} աստիճանին"}
+                        other{"{0} աստիճանին"}
+                    }
+                    instrumental{
+                        one{"{0} աստիճանով"}
+                        other{"{0} աստիճանով"}
+                    }
+                    locative{
+                        one{"{0} աստիճանում"}
+                        other{"{0} աստիճանում"}
+                    }
+                }
                 dnam{"°"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             kelvin{
+                case{
+                    ablative{
+                        one{"{0} կելվինից"}
+                        other{"{0} կելվինից"}
+                    }
+                    dative{
+                        one{"{0} կելվինին"}
+                        other{"{0} կելվինին"}
+                    }
+                    instrumental{
+                        one{"{0} կելվինով"}
+                        other{"{0} կելվինով"}
+                    }
+                    locative{
+                        one{"{0} կելվինում"}
+                        other{"{0} կելվինում"}
+                    }
+                }
                 dnam{"կելվիններ"}
                 one{"{0} կելվին"}
                 other{"{0} կելվին"}
@@ -906,6 +1797,24 @@ hy{
                 other{"{0} բաժակ"}
             }
             cup-metric{
+                case{
+                    ablative{
+                        one{"{0} մետրիկ բաժակից"}
+                        other{"{0} մետրիկ բաժակից"}
+                    }
+                    dative{
+                        one{"{0} մետրիկ բաժակին"}
+                        other{"{0} մետրիկ բաժակին"}
+                    }
+                    instrumental{
+                        one{"{0} մետրիկ բաժակով"}
+                        other{"{0} մետրիկ բաժակով"}
+                    }
+                    locative{
+                        one{"{0} մետրիկ բաժակում"}
+                        other{"{0} մետրիկ բաժակում"}
+                    }
+                }
                 dnam{"մետրիկ բաժակներ"}
                 one{"{0} մետրիկ բաժակ"}
                 other{"{0} մետրիկ բաժակ"}
@@ -916,10 +1825,12 @@ hy{
                 other{"{0} դեցիլիտր"}
             }
             dessert-spoon{
+                dnam{"աղանդերի գդալ"}
                 one{"{0} աղանդերի գդալ"}
                 other{"{0} աղանդերի գդալ"}
             }
             dessert-spoon-imperial{
+                dnam{"անգլիական աղանդերի գդալ"}
                 one{"{0} անգլիական աղանդերի գդալ"}
                 other{"{0} անգլիական աղանդերի գդալ"}
             }
@@ -966,6 +1877,24 @@ hy{
                 other{"{0} ջիգեր"}
             }
             liter{
+                case{
+                    ablative{
+                        one{"{0} լիտրից"}
+                        other{"{0} լիտրից"}
+                    }
+                    dative{
+                        one{"{0} լիտրին"}
+                        other{"{0} լիտրին"}
+                    }
+                    instrumental{
+                        one{"{0} լիտրով"}
+                        other{"{0} լիտրով"}
+                    }
+                    locative{
+                        one{"{0} լիտրում"}
+                        other{"{0} լիտրում"}
+                    }
+                }
                 dnam{"լիտրեր"}
                 one{"{0} լիտր"}
                 other{"{0} լիտր"}
@@ -992,6 +1921,24 @@ hy{
                 other{"{0} փինթ"}
             }
             pint-metric{
+                case{
+                    ablative{
+                        one{"{0} մետրիկ փինթից"}
+                        other{"{0} մետրիկ փինթից"}
+                    }
+                    dative{
+                        one{"{0} մետրիկ փինթին"}
+                        other{"{0} մետրիկ փինթին"}
+                    }
+                    instrumental{
+                        one{"{0} մետրիկ փինթով"}
+                        other{"{0} մետրիկ փինթով"}
+                    }
+                    locative{
+                        one{"{0} մետրիկ փինթում"}
+                        other{"{0} մետրիկ փինթում"}
+                    }
+                }
                 dnam{"մետրիկ փինթեր"}
                 one{"{0} մետրիկ փինթ"}
                 other{"{0} մետրիկ փինթ"}
@@ -1043,10 +1990,6 @@ hy{
             acre{
                 one{"{0}ակր"}
                 other{"{0}ակր"}
-            }
-            hectare{
-                one{"{0}հա"}
-                other{"{0}հա"}
             }
             square-foot{
                 one{"{0}ֆտ²"}
@@ -1121,10 +2064,36 @@ hy{
             }
         }
         concentr{
+            item{
+                dnam{"միույթ"}
+            }
+            millimole-per-liter{
+                one{"{0}մմոլ/լ"}
+                other{"{0}մմոլ/լ"}
+            }
+            mole{
+                one{"{0}մոլ"}
+                other{"{0}մոլ"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permille{
+                dnam{"‰"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+            }
+            permillion{
+                dnam{"մմվ"}
+                one{"{0}մմվ"}
+                other{"{0}մմվ"}
+            }
+            permyriad{
+                dnam{"‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -1133,6 +2102,10 @@ hy{
                 one{"{0} Լ/100 կմ"}
                 other{"{0} Լ/100 կմ"}
             }
+            liter-per-kilometer{
+                one{"{0}լ/կմ"}
+                other{"{0}լ/կմ"}
+            }
         }
         coordinate{
             dnam{"ուղղ․"}
@@ -1140,6 +2113,12 @@ hy{
             north{"{0} հս․ լ․"}
             south{"{0} հվ․ լ․"}
             west{"{0} ամ․ ե․"}
+        }
+        digital{
+            byte{
+                one{"{0} Բ"}
+                other{"{0} Բ"}
+            }
         }
         duration{
             day{
@@ -1171,6 +2150,7 @@ hy{
                 dnam{"վ"}
                 one{"{0} վ"}
                 other{"{0} վ"}
+                per{"{0}/վ"}
             }
             week{
                 dnam{"շ"}
@@ -1181,6 +2161,23 @@ hy{
                 dnam{"տ"}
                 one{"{0} տ"}
                 other{"{0} տ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"կՎտ⋅ժ/100 կմ"}
+                one{"{0} կՎտժ/100 կմ"}
+                other{"{0} կՎտժ/100 կմ"}
+            }
+        }
+        graphics{
+            pixel{
+                dnam{"կտ"}
+            }
+            pixel-per-centimeter{
+                dnam{"կսմվ"}
+                one{"{0}կսմվ"}
+                other{"{0}կսմվ"}
             }
         }
         length{
@@ -1269,8 +2266,8 @@ hy{
                 other{"{0} հՊա"}
             }
             inch-ofhg{
-                one{"{0}\u0022 ս. ս."}
-                other{"{0}\u0022 ս. ս"}
+                one{"{0}\u0022 ս.ս."}
+                other{"{0}\u0022 ս. ս."}
             }
             millibar{
                 one{"{0} մբ"}
@@ -1316,6 +2313,9 @@ hy{
                 dnam{"լ"}
                 one{"{0} լ"}
                 other{"{0} լ"}
+            }
+            pint-metric{
+                dnam{"մետր․ փինթեր"}
             }
         }
     }
@@ -1472,6 +2472,11 @@ hy{
             }
         }
         concentr{
+            item{
+                dnam{"միույթ"}
+                one{"{0} միույթ"}
+                other{"{0} միույթ"}
+            }
             karat{
                 dnam{"կար"}
                 one{"{0} կար"}
@@ -1738,6 +2743,11 @@ hy{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"կՎտ⋅ժ/100 կմ"}
+                one{"{0} կՎտ⋅ժ/100 կմ"}
+                other{"{0} կՎտ⋅ժ/100 կմ"}
+            }
             newton{
                 dnam{"Ն"}
                 one{"{0} Ն"}
@@ -1829,6 +2839,11 @@ hy{
                 dnam{"R⊕"}
                 one{"{0} R⊕"}
                 other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"ծովային սաժեն"}
+                one{"{0} ֆատոմ"}
+                other{"{0} ֆատոմ"}
             }
             foot{
                 dnam{"ֆտ"}
@@ -2158,6 +3173,11 @@ hy{
                 one{"{0} տկռ"}
                 other{"{0} տկռ"}
             }
+            bushel{
+                dnam{"bu"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"սլ"}
                 one{"{0} սլ"}
@@ -2294,7 +3314,7 @@ hy{
                 other{"{0} փինթ"}
             }
             pint-metric{
-                dnam{"մետր․ պինտեր"}
+                dnam{"մետր․ փինթ"}
                 one{"{0} մետր․ փինթ"}
                 other{"{0} մետր․ փինթ"}
             }

@@ -51,15 +51,10 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
-  double bitrateMean; // deprecated, to be removed in Bug 1367562
-  double bitrateStdDev; // deprecated, to be removed in Bug 1367562
-  double framerateMean; // deprecated, to be removed in Bug 1367562
-  double framerateStdDev; // deprecated, to be removed in Bug 1367562
 };
 
 dictionary RTCRemoteInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   DOMString localId;
-  long long bytesReceived; // Deprecated, to be removed in Bug 1529405
   double roundTripTime;
 };
 
@@ -75,12 +70,6 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
-  double bitrateMean; // deprecated, to be removed in Bug 1367562
-  double bitrateStdDev; // deprecated, to be removed in Bug 1367562
-  double framerateMean; // deprecated, to be removed in Bug 1367562
-  double framerateStdDev; // deprecated, to be removed in Bug 1367562
-  unsigned long droppedFrames; // non-spec alias for framesDropped
-                               // to be deprecated in Bug 1225720
 };
 
 dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {

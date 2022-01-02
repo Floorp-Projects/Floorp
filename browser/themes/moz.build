@@ -11,8 +11,13 @@ with Files("ThemeVariableMap.jsm"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
 EXTRA_JS_MODULES += [
+    "BuiltInThemeConfig.jsm",
     "BuiltInThemes.jsm",
     "ThemeVariableMap.jsm",
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
 ]
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]

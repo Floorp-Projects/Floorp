@@ -3,6 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
+
 /**
  * With optional arguments on both ends, this case is ambiguous:
  *     runtime.sendMessage("string", {} or nullish)
@@ -87,6 +93,37 @@ this.runtime = class extends ExtensionAPI {
 
         getURL(url) {
           return extension.baseURI.resolve(url);
+        },
+
+        getFrameId(target) {
+          let frameId = WebNavigationFrames.getFromWindow(target);
+          if (frameId >= 0) {
+            return frameId;
+          }
+          // Not a WindowProxy, perhaps an embedder element?
+
+          let type;
+          try {
+            type = Cu.getClassName(target, true);
+          } catch (e) {
+            // Not a valid object, will throw below.
+          }
+
+          const embedderTypes = [
+            "HTMLIFrameElement",
+            "HTMLFrameElement",
+            "HTMLEmbedElement",
+            "HTMLObjectElement",
+          ];
+
+          if (embedderTypes.includes(type)) {
+            if (!target.browsingContext) {
+              return -1;
+            }
+            return WebNavigationFrames.getFrameId(target.browsingContext);
+          }
+
+          throw new ExtensionUtils.ExtensionError("Invalid argument");
         },
       },
     };

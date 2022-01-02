@@ -498,7 +498,6 @@ cbindgen-types = [
     { gecko = "StyleTextDecorationLine", servo = "crate::values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "crate::values::computed::TextTransform" },
     { gecko = "StyleTextUnderlinePosition", servo = "crate::values::computed::TextUnderlinePosition" },
-    { gecko = "StyleMozListReversed", servo = "crate::values::computed::MozListReversed" },
     { gecko = "StyleOwned", servo = "crate::gecko_bindings::sugar::ownership::Owned" },
     { gecko = "StyleOwnedOrNull", servo = "crate::gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
@@ -557,7 +556,8 @@ cbindgen-types = [
     { gecko = "StyleVariantAlternatesList", servo = "crate::values::specified::font::VariantAlternatesList" },
     { gecko = "StyleSVGPaintOrder", servo = "crate::values::specified::svg::SVGPaintOrder" },
     { gecko = "StyleClipRectOrAuto", servo = "crate::values::computed::ClipRectOrAuto" },
-    { gecko = "StyleCounterSetOrReset", servo = "crate::values::computed::CounterSetOrReset" },
+    { gecko = "StyleCounterReset", servo = "crate::values::computed::CounterReset" },
+    { gecko = "StyleCounterSet", servo = "crate::values::computed::CounterSet" },
     { gecko = "StyleCounterIncrement", servo = "crate::values::computed::CounterIncrement" },
     { gecko = "StyleContent", servo = "crate::values::computed::counters::Content" },
     { gecko = "StyleSymbolsType", servo = "crate::values::generics::SymbolsType" },
@@ -586,6 +586,7 @@ cbindgen-types = [
     { gecko = "StylePageSize", servo = "crate::values::computed::page::PageSize" },
     { gecko = "StyleDProperty", servo = "crate::values::specified::svg::DProperty" },
     { gecko = "StyleImageRendering", servo = "crate::values::computed::ImageRendering" },
+    { gecko = "StyleScrollbarGutter", servo = "crate::values::computed::ScrollbarGutter" },
 ]
 
 mapped-generic-types = [

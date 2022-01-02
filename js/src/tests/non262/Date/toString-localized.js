@@ -50,7 +50,7 @@ for (let tz of ["UTC", "UCT", "Zulu", "Universal", "Etc/UTC", "Etc/UCT", "Etc/Zu
             assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT+0000 (Coordinated Universal Time)");
         });
         withLocale("fr", () => {
-            assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT+0000 (Temps universel coordonné)");
+            assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT+0000 (temps universel coordonné)");
         });
         withLocale("de", () => {
             assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT+0000 (Koordinierte Weltzeit)");

@@ -390,11 +390,6 @@ void WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
   SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
 
-void WebRenderBridgeChild::UpdateTextureRegion(
-    CompositableClient* aCompositable,
-    const ThebesBufferData& aThebesBufferData,
-    const nsIntRegion& aUpdatedRegion) {}
-
 bool WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp) {
   if (!mIsInTransaction) {
     return false;
@@ -478,10 +473,6 @@ void WebRenderBridgeChild::UseTextures(
   AddWebRenderParentCommand(CompositableOperation(aCompositable->GetIPCHandle(),
                                                   OpUseTexture(textures)));
 }
-
-void WebRenderBridgeChild::UseComponentAlphaTextures(
-    CompositableClient* aCompositable, TextureClient* aClientOnBlack,
-    TextureClient* aClientOnWhite) {}
 
 void WebRenderBridgeChild::UpdateFwdTransactionId() {
   GetCompositorBridgeChild()->UpdateFwdTransactionId();

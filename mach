@@ -11,33 +11,6 @@
 # shell because `''':'`, `':'` and `:` are all equivalent, and `:` is a no-op.
 ''':'
 
-# Commands that are to be run with the system Python 3 instead of the
-# virtualenv.
-nativecmds="
-    bootstrap
-    create-mach-environment
-    install-moz-phab
-"
-
-run_py() {
-    # Try to run a specific Python interpreter.
-    py_executable="$1"
-    shift
-    if command -v "$py_executable" > /dev/null
-    then
-        exec "$py_executable" $py_profile_command_args "$0" "$@"
-    else
-        echo "This mach command requires $py_executable, which wasn't found on the system!"
-        case "$py_executable" in
-            python3) ;;
-            *)
-                echo "Consider running 'mach bootstrap' or 'mach create-mach-environment' to create the mach virtualenvs, or set MACH_USE_SYSTEM_PYTHON to use the system Python installation over a virtualenv."
-                ;;
-        esac
-        exit 1
-    fi
-}
-
 get_command() {
     # Parse the name of the mach command out of the arguments. This is necessary
     # in the presence of global mach arguments that come before the name of the
@@ -79,7 +52,6 @@ get_command() {
     return ${py_profile_command}
 }
 
-state_dir=${MOZBUILD_STATE_PATH:-~/.mozbuild}
 command=$(get_command "$@")
 py_profile_command=$?
 
@@ -92,32 +64,17 @@ else
     # a string instead.
     py_profile_command_args="-m cProfile -o mach_profile_${command}.cProfile"
     echo "Running with --profile-command.  To visualize, use snakeviz:"
-    echo "$HOME/.mozbuild/_virtualenvs/mach/bin/python -m pip install snakeviz"
-    echo "$HOME/.mozbuild/_virtualenvs/mach/bin/python -m snakeviz mach_profile_${command}.cProfile"
+    echo "python3 -m pip install snakeviz"
+    echo "python3 -m snakeviz mach_profile_${command}.cProfile"
 fi
 
-# If MACH_USE_SYSTEM_PYTHON or MOZ_AUTOMATION are set, always use the
-# python 3 executables and not the virtualenv locations.
-if [ -z ${MACH_USE_SYSTEM_PYTHON} ] && [ -z ${MOZ_AUTOMATION} ]
+if command -v python3 > /dev/null
 then
-    case "$OSTYPE" in
-        cygwin|msys|win32) bin_path=Scripts;;
-        *) bin_path=bin;;
-    esac
-    py3executable=$state_dir/_virtualenvs/mach/$bin_path/python
+    exec python3 $py_profile_command_args "$0" "$@"
 else
-    py3executable=python3
+    echo "This mach command requires 'python3', which wasn't found on the system!"
+    exit 1
 fi
-
-# Check whether we need to run with the native Python 3 interpreter.
-case " $(echo $nativecmds) " in
-    *\ $command\ *)
-        run_py python3 "$@"
-        ;;
-esac
-
-# # Use the mach virtualenv's Python 3 for the rest of the commands.
-run_py "$py3executable" "$@"
 '''
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -136,6 +93,8 @@ def load_mach(dir_path, mach_path):
 
 def check_and_get_mach(dir_path):
     initialize_paths = (
+        # Run Thunderbird's mach_initialize.py if it exists
+        'comm/build/mach_initialize.py',
         'build/mach_initialize.py',
         # test package initialize
         'tools/mach_initialize.py',

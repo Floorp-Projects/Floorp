@@ -93,6 +93,14 @@ add_task(async function() {
     "getAllTargets(ALL_TYPES) returned the expected targets"
   );
 
+  for (const target of allTargets) {
+    is(
+      target.commands,
+      commands,
+      "Each target front has a `commands` attribute - " + target
+    );
+  }
+
   targetCommand.destroy();
 
   // Wait for all the targets to be fully attached so we don't have pending requests.

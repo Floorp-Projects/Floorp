@@ -137,9 +137,9 @@ add_task(async function() {
   await checkTab2Active(true);
 
   // Go back
-  let backDone = BrowserTestUtils.waitForContentEvent(
-    ctx.tab2Browser,
-    "pageshow"
+  let backDone = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    testPath + "bug343515_pg2.html"
   );
   ctx.tab2Browser.goBack();
   await backDone;
@@ -207,9 +207,9 @@ add_task(async function() {
   });
 
   // Go forward on tab 2
-  let forwardDone = BrowserTestUtils.waitForContentEvent(
-    ctx.tab2Browser,
-    "pageshow"
+  let forwardDone = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    testPath + "bug343515_pg3.html"
   );
   ctx.tab2Browser.goForward();
   await forwardDone;

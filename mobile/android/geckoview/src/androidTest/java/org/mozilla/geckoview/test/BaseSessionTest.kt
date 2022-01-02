@@ -66,7 +66,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val VIDEO_MP4_PATH = "/assets/www/mp4.html"
         const val VIDEO_WEBM_PATH = "/assets/www/webm.html"
         const val VIDEO_BAD_PATH = "/assets/www/badVideoPath.html"
-        const val UNKNOWN_HOST_URI = "http://www.test.invalid/"
+        const val UNKNOWN_HOST_URI = "https://www.test.invalid/"
         const val UNKNOWN_PROTOCOL_URI = "htt://invalid"
         const val FULLSCREEN_PATH = "/assets/www/fullscreen.html"
         const val VIEWPORT_PATH = "/assets/www/viewport.html"
@@ -104,9 +104,17 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH = "/assets/www/overscroll-behavior-none-on-non-root.html"
         const val SCROLL_HANDOFF_HTML_PATH = "/assets/www/scroll-handoff.html"
         const val SHOW_DYNAMIC_TOOLBAR_HTML_PATH = "/assets/www/showDynamicToolbar.html"
+        const val CONTEXT_MENU_AUDIO_HTML_PATH = "/assets/www/context_menu_audio.html"
+        const val CONTEXT_MENU_IMAGE_NESTED_HTML_PATH = "/assets/www/context_menu_image_nested.html"
+        const val CONTEXT_MENU_IMAGE_HTML_PATH = "/assets/www/context_menu_image.html"
+        const val CONTEXT_MENU_LINK_HTML_PATH = "/assets/www/context_menu_link.html"
+        const val CONTEXT_MENU_VIDEO_HTML_PATH = "/assets/www/context_menu_video.html"
+        const val CONTEXT_MENU_BLOB_FULL_HTML_PATH = "/assets/www/context_menu_blob_full.html"
+        const val CONTEXT_MENU_BLOB_BUFFERED_HTML_PATH = "/assets/www/context_menu_blob_buffered.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST
+        const val TEST_PORT = GeckoSessionTestRule.TEST_PORT
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()

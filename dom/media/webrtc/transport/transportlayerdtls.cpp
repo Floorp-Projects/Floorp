@@ -1441,7 +1441,7 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc* fd,
       return SECSuccess;
 
     case VERIFY_DIGEST: {
-      MOZ_ASSERT(digests_.size() != 0);
+      MOZ_ASSERT(!digests_.empty());
       // Check all the provided digests
 
       // Checking functions call PR_SetError()

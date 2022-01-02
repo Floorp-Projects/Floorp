@@ -75,7 +75,8 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
     MOZ_CRASH();
   }
 
-  if (!mSharedBuffer->SetHandle(aHandle, ipc::SharedMemory::RightsReadWrite)) {
+  if (!mSharedBuffer->SetHandle(std::move(aHandle),
+                                ipc::SharedMemory::RightsReadWrite)) {
     MOZ_CRASH();
   }
 
@@ -123,12 +124,14 @@ void CrossProcessMutex::Unlock() {
   pthread_mutex_unlock(mMutex);
 }
 
-CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessMutexHandle CrossProcessMutex::CloneHandle() {
   CrossProcessMutexHandle result = ipc::SharedMemoryBasic::NULLHandle();
 
-  if (mSharedBuffer && !mSharedBuffer->ShareToProcess(aTargetPid, &result)) {
-    MOZ_CRASH();
+  if (mSharedBuffer) {
+    result = mSharedBuffer->CloneHandle();
+    if (!result) {
+      MOZ_CRASH();
+    }
   }
 
   return result;

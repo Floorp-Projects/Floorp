@@ -5,11 +5,11 @@
 
 package org.mozilla.gecko.mozglue;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+import dalvik.system.BaseDexClassLoader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -73,12 +73,6 @@ public final class GeckoLoader {
   }
 
   private static File getTmpDir(final Context context) {
-    // Old directory
-    // TODO: Bug 1699845 delete this code in Gecko 95
-    final File oldDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
-    if (oldDir.exists()) {
-      delTree(oldDir);
-    }
     // It's important that this folder is in the cache directory so users can actually
     // clear it when it gets too big.
     return new File(context.getCacheDir(), "gecko_temp");
@@ -188,9 +182,45 @@ public final class GeckoLoader {
     loadLibsSetupLocked(context);
   }
 
+  // Adapted from
+  // https://source.chromium.org/chromium/chromium/src/+/main:base/android/java/src/org/chromium/base/BundleUtils.java;l=196;drc=c0fedddd4a1444653235912cfae3d44b544ded01
+  private static String getLibraryPath(final String libraryName) {
+    // Due to b/171269960 isolated split class loaders have an empty library path, so check
+    // the base module class loader first which loaded GeckoAppShell. If the library is not
+    // found there, attempt to construct the correct library path from the split.
+    String path =
+        ((BaseDexClassLoader) GeckoAppShell.class.getClassLoader()).findLibrary(libraryName);
+    if (path != null) {
+      return path;
+    }
+
+    // SplitCompat is installed on the application context, so check there for library paths
+    // which were added to that ClassLoader.
+    final ClassLoader classLoader = GeckoAppShell.getApplicationContext().getClassLoader();
+    if (classLoader instanceof BaseDexClassLoader) {
+      path = ((BaseDexClassLoader) classLoader).findLibrary(libraryName);
+      if (path != null) {
+        return path;
+      }
+    }
+
+    throw new RuntimeException("Could not find mozglue path.");
+  }
+
+  private static String getLibraryBase() {
+    final String mozglue = getLibraryPath("mozglue");
+    final int lastSlash = mozglue.lastIndexOf('/');
+    if (lastSlash < 0) {
+      throw new IllegalStateException("Invalid library path for libmozglue.so: " + mozglue);
+    }
+    final String base = mozglue.substring(0, lastSlash);
+    Log.i(LOGTAG, "Library base=" + base);
+    return base;
+  }
+
   private static void loadLibsSetupLocked(final Context context) {
     putenv("GRE_HOME=" + getGREDir(context).getPath());
-    putenv("MOZ_ANDROID_LIBDIR=" + context.getApplicationInfo().nativeLibraryDir);
+    putenv("MOZ_ANDROID_LIBDIR=" + getLibraryBase());
   }
 
   @RobocopTarget
@@ -385,90 +415,25 @@ public final class GeckoLoader {
    *
    * <p>Returns null or the cause exception.
    */
-  private static Throwable doLoadLibraryExpected(final Context context, final String lib) {
+  public static Throwable doLoadLibrary(final Context context, final String lib) {
     try {
       // Attempt 1: the way that should work.
       System.loadLibrary(lib);
       return null;
     } catch (final Throwable e) {
-      Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying native library dir.");
-
-      // Attempt 2: use nativeLibraryDir, which should also work.
-      final String libDir = context.getApplicationInfo().nativeLibraryDir;
-      final String libPath = libDir + "/lib" + lib + ".so";
-
+      final String libPath = getLibraryPath(lib);
       // Does it even exist?
       if (new File(libPath).exists()) {
         if (attemptLoad(libPath)) {
           // Success!
           return null;
         }
-        Log.wtf(LOGTAG, "Library exists but couldn't load!");
-      } else {
-        Log.wtf(LOGTAG, "Library doesn't exist when it should.");
+        throw new RuntimeException(
+            "Library exists but couldn't load." + "Path: " + libPath + " lib: " + lib, e);
       }
-
-      // We failed. Return the original cause.
-      return e;
+      throw new RuntimeException(
+          "Library doesn't exist when it should." + "Path: " + libPath + " lib: " + lib, e);
     }
-  }
-
-  @SuppressLint("SdCardPath")
-  public static void doLoadLibrary(final Context context, final String lib) {
-    final Throwable e = doLoadLibraryExpected(context, lib);
-    if (e == null) {
-      // Success.
-      return;
-    }
-
-    // If we're in a mismatched UID state (Bug 1042935 Comment 16) there's really
-    // nothing we can do.
-    final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
-    if (nativeLibPath.contains("mismatched_uid")) {
-      throw new RuntimeException("Fatal: mismatched UID: cannot load.");
-    }
-
-    // Attempt 3: try finding the path the pseudo-supported way using .dataDir.
-    final String dataLibPath = context.getApplicationInfo().dataDir + "/lib/lib" + lib + ".so";
-    if (attemptLoad(dataLibPath)) {
-      return;
-    }
-
-    // Attempt 4: use /data/app-lib directly. This is a last-ditch effort.
-    final String androidPackageName = context.getPackageName();
-    if (attemptLoad("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so")) {
-      return;
-    }
-
-    // Attempt 5: even more optimistic.
-    if (attemptLoad("/data/data/" + androidPackageName + "/lib/lib" + lib + ".so")) {
-      return;
-    }
-
-    // Look in our files directory, copying from the APK first if necessary.
-    final String filesLibDir = context.getFilesDir() + "/lib";
-    final String filesLibPath = filesLibDir + "/lib" + lib + ".so";
-    if (new File(filesLibPath).exists()) {
-      if (attemptLoad(filesLibPath)) {
-        return;
-      }
-    } else {
-      // Try copying.
-      if (extractLibrary(context, lib, filesLibDir)) {
-        // Let's try it!
-        if (attemptLoad(filesLibPath)) {
-          return;
-        }
-      }
-    }
-
-    // Give up loudly, leaking information to debug the failure.
-    final String message = getLoadDiagnostics(context, lib);
-    Log.e(LOGTAG, "Load diagnostics: " + message);
-
-    // Throw the descriptive message, using the original library load
-    // failure as the cause.
-    throw new RuntimeException(message, e);
   }
 
   public static synchronized void loadMozGlue(final Context context) {

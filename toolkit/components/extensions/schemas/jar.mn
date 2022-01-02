@@ -41,6 +41,7 @@ toolkit.jar:
     content/extensions/schemas/proxy.json
     content/extensions/schemas/privacy.json
     content/extensions/schemas/runtime.json
+    content/extensions/schemas/scripting.json
     content/extensions/schemas/storage.json
     content/extensions/schemas/telemetry.json
     content/extensions/schemas/test.json

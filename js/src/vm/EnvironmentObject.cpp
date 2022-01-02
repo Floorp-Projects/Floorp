@@ -27,7 +27,6 @@
 #include "vm/Realm.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
-#include "vm/Xdr.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
@@ -195,8 +194,7 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
         continue;
       }
       callobj->setAliasedBinding(
-          cx, fi,
-          frame.unaliasedFormal(fi.argumentSlot(), DONT_CHECK_ALIASING));
+          fi, frame.unaliasedFormal(fi.argumentSlot(), DONT_CHECK_ALIASING));
     }
   }
 
@@ -462,11 +460,6 @@ bool ModuleEnvironmentObject::lookupImport(
     jsid name, ModuleEnvironmentObject** envOut,
     mozilla::Maybe<PropertyInfo>* propOut) {
   return importBindings().lookup(name, envOut, propOut);
-}
-
-void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterRealmMerge(
-    GlobalObject& global) {
-  setEnclosingEnvironment(&global.lexicalEnvironment());
 }
 
 /* static */
@@ -1299,7 +1292,7 @@ EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope)
 }
 
 EnvironmentIter::EnvironmentIter(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc)
+                                 const jsbytecode* pc)
     : si_(cx, frame.script()->innermostScope(pc)),
       env_(cx, frame.environmentChain()),
       frame_(frame) {
@@ -2813,7 +2806,7 @@ void DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame) {
 }
 
 void DebugEnvironments::onPopLexical(JSContext* cx, AbstractFramePtr frame,
-                                     jsbytecode* pc) {
+                                     const jsbytecode* pc) {
   cx->check(frame);
 
   DebugEnvironments* envs = cx->realm()->debugEnvs();
@@ -3419,7 +3412,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
 
 bool js::GetThisValueForDebuggerFrameMaybeOptimizedOut(JSContext* cx,
                                                        AbstractFramePtr frame,
-                                                       jsbytecode* pc,
+                                                       const jsbytecode* pc,
                                                        MutableHandleValue res) {
   RootedObject scopeChain(cx);
   RootedScope scope(cx);
@@ -3626,7 +3619,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
   // The inner-functions up to `lastFun` are the hoisted function declarations
   // of the script. We must clone and bind them now.
   for (size_t i = 0; i <= lastFun; ++i) {
-    const JS::GCCellPtr& thing = script->gcthings()[i];
+    JS::GCCellPtr thing = script->gcthings()[i];
 
     // Skip the initial scopes. In practice, there is at most one variables and
     // one lexical scope.
@@ -3952,7 +3945,8 @@ bool js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
 }
 
 bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
-                                     jsbytecode* pc, MutableHandleObject env,
+                                     const jsbytecode* pc,
+                                     MutableHandleObject env,
                                      MutableHandleScope scope) {
   env.set(frame.environmentChain());
 

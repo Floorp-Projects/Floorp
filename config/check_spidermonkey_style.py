@@ -529,7 +529,7 @@ class CppBlock(object):
         self.kids[-1].lines.append(line)
 
     def style_relevant_kids(self):
-        """ Return a list of kids in this block that are style-relevant. """
+        """Return a list of kids in this block that are style-relevant."""
         return [kid for kid in self.kids if kid.is_style_relevant()]
 
     def sorted(self, enclosing_inclname):
@@ -623,7 +623,7 @@ class CppBlock(object):
 
 
 class OrdinaryCode(object):
-    """ A list of lines of code that aren't #include/#if/#else/#endif lines. """
+    """A list of lines of code that aren't #include/#if/#else/#endif lines."""
 
     def __init__(self, lines=None):
         self.lines = lines if lines is not None else []

@@ -179,12 +179,6 @@ bool HasOffThreadIonCompile(JS::Realm* realm);
 #endif
 
 /*
- * Wait for all scheduled, in progress or finished parse tasks for the runtime
- * to complete.
- */
-void WaitForOffThreadParses(JSRuntime* runtime);
-
-/*
  * Cancel all scheduled, in progress or finished parses for runtime.
  *
  * Parse tasks which have completed but for which JS::FinishOffThreadScript (or
@@ -235,12 +229,6 @@ JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
     JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
     void* callbackData);
 
-/*
- * Called at the end of GC to enqueue any Parse tasks that were waiting on an
- * atoms-zone GC to finish.
- */
-void EnqueuePendingParseTasksAfterGC(JSRuntime* rt);
-
 // Drain the task queues and wait for all helper threads to finish running.
 //
 // Note that helper threads are shared between runtimes and it's possible that
@@ -248,13 +236,6 @@ void EnqueuePendingParseTasksAfterGC(JSRuntime* rt);
 // never return.
 void WaitForAllHelperThreads();
 void WaitForAllHelperThreads(AutoLockHelperThreadState& lock);
-
-struct AutoEnqueuePendingParseTasksAfterGC {
-  const gc::GCRuntime& gc_;
-  explicit AutoEnqueuePendingParseTasksAfterGC(const gc::GCRuntime& gc)
-      : gc_(gc) {}
-  ~AutoEnqueuePendingParseTasksAfterGC();
-};
 
 // Enqueue a compression job to be processed later. These are started at the
 // start of the major GC after the next one.
@@ -282,10 +263,6 @@ void RunPendingSourceCompressions(JSRuntime* runtime);
 // happens on low core count machines where we are concerned about blocking
 // main-thread execution.
 bool IsOffThreadSourceCompressionEnabled();
-
-// Return whether, if a new parse task was started, it would need to wait for
-// an in-progress GC to complete before starting.
-extern bool OffThreadParsingMustWaitForGC(JSRuntime* rt);
 
 }  // namespace js
 

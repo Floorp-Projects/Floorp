@@ -5,9 +5,7 @@ var CC = Components.Constructor;
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var obs = Cc["@mozilla.org/observer-service;1"].getService(
-  Ci.nsIObserverService
-);
+var obs = Services.obs;
 
 var baseUrl;
 
@@ -55,8 +53,11 @@ add_test(function testAsyncCancel() {
   startChannelRequest(baseUrl, CL_EXPECT_FAILURE, (request, data, context) => {
     Assert.ok(!data, "no response");
 
-    var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-    Assert.equal(cm.countCookiesFromHost("localhost"), 0, "no cookies set");
+    Assert.equal(
+      Services.cookies.countCookiesFromHost("localhost"),
+      0,
+      "no cookies set"
+    );
 
     executeSoon(run_next_test);
   });

@@ -11,6 +11,12 @@ const SECURE_HOST = "https://example.com";
 
 const DEFAULT_URL = `${DEFAULT_HOST}${SJS_PATH}`;
 
+// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
+});
+
 add_task(async function noCookiesWhenNoneAreSet({ client }) {
   const { Network } = client;
   const { cookies } = await Network.getAllCookies();

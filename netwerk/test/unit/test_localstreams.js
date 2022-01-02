@@ -71,8 +71,7 @@ function stream_for_file(file) {
 }
 
 function stream_from_channel(file) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var uri = ios.newFileURI(file);
+  var uri = Services.io.newFileURI(file);
   return NetUtil.newChannel({
     uri,
     loadUsingSystemPrincipal: true,

@@ -1,16 +1,9 @@
 "use strict";
 
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
-var mainThread = threadManager.currentThread;
+var ioService = Services.io;
+var prefs = Services.prefs;
+var mainThread = Services.tm.currentThread;
 
 var listener1 = {
   onLookupComplete(inRequest, inRecord, inStatus) {

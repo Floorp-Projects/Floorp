@@ -26,7 +26,7 @@ class AutoTransportDescriptor final {
 
   static Result<std::pair<AutoTransportDescriptor, AutoTransportDescriptor>,
                 nsresult>
-  Create(int32_t aProcIdOne);
+  Create();
 
   AutoTransportDescriptor Duplicate() const;
 

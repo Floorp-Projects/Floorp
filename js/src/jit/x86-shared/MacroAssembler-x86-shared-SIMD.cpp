@@ -902,22 +902,13 @@ void MacroAssemblerX86Shared::maxFloat64x2(FloatRegister lhs, Operand rhs,
   minMaxFloat64x2(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
 }
 
-static inline void MaskSimdShiftCount(MacroAssembler& masm, unsigned shiftmask,
-                                      Register count, Register temp,
-                                      FloatRegister dest) {
-  masm.mov(count, temp);
-  masm.andl(Imm32(shiftmask), temp);
-  masm.vmovd(temp, dest);
-}
-
 void MacroAssemblerX86Shared::packedShiftByScalarInt8x16(
-    FloatRegister in, Register count, Register temp, FloatRegister xtmp,
-    FloatRegister dest,
+    FloatRegister in, Register count, FloatRegister xtmp, FloatRegister dest,
     void (MacroAssemblerX86Shared::*shift)(FloatRegister, FloatRegister,
                                            FloatRegister),
     void (MacroAssemblerX86Shared::*extend)(const Operand&, FloatRegister)) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 7, count, temp, scratch);
+  vmovd(count, scratch);
 
   // High bytes
   vpalignr(Operand(in), xtmp, 8);
@@ -938,9 +929,8 @@ void MacroAssemblerX86Shared::packedShiftByScalarInt8x16(
 }
 
 void MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(
-    FloatRegister in, Register count, Register temp, FloatRegister xtmp,
-    FloatRegister dest) {
-  packedShiftByScalarInt8x16(in, count, temp, xtmp, dest,
+    FloatRegister in, Register count, FloatRegister xtmp, FloatRegister dest) {
+  packedShiftByScalarInt8x16(in, count, xtmp, dest,
                              &MacroAssemblerX86Shared::vpsllw,
                              &MacroAssemblerX86Shared::vpmovzxbw);
 }
@@ -964,9 +954,8 @@ void MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(
 }
 
 void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
-    FloatRegister in, Register count, Register temp, FloatRegister xtmp,
-    FloatRegister dest) {
-  packedShiftByScalarInt8x16(in, count, temp, xtmp, dest,
+    FloatRegister in, Register count, FloatRegister xtmp, FloatRegister dest) {
+  packedShiftByScalarInt8x16(in, count, xtmp, dest,
                              &MacroAssemblerX86Shared::vpsraw,
                              &MacroAssemblerX86Shared::vpmovsxbw);
 }
@@ -984,9 +973,8 @@ void MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(
 }
 
 void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
-    FloatRegister in, Register count, Register temp, FloatRegister xtmp,
-    FloatRegister dest) {
-  packedShiftByScalarInt8x16(in, count, temp, xtmp, dest,
+    FloatRegister in, Register count, FloatRegister xtmp, FloatRegister dest) {
+  packedShiftByScalarInt8x16(in, count, xtmp, dest,
                              &MacroAssemblerX86Shared::vpsrlw,
                              &MacroAssemblerX86Shared::vpmovzxbw);
 }
@@ -1001,71 +989,70 @@ void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
 }
 
 void MacroAssemblerX86Shared::packedLeftShiftByScalarInt16x8(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 15, count, temp, scratch);
+  vmovd(count, scratch);
   vpsllw(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedRightShiftByScalarInt16x8(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 15, count, temp, scratch);
+  vmovd(count, scratch);
   vpsraw(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt16x8(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 15, count, temp, scratch);
+  vmovd(count, scratch);
   vpsrlw(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedLeftShiftByScalarInt32x4(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 31, count, temp, scratch);
+  vmovd(count, scratch);
   vpslld(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedRightShiftByScalarInt32x4(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 31, count, temp, scratch);
+  vmovd(count, scratch);
   vpsrad(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt32x4(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 31, count, temp, scratch);
+  vmovd(count, scratch);
   vpsrld(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedLeftShiftByScalarInt64x2(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 63, count, temp, scratch);
+  vmovd(count, scratch);
   vpsllq(scratch, in, dest);
 }
 
 void MacroAssemblerX86Shared::packedRightShiftByScalarInt64x2(
-    FloatRegister in, Register count, Register temp1, FloatRegister temp2,
-    FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister temp, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 63, count, temp1, temp2);
+  vmovd(count, temp);
   asMasm().moveSimd128(in, dest);
   asMasm().signReplicationInt64x2(in, scratch);
   // Invert if negative, shift all, invert back if negative.
   vpxor(Operand(scratch), dest, dest);
-  vpsrlq(temp2, dest, dest);
+  vpsrlq(temp, dest, dest);
   vpxor(Operand(scratch), dest, dest);
 }
 
 void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt64x2(
-    FloatRegister in, Register count, Register temp, FloatRegister dest) {
+    FloatRegister in, Register count, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
-  MaskSimdShiftCount(asMasm(), 63, count, temp, scratch);
+  vmovd(count, scratch);
   vpsrlq(scratch, in, dest);
 }
 

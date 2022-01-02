@@ -28,10 +28,16 @@ async function checkCaptivePortalTabReference(evt, currState) {
     portalTab != portalTab2,
     "waitForNewTab in openCaptivePortalLoginTab should not have completed at this point if references were held to the old captive portal tab after login/abort."
   );
-
-  gBrowser.removeTab(errorTab);
   gBrowser.removeTab(portalTab);
   gBrowser.removeTab(portalTab2);
+
+  let errorTabReloaded = BrowserTestUtils.waitForErrorPage(
+    errorTab.linkedBrowser
+  );
+  Services.obs.notifyObservers(null, "captive-portal-login-success");
+  await errorTabReloaded;
+
+  gBrowser.removeTab(errorTab);
 }
 
 add_task(async function setup() {

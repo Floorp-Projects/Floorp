@@ -21,9 +21,6 @@
 #include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
-#ifdef XP_DARWIN
-#  include "mozilla/layers/TextureSync.h"
-#endif
 #include "mozilla/layers/GPUVideoTextureHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -79,8 +76,8 @@ class TextureParent : public ParentActor<PTextureParent> {
   virtual ~TextureParent();
 
   bool Init(const SurfaceDescriptor& aSharedData,
-            const ReadLockDescriptor& aReadLock,
-            const LayersBackend& aLayersBackend, const TextureFlags& aFlags);
+            ReadLockDescriptor&& aReadLock, const LayersBackend& aLayersBackend,
+            const TextureFlags& aFlags);
 
   void NotifyNotUsed(uint64_t aTransactionId);
 
@@ -104,7 +101,6 @@ static bool WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
                                          LayersBackend aBackend,
                                          TextureFlags aFlags) {
   if ((aFlags & TextureFlags::SNAPSHOT) ||
-      (aBackend != LayersBackend::LAYERS_WR) ||
       (!aDeallocator->UsesImageBridge() &&
        !aDeallocator->AsCompositorBridgeParentBase())) {
     return false;
@@ -115,12 +111,12 @@ static bool WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
 ////////////////////////////////////////////////////////////////////////////////
 PTextureParent* TextureHost::CreateIPDLActor(
     HostIPCAllocator* aAllocator, const SurfaceDescriptor& aSharedData,
-    const ReadLockDescriptor& aReadLock, LayersBackend aLayersBackend,
+    ReadLockDescriptor&& aReadLock, LayersBackend aLayersBackend,
     TextureFlags aFlags, uint64_t aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   TextureParent* actor =
       new TextureParent(aAllocator, aSerial, aExternalImageId);
-  if (!actor->Init(aSharedData, aReadLock, aLayersBackend, aFlags)) {
+  if (!actor->Init(aSharedData, std::move(aReadLock), aLayersBackend, aFlags)) {
     actor->ActorDestroy(ipc::IProtocol::ActorDestroyReason::FailedConstructor);
     delete actor;
     return nullptr;
@@ -182,7 +178,7 @@ already_AddRefed<TextureHost> CreateDummyBufferTextureHost(
 }
 
 already_AddRefed<TextureHost> TextureHost::Create(
-    const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
     ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
     TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId) {
   RefPtr<TextureHost> result;
@@ -225,8 +221,9 @@ already_AddRefed<TextureHost> TextureHost::Create(
         break;
       }
 
-      result = TextureHost::Create(*realDesc, aReadLock, aDeallocator, aBackend,
-                                   aFlags, aExternalImageId);
+      result =
+          TextureHost::Create(*realDesc, std::move(aReadLock), aDeallocator,
+                              aBackend, aFlags, aExternalImageId);
       return result.forget();
     }
     default:
@@ -244,7 +241,7 @@ already_AddRefed<TextureHost> TextureHost::Create(
   }
 
   if (result) {
-    result->DeserializeReadLock(aReadLock, aDeallocator);
+    result->DeserializeReadLock(std::move(aReadLock), aDeallocator);
   }
 
   return result.forget();
@@ -353,7 +350,6 @@ TextureHost::~TextureHost() {
     // be destroyed by now. But we will hit assertions if we don't ReadUnlock
     // before destroying the lock itself.
     ReadUnlock();
-    MaybeNotifyUnlocked();
   }
 }
 
@@ -368,19 +364,7 @@ void TextureHost::Finalize() {
 
 void TextureHost::UnbindTextureSource() {
   if (mReadLocked) {
-    // This TextureHost is not used anymore. Since most compositor backends are
-    // working asynchronously under the hood a compositor could still be using
-    // this texture, so it is generally best to wait until the end of the next
-    // composition before calling ReadUnlock. We ask the compositor to take care
-    // of that for us.
-    if (mProvider) {
-      mProvider->UnlockAfterComposition(this);
-    } else {
-      // GetCompositor returned null which means no compositor can be using this
-      // texture. We can ReadUnlock right away.
-      ReadUnlock();
-      MaybeNotifyUnlocked();
-    }
+    ReadUnlock();
   }
 }
 
@@ -402,17 +386,7 @@ void TextureHost::NotifyNotUsed() {
     return;
   }
 
-  // The following cases do not need to defer NotifyNotUsed until next
-  // Composite.
-  // - TextureHost does not have Compositor.
-  // - Compositor is BasicCompositor.
-  // - TextureHost has intermediate buffer.
-  //   end of buffer usage.
-  if (!mProvider || HasIntermediateBuffer() ||
-      !mProvider->NotifyNotUsedAfterComposition(this)) {
-    static_cast<TextureParent*>(mActor)->NotifyNotUsed(mFwdTransactionId);
-    return;
-  }
+  static_cast<TextureParent*>(mActor)->NotifyNotUsed(mFwdTransactionId);
 }
 
 void TextureHost::CallNotifyNotUsed() {
@@ -433,8 +407,7 @@ void TextureHost::MaybeDestroyRenderTexture() {
 
 void TextureHost::DestroyRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  wr::RenderThread::Get()->UnregisterExternalImage(
-      wr::AsUint64(aExternalImageId));
+  wr::RenderThread::Get()->UnregisterExternalImage(aExternalImageId);
 }
 
 void TextureHost::EnsureRenderTexture(
@@ -459,45 +432,30 @@ void TextureHost::EnsureRenderTexture(
   CreateRenderTexture(mExternalImageId.ref());
 }
 
-void TextureHost::Updated(const nsIntRegion* aRegion) {
-  UpdatedInternal(aRegion);
-}
-
 TextureSource::TextureSource() : mCompositableCount(0) {}
 
 TextureSource::~TextureSource() = default;
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
-    : TextureHost(aFlags),
-      mUpdateSerial(1),
-      mLocked(false),
-      mNeedsFullUpdate(false) {
+    : TextureHost(aFlags), mLocked(false) {
   mDescriptor = aDesc;
   switch (mDescriptor.type()) {
     case BufferDescriptor::TYCbCrDescriptor: {
       const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.display().Size();
       mFormat = gfx::SurfaceFormat::YUV;
-      mHasIntermediateBuffer = ycbcr.hasIntermediateBuffer();
       break;
     }
     case BufferDescriptor::TRGBDescriptor: {
       const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
-      mHasIntermediateBuffer = rgb.hasIntermediateBuffer();
       break;
     }
     default:
       gfxCriticalError() << "Bad buffer host descriptor "
                          << (int)mDescriptor.type();
       MOZ_CRASH("GFX: Bad descriptor");
-  }
-  if (aFlags & TextureFlags::COMPONENT_ALPHA) {
-    // One texture of a component alpha texture pair will start out all white.
-    // This hack allows us to easily make sure that white will be uploaded.
-    // See bug 1138934
-    mNeedsFullUpdate = true;
   }
 
 #ifdef XP_MACOSX
@@ -514,77 +472,7 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
 
 BufferTextureHost::~BufferTextureHost() = default;
 
-void BufferTextureHost::UpdatedInternal(const nsIntRegion* aRegion) {
-  ++mUpdateSerial;
-  // If the last frame wasn't uploaded yet, and we -don't- have a partial
-  // update, we still need to update the full surface.
-  if (aRegion && !mNeedsFullUpdate) {
-    mMaybeUpdatedRegion.OrWith(*aRegion);
-  } else {
-    mNeedsFullUpdate = true;
-  }
-  if (GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
-    DebugOnly<bool> result =
-        MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr);
-    NS_WARNING_ASSERTION(result, "Failed to upload a texture");
-  }
-}
-
-void BufferTextureHost::SetTextureSourceProvider(
-    TextureSourceProvider* aProvider) {
-  if (mProvider == aProvider) {
-    return;
-  }
-  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
-    mFirstSource->SetOwner(nullptr);
-  }
-  if (mFirstSource) {
-    mFirstSource = nullptr;
-    mNeedsFullUpdate = true;
-  }
-  mProvider = aProvider;
-}
-
-void BufferTextureHost::DeallocateDeviceData() {
-  if (mFirstSource && mFirstSource->NumCompositableRefs() > 0) {
-    // WrappingTextureSourceYCbCrBasic wraps YUV format BufferTextureHost.
-    // When BufferTextureHost is destroyed, data of
-    // WrappingTextureSourceYCbCrBasic becomes invalid.
-    if (mFirstSource->AsWrappingTextureSourceYCbCrBasic() &&
-        mFirstSource->IsOwnedBy(this)) {
-      mFirstSource->SetOwner(nullptr);
-      mFirstSource->DeallocateDeviceData();
-    }
-    return;
-  }
-
-  if (!mFirstSource || !mFirstSource->IsOwnedBy(this)) {
-    mFirstSource = nullptr;
-    return;
-  }
-
-  mFirstSource->SetOwner(nullptr);
-
-  RefPtr<TextureSource> it = mFirstSource;
-  while (it) {
-    it->DeallocateDeviceData();
-    it = it->GetNextSibling();
-  }
-}
-
-bool BufferTextureHost::Lock() {
-  MOZ_ASSERT(!mLocked);
-  if (!UploadIfNeeded()) {
-    return false;
-  }
-  mLocked = !!mFirstSource;
-  return mLocked;
-}
-
-void BufferTextureHost::Unlock() {
-  MOZ_ASSERT(mLocked);
-  mLocked = false;
-}
+void BufferTextureHost::DeallocateDeviceData() {}
 
 void BufferTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
@@ -598,7 +486,7 @@ void BufferTextureHost::CreateRenderTexture(
         new wr::RenderBufferTextureHost(GetBuffer(), GetBufferDescriptor());
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 
@@ -680,13 +568,13 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
   }
 }
 
-void TextureHost::DeserializeReadLock(const ReadLockDescriptor& aDesc,
+void TextureHost::DeserializeReadLock(ReadLockDescriptor&& aDesc,
                                       ISurfaceAllocator* aAllocator) {
   if (mReadLock) {
     return;
   }
 
-  mReadLock = TextureReadLock::Deserialize(aDesc, aAllocator);
+  mReadLock = TextureReadLock::Deserialize(std::move(aDesc), aAllocator);
 }
 
 void TextureHost::SetReadLocked() {
@@ -698,9 +586,6 @@ void TextureHost::SetReadLocked() {
   // lock again!
   MOZ_ASSERT(!mReadLocked);
   mReadLocked = true;
-  if (mProvider) {
-    mProvider->MaybeUnlockBeforeNextComposition(this);
-  }
 }
 
 void TextureHost::ReadUnlock() {
@@ -714,210 +599,14 @@ bool TextureHost::NeedsYFlip() const {
   return bool(mFlags & TextureFlags::ORIGIN_BOTTOM_LEFT);
 }
 
-bool BufferTextureHost::EnsureWrappingTextureSource() {
-  MOZ_ASSERT(!mHasIntermediateBuffer);
-
-  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
-    return true;
-  }
-  // We don't own it, apparently.
-  if (mFirstSource) {
-    mNeedsFullUpdate = true;
-    mFirstSource = nullptr;
-  }
-
-  if (!mProvider) {
-    return false;
-  }
-
-  if (mFormat == gfx::SurfaceFormat::YUV) {
-    mFirstSource = mProvider->CreateDataTextureSourceAroundYCbCr(this);
-  } else {
-    uint8_t* data = GetBuffer();
-    if (!data) {
-      return false;
-    }
-    RefPtr<gfx::DataSourceSurface> surf =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            data, ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width),
-            mSize, mFormat);
-    if (!surf) {
-      return false;
-    }
-    mFirstSource = mProvider->CreateDataTextureSourceAround(surf);
-  }
-
-  if (!mFirstSource) {
-    // BasicCompositor::CreateDataTextureSourceAround never returns null
-    // and we don't expect to take this branch if we are using another backend.
-    // Returning false is fine but if we get into this situation it probably
-    // means something fishy is going on, like a texture being used with
-    // several compositor backends.
-    NS_WARNING("Failed to use a BufferTextureHost without intermediate buffer");
-    return false;
-  }
-
-  mFirstSource->SetUpdateSerial(mUpdateSerial);
-  mFirstSource->SetOwner(this);
-
-  return true;
-}
-
-static bool IsCompatibleTextureSource(TextureSource* aTexture,
-                                      const BufferDescriptor& aDescriptor,
-                                      TextureSourceProvider* aProvider) {
-  if (!aProvider) {
-    return false;
-  }
-
-  switch (aDescriptor.type()) {
-    case BufferDescriptor::TYCbCrDescriptor: {
-      const YCbCrDescriptor& ycbcr = aDescriptor.get_YCbCrDescriptor();
-
-      if (!aProvider->SupportsEffect(EffectTypes::YCBCR)) {
-        return aTexture->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 &&
-               aTexture->GetSize() == ycbcr.ySize();
-      }
-
-      if (aTexture->GetFormat() != gfx::SurfaceFormat::A8 ||
-          aTexture->GetSize() != ycbcr.ySize()) {
-        return false;
-      }
-
-      auto cbTexture = aTexture->GetSubSource(1);
-      if (!cbTexture || cbTexture->GetFormat() != gfx::SurfaceFormat::A8 ||
-          cbTexture->GetSize() != ycbcr.cbCrSize()) {
-        return false;
-      }
-
-      auto crTexture = aTexture->GetSubSource(2);
-      if (!crTexture || crTexture->GetFormat() != gfx::SurfaceFormat::A8 ||
-          crTexture->GetSize() != ycbcr.cbCrSize()) {
-        return false;
-      }
-
-      return true;
-    }
-    case BufferDescriptor::TRGBDescriptor: {
-      const RGBDescriptor& rgb = aDescriptor.get_RGBDescriptor();
-      return aTexture->GetFormat() == rgb.format() &&
-             aTexture->GetSize() == rgb.size();
-    }
-    default: {
-      return false;
-    }
-  }
-}
-
-void BufferTextureHost::PrepareTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  if (!mHasIntermediateBuffer) {
-    EnsureWrappingTextureSource();
-  }
-
-  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
-    // We are already attached to a TextureSource, nothing to do except tell
-    // the compositable to use it.
-    aTexture = mFirstSource.get();
-    return;
-  }
-
-  // We don't own it, apparently.
-  if (mFirstSource) {
-    mNeedsFullUpdate = true;
-    mFirstSource = nullptr;
-  }
-
-  DataTextureSource* texture =
-      aTexture.get() ? aTexture->AsDataTextureSource() : nullptr;
-
-  bool compatibleFormats =
-      texture && IsCompatibleTextureSource(texture, mDescriptor, mProvider);
-
-  bool shouldCreateTexture = !compatibleFormats ||
-                             texture->NumCompositableRefs() > 1 ||
-                             texture->HasOwner();
-
-  if (!shouldCreateTexture) {
-    mFirstSource = texture;
-    mFirstSource->SetOwner(this);
-    mNeedsFullUpdate = true;
-
-    // It's possible that texture belonged to a different compositor,
-    // so make sure we update it (and all of its siblings) to the
-    // current one.
-    RefPtr<TextureSource> it = mFirstSource;
-    while (it) {
-      it->SetTextureSourceProvider(mProvider);
-      it = it->GetNextSibling();
-    }
-  }
-}
-
-bool BufferTextureHost::BindTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  MOZ_ASSERT(mLocked);
-  MOZ_ASSERT(mFirstSource);
-  aTexture = mFirstSource;
-  return !!aTexture;
-}
-
-bool BufferTextureHost::AcquireTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  if (!UploadIfNeeded()) {
-    return false;
-  }
-  aTexture = mFirstSource;
-  return !!mFirstSource;
-}
-
-void BufferTextureHost::ReadUnlock() {
-  if (mFirstSource) {
-    mFirstSource->Sync(true);
-  }
-
-  TextureHost::ReadUnlock();
-}
-
-void BufferTextureHost::MaybeNotifyUnlocked() {
-#ifdef XP_DARWIN
-  auto actor = GetIPDLActor();
-  if (actor) {
-    AutoTArray<uint64_t, 1> serials;
-    serials.AppendElement(TextureHost::GetTextureSerial(actor));
-    TextureSync::SetTexturesUnlocked(actor->OtherPid(), serials);
-  }
-#endif
-}
-
 void BufferTextureHost::UnbindTextureSource() {
-  if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
-    mFirstSource->Unbind();
-  }
-
   // This texture is not used by any layer anymore.
-  // If the texture doesn't have an intermediate buffer, it means we are
-  // compositing synchronously on the CPU, so we don't need to wait until
-  // the end of the next composition to ReadUnlock (which other textures do
-  // by default).
   // If the texture has an intermediate buffer we don't care either because
   // texture uploads are also performed synchronously for BufferTextureHost.
   ReadUnlock();
-  MaybeNotifyUnlocked();
 }
 
-gfx::SurfaceFormat BufferTextureHost::GetFormat() const {
-  // mFormat is the format of the data that we share with the content process.
-  // GetFormat, on the other hand, expects the format that we present to the
-  // Compositor (it is used to choose the effect type).
-  // if the compositor does not support YCbCr effects, we give it a RGBX texture
-  // instead (see BufferTextureHost::Upload)
-  if (mFormat == gfx::SurfaceFormat::YUV && mProvider &&
-      !mProvider->SupportsEffect(EffectTypes::YCBCR)) {
-    return gfx::SurfaceFormat::R8G8B8X8;
-  }
-  return mFormat;
-}
+gfx::SurfaceFormat BufferTextureHost::GetFormat() const { return mFormat; }
 
 gfx::YUVColorSpace BufferTextureHost::GetYUVColorSpace() const {
   if (mFormat == gfx::SurfaceFormat::YUV) {
@@ -941,162 +630,6 @@ gfx::ColorRange BufferTextureHost::GetColorRange() const {
     return desc.colorRange();
   }
   return TextureHost::GetColorRange();
-}
-
-bool BufferTextureHost::UploadIfNeeded() {
-  return MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr);
-}
-
-bool BufferTextureHost::MaybeUpload(nsIntRegion* aRegion) {
-  auto serial = mFirstSource ? mFirstSource->GetUpdateSerial() : 0;
-
-  if (serial == mUpdateSerial) {
-    return true;
-  }
-
-  if (serial == 0) {
-    // 0 means the source has no valid content
-    aRegion = nullptr;
-  }
-
-  if (!Upload(aRegion)) {
-    return false;
-  }
-
-  if (mHasIntermediateBuffer) {
-    // We just did the texture upload, the content side can now freely write
-    // into the shared buffer.
-    ReadUnlock();
-    MaybeNotifyUnlocked();
-  }
-
-  // We no longer have an invalid region.
-  mNeedsFullUpdate = false;
-  mMaybeUpdatedRegion.SetEmpty();
-
-  // If upload returns true we know mFirstSource is not null
-  mFirstSource->SetUpdateSerial(mUpdateSerial);
-  return true;
-}
-
-bool BufferTextureHost::Upload(nsIntRegion* aRegion) {
-  uint8_t* buf = GetBuffer();
-  if (!buf) {
-    // We don't have a buffer; a possible cause is that the IPDL actor
-    // is already dead. This inevitably happens as IPDL actors can die
-    // at any time, so we want to silently return in this case.
-    // another possible cause is that IPDL failed to map the shmem when
-    // deserializing it.
-    return false;
-  }
-  if (!mProvider) {
-    // This can happen if we send textures to a compositable that isn't yet
-    // attached to a layer.
-    return false;
-  }
-  if (!mHasIntermediateBuffer && EnsureWrappingTextureSource()) {
-    if (!mFirstSource || !mFirstSource->IsDirectMap()) {
-      return true;
-    }
-  }
-
-  if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
-    NS_WARNING("BufferTextureHost: unsupported format!");
-    return false;
-  } else if (mFormat == gfx::SurfaceFormat::YUV) {
-    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-
-    if (!mProvider->SupportsEffect(EffectTypes::YCBCR)) {
-      RefPtr<gfx::DataSourceSurface> surf =
-          ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
-              buf, mDescriptor.get_YCbCrDescriptor());
-      if (NS_WARN_IF(!surf)) {
-        return false;
-      }
-      if (!mFirstSource) {
-        mFirstSource = mProvider->CreateDataTextureSource(
-            mFlags | TextureFlags::RGB_FROM_YCBCR);
-        mFirstSource->SetOwner(this);
-      }
-      return mFirstSource->Update(surf, aRegion);
-    }
-
-    RefPtr<DataTextureSource> srcY;
-    RefPtr<DataTextureSource> srcU;
-    RefPtr<DataTextureSource> srcV;
-    if (!mFirstSource) {
-      // We don't support BigImages for YCbCr compositing.
-      srcY = mProvider->CreateDataTextureSource(
-          mFlags | TextureFlags::DISALLOW_BIGIMAGE);
-      srcU = mProvider->CreateDataTextureSource(
-          mFlags | TextureFlags::DISALLOW_BIGIMAGE);
-      srcV = mProvider->CreateDataTextureSource(
-          mFlags | TextureFlags::DISALLOW_BIGIMAGE);
-      mFirstSource = srcY;
-      mFirstSource->SetOwner(this);
-      srcY->SetNextSibling(srcU);
-      srcU->SetNextSibling(srcV);
-    } else {
-      // mFormat never changes so if this was created as a YCbCr host and
-      // already contains a source it should already have 3 sources.
-      // BufferTextureHost only uses DataTextureSources so it is safe to assume
-      // all 3 sources are DataTextureSource.
-      MOZ_ASSERT(mFirstSource->GetNextSibling());
-      MOZ_ASSERT(mFirstSource->GetNextSibling()->GetNextSibling());
-      srcY = mFirstSource;
-      srcU = mFirstSource->GetNextSibling()->AsDataTextureSource();
-      srcV = mFirstSource->GetNextSibling()
-                 ->GetNextSibling()
-                 ->AsDataTextureSource();
-    }
-
-    RefPtr<gfx::DataSourceSurface> tempY =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            ImageDataSerializer::GetYChannel(buf, desc), desc.yStride(),
-            desc.ySize(), SurfaceFormatForColorDepth(desc.colorDepth()));
-    RefPtr<gfx::DataSourceSurface> tempCb =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            ImageDataSerializer::GetCbChannel(buf, desc), desc.cbCrStride(),
-            desc.cbCrSize(), SurfaceFormatForColorDepth(desc.colorDepth()));
-    RefPtr<gfx::DataSourceSurface> tempCr =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            ImageDataSerializer::GetCrChannel(buf, desc), desc.cbCrStride(),
-            desc.cbCrSize(), SurfaceFormatForColorDepth(desc.colorDepth()));
-    // We don't support partial updates for Y U V textures
-    NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
-    if (!tempY || !tempCb || !tempCr || !srcY->Update(tempY) ||
-        !srcU->Update(tempCb) || !srcV->Update(tempCr)) {
-      NS_WARNING("failed to update the DataTextureSource");
-      return false;
-    }
-  } else {
-    // non-YCbCr case
-    nsIntRegion* regionToUpdate = aRegion;
-    if (!mFirstSource) {
-      mFirstSource = mProvider->CreateDataTextureSource(mFlags);
-      mFirstSource->SetOwner(this);
-      if (mFlags & TextureFlags::COMPONENT_ALPHA) {
-        // Update the full region the first time for component alpha textures.
-        regionToUpdate = nullptr;
-      }
-    }
-
-    RefPtr<gfx::DataSourceSurface> surf =
-        gfx::Factory::CreateWrappingDataSourceSurface(
-            GetBuffer(),
-            ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width), mSize,
-            mFormat);
-    if (!surf) {
-      return false;
-    }
-
-    if (!mFirstSource->Update(surf.get(), regionToUpdate)) {
-      NS_WARNING("failed to update the DataTextureSource");
-      return false;
-    }
-  }
-  MOZ_ASSERT(mFirstSource);
-  return true;
 }
 
 already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface() {
@@ -1224,11 +757,12 @@ void TextureParent::NotifyNotUsed(uint64_t aTransactionId) {
 }
 
 bool TextureParent::Init(const SurfaceDescriptor& aSharedData,
-                         const ReadLockDescriptor& aReadLock,
+                         ReadLockDescriptor&& aReadLock,
                          const LayersBackend& aBackend,
                          const TextureFlags& aFlags) {
-  mTextureHost = TextureHost::Create(aSharedData, aReadLock, mSurfaceAllocator,
-                                     aBackend, aFlags, mExternalImageId);
+  mTextureHost =
+      TextureHost::Create(aSharedData, std::move(aReadLock), mSurfaceAllocator,
+                          aBackend, aFlags, mExternalImageId);
   if (mTextureHost) {
     mTextureHost->mActor = this;
   }
@@ -1245,7 +779,6 @@ void TextureParent::Destroy() {
     // ReadUnlock here to make sure the ReadLock's shmem does not outlive the
     // protocol that created it.
     mTextureHost->ReadUnlock();
-    mTextureHost->MaybeNotifyUnlocked();
   }
 
   if (mTextureHost->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {

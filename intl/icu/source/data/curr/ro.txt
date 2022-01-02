@@ -1634,6 +1634,11 @@ ro{
             one{"dolar liberian"}
             other{"dolari liberieni"}
         }
+        LSL{
+            few{"maloti leshotieni"}
+            one{"maloti leshotieni"}
+            other{"maloti leshotieni"}
+        }
         LTL{
             few{"lite lituaniene"}
             one{"litu lituanian"}

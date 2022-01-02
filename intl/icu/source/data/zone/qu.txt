@@ -1883,6 +1883,9 @@ qu{
             lg{"Hora de Ekaterinburgo"}
             ls{"Hora Estandar de Ekaterinburgo"}
         }
+        "meta:Yukon"{
+            ls{"Yukon Ura"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

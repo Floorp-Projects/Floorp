@@ -18,6 +18,9 @@ static LazyLogModule sPNGEncoderLog("PNGEncoder");
 NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
 
+#define DEFAULT_ZLIB_LEVEL 3
+#define DEFAULT_FILTERS PNG_FILTER_SUB
+
 nsPNGEncoder::nsPNGEncoder()
     : mPNG(nullptr),
       mPNGinfo(nullptr),
@@ -87,6 +90,8 @@ nsPNGEncoder::StartImageEncode(uint32_t aWidth, uint32_t aHeight,
   bool useTransparency = true, skipFirstFrame = false;
   uint32_t numFrames = 1;
   uint32_t numPlays = 0;  // For animations, 0 == forever
+  int zlibLevel = DEFAULT_ZLIB_LEVEL;
+  int filters = DEFAULT_FILTERS;
 
   // can't initialize more than once
   if (mImageBuffer != nullptr) {
@@ -100,8 +105,8 @@ nsPNGEncoder::StartImageEncode(uint32_t aWidth, uint32_t aHeight,
 
   // parse and check any provided output options
   nsresult rv = ParseOptions(aOutputOptions, &useTransparency, &skipFirstFrame,
-                             &numFrames, &numPlays, nullptr, nullptr, nullptr,
-                             nullptr, nullptr);
+                             &numFrames, &numPlays, &zlibLevel, &filters,
+                             nullptr, nullptr, nullptr, nullptr, nullptr);
   if (rv != NS_OK) {
     return rv;
   }
@@ -133,6 +138,13 @@ nsPNGEncoder::StartImageEncode(uint32_t aWidth, uint32_t aHeight,
     png_destroy_write_struct(&mPNG, &mPNGinfo);
     return NS_ERROR_FAILURE;
   }
+
+#ifdef PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED
+  png_set_compression_level(mPNG, zlibLevel);
+#endif
+#ifdef PNG_WRITE_FILTER_SUPPORTED
+  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, filters);
+#endif
 
   // Set up to read the data into our image buffer, start out with an 8K
   // estimated size. Note: we don't have to worry about freeing this data
@@ -198,6 +210,7 @@ nsPNGEncoder::AddImageFrame(const uint8_t* aData,
                             uint32_t aInputFormat,
                             const nsAString& aFrameOptions) {
   bool useTransparency = true;
+  int filters = DEFAULT_FILTERS;
   uint32_t delay_ms = 500;
 #ifdef PNG_APNG_SUPPORTED
   uint32_t dispose_op = PNG_DISPOSE_OP_NONE;
@@ -230,9 +243,9 @@ nsPNGEncoder::AddImageFrame(const uint8_t* aData,
   }
 
   // parse and check any provided output options
-  nsresult rv =
-      ParseOptions(aFrameOptions, &useTransparency, nullptr, nullptr, nullptr,
-                   &dispose_op, &blend_op, &delay_ms, &x_offset, &y_offset);
+  nsresult rv = ParseOptions(aFrameOptions, &useTransparency, nullptr, nullptr,
+                             nullptr, nullptr, &filters, &dispose_op, &blend_op,
+                             &delay_ms, &x_offset, &y_offset);
   if (rv != NS_OK) {
     return rv;
   }
@@ -257,7 +270,7 @@ nsPNGEncoder::AddImageFrame(const uint8_t* aData,
   }
 
 #ifdef PNG_WRITE_FILTER_SUPPORTED
-  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, PNG_FILTER_VALUE_NONE);
+  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, filters);
 #endif
 
   // write each row: if we add more input formats, we may want to
@@ -335,6 +348,7 @@ nsPNGEncoder::EndImageEncode() {
 nsresult nsPNGEncoder::ParseOptions(const nsAString& aOptions,
                                     bool* useTransparency, bool* skipFirstFrame,
                                     uint32_t* numFrames, uint32_t* numPlays,
+                                    int* zlibLevel, int* filters,
                                     uint32_t* frameDispose,
                                     uint32_t* frameBlend, uint32_t* frameDelay,
                                     uint32_t* offsetX, uint32_t* offsetY) {
@@ -412,6 +426,68 @@ nsresult nsPNGEncoder::ParseOptions(const nsAString& aOptions,
       // plays=0 to loop forever, otherwise play sequence specified
       // number of times
       if (PR_sscanf(value, "%u", numPlays) != 1) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      // png-zlib-level=#
+    } else if (nsCRT::strcmp(token, "png-zlib-level") == 0) {
+      if (!value) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      int localZlibLevel = DEFAULT_ZLIB_LEVEL;
+      if (PR_sscanf(value, "%d", &localZlibLevel) != 1) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      // zlib-level 0-9 are the only valid values
+      if (localZlibLevel < 0 || localZlibLevel > 9) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (zlibLevel) {
+        *zlibLevel = localZlibLevel;
+      }
+
+      // png-filter=[no_filters|none|sub|up|avg|paeth|fast|all]
+    } else if (nsCRT::strcmp(token, "png-filter") == 0) {
+      if (!value) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      if (nsCRT::strcmp(value, "no_filters") == 0) {
+        if (filters) {
+          *filters = PNG_NO_FILTERS;
+        }
+      } else if (nsCRT::strcmp(value, "none") == 0) {
+        if (filters) {
+          *filters = PNG_FILTER_NONE;
+        }
+      } else if (nsCRT::strcmp(value, "sub") == 0) {
+        if (filters) {
+          *filters = PNG_FILTER_SUB;
+        }
+      } else if (nsCRT::strcmp(value, "up") == 0) {
+        if (filters) {
+          *filters = PNG_FILTER_UP;
+        }
+      } else if (nsCRT::strcmp(value, "avg") == 0) {
+        if (filters) {
+          *filters = PNG_FILTER_AVG;
+        }
+      } else if (nsCRT::strcmp(value, "paeth") == 0) {
+        if (filters) {
+          *filters = PNG_FILTER_PAETH;
+        }
+      } else if (nsCRT::strcmp(value, "fast") == 0) {
+        if (filters) {
+          *filters = PNG_FAST_FILTERS;
+        }
+      } else if (nsCRT::strcmp(value, "all") == 0) {
+        if (filters) {
+          *filters = PNG_ALL_FILTERS;
+        }
+      } else {
         return NS_ERROR_INVALID_ARG;
       }
 

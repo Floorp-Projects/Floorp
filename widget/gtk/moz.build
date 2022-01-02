@@ -55,7 +55,6 @@ UNIFIED_SOURCES += [
     "nsGtkKeyUtils.cpp",
     "nsImageToPixbuf.cpp",
     "nsLookAndFeel.cpp",
-    "nsNativeBasicThemeGTK.cpp",
     "nsSound.cpp",
     "nsToolkit.cpp",
     "nsWidgetFactory.cpp",
@@ -163,8 +162,6 @@ if CONFIG["MOZ_WAYLAND"]:
 
 if CONFIG["MOZ_ENABLE_DBUS"]:
     CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
-
-CXXFLAGS += ["-Wno-error=shadow"]
 CXXFLAGS += ["-Werror=switch"]
 
 REQUIRES_UNIFIED_BUILD = True

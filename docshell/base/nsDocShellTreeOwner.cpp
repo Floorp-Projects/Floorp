@@ -1117,7 +1117,7 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
   if (!mShowingTooltip) {
     nsIEventTarget* target = nullptr;
     if (nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetComposedTarget()) {
-      mPossibleTooltipNode = do_QueryInterface(eventTarget);
+      mPossibleTooltipNode = nsINode::FromEventTarget(eventTarget);
       nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
       if (global) {
         target = global->EventTargetFor(TaskCategory::UI);

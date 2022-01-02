@@ -93,6 +93,7 @@
                     dest.write_str(" ")?;
                 }
                 self.text_decoration_thickness.to_css(dest)?;
+                has_value = true;
             }
 
             % if engine == "gecko":

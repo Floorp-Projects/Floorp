@@ -1456,6 +1456,14 @@ void CodeGenerator::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir) {
   }
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
+  const LInt64Allocation input = ins->getInt64Operand(0);
+  Register64 inputR = ToRegister64(input);
+  MOZ_ASSERT(inputR == ToOutRegister64(ins));
+  masm.notl(inputR.high);
+  masm.notl(inputR.low);
+}
+
 void CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir) {
   Register64 input = ToRegister64(lir->getInt64Operand(0));
 

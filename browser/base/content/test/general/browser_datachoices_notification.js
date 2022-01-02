@@ -31,19 +31,18 @@ const TEST_POLICY_VERSION = 37;
 
 function fakeShowPolicyTimeout(set, clear) {
   let reportingPolicy = ChromeUtils.import(
-    "resource://gre/modules/TelemetryReportingPolicy.jsm",
-    null
+    "resource://gre/modules/TelemetryReportingPolicy.jsm"
   ).Policy;
   reportingPolicy.setShowInfobarTimeout = set;
   reportingPolicy.clearShowInfobarTimeout = clear;
 }
 
 function sendSessionRestoredNotification() {
-  let reportingPolicyImpl = ChromeUtils.import(
-    "resource://gre/modules/TelemetryReportingPolicy.jsm",
-    null
-  ).TelemetryReportingPolicyImpl;
-  reportingPolicyImpl.observe(null, "sessionstore-windows-restored", null);
+  let reportingPolicy = ChromeUtils.import(
+    "resource://gre/modules/TelemetryReportingPolicy.jsm"
+  ).Policy;
+
+  reportingPolicy.fakeSessionRestoreNotification();
 }
 
 /**

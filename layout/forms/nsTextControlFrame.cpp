@@ -45,6 +45,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsFrameSelection.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
@@ -180,6 +181,7 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   aPostDestroyData.AddAnonymousContent(mRootNode.forget());
   aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
   aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mShowPasswordButton.forget());
 
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -444,6 +446,18 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   // background on the placeholder doesn't obscure the caret.
   aElements.AppendElement(mRootNode);
 
+  if (StaticPrefs::layout_forms_input_type_show_password_button_enabled() &&
+      IsPasswordTextControl()) {
+    mShowPasswordButton =
+        MakeAnonElement(PseudoStyleType::mozTextControlShowPasswordButton,
+                        nullptr, nsGkAtoms::button);
+    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                                 u"true"_ns, false);
+    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
+                                 u"-1"_ns, false);
+    aElements.AppendElement(mShowPasswordButton);
+  }
+
   rv = UpdateValueDisplay(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -567,6 +581,10 @@ void nsTextControlFrame::AppendAnonymousContentTo(
     aElements.AppendElement(mPreviewDiv);
   }
 
+  if (mShowPasswordButton) {
+    aElements.AppendElement(mShowPasswordButton);
+  }
+
   aElements.AppendElement(mRootNode);
 }
 
@@ -653,7 +671,8 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
 static bool IsButtonBox(const nsIFrame* aFrame) {
   auto pseudoType = aFrame->Style()->GetPseudoType();
   return pseudoType == PseudoStyleType::mozNumberSpinBox ||
-         pseudoType == PseudoStyleType::mozSearchClearButton;
+         pseudoType == PseudoStyleType::mozSearchClearButton ||
+         pseudoType == PseudoStyleType::mozTextControlShowPasswordButton;
 }
 
 void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
@@ -735,6 +754,11 @@ void nsTextControlFrame::ReflowTextControlChild(
   // or percentage, if we're not the button box.
   auto overridePadding =
       isButtonBox ? Nothing() : Some(aReflowInput.ComputedLogicalPadding(wm));
+  if (!isButtonBox && aButtonBoxISize) {
+    // Button box respects inline-end-padding, so we don't need to.
+    overridePadding->IEnd(outerWM) = 0;
+  }
+
   // We want to let our button box fill the frame in the block axis, up to the
   // edge of the control's border. So, we use the control's padding-box as the
   // containing block size for our button box.
@@ -743,8 +767,6 @@ void nsTextControlFrame::ReflowTextControlChild(
   kidReflowInput.Init(aPresContext, overrideCBSize, Nothing(), overridePadding);
 
   LogicalPoint position(wm);
-  const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
-
   if (!isButtonBox) {
     MOZ_ASSERT(wm == outerWM,
                "Shouldn't have to care about orthogonal "
@@ -752,10 +774,13 @@ void nsTextControlFrame::ReflowTextControlChild(
                "except for the number spin-box which forces "
                "horizontal-tb");
 
-    // Offset the frame by the size of the parent's border
-    const auto& padding = aReflowInput.ComputedLogicalPadding(wm);
-    position.B(wm) = bp.BStart(wm) - padding.BStart(wm);
-    position.I(wm) = bp.IStart(wm) - padding.IStart(wm);
+    const auto& border = aReflowInput.ComputedLogicalBorder(wm);
+
+    // Offset the frame by the size of the parent's border. Note that we don't
+    // have to account for the parent's padding here, because this child
+    // actually "inherits" that padding and manages it on behalf of the parent.
+    position.B(wm) = border.BStart(wm);
+    position.I(wm) = border.IStart(wm);
 
     // Set computed width and computed height for the child (the button box is
     // the only exception, which has an auto size).
@@ -773,17 +798,21 @@ void nsTextControlFrame::ReflowTextControlChild(
               containerSize, ReflowChildFlags::Default, aStatus);
 
   if (isButtonBox) {
+    const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
     auto size = desiredSize.Size(outerWM);
     // Center button in the block axis of our content box. We do this
     // computation in terms of outerWM for simplicity.
-    position = LogicalPoint(outerWM);
-    position.B(outerWM) =
+    LogicalRect buttonRect(outerWM);
+    buttonRect.BSize(outerWM) = size.BSize(outerWM);
+    buttonRect.ISize(outerWM) = size.ISize(outerWM);
+    buttonRect.BStart(outerWM) =
         bp.BStart(outerWM) +
         (aReflowInput.ComputedBSize() - size.BSize(outerWM)) / 2;
     // Align to the inline-end of the content box.
-    position.I(outerWM) =
+    buttonRect.IStart(outerWM) =
         bp.IStart(outerWM) + aReflowInput.ComputedISize() - size.ISize(outerWM);
-    position = position.ConvertTo(wm, outerWM, containerSize);
+    buttonRect = buttonRect.ConvertTo(wm, outerWM, containerSize);
+    position = buttonRect.Origin(wm);
     aButtonBoxISize = size.ISize(outerWM);
   }
 
@@ -1219,7 +1248,6 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     if (IsPasswordTextControl()) {
       textNode->MarkAsMaybeMasked();
     }
-
     mRootNode->AppendChildTo(textNode, aNotify, IgnoreErrors());
     textContent = textNode;
   } else {

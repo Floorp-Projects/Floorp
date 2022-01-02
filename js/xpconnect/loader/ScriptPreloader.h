@@ -84,8 +84,18 @@ class ScriptPreloader : public nsIObserver,
   NS_DECL_NSINAMED
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
+ private:
+  static StaticRefPtr<ScriptPreloader> gScriptPreloader;
+  static StaticRefPtr<ScriptPreloader> gChildScriptPreloader;
+  static UniquePtr<AutoMemMap> gCacheData;
+  static UniquePtr<AutoMemMap> gChildCacheData;
+
+ public:
   static ScriptPreloader& GetSingleton();
   static ScriptPreloader& GetChildSingleton();
+
+  static void DeleteSingleton();
+  static void DeleteCacheDataSingleton();
 
   static ProcessType GetChildProcessType(const nsACString& remoteType);
 
@@ -137,7 +147,7 @@ class ScriptPreloader : public nsIObserver,
   static void InitContentChild(dom::ContentParent& parent);
 
  protected:
-  virtual ~ScriptPreloader() = default;
+  virtual ~ScriptPreloader();
 
  private:
   enum class ScriptStatus {
@@ -515,9 +525,9 @@ class ScriptPreloader : public nsIObserver,
   nsCOMPtr<nsITimer> mSaveTimer;
 
   // The mmapped cache data from this session's cache file.
-  // The instance is held by the static variable in GetSingleton or
-  // GetChildSingleton, and its lifetime is guaranteed to be longer than
-  // ScriptPreloader instance.
+  // The instance is held by either `gCacheData` or `gChildCacheData` static
+  // fields, and its lifetime is guaranteed to be longer than ScriptPreloader
+  // instance.
   AutoMemMap* mCacheData;
 
   Monitor mMonitor;

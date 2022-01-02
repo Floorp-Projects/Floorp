@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { uniq, remove } from "lodash";
+import { remove } from "lodash";
 
 import {
   getActiveEventListeners,
@@ -26,8 +26,9 @@ export function addEventListenerBreakpoints(eventsToAdd) {
   return async ({ dispatch, client, getState }) => {
     const activeListenerBreakpoints = await getActiveEventListeners(getState());
 
-    const newEvents = uniq([...eventsToAdd, ...activeListenerBreakpoints]);
-
+    const newEvents = [
+      ...new Set([...eventsToAdd, ...activeListenerBreakpoints]),
+    ];
     await updateBreakpoints(dispatch, client, newEvents);
   };
 }
@@ -56,9 +57,7 @@ export function toggleEventLogging() {
 export function addEventListenerExpanded(category) {
   return async ({ dispatch, getState }) => {
     const expanded = await getEventListenerExpanded(getState());
-
-    const newExpanded = uniq([...expanded, category]);
-
+    const newExpanded = [...new Set([...expanded, category])];
     await updateExpanded(dispatch, newExpanded);
   };
 }

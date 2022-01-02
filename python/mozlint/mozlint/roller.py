@@ -60,6 +60,11 @@ def _run_worker(config, paths, **lintargs):
     ):
         lintargs["show_warnings"] = True
 
+    # Override ignore thirdparty
+    # Only deactivating include_thirdparty is set on a linter.yml in use
+    if config.get("include_thirdparty", False):
+        lintargs["include_thirdparty"] = True
+
     func = supported_types[config["type"]]
     start_time = time.time()
     try:
@@ -317,9 +322,10 @@ class LintRoller(object):
             if rev:
                 vcs_paths.update(self.vcs.get_changed_files("AM", rev=rev))
             if outgoing:
+                upstream = outgoing if isinstance(outgoing, str) else None
                 try:
                     vcs_paths.update(
-                        self.vcs.get_outgoing_files("AM", upstream=outgoing)
+                        self.vcs.get_outgoing_files("AM", upstream=upstream)
                     )
                 except MissingUpstreamRepo:
                     print(

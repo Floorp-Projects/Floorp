@@ -6,9 +6,7 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // Turn off the authentication dialog blocking for this test.
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+var prefs = Services.prefs;
 prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
 function URL(domain, path = "") {

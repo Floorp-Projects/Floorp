@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.mozilla.geckoview.test_runner">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme"
+            android:name="androidx.multidex.MultiDexApplication">
+        <uses-library android:name="android.test.runner" android:required="false"/>
+        <activity android:name=".TestRunnerActivity" android:exported="true"/>
+        <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="org.mozilla.geckoview.test_runner.XPCSHELL_TEST"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- This is used to run xpcshell tests -->
+        <service android:name=".XpcshellTestRunnerService$i0" android:enabled="true" android:exported="true" android:process=":xpcshell0"/>
+        <service android:name=".XpcshellTestRunnerService$i1" android:enabled="true" android:exported="true" android:process=":xpcshell1"/>
+        <service android:name=".XpcshellTestRunnerService$i2" android:enabled="true" android:exported="true" android:process=":xpcshell2"/>
+        <service android:name=".XpcshellTestRunnerService$i3" android:enabled="true" android:exported="true" android:process=":xpcshell3"/>
+        <service android:name=".XpcshellTestRunnerService$i4" android:enabled="true" android:exported="true" android:process=":xpcshell4"/>
+        <service android:name=".XpcshellTestRunnerService$i5" android:enabled="true" android:exported="true" android:process=":xpcshell5"/>
+        <service android:name=".XpcshellTestRunnerService$i6" android:enabled="true" android:exported="true" android:process=":xpcshell6"/>
+        <service android:name=".XpcshellTestRunnerService$i7" android:enabled="true" android:exported="true" android:process=":xpcshell7"/>
+        <service android:name=".XpcshellTestRunnerService$i8" android:enabled="true" android:exported="true" android:process=":xpcshell8"/>
+        <service android:name=".XpcshellTestRunnerService$i9" android:enabled="true" android:exported="true" android:process=":xpcshell9"/>
+    </application>
+</manifest>

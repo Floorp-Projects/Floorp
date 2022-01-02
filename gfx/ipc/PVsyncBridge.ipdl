@@ -14,6 +14,7 @@ namespace gfx {
 // dedicated thread in the UI process to the compositor thread in the
 // compositor process. The child side exists in the UI process, and the
 // parent side in the GPU process.
+[NeedsOtherPid]
 sync protocol PVsyncBridge
 {
 parent:

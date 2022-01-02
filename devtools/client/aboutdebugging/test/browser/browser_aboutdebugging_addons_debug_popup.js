@@ -80,26 +80,15 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   const browserActionEl = window.document.getElementById(browserActionId);
   ok(browserActionEl, "Got the browserAction button from the browser UI");
 
-  // Create a promise that will resolve when popup.html appears in the list of
-  // frames known by the toolbox.
-  const popupFramePromise = new Promise(resolve => {
-    const listener = data => {
-      if (data.frames.some(({ url }) => url && url.endsWith("popup.html"))) {
-        toolbox.target.off("frame-update", listener);
-        resolve();
-      }
-    };
-    toolbox.target.on("frame-update", listener);
-  });
-
   info("Show the web extension popup");
   browserActionEl.click();
 
-  info("Wait until popup.html appears in the frames list menu button");
-  await popupFramePromise;
+  info("Wait until the frames list button is displayed");
+  const btn = await waitFor(() =>
+    toolbox.doc.getElementById("command-button-frames")
+  );
 
   info("Clicking the frame list button");
-  const btn = toolbox.doc.getElementById("command-button-frames");
   btn.click();
 
   const menuList = toolbox.doc.getElementById("toolbox-frame-menu");

@@ -134,6 +134,8 @@ add_task(async function test_password_input() {
       false,
       "context-selectall",
       null,
+      // "context-toggle-show-password",
+      // null,
     ],
     {
       skipFocusChange: true,

@@ -17,16 +17,14 @@ const { CertUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
 });
 
-// This exists so that tests can override the XHR behaviour for downloading
-// the addon update XML file.
-var CreateXHR = function() {
-  return new XMLHttpRequest();
+// This exists so that tests can override the ServiceRequest behaviour for
+// downloading the addon update XML file.
+var CreateServiceRequest = function() {
+  return new ServiceRequest();
 };
 
 // This will inherit settings from the "addons" logger.
@@ -38,10 +36,10 @@ logger.manageLevelFromPref("extensions.logging.productaddons.level");
 /**
  * Number of milliseconds after which we need to cancel `downloadXMLWithRequest`.
  *
- * Bug 1087674 suggests that the XHR we use in `downloadXMLWithRequest` may
- * never terminate in presence of network nuisances (e.g. strange
- * antivirus behavior). This timeout is a defensive measure to ensure
- * that we fail cleanly in such case.
+ * Bug 1087674 suggests that the XHR/ServiceRequest we use in
+ * `downloadXMLWithRequest` may never terminate in presence of network nuisances
+ * (e.g. strange antivirus behavior). This timeout is a defensive measure to
+ * ensure that we fail cleanly in such case.
  */
 const TIMEOUT_DELAY_MS = 20000;
 // How much of a file to read into memory at a time for hashing
@@ -205,8 +203,8 @@ async function verifyGmpContentSignature(data, contentSignatureHeader) {
  * @param  allowedCerts
  *         The list of certificate attributes to match the SSL certificate
  *         against or null to skip checks.
- * @return a promise that resolves to the XHR request on success or rejects
- *         with a JS exception in case of error.
+ * @return a promise that resolves to the ServiceRequest request on success or
+ *         rejects with a JS exception in case of error.
  */
 function downloadXMLWithRequest(
   url,
@@ -214,8 +212,8 @@ function downloadXMLWithRequest(
   allowedCerts = null
 ) {
   return new Promise((resolve, reject) => {
-    let request = CreateXHR();
-    // This is here to let unit test code override XHR
+    let request = CreateServiceRequest();
+    // This is here to let unit test code override the ServiceRequest.
     if (request.wrappedJSObject) {
       request = request.wrappedJSObject;
     }
@@ -229,13 +227,6 @@ function downloadXMLWithRequest(
     request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     // Don't send any cookies
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
-    // Use conservative TLS settings. See bug 1325501.
-    // TODO move to ServiceRequest.
-    if (request.channel instanceof Ci.nsIHttpChannelInternal) {
-      request.channel.QueryInterface(
-        Ci.nsIHttpChannelInternal
-      ).beConservative = true;
-    }
     request.timeout = TIMEOUT_DELAY_MS;
 
     request.overrideMimeType("text/xml");
@@ -375,7 +366,7 @@ function parseXML(document) {
 }
 
 /**
- * Downloads file from a URL using XHR.
+ * Downloads file from a URL using ServiceRequest.
  *
  * @param  url
  *         The url to download from.
@@ -387,12 +378,12 @@ function parseXML(document) {
  */
 function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
   return new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest();
+    let sr = new ServiceRequest();
 
-    xhr.onload = function(response) {
-      logger.info("downloadXHR File download. status=" + xhr.status);
-      if (xhr.status != 200 && xhr.status != 206) {
-        reject(Components.Exception("File download failed", xhr.status));
+    sr.onload = function(response) {
+      logger.info("downloadFile File download. status=" + sr.status);
+      if (sr.status != 200 && sr.status != 206) {
+        reject(Components.Exception("File download failed", sr.status));
         return;
       }
       (async function() {
@@ -402,7 +393,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
         let path = f.path;
         logger.info(`Downloaded file will be saved to ${path}`);
         await f.file.close();
-        await OS.File.writeAtomic(path, new Uint8Array(xhr.response));
+        await OS.File.writeAtomic(path, new Uint8Array(sr.response));
         return path;
       })().then(resolve, reject);
     };
@@ -411,7 +402,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
       let request = event.target;
       let status = getRequestStatus(request);
       let message =
-        "Failed downloading via XHR, status: " +
+        "Failed downloading via ServiceRequest, status: " +
         status +
         ", reason: " +
         event.type;
@@ -420,26 +411,18 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
       ex.status = status;
       reject(ex);
     };
-    xhr.addEventListener("error", fail);
-    xhr.addEventListener("abort", fail);
+    sr.addEventListener("error", fail);
+    sr.addEventListener("abort", fail);
 
-    xhr.responseType = "arraybuffer";
+    sr.responseType = "arraybuffer";
     try {
-      xhr.open("GET", url);
+      sr.open("GET", url);
       if (options.httpsOnlyNoUpgrade) {
-        xhr.channel.loadInfo.httpsOnlyStatus |=
-          Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
+        sr.channel.loadInfo.httpsOnlyStatus |= Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
       }
       // Allow deprecated HTTP request from SystemPrincipal
-      xhr.channel.loadInfo.allowDeprecatedSystemRequests = true;
-      // Use conservative TLS settings. See bug 1325501.
-      // TODO move to ServiceRequest.
-      if (xhr.channel instanceof Ci.nsIHttpChannelInternal) {
-        xhr.channel.QueryInterface(
-          Ci.nsIHttpChannelInternal
-        ).beConservative = true;
-      }
-      xhr.send(null);
+      sr.channel.loadInfo.allowDeprecatedSystemRequests = true;
+      sr.send(null);
     } catch (ex) {
       reject(ex);
     }

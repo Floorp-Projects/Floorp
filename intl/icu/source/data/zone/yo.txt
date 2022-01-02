@@ -343,28 +343,28 @@ yo{
             ls{"Afghanistan Time"}
         }
         "meta:Africa_Central"{
-            ls{"Central Africa Time"}
+            ls{"Àkókò Àárín Afírikà"}
         }
         "meta:Africa_Eastern"{
-            ls{"East Africa Time"}
+            ls{"Àkókò Ìlà-Oòrùn Afírikà"}
         }
         "meta:Africa_Southern"{
             ls{"South Africa Standard Time"}
         }
         "meta:Africa_Western"{
-            ld{"West Africa Summer Time"}
-            lg{"West Africa Time"}
-            ls{"West Africa Standard Time"}
+            ld{"Àkókò Ìwọ̀-Oòrùn Ooru Afírikà"}
+            lg{"Àkókò Ìwọ̀-Oòrùn Afírikà"}
+            ls{"Àkókò Ìwọ̀-Oòrùn Àfẹnukò Afírikà"}
         }
         "meta:Alaska"{
-            ld{"Alaska Daylight Time"}
-            lg{"Alaska Time"}
-            ls{"Alaska Standard Time"}
+            ld{"Àkókò Ìyálẹ̀ta Alásíkà"}
+            lg{"Àkókò Alásíkà"}
+            ls{"Àkókò Àfẹnukò Alásíkà"}
         }
         "meta:Amazon"{
-            ld{"Amazon Summer Time"}
-            lg{"Amazon Time"}
-            ls{"Amazon Standard Time"}
+            ld{"Àkókò Oru Amásọ́nì"}
+            lg{"Àkókò Amásọ́nì"}
+            ls{"Àkókò Afẹnukò Amásọ́nì"}
         }
         "meta:America_Central"{
             ld{"Akókò àárín gbùngbùn ojúmọmọ"}
@@ -402,9 +402,9 @@ yo{
             ls{"Aago àsìkò Argentina"}
         }
         "meta:Argentina_Western"{
-            ld{"Western Argentina Summer Time"}
-            lg{"Western Argentina Time"}
-            ls{"Western Argentina Standard Time"}
+            ld{"Àkókò Oru Iwọ́-oòrùn Ajẹ́ntínà"}
+            lg{"Àkókò Iwọ́-oòrùn Ajẹ́ntínà"}
+            ls{"Àkókò Iwọ́-oòrùn Àfẹnukò Ajẹ́ntínà"}
         }
         "meta:Armenia"{
             ld{"Armenia Summer Time"}
@@ -442,9 +442,9 @@ yo{
             ls{"Azerbaijan Standard Time"}
         }
         "meta:Azores"{
-            ld{"Azores Summer Time"}
-            lg{"Azores Time"}
-            ls{"Azores Standard Time"}
+            ld{"Àkókò Ooru Ásọ́sì"}
+            lg{"Àkókò Ásọ́sì"}
+            ls{"Àkókò Àfẹnukò Ásọ́sì"}
         }
         "meta:Bangladesh"{
             ld{"Bangladesh Summer Time"}
@@ -466,9 +466,9 @@ yo{
             ls{"Brunei Darussalam Time"}
         }
         "meta:Cape_Verde"{
-            ld{"Cape Verde Summer Time"}
-            lg{"Cape Verde Time"}
-            ls{"Cape Verde Standard Time"}
+            ld{"Àkókò Sọ́mà Képú Fáàdì"}
+            lg{"Àkókò Képú Fáàdì"}
+            ls{"Àkókò Àfẹnukò Képú Fáàdì"}
         }
         "meta:Chamorro"{
             ls{"Chamorro Standard Time"}
@@ -479,9 +479,9 @@ yo{
             ls{"Chatham Standard Time"}
         }
         "meta:Chile"{
-            ld{"Chile Summer Time"}
-            lg{"Chile Time"}
-            ls{"Chile Standard Time"}
+            ld{"Àkókò Oru Ṣílè"}
+            lg{"Àkókò Ṣílè"}
+            ls{"Àkókò Àfẹnukò Ṣílè"}
         }
         "meta:China"{
             ld{"Àkókò Ojúmọmọ Ṣáínà"}
@@ -542,7 +542,7 @@ yo{
             ls{"Àkókò àsikò Ìhà Ìlà Oòrùn Europe"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"Further-eastern European Time"}
+            ls{"Àkókò Iwájú Ìlà Oòrùn Yúróòpù"}
         }
         "meta:Europe_Western"{
             ld{"Àkókò Sọmà Ìhà Ìwọ Oòrùn Europe"}
@@ -550,9 +550,9 @@ yo{
             ls{"Àkókò àsikò Ìwọ Oòrùn Europe"}
         }
         "meta:Falkland"{
-            ld{"Falkland Islands Summer Time"}
-            lg{"Falkland Islands Time"}
-            ls{"Falkland Islands Standard Time"}
+            ld{"Àkókò Ooru Etíkun Fókílándì"}
+            lg{"Àkókò Fókílándì"}
+            ls{"Àkókò Àfẹnukò Etíkun Fókílándì"}
         }
         "meta:Fiji"{
             ld{"Fiji Summer Time"}
@@ -560,10 +560,10 @@ yo{
             ls{"Fiji Standard Time"}
         }
         "meta:French_Guiana"{
-            ls{"French Guiana Time"}
+            ls{"Àkókò Gúyánà Fáránsè"}
         }
         "meta:French_Southern"{
-            ls{"French Southern & Antarctic Time"}
+            ls{"Àkókò Gúsù Fáransé àti Àntátíìkì"}
         }
         "meta:GMT"{
             ls{"Greenwich Mean Time"}
@@ -599,7 +599,7 @@ yo{
             }
         }
         "meta:Guyana"{
-            ls{"Guyana Time"}
+            ls{"Àkókò Gúyànà"}
         }
         "meta:Hawaii_Aleutian"{
             ld{"Àkókò Ojúmọmọ Hawaii-Aleutian"}
@@ -620,7 +620,7 @@ yo{
             ls{"India Standard Time"}
         }
         "meta:Indian_Ocean"{
-            ls{"Indian Ocean Time"}
+            ls{"Àkókò Etíkun Índíà"}
         }
         "meta:Indochina"{
             ls{"Àkókò Indochina"}
@@ -640,9 +640,9 @@ yo{
             ls{"Iran Standard Time"}
         }
         "meta:Irkutsk"{
-            ld{"Irkutsk Summer Time"}
-            lg{"Irkutsk Time"}
-            ls{"Irkutsk Standard Time"}
+            ld{"Àkókò Sọmà Íkúsíkì"}
+            lg{"Àkókò Íkósíkì"}
+            ls{"Àkókò Àfẹnukò Íkósíkì"}
         }
         "meta:Israel"{
             ld{"Israel Daylight Time"}
@@ -705,9 +705,9 @@ yo{
             ls{"Marshall Islands Time"}
         }
         "meta:Mauritius"{
-            ld{"Mauritius Summer Time"}
-            lg{"Mauritius Time"}
-            ls{"Mauritius Standard Time"}
+            ld{"Àkókò Ooru Máríṣúṣì"}
+            lg{"Àkókò Máríṣúṣì"}
+            ls{"Àkókò Àfẹnukò Máríṣúṣì"}
         }
         "meta:Mawson"{
             ls{"Mawson Time"}
@@ -791,14 +791,14 @@ yo{
             ls{"Papua New Guinea Time"}
         }
         "meta:Paraguay"{
-            ld{"Paraguay Summer Time"}
-            lg{"Paraguay Time"}
-            ls{"Paraguay Standard Time"}
+            ld{"Àkókò Ooru Párágúwè"}
+            lg{"Àkókò Párágúwè"}
+            ls{"Àkókò Àfẹnukò Párágúwè"}
         }
         "meta:Peru"{
-            ld{"Peru Summer Time"}
-            lg{"Peru Time"}
-            ls{"Peru Standard Time"}
+            ld{"Àkókò Ooru Pérù"}
+            lg{"Àkókò Pérù"}
+            ls{"Àkókò Àfẹnukò Pérù"}
         }
         "meta:Philippines"{
             ld{"Philippine Summer Time"}
@@ -823,7 +823,7 @@ yo{
             ls{"Pyongyang Time"}
         }
         "meta:Reunion"{
-            ls{"Réunion Time"}
+            ls{"Àkókò Rẹ́yúníọ́nì"}
         }
         "meta:Rothera"{
             ls{"Rothera Time"}
@@ -839,7 +839,7 @@ yo{
             ls{"Samoa Standard Time"}
         }
         "meta:Seychelles"{
-            ls{"Seychelles Time"}
+            ls{"Àkókò Sèṣẹ́ẹ̀lì"}
         }
         "meta:Singapore"{
             ls{"Singapore Standard Time"}
@@ -848,10 +848,10 @@ yo{
             ls{"Solomon Islands Time"}
         }
         "meta:South_Georgia"{
-            ls{"South Georgia Time"}
+            ls{"Àkókò Gúsù Jọ́jíà"}
         }
         "meta:Suriname"{
-            ls{"Suriname Time"}
+            ls{"Àkókò Súrínámù"}
         }
         "meta:Syowa"{
             ls{"Syowa Time"}
@@ -889,7 +889,7 @@ yo{
         "meta:Uruguay"{
             ld{"Aago Soma Uruguay"}
             lg{"Aago Uruguay"}
-            ls{"Uruguay Standard Time"}
+            ls{"Àkókò Àfẹnukò Úrúgúwè"}
         }
         "meta:Uzbekistan"{
             ld{"Uzbekistan Summer Time"}
@@ -932,6 +932,9 @@ yo{
             ld{"Yekaterinburg Summer Time"}
             lg{"Yekaterinburg Time"}
             ls{"Yekaterinburg Standard Time"}
+        }
+        "meta:Yukon"{
+            ls{"Àkókò Yúkọ́nì"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"WAT{0}"}

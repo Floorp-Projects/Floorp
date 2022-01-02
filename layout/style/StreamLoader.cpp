@@ -116,7 +116,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   }  // run destructor for `bytes`
 
   auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-      aRequest, mSheetLoadData->mURI);
+      aRequest, mSheetLoadData->mURI, nsContentUtils::SubresourceKind::Style);
 
   // For now, we never cache entries that we have to revalidate, or whose
   // channel don't support caching.
@@ -150,9 +150,7 @@ void StreamLoader::HandleBOM() {
   MOZ_ASSERT(mEncodingFromBOM.isNothing());
   MOZ_ASSERT(mBytes.IsEmpty());
 
-  const Encoding* encoding;
-  size_t bomLength;
-  Tie(encoding, bomLength) = Encoding::ForBOM(mBOMBytes);
+  auto [encoding, bomLength] = Encoding::ForBOM(mBOMBytes);
   mEncodingFromBOM.emplace(encoding);  // Null means no BOM.
 
   // BOMs are three bytes at most, but may be fewer. Copy over anything

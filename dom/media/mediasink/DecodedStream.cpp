@@ -488,7 +488,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
   AUTO_PROFILER_LABEL(FUNCTION_SIGNATURE, MEDIA_PLAYBACK);
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("StartTime=%" PRId64,
                                  aStartTime.ToMicroseconds());
     PLAYBACK_PROFILER_MARKER(markerString);
@@ -665,7 +665,7 @@ void DecodedStream::SetPlaying(bool aPlaying) {
     return;
   }
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("Playing=%s", aPlaying ? "true" : "false");
     PLAYBACK_PROFILER_MARKER(markerString);
   }
@@ -675,7 +675,7 @@ void DecodedStream::SetPlaying(bool aPlaying) {
 
 void DecodedStream::SetVolume(double aVolume) {
   AssertOwnerThread();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("Volume=%f", aVolume);
     PLAYBACK_PROFILER_MARKER(markerString);
   }
@@ -690,7 +690,7 @@ void DecodedStream::SetVolume(double aVolume) {
 
 void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("PlaybackRate=%f", aPlaybackRate);
     PLAYBACK_PROFILER_MARKER(markerString);
   }
@@ -705,7 +705,7 @@ void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
 
 void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
   AssertOwnerThread();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("PreservesPitch=%s",
                                  aPreservesPitch ? "true" : "false");
     PLAYBACK_PROFILER_MARKER(markerString);
@@ -1088,7 +1088,7 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
   mLastOutputTime = time;
   auto currentTime = GetPosition();
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("OutputTime=%" PRId64,
                                  currentTime.ToMicroseconds());
     PLAYBACK_PROFILER_MARKER(markerString);

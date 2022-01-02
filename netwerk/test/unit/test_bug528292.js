@@ -36,10 +36,7 @@ function postRedirectHandler(metadata, response) {
 }
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 add_task(async () => {
@@ -51,17 +48,12 @@ add_task(async () => {
 
   if (!inChildProcess()) {
     // Disable third-party cookies in general.
-    Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch)
-      .setIntPref("network.cookie.cookieBehavior", 1);
-    Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch)
-      .setBoolPref("network.cookieJarSettings.unblocked_for_testing", true);
+    Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
+    Services.prefs.setBoolPref(
+      "network.cookieJarSettings.unblocked_for_testing",
+      true
+    );
   }
-
-  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
 
   // Set up a channel with forceAllowThirdPartyCookie set to true.  We'll use
   // the channel both to set a cookie and then to load the pre-redirect URI.
@@ -76,7 +68,7 @@ add_task(async () => {
   // Set a cookie on one of the URIs.  It doesn't matter which one, since
   // they're both from the same host, which is enough for the cookie service
   // to send the cookie with both requests.
-  var postRedirectURI = ioService.newURI(postRedirectURL);
+  var postRedirectURI = Services.io.newURI(postRedirectURL);
 
   await CookieXPCShellUtils.setCookieToDocument(
     postRedirectURI.spec,

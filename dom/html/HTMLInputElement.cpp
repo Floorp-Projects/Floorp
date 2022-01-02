@@ -2511,8 +2511,6 @@ void HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged) {
   // Grab the full path here for any chrome callers who access our .value via a
   // CPOW. This path won't be called from a CPOW meaning the potential sync IPC
   // call under GetMozFullPath won't be rejected for not being urgent.
-  // XXX Protected by the ifndef because the blob code doesn't allow us to send
-  // this message in b2g.
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
     mFileData->mFirstFilePath.Truncate();
   } else {
@@ -3031,6 +3029,10 @@ void HTMLInputElement::Select() {
 void HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext) {
   // If already handling select event, don't dispatch a second.
   if (!mHandlingSelectEvent) {
+    // FYI: If you want to skip dispatching eFormSelect event and if there are
+    //      no event listeners, you can refer
+    //      nsPIDOMWindow::HasFormSelectEventListeners(), but be careful about
+    //      some C++ event handlers, e.g., EventTarget::PostHandleEvent().
     WidgetEvent event(true, eFormSelect);
 
     mHandlingSelectEvent = true;
@@ -3265,10 +3267,10 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
        aVisitor.mEvent->mMessage == eFocusIn ||
        aVisitor.mEvent->mMessage == eFocusOut ||
        aVisitor.mEvent->mMessage == eBlur)) {
-    nsCOMPtr<nsIContent> originalTarget =
-        do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mOriginalTarget);
-    nsCOMPtr<nsIContent> relatedTarget =
-        do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
+    nsIContent* originalTarget = nsIContent::FromEventTargetOrNull(
+        aVisitor.mEvent->AsFocusEvent()->mOriginalTarget);
+    nsIContent* relatedTarget = nsIContent::FromEventTargetOrNull(
+        aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
 
     if (originalTarget && relatedTarget &&
         originalTarget->FindFirstNonChromeOnlyAccessContent() ==
@@ -3485,7 +3487,7 @@ bool HTMLInputElement::ShouldPreventDOMActivateDispatch(
     return false;
   }
 
-  nsCOMPtr<Element> target = do_QueryInterface(aOriginalTarget);
+  Element* target = Element::FromEventTargetOrNull(aOriginalTarget);
   if (!target) {
     return false;
   }
@@ -3514,8 +3516,8 @@ nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
     // If the user clicked on the "Choose folder..." button we open the
     // directory picker, else we open the file picker.
     FilePickerType type = FILE_PICKER_FILE;
-    nsCOMPtr<nsIContent> target =
-        do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
+    nsIContent* target =
+        nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
     if (target && target->FindFirstNonChromeOnlyAccessContent() == this &&
         ((StaticPrefs::dom_input_dirpicker() && Allowdirs()) ||
          (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
@@ -3986,16 +3988,35 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         case eMouseClick: {
           if (!aVisitor.mEvent->DefaultPrevented() &&
               aVisitor.mEvent->IsTrusted() &&
-              mType == FormControlType::InputSearch &&
               aVisitor.mEvent->AsMouseEvent()->mButton ==
                   MouseButton::ePrimary) {
-            if (nsSearchControlFrame* searchControlFrame =
-                    do_QueryFrame(GetPrimaryFrame())) {
-              Element* clearButton = searchControlFrame->GetAnonClearButton();
-              if (clearButton &&
-                  aVisitor.mEvent->mOriginalTarget == clearButton) {
-                SetUserInput(EmptyString(),
-                             *nsContentUtils::GetSystemPrincipal());
+            // TODO(emilio): Handling this should ideally not move focus.
+            if (mType == FormControlType::InputSearch) {
+              if (nsSearchControlFrame* searchControlFrame =
+                      do_QueryFrame(GetPrimaryFrame())) {
+                Element* clearButton = searchControlFrame->GetAnonClearButton();
+                if (clearButton &&
+                    aVisitor.mEvent->mOriginalTarget == clearButton) {
+                  SetUserInput(EmptyString(),
+                               *nsContentUtils::GetSystemPrincipal());
+                  // TODO(emilio): This should focus the input, but calling
+                  // SetFocus(this, FLAG_NOSCROLL) for some reason gets us into
+                  // an inconsistent state where we're focused but don't match
+                  // :focus-visible / :focus.
+                }
+              }
+            } else if (mType == FormControlType::InputPassword) {
+              if (nsTextControlFrame* textControlFrame =
+                      do_QueryFrame(GetPrimaryFrame())) {
+                auto* showPassword = textControlFrame->GetShowPasswordButton();
+                if (showPassword &&
+                    aVisitor.mEvent->mOriginalTarget == showPassword) {
+                  SetShowPassword(!ShowPassword());
+                  // TODO(emilio): This should focus the input, but calling
+                  // SetFocus(this, FLAG_NOSCROLL) for some reason gets us into
+                  // an inconsistent state where we're focused but don't match
+                  // :focus-visible / :focus.
+                }
               }
             }
           }
@@ -5942,21 +5963,14 @@ EventStates HTMLInputElement::IntrinsicState() const {
     }
   }
 
-  if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder) &&
-      ShouldShowPlaceholder()) {
-    state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
-  }
-
-  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
-    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
+  if (mType != FormControlType::InputFile && IsValueEmpty()) {
+    state |= NS_EVENT_STATE_VALUE_EMPTY;
+    if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
+      state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
+    }
   }
 
   return state;
-}
-
-bool HTMLInputElement::ShouldShowPlaceholder() const {
-  MOZ_ASSERT(PlaceholderApplies());
-  return IsValueEmpty();
 }
 
 static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
@@ -6410,10 +6424,10 @@ Decimal HTMLInputElement::GetStep() const {
   return step * GetStepScaleFactor();
 }
 
-// nsIConstraintValidation
+// ConstraintValidation
 
 void HTMLInputElement::SetCustomValidity(const nsAString& aError) {
-  nsIConstraintValidation::SetCustomValidity(aError);
+  ConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
@@ -6583,7 +6597,8 @@ void HTMLInputElement::UpdateBarredFromConstraintValidation() {
       mType == FormControlType::InputHidden ||
       mType == FormControlType::InputButton ||
       mType == FormControlType::InputReset ||
-      HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) || IsDisabled());
+      HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) ||
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
 }
 
 nsresult HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
@@ -6665,19 +6680,9 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind) {
     SetDirectionFromValue(true);
   }
 
-  // :placeholder-shown pseudo-class may change when the value changes.
-  // However, we don't want to waste cycles if the state doesn't apply.
-  if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
-    UpdateState(true);
-  }
-
-  // Update clear button state on search inputs
-  if (mType == FormControlType::InputSearch) {
-    if (nsSearchControlFrame* searchControlFrame =
-            do_QueryFrame(GetPrimaryFrame())) {
-      searchControlFrame->UpdateClearButtonState();
-    }
-  }
+  // :placeholder-shown and value-empty pseudo-class may change when the value
+  // changes.
+  UpdateState(true);
 }
 
 bool HTMLInputElement::HasCachedSelection() {
@@ -6688,6 +6693,24 @@ bool HTMLInputElement::HasCachedSelection() {
   return state->IsSelectionCached() && state->HasNeverInitializedBefore() &&
          state->GetSelectionProperties().GetStart() !=
              state->GetSelectionProperties().GetEnd();
+}
+
+void HTMLInputElement::SetShowPassword(bool aValue) {
+  if (NS_WARN_IF(mType != FormControlType::InputPassword)) {
+    return;
+  }
+  if (aValue) {
+    AddStates(NS_EVENT_STATE_REVEALED);
+  } else {
+    RemoveStates(NS_EVENT_STATE_REVEALED);
+  }
+}
+
+bool HTMLInputElement::ShowPassword() const {
+  if (NS_WARN_IF(mType != FormControlType::InputPassword)) {
+    return false;
+  }
+  return State().HasState(NS_EVENT_STATE_REVEALED);
 }
 
 void HTMLInputElement::FieldSetDisabledChanged(bool aNotify) {

@@ -72,7 +72,7 @@ class TestGetPreReleaseSuffix(unittest.TestCase):
         self.assertEqual(self.c, "")
 
     def test_plus(self):
-        """test 1.2+ version string """
+        """test 1.2+ version string"""
         self.c = get_prerelease_suffix("1.2+")
         self.assertEqual(self.c, "")
 

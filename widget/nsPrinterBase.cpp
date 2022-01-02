@@ -8,6 +8,7 @@
 #include <utility>
 #include "nsPaper.h"
 #include "nsIPrintSettings.h"
+#include "nsPrintSettingsService.h"
 #include "PrintBackgroundTask.h"
 #include "mozilla/dom/Promise.h"
 
@@ -37,6 +38,16 @@ class nsPrinterInfo : public nsIPrinterInfo {
     mPaperList.SetCapacity(aPrinterInfo.mPaperList.Length());
     for (const PaperInfo& info : aPrinterInfo.mPaperList) {
       mPaperList.AppendElement(MakeRefPtr<nsPaper>(aPrinter, info));
+    }
+
+    // Update the printer's default settings with the global settings.
+    nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    if (printSettingsSvc) {
+      // Passing false as the second parameter means we don't get the printer
+      // specific settings.
+      printSettingsSvc->InitPrintSettingsFromPrefs(
+          mDefaultSettings, false, nsIPrintSettings::kInitSaveAll);
     }
   }
 
@@ -140,6 +151,30 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
   return mozilla::AsyncPromiseAttributeGetter(
       *this, mAsyncAttributePromises[aAttribute], aCx, aResultPromise,
       attributeKeys[aAttribute], aBackgroundTask, std::forward<Args>(aArgs)...);
+}
+
+NS_IMETHODIMP nsPrinterBase::CopyFromWithValidation(
+    nsIPrintSettings* aSettingsToCopyFrom, JSContext* aCx,
+    Promise** aResultPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResultPromise);
+
+  ErrorResult errorResult;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), errorResult);
+  if (MOZ_UNLIKELY(errorResult.Failed())) {
+    return errorResult.StealNSResult();
+  }
+
+  nsCOMPtr<nsIPrintSettings> settings;
+  MOZ_ALWAYS_SUCCEEDS(aSettingsToCopyFrom->Clone(getter_AddRefs(settings)));
+  nsString printerName;
+  MOZ_ALWAYS_SUCCEEDS(GetName(printerName));
+  MOZ_ALWAYS_SUCCEEDS(settings->SetPrinterName(printerName));
+  promise->MaybeResolve(settings);
+  promise.forget(aResultPromise);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPrinterBase::GetSupportsDuplex(JSContext* aCx,

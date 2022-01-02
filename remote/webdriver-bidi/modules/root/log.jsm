@@ -11,9 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXT_DESCRIPTOR_TYPES:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
-  WindowGlobalMessageHandler:
-    "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
 
 class Log extends Module {
@@ -24,18 +24,33 @@ class Log extends Module {
    */
 
   _subscribeEvent(params) {
+    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
+    // class.
     switch (params.event) {
       case "log.entryAdded":
-        return this.messageHandler.handleCommand({
+        return this.messageHandler.addSessionData({
           moduleName: "log",
-          commandName: "_subscribeEvent",
-          params: {
-            event: "log.entryAdded",
+          category: "event",
+          contextDescriptor: {
+            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
           },
-          destination: {
-            broadcast: true,
-            type: WindowGlobalMessageHandler.type,
+          values: ["log.entryAdded"],
+        });
+      default:
+        throw new Error(`Unsupported event for log module ${params.event}`);
+    }
+  }
+
+  _unsubscribeEvent(params) {
+    switch (params.event) {
+      case "log.entryAdded":
+        return this.messageHandler.removeSessionData({
+          moduleName: "log",
+          category: "event",
+          contextDescriptor: {
+            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
           },
+          values: ["log.entryAdded"],
         });
       default:
         throw new Error(`Unsupported event for log module ${params.event}`);

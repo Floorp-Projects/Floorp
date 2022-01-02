@@ -190,6 +190,10 @@ parent:
   // enum for the valid flags.
   async UpdateBFCacheStatus(uint32_t aOnFlags, uint32_t aOffFlags);
 
+  // Signal whether the first connection is added (aIsAdded = true) or
+  // the last connection is removed (aIsAdded = false).
+  async UpdateActivePeerConnectionStatus(bool aIsAdded);
+
   /**
    * Used to notify the parent when there's a change in the number of requests
    * in the loadgroup. If there are no requests this will be set to Nothing().

@@ -10,7 +10,6 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "modules/desktop_capture/desktop_device_info.h"
 
 #include "tab_capturer.h"
 
@@ -22,7 +21,6 @@
 #include "mozilla/Logging.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/scoped_ref_ptr.h"
 #include "nsThreadUtils.h"
 #include "nsIBrowserWindowTracker.h"
 #include "nsIDocShellTreeOwner.h"
@@ -36,6 +34,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "desktop_device_info.h"
 
 #include "MediaUtils.h"
 

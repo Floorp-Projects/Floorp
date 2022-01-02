@@ -72,7 +72,7 @@ for option; do
 		for dir in a b; do
 			# Need to run mach python from inside the gecko source.
 			# See bug #1533642.
-			(cd $GECKO_PATH && ./mach python --no-virtualenv toolkit/mozapps/installer/unpack.py --omnijar $OMNIJAR $CURDIR/$dir)
+			(cd $GECKO_PATH && ./mach python toolkit/mozapps/installer/unpack.py --omnijar $OMNIJAR $CURDIR/$dir)
 		done
 		;;
 	--fail)

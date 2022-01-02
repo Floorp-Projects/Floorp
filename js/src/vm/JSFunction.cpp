@@ -30,7 +30,6 @@
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/Ion.h"

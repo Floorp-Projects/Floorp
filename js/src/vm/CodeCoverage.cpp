@@ -593,12 +593,7 @@ bool InitScriptCoverage(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(script->hasBytecode(),
              "Only initialize coverage data for fully initialized scripts.");
 
-  // Don't allocate LCovSource if we on helper thread since we will have our
-  // realm migrated. The 'GCRunime::mergeRealms' code will do this
-  // initialization.
-  if (cx->isHelperThreadContext()) {
-    return true;
-  }
+  MOZ_ASSERT(!cx->isHelperThreadContext());
 
   const char* filename = script->filename();
   if (!filename) {

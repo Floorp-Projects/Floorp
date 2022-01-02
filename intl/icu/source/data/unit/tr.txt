@@ -160,6 +160,11 @@ tr{
             }
         }
         concentr{
+            item{
+                dnam{"öğe"}
+                one{"{0} öğe"}
+                other{"{0} öğe"}
+            }
             karat{
                 dnam{"ayar"}
                 one{"{0} ayar"}
@@ -421,6 +426,11 @@ tr{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"100 kilometre / kilowatt-saat"}
+                one{"100 kilometre/{0} kilowatt-saat"}
+                other{"100 kilometre/{0} kilowatt-saat"}
+            }
             newton{
                 dnam{"newton"}
                 one{"{0} newton"}
@@ -828,8 +838,8 @@ tr{
             }
             generic{
                 dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
+                one{"{0} derece"}
+                other{"{0} derece"}
             }
             kelvin{
                 dnam{"kelvin"}
@@ -1120,6 +1130,11 @@ tr{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"öğe"}
+                one{"{0} öğe"}
+                other{"{0} öğe"}
+            }
             karat{
                 dnam{"ayar"}
                 one{"{0} ayar"}
@@ -1315,6 +1330,9 @@ tr{
                 one{"{0} cal"}
                 other{"{0} cal"}
             }
+            electronvolt{
+                dnam{"eV"}
+            }
             foodcalorie{
                 one{"{0} kcal"}
                 other{"{0} kcal"}
@@ -1334,6 +1352,18 @@ tr{
             kilowatt-hour{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
+            newton{
+                dnam{"N"}
+                one{"{0} N"}
+                other{"{0} N"}
             }
         }
         frequency{
@@ -1356,6 +1386,14 @@ tr{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"MP"}
+            }
+            pixel{
+                dnam{"px"}
             }
         }
         length{
@@ -1415,6 +1453,7 @@ tr{
                 per{"{0}/m"}
             }
             micrometer{
+                dnam{"μm"}
                 one{"{0} μm"}
                 other{"{0} μm"}
             }
@@ -1454,10 +1493,15 @@ tr{
                 other{"{0} pm"}
             }
             point{
+                dnam{"pt"}
                 one{"{0} pt"}
                 other{"{0} pt"}
             }
+            solar-radius{
+                dnam{"R☉"}
+            }
             yard{
+                dnam{"yd"}
                 one{"{0} yd"}
                 other{"{0} yd"}
             }
@@ -1474,6 +1518,12 @@ tr{
                 dnam{"karat"}
                 one{"{0} ct"}
                 other{"{0} ct"}
+            }
+            dalton{
+                dnam{"Da"}
+            }
+            earth-mass{
+                dnam{"M⊕"}
             }
             gram{
                 dnam{"gram"}
@@ -1514,9 +1564,13 @@ tr{
                 other{"{0} oz t"}
             }
             pound{
+                dnam{"lb"}
                 one{"{0} lb"}
                 other{"{0} lb"}
                 per{"{0}/lb"}
+            }
+            solar-mass{
+                dnam{"M☉"}
             }
             stone{
                 dnam{"stone"}
@@ -1571,11 +1625,6 @@ tr{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-ofhg{
-                dnam{"mm Hg"}
-                one{"{0} mm Hg"}
-                other{"{0} mm Hg"}
-            }
             pound-force-per-square-inch{
                 dnam{"lb/in²"}
                 one{"{0} lb/in²"}
@@ -1608,12 +1657,12 @@ tr{
             celsius{
                 dnam{"°C"}
                 one{"{0}°C"}
-                other{"{0}°C"}
+                other{"{0} °C"}
             }
             fahrenheit{
                 dnam{"°F"}
-                one{"{0}°F"}
-                other{"{0}°F"}
+                one{"{0} °F"}
+                other{"{0} °F"}
             }
             generic{
                 dnam{"°"}
@@ -1621,15 +1670,17 @@ tr{
                 other{"{0}°"}
             }
             kelvin{
-                dnam{"K"}
-                one{"{0}°K"}
-                other{"{0}°K"}
+                one{"{0} K"}
+                other{"{0} K"}
             }
         }
         volume{
             acre-foot{
                 one{"{0} akre fit"}
                 other{"{0} akre fit"}
+            }
+            barrel{
+                dnam{"bbl"}
             }
             bushel{
                 dnam{"buşel"}
@@ -1676,9 +1727,23 @@ tr{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"tat. kaş."}
+                one{"{0} tat. kaş."}
+                other{"{0} tat. kaş."}
+            }
+            dessert-spoon-imperial{
+                dnam{"İng. tk"}
+                one{"{0} İng. tk"}
+                other{"{0} İng. tk"}
+            }
             fluid-ounce{
                 one{"{0} sıvı ons"}
                 other{"{0} sıvı ons"}
+            }
+            fluid-ounce-imperial{
+                one{"{0} İng. sıvı ons"}
+                other{"{0} İng. sıvı ons"}
             }
             gallon{
                 one{"{0} galon"}
@@ -1709,6 +1774,11 @@ tr{
             quart{
                 one{"{0} quart"}
                 other{"{0} quart"}
+            }
+            quart-imperial{
+                dnam{"İng. qt"}
+                one{"{0} İng. qt."}
+                other{"{0} İng. qt."}
             }
             tablespoon{
                 one{"{0} yk"}
@@ -1829,6 +1899,11 @@ tr{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"öğe"}
+                one{"{0} öğe"}
+                other{"{0} öğe"}
+            }
             karat{
                 dnam{"ayar"}
                 one{"{0} ayar"}
@@ -2090,6 +2165,11 @@ tr{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 dnam{"newton"}
             }
@@ -2438,12 +2518,12 @@ tr{
         temperature{
             celsius{
                 dnam{"°C"}
-                one{"{0}°C"}
+                one{"{0} °C"}
                 other{"{0}°C"}
             }
             fahrenheit{
                 dnam{"°F"}
-                one{"{0}°F"}
+                one{"{0} °F"}
                 other{"{0}°F"}
             }
             generic{
@@ -2454,7 +2534,7 @@ tr{
             kelvin{
                 dnam{"K"}
                 one{"{0}K"}
-                other{"{0}K"}
+                other{"{0} K"}
             }
         }
         torque{
@@ -2569,8 +2649,8 @@ tr{
             }
             fluid-ounce-imperial{
                 dnam{"İng. sıvı ons"}
-                one{"{0} sıvı ons İng."}
-                other{"{0} sıvı ons İng."}
+                one{"{0} İng. sıvı ons"}
+                other{"{0} İng. sıvı ons"}
             }
             gallon{
                 dnam{"gal"}

@@ -130,12 +130,6 @@ void TextureClientPool::AllocateTextureClient() {
 
   TextureAllocationFlags allocFlags = ALLOC_DEFAULT;
 
-  if (mKnowsCompositor->SupportsTextureDirectMapping() &&
-      std::max(mSize.width, mSize.height) <= GetMaxTextureSize()) {
-    allocFlags =
-        TextureAllocationFlags(allocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
-  }
-
   RefPtr<TextureClient> newClient;
   if (StaticPrefs::layers_force_shmem_tiles_AtStartup()) {
     // gfx::BackendType::NONE means use the content backend

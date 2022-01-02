@@ -17,8 +17,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
@@ -393,8 +391,8 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/ClickHandlerChild.jsm",
       events: {
-        click: { capture: true, mozSystemGroup: true },
-        auxclick: { capture: true, mozSystemGroup: true },
+        click: { capture: true, mozSystemGroup: true, wantUntrusted: true },
+        auxclick: { capture: true, mozSystemGroup: true, wantUntrusted: true },
       },
     },
 
@@ -643,6 +641,13 @@ let JSWINDOWACTORS = {
 
     messageManagerGroups: ["browsers"],
     enablePreference: "accessibility.blockautorefresh",
+  },
+
+  ScreenshotsComponent: {
+    child: {
+      moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
+    },
+    enablePreference: "screenshots.browser.component.enabled",
   },
 
   SearchSERPTelemetry: {
@@ -1090,8 +1095,6 @@ BrowserGlue.prototype = {
           }
         } else if (data == "add-breaches-sync-handler") {
           this._addBreachesSyncHandler();
-        } else if (data == "new-window-restriction-telemetry") {
-          this._collectNewWindowRestrictionTelemetry();
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -1128,7 +1131,9 @@ BrowserGlue.prototype = {
         // URI that it's been asked to load into a keyword search.
         let engine = null;
         try {
-          engine = subject.QueryInterface(Ci.nsISearchEngine);
+          engine = Services.search.getEngineByName(
+            subject.QueryInterface(Ci.nsISupportsString).data
+          );
         } catch (ex) {
           Cu.reportError(ex);
         }
@@ -1188,35 +1193,37 @@ BrowserGlue.prototype = {
   // initialization (called on application startup)
   _init: function BG__init() {
     let os = Services.obs;
-    os.addObserver(this, "notifications-open-settings");
-    os.addObserver(this, "final-ui-startup");
-    os.addObserver(this, "browser-delayed-startup-finished");
-    os.addObserver(this, "sessionstore-windows-restored");
-    os.addObserver(this, "browser:purge-session-history");
-    os.addObserver(this, "quit-application-requested");
-    os.addObserver(this, "quit-application-granted");
+    [
+      "notifications-open-settings",
+      "final-ui-startup",
+      "browser-delayed-startup-finished",
+      "sessionstore-windows-restored",
+      "browser:purge-session-history",
+      "quit-application-requested",
+      "quit-application-granted",
+      "weave:service:ready",
+      "fxaccounts:onverified",
+      "fxaccounts:device_connected",
+      "fxaccounts:verify_login",
+      "fxaccounts:device_disconnected",
+      "fxaccounts:commands:open-uri",
+      "session-save",
+      "places-init-complete",
+      "distribution-customization-complete",
+      "handle-xul-text-link",
+      "profile-before-change",
+      "keyword-search",
+      "browser-search-engine-modified",
+      "restart-in-safe-mode",
+      "flash-plugin-hang",
+      "xpi-signature-changed",
+      "sync-ui-state:update",
+      "handlersvc-store-initialized",
+    ].forEach(topic => os.addObserver(this, topic, true));
     if (OBSERVE_LASTWINDOW_CLOSE_TOPICS) {
-      os.addObserver(this, "browser-lastwindow-close-requested");
-      os.addObserver(this, "browser-lastwindow-close-granted");
+      os.addObserver(this, "browser-lastwindow-close-requested", true);
+      os.addObserver(this, "browser-lastwindow-close-granted", true);
     }
-    os.addObserver(this, "weave:service:ready");
-    os.addObserver(this, "fxaccounts:onverified");
-    os.addObserver(this, "fxaccounts:device_connected");
-    os.addObserver(this, "fxaccounts:verify_login");
-    os.addObserver(this, "fxaccounts:device_disconnected");
-    os.addObserver(this, "fxaccounts:commands:open-uri");
-    os.addObserver(this, "session-save");
-    os.addObserver(this, "places-init-complete");
-    os.addObserver(this, "distribution-customization-complete");
-    os.addObserver(this, "handle-xul-text-link");
-    os.addObserver(this, "profile-before-change");
-    os.addObserver(this, "keyword-search");
-    os.addObserver(this, "browser-search-engine-modified");
-    os.addObserver(this, "restart-in-safe-mode");
-    os.addObserver(this, "flash-plugin-hang");
-    os.addObserver(this, "xpi-signature-changed");
-    os.addObserver(this, "sync-ui-state:update");
-    os.addObserver(this, "handlersvc-store-initialized");
 
     ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
     ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
@@ -1237,25 +1244,6 @@ BrowserGlue.prototype = {
     // until here.
     AboutHomeStartupCache.uninit();
 
-    let os = Services.obs;
-    os.removeObserver(this, "notifications-open-settings");
-    os.removeObserver(this, "final-ui-startup");
-    os.removeObserver(this, "sessionstore-windows-restored");
-    os.removeObserver(this, "browser:purge-session-history");
-    os.removeObserver(this, "quit-application-requested");
-    os.removeObserver(this, "quit-application-granted");
-    os.removeObserver(this, "restart-in-safe-mode");
-    if (OBSERVE_LASTWINDOW_CLOSE_TOPICS) {
-      os.removeObserver(this, "browser-lastwindow-close-requested");
-      os.removeObserver(this, "browser-lastwindow-close-granted");
-    }
-    os.removeObserver(this, "weave:service:ready");
-    os.removeObserver(this, "fxaccounts:onverified");
-    os.removeObserver(this, "fxaccounts:device_connected");
-    os.removeObserver(this, "fxaccounts:verify_login");
-    os.removeObserver(this, "fxaccounts:device_disconnected");
-    os.removeObserver(this, "fxaccounts:commands:open-uri");
-    os.removeObserver(this, "session-save");
     if (this._bookmarksBackupIdleTime) {
       this._userIdleService.removeIdleObserver(
         this,
@@ -1274,18 +1262,6 @@ BrowserGlue.prototype = {
       this._gmpInstallManager.uninit();
       delete this._gmpInstallManager;
     }
-    try {
-      os.removeObserver(this, "places-init-complete");
-    } catch (ex) {
-      /* Could have been removed already */
-    }
-    os.removeObserver(this, "handle-xul-text-link");
-    os.removeObserver(this, "profile-before-change");
-    os.removeObserver(this, "keyword-search");
-    os.removeObserver(this, "browser-search-engine-modified");
-    os.removeObserver(this, "flash-plugin-hang");
-    os.removeObserver(this, "xpi-signature-changed");
-    os.removeObserver(this, "sync-ui-state:update");
 
     Services.prefs.removeObserver(
       "privacy.trackingprotection",
@@ -1593,7 +1569,7 @@ BrowserGlue.prototype = {
 
     ProcessHangMonitor.init();
 
-    UrlbarPrefs.updateFirefoxSuggestScenario(true);
+    UrlbarPrefs.updateFirefoxSuggestScenario();
 
     // A channel for "remote troubleshooting" code...
     let channel = new WebChannel(
@@ -2711,9 +2687,13 @@ BrowserGlue.prototype = {
         },
       },
 
+      // Login detection service is used in fission to identify high value sites.
       {
         task: () => {
-          this._collectNewWindowRestrictionTelemetry();
+          let loginDetection = Cc[
+            "@mozilla.org/login-detection-service;1"
+          ].createInstance(Ci.nsILoginDetectionService);
+          loginDetection.init();
         },
       },
 
@@ -3340,11 +3320,21 @@ BrowserGlue.prototype = {
     });
   },
 
+  _migrateHashedKeysForXULStoreForDocument(docUrl) {
+    Array.from(Services.xulStore.getIDsEnumerator(docUrl))
+      .filter(id => id.startsWith("place:"))
+      .forEach(id => {
+        Services.xulStore.removeValue(docUrl, id, "open");
+        let hashedId = PlacesUIUtils.obfuscateUrlForXulStore(id);
+        Services.xulStore.setValue(docUrl, hashedId, "open", "true");
+      });
+  },
+
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 120;
+    const UI_VERSION = 121;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4035,6 +4025,17 @@ BrowserGlue.prototype = {
       }
     }
 
+    if (currentUIVersion < 121) {
+      // Migrate stored uris and convert them to use hashed keys
+      this._migrateHashedKeysForXULStoreForDocument(BROWSER_DOCURL);
+      this._migrateHashedKeysForXULStoreForDocument(
+        "chrome://browser/content/places/bookmarksSidebar.xhtml"
+      );
+      this._migrateHashedKeysForXULStoreForDocument(
+        "chrome://browser/content/places/historySidebar.xhtml"
+      );
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -4524,14 +4525,6 @@ BrowserGlue.prototype = {
     }
   },
 
-  _collectNewWindowRestrictionTelemetry() {
-    let restrictionPref = Services.prefs.getIntPref(
-      "browser.link.open_newwindow.restriction",
-      2
-    );
-    Glean.browserLink.openNewwindowRestriction.set(restrictionPref);
-  },
-
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
     "nsISupportsWeakReference",
@@ -4765,9 +4758,7 @@ var ContentBlockingCategoriesPrefs = {
     // If there is a custom policy which changes a related pref, then put the user in custom so
     // they still have access to other content blocking prefs, and to keep our default definitions
     // from changing.
-    let policy =
-      Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE &&
-      Services.policies.getActivePolicies();
+    let policy = Services.policies.getActivePolicies();
     if (policy && (policy.EnableTrackingProtection || policy.Cookies)) {
       Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
     }

@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef LIBFUZZER
   fuzzer::FuzzerDriver(&argc, &argv, testingFunc);
-#elif __AFL_COMPILER
+#elif AFLFUZZ
   testingFunc(nullptr, 0);
 #endif
 

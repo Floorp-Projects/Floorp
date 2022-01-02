@@ -195,10 +195,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual mozilla::a11y::role NativeRole() const;
 
-  /**
-   * Return all states of accessible (including ARIA states).
-   */
-  virtual uint64_t State();
+  virtual uint64_t State() override;
 
   /**
    * Return interactive states present on the accessible
@@ -403,10 +400,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual LocalAccessible* EmbeddedChildAt(uint32_t aIndex) override;
 
-  /**
-   * Return index of the given embedded accessible child.
-   */
-  int32_t GetIndexOfEmbeddedChild(LocalAccessible* aChild);
+  virtual int32_t IndexOfEmbeddedChild(Accessible* aChild) override;
 
   /**
    * Return number of content children/content child at index. The content
@@ -481,7 +475,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Focus the accessible.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void TakeFocus() const;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void TakeFocus() const override;
 
   /**
    * Scroll the accessible into view.
@@ -592,11 +586,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return true if the accessible is hyper link accessible.
    */
   virtual bool IsLink() const override;
-
-  /**
-   * Return the start offset of the link within the parent accessible.
-   */
-  virtual uint32_t StartOffset();
 
   /**
    * Return the end offset of the link within the parent accessible.
@@ -725,6 +714,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return container widget this accessible belongs to.
    */
   virtual LocalAccessible* ContainerWidget() const;
+
+  bool IsActiveDescendant(LocalAccessible** aWidget = nullptr) const;
 
   /**
    * Return the localized string for the given key.

@@ -72,6 +72,7 @@
   "thai", \
   "tibt", \
   "tirh", \
+  "tnsa", \
   "vaii", \
   "wara", \
   "wcho"

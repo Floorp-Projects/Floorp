@@ -1328,6 +1328,7 @@ nsXULAppInfo::GetRestartedByOS(bool* aResult) {
 
 NS_IMETHODIMP
 nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
+  LookAndFeel::EnsureColorSchemesInitialized();
   *aResult = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
   return NS_OK;
 }
@@ -3810,7 +3811,30 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AppInitDLLs,
                                          NS_ConvertUTF16toUTF8(appInitDLLs));
     }
+
+    nsString packageFamilyName = widget::WinUtils::GetPackageFamilyName();
+    if (StringBeginsWith(packageFamilyName, u"Mozilla."_ns) ||
+        StringBeginsWith(packageFamilyName, u"MozillaCorporation."_ns)) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::WindowsPackageFamilyName,
+          NS_ConvertUTF16toUTF8(packageFamilyName));
+    }
 #endif
+
+    bool isBackgroundTaskMode = false;
+#ifdef MOZ_BACKGROUNDTASKS
+    Maybe<nsCString> backgroundTasks = BackgroundTasks::GetBackgroundTasks();
+    if (backgroundTasks.isSome()) {
+      isBackgroundTaskMode = true;
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::BackgroundTaskName, backgroundTasks.ref());
+    }
+#endif
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::BackgroundTaskMode, isBackgroundTaskMode);
+
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::HeadlessMode,
+                                       gfxPlatform::IsHeadless());
 
     CrashReporter::SetRestartArgs(gArgc, gArgv);
 
@@ -5301,11 +5325,11 @@ nsresult XREMain::XRE_mainRun() {
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
-static already_AddRefed<nsIFile> GreOmniPath() {
+static already_AddRefed<nsIFile> GreOmniPath(int argc, char** argv) {
   nsresult rv;
 
   const char* path = nullptr;
-  ArgResult ar = CheckArg("greomni", &path);
+  ArgResult ar = CheckArg(argc, argv, "greomni", &path, CheckArgFlag::None);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR,
                "Error: argument --greomni requires a path argument\n");
@@ -5397,7 +5421,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     nsCOMPtr<nsIFile> greDir;
 
 #if defined(MOZ_WIDGET_ANDROID)
-    greDir = GreOmniPath();
+    greDir = GreOmniPath(argc, argv);
     if (!greDir) {
       return 2;
     }
@@ -5579,7 +5603,8 @@ nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-  nsCOMPtr<nsIFile> greOmni = gAppData ? gAppData->xreDirectory : GreOmniPath();
+  nsCOMPtr<nsIFile> greOmni =
+      gAppData ? gAppData->xreDirectory : GreOmniPath(aArgc, aArgv);
   if (!greOmni) {
     return NS_ERROR_FAILURE;
   }

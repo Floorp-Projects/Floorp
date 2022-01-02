@@ -225,25 +225,15 @@ bool RenderCompositorOGLSWGL::Resume() {
   // Destroy EGLSurface if it exists.
   DestroyEGLSurface();
 
-  // Query the new surface size as this may have changed. We cannot use
-  // mWidget->GetClientSize() due to a race condition between
-  // nsWindow::Resize() being called and the frame being rendered after the
-  // surface is resized.
-  EGLNativeWindowType window = mWidget->AsAndroid()->GetEGLNativeWindow();
-  JNIEnv* const env = jni::GetEnvForThread();
-  ANativeWindow* const nativeWindow =
-      ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(window));
-  const int32_t width = ANativeWindow_getWidth(nativeWindow);
-  const int32_t height = ANativeWindow_getHeight(nativeWindow);
-
+  auto size = GetBufferSize();
   GLint maxTextureSize = 0;
   GetGLContext()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE,
                                (GLint*)&maxTextureSize);
 
   // When window size is too big, hardware buffer allocation could fail.
-  if (maxTextureSize < width || maxTextureSize < height) {
-    gfxCriticalNote << "Too big ANativeWindow size(" << width << ", " << height
-                    << ") MaxTextureSize " << maxTextureSize;
+  if (maxTextureSize < size.width || maxTextureSize < size.height) {
+    gfxCriticalNote << "Too big ANativeWindow size(" << size.width << ", "
+                    << size.height << ") MaxTextureSize " << maxTextureSize;
     return false;
   }
 
@@ -254,9 +244,7 @@ bool RenderCompositorOGLSWGL::Resume() {
   }
 
   gl::GLContextEGL::Cast(GetGLContext())->SetEGLSurfaceOverride(mEGLSurface);
-  mEGLSurfaceSize = Some(LayoutDeviceIntSize(width, height));
-  ANativeWindow_release(nativeWindow);
-  mCompositor->SetDestinationSurfaceSize(gfx::IntSize(width, height));
+  mCompositor->SetDestinationSurfaceSize(size.ToUnknownSize());
 #elif defined(MOZ_WIDGET_GTK)
   bool resumed = mCompositor->Resume();
   if (!resumed) {
@@ -275,9 +263,6 @@ bool RenderCompositorOGLSWGL::IsPaused() {
 }
 
 LayoutDeviceIntSize RenderCompositorOGLSWGL::GetBufferSize() {
-  if (mEGLSurfaceSize) {
-    return *mEGLSurfaceSize;
-  }
   return mWidget->GetClientSize();
 }
 

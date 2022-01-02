@@ -53,7 +53,7 @@ add_task(async function() {
   info("Previously chosen child is remembered. Passed.");
 
   info("Stopping the picker");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 
   function doKeyHover(key) {
     info("Key pressed. Waiting for element to be highlighted/hovered");

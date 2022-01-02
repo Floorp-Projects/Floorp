@@ -258,6 +258,7 @@ var ChromeMigrationUtils = {
   getDataPath(chromeProjectName = "Chrome") {
     const SUB_DIRECTORIES = {
       win: {
+        Brave: ["BraveSoftware", "Brave-Browser"],
         Chrome: ["Google", "Chrome"],
         "Chrome Beta": ["Google", "Chrome Beta"],
         Chromium: ["Chromium"],
@@ -266,6 +267,7 @@ var ChromeMigrationUtils = {
         "Edge Beta": ["Microsoft", "Edge Beta"],
       },
       macosx: {
+        Brave: ["BraveSoftware", "Brave-Browser"],
         Chrome: ["Google", "Chrome"],
         Chromium: ["Chromium"],
         Canary: ["Google", "Chrome Canary"],
@@ -273,6 +275,7 @@ var ChromeMigrationUtils = {
         "Edge Beta": ["Microsoft Edge Beta"],
       },
       linux: {
+        Brave: ["BraveSoftware", "Brave-Browser"],
         Chrome: ["google-chrome"],
         "Chrome Beta": ["google-chrome-beta"],
         "Chrome Dev": ["google-chrome-unstable"],

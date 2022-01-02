@@ -37,10 +37,6 @@ namespace mozilla {
 
 class CancelableRunnable;
 
-namespace dom {
-class WebGLParent;
-}  // namespace dom
-
 namespace gfx {
 class DrawTarget;
 class GPUProcessManager;
@@ -199,7 +195,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       PAPZCTreeManagerParent* aActor) = 0;
 
   virtual PTextureParent* AllocPTextureParent(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aBackend, const TextureFlags& aTextureFlags,
       const LayersId& id, const uint64_t& aSerial,
       const MaybeExternalImageId& aExternalImageId) = 0;
@@ -256,8 +252,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvInitPCanvasParent(
       Endpoint<PCanvasParent>&& aEndpoint) = 0;
   virtual mozilla::ipc::IPCResult RecvReleasePCanvasParent() = 0;
-
-  virtual already_AddRefed<PWebGLParent> AllocPWebGLParent() = 0;
 
   bool mCanSend;
 
@@ -366,7 +360,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
 
   PTextureParent* AllocPTextureParent(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;
@@ -418,13 +412,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ScheduleRenderOnCompositorThread(wr::RenderReasons aReasons) override;
 
   void ScheduleComposition(wr::RenderReasons aReasons);
-
-  void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
-                                   const FocusTarget& aFocusTarget,
-                                   bool aScheduleComposite,
-                                   uint32_t aPaintSequenceNumber,
-                                   bool aIsRepeatTransaction,
-                                   bool aHitTestUpdate);
 
   /**
    * Check rotation info and schedule a rendering task if needed.
@@ -584,12 +571,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
   webgpu::WebGPUParent* GetWebGPUBridge() { return mWebGPUBridge; }
-
-  already_AddRefed<PWebGLParent> AllocPWebGLParent() override {
-    MOZ_ASSERT_UNREACHABLE(
-        "This message is CrossProcessCompositorBridgeParent only");
-    return nullptr;
-  }
 
  private:
   void Initialize();

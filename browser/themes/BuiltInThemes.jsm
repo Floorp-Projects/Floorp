@@ -10,173 +10,42 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
-// List of themes built in to the browser. The themes are represented by objects
-// containing their id, current version, and path relative to
-// resource://builtin-themes/.
-const STANDARD_THEMES = new Map([
-  [
-    "firefox-compact-light@mozilla.org",
-    {
-      version: "1.2",
-      path: "light/",
-    },
-  ],
-  [
-    "firefox-compact-dark@mozilla.org",
-    {
-      version: "1.2",
-      path: "dark/",
-    },
-  ],
-  [
-    "firefox-alpenglow@mozilla.org",
-    {
-      version: "1.4",
-      path: "alpenglow/",
-    },
-  ],
-]);
+const kActiveThemePref = "extensions.activeThemeID";
+const kRetainedThemesPref = "browser.theme.retainedExpiredThemes";
 
-const COLORWAY_THEMES = new Map([
-  [
-    "lush-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/lush/soft/",
-    },
-  ],
-  [
-    "lush-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/lush/balanced/",
-    },
-  ],
-  [
-    "lush-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/lush/bold/",
-    },
-  ],
-  [
-    "abstract-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/abstract/soft/",
-    },
-  ],
-  [
-    "abstract-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/abstract/balanced/",
-    },
-  ],
-  [
-    "abstract-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/abstract/bold/",
-    },
-  ],
-  [
-    "elemental-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/elemental/soft/",
-    },
-  ],
-  [
-    "elemental-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/elemental/balanced/",
-    },
-  ],
-  [
-    "elemental-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/elemental/bold/",
-    },
-  ],
-  [
-    "cheers-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/cheers/soft/",
-    },
-  ],
-  [
-    "cheers-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/cheers/balanced/",
-    },
-  ],
-  [
-    "cheers-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/cheers/bold/",
-    },
-  ],
-  [
-    "graffiti-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/graffiti/soft/",
-    },
-  ],
-  [
-    "graffiti-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/graffiti/balanced/",
-    },
-  ],
-  [
-    "graffiti-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/graffiti/bold/",
-    },
-  ],
-  [
-    "foto-soft-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/foto/soft/",
-    },
-  ],
-  [
-    "foto-balanced-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/foto/balanced/",
-    },
-  ],
-  [
-    "foto-bold-colorway@mozilla.org",
-    {
-      version: "1.0",
-      path: "monochromatic/foto/bold/",
-    },
-  ],
-]);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "retainedThemes",
+  kRetainedThemesPref,
+  null,
+  null,
+  val => {
+    if (!val) {
+      return [];
+    }
+
+    let parsedVal;
+    try {
+      parsedVal = JSON.parse(val);
+    } catch (ex) {
+      console.log(`${kRetainedThemesPref} has invalid value.`);
+      return [];
+    }
+
+    return parsedVal;
+  }
+);
 
 class _BuiltInThemes {
-  constructor() {
-    if (!Services.prefs.getBoolPref("browser.theme.colorways.enabled", true)) {
-      // If the colorways pref is false on startup, then we've pushed out a pref
-      // change to clients, and should remove the themes.
-      this._uninstallColorwayThemes();
-    }
-  }
+  /**
+   * The list of themes to be installed. This is exposed on the class so tests
+   * can set custom config files.
+   */
+  builtInThemeMap = BuiltInThemeConfig;
 
   /**
    * @param {string} id An addon's id string.
@@ -185,18 +54,9 @@ class _BuiltInThemes {
    *   theme's preview image. Null otherwise.
    */
   previewForBuiltInThemeId(id) {
-    if (STANDARD_THEMES.has(id)) {
-      return `resource://builtin-themes/${
-        STANDARD_THEMES.get(id).path
-      }preview.svg`;
-    }
-    if (
-      Services.prefs.getBoolPref("browser.theme.colorways.enabled", true) &&
-      COLORWAY_THEMES.has(id)
-    ) {
-      return `resource://builtin-themes/${
-        COLORWAY_THEMES.get(id).path
-      }preview.svg`;
+    let theme = this.builtInThemeMap.get(id);
+    if (theme) {
+      return `${theme.path}preview.svg`;
     }
 
     return null;
@@ -207,17 +67,11 @@ class _BuiltInThemes {
    * AddonManager.maybeInstallBuiltinAddon for that theme.
    */
   maybeInstallActiveBuiltInTheme() {
-    let activeThemeID = Services.prefs.getStringPref(
-      "extensions.activeThemeID",
+    const activeThemeID = Services.prefs.getStringPref(
+      kActiveThemePref,
       "default-theme@mozilla.org"
     );
-    let activeBuiltInTheme = STANDARD_THEMES.get(activeThemeID);
-    if (
-      !activeBuiltInTheme &&
-      Services.prefs.getBoolPref("browser.theme.colorways.enabled", true)
-    ) {
-      activeBuiltInTheme = COLORWAY_THEMES.get(activeThemeID);
-    }
+    let activeBuiltInTheme = this.builtInThemeMap.get(activeThemeID);
 
     if (activeBuiltInTheme) {
       AddonManager.maybeInstallBuiltinAddon(
@@ -229,27 +83,25 @@ class _BuiltInThemes {
   }
 
   /**
-   * Ensures that all built-in themes are installed.
+   * Ensures that all built-in themes are installed and expired themes are
+   * uninstalled.
    */
   async ensureBuiltInThemes() {
     let installPromises = [];
-    for (let [id, { version, path }] of STANDARD_THEMES.entries()) {
-      installPromises.push(
-        AddonManager.maybeInstallBuiltinAddon(
-          id,
-          version,
-          `resource://builtin-themes/${path}`
-        )
-      );
-    }
+    installPromises.push(this._uninstallExpiredThemes());
 
-    if (Services.prefs.getBoolPref("browser.theme.colorways.enabled", true)) {
-      for (let [id, { version, path }] of COLORWAY_THEMES.entries()) {
+    const now = new Date();
+    for (let [id, themeInfo] of this.builtInThemeMap.entries()) {
+      if (
+        !themeInfo.expiry ||
+        retainedThemes.includes(id) ||
+        new Date(themeInfo.expiry) > now
+      ) {
         installPromises.push(
           AddonManager.maybeInstallBuiltinAddon(
             id,
-            version,
-            `resource://builtin-themes/${path}`
+            themeInfo.version,
+            themeInfo.path
           )
         );
       }
@@ -258,14 +110,78 @@ class _BuiltInThemes {
     await Promise.all(installPromises);
   }
 
-  async _uninstallColorwayThemes() {
-    for (let id of COLORWAY_THEMES.keys()) {
-      try {
-        let addon = await AddonManager.getAddonByID(id);
-        await addon.uninstall();
-      } catch (e) {
-        Cu.reportError(`Failed to uninstall colorway theme ${id}`);
+  /**
+   * @param {string} id
+   *   A theme's ID.
+   * @returns {boolean}
+   *   Returns true if the theme is expired. False otherwise.
+   * @note This looks up the id in a Map rather than accessing a property on
+   *   the addon itself. That makes calls to this function O(m) where m is the
+   *   total number of built-in themes offered now or in the past. Since we
+   *   are using a Map, calls are O(1) in the average case.
+   */
+  themeIsExpired(id) {
+    let themeInfo = this.builtInThemeMap.get(id);
+    return themeInfo?.expiry && new Date(themeInfo.expiry) < new Date();
+  }
+
+  /**
+   * @param {string} id
+   *   The theme's id.
+   * @return {boolean}
+   *   True if the theme with id `id` is both expired and retained. That is,
+   *   the user has the ability to use it after its expiry date.
+   */
+  isRetainedExpiredTheme(id) {
+    return retainedThemes.includes(id) && this.themeIsExpired(id);
+  }
+
+  /**
+   * Uninstalls themes after they expire. If the expired theme is active, then
+   * it is not uninstalled. Instead, it is saved so that the user can use it
+   * indefinitely.
+   */
+  async _uninstallExpiredThemes() {
+    const activeThemeID = Services.prefs.getStringPref(
+      kActiveThemePref,
+      "default-theme@mozilla.org"
+    );
+    const now = new Date();
+    const expiredThemes = Array.from(this.builtInThemeMap.entries()).filter(
+      ([id, themeInfo]) =>
+        !!themeInfo.expiry &&
+        !retainedThemes.includes(id) &&
+        new Date(themeInfo.expiry) <= now
+    );
+    for (let [id] of expiredThemes) {
+      if (id == activeThemeID) {
+        this._retainLimitedTimeTheme(id);
+      } else {
+        try {
+          let addon = await AddonManager.getAddonByID(id);
+          if (addon) {
+            await addon.uninstall();
+          }
+        } catch (e) {
+          Cu.reportError(`Failed to uninstall expired theme ${id}`);
+        }
       }
+    }
+  }
+
+  /**
+   * Set a pref to ensure that the user can continue to use a specified theme
+   * past its expiry date.
+   * @param {string} id
+   *   The ID of the theme to retain.
+   */
+  _retainLimitedTimeTheme(id) {
+    if (!retainedThemes.includes(id)) {
+      retainedThemes.push(id);
+      Services.prefs.setStringPref(
+        kRetainedThemesPref,
+        JSON.stringify(retainedThemes)
+      );
     }
   }
 }

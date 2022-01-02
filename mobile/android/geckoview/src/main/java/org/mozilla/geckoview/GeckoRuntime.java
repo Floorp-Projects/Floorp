@@ -17,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
@@ -32,8 +33,8 @@ import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoNetworkManager;
@@ -293,27 +294,6 @@ public final class GeckoRuntime implements Parcelable {
     return null;
   }
 
-  private void setArguments(
-      final Context context, final GeckoThread.InitInfo initInfo, final String[] arguments) {
-    final List<String> result = new ArrayList<>(arguments.length);
-    for (final String argument : arguments) {
-      if ("-xpcshell".equals(argument)) {
-        // Only debug builds of the test app can run an xpcshell
-        if (!BuildConfig.DEBUG
-            || !"org.mozilla.geckoview.test"
-                .equals(context.getApplicationContext().getPackageName())) {
-          throw new IllegalArgumentException("Only the test app can run -xpcshell.");
-        }
-
-        initInfo.xpcshell = true;
-      } else {
-        result.add(argument);
-      }
-    }
-
-    initInfo.args = result.toArray(new String[] {});
-  }
-
   /* package */ boolean init(
       final @NonNull Context context, final @NonNull GeckoRuntimeSettings settings) {
     if (DEBUG) {
@@ -351,16 +331,9 @@ public final class GeckoRuntime implements Parcelable {
     GeckoAppShell.setCrashHandlerService(settings.getCrashHandler());
     GeckoFontScaleListener.getInstance().attachToContext(context, settings);
 
-    final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
-    setArguments(context, info, settings.getArguments());
-    if (info.xpcshell) {
-      info.outFilePath = settings.getExtras().getString("out_file");
-      // Xpcshell tests need multi-e10s to work properly
-      settings.setProcessCount(BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_COUNT);
-    }
-    info.extras = settings.getExtras();
-    info.flags = flags;
-    info.prefs = settings.getPrefsMap();
+    Bundle extras = settings.getExtras();
+    String[] args = settings.getArguments();
+    Map<String, Object> prefs = settings.getPrefsMap();
 
     // Older versions have problems with SnakeYaml
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -379,12 +352,35 @@ public final class GeckoRuntime implements Parcelable {
         try {
           final DebugConfig debugConfig = DebugConfig.fromFile(new File(configFilePath));
           Log.i(LOGTAG, "Adding debug configuration from: " + configFilePath);
-          debugConfig.mergeIntoInitInfo(info);
+          prefs = debugConfig.mergeIntoPrefs(prefs);
+          args = debugConfig.mergeIntoArgs(args);
+          extras = debugConfig.mergeIntoExtras(extras);
         } catch (final DebugConfig.ConfigException e) {
           Log.w(LOGTAG, "Failed to add debug configuration from: " + configFilePath, e);
         } catch (final FileNotFoundException e) {
         }
       }
+    }
+
+    final GeckoThread.InitInfo info =
+        GeckoThread.InitInfo.builder()
+            .args(args)
+            .extras(extras)
+            .flags(flags)
+            .prefs(prefs)
+            .outFilePath(extras != null ? extras.getString("out_file") : null)
+            .build();
+
+    if (info.xpcshell
+        && (!BuildConfig.DEBUG
+            || !"org.mozilla.geckoview.test_runner"
+                .equals(context.getApplicationContext().getPackageName()))) {
+      throw new IllegalArgumentException("Only the test app can run -xpcshell.");
+    }
+
+    if (info.xpcshell) {
+      // Xpcshell tests need multi-e10s to work properly
+      settings.setProcessCount(BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_COUNT);
     }
 
     if (!GeckoThread.init(info)) {

@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import FrameMenu from "../FrameMenu";
-import { kebabCase } from "lodash";
 
 import { showMenu } from "../../../../context-menu/menu";
 import { copyToTheClipboard } from "../../../../utils/clipboard";
@@ -19,8 +18,7 @@ jest.mock("../../../../utils/clipboard", () => ({
 }));
 
 function generateMockId(labelString) {
-  const label = L10N.getStr(labelString);
-  return `node-menu-${kebabCase(label)}`;
+  return `node-menu-${labelString}`;
 }
 
 describe("FrameMenu", () => {
@@ -55,7 +53,7 @@ describe("FrameMenu", () => {
     const sourceId = generateMockId("copySourceUri2");
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGroupingId = generateMockId("framework.enableGrouping");
-    const blackBoxId = generateMockId("sourceFooter.ignore");
+    const blackBoxId = generateMockId("ignoreContextItem.ignore");
 
     FrameMenu(
       mockFrame,

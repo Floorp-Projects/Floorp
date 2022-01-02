@@ -71,10 +71,14 @@ void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
       mallocHeapSize.retainedBytes(), gc.tunables, gc.schedulingState, lock);
 }
 
-void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc) {
-  gcHeapThreshold.setSliceThreshold(this, gcHeapSize, gc.tunables);
-  mallocHeapThreshold.setSliceThreshold(this, mallocHeapSize, gc.tunables);
-  jitHeapThreshold.setSliceThreshold(this, jitHeapSize, gc.tunables);
+void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc,
+                                             bool waitingOnBGTask) {
+  gcHeapThreshold.setSliceThreshold(this, gcHeapSize, gc.tunables,
+                                    waitingOnBGTask);
+  mallocHeapThreshold.setSliceThreshold(this, mallocHeapSize, gc.tunables,
+                                        waitingOnBGTask);
+  jitHeapThreshold.setSliceThreshold(this, jitHeapSize, gc.tunables,
+                                     waitingOnBGTask);
 }
 
 void js::ZoneAllocator::clearGCSliceThresholds() {
@@ -141,10 +145,6 @@ void ZoneAllocPolicy::decMemory(size_t nbytes) {
 
 JS::Zone::Zone(JSRuntime* rt, Kind kind)
     : ZoneAllocator(rt, kind),
-      // Note: don't use |this| before initializing helperThreadUse_!
-      // ProtectedData checks in CheckZone::check may read this field.
-      helperThreadUse_(HelperThreadUse::None),
-      helperThreadOwnerContext_(nullptr),
       arenas(this),
       data(this, nullptr),
       tenuredBigInts(this, 0),
@@ -195,7 +195,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
 }
 
 Zone::~Zone() {
-  MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
   DebugAPI::deleteDebugScriptMap(debugScriptMap);
@@ -223,7 +222,6 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
 
 void Zone::changeGCState(GCState prev, GCState next) {
   MOZ_ASSERT(RuntimeHeapIsBusy());
-  MOZ_ASSERT(canCollect());
   MOZ_ASSERT(gcState() == prev);
 
   // This can be called when barriers have been temporarily disabled by
@@ -549,11 +547,7 @@ void JS::Zone::checkUniqueIdTableAfterMovingGC() {
 }
 #endif
 
-uint64_t Zone::gcNumber() {
-  // Zones in use by exclusive threads are not collected, and threads using
-  // them cannot access the main runtime's gcNumber without racing.
-  return usedByHelperThread() ? 0 : runtimeFromMainThread()->gc.gcNumber();
-}
+uint64_t Zone::gcNumber() { return runtimeFromMainThread()->gc.gcNumber(); }
 
 js::jit::JitZone* Zone::createJitZone(JSContext* cx) {
   MOZ_ASSERT(!jitZone_);
@@ -575,18 +569,6 @@ bool Zone::hasMarkedRealms() {
     }
   }
   return false;
-}
-
-bool Zone::canCollect() {
-  // The atoms zone cannot be collected while off-thread parsing is taking
-  // place.
-  if (isAtomsZone()) {
-    return !runtimeFromAnyThread()->hasHelperThreadZones();
-  }
-
-  // Zones that will be or are currently used by other threads cannot be
-  // collected.
-  return !createdForHelperThread();
 }
 
 void Zone::notifyObservingDebuggers() {
@@ -613,12 +595,6 @@ Zone* Zone::nextZone() const {
   return listNext_;
 }
 
-void Zone::clearTables() {
-  MOZ_ASSERT(regExps().empty());
-
-  shapeZone().clearTables(runtimeFromMainThread()->defaultFreeOp());
-}
-
 void Zone::fixupAfterMovingGC() {
   ZoneAllocator::fixupAfterMovingGC();
   shapeZone().fixupPropMapShapeTableAfterMovingGC();
@@ -635,33 +611,6 @@ bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
   }
 
   return true;
-}
-
-void Zone::deleteEmptyCompartment(JS::Compartment* comp) {
-  MOZ_ASSERT(comp->zone() == this);
-  arenas.checkEmptyArenaLists();
-
-  MOZ_ASSERT(compartments().length() == 1);
-  MOZ_ASSERT(compartments()[0] == comp);
-  MOZ_ASSERT(comp->realms().length() == 1);
-
-  Realm* realm = comp->realms()[0];
-  JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
-  realm->destroy(fop);
-  comp->destroy(fop);
-
-  compartments().clear();
-}
-
-void Zone::setHelperThreadOwnerContext(JSContext* cx) {
-  MOZ_ASSERT_IF(cx, TlsContext.get() == cx);
-  helperThreadOwnerContext_ = cx;
-}
-
-bool Zone::ownedByCurrentHelperThread() {
-  MOZ_ASSERT(usedByHelperThread());
-  MOZ_ASSERT(TlsContext.get());
-  return helperThreadOwnerContext_ == TlsContext.get();
 }
 
 void Zone::purgeAtomCache() {

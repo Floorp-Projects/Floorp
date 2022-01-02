@@ -12,18 +12,20 @@
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/ValidityState.h"
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mSubmissionValue,
-                                      mState)
+                                      mState, mValidity)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIFormControl)
+  NS_INTERFACE_MAP_ENTRY(nsIConstraintValidation)
 NS_INTERFACE_MAP_END
 
 ElementInternals::ElementInternals(HTMLElement* aTarget)
@@ -123,6 +125,113 @@ HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
   return GetForm();
 }
 
+// https://html.spec.whatwg.org/commit-snapshots/3ad5159be8f27e110a70cefadcb50fc45ec21b05/#dom-elementinternals-setvalidity
+void ElementInternals::SetValidity(
+    const ValidityStateFlags& aFlags, const Optional<nsAString>& aMessage,
+    const Optional<NonNull<nsGenericHTMLElement>>& aAnchor, ErrorResult& aRv) {
+  /**
+   * 1. Let element be this's target element.
+   * 2. If element is not a form-associated custom element, then throw a
+   *    "NotSupportedError" DOMException.
+   */
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return;
+  }
+
+  /**
+   * 3. If flags contains one or more true values and message is not given or is
+   *    the empty string, then throw a TypeError.
+   */
+  if ((aFlags.mBadInput || aFlags.mCustomError || aFlags.mPatternMismatch ||
+       aFlags.mRangeOverflow || aFlags.mRangeUnderflow ||
+       aFlags.mStepMismatch || aFlags.mTooLong || aFlags.mTooShort ||
+       aFlags.mTypeMismatch || aFlags.mValueMissing) &&
+      (!aMessage.WasPassed() || aMessage.Value().IsEmpty())) {
+    aRv.ThrowTypeError("Need to provide validation message");
+    return;
+  }
+
+  /**
+   * 4. For each entry flag → value of flags, set element's validity flag with
+   *    the name flag to value.
+   */
+  SetValidityState(VALIDITY_STATE_VALUE_MISSING, aFlags.mValueMissing);
+  SetValidityState(VALIDITY_STATE_TYPE_MISMATCH, aFlags.mTypeMismatch);
+  SetValidityState(VALIDITY_STATE_PATTERN_MISMATCH, aFlags.mPatternMismatch);
+  SetValidityState(VALIDITY_STATE_TOO_LONG, aFlags.mTooLong);
+  SetValidityState(VALIDITY_STATE_TOO_SHORT, aFlags.mTooShort);
+  SetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW, aFlags.mRangeUnderflow);
+  SetValidityState(VALIDITY_STATE_RANGE_OVERFLOW, aFlags.mRangeOverflow);
+  SetValidityState(VALIDITY_STATE_STEP_MISMATCH, aFlags.mStepMismatch);
+  SetValidityState(VALIDITY_STATE_BAD_INPUT, aFlags.mBadInput);
+  SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, aFlags.mCustomError);
+  mTarget->UpdateState(true);
+
+  /**
+   * 5. Set element's validation message to the empty string if message is not
+   *    given or all of element's validity flags are false, or to message
+   *    otherwise.
+   * 6. If element's customError validity flag is true, then set element's
+   *    custom validity error message to element's validation message.
+   *    Otherwise, set element's custom validity error message to the empty
+   *    string.
+   */
+  mValidationMessage =
+      (!aMessage.WasPassed() || IsValid()) ? EmptyString() : aMessage.Value();
+
+  /**
+   * 7. Set element's validation anchor to null if anchor is not given.
+   *    Otherwise, if anchor is not a shadow-including descendant of element,
+   *    then throw a "NotFoundError" DOMException. Otherwise, set element's
+   *    validation anchor to anchor.
+   */
+  // TODO: Bug 1738262 - Support validation anchor for form-associated custom
+  //       element.
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-willvalidate
+bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return false;
+  }
+  return WillValidate();
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-validity
+ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return nullptr;
+  }
+  return Validity();
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-validationmessage
+void ElementInternals::GetValidationMessage(nsAString& aValidationMessage,
+                                            ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return;
+  }
+  aValidationMessage = mValidationMessage;
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-checkvalidity
+bool ElementInternals::CheckValidity(ErrorResult& aRv) {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return false;
+  }
+  return nsIConstraintValidation::CheckValidity(*mTarget);
+}
+
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
 already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     ErrorResult& aRv) const {
@@ -185,6 +294,16 @@ NS_IMETHODIMP ElementInternals::SubmitNamesValues(FormData* aFormData) {
 void ElementInternals::UpdateFormOwner() {
   if (mTarget) {
     mTarget->UpdateFormOwner();
+  }
+}
+
+void ElementInternals::UpdateBarredFromConstraintValidation() {
+  if (mTarget) {
+    MOZ_ASSERT(mTarget->IsFormAssociatedElement());
+    SetBarredFromConstraintValidation(
+        mTarget->HasAttr(nsGkAtoms::readonly) ||
+        mTarget->HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) ||
+        mTarget->IsDisabled());
   }
 }
 

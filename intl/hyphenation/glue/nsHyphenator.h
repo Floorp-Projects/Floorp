@@ -41,8 +41,7 @@ class nsHyphenator {
 
   nsresult Hyphenate(const nsAString& aText, nsTArray<bool>& aHyphens);
 
-  void ShareToProcess(base::ProcessId aPid,
-                      base::SharedMemoryHandle* aOutHandle, uint32_t* aOutSize);
+  void CloneHandle(base::SharedMemoryHandle* aOutHandle, uint32_t* aOutSize);
 
  private:
   ~nsHyphenator() = default;

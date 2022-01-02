@@ -230,6 +230,16 @@ en{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "rMMMMEEEEd",
+                "rMMMMd",
+                "rMMMd",
+                "rMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -243,8 +253,11 @@ en{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"r(U)"}
-                GyMMM{"MMM r(U)"}
-                GyMMMEd{"E, MMM d, r(U)"}
+                GyMMM{"MMM r"}
+                GyMMMEd{"E, MMM d, r"}
+                GyMMMM{"MMMM r(U)"}
+                GyMMMMEd{"E, MMMM d, r(U)"}
+                GyMMMMd{"MMMM d, r(U)"}
                 GyMMMd{"MMM d, r"}
                 H{"HH"}
                 Hm{"HH:mm"}
@@ -266,13 +279,14 @@ en{
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"r(U)"}
-                yMd{"M/d/r"}
                 yyyy{"r(U)"}
                 yyyyM{"M/r"}
                 yyyyMEd{"E, M/d/r"}
-                yyyyMMM{"MMM r(U)"}
-                yyyyMMMEd{"E, MMM d, r(U)"}
+                yyyyMMM{"MMM r"}
+                yyyyMMMEd{"E, MMM d, r"}
                 yyyyMMMM{"MMMM r(U)"}
+                yyyyMMMMEd{"E, MMMM d, r(U)"}
+                yyyyMMMMd{"MMMM d, r(U)"}
                 yyyyMMMd{"MMM d, r"}
                 yyyyMd{"M/d/r"}
                 yyyyQQQ{"QQQ r(U)"}
@@ -451,6 +465,16 @@ en{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             appendItems{
                 Day{"{0} ({2}: {1})"}
                 Day-Of-Week{"{0} {1}"}
@@ -480,6 +504,7 @@ en{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -686,6 +711,16 @@ en{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Day{"{0} ({2}: {1})"}
                 Day-Of-Week{"{0} {1}"}
@@ -715,6 +750,7 @@ en{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1098,11 +1134,22 @@ en{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMMd",
+            }
             availableFormats{
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d MMM y GGGGG"}
                 M{"L"}
                 MEd{"E, d MMM"}
                 MMM{"LLL"}
@@ -1209,11 +1256,21 @@ en{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
         }
         roc{
             eras{
                 abbreviated{
-                    "Before R.O.C.",
+                    "B.R.O.C.",
                     "Minguo",
                 }
             }

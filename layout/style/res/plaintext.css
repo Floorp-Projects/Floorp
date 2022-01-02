@@ -18,17 +18,8 @@ html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
 }
 
 @-moz-document unobservable-document() {
-  @media (prefers-color-scheme: dark) {
-    :root {
-      /**
-       * in-content-page-{color, background} for dark theme.
-       *
-       * TODO(emilio): Make this just `color-scheme: dark` once color-scheme ships,
-       * (or `color-scheme: light dark` outside the media query).
-       */
-      background: rgb(28,27,34);
-      color: rgb(251,251,254);
-    }
+  :root {
+    color-scheme: light dark;
   }
 }
 

@@ -11,6 +11,7 @@ pushd "${GECKO_PATH}/gfx/wr/wrench"
 # These things come from the toolchain dependencies of the job that invokes
 # this script (webrender-wrench-android-build).
 export PATH="${PATH}:${MOZ_FETCHES_DIR}/rustc/bin"
+export PATH="${PATH}:${JAVA_HOME}/bin"
 export ANDROID_HOME="${MOZ_FETCHES_DIR}/android-sdk-linux"
 export NDK_HOME="${MOZ_FETCHES_DIR}/android-ndk"
 

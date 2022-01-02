@@ -5029,6 +5029,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
         aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
     if (found && cachedMeasurement.IsValidFor(aChild, aCBSize)) {
       childSize.BSize(wm) = cachedMeasurement.BSize();
+      childSize.ISize(wm) = aChild->ISize(wm);
       nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
                                           LogicalPoint(wm), nsSize(), flags);
       return cachedMeasurement.BSize();

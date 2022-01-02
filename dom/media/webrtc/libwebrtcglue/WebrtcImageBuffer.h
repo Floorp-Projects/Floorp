@@ -7,8 +7,8 @@
 #ifndef WebrtcImageBuffer_h__
 #define WebrtcImageBuffer_h__
 
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "rtc_base/keep_ref_until_done.h"
 
 namespace mozilla {
 namespace layers {
@@ -28,12 +28,12 @@ class ImageBuffer : public webrtc::VideoFrameBuffer {
       return nullptr;
     }
     const layers::PlanarYCbCrData* data = image->GetData();
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buf(
-        new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-            data->mPicSize.width, data->mPicSize.height, data->mYChannel,
-            data->mYStride, data->mCbChannel, data->mCbCrStride,
-            data->mCrChannel, data->mCbCrStride,
-            rtc::KeepRefUntilDone(image.get())));
+    rtc::scoped_refptr<webrtc::I420BufferInterface> buf =
+        webrtc::WrapI420Buffer(data->mPicSize.width, data->mPicSize.height,
+                               data->mYChannel, data->mYStride,
+                               data->mCbChannel, data->mCbCrStride,
+                               data->mCrChannel, data->mCbCrStride,
+                               rtc::KeepRefUntilDone(image.get()));
     return buf;
   }
 

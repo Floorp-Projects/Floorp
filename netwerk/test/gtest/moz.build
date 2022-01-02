@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     "TestHttpResponseHead.cpp",
     "TestInputStreamTransport.cpp",
     "TestIsValidIp.cpp",
+    "TestLinkHeader.cpp",
     "TestMIMEInputStream.cpp",
     "TestMozURL.cpp",
     "TestProtocolProxyService.cpp",
@@ -31,9 +32,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
         "TestNamedPipeService.cpp",
     ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow"]
 
 # skip the test on windows10-aarch64
 if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):

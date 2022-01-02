@@ -9,19 +9,21 @@
 
 #include "AsyncPanZoomAnimation.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
+#include "mozilla/ScrollPositionUpdate.h"
 
 namespace mozilla {
 namespace layers {
 
 class AsyncPanZoomController;
 
-class SmoothMsdScrollAnimation : public AsyncPanZoomAnimation {
+class SmoothMsdScrollAnimation final : public AsyncPanZoomAnimation {
  public:
   SmoothMsdScrollAnimation(AsyncPanZoomController& aApzc,
                            const CSSPoint& aInitialPosition,
                            const CSSPoint& aInitialVelocity,
                            const CSSPoint& aDestination, double aSpringConstant,
-                           double aDampingRatio);
+                           double aDampingRatio,
+                           ScrollTriggeredByScript aTriggeredByScript);
 
   /**
    * Advances a smooth scroll simulation based on the time passed in |aDelta|.
@@ -32,14 +34,20 @@ class SmoothMsdScrollAnimation : public AsyncPanZoomAnimation {
   bool DoSample(FrameMetrics& aFrameMetrics,
                 const TimeDuration& aDelta) override;
 
-  void SetDestination(const CSSPoint& aNewDestination);
+  void SetDestination(const CSSPoint& aNewDestination,
+                      ScrollTriggeredByScript aTriggeredByScript);
   CSSPoint GetDestination() const;
   SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() override;
+
+  bool WasTriggeredByScript() const override {
+    return mTriggeredByScript == ScrollTriggeredByScript::Yes;
+  }
 
  private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel;
   AxisPhysicsMSDModel mYAxisModel;
+  ScrollTriggeredByScript mTriggeredByScript;
 };
 
 }  // namespace layers

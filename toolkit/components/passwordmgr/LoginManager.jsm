@@ -437,6 +437,16 @@ LoginManager.prototype = {
   },
 
   /**
+   * Get a dump of all stored logins asynchronously. Used by the login detection service.
+   */
+  getAllLoginsWithCallbackAsync(aCallback) {
+    log.debug("Searching a list of all logins asynchronously");
+    this._storage.getAllLoginsAsync().then(logins => {
+      aCallback.onSearchComplete(logins);
+    });
+  },
+
+  /**
    * Remove all user facing stored logins.
    *
    * This will not remove the FxA Sync key, which is stored with the rest of a user's logins.

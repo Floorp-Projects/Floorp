@@ -31,8 +31,6 @@ const SUPPORTED_OPTIONS = {
   javascriptEnabled: true,
   // Force a custom device pixel ratio (used in RDM). Set to null to restore origin ratio.
   overrideDPPX: true,
-  // Enable paint flashing mode.
-  paintFlashing: true,
   // Enable print simulation mode.
   printSimulationEnabled: true,
   // Override navigator.maxTouchPoints (used in RDM and doesn't apply if RDM isn't enabled)
@@ -103,7 +101,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
   _shouldHandleConfigurationInParentProcess() {
     // Only handle parent process configuration if the watcherActor is tied to a
     // browser element (i.e. we're *not* in the Browser Toolbox)
-    return this.watcherActor.browserElement;
+    return this.watcherActor.context.type == "browser-element";
   },
 
   /**
@@ -125,8 +123,8 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // updates related to other browser elements
     if (
-      this.watcherActor.browserId &&
-      browsingContext.browserId != this.watcherActor.browserId
+      this.watcherActor.context.type == "browser-element" &&
+      browsingContext.browserId != this.watcherActor.context.browserId
     ) {
       return;
     }

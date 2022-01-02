@@ -6,7 +6,7 @@
 
 #include "nsFrameList.h"
 
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/PresShell.h"
 #include "nsBidiPresUtils.h"
@@ -306,7 +306,7 @@ nsIFrame* nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const {
   nsIFrame* parent = mFirstChild->GetParent();
   if (!parent) return aFrame ? aFrame->GetPrevSibling() : LastChild();
 
-  mozilla::intl::Bidi::Direction paraDir =
+  mozilla::intl::BidiDirection paraDir =
       nsBidiPresUtils::ParagraphDirection(mFirstChild);
 
   nsAutoLineIterator iter = parent->GetLineIterator();
@@ -315,7 +315,7 @@ nsIFrame* nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const {
     if (parent->IsLineFrame()) {
       // Line frames are not bidi-splittable, so need to consider bidi
       // reordering
-      if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+      if (paraDir == mozilla::intl::BidiDirection::LTR) {
         return nsBidiPresUtils::GetFrameToLeftOf(aFrame, mFirstChild, -1);
       } else {  // RTL
         return nsBidiPresUtils::GetFrameToRightOf(aFrame, mFirstChild, -1);
@@ -347,7 +347,7 @@ nsIFrame* nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const {
   if (aFrame) {
     auto line = iter->GetLine(thisLine).unwrap();
 
-    if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+    if (paraDir == mozilla::intl::BidiDirection::LTR) {
       frame = nsBidiPresUtils::GetFrameToLeftOf(aFrame, line.mFirstFrameOnLine,
                                                 line.mNumFramesOnLine);
     } else {  // RTL
@@ -360,7 +360,7 @@ nsIFrame* nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const {
     // Get the last frame of the previous line
     auto line = iter->GetLine(thisLine - 1).unwrap();
 
-    if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+    if (paraDir == mozilla::intl::BidiDirection::LTR) {
       frame = nsBidiPresUtils::GetFrameToLeftOf(nullptr, line.mFirstFrameOnLine,
                                                 line.mNumFramesOnLine);
     } else {  // RTL
@@ -377,7 +377,7 @@ nsIFrame* nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const {
   nsIFrame* parent = mFirstChild->GetParent();
   if (!parent) return aFrame ? aFrame->GetPrevSibling() : mFirstChild;
 
-  mozilla::intl::Bidi::Direction paraDir =
+  mozilla::intl::BidiDirection paraDir =
       nsBidiPresUtils::ParagraphDirection(mFirstChild);
 
   nsAutoLineIterator iter = parent->GetLineIterator();
@@ -386,7 +386,7 @@ nsIFrame* nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const {
     if (parent->IsLineFrame()) {
       // Line frames are not bidi-splittable, so need to consider bidi
       // reordering
-      if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+      if (paraDir == mozilla::intl::BidiDirection::LTR) {
         return nsBidiPresUtils::GetFrameToRightOf(aFrame, mFirstChild, -1);
       } else {  // RTL
         return nsBidiPresUtils::GetFrameToLeftOf(aFrame, mFirstChild, -1);
@@ -418,7 +418,7 @@ nsIFrame* nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const {
   if (aFrame) {
     auto line = iter->GetLine(thisLine).unwrap();
 
-    if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+    if (paraDir == mozilla::intl::BidiDirection::LTR) {
       frame = nsBidiPresUtils::GetFrameToRightOf(aFrame, line.mFirstFrameOnLine,
                                                  line.mNumFramesOnLine);
     } else {  // RTL
@@ -432,7 +432,7 @@ nsIFrame* nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const {
     // Get the first frame of the next line
     auto line = iter->GetLine(thisLine + 1).unwrap();
 
-    if (paraDir == mozilla::intl::Bidi::Direction::LTR) {
+    if (paraDir == mozilla::intl::BidiDirection::LTR) {
       frame = nsBidiPresUtils::GetFrameToRightOf(
           nullptr, line.mFirstFrameOnLine, line.mNumFramesOnLine);
     } else {  // RTL

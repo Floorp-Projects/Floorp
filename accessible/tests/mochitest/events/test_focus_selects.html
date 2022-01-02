@@ -12,7 +12,7 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
@@ -21,10 +21,9 @@
   <script type="application/javascript">
     // gA11yEventDumpID = "eventdump"; // debug stuff
     // gA11yEventDumpToConsole = true;
-
     var gQueue = null;
 
-    function doTests() {
+    async function doTests() {
       // Bug 746534 - File causes crash or hang on OS X
       if (MAC) {
         todo(false, "Bug 746534 - test file causes crash or hang on OS X");
@@ -32,48 +31,127 @@
         return;
       }
 
-      gQueue = new eventQueue();
-
+      let p = waitForEvent(EVENT_FOCUS, "orange");
       // first item is focused until there's selection
-      gQueue.push(new synthFocus("list", new focusChecker("orange")));
+      getNode("list").focus();
+      await p;
 
-      // item is selected and stays focused
-      gQueue.push(new synthDownKey("list", new nofocusChecker()));
+      p = waitForEvents({
+        expected: [[EVENT_SELECTION, "orange"]],
+        unexpected: [
+          [EVENT_FOCUS],
+          stateChangeEventArgs("orange", EXT_STATE_ACTIVE, true, true),
+        ],
+      });
+      // item is selected and stays focused and active
+      synthesizeKey("VK_DOWN");
+      await p;
 
+      p = waitForEvents([
+        stateChangeEventArgs("orange", EXT_STATE_ACTIVE, false, true),
+        stateChangeEventArgs("apple", EXT_STATE_ACTIVE, true, true),
+        [EVENT_FOCUS, "apple"],
+      ]);
       // last selected item is focused
-      gQueue.push(new synthDownKey("list", new focusChecker("apple"), { shiftKey: true }));
+      synthesizeKey("VK_DOWN", { shiftKey: true });
+      await p;
 
+      p = waitForEvents({
+        expected: [
+          [EVENT_FOCUS, "orange"],
+          stateChangeEventArgs("orange", EXT_STATE_ACTIVE, true, true),
+        ],
+        unexpected: [
+          [EVENT_FOCUS, "apple"],
+          stateChangeEventArgs("apple", EXT_STATE_ACTIVE, true, true),
+        ],
+      });
       // no focus event if nothing is changed
-      gQueue.push(new synthDownKey("list", new nofocusChecker("apple")));
-
+      synthesizeKey("VK_DOWN");
       // current item is focused
-      gQueue.push(new synthUpKey("list", new focusChecker("orange"), { ctrlKey: true }));
+      synthesizeKey("VK_UP", { ctrlKey: true });
+      await p;
 
+      p = waitForEvent(EVENT_FOCUS, "emptylist");
       // focus on empty list (no items to be focused)
-      gQueue.push(new synthTab("list", new focusChecker("emptylist")));
+      synthesizeKey("VK_TAB");
+      await p;
 
+      p = waitForEvents({
+        expected: [[EVENT_FOCUS, "orange"]],
+        unexpected: [stateChangeEventArgs("orange", EXT_STATE_ACTIVE, true, true)],
+      });
       // current item is focused
-      gQueue.push(new synthShiftTab("emptylist", new focusChecker("orange")));
+      synthesizeKey("VK_TAB", { shiftKey: true });
+      await p;
 
+      p = waitForEvent(EVENT_FOCUS, "combobox");
+      getNode("combobox").focus();
+      await p;
+
+      p = waitForEvents({
+        expected: [
+          [EVENT_SELECTION, "cb_apple"],
+          stateChangeEventArgs("cb_apple", EXT_STATE_ACTIVE, true, true),
+        ],
+        unexpected: [[EVENT_FOCUS]],
+      });
       // collapsed combobox keeps a focus
-      gQueue.push(new synthFocus("combobox", new focusChecker("combobox")));
-      gQueue.push(new synthDownKey("combobox", new nofocusChecker("combobox")));
+      synthesizeKey("VK_DOWN");
+      await p;
 
+      p = waitForEvent(EVENT_FOCUS, "cb_apple");
+      // current selected item is focused when combobox is expanded
+      synthesizeKey("VK_DOWN", { altKey: true });
+      await p;
+
+      p = waitForEvents({
+        expected: [
+          [EVENT_SELECTION, "cb_orange"],
+          stateChangeEventArgs("cb_orange", EXT_STATE_ACTIVE, true, true),
+        ],
+      });
       // selected item is focused for expanded combobox
-      gQueue.push(new synthOpenComboboxKey("combobox", new focusChecker("cb_apple")));
-      gQueue.push(new synthUpKey("combobox", new focusChecker("cb_orange")));
+      synthesizeKey("VK_UP");
+      await p;
 
+      p = waitForEvent(EVENT_FOCUS, "combobox");
       // collapsed combobx keeps a focus
-      gQueue.push(new synthEscapeKey("combobox", new focusChecker("combobox")));
+      synthesizeKey("VK_ESCAPE");
+      await p;
 
       // no focus events for unfocused list controls when current item is
       // changed
-      gQueue.push(new synthFocus("emptylist"));
 
-      gQueue.push(new changeCurrentItem("list", "orange"));
-      gQueue.push(new changeCurrentItem("combobox", "cb_apple"));
+      p = waitForEvent(EVENT_FOCUS, "emptylist");
+      getNode("emptylist").focus();
+      await p;
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      p = waitForEvents({
+        expected: [[EVENT_SELECTION, "orange"]],
+        unexpected: [
+          [EVENT_FOCUS],
+          stateChangeEventArgs("orange", EXT_STATE_ACTIVE, true, true),
+        ],
+      });
+      // An unfocused selectable list gets selection change events,
+      // but not active or focus change events.
+      getNode("list").selectedIndex = getNode("orange").index;
+      await p;
+
+      p = waitForEvents({
+        expected: [
+          [EVENT_SELECTION, "cb_apple"],
+          stateChangeEventArgs("cb_apple", EXT_STATE_ACTIVE, true, true),
+        ],
+        unexpected: [[EVENT_FOCUS]],
+      });
+      // An unfocused selectable combobox gets selection change events,
+      // and active state change events, but not focus.
+      getNode("cb_apple").selected = true;
+      await p;
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

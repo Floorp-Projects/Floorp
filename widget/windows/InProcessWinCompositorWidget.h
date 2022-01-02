@@ -48,6 +48,8 @@ class InProcessWinCompositorWidget final
   bool OnWindowResize(const LayoutDeviceIntSize& aSize) override;
   void OnWindowModeChange(nsSizeMode aSizeMode) override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
+  void NotifyVisibilityUpdated(nsSizeMode aSizeMode,
+                               bool aIsFullyOccluded) override;
   void ClearTransparentWindow() override;
 
   bool RedrawTransparentWindow();
@@ -62,6 +64,9 @@ class InProcessWinCompositorWidget final
   }
 
   bool HasGlass() const override;
+
+  nsSizeMode GetWindowSizeMode() const override;
+  bool GetWindowIsFullyOccluded() const override;
 
   void ObserveVsync(VsyncObserver* aObserver) override;
   nsIWidget* RealWidget() override;
@@ -86,6 +91,11 @@ class InProcessWinCompositorWidget final
   mozilla::Mutex mTransparentSurfaceLock;
   mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
       mTransparencyMode;
+
+  // Visibility handling.
+  mozilla::Atomic<nsSizeMode, MemoryOrdering::Relaxed> mSizeMode;
+  mozilla::Atomic<bool, MemoryOrdering::Relaxed> mIsFullyOccluded;
+
   RefPtr<gfxASurface> mTransparentSurface;
   HDC mMemoryDC;
   HDC mCompositeDC;

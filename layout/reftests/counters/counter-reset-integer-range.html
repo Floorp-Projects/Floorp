@@ -10,8 +10,11 @@ span::after { content: counter(c); }
 <span style="counter-reset: c 2147483648"></span>
 <span style="counter-reset: c 2147483649"></span>
 <span style="counter-reset: c -2147483647"></span>
-<!-- The next two computes to std::numeric_limits<int32_t>::min() which we use as the "magic" number for the content based <ol reversed> start value.  See https://drafts.csswg.org/css-lists-3/#ua-stylesheet -->
-<!-- TODO: bug 1706346
+<!--
+  We use std::numeric_limits<int32_t>::min() as an internal "magic" value to
+  implement the content based <ol reversed> start value. So the following two
+  values are outside our supported range and should be clamped to the valid
+  range per spec.
+-->
 <span style="counter-reset: c -2147483648"></span>
 <span style="counter-reset: c -2147483649"></span>
--->

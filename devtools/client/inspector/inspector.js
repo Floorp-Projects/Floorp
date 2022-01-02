@@ -159,6 +159,7 @@ function Inspector(toolbox, commands) {
   );
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+  this._onTargetSelected = this._onTargetSelected.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
 
@@ -205,11 +206,12 @@ Inspector.prototype = {
     // iframe if it had already been initialized.
     this.setupSplitter();
 
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+      onDestroyed: this._onTargetDestroyed,
+    });
 
     await this.toolbox.resourceCommand.watchResources(
       [
@@ -273,6 +275,34 @@ Inspector.prototype = {
       this._getCssProperties(targetFront),
       this._getAccessibilityFront(targetFront),
     ]);
+  },
+
+  async _onTargetSelected({ targetFront }) {
+    // We don't use this.highlighters since it creates a HighlightersOverlay if it wasn't
+    // the case yet.
+    if (this._highlighters) {
+      this._highlighters.hideAllHighlighters();
+    }
+    if (targetFront.isDestroyed()) {
+      return;
+    }
+
+    await this.initInspectorFront(targetFront);
+
+    // the target might have been destroyed when reloading quickly,
+    // while waiting for inspector front initialization
+    if (targetFront.isDestroyed()) {
+      return;
+    }
+
+    const { walker } = await targetFront.getFront("inspector");
+    const rootNodeFront = await walker.getRootNode();
+    // When a given target is focused, don't try to reset the selection
+    this.selectionCssSelectors = [];
+    this._defaultNode = null;
+
+    // onRootNodeAvailable will take care of populating the markup view
+    await this.onRootNodeAvailable(rootNodeFront);
   },
 
   _onTargetDestroyed({ targetFront }) {
@@ -531,7 +561,7 @@ Inspector.prototype = {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     if (this._highlighters) {
-      this._highlighters.onWillNavigate();
+      this._highlighters.hideAllHighlighters();
     }
     this._destroyMarkup();
     this._pendingSelectionUnique = null;
@@ -566,12 +596,17 @@ Inspector.prototype = {
       return null;
     }
 
-    const walker = this.walker;
+    const walker = rootNodeFront.walkerFront;
     const cssSelectors = this.selectionCssSelectors;
     // Try to find a default node using three strategies:
     const defaultNodeSelectors = [
       // - first try to match css selectors for the selection
-      () => (cssSelectors.length ? walker.findNodeFront(cssSelectors) : null),
+      () =>
+        cssSelectors.length
+          ? this.commands.inspectorCommand.findNodeFrontFromSelectors(
+              cssSelectors
+            )
+          : null,
       // - otherwise try to get the "body" element
       () => walker.querySelector(rootNodeFront, "body"),
       // - finally get the documentElement element if nothing else worked.
@@ -1427,31 +1462,22 @@ Inspector.prototype = {
   },
 
   /**
-   * Some inspector ruleview helpers rely on the selectionCssSelector to get the
-   * unique CSS selector of the selected element only within its host document,
-   * disregarding ancestor iframes.
-   * They should not care about the complete array of CSS selectors, only
-   * relevant in order to reselect the proper node when reloading pages with
-   * frames.
-   */
-  get selectionCssSelector() {
-    if (this.selectionCssSelectors.length) {
-      return this.selectionCssSelectors[this.selectionCssSelectors.length - 1];
-    }
-
-    return null;
-  },
-
-  /**
    * On any new selection made by the user, store the array of css selectors
    * of the selected node so it can be restored after reload of the same page
    */
   updateSelectionCssSelectors() {
-    if (this.selection.isElementNode()) {
-      this.selection.nodeFront.getAllSelectors().then(selectors => {
-        this.selectionCssSelectors = selectors;
-      }, this._handleRejectionIfNotDestroyed);
+    if (!this.selection.isElementNode()) {
+      return;
     }
+
+    this.commands.inspectorCommand
+      .getNodeFrontSelectorsFromTopDocument(this.selection.nodeFront)
+      .then(selectors => {
+        this.selectionCssSelectors = selectors;
+        // emit an event so tests relying on the property being set can properly wait
+        // for it.
+        this.emitForTests("selection-css-selectors-updated", selectors);
+      }, this._handleRejectionIfNotDestroyed);
   },
 
   /**
@@ -1704,11 +1730,12 @@ Inspector.prototype = {
     this.searchboxShortcuts.destroy();
     this.searchboxShortcuts = null;
 
-    this.commands.targetCommand.unwatchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+      onDestroyed: this._onTargetDestroyed,
+    });
     const { resourceCommand } = this.toolbox;
     resourceCommand.unwatchResources(
       [
@@ -1801,7 +1828,7 @@ Inspector.prototype = {
       return null;
     }
     // turn off node picker when color picker is starting
-    this.toolbox.nodePicker.stop().catch(console.error);
+    this.toolbox.nodePicker.stop({ canceled: true }).catch(console.error);
     this.telemetry.scalarSet(TELEMETRY_EYEDROPPER_OPENED, 1);
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
@@ -1835,7 +1862,7 @@ Inspector.prototype = {
     }
 
     // turn off node picker when add node is triggered
-    this.toolbox.nodePicker.stop();
+    this.toolbox.nodePicker.stop({ canceled: true });
 
     // turn off color picker when add node is triggered
     this.hideEyeDropper();

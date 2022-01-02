@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PWebGL;
+
+namespace mozilla {
+namespace gfx {
+
+/**
+ * The PCanvasManager protocol is the top-level protocol between the main and
+ * worker threads in the content process, and the renderer thread in the
+ * compositor process. This protocol should be used to create accelerated
+ * canvas instances.
+ */
+[RefCounted] sync protocol PCanvasManager
+{
+  manages PWebGL;
+
+parent:
+  // Actor that represents one WebGL context.
+  async PWebGL();
+};
+
+} // gfx
+} // mozilla

@@ -16,6 +16,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
 
 #include "nsExternalHelperAppService.h"
@@ -132,6 +133,8 @@ static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] =
     "browser.helperApps.neverAsk.saveToDisk";
 static const char NEVER_ASK_FOR_OPEN_FILE_PREF[] =
     "browser.helperApps.neverAsk.openFile";
+
+StaticRefPtr<nsIFile> sFallbackDownloadDir;
 
 // Helper functions for Content-Disposition headers
 
@@ -312,14 +315,11 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
         }
 
         // We have the directory, and now we need to make sure it exists
-        bool dirExists = false;
-        (void)dir->Exists(&dirExists);
-        if (dirExists) break;
-
         nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0755);
-        if (NS_FAILED(rv)) {
+        // If we can't create this and it's not because the file already
+        // exists, clear out `dir` so we don't return it.
+        if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_FAILED(rv)) {
           dir = nullptr;
-          break;
         }
       } break;
       case NS_FOLDER_VALUE_DOWNLOADS:
@@ -329,6 +329,51 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
     if (!dir) {
       rv = NS_GetSpecialDirectory(NS_OS_DEFAULT_DOWNLOAD_DIR,
                                   getter_AddRefs(dir));
+      if (NS_FAILED(rv)) {
+        // On some OSes, there is no guarantee this directory exists.
+        // Fall back to $HOME + Downloads.
+        if (sFallbackDownloadDir) {
+          sFallbackDownloadDir->Clone(getter_AddRefs(dir));
+        } else {
+          rv = NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(dir));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr<nsIStringBundleService> bundleService =
+              do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsAutoString downloadLocalized;
+          nsCOMPtr<nsIStringBundle> downloadBundle;
+          rv = bundleService->CreateBundle(
+              "chrome://mozapps/locale/downloads/downloads.properties",
+              getter_AddRefs(downloadBundle));
+          if (NS_SUCCEEDED(rv)) {
+            rv = downloadBundle->GetStringFromName("DownloadsFolder",
+                                                   downloadLocalized);
+          }
+          if (NS_FAILED(rv)) {
+            downloadLocalized.AssignLiteral("Downloads");
+          }
+          rv = dir->Append(downloadLocalized);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // Can't getter_AddRefs on StaticRefPtr, so do some copying.
+          nsCOMPtr<nsIFile> copy;
+          dir->Clone(getter_AddRefs(copy));
+          sFallbackDownloadDir = copy.forget();
+          ClearOnShutdown(&sFallbackDownloadDir);
+        }
+        if (aSkipChecks) {
+          dir.forget(_directory);
+          return NS_OK;
+        }
+
+        // We have the directory, and now we need to make sure it exists
+        rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+        if (rv == NS_ERROR_FILE_ALREADY_EXISTS || NS_SUCCEEDED(rv)) {
+          dir.forget(_directory);
+          rv = NS_OK;
+        }
+        return rv;
+      }
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
@@ -1016,13 +1061,15 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
+                                    nsIPrincipal* aRedirectPrincipal,
                                     BrowsingContext* aBrowsingContext,
                                     bool aTriggeredExternally) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        aURI, aTriggeringPrincipal, aBrowsingContext, aTriggeredExternally);
+        aURI, aTriggeringPrincipal, aRedirectPrincipal, aBrowsingContext,
+        aTriggeredExternally);
     return NS_OK;
   }
 
@@ -1114,8 +1161,10 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->HandleURI(handler, escapedURI, aTriggeringPrincipal,
-                            aBrowsingContext, aTriggeredExternally);
+  return chooser->HandleURI(
+      handler, escapedURI,
+      aRedirectPrincipal ? aRedirectPrincipal : aTriggeringPrincipal,
+      aBrowsingContext, aTriggeredExternally);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1693,8 +1742,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
   }
 
-  if (StaticPrefs::browser_download_enable_spam_prevention() &&
+  if (!mForceSave && StaticPrefs::browser_download_enable_spam_prevention() &&
       IsDownloadSpam(aChannel)) {
+    RecordDownloadTelemetry(aChannel, "spam");
     return NS_OK;
   }
 
@@ -1706,6 +1756,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     // cancel the request so no ui knows about this.
     mCanceled = true;
     request->Cancel(NS_ERROR_ABORT);
+    RecordDownloadTelemetry(aChannel, "forbidden");
     return NS_OK;
   }
 
@@ -1783,6 +1834,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     if (mTempFile) mTempFile->GetPath(path);
 
     SendStatusChange(kWriteError, transferError, request, path);
+
+    RecordDownloadTelemetry(aChannel, "savefailed");
 
     return NS_OK;
   }
@@ -1893,6 +1946,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (mForceSave) {
     alwaysAsk = false;
     action = nsIMIMEInfo::saveToDisk;
+    shouldAutomaticallyHandleInternally = false;
   }
   // Additionally, if we are asked by the OS to open a local file,
   // automatically downloading it to create a second copy of that file doesn't
@@ -1901,6 +1955,21 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
       action == nsIMIMEInfo::saveToDisk) {
     alwaysAsk = true;
   }
+
+  nsAutoCString actionTelem;
+  if (alwaysAsk) {
+    actionTelem.AssignLiteral("ask");
+  } else if (shouldAutomaticallyHandleInternally) {
+    actionTelem.AssignLiteral("internal");
+  } else if (action == nsIMIMEInfo::useHelperApp ||
+             action == nsIMIMEInfo::useSystemDefault) {
+    actionTelem.AssignLiteral("external");
+  } else {
+    actionTelem.AssignLiteral("save");
+  }
+
+  RecordDownloadTelemetry(aChannel, actionTelem.get());
+
   if (alwaysAsk) {
     // Display the dialog
     mDialog = do_CreateInstance(NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv);
@@ -1921,7 +1990,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
      * We can skip this check, though, if we have a setting to open in a
      * helper app.
      * This code mirrors the code in
-     * nsExternalAppHandler::LaunchWithApplication so that what we
+     * nsExternalAppHandler::SetDownloadToLaunch so that what we
      * test here is as close as possible to what will really be
      * happening if we decide to execute
      */
@@ -1955,7 +2024,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
          action == nsIMIMEInfo::useSystemDefault ||
          shouldAutomaticallyHandleInternally) &&
         !alwaysAskWhereToSave) {
-      rv = LaunchWithApplication(shouldAutomaticallyHandleInternally, nullptr);
+      // Check if the file is local, in which case just launch it from where it
+      // is. Otherwise, set the file to launch once it's finished downloading.
+      rv = mIsFileChannel ? LaunchLocalFile()
+                          : SetDownloadToLaunch(
+                                shouldAutomaticallyHandleInternally, nullptr);
     } else {
       rv = PromptForSaveDestination();
     }
@@ -1963,13 +2036,52 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   return NS_OK;
 }
 
-bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+void nsExternalAppHandler::RecordDownloadTelemetry(nsIChannel* aChannel,
+                                                   const char* aAction) {
+  // Telemetry for helper app dialog
 
-  if (loadInfo->GetHasValidUserGestureActivation()) {
-    return false;
+  if (XRE_IsContentProcess()) {
+    return;
   }
 
+  nsAutoCString reason;
+  switch (mReason) {
+    case nsIHelperAppLauncherDialog::REASON_SERVERREQUEST:
+      reason.AssignLiteral("attachment");
+      break;
+    case nsIHelperAppLauncherDialog::REASON_TYPESNIFFED:
+      reason.AssignLiteral("sniffed");
+      break;
+    case nsIHelperAppLauncherDialog::REASON_CANTHANDLE:
+    default:
+      reason.AssignLiteral("other");
+      break;
+  }
+
+  nsAutoCString contentTypeTelem;
+  nsAutoCString contentType;
+  aChannel->GetContentType(contentType);
+  if (contentType.EqualsIgnoreCase(APPLICATION_PDF)) {
+    contentTypeTelem.AssignLiteral("pdf");
+  } else if (contentType.EqualsIgnoreCase(APPLICATION_OCTET_STREAM) ||
+             contentType.EqualsIgnoreCase(BINARY_OCTET_STREAM)) {
+    contentTypeTelem.AssignLiteral("octetstream");
+  } else {
+    contentTypeTelem.AssignLiteral("other");
+  }
+
+  CopyableTArray<mozilla::Telemetry::EventExtraEntry> extra(1);
+  extra.AppendElement(
+      mozilla::Telemetry::EventExtraEntry{"type"_ns, contentTypeTelem});
+  extra.AppendElement(mozilla::Telemetry::EventExtraEntry{"reason"_ns, reason});
+
+  mozilla::Telemetry::RecordEvent(
+      mozilla::Telemetry::EventID::Downloads_Helpertype_Unknowntype,
+      mozilla::Some(aAction), mozilla::Some(extra));
+}
+
+bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPermissionManager> permissionManager =
       mozilla::services::GetPermissionManager();
   nsCOMPtr<nsIPrincipal> principal = loadInfo->TriggeringPrincipal();
@@ -2010,7 +2122,8 @@ bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
       // End cancel
       return true;
     }
-  } else {
+  }
+  if (!loadInfo->GetHasValidUserGestureActivation()) {
     permissionManager->AddFromPrincipal(
         principal, type, nsIPermissionManager::PROMPT_ACTION,
         nsIPermissionManager::EXPIRE_NEVER, 0 /* expire time */);
@@ -2584,17 +2697,9 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 
   int32_t action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
-  bool shouldAutomaticallyHandleInternally =
+  mHandleInternally =
       action == nsIMIMEInfo::handleInternally &&
       StaticPrefs::browser_download_improvements_to_download_panel();
-
-  if (StaticPrefs::browser_download_improvements_to_download_panel() &&
-      (action == nsIMIMEInfo::useHelperApp ||
-       action == nsIMIMEInfo::useSystemDefault ||
-       shouldAutomaticallyHandleInternally)) {
-    return LaunchWithApplication(shouldAutomaticallyHandleInternally,
-                                 aNewFileLocation);
-  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> fileToUse = aNewFileLocation;
@@ -2639,32 +2744,13 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
   return NS_OK;
 }
 
-// LaunchWithApplication should only be called by the helper app dialog which
+// SetDownloadToLaunch should only be called by the helper app dialog which
 // allows the user to say launch with application or save to disk.
-NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(
+NS_IMETHODIMP nsExternalAppHandler::SetDownloadToLaunch(
     bool aHandleInternally, nsIFile* aNewFileLocation) {
   if (mCanceled) return NS_OK;
 
   mHandleInternally = aHandleInternally;
-
-  // Now check if the file is local, in which case we won't bother with saving
-  // it to a temporary directory and just launch it from where it is
-  nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
-  if (fileUrl && mIsFileChannel) {
-    Cancel(NS_BINDING_ABORTED);
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = fileUrl->GetFile(getter_AddRefs(file));
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = mMimeInfo->LaunchWithFile(file);
-      if (NS_SUCCEEDED(rv)) return NS_OK;
-    }
-    nsAutoString path;
-    if (file) file->GetPath(path);
-    // If we get here, an error happened
-    SendStatusChange(kLaunchError, rv, nullptr, path);
-    return rv;
-  }
 
   // Now that the user has elected to launch the downloaded file with a helper
   // app, we're justified in removing the 'salted' name.  We'll rename to what
@@ -2711,6 +2797,23 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(
     SendStatusChange(kWriteError, rv, nullptr, path);
     Cancel(rv);
   }
+  return rv;
+}
+
+nsresult nsExternalAppHandler::LaunchLocalFile() {
+  nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
+  Cancel(NS_BINDING_ABORTED);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = fileUrl->GetFile(getter_AddRefs(file));
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = mMimeInfo->LaunchWithFile(file);
+    if (NS_SUCCEEDED(rv)) return NS_OK;
+  }
+  nsAutoString path;
+  if (file) file->GetPath(path);
+  // If we get here, an error happened
+  SendStatusChange(kLaunchError, rv, nullptr, path);
   return rv;
 }
 

@@ -27,6 +27,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "ProcessToolsService.cpp",
+    "ProcInfo_common.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

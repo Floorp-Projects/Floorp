@@ -27,13 +27,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
       insecureLink.id="insecure";
       insecureLink.textContent="Not secure Link";
 
-      const insecurePDF = document.createElement("a");        
-      insecurePDF.href=`http://${host}/${path}?type=application/pdf&name=example.pdf`;
-      insecurePDF.download="true";
-      insecurePDF.id="insecurePDF";
-      insecurePDF.textContent="Not secure Link to PDF";
+      const insecureSVG = document.createElement("a");        
+      insecureSVG.href=`http://${host}/${path}?type=image/svg+xml&name=example.svg`;
+      insecureSVG.download="true";
+      insecureSVG.id="insecureSVG";
+      insecureSVG.textContent="Not secure Link to SVG";
 
-      document.body.append(insecurePDF);
+      document.body.append(insecureSVG);
       document.body.append(secureLink);
       document.body.append(insecureLink);
   </script>

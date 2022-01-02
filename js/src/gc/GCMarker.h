@@ -19,7 +19,6 @@ class JSRope;
 
 namespace js {
 
-class AutoAccessAtomsZone;
 class WeakMapBase;
 
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;

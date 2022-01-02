@@ -99,9 +99,6 @@ class nsTimerImpl {
       mozilla::Variant<UnknownCallback, InterfaceCallback, ObserverCallback,
                        FuncCallback, ClosureCallback>;
 
-  nsresult InitCommon(uint32_t aDelayMS, uint32_t aType, Callback&& newCallback,
-                      const mozilla::MutexAutoLock& aProofOfLock);
-
   nsresult InitCommon(const mozilla::TimeDuration& aDelay, uint32_t aType,
                       Callback&& newCallback,
                       const mozilla::MutexAutoLock& aProofOfLock);

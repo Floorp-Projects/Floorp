@@ -59,9 +59,9 @@ compact-short currency/EUR unit-width-full-name
 
 compact-short measure-unit/length-furlong unit-width-narrow
   es-MX
-    0 fur
-    92 k fur
-    -0.22 fur
+    0fur
+    92 kfur
+    -0.22fur
   zh-TW
     0化朗
     9.2萬化朗
@@ -143,9 +143,9 @@ scientific/+ee/sign-always currency/EUR unit-width-full-name
 
 scientific/+ee/sign-always measure-unit/length-furlong unit-width-narrow
   es-MX
-    0E+00 fur
-    9.182736E+04 fur
-    -2.2222E-01 fur
+    0E+00fur
+    9.182736E+04fur
+    -2.2222E-01fur
   zh-TW
     0E+00化朗
     9.182736E+04化朗
@@ -3307,9 +3307,9 @@ currency/EUR unit-width-full-name @@
 
 measure-unit/length-furlong unit-width-narrow precision-integer
   es-MX
-    0 fur
-    91,827 fur
-    -0 fur
+    0fur
+    91,827fur
+    -0fur
   zh-TW
     0化朗
     91,827化朗
@@ -3321,9 +3321,9 @@ measure-unit/length-furlong unit-width-narrow precision-integer
 
 measure-unit/length-furlong unit-width-narrow .000
   es-MX
-    0.000 fur
-    91,827.364 fur
-    -0.222 fur
+    0.000fur
+    91,827.364fur
+    -0.222fur
   zh-TW
     0.000化朗
     91,827.364化朗
@@ -3335,9 +3335,9 @@ measure-unit/length-furlong unit-width-narrow .000
 
 measure-unit/length-furlong unit-width-narrow .##/@@@+
   es-MX
-    0 fur
-    91,827.36 fur
-    -0.222 fur
+    0fur
+    91,827.36fur
+    -0.222fur
   zh-TW
     0化朗
     91,827.36化朗
@@ -3349,9 +3349,9 @@ measure-unit/length-furlong unit-width-narrow .##/@@@+
 
 measure-unit/length-furlong unit-width-narrow @@
   es-MX
-    0.0 fur
-    92,000 fur
-    -0.22 fur
+    0.0fur
+    92,000fur
+    -0.22fur
   zh-TW
     0.0化朗
     92,000化朗
@@ -3475,9 +3475,9 @@ currency/EUR unit-width-full-name rounding-mode-floor
 
 measure-unit/length-furlong unit-width-narrow rounding-mode-floor
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0fur
+    91,827.3645fur
+    -0.22222fur
   zh-TW
     0化朗
     91,827.3645化朗
@@ -3559,9 +3559,9 @@ currency/EUR unit-width-full-name integer-width/##00
 
 measure-unit/length-furlong unit-width-narrow integer-width/##00
   es-MX
-    00 fur
-    1,827.3645 fur
-    -00.22222 fur
+    00fur
+    1,827.3645fur
+    -00.22222fur
   zh-TW
     00化朗
     1,827.3645化朗
@@ -3643,9 +3643,9 @@ currency/EUR unit-width-full-name scale/0.5
 
 measure-unit/length-furlong unit-width-narrow scale/0.5
   es-MX
-    0 fur
-    45,913.68225 fur
-    -0.11111 fur
+    0fur
+    45,913.68225fur
+    -0.11111fur
   zh-TW
     0化朗
     45,913.68225化朗
@@ -3727,9 +3727,9 @@ currency/EUR unit-width-full-name group-on-aligned
 
 measure-unit/length-furlong unit-width-narrow group-on-aligned
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0fur
+    91,827.3645fur
+    -0.22222fur
   zh-TW
     0化朗
     91,827.3645化朗
@@ -3811,9 +3811,9 @@ currency/EUR unit-width-full-name latin
 
 measure-unit/length-furlong unit-width-narrow latin
   es-MX
-    0 fur
-    91,827.3645 fur
-    -0.22222 fur
+    0fur
+    91,827.3645fur
+    -0.22222fur
   zh-TW
     0化朗
     91,827.3645化朗
@@ -3895,9 +3895,9 @@ currency/EUR unit-width-full-name sign-accounting-except-zero
 
 measure-unit/length-furlong unit-width-narrow sign-accounting-except-zero
   es-MX
-    0 fur
-    +91,827.3645 fur
-    -0.22222 fur
+    0fur
+    +91,827.3645fur
+    -0.22222fur
   zh-TW
     0化朗
     +91,827.3645化朗
@@ -3979,9 +3979,9 @@ currency/EUR unit-width-full-name decimal-always
 
 measure-unit/length-furlong unit-width-narrow decimal-always
   es-MX
-    0. fur
-    91,827.3645 fur
-    -0.22222 fur
+    0.fur
+    91,827.3645fur
+    -0.22222fur
   zh-TW
     0.化朗
     91,827.3645化朗

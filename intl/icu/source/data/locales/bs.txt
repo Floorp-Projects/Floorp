@@ -258,6 +258,173 @@ bs{
                 }
             }
         }
+        chinese{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "E, d.M.y.",
+                "d.M.y.",
+                "d.M.y.",
+                "d.M.y.",
+                "{1}, {0}",
+                "{1} 'u' {0}",
+                "{1} 'u' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                Gy{"r(U)"}
+            }
+            cyclicNameSets{
+                solarTerms{
+                    format{
+                        abbreviated{
+                            "kreće proljeće",
+                            "kišnica",
+                            "bude se insekti",
+                            "proljetna ravnodnevica",
+                            "vedro",
+                            "kiša zrna",
+                            "kreće ljeto",
+                            "puno zrno",
+                            "zrelo zrno",
+                            "ljetni solsticij",
+                            "blaga vrućina",
+                            "velika vrućina",
+                            "kreće jesen",
+                            "kraj vrućine",
+                            "bijela rosa",
+                            "jesenja ravnodnevnica",
+                            "hladna rosa",
+                            "spušta se mraz",
+                            "kreće zima",
+                            "blagi snijeg",
+                            "veliki snijeg",
+                            "zimski solsticij",
+                            "blaga hladnoća",
+                            "jaka hladnoća",
+                        }
+                        narrow{
+                            "kreće proljeće",
+                            "kišnica",
+                            "bude se insekti",
+                            "proljetna ravnodnevica",
+                            "vedro",
+                            "kiša zrna",
+                            "kreće ljeto",
+                            "puno zrno",
+                            "zrelo zrno",
+                            "ljetni solsticij",
+                            "blaga vrućina",
+                            "velika vrućina",
+                            "kreće jesen",
+                            "kraj vrućine",
+                            "bijela rosa",
+                            "jesenja ravnodnevnica",
+                            "hladna rosa",
+                            "spušta se mraz",
+                            "kreće zima",
+                            "blagi snijeg",
+                            "veliki snijeg",
+                            "zimski solsticij",
+                            "blaga hladnoća",
+                            "jaka hladnoća",
+                        }
+                        wide{
+                            "kreće proljeće",
+                            "kišnica",
+                            "bude se insekti",
+                            "proljetna ravnodnevica",
+                            "vedro",
+                            "kiša zrna",
+                            "kreće ljeto",
+                            "puno zrno",
+                            "zrelo zrno",
+                            "ljetni solsticij",
+                            "blaga vrućina",
+                            "velika vrućina",
+                            "kreće jesen",
+                            "kraj vrućine",
+                            "bijela rosa",
+                            "jesenja ravnodnevnica",
+                            "hladna rosa",
+                            "spušta se mraz",
+                            "kreće zima",
+                            "blagi snijeg",
+                            "veliki snijeg",
+                            "zimski solsticij",
+                            "blaga hladnoća",
+                            "jaka hladnoća",
+                        }
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "1. mjesec",
+                        "2. mjesec",
+                        "3. mjesec",
+                        "4. mjesec",
+                        "5. mjesec",
+                        "6. mjesec",
+                        "7. mjesec",
+                        "8. mjesec",
+                        "9. mjesec",
+                        "10. mjesec",
+                        "11. mjesec",
+                        "12. mjesec",
+                    }
+                    wide{
+                        "Prvi mjesec",
+                        "Drugi mjesec",
+                        "Treći mjesec",
+                        "Četvrti mjesec",
+                        "Peti mjesec",
+                        "Šesti mjesec",
+                        "Sedmi mjesec",
+                        "Osmi mjesec",
+                        "Deveti mjesec",
+                        "Deseti mjesec",
+                        "Jedanaesti mjesec",
+                        "Dvanaesti mjesec",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1. mjesec",
+                        "2. mjesec",
+                        "3. mjesec",
+                        "4. mjesec",
+                        "5. mjesec",
+                        "6. mjesec",
+                        "7. mjesec",
+                        "8. mjesec",
+                        "9. mjesec",
+                        "10.. mjesec",
+                        "11. mjesec",
+                        "12. mjesec",
+                    }
+                    wide{
+                        "Prvi mjesec",
+                        "Drugi mjesec",
+                        "Treći mjesec",
+                        "Četvrti mjesec",
+                        "Peti mjesec",
+                        "Šesti mjesec",
+                        "Sedmi mjesec",
+                        "Osmi mjesec",
+                        "Deveti mjesec",
+                        "Deseti mjesec",
+                        "Jedanaesti mjesec",
+                        "Dvanaesti mjesec",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -273,6 +440,16 @@ bs{
                 "{1} 'u' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMdd",
+                "GyMMdd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 Bh{"h B"}
@@ -366,6 +543,9 @@ bs{
                     d{"GGGGG y-MM-dd – y-MM-dd"}
                     y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
+                H{
+                    H{"HH – HH'h'"}
+                }
                 Hm{
                     H{"HH:mm–HH:mm"}
                     m{"HH:mm–HH:mm"}
@@ -373,6 +553,9 @@ bs{
                 Hmv{
                     H{"HH:mm–HH:mm v"}
                     m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH 'h' v"}
                 }
                 M{
                     M{"M. – M."}
@@ -402,6 +585,7 @@ bs{
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
+                    h{"h – h'h' a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
@@ -415,6 +599,7 @@ bs{
                 }
                 hv{
                     a{"h a – h a v"}
+                    h{"h – h 'h' a v"}
                 }
                 y{
                     y{"y. – y. G"}
@@ -480,6 +665,16 @@ bs{
                 "{1} 'u' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -692,7 +887,7 @@ bs{
                 }
                 narrow{
                     "p.n.e.",
-                    "n.e.",
+                    "n. e.",
                 }
                 wide{
                     "prije nove ere",
@@ -1001,6 +1196,16 @@ bs{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMdd",
+                "GyMMdd",
+                "GyMMdd",
+            }
             availableFormats{
                 Ed{"E, dd."}
                 Hm{"HH:mm"}
@@ -1087,7 +1292,7 @@ bs{
         animals_nature{"životinja ili priroda"}
         arrows{"strelica"}
         body{"tijelo"}
-        box_drawing{"Linije"}
+        box_drawing{"tabela znakova"}
         braille{"Brajevo pismo"}
         building{"zgrada"}
         bullets_stars{"znak za nabrajanje ili zvjezdica"}
@@ -1100,9 +1305,9 @@ bs{
         downwards_arrows{"strelica nadolje"}
         downwards_upwards_arrows{"strelica nadolje-nagore"}
         east_asian_scripts{"istočnoazijsko pismo"}
-        emoji{"Emoji sličice"}
+        emoji{"emoji sličica"}
         european_scripts{"evropsko pismo"}
-        female{"Žensko"}
+        female{"žensko"}
         flag{"zastava"}
         flags{"zastave"}
         food_drink{"Hrana i piće"}
@@ -1392,7 +1597,7 @@ bs{
             }
         }
         minute-short{
-            dn{"min."}
+            dn{"min"}
             relativeTime{
                 future{
                     few{"za {0} min."}
@@ -1528,7 +1733,7 @@ bs{
                 }
                 past{
                     few{"prije {0} kvartala"}
-                    one{"prije {0} kvartal"}
+                    one{"prije {0} kvartala"}
                     other{"prije {0} kvartala"}
                 }
             }

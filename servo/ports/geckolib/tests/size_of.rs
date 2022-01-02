@@ -8,7 +8,7 @@ use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::data::{ElementData, ElementStyles};
 use style::gecko::selector_parser::{self, SelectorImpl};
 use style::properties::ComputedValues;
-use style::rule_tree::{RULE_NODE_SIZE, StrongRuleNode};
+use style::rule_tree::{StrongRuleNode, RULE_NODE_SIZE};
 use style::servo_arc::Arc;
 use style::values::computed;
 use style::values::specified;

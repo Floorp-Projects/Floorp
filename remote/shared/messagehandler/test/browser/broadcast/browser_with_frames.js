@@ -18,6 +18,7 @@ add_task(async function test_broadcasting_with_frames() {
     "commandwindowglobalonly",
     "testBroadcast",
     {},
+    contextDescriptorAll,
     rootMessageHandler
   );
 

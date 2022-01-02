@@ -39,7 +39,7 @@ add_task(async function test_policy_masterpassword_doorhanger() {
 
       // Submit the form with the new credentials. This will cause the doorhanger
       // notification to be displayed.
-      let formSubmittedPromise = listenForTestNotification("FormSubmit");
+      let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
       await SpecialPowers.spawn(browser, [], async function() {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();

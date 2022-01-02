@@ -38,7 +38,6 @@ class JS_PUBLIC_API JSTracer;
 
 namespace js {
 
-class AutoAccessAtomsZone;
 class AutoLockHelperThreadState;
 class GCMarker;
 
@@ -289,8 +288,7 @@ class JitRuntime {
   ~JitRuntime();
   [[nodiscard]] bool initialize(JSContext* cx);
 
-  static void TraceAtomZoneRoots(JSTracer* trc,
-                                 const js::AutoAccessAtomsZone& access);
+  static void TraceAtomZoneRoots(JSTracer* trc);
   [[nodiscard]] static bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
   static void TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc);
 

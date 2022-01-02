@@ -92,70 +92,11 @@ async function assertOneRemoteBrowserShown(
  * @returns nsICommandLine
  */
 function constructOnePageCmdLine(aURL) {
-  return {
-    _arg: aURL,
-    _argCount: 1,
-
-    get length() {
-      return this._argCount;
-    },
-
-    getArgument(aIndex) {
-      if (aIndex == 0 && this._argCount) {
-        return this._arg;
-      }
-      throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
-    },
-
-    findFlag() {
-      return -1;
-    },
-
-    removeArguments() {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
-
-    handleFlag() {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
-
-    handleFlagWithParam() {
-      if (this._argCount) {
-        this._argCount = 0;
-        return this._arg;
-      }
-
-      return "";
-    },
-
-    get state() {
-      return 0;
-    },
-
-    STATE_INITIAL_LAUNCH: 0,
-    STATE_REMOTE_AUTO: 1,
-    STATE_REMOTE_EXPLICIT: 2,
-
-    preventDefault: false,
-
-    get workingDirectory() {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
-
-    get windowContext() {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
-
-    resolveFile() {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
-
-    resolveURI() {
-      return Services.io.newURI(this._arg);
-    },
-
-    QueryInterface: ChromeUtils.generateQI(["nsICommandLine"]),
-  };
+  return Cu.createCommandLine(
+    ["-url", aURL],
+    null,
+    Ci.nsICommandLine.STATE_INITIAL_LAUNCH
+  );
 }
 
 add_task(async function setup() {
@@ -174,7 +115,11 @@ add_task(async function setup() {
  * This tests the default case, where no arguments are passed.
  */
 add_task(async function test_default_args_and_homescreen() {
-  let cmdLine = Cu.createCommandLine();
+  let cmdLine = Cu.createCommandLine(
+    [],
+    null,
+    Ci.nsICommandLine.STATE_INITIAL_LAUNCH
+  );
   await assertOneRemoteBrowserShown(
     cmdLine,
     "about:home",

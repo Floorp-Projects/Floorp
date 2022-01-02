@@ -1,16 +1,11 @@
 "use strict";
 
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
-var mainThread = threadManager.currentThread;
+var mainThread = Services.tm.currentThread;
 
 var onionPref;
 var localdomainPref;
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+var prefs = Services.prefs;
 
 // check that we don't lookup .onion
 var listenerBlock = {

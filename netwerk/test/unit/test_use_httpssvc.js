@@ -212,7 +212,7 @@ add_task(async function testFallback() {
     ],
   });
 
-  let [, inRecord] = await new TRRDNSListener("test.fallback.com", {
+  let { inRecord } = await new TRRDNSListener("test.fallback.com", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
 

@@ -88,16 +88,18 @@ static RefPtr<PWebrtcGlobalParent::GetStatsPromise>
 GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
   nsTArray<RefPtr<dom::RTCStatsReportPromise>> promises;
 
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     // Grab stats for non-closed PCs
-    for (const auto& [id, pc] : ctx->GetPeerConnections()) {
-      if (aPcIdFilter.IsEmpty() || aPcIdFilter.EqualsASCII(id.c_str())) {
-        if (pc->HasMedia()) {
-          promises.AppendElement(pc->GetStats(nullptr, true));
-        }
+    ctx->ForEachPeerConnection([&](PeerConnectionImpl* aPc) {
+      if (!aPcIdFilter.IsEmpty() &&
+          !aPcIdFilter.EqualsASCII(aPc->GetIdAsAscii().c_str())) {
+        return;
       }
-    }
+      if (!aPc->HasMedia()) {
+        return;
+      }
+      promises.AppendElement(aPc->GetStats(nullptr, true));
+    });
 
     // Grab stats for closed PCs
     for (const auto& report : ctx->mStatsForClosedPeerConnections) {
@@ -147,9 +149,7 @@ static std::map<int32_t, dom::Sequence<nsString>>& GetWebrtcGlobalLogStash() {
 
 static void ClearClosedStats() {
   GetWebrtcGlobalStatsStash().Clear();
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     ctx->mStatsForClosedPeerConnections.Clear();
   }
 }
@@ -624,58 +624,10 @@ static void StoreLongTermICEStatisticsImpl_m(RTCStatsReportInternal* report) {
 
   report->mClosed = true;
 
-  for (const auto& outboundRtpStats : report->mOutboundRtpStreamStats) {
-    bool isVideo = (outboundRtpStats.mId.Value().Find("video") != -1);
-    if (!isVideo) {
-      continue;
-    }
-    if (outboundRtpStats.mBitrateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
-                 uint32_t(outboundRtpStats.mBitrateMean.Value() / 1000));
-    }
-    if (outboundRtpStats.mBitrateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                 uint32_t(outboundRtpStats.mBitrateStdDev.Value() / 1000));
-    }
-    if (outboundRtpStats.mFramerateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
-                 uint32_t(outboundRtpStats.mFramerateMean.Value()));
-    }
-    if (outboundRtpStats.mFramerateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                 uint32_t(outboundRtpStats.mFramerateStdDev.Value() * 10));
-    }
-    if (outboundRtpStats.mDroppedFrames.WasPassed() &&
-        report->mCallDurationMs.WasPassed()) {
-      double mins = report->mCallDurationMs.Value() / (1000 * 60);
-      if (mins > 0) {
-        Accumulate(
-            WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
-            uint32_t(double(outboundRtpStats.mDroppedFrames.Value()) / mins));
-      }
-    }
-  }
-
   for (const auto& inboundRtpStats : report->mInboundRtpStreamStats) {
     bool isVideo = (inboundRtpStats.mId.Value().Find("video") != -1);
     if (!isVideo) {
       continue;
-    }
-    if (inboundRtpStats.mBitrateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
-                 uint32_t(inboundRtpStats.mBitrateMean.Value() / 1000));
-    }
-    if (inboundRtpStats.mBitrateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                 uint32_t(inboundRtpStats.mBitrateStdDev.Value() / 1000));
-    }
-    if (inboundRtpStats.mFramerateMean.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
-                 uint32_t(inboundRtpStats.mFramerateMean.Value()));
-    }
-    if (inboundRtpStats.mFramerateStdDev.WasPassed()) {
-      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                 uint32_t(inboundRtpStats.mFramerateStdDev.Value() * 10));
     }
     if (inboundRtpStats.mDiscardedPackets.WasPassed() &&
         report->mCallDurationMs.WasPassed()) {
@@ -690,8 +642,7 @@ static void StoreLongTermICEStatisticsImpl_m(RTCStatsReportInternal* report) {
 
   // Finally, store the stats
 
-  PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-  if (ctx) {
+  if (auto ctx = GetPeerConnectionCtx()) {
     if (!ctx->mStatsForClosedPeerConnections.AppendElement(*report, fallible)) {
       mozalloc_handle_oom(0);
     }

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDNSServiceDiscovery.h"
+#include "MainThreadUtils.h"
 #include "MDNSResponderOperator.h"
 #include "nsICancelable.h"
 #include "nsXULAppAPI.h"

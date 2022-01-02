@@ -436,7 +436,7 @@ class GeckoMigration(
         self.touch_clobber_file(dirs["abs_to_dir"])
 
     def release_to_esr(self, *args, **kwargs):
-        """ mozilla-release -> mozilla-esrNN behavior. """
+        """mozilla-release -> mozilla-esrNN behavior."""
         dirs = self.query_abs_dirs()
         self.apply_replacements()
         self.touch_clobber_file(dirs["abs_to_dir"])
@@ -456,7 +456,7 @@ class GeckoMigration(
             self.replace(os.path.join(dirs["abs_to_dir"], f), from_, to)
 
     def pull_from_repo(self, from_dir, to_dir, revision=None, branch=None):
-        """ Pull from one repo to another. """
+        """Pull from one repo to another."""
         hg = self.query_exe("hg", return_type="list")
         cmd = hg + ["pull"]
         if revision:

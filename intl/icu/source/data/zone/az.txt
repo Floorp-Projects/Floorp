@@ -1885,6 +1885,9 @@ az{
             lg{"Yekaterinburq Vaxtı"}
             ls{"Yekaterinburq Standart Vaxtı"}
         }
+        "meta:Yukon"{
+            ls{"Yukon Vaxtı"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

@@ -12,21 +12,8 @@
 #include "frontend/IfEmitter.h"        // IfEmitter
 #include "frontend/ParseNode.h"        // AccessorType
 #include "frontend/SharedContext.h"    // SharedContext
-#include "gc/AllocKind.h"              // AllocKind
-#include "js/Id.h"                     // jsid
-#include "js/Value.h"                  // UndefinedHandleValue
-#include "vm/BytecodeUtil.h"           // IsHiddenInitOp
 #include "vm/FunctionPrefixKind.h"     // FunctionPrefixKind
-#include "vm/JSContext.h"              // JSContext
-#include "vm/JSObject.h"               // TenuredObject
-#include "vm/NativeObject.h"           // NativeDefineDataProperty
 #include "vm/Opcodes.h"                // JSOp
-#include "vm/Runtime.h"                // cx->parserNames()
-#include "vm/SharedStencil.h"          // GCThingIndex
-
-#include "gc/ObjectKind-inl.h"  // GetGCObjectKind
-#include "vm/JSAtom-inl.h"      // AtomToId
-#include "vm/JSObject-inl.h"    // NewBuiltinClassInstance
 
 using namespace js;
 using namespace js::frontend;

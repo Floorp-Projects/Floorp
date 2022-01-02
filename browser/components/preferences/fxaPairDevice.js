@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.jsm",
 });
 const { require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm",
+  "resource://devtools/shared/loader/Loader.jsm",
   {}
 );
 const QR = require("devtools/shared/qrcode/index");

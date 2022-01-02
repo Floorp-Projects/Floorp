@@ -78,7 +78,7 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
   uint32_t bytesRead = 0;
   bool inSysexMessage = false;
   UniquePtr<MIDIMessage> currentMsg;
-  for (auto& byte : aByteBuffer) {
+  for (const auto& byte : aByteBuffer) {
     bytesRead++;
     if ((byte & kSystemRealtimeMessage) == kSystemRealtimeMessage) {
       MIDIMessage rt_msg;
@@ -116,9 +116,6 @@ bool IsSysexMessage(const MIDIMessage& aMsg) {
   if (aMsg.data().Length() == 0) {
     return false;
   }
-  if (aMsg.data()[0] == kSysexMessageStart) {
-    return true;
-  }
-  return false;
+  return aMsg.data()[0] == kSysexMessageStart;
 }
 }  // namespace mozilla::dom::MIDIUtils

@@ -12,12 +12,14 @@ namespace layers {
 SmoothMsdScrollAnimation::SmoothMsdScrollAnimation(
     AsyncPanZoomController& aApzc, const CSSPoint& aInitialPosition,
     const CSSPoint& aInitialVelocity, const CSSPoint& aDestination,
-    double aSpringConstant, double aDampingRatio)
+    double aSpringConstant, double aDampingRatio,
+    ScrollTriggeredByScript aTriggeredByScript)
     : mApzc(aApzc),
       mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
                   aSpringConstant, aDampingRatio),
       mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
-                  aSpringConstant, aDampingRatio) {}
+                  aSpringConstant, aDampingRatio),
+      mTriggeredByScript(aTriggeredByScript) {}
 
 bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                         const TimeDuration& aDelta) {
@@ -113,9 +115,12 @@ bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   return true;
 }
 
-void SmoothMsdScrollAnimation::SetDestination(const CSSPoint& aNewDestination) {
+void SmoothMsdScrollAnimation::SetDestination(
+    const CSSPoint& aNewDestination,
+    ScrollTriggeredByScript aTriggeredByScript) {
   mXAxisModel.SetDestination(aNewDestination.x);
   mYAxisModel.SetDestination(aNewDestination.y);
+  mTriggeredByScript = aTriggeredByScript;
 }
 
 CSSPoint SmoothMsdScrollAnimation::GetDestination() const {

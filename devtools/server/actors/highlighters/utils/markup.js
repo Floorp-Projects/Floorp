@@ -196,10 +196,19 @@ exports.isNodeValid = isNodeValid;
  * @param {Function} nodeBuilder
  *        A function that, when executed, returns a DOM node to be inserted into
  *        the canvasFrame.
+ * @param {Object} options
+ * @param {Boolean} options.waitForDocumentToLoad
+ *        Set to false to try to insert the anonymous content even if the document
+ *        isn't loaded yet. Defaults to true.
  */
-function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
+function CanvasFrameAnonymousContentHelper(
+  highlighterEnv,
+  nodeBuilder,
+  { waitForDocumentToLoad = true } = {}
+) {
   this.highlighterEnv = highlighterEnv;
   this.nodeBuilder = nodeBuilder;
+  this.waitForDocumentToLoad = !!waitForDocumentToLoad;
 
   this._onWindowReady = this._onWindowReady.bind(this);
   this.highlighterEnv.on("window-ready", this._onWindowReady);
@@ -219,7 +228,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
     const doc = this.highlighterEnv.document;
     if (
       doc.documentElement &&
-      (isDocumentReady(doc) || doc.readyState !== "uninitialized")
+      (!this.waitForDocumentToLoad ||
+        isDocumentReady(doc) ||
+        doc.readyState !== "uninitialized")
     ) {
       this._insert();
     }
@@ -255,7 +266,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   async _insert() {
-    await waitForContentLoaded(this.highlighterEnv.window);
+    if (this.waitForDocumentToLoad) {
+      await waitForContentLoaded(this.highlighterEnv.window);
+    }
     if (!this.highlighterEnv) {
       // CanvasFrameAnonymousContentHelper was already destroyed.
       return;
@@ -293,7 +306,9 @@ CanvasFrameAnonymousContentHelper.prototype = {
         }
       }
 
-      await waitForContentLoaded(this._iframe);
+      if (this.waitForDocumentToLoad) {
+        await waitForContentLoaded(this._iframe);
+      }
       if (!this.highlighterEnv) {
         // CanvasFrameAnonymousContentHelper was already destroyed.
         return;
@@ -326,8 +341,12 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // that scenario, fixes when we're adding anonymous content in a tab that
     // is not the active one (see bug 1260043 and bug 1260044)
     try {
+      // If we didn't wait for the document to load, we want to force a layout update
+      // to ensure the anonymous content will be rendered (see Bug 1580394).
+      const forceSynchronousLayoutUpdate = !this.waitForDocumentToLoad;
       this._content = this.anonymousContentDocument.insertAnonymousContent(
-        node
+        node,
+        forceSynchronousLayoutUpdate
       );
     } catch (e) {
       // If the `insertAnonymousContent` fails throwing a `NS_ERROR_UNEXPECTED`, it means

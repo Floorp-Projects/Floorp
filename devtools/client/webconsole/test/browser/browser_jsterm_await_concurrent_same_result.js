@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Test concurrent top-level await expressions returning same value";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test concurrent top-level await expressions returning same value";
 
 add_task(async function() {
   // Enable editor mode as we'll be able to quicly trigger multiple evaluations.

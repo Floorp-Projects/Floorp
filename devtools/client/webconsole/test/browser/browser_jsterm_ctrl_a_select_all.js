@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Test console select all";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test console select all";
 
 add_task(async function() {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.

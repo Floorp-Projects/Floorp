@@ -110,6 +110,3 @@ if CONFIG["CC_TYPE"] == "clang-cl":
 USE_LIBS += [
     "mozglue",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

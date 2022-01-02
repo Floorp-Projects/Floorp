@@ -29,7 +29,7 @@ var sel = getSelection();
 sel.collapse(test, test.childNodes.length);
 
 // make it a H1
-document.execCommand("heading", false, "H1");
+document.execCommand("formatBlock", false, "H1");
 // simulate a CR key
 sendKey("return");
 // insert some text

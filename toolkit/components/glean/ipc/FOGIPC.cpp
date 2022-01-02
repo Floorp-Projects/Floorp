@@ -9,20 +9,26 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/GPUChild.h"
+#include "mozilla/gfx/GPUParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ProcInfo.h"
+#include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
 using mozilla::dom::ContentParent;
+using mozilla::gfx::GPUChild;
+using mozilla::gfx::GPUProcessManager;
 using mozilla::ipc::ByteBuf;
 using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 
 namespace mozilla {
 namespace glean {
 
-static void RecordCpuTime() {
-  static uint64_t previousCpuTime = 0;
+static void RecordPowerMetrics() {
+  static uint64_t previousCpuTime = 0, previousGpuTime = 0;
 
   uint64_t cpuTime;
   if (NS_FAILED(GetCpuTimeSinceProcessStartInMs(&cpuTime))) {
@@ -38,6 +44,16 @@ static void RecordCpuTime() {
     // This should be fine for now, but may overflow in the future.
     power::total_cpu_time_ms.Add(int32_t(newCpuTime));
   }
+
+  uint64_t gpuTime;
+  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime))) {
+    uint64_t newGpuTime = gpuTime - previousGpuTime;
+    previousGpuTime += newGpuTime;
+
+    if (newGpuTime) {
+      power::total_gpu_time_ms.Add(int32_t(newGpuTime));
+    }
+  }
 }
 
 /**
@@ -48,8 +64,8 @@ static void RecordCpuTime() {
  *                    serialized payload that the Rust impl hands you.
  */
 void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
-  // Record the CPU time right before data is sent to the parent.
-  RecordCpuTime();
+  // Record power metrics right before data is sent to the parent.
+  RecordPowerMetrics();
 
   ByteBuf buf;
   uint32_t ipcBufferSize = impl::fog_serialize_ipc_buf();
@@ -71,19 +87,33 @@ void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
  */
 void FlushAllChildData(
     std::function<void(nsTArray<ipc::ByteBuf>&&)>&& aResolver) {
+  auto timerId = fog_ipc::flush_durations.Start();
+
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
-  if (parents.Length() == 0) {
+  nsTArray<RefPtr<FlushFOGDataPromise>> promises;
+  for (auto* parent : parents) {
+    promises.EmplaceBack(parent->SendFlushFOGData());
+  }
+
+  GPUProcessManager* gpuManager = GPUProcessManager::Get();
+  GPUChild* gpuChild = nullptr;
+  if (gpuManager) {
+    gpuChild = gpuManager->GetGPUChild();
+    if (gpuChild) {
+      promises.EmplaceBack(gpuChild->SendFlushFOGData());
+    }
+  }
+
+  if (promises.Length() == 0) {
+    // No child processes at the moment. Resolve synchronously.
+    fog_ipc::flush_durations.Cancel(std::move(timerId));
     nsTArray<ipc::ByteBuf> results;
     aResolver(std::move(results));
     return;
   }
 
-  auto timerId = fog_ipc::flush_durations.Start();
-  nsTArray<RefPtr<FlushFOGDataPromise>> promises;
-  for (auto* parent : parents) {
-    promises.EmplaceBack(parent->SendFlushFOGData());
-  }
+  // If fog.ipc.flush_failures ever gets too high:
   // TODO: Don't throw away resolved data if some of the promises reject.
   // (not sure how, but it'll mean not using ::All... maybe a custom copy of
   // AllPromiseHolder? Might be impossible outside MozPromise.h)
@@ -96,6 +126,7 @@ void FlushAllChildData(
                if (aValue.IsResolve()) {
                  aResolver(std::move(aValue.ResolveValue()));
                } else {
+                 fog_ipc::flush_failures.Add(1);
                  nsTArray<ipc::ByteBuf> results;
                  aResolver(std::move(results));
                }
@@ -120,6 +151,10 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     case GeckoProcessType_Content:
       mozilla::dom::ContentChild::GetSingleton()->SendFOGData(std::move(buf));
       break;
+    case GeckoProcessType_GPU:
+      Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
+          std::move(buf));
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
   }
@@ -130,8 +165,9 @@ void SendFOGData(ipc::ByteBuf&& buf) {
  * sending it all down into Rust to be used.
  */
 RefPtr<GenericPromise> FlushAndUseFOGData() {
-  // Record CPU time on the parent before sending requests to child processes.
-  RecordCpuTime();
+  // Record power metrics on the parent before sending requests to child
+  // processes.
+  RecordPowerMetrics();
 
   RefPtr<GenericPromise::Private> ret = new GenericPromise::Private(__func__);
   std::function<void(nsTArray<ByteBuf> &&)> resolver =
@@ -143,6 +179,10 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
       };
   FlushAllChildData(std::move(resolver));
   return ret;
+}
+
+void TestTriggerGPUMetrics() {
+  gfx::GPUProcessManager::Get()->TestTriggerMetrics();
 }
 
 }  // namespace glean

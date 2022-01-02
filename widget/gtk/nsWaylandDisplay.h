@@ -19,6 +19,7 @@
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 #include "mozilla/widget/primary-selection-unstable-v1-client-protocol.h"
 #include "mozilla/widget/viewporter-client-protocol.h"
+#include "mozilla/widget/xdg-activation-v1-client-protocol.h"
 
 namespace mozilla {
 namespace widget {
@@ -71,6 +72,7 @@ class nsWaylandDisplay {
     return mPointerConstraints;
   }
   zwp_linux_dmabuf_v1* GetDmabuf(void) { return mDmabuf; };
+  xdg_activation_v1* GetXdgActivation(void) { return mXdgActivation; };
 
   bool IsMainThreadDisplay() { return mEventQueue == nullptr; }
 
@@ -88,6 +90,7 @@ class nsWaylandDisplay {
       zwp_relative_pointer_manager_v1* aRelativePointerManager);
   void SetPointerConstraints(zwp_pointer_constraints_v1* aPointerConstraints);
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
+  void SetXdgActivation(xdg_activation_v1* aXdgActivation);
 
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
@@ -109,6 +112,7 @@ class nsWaylandDisplay {
   zwp_pointer_constraints_v1* mPointerConstraints;
   wp_viewporter* mViewporter;
   zwp_linux_dmabuf_v1* mDmabuf;
+  xdg_activation_v1* mXdgActivation;
   bool mExplicitSync;
 };
 

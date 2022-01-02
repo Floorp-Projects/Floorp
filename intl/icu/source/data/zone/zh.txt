@@ -1940,6 +1940,9 @@ zh{
             lg{"叶卡捷琳堡时间"}
             ls{"叶卡捷琳堡标准时间"}
         }
+        "meta:Yukon"{
+            ls{"育空时间"}
+        }
         fallbackFormat{"{1}（{0}）"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

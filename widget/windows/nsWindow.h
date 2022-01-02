@@ -368,6 +368,13 @@ class nsWindow final : public nsWindowBase {
   void MaybeEnableWindowOcclusion(bool aEnable);
 
  protected:
+  struct Desktop {
+    // Cached GUID of the virtual desktop this window should be on.
+    // This value may be stale.
+    nsString mID;
+    bool mUpdateIsQueued = false;
+  };
+
   virtual ~nsWindow();
 
   virtual void WindowUsesOMTC() override;
@@ -463,7 +470,6 @@ class nsWindow final : public nsWindowBase {
   TimeStamp GetMessageTimeStamp(LONG aEventTime) const;
   static void UpdateFirstEventTime(DWORD aEventTime);
   void FinishLiveResizing(ResizeState aNewState);
-  LayoutDeviceIntPoint GetTouchCoordinates(WPARAM wParam, LPARAM lParam);
   mozilla::Maybe<mozilla::PanGestureInput> ConvertTouchToPanGesture(
       const mozilla::MultiTouchInput& aTouchInput, PTOUCHINPUT aOriginalEvent);
   void DispatchTouchOrPanGestureInput(mozilla::MultiTouchInput& aTouchInput,
@@ -567,6 +573,8 @@ class nsWindow final : public nsWindowBase {
   void DestroyDirectManipulation();
 
   bool NeedsToTrackWindowOcclusionState();
+
+  void AsyncUpdateWorkspaceID(Desktop& aDesktop);
 
  protected:
   nsCOMPtr<nsIWidget> mParent;
@@ -742,6 +750,8 @@ class nsWindow final : public nsWindowBase {
   mozilla::EnumeratedArray<WindowButtonType, WindowButtonType::Count,
                            LayoutDeviceIntRect>
       mWindowBtnRect;
+
+  mozilla::DataMutex<Desktop> mDesktopId;
 };
 
 #endif  // Window_h__

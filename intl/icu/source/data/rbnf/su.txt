@@ -33,7 +33,7 @@ su{
             "1000000000000: =#,##0=;",
             "%%spellout-cardinal-large:",
             "1: sa;",
-            "0: =%spellout-cardinal= ;",
+            "2: =%spellout-cardinal= ;",
             "%spellout-ordinal:",
             "-x: mineus >>;",
             "x.x: =#,##0.0=;",

@@ -187,7 +187,7 @@ def isValidPlatform(platform):
 
 
 def parseRepackConfig(filename, platform):
-    """ Did you hear about this cool file format called yaml ? json ? Yeah, me neither """
+    """Did you hear about this cool file format called yaml ? json ? Yeah, me neither"""
     config = {}
     config["platforms"] = []
     f = open(filename, "r")

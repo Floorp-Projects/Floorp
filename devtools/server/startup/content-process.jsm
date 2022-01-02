@@ -27,7 +27,7 @@ function setupServer(mm) {
 
   // Lazy load Loader.jsm to prevent loading any devtools dependency too early.
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
 
   // Init a custom, invisible DevToolsServer, in order to not pollute the

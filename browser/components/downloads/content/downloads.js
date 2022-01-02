@@ -89,6 +89,17 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+
+/* global DownloadIntegration */
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
+
 // DownloadsPanel
 
 /**
@@ -128,6 +139,20 @@ var DownloadsPanel = {
     DownloadsCommon.log(
       "Attempting to initialize DownloadsPanel for a window."
     );
+
+    // Allow the download spam protection module to notify DownloadsView
+    // if it's been created.
+    if (
+      DownloadIntegration.downloadSpamProtection &&
+      !DownloadIntegration.downloadSpamProtection.spamList._views.has(
+        DownloadsView
+      )
+    ) {
+      DownloadIntegration.downloadSpamProtection.spamList.addView(
+        DownloadsView
+      );
+    }
+
     if (this._state != this.kStateUninitialized) {
       DownloadsCommon.log("DownloadsPanel is already initialized.");
       return;
@@ -150,6 +175,7 @@ var DownloadsPanel = {
     DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit).addView(
       DownloadsSummary
     );
+
     DownloadsCommon.log(
       "DownloadsView attached - the panel for this window",
       "should now see download items come in."
@@ -184,6 +210,12 @@ var DownloadsPanel = {
       DownloadsView.kItemCountLimit
     ).removeView(DownloadsSummary);
     this._unattachEventListeners();
+
+    if (DownloadIntegration.downloadSpamProtection) {
+      DownloadIntegration.downloadSpamProtection.spamList.removeView(
+        DownloadsView
+      );
+    }
 
     this._state = this.kStateUninitialized;
 
@@ -1560,8 +1592,19 @@ var DownloadsBlockedSubview = {
 
     let e = this.elements;
     let s = DownloadsCommon.strings;
-    e.title.textContent = title;
-    e.details1.textContent = details[0];
+
+    title.l10n
+      ? document.l10n.setAttributes(e.title, title.l10n.id, title.l10n.args)
+      : (e.title.textContent = title);
+
+    details[0].l10n
+      ? document.l10n.setAttributes(
+          e.details1,
+          details[0].l10n.id,
+          details[0].l10n.args
+        )
+      : (e.details1.textContent = details[0]);
+
     e.details2.textContent = details[1];
 
     if (download.launchWhenSucceeded) {

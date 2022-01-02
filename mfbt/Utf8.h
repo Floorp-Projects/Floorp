@@ -357,8 +357,8 @@ inline size_t ConvertUtf8toUtf16(mozilla::Span<const char> aSource,
  */
 inline size_t UnsafeConvertValidUtf8toUtf16(mozilla::Span<const char> aSource,
                                             mozilla::Span<char16_t> aDest) {
-  return encoding_mem_convert_utf8_to_utf16(
-      aSource.Elements(), aSource.Length(), aDest.Elements(), aDest.Length());
+  return encoding_mem_convert_str_to_utf16(aSource.Elements(), aSource.Length(),
+                                           aDest.Elements(), aDest.Length());
 }
 
 /**

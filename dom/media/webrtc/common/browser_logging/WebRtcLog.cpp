@@ -7,7 +7,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 #include "prenv.h"
-#include "common_types.h"
 #include "rtc_base/logging.h"
 
 #include "nscore.h"

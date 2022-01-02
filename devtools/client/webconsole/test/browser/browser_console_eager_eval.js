@@ -5,7 +5,7 @@
 "use strict";
 
 // Check evaluating eager-evaluation values.
-const TEST_URI = "data:text/html;charset=utf8,";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>";
 
 add_task(async function() {
   await addTab(TEST_URI);
@@ -23,7 +23,7 @@ add_task(async function() {
 async function executeNonDebuggeeSideeffect(hud) {
   await executeAndWaitForMessage(
     hud,
-    `globalThis.eagerLoader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");`,
+    `globalThis.eagerLoader = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");`,
     `DevToolsLoader`
   );
 

@@ -5,6 +5,7 @@
 
 #include "Accessible.h"
 #include "ARIAMap.h"
+#include "mozilla/a11y/HyperTextAccessibleBase.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -67,4 +68,12 @@ bool Accessible::IsTextRole() {
   }
 
   return true;
+}
+
+uint32_t Accessible::StartOffset() {
+  MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
+  Accessible* parent = Parent();
+  HyperTextAccessibleBase* hyperText =
+      parent ? parent->AsHyperTextBase() : nullptr;
+  return hyperText ? hyperText->GetChildOffset(this) : 0;
 }

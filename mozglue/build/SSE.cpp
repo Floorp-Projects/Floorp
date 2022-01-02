@@ -30,7 +30,7 @@ static bool has_cpuid_bits(unsigned int level, CPUIDRegister reg,
                            unsigned int bits) {
   unsigned int regs[4];
   unsigned int eax, ebx, ecx, edx;
-  unsigned max = __get_cpuid_max(0, NULL);
+  unsigned max = __get_cpuid_max(level & 0x80000000u, nullptr);
   if (level > max) return false;
   __cpuid_count(level, 0, eax, ebx, ecx, edx);
   regs[0] = eax;
@@ -178,6 +178,8 @@ bool avx2_enabled = has_avx() && has_cpuid_bits(7u, ebx, (1u << 5));
 #  if !defined(MOZILLA_PRESUME_AES)
 bool aes_enabled = has_cpuid_bits(1u, ecx, (1u << 25));
 #  endif
+
+bool has_constant_tsc = has_cpuid_bits(0x80000007u, edx, (1u << 8));
 
 #endif
 

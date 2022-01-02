@@ -94,6 +94,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mFrameInnerDarkBorder = kBlack;
     nscolor mOddCellBackground = kWhite;
     nscolor mNativeHyperLinkText = kBlack;
+    nscolor mNativeVisitedHyperLinkText = kBlack;
     nscolor mComboBoxText = kBlack;
     nscolor mComboBoxBackground = kWhite;
     nscolor mFieldText = kBlack;

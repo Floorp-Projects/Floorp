@@ -152,6 +152,11 @@ ps{
             }
         }
         concentr{
+            item{
+                dnam{"توکي"}
+                one{"{0} توکی"}
+                other{"{0} توکی"}
+            }
             karat{
                 dnam{"قيراط"}
                 one{"{0} قيراط"}
@@ -704,7 +709,6 @@ ps{
                 dnam{"پاسکیلز"}
             }
             pound-force-per-square-inch{
-                dnam{"پاونډز في مربع انچ"}
                 one{"{0} پاونډ في مربع انچ"}
                 other{"{0} پاونډز في مربع انچ"}
             }
@@ -744,8 +748,6 @@ ps{
             }
             generic{
                 dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
             }
             kelvin{
                 dnam{"کيلونز"}
@@ -843,7 +845,6 @@ ps{
                 other{"{0} ډرام"}
             }
             drop{
-                dnam{"څاڅک"}
                 one{"{0} څاڅک"}
                 other{"{0} څاڅک"}
             }
@@ -940,6 +941,11 @@ ps{
             }
         }
         concentr{
+            item{
+                dnam{"توکی"}
+                one{"{0} توکی"}
+                other{"{0} توکی"}
+            }
             percent{
                 dnam{"سلنه"}
                 one{"{0}%"}
@@ -951,6 +957,9 @@ ps{
                 dnam{"L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg UK"}
             }
         }
         coordinate{
@@ -1002,6 +1011,12 @@ ps{
                 other{"{0} y"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0} kWh/100km"}
+                other{"{0}kWh/100km"}
+            }
+        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -1051,6 +1066,18 @@ ps{
             }
         }
         volume{
+            dessert-spoon-imperial{
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            fluid-ounce-imperial{
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                one{"{0}galIm"}
+                other{"{0}galIm"}
+            }
             liter{
                 dnam{"لیټر"}
                 one{"{0}L"}
@@ -1203,6 +1230,11 @@ ps{
             }
         }
         concentr{
+            item{
+                dnam{"توکی"}
+                one{"{0} توکی"}
+                other{"{0} توکی"}
+            }
             karat{
                 dnam{"قيراط"}
                 one{"{0} kt"}
@@ -1350,11 +1382,6 @@ ps{
                 one{"{0} h"}
                 other{"{0} h"}
                 per{"{0}/h"}
-            }
-            microsecond{
-                dnam{"μs"}
-                one{"{0} μs"}
-                other{"{0} μs"}
             }
             millisecond{
                 dnam{"ms"}
@@ -1915,7 +1942,6 @@ ps{
                 dnam{"Imp. gal"}
                 one{"{0} gal Imp."}
                 other{"{0} gal Imp."}
-                per{"{0}/gal Imp."}
             }
             hectoliter{
                 dnam{"hL"}

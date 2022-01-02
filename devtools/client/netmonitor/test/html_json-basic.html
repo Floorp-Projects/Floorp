@@ -19,23 +19,23 @@
       /* exported performRequests */
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address, true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(null);
+        });
       }
 
-      function performRequests() {
+      async function performRequests() {
         // Forward the query parameter for this page to sjs_json-test-server
-        get("sjs_json-test-server.sjs" + window.location.search, function() {
-          // Done.
-        });
+        await get("sjs_json-test-server.sjs" + window.location.search);
       }
     </script>
   </body>

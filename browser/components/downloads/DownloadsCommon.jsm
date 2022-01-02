@@ -62,6 +62,13 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gAlwaysOpenPanel",
+  "browser.download.alwaysOpenPanel",
+  true
+);
+
 const kDownloadsStringBundleUrl =
   "chrome://browser/locale/downloads/downloads.properties";
 
@@ -952,7 +959,8 @@ DownloadsDataCtor.prototype = {
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
       ) &&
-      DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1;
+      DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1 &&
+      gAlwaysOpenPanel;
 
     if (
       this.panelHasShownBefore &&
@@ -1265,6 +1273,7 @@ DownloadsIndicatorDataCtor.prototype = {
           break;
         case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED: // fall-through
         case Downloads.Error.BLOCK_VERDICT_INSECURE:
+        case Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
           // Existing higher level attention indication trumps ATTENTION_WARNING.
           if (this._attention != DownloadsCommon.ATTENTION_SEVERE) {
             this.attention = DownloadsCommon.ATTENTION_WARNING;

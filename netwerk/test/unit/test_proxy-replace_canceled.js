@@ -28,10 +28,7 @@ function run_test() {
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
 
-  var prefserv = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefService
-  );
-  var prefs = prefserv.getBranch("network.proxy.");
+  var prefs = Services.prefs.getBranch("network.proxy.");
   prefs.setIntPref("type", 2);
   prefs.setCharPref(
     "autoconfig_url",

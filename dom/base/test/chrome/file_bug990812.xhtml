@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
   <label value="Mozilla Bug 990812"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-
+    /* global messageManager, sendAsyncMessage, getGroupMessageManager */
     var FRAME_SCRIPT_GLOBAL = "data:,sendSyncMessage('test', 'global')";
     var FRAME_SCRIPT_WINDOW = "data:,sendSyncMessage('test', 'window')";
     var FRAME_SCRIPT_GROUP  = "data:,sendSyncMessage('test', 'group')";

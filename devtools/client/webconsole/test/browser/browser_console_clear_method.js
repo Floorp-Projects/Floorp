@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>Bug 1296870";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html><p>Bug 1296870";
 
 add_task(async function() {
   await loadTab(TEST_URI);

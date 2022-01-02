@@ -320,6 +320,8 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 
   // Read permissions
   policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/dev/random");
+  policy->AddPath(rdonly, "/proc/sys/crypto/fips_enabled");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
   policy->AddDir(rdonly, "/sys/devices/cpu");
@@ -807,6 +809,14 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
     }
   }
 
+  // VA-API needs DRI and GPU detection
+  policy->AddDir(rdwr, "/dev/dri");
+  AddMesaSysfsPaths(policy.get());
+
+  // FFmpeg and GPU drivers may need general-case library loading
+  AddLdconfigPaths(policy.get());
+  AddLdLibraryEnvPaths(policy.get());
+
   if (policy->IsEmpty()) {
     policy = nullptr;
   }
@@ -818,6 +828,8 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   auto policy = MakeUnique<SandboxBroker::Policy>();
 
   policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/dev/random");
+  policy->AddPath(rdonly, "/proc/sys/crypto/fips_enabled");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
   policy->AddDir(rdonly, "/sys/devices/cpu");

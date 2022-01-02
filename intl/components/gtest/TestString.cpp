@@ -199,13 +199,15 @@ TEST(IntlString, ComposePairNFC)
   ASSERT_EQ(String::ComposePairNFC(U'a', U'\u0308'), U'ä');
   // Accented letter + a further accent
   ASSERT_EQ(String::ComposePairNFC(U'ä', U'\u0304'), U'ǟ');
-  // Accented letter + a further accent, but doubly-accented form is not available
+  // Accented letter + a further accent, but doubly-accented form is not
+  // available
   ASSERT_EQ(String::ComposePairNFC(U'ä', U'\u0301'), U'\0');
-  // These do not compose because although U+0344 has the decomposition <0308, 0301>
-  // (see below), it also has the Full_Composition_Exclusion property.
+  // These do not compose because although U+0344 has the decomposition <0308,
+  // 0301> (see below), it also has the Full_Composition_Exclusion property.
   ASSERT_EQ(String::ComposePairNFC(U'\u0308', U'\u0301'), U'\0');
   // Supplementary-plane letter + accent
-  ASSERT_EQ(String::ComposePairNFC(U'\U00011099', U'\U000110BA'), U'\U0001109A');
+  ASSERT_EQ(String::ComposePairNFC(U'\U00011099', U'\U000110BA'),
+            U'\U0001109A');
 }
 
 TEST(IntlString, DecomposeRawNFD)

@@ -3097,11 +3097,8 @@ void MacroAssembler::absInt64x2(FloatRegister src, FloatRegister dest) {
 
 void MacroAssembler::leftShiftInt8x16(FloatRegister lhs, Register rhs,
                                       FloatRegister dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  ARMRegister scratch = temps.AcquireW();
-  And(scratch, ARMRegister(rhs, 32), 7);
   ScratchSimd128Scope vscratch(*this);
-  Dup(Simd16B(vscratch), scratch);
+  Dup(Simd16B(vscratch), ARMRegister(rhs, 32));
   Sshl(Simd16B(dest), Simd16B(lhs), Simd16B(vscratch));
 }
 
@@ -3112,11 +3109,8 @@ void MacroAssembler::leftShiftInt8x16(Imm32 count, FloatRegister src,
 
 void MacroAssembler::leftShiftInt16x8(FloatRegister lhs, Register rhs,
                                       FloatRegister dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  ARMRegister scratch = temps.AcquireW();
-  And(scratch, ARMRegister(rhs, 32), 15);
   ScratchSimd128Scope vscratch(*this);
-  Dup(Simd8H(vscratch), scratch);
+  Dup(Simd8H(vscratch), ARMRegister(rhs, 32));
   Sshl(Simd8H(dest), Simd8H(lhs), Simd8H(vscratch));
 }
 
@@ -3127,11 +3121,8 @@ void MacroAssembler::leftShiftInt16x8(Imm32 count, FloatRegister src,
 
 void MacroAssembler::leftShiftInt32x4(FloatRegister lhs, Register rhs,
                                       FloatRegister dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  ARMRegister scratch = temps.AcquireW();
-  And(scratch, ARMRegister(rhs, 32), 31);
   ScratchSimd128Scope vscratch(*this);
-  Dup(Simd4S(vscratch), scratch);
+  Dup(Simd4S(vscratch), ARMRegister(rhs, 32));
   Sshl(Simd4S(dest), Simd4S(lhs), Simd4S(vscratch));
 }
 
@@ -3142,11 +3133,8 @@ void MacroAssembler::leftShiftInt32x4(Imm32 count, FloatRegister src,
 
 void MacroAssembler::leftShiftInt64x2(FloatRegister lhs, Register rhs,
                                       FloatRegister dest) {
-  vixl::UseScratchRegisterScope temps(this);
-  ARMRegister scratch = temps.AcquireX();
-  And(scratch, ARMRegister(rhs, 64), 63);
   ScratchSimd128Scope vscratch(*this);
-  Dup(Simd2D(vscratch), scratch);
+  Dup(Simd2D(vscratch), ARMRegister(rhs, 64));
   Sshl(Simd2D(dest), Simd2D(lhs), Simd2D(vscratch));
 }
 

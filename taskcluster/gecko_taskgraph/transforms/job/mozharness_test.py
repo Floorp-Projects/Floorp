@@ -16,7 +16,7 @@ from gecko_taskgraph.transforms.job import (
 )
 from gecko_taskgraph.util.schema import Schema
 from gecko_taskgraph.util.taskcluster import get_artifact_path
-from gecko_taskgraph.transforms.tests import test_description_schema, normpath
+from gecko_taskgraph.transforms.test import test_description_schema, normpath
 from gecko_taskgraph.transforms.job.common import support_vcs_checkout
 
 VARIANTS = [

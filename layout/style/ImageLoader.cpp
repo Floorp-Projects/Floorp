@@ -540,9 +540,9 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
           static_cast<layers::WebRenderMaskData*>(data.get())->Invalidate();
           invalidateFrame = true;
           break;
-        case layers::WebRenderUserData::UserDataType::eImage:
-          if (static_cast<layers::WebRenderImageData*>(data.get())
-                  ->UsingSharedSurface(aRequest->GetProducerId())) {
+        case layers::WebRenderUserData::UserDataType::eImageProvider:
+          if (static_cast<layers::WebRenderImageProviderData*>(data.get())
+                  ->Invalidate(aRequest->GetProviderId())) {
             break;
           }
           [[fallthrough]];

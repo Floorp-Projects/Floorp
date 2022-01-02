@@ -1,47 +1,70 @@
 # Remote CFR Messages
-Starting in Firefox 68, CFR messages will be defined using [Remote Settings](https://remote-settings.readthedocs.io/en/latest/index.html). In this document, we'll cover how how to set up a dev environment.
+Starting in Firefox 68, CFR messages will be defined using [Remote Settings](https://remote-settings.readthedocs.io/en/latest/index.html). In this document, we'll cover how to set up a dev environment.
 
 ## Using a dev server for Remote CFR
 
-**1. Setup the Remote Settings dev server with the CFR messages.**
-Note that the dev server gets wiped every 24 hours so this will be have to be done once a day. You can check if there currently are any messages [here](https://kinto.dev.mozaws.net/v1//buckets/main/collections/cfr/records).
+> Note: Since Novembre 2021, Remote Settings has a proper DEV instance, which is
+> reachable without VPN, but has the same config (openid, multi-signoff, ...)
+> and collections as STAGE/PROD.
+
+**1. Obtain your Bearer Token**
+
+Until [Bug 1630651](https://bugzilla.mozilla.org/show_bug.cgi?id=1630651) happens, the easiest way to obtain your OpenID credentials is to use the admin interface.
+
+1. [Login on the Admin UI](https://settings.dev.mozaws.net/v1/admin/) using your LDAP identity
+2. Copy the authentication header (📋 icon in the top bar)
+3. Test your credentials with ``curl``. When reaching out the server root URL with this bearer token you should see a ``user`` entry whose ``id`` field is ``ldap:<you>@mozilla.com``.
 
 ```bash
-SERVER=https://kinto.dev.mozaws.net/v1
+SERVER=https://settings.dev.mozaws.net/v1
+BEARER_TOKEN="Bearer uLdb-Yafefe....2Hyl5_w"
 
-# create user
-curl -X PUT ${SERVER}/accounts/devuser \
-     -d '{"data": {"password": "devpass"}}' \
-     -H 'Content-Type:application/json'
-
-BASIC_AUTH=devuser:devpass
-
-# create collection
-CID=cfr
-curl -X PUT ${SERVER}/buckets/main/collections/${CID} \
-     -H 'Content-Type:application/json' \
-     -u ${BASIC_AUTH}
-
-# post a message
-curl -X POST ${SERVER}/buckets/main/collections/${CID}/records \
-     -d '{"data":{"id":"PIN_TAB","template":"cfr_doorhanger","content":{"category":"cfrFeatures","bucket_id":"CFR_PIN_TAB","notification_text":{"string_id":"cfr-doorhanger-extension-notification"},"heading_text":{"string_id":"cfr-doorhanger-pintab-heading"},"info_icon":{"label":{"string_id":"cfr-doorhanger-extension-sumo-link"},"sumo_path":"extensionrecommendations"},"text":{"string_id":"cfr-doorhanger-pintab-description"},"descriptionDetails":{"steps":[{"string_id":"cfr-doorhanger-pintab-step1"},{"string_id":"cfr-doorhanger-pintab-step2"},{"string_id":"cfr-doorhanger-pintab-step3"}]},"buttons":{"primary":{"label":{"string_id":"cfr-doorhanger-pintab-ok-button"},"action":{"type":"PIN_CURRENT_TAB"}},"secondary":[{"label":{"string_id":"cfr-doorhanger-extension-cancel-button"},"action":{"type":"CANCEL"}},{"label":{"string_id":"cfr-doorhanger-extension-never-show-recommendation"}},{"label":{"string_id":"cfr-doorhanger-extension-manage-settings-button"},"action":{"type":"OPEN_PREFERENCES_PAGE","data":{"category":"general-cfrfeatures"}}}]}},"targeting":"locale == \"en-US\" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3","frequency":{"lifetime":3},"trigger":{"id":"frequentVisits","params":["docs.google.com","www.docs.google.com","calendar.google.com","messenger.com","www.messenger.com","web.whatsapp.com","mail.google.com","outlook.live.com","facebook.com","www.facebook.com","twitter.com","www.twitter.com","reddit.com","www.reddit.com","github.com","www.github.com","youtube.com","www.youtube.com","feedly.com","www.feedly.com","drive.google.com","amazon.com","www.amazon.com","messages.android.com"]}}}' \
-     -H 'Content-Type:application/json' \
-     -u ${BASIC_AUTH}
+curl -s ${SERVER}/ -H "Authorization:${BEARER_TOKEN}" | jq .user
 ```
 
-Now there should be a message listed: https://kinto.dev.mozaws.net/v1//buckets/main/collections/cfr/records
+**2. Create/Update/Delete CFR entries**
 
-NOTE: The collection and messages can also be created manually using the [admin interface](https://kinto.dev.mozaws.net/v1/admin/).
+> The messages can also be created manually using the [admin interface](https://settings.dev.mozaws.net/v1/admin/).
 
-**2. Set Remote Settings prefs to use the dev server.**
+In following example, we will create a new entry using the REST API (reusing `SERVER` and `BEARER_TOKEN` from previous step).
+
+```bash
+CID=cfr
+
+# post a message
+curl -X POST ${SERVER}/buckets/main-workspace/collections/${CID}/records \
+     -d '{"data":{"id":"PIN_TAB","template":"cfr_doorhanger","content":{"category":"cfrFeatures","bucket_id":"CFR_PIN_TAB","notification_text":{"string_id":"cfr-doorhanger-extension-notification"},"heading_text":{"string_id":"cfr-doorhanger-pintab-heading"},"info_icon":{"label":{"string_id":"cfr-doorhanger-extension-sumo-link"},"sumo_path":"extensionrecommendations"},"text":{"string_id":"cfr-doorhanger-pintab-description"},"descriptionDetails":{"steps":[{"string_id":"cfr-doorhanger-pintab-step1"},{"string_id":"cfr-doorhanger-pintab-step2"},{"string_id":"cfr-doorhanger-pintab-step3"}]},"buttons":{"primary":{"label":{"string_id":"cfr-doorhanger-pintab-ok-button"},"action":{"type":"PIN_CURRENT_TAB"}},"secondary":[{"label":{"string_id":"cfr-doorhanger-extension-cancel-button"},"action":{"type":"CANCEL"}},{"label":{"string_id":"cfr-doorhanger-extension-never-show-recommendation"}},{"label":{"string_id":"cfr-doorhanger-extension-manage-settings-button"},"action":{"type":"OPEN_PREFERENCES_PAGE","data":{"category":"general-cfrfeatures"}}}]}},"targeting":"locale == \"en-US\" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3","frequency":{"lifetime":3},"trigger":{"id":"frequentVisits","params":["docs.google.com","www.docs.google.com","calendar.google.com","messenger.com","www.messenger.com","web.whatsapp.com","mail.google.com","outlook.live.com","facebook.com","www.facebook.com","twitter.com","www.twitter.com","reddit.com","www.reddit.com","github.com","www.github.com","youtube.com","www.youtube.com","feedly.com","www.feedly.com","drive.google.com","amazon.com","www.amazon.com","messages.android.com"]}}}' \
+     -H 'Content-Type:application/json' \
+     -H "Authorization:${BEARER_TOKEN}"
+```
+
+The collection was modified and now with pending changes in the workspace. We will now request a review, so that the changes become visible in the **preview** bucket.
+
+```bash
+# request review
+curl -X PATCH ${SERVER}/buckets/main-workspace/collections/${CID} \
+     -H 'Content-Type:application/json' \
+     -d '{"data": {"status": "to-review"}}' \
+     -H "Authorization:${BEARER_TOKEN}"
+```
+
+Now this new record should be listed here: https://settings.dev.mozaws.net/v1/buckets/main-preview/collections/cfr/records
+
+**3. Set Remote Settings prefs to use the dev server.**
+
+Until [support for the DEV environment](https://github.com/mozilla-extensions/remote-settings-devtools/issues/66) is added to the [Remote Settings dev tools](https://github.com/mozilla-extensions/remote-settings-devtools/), we'll change the preferences manually.
+
+> These are critical preferences, you should use a dedicated Firefox profile for development.
 
 ```javascript
-Services.prefs.setStringPref("services.settings.server", "https://kinto.dev.mozaws.net/v1");
-
-// Disable signature verification
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-
-RemoteSettings("cfr").verifySignature = false;
+  Services.prefs.setCharPref("services.settings.loglevel", "debug");
+  Services.prefs.setCharPref("services.settings.server", "https://settings.dev.mozaws.net/v1");
+  // Dev collections are signed with the STAGE infrastructure, use STAGE's hash:
+  Services.prefs.setCharPref("security.content.signature.root_hash" "3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45");
+  // Prevent packaged dumps to interfere.
+  Services.prefs.setBoolPref("services.settings.load_dump", false);
+  // The changes are not approved yet, point the client to «preview»
+  Services.prefs.setCharPref("services.settings.default_bucket", "main-preview");
 ```
 
 **3. Set ASRouter CFR pref to use Remote Settings provider and enable asrouter devtools.**

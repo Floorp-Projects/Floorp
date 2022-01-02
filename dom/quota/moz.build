@@ -20,7 +20,6 @@ XPIDL_MODULE = "dom_quota"
 
 EXPORTS.mozilla.dom += [
     "QMResult.h",
-    "QMResultInlines.h",
     "StorageManager.h",
 ]
 
@@ -43,6 +42,7 @@ EXPORTS.mozilla.dom.quota += [
     "FileStreams.h",
     "FirstInitializationAttempts.h",
     "FirstInitializationAttemptsImpl.h",
+    "ForwardDecls.h",
     "InitializationTypes.h",
     "IPCStreamCipherStrategy.h",
     "MemoryOutputStream.h",
@@ -54,8 +54,11 @@ EXPORTS.mozilla.dom.quota += [
     "QuotaManagerImpl.h",
     "QuotaManagerService.h",
     "QuotaObject.h",
+    "RemoveParen.h",
+    "ResultExtensions.h",
     "ScopedLogExtraInfo.h",
     "SerializationHelpers.h",
+    "StorageHelpers.h",
     "UsageInfo.h",
 ]
 
@@ -83,6 +86,7 @@ UNIFIED_SOURCES += [
     "QuotaRequests.cpp",
     "QuotaResults.cpp",
     "ScopedLogExtraInfo.cpp",
+    "StorageHelpers.cpp",
     "StorageManager.cpp",
 ]
 
@@ -99,6 +103,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/caps",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

@@ -222,7 +222,7 @@ const silenceWorkerUpdates = function() {
   const {
     removeMockedModule,
     setMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
 
   const mock = {
     WorkersListener: () => {

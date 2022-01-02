@@ -15,7 +15,7 @@ use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks, SubSliceIndex};
-use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
+use crate::picture::{BackdropKind, SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
@@ -329,7 +329,6 @@ impl FrameBuilder {
         scratch: &mut ScratchBuffer,
         debug_flags: DebugFlags,
         composite_state: &mut CompositeState,
-        tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &SpatialTree,
         profile: &mut TransactionProfile,
@@ -403,41 +402,78 @@ impl FrameBuilder {
                 global_device_pixel_scale,
                 spatial_tree,
                 global_screen_world_rect,
-                surfaces: &mut surfaces,
                 debug_flags,
                 scene_properties,
                 config: scene.config,
                 root_spatial_node_index,
             };
 
-            let mut visibility_state = FrameVisibilityState {
-                clip_chain_stack: scratch.frame.clip_chain_stack.take(),
-                surface_stack: scratch.frame.surface_stack.take(),
-                resource_cache,
-                gpu_cache,
-                clip_store: &mut scene.clip_store,
-                scratch,
-                tile_cache: None,
-                data_stores,
-                composite_state,
-            };
-
             for pic_index in scene.tile_cache_pictures.iter().rev() {
-                update_primitive_visibility(
-                    &mut scene.prim_store,
-                    *pic_index,
-                    ROOT_SURFACE_INDEX,
-                    &global_screen_world_rect,
-                    &visibility_context,
-                    &mut visibility_state,
-                    tile_caches,
-                    true,
-                    &mut scene.prim_instances,
-                );
-            }
+                let pic = &mut scene.prim_store.pictures[pic_index.0];
 
-            visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
-            visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
+                match pic.raster_config {
+                    Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
+                        let tile_cache = tile_caches
+                            .get_mut(&slice_id)
+                            .expect("bug: non-existent tile cache");
+
+                        let mut visibility_state = FrameVisibilityState {
+                            clip_chain_stack: scratch.frame.clip_chain_stack.take(),
+                            surface_stack: scratch.frame.surface_stack.take(),
+                            resource_cache,
+                            gpu_cache,
+                            clip_store: &mut scene.clip_store,
+                            scratch,
+                            data_stores,
+                            composite_state,
+                        };
+
+                        // If we have a tile cache for this picture, see if any of the
+                        // relative transforms have changed, which means we need to
+                        // re-map the dependencies of any child primitives.
+                        let world_culling_rect = tile_cache.pre_update(
+                            layout_rect_as_picture_rect(&pic.estimated_local_rect),
+                            surface_index,
+                            &visibility_context,
+                            &mut visibility_state,
+                        );
+
+                        // Push a new surface, supplying the list of clips that should be
+                        // ignored, since they are handled by clipping when drawing this surface.
+                        visibility_state.push_surface(
+                            surface_index,
+                            &tile_cache.shared_clips,
+                            frame_context.spatial_tree,
+                        );
+
+                        update_primitive_visibility(
+                            &mut scene.prim_store,
+                            *pic_index,
+                            ROOT_SURFACE_INDEX,
+                            &world_culling_rect,
+                            &visibility_context,
+                            &mut visibility_state,
+                            tile_cache,
+                            true,
+                            &mut scene.prim_instances,
+                            &mut surfaces,
+                        );
+
+                        // Build the dirty region(s) for this tile cache.
+                        tile_cache.post_update(
+                            &visibility_context,
+                            &mut visibility_state,
+                        );
+
+                        visibility_state.pop_surface();
+                        visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
+                        visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
+                    }
+                    _ => {
+                        panic!("bug: not a tile cache");
+                    }
+                }
+            }
 
             profile.end_time(profiler::FRAME_VISIBILITY_TIME);
         }
@@ -484,7 +520,6 @@ impl FrameBuilder {
                     &mut frame_state,
                     &frame_context,
                     &mut scratch.primitive,
-                    tile_cache_logger,
                     tile_caches,
                 )
             {
@@ -499,7 +534,6 @@ impl FrameBuilder {
                     &mut frame_state,
                     data_stores,
                     &mut scratch.primitive,
-                    tile_cache_logger,
                     tile_caches,
                     &mut scene.prim_instances,
                 );
@@ -513,7 +547,6 @@ impl FrameBuilder {
             }
         }
 
-        tile_cache_logger.advance();
         frame_state.pop_dirty_region();
         profile.end_time(profiler::FRAME_PREPARE_TIME);
         profile.set(profiler::VISIBLE_PRIMITIVES, frame_state.num_visible_primitives);
@@ -543,7 +576,6 @@ impl FrameBuilder {
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
         debug_flags: DebugFlags,
-        tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &mut SpatialTree,
         dirty_rects_are_valid: bool,
@@ -594,7 +626,6 @@ impl FrameBuilder {
             scratch,
             debug_flags,
             &mut composite_state,
-            tile_cache_logger,
             tile_caches,
             spatial_tree,
             profile,

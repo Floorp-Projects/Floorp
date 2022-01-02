@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8," +
+  "data:text/html;charset=utf8,<!DOCTYPE html>" +
   `<script>
     console.log({a:1}, 100, {b:1}, 'foo', false, null, undefined);
 

@@ -68,8 +68,6 @@ class InterceptedChannelBase : public nsIInterceptedChannel {
 
   NS_IMETHODIMP
   SetFetchHandlerFinish(TimeStamp aTimeStamp) override { return NS_OK; }
-
-  static already_AddRefed<nsIURI> SecureUpgradeChannelURI(nsIChannel* aChannel);
 };
 
 }  // namespace net

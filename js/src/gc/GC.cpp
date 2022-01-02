@@ -388,7 +388,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       cleanUpEverything(false),
       grayBitsValid(false),
       majorGCTriggerReason(JS::GCReason::NO_REASON),
-      fullGCForAtomsRequested_(false),
       minorGCNumber(0),
       majorGCNumber(0),
       number(0),
@@ -1295,10 +1294,9 @@ void GCRuntime::removeWeakPointerZonesCallback(
   EraseCallback(updateWeakPointerZonesCallbacks.ref(), callback);
 }
 
-void GCRuntime::callWeakPointerZonesCallbacks() const {
-  JSContext* cx = rt->mainContextFromOwnThread();
+void GCRuntime::callWeakPointerZonesCallbacks(JSTracer* trc) const {
   for (auto const& p : updateWeakPointerZonesCallbacks.ref()) {
-    p.op(cx, p.data);
+    p.op(trc, p.data);
   }
 }
 
@@ -1314,10 +1312,9 @@ void GCRuntime::removeWeakPointerCompartmentCallback(
 }
 
 void GCRuntime::callWeakPointerCompartmentCallbacks(
-    JS::Compartment* comp) const {
-  JSContext* cx = rt->mainContextFromOwnThread();
+    JSTracer* trc, JS::Compartment* comp) const {
   for (auto const& p : updateWeakPointerCompartmentCallbacks.ref()) {
-    p.op(cx, comp, p.data);
+    p.op(trc, comp, p.data);
   }
 }
 
@@ -1485,12 +1482,7 @@ bool GCRuntime::triggerGC(JS::GCReason reason) {
 }
 
 void GCRuntime::maybeTriggerGCAfterAlloc(Zone* zone) {
-  if (!CurrentThreadCanAccessRuntime(rt)) {
-    // Zones in use by a helper thread can't be collected.
-    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
-    return;
-  }
-
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
   TriggerResult trigger =
@@ -1528,11 +1520,9 @@ void GCRuntime::maybeTriggerGCAfterMalloc(Zone* zone) {
 bool GCRuntime::maybeTriggerGCAfterMalloc(Zone* zone, const HeapSize& heap,
                                           const HeapThreshold& threshold,
                                           JS::GCReason reason) {
+  // Ignore malloc during sweeping, for example when we resize hash tables.
   if (!CurrentThreadCanAccessRuntime(rt)) {
-    // Zones in use by a helper thread can't be collected. Also ignore malloc
-    // during sweeping, for example when we resize hash tables.
-    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone() ||
-               JS::RuntimeHeapIsBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     return false;
   }
 
@@ -1583,12 +1573,6 @@ bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
 #endif
 
   if (zone->isAtomsZone()) {
-    /* We can't do a zone GC of just the atoms zone. */
-    if (rt->hasHelperThreadZones()) {
-      /* We can't collect atoms while off-thread parsing is allocating. */
-      fullGCForAtomsRequested_ = true;
-      return false;
-    }
     stats().recordTrigger(used, threshold);
     MOZ_RELEASE_ASSERT(triggerGC(reason));
     return true;
@@ -1645,15 +1629,6 @@ bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
 
   stats().recordTrigger(usedBytes, thresholdBytes);
   return true;
-}
-
-void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
-  MOZ_ASSERT(fullGCForAtomsRequested_);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-  MOZ_ASSERT(cx->canCollectAtoms());
-  fullGCForAtomsRequested_ = false;
-  MOZ_RELEASE_ASSERT(triggerGC(JS::GCReason::DELAYED_ATOMS_GC));
 }
 
 void GCRuntime::startDecommit() {
@@ -1795,6 +1770,11 @@ void GCRuntime::cancelRequestedGCAfterBackgroundTask() {
                                        JS::GCReason::NO_REASON);
 }
 
+bool GCRuntime::isWaitingOnBackgroundTask() const {
+  AutoLockHelperThreadState lock;
+  return requestSliceAfterBackgroundTask;
+}
+
 void GCRuntime::queueUnusedLifoBlocksForFree(LifoAlloc* lifo) {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
   AutoLockHelperThreadState lock;
@@ -1928,19 +1908,6 @@ void Compartment::sweepRealms(JSFreeOp* fop, bool keepAtleastOne,
   MOZ_ASSERT_IF(destroyingRuntime, realms().empty());
 }
 
-void GCRuntime::deleteEmptyZone(Zone* zone) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(zone->compartments().empty());
-  for (auto& i : zones()) {
-    if (i == zone) {
-      zones().erase(&i);
-      zone->destroy(rt->defaultFreeOp());
-      return;
-    }
-  }
-  MOZ_CRASH("Zone not found");
-}
-
 void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
   MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
 
@@ -2061,7 +2028,7 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
 
 #ifdef DEBUG
 class CompartmentCheckTracer final : public JS::CallbackTracer {
-  void onChild(const JS::GCCellPtr& thing) override;
+  void onChild(JS::GCCellPtr thing) override;
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
@@ -2099,7 +2066,7 @@ static bool InCrossCompartmentMap(JSRuntime* rt, JSObject* src,
   return false;
 }
 
-void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
+void CompartmentCheckTracer::onChild(JS::GCCellPtr thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
@@ -2175,29 +2142,7 @@ static bool ShouldCollectZone(Zone* zone, JS::GCReason reason) {
   }
 
   // Otherwise we only collect scheduled zones.
-  if (!zone->isGCScheduled()) {
-    return false;
-  }
-
-  // If canCollectAtoms() is false then parsing is currently happening on
-  // another thread, in which case we don't have information about which atoms
-  // are roots, so we must skip collecting atoms.
-  //
-  // Note that only affects the first slice of an incremental GC since root
-  // marking is completed before we return to the mutator.
-  //
-  // Off-thread parsing is inhibited after the start of GC which prevents
-  // races between creating atoms during parsing and sweeping atoms on the
-  // main thread.
-  //
-  // Otherwise, we always schedule a GC in the atoms zone so that atoms which
-  // the other collected zones are using are marked, and we can update the
-  // set of atoms in use by the other collected zones at the end of the GC.
-  if (zone->isAtomsZone()) {
-    return TlsContext.get()->canCollectAtoms();
-  }
-
-  return zone->canCollect();
+  return zone->isGCScheduled();
 }
 
 bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
@@ -2208,7 +2153,7 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
     MOZ_ASSERT(!zone->isCollecting());
     MOZ_ASSERT_IF(!zone->isAtomsZone(), !zone->compartments().empty());
     for (auto i : AllAllocKinds()) {
-      MOZ_ASSERT(!zone->arenas.arenasToSweep(i));
+      MOZ_ASSERT(zone->arenas.collectingArenaList(i).isEmpty());
     }
   }
 #endif
@@ -2220,22 +2165,14 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
     /* Set up which zones will be collected. */
     bool shouldCollect = ShouldCollectZone(zone, reason);
     if (shouldCollect) {
-      MOZ_ASSERT(zone->canCollect());
       any = true;
       zone->changeGCState(Zone::NoGC, Zone::Prepare);
-    } else if (zone->canCollect()) {
+    } else {
       *isFullOut = false;
     }
 
     zone->setWasCollected(shouldCollect);
   }
-
-  /*
-   * Check that we do collect the atoms zone if we triggered a GC for that
-   * purpose.
-   */
-  MOZ_ASSERT_IF(reason == JS::GCReason::DELAYED_ATOMS_GC,
-                atomsZone->isGCPreparing());
 
   /* Check that at least one zone is scheduled for collection. */
   return any;
@@ -2357,11 +2294,6 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
     return false;
   }
 
-  /* Check it's safe to access the atoms zone if we are collecting it. */
-  if (atomsZone->isCollecting()) {
-    session.maybeCheckAtomsAccess.emplace(rt);
-  }
-
   if (reason == JS::GCReason::DESTROY_RUNTIME) {
     restorePermanentSharedThings();
   }
@@ -2372,7 +2304,6 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
    * can be slow. This happens concurrently with the mutator and GC proper does
    * not start until this is complete.
    */
-  setParallelUnmarkEnabled(true);
   unmarkTask.initZones();
   unmarkTask.start();
 
@@ -2403,6 +2334,9 @@ void BackgroundUnmarkTask::initZones() {
     if (!zones.append(zone.get())) {
       oomUnsafe.crash("BackgroundUnmarkTask::initZones");
     }
+
+    zone->arenas.clearFreeLists();
+    zone->arenas.moveArenasToCollectingLists();
   }
 }
 
@@ -2411,30 +2345,23 @@ void BackgroundUnmarkTask::run(AutoLockHelperThreadState& helperTheadLock) {
 
   AutoTraceLog log(TraceLoggerForCurrentThread(), TraceLogger_GCUnmarking);
 
-  // We need to hold the GC lock while traversing the arena lists.
-  AutoLockGC gcLock(gc);
-
-  unmarkZones(gcLock);
-  zones.clear();
-}
-
-void BackgroundUnmarkTask::unmarkZones(AutoLockGC& lock) {
   for (Zone* zone : zones) {
     for (auto kind : AllAllocKinds()) {
-      for (ArenaIter arena(zone, kind); !arena.done(); arena.next()) {
-        AutoUnlockGC unlock(lock);
+      ArenaList& arenas = zone->arenas.collectingArenaList(kind);
+      for (ArenaListIter arena(arenas.head()); !arena.done(); arena.next()) {
         arena->unmarkAll();
         if (isCancelled()) {
-          return;
+          break;
         }
       }
     }
   }
+
+  zones.clear();
 }
 
 void GCRuntime::endPreparePhase(JS::GCReason reason) {
   MOZ_ASSERT(unmarkTask.isIdle());
-  setParallelUnmarkEnabled(false);
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     /*
@@ -2443,8 +2370,6 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
      * arenaAllocatedDuringGC().
      */
     zone->arenas.clearFreeLists();
-
-    zone->arenas.checkGCStateNotInUse();
 
     zone->markedStrings = 0;
     zone->finalizedStrings = 0;
@@ -2586,6 +2511,11 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     // Incremental marking barriers are enabled at this point.
     zone->changeGCState(Zone::Prepare, Zone::MarkBlackOnly);
+
+    // Merge arenas allocated during the prepare phase, then move all arenas to
+    // the collecting arena lists.
+    zone->arenas.mergeArenasFromCollectingLists();
+    zone->arenas.moveArenasToCollectingLists();
   }
 
   if (rt->isBeingDestroyed()) {
@@ -2895,11 +2825,12 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
     case State::Prepare:
       unmarkTask.cancelAndWait();
-      setParallelUnmarkEnabled(false);
 
       for (GCZonesIter zone(this); !zone.done(); zone.next()) {
         zone->changeGCState(Zone::Prepare, Zone::NoGC);
         zone->clearGCSliceThresholds();
+        zone->arenas.clearFreeLists();
+        zone->arenas.mergeArenasFromCollectingLists();
       }
 
       incrementalState = State::NotActive;
@@ -2918,7 +2849,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
         zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
         zone->clearGCSliceThresholds();
         zone->arenas.unmarkPreMarkedFreeCells();
-        zone->arenas.mergeNewArenasInMarkPhase();
+        zone->arenas.mergeArenasFromCollectingLists();
       }
 
       {
@@ -3039,12 +2970,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
   AutoSetThreadIsPerformingGC performingGC;
 
   AutoGCSession session(this, JS::HeapState::MajorCollecting);
-
-  // We don't allow off-thread parsing to start while we're doing an
-  // incremental GC of the atoms zone.
-  if (rt->activeGCInAtomsZone()) {
-    session.maybeCheckAtomsAccess.emplace(rt);
-  }
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
 
@@ -3405,10 +3330,6 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
 
   GCAbortReason resetReason = GCAbortReason::None;
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    if (!zone->canCollect()) {
-      continue;
-    }
-
     if (zone->gcHeapSize.bytes() >=
         zone->gcHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
@@ -3537,10 +3458,6 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
 
 static void ScheduleZones(GCRuntime* gc) {
   for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
-    if (!zone->canCollect()) {
-      continue;
-    }
-
     if (!gc->isPerZoneGCEnabled()) {
       zone->scheduleGC();
     }
@@ -3732,12 +3649,9 @@ gcstats::ZoneGCStats GCRuntime::scanZonesBeforeGC() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zoneStats.zoneCount++;
     zoneStats.compartmentCount += zone->compartments().length();
-    if (zone->canCollect()) {
-      zoneStats.collectableZoneCount++;
-      if (zone->isGCScheduled()) {
-        zoneStats.collectedZoneCount++;
-        zoneStats.collectedCompartmentCount += zone->compartments().length();
-      }
+    if (zone->isGCScheduled()) {
+      zoneStats.collectedZoneCount++;
+      zoneStats.collectedCompartmentCount += zone->compartments().length();
     }
   }
 
@@ -3826,9 +3740,10 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
 
   ~AutoSetZoneSliceThresholds() {
     // On exit, update the thresholds for all collecting zones.
+    bool waitingOnBGTask = gc->isWaitingOnBackgroundTask();
     for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
       if (zone->wasGCStarted()) {
-        zone->setGCSliceThresholds(*gc);
+        zone->setGCSliceThresholds(*gc, waitingOnBGTask);
       } else {
         MOZ_ASSERT(!zone->gcHeapThreshold.hasSliceThreshold());
         MOZ_ASSERT(!zone->mallocHeapThreshold.hasSliceThreshold());
@@ -3865,7 +3780,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 
   AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
   AutoStopVerifyingBarriers av(rt, IsShutdownReason(reason));
-  AutoEnqueuePendingParseTasksAfterGC aept(*this);
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
 
@@ -3931,13 +3845,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   stats().log("GC ending in state %s", StateName(incrementalState));
 
   UnscheduleZones(this);
-}
-
-js::AutoEnqueuePendingParseTasksAfterGC::
-    ~AutoEnqueuePendingParseTasksAfterGC() {
-  if (!OffThreadParsingMustWaitForGC(gc_.rt)) {
-    EnqueuePendingParseTasksAfterGC(gc_.rt);
-  }
 }
 
 SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
@@ -4144,14 +4051,6 @@ bool GCRuntime::gcIfRequested() {
   }
 
   if (majorGCRequested()) {
-    if (majorGCTriggerReason == JS::GCReason::DELAYED_ATOMS_GC &&
-        !rt->mainContextFromOwnThread()->canCollectAtoms()) {
-      // A GC was requested to collect the atoms zone, but it's no longer
-      // possible. Skip this collection.
-      majorGCTriggerReason = JS::GCReason::NO_REASON;
-      return false;
-    }
-
     if (!isIncrementalGCInProgress()) {
       startGC(JS::GCOptions::Normal, majorGCTriggerReason);
     } else {
@@ -4297,126 +4196,6 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
   return realm.release();
 }
 
-void gc::MergeRealms(Realm* source, Realm* target) {
-  JSRuntime* rt = source->runtimeFromMainThread();
-  rt->gc.mergeRealms(source, target);
-  rt->gc.maybeTriggerGCAfterAlloc(target->zone());
-  rt->gc.maybeTriggerGCAfterMalloc(target->zone());
-}
-
-void GCRuntime::mergeRealms(Realm* source, Realm* target) {
-  // The source realm must be specifically flagged as mergable.  This
-  // also implies that the realm is not visible to the debugger.
-  MOZ_ASSERT(source->creationOptions().mergeable());
-  MOZ_ASSERT(source->creationOptions().invisibleToDebugger());
-
-  MOZ_ASSERT(!source->hasBeenEnteredIgnoringJit());
-  MOZ_ASSERT(source->zone()->compartments().length() == 1);
-
-  JSContext* cx = rt->mainContextFromOwnThread();
-
-  MOZ_ASSERT(!source->zone()->wasGCStarted());
-  JS::AutoAssertNoGC nogc(cx);
-
-  AutoTraceSession session(rt);
-
-  // Cleanup tables and other state in the source realm/zone that will be
-  // meaningless after merging into the target realm/zone.
-
-  source->clearTables();
-  source->zone()->clearTables();
-  source->unsetIsDebuggee();
-
-#ifdef DEBUG
-  // Release any relocated arenas which we may be holding on to as they might
-  // be in the source zone
-  releaseHeldRelocatedArenas();
-#endif
-
-  // Fixup realm pointers in source to refer to target, and make sure
-  // type information generations are in sync.
-
-  GlobalObject* global = target->maybeGlobal();
-  MOZ_ASSERT(global);
-  AssertTargetIsNotGray(global);
-
-  for (auto baseShape = source->zone()->cellIterUnsafe<BaseShape>();
-       !baseShape.done(); baseShape.next()) {
-    baseShape->setRealmForMergeRealms(target);
-
-    // Replace placeholder object prototypes with the correct prototype in
-    // the target realm.
-    TaggedProto proto = baseShape->proto();
-    if (proto.isObject()) {
-      JSObject* obj = proto.toObject();
-      if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
-        JSObject* targetProto =
-            global->getPrototypeForOffThreadPlaceholder(obj);
-        MOZ_ASSERT(targetProto->isUsedAsPrototype());
-        baseShape->setProtoForMergeRealms(TaggedProto(targetProto));
-      }
-    }
-  }
-
-  // Fixup zone pointers in source's zone to refer to target's zone.
-
-  bool targetZoneIsCollecting = target->zone()->gcState() > Zone::Prepare;
-  for (auto thingKind : AllAllocKinds()) {
-    for (ArenaIter aiter(source->zone(), thingKind); !aiter.done();
-         aiter.next()) {
-      Arena* arena = aiter.get();
-      arena->zone = target->zone();
-      if (MOZ_UNLIKELY(targetZoneIsCollecting)) {
-        // If we are currently collecting the target zone then we must
-        // treat all merged things as if they were allocated during the
-        // collection.
-        for (ArenaCellIter cell(arena); !cell.done(); cell.next()) {
-          MOZ_ASSERT(!cell->isMarkedAny());
-          cell->markBlack();
-        }
-      }
-    }
-  }
-
-  // The source should be the only realm in its zone.
-  for (RealmsInZoneIter r(source->zone()); !r.done(); r.next()) {
-    MOZ_ASSERT(r.get() == source);
-  }
-
-  // Merge the allocator, stats and UIDs in source's zone into target's zone.
-  target->zone()->arenas.adoptArenas(&source->zone()->arenas,
-                                     targetZoneIsCollecting);
-  target->zone()->addTenuredAllocsSinceMinorGC(
-      source->zone()->getAndResetTenuredAllocsSinceMinorGC());
-  target->zone()->gcHeapSize.adopt(source->zone()->gcHeapSize);
-  target->zone()->adoptUniqueIds(source->zone());
-  target->zone()->adoptMallocBytes(source->zone());
-
-  // Atoms which are marked in source's zone are now marked in target's zone.
-  atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
-
-  // The source Realm is a parse-only realm and should not have collected any
-  // zone-tracked metadata.
-  Zone* sourceZone = source->zone();
-  MOZ_ASSERT(!sourceZone->scriptLCovMap);
-  MOZ_ASSERT(!sourceZone->scriptCountsMap);
-  MOZ_ASSERT(!sourceZone->debugScriptMap);
-#ifdef MOZ_VTUNE
-  MOZ_ASSERT(!sourceZone->scriptVTuneIdMap);
-#endif
-#ifdef JS_CACHEIR_SPEW
-  MOZ_ASSERT(!sourceZone->scriptFinalWarmUpCountMap);
-#endif
-
-  // The source realm is now completely empty, and is the only realm in its
-  // compartment, which is the only compartment in its zone. Delete realm,
-  // compartment and zone without waiting for this to be cleaned up by a full
-  // GC.
-
-  sourceZone->deleteEmptyCompartment(source->compartment());
-  deleteEmptyZone(sourceZone);
-}
-
 void GCRuntime::runDebugGC() {
 #ifdef JS_GC_ZEAL
   if (rt->mainContextFromOwnThread()->suppressGC) {
@@ -4501,49 +4280,6 @@ void GCRuntime::setDeterministic(bool enabled) {
   deterministicOnly = enabled;
 }
 #endif
-
-void ArenaLists::adoptArenas(ArenaLists* fromArenaLists,
-                             bool targetZoneIsCollecting) {
-  // GC may be active so take the lock here so we can mutate the arena lists.
-  AutoLockGC lock(runtime());
-
-  fromArenaLists->clearFreeLists();
-
-  for (auto thingKind : AllAllocKinds()) {
-    MOZ_ASSERT(fromArenaLists->concurrentUse(thingKind) == ConcurrentUse::None);
-    ArenaList* fromList = &fromArenaLists->arenaList(thingKind);
-    ArenaList* toList = &arenaList(thingKind);
-    fromList->check();
-    toList->check();
-    Arena* next;
-    for (Arena* fromArena = fromList->head(); fromArena; fromArena = next) {
-      // Copy fromArena->next before releasing/reinserting.
-      next = fromArena->next;
-
-#ifdef DEBUG
-      MOZ_ASSERT(!fromArena->isEmpty());
-      if (targetZoneIsCollecting) {
-        fromArena->checkAllCellsMarkedBlack();
-      } else {
-        fromArena->checkNoMarkedCells();
-      }
-#endif
-
-      // If the target zone is being collected then we need to add the
-      // arenas before the cursor because the collector assumes that the
-      // cursor is always at the end of the list. This has the side-effect
-      // of preventing allocation into any non-full arenas until the end
-      // of the next GC.
-      if (targetZoneIsCollecting) {
-        toList->insertBeforeCursor(fromArena);
-      } else {
-        toList->insertAtCursor(fromArena);
-      }
-    }
-    fromList->clear();
-    toList->check();
-  }
-}
 
 #ifdef DEBUG
 
@@ -4699,8 +4435,6 @@ JS_PUBLIC_API bool js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell) {
   }
 
   auto tc = &cell->asTenured();
-  MOZ_ASSERT(!tc->zoneFromAnyThread()->usedByHelperThread());
-
   auto rt = tc->runtimeFromMainThread();
   if (rt->gc.isIncrementalGCInProgress() && !tc->zone()->wasGCStarted()) {
     return false;

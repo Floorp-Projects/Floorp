@@ -62,7 +62,7 @@ class CompositorWidgetDelegate {
 };
 
 // Platforms that support out-of-process widgets.
-#if defined(XP_WIN) || defined(MOZ_X11)
+#if defined(XP_WIN) || defined(MOZ_X11) || defined(MOZ_WIDGET_ANDROID)
 // CompositorWidgetParent should implement CompositorWidget and
 // PCompositorWidgetParent.
 class CompositorWidgetParent;
@@ -189,6 +189,14 @@ class CompositorWidget {
    * a different compositor backend will be used (if any).
    */
   virtual bool InitCompositor(layers::Compositor* aCompositor) { return true; }
+
+  /**
+   * A hook that is ran whenever composition is resumed.
+   *
+   * This is called from CompositorBridgeParent::ResumeComposition,
+   * immediately prior to webrender being resumed.
+   */
+  virtual void OnResumeComposition() {}
 
   /**
    * Return the size of the drawable area of the widget.

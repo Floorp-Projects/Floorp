@@ -76,15 +76,16 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
     nsIConstraintValidation)
 
 void HTMLButtonElement::SetCustomValidity(const nsAString& aError) {
-  nsIConstraintValidation::SetCustomValidity(aError);
+  ConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
 
 void HTMLButtonElement::UpdateBarredFromConstraintValidation() {
-  SetBarredFromConstraintValidation(mType == FormControlType::ButtonButton ||
-                                    mType == FormControlType::ButtonReset ||
-                                    IsDisabled());
+  SetBarredFromConstraintValidation(
+      mType == FormControlType::ButtonButton ||
+      mType == FormControlType::ButtonReset ||
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
 }
 
 void HTMLButtonElement::FieldSetDisabledChanged(bool aNotify) {
@@ -273,6 +274,8 @@ nsresult HTMLButtonElement::BindToTree(BindContext& aContext,
       nsGenericHTMLFormControlElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  UpdateBarredFromConstraintValidation();
+
   // Update our state; we may now be the default submit element
   UpdateState(false);
 
@@ -281,6 +284,8 @@ nsresult HTMLButtonElement::BindToTree(BindContext& aContext,
 
 void HTMLButtonElement::UnbindFromTree(bool aNullParent) {
   nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
+
+  UpdateBarredFromConstraintValidation();
 
   // Update our state; we may no longer be the default submit element
   UpdateState(false);
@@ -399,10 +404,6 @@ EventStates HTMLButtonElement::IntrinsicState() const {
     } else {
       state |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
     }
-  }
-
-  if (mForm && !mForm->GetValidity() && IsSubmitControl()) {
-    state |= NS_EVENT_STATE_MOZ_SUBMITINVALID;
   }
 
   return state;

@@ -1098,10 +1098,48 @@ bool js::jit::DeadIfUnused(const MDefinition* def) {
   return true;
 }
 
+// Similar to DeadIfUnused(), but additionally allows effectful instructions.
+bool js::jit::DeadIfUnusedAllowEffectful(const MDefinition* def) {
+  // Never eliminate guard instructions.
+  if (def->isGuard()) {
+    return false;
+  }
+
+  // Required to be preserved, as the type guard related to this instruction
+  // is part of the semantics of a transformation.
+  if (def->isGuardRangeBailouts()) {
+    return false;
+  }
+
+  // Control instructions have no uses, but also shouldn't be optimized out
+  if (def->isControlInstruction()) {
+    return false;
+  }
+
+  // Used when lowering to generate the corresponding snapshots and aggregate
+  // the list of recover instructions to be repeated.
+  if (def->isInstruction() && def->toInstruction()->resumePoint()) {
+    // All effectful instructions must have a resume point attached. We're
+    // allowing effectful instructions here, so we have to ignore any resume
+    // points if we want to consider effectful instructions as dead.
+    if (!def->isEffectful()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Test whether |def| may be safely discarded, due to being dead or due to being
 // located in a basic block which has itself been marked for discarding.
 bool js::jit::IsDiscardable(const MDefinition* def) {
   return !def->hasUses() && (DeadIfUnused(def) || def->block()->isMarked());
+}
+
+// Similar to IsDiscardable(), but additionally allows effectful instructions.
+bool js::jit::IsDiscardableAllowEffectful(const MDefinition* def) {
+  return !def->hasUses() &&
+         (DeadIfUnusedAllowEffectful(def) || def->block()->isMarked());
 }
 
 // Instructions are useless if they are unused and have no side effects.
@@ -3843,11 +3881,9 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       MOZ_ASSERT(!IsMagicType(unbox->type()));
 
-      // If this is a LoadElement that needs a hole check, we only support
-      // folding it with a fallible unbox so that we can eliminate the hole
-      // check.
-      if (load->isLoadElement() && load->toLoadElement()->needsHoleCheck() &&
-          !unbox->fallible()) {
+      // If this is a LoadElement, we only support folding it with a fallible
+      // unbox so that we can eliminate the hole check.
+      if (load->isLoadElement() && !unbox->fallible()) {
         continue;
       }
 
@@ -3875,7 +3911,7 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         }
         case MDefinition::Opcode::LoadElement: {
           auto* loadIns = load->toLoadElement();
-          MOZ_ASSERT_IF(loadIns->needsHoleCheck(), unbox->fallible());
+          MOZ_ASSERT(unbox->fallible());
           replacement = MLoadElementAndUnbox::New(
               graph.alloc(), loadIns->elements(), loadIns->index(), mode, type);
           break;

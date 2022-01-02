@@ -12,7 +12,9 @@ from mozbuild.vendor.host_base import BaseHost
 class GoogleSourceHost(BaseHost):
     def upstream_commit(self, revision):
         """Query for a git commit and timestamp."""
-        url = "/".join([self.manifest["origin"]["url"], "+", revision + "?format=JSON"])
+        url = "/".join(
+            [self.manifest["vendoring"]["url"], "+", revision + "?format=JSON"]
+        )
         req = requests.get(url)
         req.raise_for_status()
         try:
@@ -31,5 +33,5 @@ class GoogleSourceHost(BaseHost):
 
     def upstream_snapshot(self, revision):
         return "/".join(
-            [self.manifest["origin"]["url"], "+archive", revision + ".tar.gz"]
+            [self.manifest["vendoring"]["url"], "+archive", revision + ".tar.gz"]
         )

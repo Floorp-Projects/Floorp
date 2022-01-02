@@ -31,6 +31,16 @@ es_CO{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMd",
+                "GGGGGyyMMd",
+            }
             availableFormats{
                 GyMMMEd{"E, d MMM 'de' y G"}
             }
@@ -114,6 +124,16 @@ es_CO{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMd",
+                "yyMMd",
+            }
             availableFormats{
                 GyMMM{"MMM 'de' y G"}
                 GyMMMEd{"E, d MMM 'de' y G"}
@@ -124,6 +144,8 @@ es_CO{
                 MMMd{"d 'de' MMM"}
                 MMMdd{"d 'de' MMM"}
                 yMEd{"EEE, d/M/y"}
+                yMMM{"MMM 'de' y"}
+                yMMMd{"d 'de' MMM 'de' y"}
             }
             dayNames{
                 format{

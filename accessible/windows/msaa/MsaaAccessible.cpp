@@ -1164,17 +1164,6 @@ MsaaAccessible::get_accState(
     return accessible->get_accState(kVarChildIdSelf, pvarState);
   }
 
-  if (mAcc->IsRemote()) {
-    // XXX Not supported for RemoteAccessible yet.
-    if (mAcc->IsDoc()) {
-      // XXX We don't cache whether a document is editable yet. Most documents
-      // aren't. To facilitate testing of the cache with screen readers, always
-      // expose READONLY here.
-      pvarState->lVal |= STATE_SYSTEM_READONLY;
-    }
-    return S_OK;
-  }
-
   // MSAA only has 31 states and the lowest 31 bits of our state bit mask
   // are the same states as MSAA.
   // Note: we map the following Gecko states to different MSAA states:
@@ -1183,7 +1172,7 @@ MsaaAccessible::get_accState(
   //   INVALID -> ALERT_HIGH
   //   CHECKABLE -> MARQUEED
 
-  uint64_t state = LocalAcc()->State();
+  uint64_t state = Acc()->State();
 
   uint32_t msaaState = 0;
   nsAccUtils::To32States(state, &msaaState, nullptr);
@@ -1470,11 +1459,8 @@ MsaaAccessible::accSelect(
   if (accessible) {
     return accessible->accSelect(flagsSelect, kVarChildIdSelf);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
-  LocalAccessible* localAcc = LocalAcc();
+  LocalAccessible* localAcc = mAcc->AsLocal();
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
     if (XRE_IsContentProcess()) {
       // In this case we might have been invoked while the IPC MessageChannel is
@@ -1486,8 +1472,12 @@ MsaaAccessible::accSelect(
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
-    localAcc->TakeFocus();
+    mAcc->TakeFocus();
     return S_OK;
+  }
+
+  if (!localAcc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
   if (flagsSelect & SELFLAG_TAKESELECTION) {

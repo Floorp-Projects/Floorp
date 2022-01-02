@@ -10,8 +10,7 @@
 #include "mozilla/dom/PMIDIPortChild.h"
 #include "mozilla/dom/MIDIPortInterface.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MIDIPort;
 class MIDIPortInfo;
@@ -46,7 +45,6 @@ class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
   MIDIPort* mDOMPort;
   bool mActorWasAlive;
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

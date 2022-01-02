@@ -943,7 +943,7 @@ static int blendGaussianBlur(S sampler, vec2 uv, const vec4_scalar& uv_rect,
   ivec2_scalar curUV = make_ivec2(force_scalar(uv) * size);
   ivec4_scalar bounds = make_ivec4(uv_rect * make_vec4(size, size));
   int startX = curUV.x;
-  int endX = min(bounds.z, curUV.x + span);
+  int endX = min(min(bounds.z, curUV.x + span), int(size.x));
   if (hori) {
     for (; curUV.x + swgl_StepSize <= endX;
          buf += swgl_StepSize, curUV.x += swgl_StepSize) {

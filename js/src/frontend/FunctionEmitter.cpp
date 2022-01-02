@@ -8,22 +8,16 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "builtin/ModuleObject.h"          // ModuleObject
 #include "frontend/AsyncEmitter.h"         // AsyncEmitter
 #include "frontend/BytecodeEmitter.h"      // BytecodeEmitter
 #include "frontend/FunctionSyntaxKind.h"   // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
 #include "frontend/NameAnalysisTypes.h"    // NameLocation
 #include "frontend/NameOpEmitter.h"        // NameOpEmitter
-#include "frontend/ParseContext.h"         // BindingIter
-#include "frontend/PropOpEmitter.h"        // PropOpEmitter
 #include "frontend/SharedContext.h"        // SharedContext
-#include "vm/AsyncFunctionResolveKind.h"   // AsyncFunctionResolveKind
-#include "vm/JSScript.h"                   // JSScript
 #include "vm/ModuleBuilder.h"              // ModuleBuilder
 #include "vm/Opcodes.h"                    // JSOp
 #include "vm/Scope.h"                      // BindingKind
-#include "wasm/AsmJS.h"                    // IsAsmJSModule
 
 using namespace js;
 using namespace js::frontend;

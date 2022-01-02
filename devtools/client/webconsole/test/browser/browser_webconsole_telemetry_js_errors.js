@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,<meta charset=utf8><script>document()</script>`;
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>document()</script>`;
 
 add_task(async function() {
   startTelemetry();

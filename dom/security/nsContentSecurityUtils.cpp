@@ -832,10 +832,7 @@ void nsContentSecurityUtils::DetectJsHacks() {
   // all of which run in the System Principal context.
   nsAutoString jsConfigPref;
   nsresult rv = Preferences::GetString("general.config.filename", jsConfigPref);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  if (!jsConfigPref.IsEmpty()) {
+  if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
     sJSHacksPresent = true;
   }
 

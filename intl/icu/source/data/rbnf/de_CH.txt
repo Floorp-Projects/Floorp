@@ -158,7 +158,7 @@ de_CH{
             "1: \u00AD=%spellout-ordinal=;",
             "%%ste2:",
             "0: ste;",
-            "1: ' =%spellout-ordinal=;",
+            "1: \u2018 =%spellout-ordinal=;",
             "%spellout-ordinal:",
             "-x: minus >>;",
             "x.x: =#,##0.#=;",

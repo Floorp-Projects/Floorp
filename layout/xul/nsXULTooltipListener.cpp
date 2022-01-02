@@ -103,12 +103,11 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
   if (currentTooltip) {
     // which node did the mouse leave?
     EventTarget* eventTarget = aEvent->GetComposedTarget();
-    nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
-    if (content && !content->GetContainingShadow()) {
+    nsCOMPtr<nsINode> targetNode = nsINode::FromEventTargetOrNull(eventTarget);
+    if (targetNode && targetNode->IsContent() &&
+        !targetNode->AsContent()->GetContainingShadow()) {
       eventTarget = aEvent->GetTarget();
     }
-
-    nsCOMPtr<nsINode> targetNode = do_QueryInterface(eventTarget);
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
@@ -121,7 +120,8 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
       // tooltip appears positioned near the mouse.
       nsCOMPtr<EventTarget> relatedTarget =
           aEvent->AsMouseEvent()->GetRelatedTarget();
-      nsCOMPtr<nsIContent> relatedContent = do_QueryInterface(relatedTarget);
+      nsIContent* relatedContent =
+          nsIContent::FromEventTargetOrNull(relatedTarget);
       if (tooltipNode == targetNode && relatedContent != currentTooltip) {
         HideTooltip();
         // reset special tree tracking
@@ -154,7 +154,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
 
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
-  nsCOMPtr<nsIContent> content = do_QueryInterface(eventTarget);
+  nsIContent* content = nsIContent::FromEventTargetOrNull(eventTarget);
 
   bool isSameTarget = true;
   nsCOMPtr<nsIContent> tempContent = do_QueryReferent(mPreviousMouseMoveTarget);
@@ -208,15 +208,15 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
         !sourceContent->AsElement()->AttrValueIs(
             kNameSpaceID_None, nsGkAtoms::popupsinherittooltip,
             nsGkAtoms::_true, eCaseMatters)) {
-      nsCOMPtr<nsIContent> targetContent = do_QueryInterface(eventTarget);
-      while (targetContent && targetContent != sourceContent) {
+      for (nsIContent* targetContent =
+               nsIContent::FromEventTargetOrNull(eventTarget);
+           targetContent && targetContent != sourceContent;
+           targetContent = targetContent->GetParent()) {
         if (targetContent->IsAnyOfXULElements(
                 nsGkAtoms::menupopup, nsGkAtoms::panel, nsGkAtoms::tooltip)) {
           mSourceNode = nullptr;
           return;
         }
-
-        targetContent = targetContent->GetParent();
       }
     }
 

@@ -368,13 +368,6 @@
   call_instruction: true
   mir_op: true
 
-# Allocate an object for |new| on the caller-side.
-# Always performs object initialization with a fast path.
-- name: CreateThisWithTemplate
-  result_type: WordSized
-  num_temps: 1
-  mir_op: true
-
 # Allocate a new arguments object for the frame.
 - name: CreateArgumentsObject
   result_type: WordSized
@@ -388,6 +381,9 @@
   gen_boilerplate: false
 
 - name: GetInlinedArgument
+  gen_boilerplate: false
+
+- name: GetInlinedArgumentHole
   gen_boilerplate: false
 
 # Get argument from arguments object.
@@ -414,11 +410,35 @@
     index: WordSized
   num_temps: 1
 
+# Load an element from an arguments object. Handles out-of-bounds accesses.
+- name: LoadArgumentsObjectArgHole
+  result_type: BoxedValue
+  operands:
+    argsObject: WordSized
+    index: WordSized
+  num_temps: 1
+
+# Return true if the element exists in the arguments object.
+- name: InArgumentsObjectArg
+  result_type: WordSized
+  operands:
+    argsObject: WordSized
+    index: WordSized
+  num_temps: 1
+
 # Return |arguments.length| unless it has been overridden.
 - name: ArgumentsObjectLength
   result_type: WordSized
   operands:
     argsObject: WordSized
+
+# Create an array from an arguments object.
+- name: ArrayFromArgumentsObject
+  result_type: WordSized
+  operands:
+    argsObject: WordSized
+  call_instruction: true
+  mir_op: true
 
 # Guard that the given flags are not set on the arguments object.
 - name: GuardArgumentsObjectFlags
@@ -536,6 +556,9 @@
   gen_boilerplate: false
 
 - name: ApplyArrayGeneric
+  gen_boilerplate: false
+
+- name: ConstructArgsGeneric
   gen_boilerplate: false
 
 - name: ConstructArrayGeneric
@@ -731,6 +754,9 @@
   mir_op: Not
 
 - name: BitNotI
+  gen_boilerplate: false
+
+- name: BitNotI64
   gen_boilerplate: false
 
 - name: BitOpI
@@ -1398,6 +1424,7 @@
   result_type: WordSized
   operands:
     specifier: BoxedValue
+    options: BoxedValue
   call_instruction: true
   mir_op: true
 
@@ -1804,6 +1831,13 @@
   call_instruction: true
   mir_op: true
 
+- name: AddSlotAndCallAddPropHook
+  operands:
+    object: WordSized
+    value: BoxedValue
+  call_instruction: true
+  mir_op: true
+
 # Store a boxed value to an object's fixed slot.
 - name: StoreFixedSlotV
   operands:
@@ -2055,7 +2089,7 @@
   mir_op: true
 
 - name: OptimizeSpreadCallCache
-  result_type: WordSized
+  result_type: BoxedValue
   operands:
     value: BoxedValue
   num_temps: 1
@@ -2086,6 +2120,16 @@
   result_type: BoxedValue
   operands:
     index: WordSized
+
+# Load a value from the actual arguments.
+# Returns undefined if |index| is larger-or-equals to |length|. Bails out if
+# |index| is negative.
+- name: GetFrameArgumentHole
+  result_type: BoxedValue
+  operands:
+    index: WordSized
+    length: WordSized
+  num_temps: 1
 
 # Create the rest parameter.
 - name: Rest

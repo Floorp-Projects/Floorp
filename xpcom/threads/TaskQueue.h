@@ -53,9 +53,6 @@ class TaskQueue : public AbstractThread,
   class EventTargetWrapper;
 
  public:
-  explicit TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     bool aSupportsTailDispatch = false);
-
   TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
             bool aSupportsTailDispatch = false);
 

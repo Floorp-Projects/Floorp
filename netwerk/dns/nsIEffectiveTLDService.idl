@@ -90,6 +90,54 @@ interface nsIEffectiveTLDService : nsISupports
     ACString getBaseDomain(in nsIURI aURI, [optional] in uint32_t aAdditionalParts);
 
     /**
+     * Get the Site without the scheme for the origin of aURI; e.g. for
+     * "https://www.bbc.co.uk/index.html", this would be "bbc.co.uk".
+     * This uses getBaseDomain() internally. This is appropriately permissive,
+     * and will return a schemeless site for aliased hostnames and IP addresses
+     * and will therefore not throw NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS or
+     * NS_ERROR_HOST_IS_IP_ADDRESS, e.g. "http://localhost/index.html" will
+     * return "localhost" successfully, rather than throwing an error.
+     *
+     * @param aHostURI
+     *        The URI to analyze.
+     *
+     * @return the Site.
+     *
+     * @throws NS_ERROR_UNEXPECTED
+     *         or other error returned by nsIIDNService::normalize when
+     *         the hostname contains characters disallowed in URIs
+     *
+     * @see    getBaseDomain()
+     * @see    getSite()
+     *
+     * @warning This function should not be used without good reason. Please
+     * use getSite() or the Origin if you are not absolutely certain.
+     */
+    ACString getSchemelessSite(in nsIURI aURI);
+
+    /**
+     * Get the Site for the origin of aURI; e.g. for
+     * "https://www.bbc.co.uk/index.html", this would be "https://bbc.co.uk".
+     * This uses getBaseDomain() internally. This is appropriately permissive,
+     * and will return a scheme for alaised hostnames and IP addresses and will
+     * therefore not throw NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS or
+     * NS_ERROR_HOST_IS_IP_ADDRESS, e.g. "http://localhost/index.html" will
+     * return "http://localhost" successfully, rather than throwing an error.
+     *
+     * @param aHostURI
+     *        The URI to analyze.
+     *
+     * @return the Site.
+     *
+     * @throws NS_ERROR_UNEXPECTED
+     *         or other error returned by nsIIDNService::normalize when
+     *         the hostname contains characters disallowed in URIs
+     *
+     * @see    getBaseDomain()
+     */
+    ACString getSite(in nsIURI aURI);
+
+    /**
      * NOTE: It is strongly recommended to use getPublicSuffix() above if a suitable
      * nsIURI is available. Only use this method if this is not the case.
      *

@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+#include <atomic>
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
@@ -12,18 +14,57 @@
 #include <type_traits>
 #include <unistd.h>
 
+#include "AndroidGraphics.h"
+#include "AndroidBridge.h"
+#include "AndroidBridgeUtilities.h"
+#include "AndroidCompositorWidget.h"
+#include "AndroidContentController.h"
+#include "AndroidUiThread.h"
+#include "AndroidView.h"
+#include "gfxContext.h"
+#include "GeckoEditableSupport.h"
+#include "GeckoViewSupport.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
+#include "JavaBuiltins.h"
+#include "JavaExceptions.h"
+#include "KeyEvent.h"
+#include "Layers.h"
+#include "MotionEvent.h"
+#include "ScopedGLHelpers.h"
+#include "ScreenHelperAndroid.h"
+#include "TouchResampler.h"
+#include "WidgetUtils.h"
+#include "WindowRenderer.h"
+
+#include "nsAppShell.h"
+#include "nsContentUtils.h"
+#include "nsFocusManager.h"
+#include "nsGkAtoms.h"
+#include "nsGfxCIID.h"
+#include "nsLayoutUtils.h"
+#include "nsNetUtil.h"
+#include "nsPrintfCString.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
+#include "nsUserIdleService.h"
+#include "nsViewManager.h"
+#include "nsWidgetsCID.h"
+#include "nsWindow.h"
+
+#include "nsIWidgetListener.h"
+#include "nsIWindowWatcher.h"
+#include "nsIAppWindow.h"
+
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_android.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
-
-#include "mozilla/Preferences.h"
-#include "mozilla/Unused.h"
 #include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -34,65 +75,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/widget/AndroidVsync.h"
-#include <algorithm>
-
-using mozilla::Unused;
-using mozilla::dom::ContentChild;
-using mozilla::dom::ContentParent;
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::IntSize;
-using mozilla::gfx::Matrix;
-using mozilla::gfx::SurfaceFormat;
-
-#include "nsWindow.h"
-
-#include "AndroidGraphics.h"
-#include "JavaExceptions.h"
-
-#include "nsIWidgetListener.h"
-#include "nsIWindowWatcher.h"
-#include "nsIAppWindow.h"
-
-#include "nsAppShell.h"
-#include "nsFocusManager.h"
-#include "nsUserIdleService.h"
-#include "nsLayoutUtils.h"
-#include "nsNetUtil.h"
-#include "nsViewManager.h"
-
-#include "WidgetUtils.h"
-#include "nsContentUtils.h"
-
-#include "nsGfxCIID.h"
-#include "nsGkAtoms.h"
-#include "nsWidgetsCID.h"
-
-#include "gfxContext.h"
-
-#include "AndroidContentController.h"
-#include "GLContext.h"
-#include "GLContextProvider.h"
-#include "Layers.h"
-#include "WindowRenderer.h"
-#include "ScopedGLHelpers.h"
-#include "mozilla/layers/APZEventState.h"
-#include "mozilla/layers/APZInputBridge.h"
-#include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-
-#include "nsTArray.h"
-
-#include "AndroidBridge.h"
-#include "AndroidBridgeUtilities.h"
-#include "AndroidUiThread.h"
-#include "AndroidView.h"
-#include "GeckoEditableSupport.h"
-#include "GeckoViewSupport.h"
-#include "KeyEvent.h"
-#include "MotionEvent.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/java/EventDispatcherWrappers.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/GeckoEditableChildWrappers.h"
@@ -101,16 +84,17 @@ using mozilla::gfx::SurfaceFormat;
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
 #include "mozilla/java/PanZoomControllerNatives.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
-#include "ScreenHelperAndroid.h"
-#include "TouchResampler.h"
-
+#include "mozilla/layers/APZEventState.h"
+#include "mozilla/layers/APZInputBridge.h"
+#include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/CompositorSession.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/UiCompositorControllerChild.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/ProfilerLabels.h"
-#include "nsPrintfCString.h"
-#include "nsString.h"
-
-#include "JavaBuiltins.h"
-
-#include "mozilla/ipc/Shmem.h"
+#include "mozilla/widget/AndroidVsync.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -118,12 +102,13 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
 
+using mozilla::dom::ContentChild;
+using mozilla::dom::ContentParent;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::IntSize;
+using mozilla::gfx::Matrix;
+using mozilla::gfx::SurfaceFormat;
 using mozilla::java::GeckoSession;
-
-#include "mozilla/layers/CompositorBridgeChild.h"
-#include "mozilla/layers/CompositorSession.h"
-#include "mozilla/layers/UiCompositorControllerChild.h"
-#include "nsThreadUtils.h"
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
@@ -148,6 +133,10 @@ static const int32_t INPUT_RESULT_IGNORED =
     java::PanZoomController::INPUT_RESULT_IGNORED;
 
 static const nsCString::size_type MAX_TOPLEVEL_DATA_URI_LEN = 2 * 1024 * 1024;
+
+// Unique ID given to each widget, to identify it for the
+// CompositorSurfaceManager.
+static std::atomic<int32_t> sWidgetId{0};
 
 namespace {
 template <class Instance, class Impl>
@@ -716,9 +705,7 @@ class NPZCSupport final
     MOZ_ASSERT(toolMinor.Length() == pointerCount);
 
     for (size_t i = startIndex; i < endIndex; i++) {
-      float orien;
-      ScreenSize radius;
-      std::tie(orien, radius) = ConvertOrientationAndRadius(
+      auto [orien, radius] = ConvertOrientationAndRadius(
           orientation[i], toolMajor[i], toolMinor[i]);
 
       ScreenIntPoint point(int32_t(floorf(x[i])), int32_t(floorf(y[i])));
@@ -728,12 +715,9 @@ class NPZCSupport final
       for (size_t historyIndex = 0; historyIndex < historySize;
            historyIndex++) {
         size_t historicalI = historyIndex * pointerCount + i;
-        float historicalAngle;
-        ScreenSize historicalRadius;
-        std::tie(historicalAngle, historicalRadius) =
-            ConvertOrientationAndRadius(historicalOrientation[historicalI],
-                                        historicalToolMajor[historicalI],
-                                        historicalToolMinor[historicalI]);
+        auto [historicalAngle, historicalRadius] = ConvertOrientationAndRadius(
+            historicalOrientation[historicalI],
+            historicalToolMajor[historicalI], historicalToolMinor[historicalI]);
         ScreenIntPoint historicalPoint(
             int32_t(floorf(historicalX[historicalI])),
             int32_t(floorf(historicalY[historicalI])));
@@ -909,7 +893,7 @@ class LayerViewSupport final
   WindowPtr mWindow;
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
-  jni::Object::GlobalRef mSurface;
+  java::sdk::Surface::GlobalRef mSurface;
 
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
@@ -1004,9 +988,9 @@ class LayerViewSupport final
                 }
                 results->pop();
               }
-              compositor->OnCompositorDetached();
             }
 
+            compositor->OnCompositorDetached();
             disposer->Run();
           }));
     }
@@ -1018,7 +1002,7 @@ class LayerViewSupport final
 
   bool CompositorPaused() const { return mCompositorPaused; }
 
-  jni::Object::Param GetSurface() { return mSurface; }
+  java::sdk::Surface::Param GetSurface() { return mSurface; }
 
  private:
   already_AddRefed<UiCompositorControllerChild>
@@ -1166,10 +1150,18 @@ class LayerViewSupport final
       int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    mSurface = aSurface;
+    mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
 
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
+      if (auto window = mWindow.Access()) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          // Send new Surface to GPU process, if one exists.
+          child->OnCompositorSurfaceChanged(gkWindow->mWidgetId, mSurface);
+        }
+      }
+
       child->ResumeAndResize(aX, aY, aWidth, aHeight);
     }
 
@@ -1712,12 +1704,13 @@ void nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent) {
 }
 
 nsWindow::nsWindow()
-    : mScreenId(0),  // Use 0 (primary screen) as the default value.
+    : mWidgetId(++sWidgetId),
+      mScreenId(0),  // Use 0 (primary screen) as the default value.
       mIsVisible(false),
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
       mIsFullScreen(false),
-      mIsDisablingWebRender(false) {}
+      mCompositorWidgetDelegate(nullptr) {}
 
 nsWindow::~nsWindow() {
   gTopLevelWindows.RemoveElement(this);
@@ -2173,17 +2166,11 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
 }
 
 mozilla::WindowRenderer* nsWindow::GetWindowRenderer() {
-  if (mWindowRenderer) {
-    return mWindowRenderer;
-  }
-
-  if (mIsDisablingWebRender) {
+  if (!mWindowRenderer) {
     CreateLayerManager();
-    mIsDisablingWebRender = false;
-    return mWindowRenderer;
   }
 
-  return nullptr;
+  return mWindowRenderer;
 }
 
 void nsWindow::CreateLayerManager() {
@@ -2204,6 +2191,19 @@ void nsWindow::CreateLayerManager() {
     LayoutDeviceIntRect rect = GetBounds();
     CreateCompositor(rect.Width(), rect.Height());
     if (mWindowRenderer) {
+      auto lvs(mLayerViewSupport.Access());
+      if (lvs) {
+        GetUiCompositorControllerChild()->OnCompositorSurfaceChanged(
+            mWidgetId, lvs->GetSurface());
+
+        if (!lvs->CompositorPaused()) {
+          CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+          if (remoteRenderer) {
+            remoteRenderer->SendResumeAsync();
+          }
+        }
+      }
+
       return;
     }
 
@@ -2217,8 +2217,9 @@ void nsWindow::CreateLayerManager() {
   }
 }
 
-void nsWindow::NotifyDisablingWebRender() {
-  mIsDisablingWebRender = true;
+void nsWindow::NotifyCompositorSessionLost(
+    mozilla::layers::CompositorSession* aSession) {
+  nsBaseWidget::NotifyCompositorSessionLost(aSession);
   RedrawAll();
 }
 
@@ -2568,6 +2569,22 @@ nsresult nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
   return SynthesizeNativeMouseEvent(
       aPoint, NativeMouseMessage::Move, MouseButton::eNotPressed,
       nsIWidget::Modifiers::NO_MODIFIERS, aObserver);
+}
+
+void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
+  if (delegate) {
+    mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
+    MOZ_ASSERT(mCompositorWidgetDelegate,
+               "nsWindow::SetCompositorWidgetDelegate called with a "
+               "non-PlatformCompositorWidgetDelegate");
+  } else {
+    mCompositorWidgetDelegate = nullptr;
+  }
+}
+
+void nsWindow::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(mWidgetId);
 }
 
 bool nsWindow::WidgetPaintsBackground() {

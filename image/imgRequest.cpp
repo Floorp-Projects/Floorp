@@ -554,7 +554,8 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
   //
   // We have the original URI in the cache key though, probably we should be
   // using that instead of relying on Init() getting called.
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest, uri);
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
+      aRequest, uri, nsContentUtils::SubresourceKind::Image);
 
   // Expiration time defaults to 0. We set the expiration time on our entry if
   // it hasn't been set yet.
@@ -728,8 +729,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
   if (image) {
-    nsresult rv =
-        image->OnImageDataComplete(aRequest, nullptr, status, lastPart);
+    nsresult rv = image->OnImageDataComplete(aRequest, status, lastPart);
 
     // If we got an error in the OnImageDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -1016,7 +1016,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
   // Notify the image that it has new data.
   if (aInStr) {
     nsresult rv =
-        image->OnImageDataAvailable(aRequest, nullptr, aInStr, aOffset, aCount);
+        image->OnImageDataAvailable(aRequest, aInStr, aOffset, aCount);
 
     if (NS_FAILED(rv)) {
       MOZ_LOG(gImgLog, LogLevel::Warning,

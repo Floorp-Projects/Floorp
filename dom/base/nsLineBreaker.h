@@ -8,6 +8,7 @@
 #define NSLINEBREAKER_H_
 
 #include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/Segmenter.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -174,10 +175,9 @@ class nsLineBreaker {
   nsresult Reset(bool* aTrailingBreak);
 
   /*
-   * Set word-break mode for linebreaker.  This is set by word-break property.
-   * @param aMode is LineBreaker::WordBreak::* value.
+   * Set word-break mode for line breaker. This is set by word-break property.
    */
-  void SetWordBreak(mozilla::intl::LineBreaker::WordBreak aMode) {
+  void SetWordBreak(mozilla::intl::WordBreakRule aMode) {
     // If current word is non-empty and mode is changing, flush the breaker.
     if (aMode != mWordBreak && !mCurrentWord.IsEmpty()) {
       nsresult rv = FlushCurrentWord();
@@ -187,7 +187,7 @@ class nsLineBreaker {
       // If previous mode was break-all, we should allow a break here.
       // XXX (jfkthame) css-text spec seems unclear on this, raised question in
       // https://github.com/w3c/csswg-drafts/issues/3897
-      if (mWordBreak == mozilla::intl::LineBreaker::WordBreak::BreakAll) {
+      if (mWordBreak == mozilla::intl::WordBreakRule::BreakAll) {
         mBreakHere = true;
       }
     }
@@ -195,22 +195,21 @@ class nsLineBreaker {
   }
 
   /*
-   * Set line-break rule strictness mode for linebreaker.  This is set by the
+   * Set line-break rule strictness mode for line breaker. This is set by the
    * line-break property.
-   * @param aMode is LineBreaker::Strictness::* value.
    */
-  void SetStrictness(mozilla::intl::LineBreaker::Strictness aMode) {
-    if (aMode != mStrictness && !mCurrentWord.IsEmpty()) {
+  void SetStrictness(mozilla::intl::LineBreakRule aMode) {
+    if (aMode != mLineBreak && !mCurrentWord.IsEmpty()) {
       nsresult rv = FlushCurrentWord();
       if (NS_FAILED(rv)) {
         NS_WARNING("FlushCurrentWord failed, line-breaks may be wrong");
       }
       // If previous mode was anywhere, we should allow a break here.
-      if (mStrictness == mozilla::intl::LineBreaker::Strictness::Anywhere) {
+      if (mLineBreak == mozilla::intl::LineBreakRule::Anywhere) {
         mBreakHere = true;
       }
     }
-    mStrictness = aMode;
+    mLineBreak = aMode;
   }
 
   /**
@@ -272,10 +271,10 @@ class nsLineBreaker {
   // True if a break must be allowed at the current position because
   // a run of breakable whitespace ends here
   bool mBreakHere;
-  // line break mode by "word-break" style
-  mozilla::intl::LineBreaker::WordBreak mWordBreak;
-  // strictness of break rules, from line-break property
-  mozilla::intl::LineBreaker::Strictness mStrictness;
+  // Break rules for letters from the "word-break" property.
+  mozilla::intl::WordBreakRule mWordBreak;
+  // Line breaking strictness from the "line-break" property.
+  mozilla::intl::LineBreakRule mLineBreak;
   // Should the text be treated as continuing a word-in-progress (for purposes
   // of initial capitalization)? Normally this is set to false whenever we
   // start using a linebreaker, but it may be set to true if the line-breaker

@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1732069: Sec-Fetch-Site inconsistent on localhost/IPs</title>
+</head>
+<body>
+  <iframe src="http://localhost:9898/foo"></iframe>
+  <iframe src="http://localhost:9899/foo"></iframe>
+  <iframe src="http://sub.localhost/foo"></iframe>
+</body>
+</html>

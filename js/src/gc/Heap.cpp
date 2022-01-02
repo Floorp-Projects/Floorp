@@ -192,8 +192,7 @@ ArenaLists::ArenaLists(Zone* zone)
     : zone_(zone),
       freeLists_(zone),
       arenaLists_(zone),
-      newArenasInMarkPhase_(zone),
-      arenasToSweep_(),
+      collectingArenaLists_(zone),
       incrementalSweptArenaKind(zone, AllocKind::LIMIT),
       incrementalSweptArenas(zone),
       gcCompactPropMapArenasToUpdate(zone, nullptr),
@@ -201,7 +200,6 @@ ArenaLists::ArenaLists(Zone* zone)
       savedEmptyArenas(zone, nullptr) {
   for (auto i : AllAllocKinds()) {
     concurrentUse(i) = ConcurrentUse::None;
-    arenasToSweep(i) = nullptr;
   }
 }
 
@@ -235,6 +233,23 @@ ArenaLists::~ArenaLists() {
   ReleaseArenas(runtime(), savedEmptyArenas, lock);
 }
 
+void ArenaLists::moveArenasToCollectingLists() {
+  checkEmptyFreeLists();
+  for (AllocKind kind : AllAllocKinds()) {
+    MOZ_ASSERT(collectingArenaList(kind).isEmpty());
+    collectingArenaList(kind) = std::move(arenaList(kind));
+    MOZ_ASSERT(arenaList(kind).isEmpty());
+  }
+}
+
+void ArenaLists::mergeArenasFromCollectingLists() {
+  for (AllocKind kind : AllAllocKinds()) {
+    collectingArenaList(kind).insertListWithCursorAtEnd(arenaList(kind));
+    arenaList(kind) = std::move(collectingArenaList(kind));
+    MOZ_ASSERT(collectingArenaList(kind).isEmpty());
+  }
+}
+
 Arena* ArenaLists::takeSweptEmptyArenas() {
   Arena* arenas = savedEmptyArenas;
   savedEmptyArenas = nullptr;
@@ -258,7 +273,7 @@ void ArenaLists::checkGCStateNotInUse() {
 #ifdef DEBUG
   checkSweepStateNotInUse();
   for (auto i : AllAllocKinds()) {
-    MOZ_ASSERT(newArenasInMarkPhase(i).isEmpty());
+    MOZ_ASSERT(collectingArenaList(i).isEmpty());
   }
 #endif
 }
@@ -271,7 +286,6 @@ void ArenaLists::checkSweepStateNotInUse() {
   MOZ_ASSERT(!savedEmptyArenas);
   for (auto i : AllAllocKinds()) {
     MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
-    MOZ_ASSERT(!arenasToSweep(i));
   }
 #endif
 }

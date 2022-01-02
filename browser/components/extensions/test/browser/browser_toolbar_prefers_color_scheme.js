@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function testThemeDeterminesToolbarQuery() {
+async function testThemeDeterminesToolbarQuery(toolbarProp) {
   let darkModeQuery = window.matchMedia("(-moz-system-dark-theme)");
   let darkToolbarQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -16,7 +16,7 @@ add_task(async function testThemeDeterminesToolbarQuery() {
       },
       theme: {
         colors: {
-          toolbar: "rgba(12, 12, 12, 1)",
+          [toolbarProp]: "#fff",
         },
       },
     },
@@ -30,7 +30,7 @@ add_task(async function testThemeDeterminesToolbarQuery() {
       },
       theme: {
         colors: {
-          toolbar: "rgba(255, 255, 255, 1)",
+          [toolbarProp]: "#000",
         },
       },
     },
@@ -45,8 +45,8 @@ add_task(async function testThemeDeterminesToolbarQuery() {
       },
       theme: {
         colors: {
-          toolbar: "rgba(12, 12, 12, 1)",
-          ntp_background: "rgba(255, 255, 255, 1)",
+          [toolbarProp]: "#fff",
+          ntp_text: "#000",
         },
       },
     },
@@ -61,8 +61,8 @@ add_task(async function testThemeDeterminesToolbarQuery() {
       },
       theme: {
         colors: {
-          toolbar: "rgba(255, 255, 255, 1)",
-          ntp_background: "rgba(12, 12, 12, 1)",
+          [toolbarProp]: "#000",
+          ntp_text: "#fff",
         },
       },
     },
@@ -187,4 +187,91 @@ add_task(async function testThemeDeterminesToolbarQuery() {
   }
   BrowserTestUtils.removeTab(contentTab);
   BrowserTestUtils.removeTab(preferencesTab);
+}
+
+add_task(function test_toolbar() {
+  return testThemeDeterminesToolbarQuery("toolbar_text");
+});
+
+// Assert that we fall back to tab_background_text if toolbar is not set.
+add_task(function test_frame() {
+  return testThemeDeterminesToolbarQuery("tab_background_text");
+});
+
+const kDark = 0;
+const kLight = 1;
+const kDefault = 2;
+
+// The above tests should be enough to make sure that the prefs behave as
+// expected, the following ones test various edge cases in a simpler way.
+async function testTheme(description, toolbar, content, themeData) {
+  info(description);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "dummy@mochi.test",
+        },
+      },
+      theme: themeData,
+    },
+  });
+
+  await Promise.all([
+    TestUtils.topicObserved("lightweight-theme-styling-update"),
+    extension.startup(),
+  ]);
+
+  is(
+    SpecialPowers.getIntPref("browser.theme.toolbar-theme"),
+    toolbar,
+    "Toolbar theme expected"
+  );
+  is(
+    SpecialPowers.getIntPref("browser.theme.content-theme"),
+    content,
+    "Content theme expected"
+  );
+
+  await Promise.all([
+    TestUtils.topicObserved("lightweight-theme-styling-update"),
+    extension.unload(),
+  ]);
+}
+
+add_task(async function test_dark_toolbar_dark_text() {
+  // Bug 1743010
+  await testTheme(
+    "Dark toolbar color, dark toolbar background",
+    kDark,
+    kDefault,
+    {
+      colors: {
+        toolbar: "rgb(20, 17, 26)",
+        toolbar_text: "rgb(251, 29, 78)",
+      },
+    }
+  );
+
+  // Dark frame text is ignored as it might be overlaid with an image,
+  // see bug 1741931.
+  await testTheme("Dark frame is ignored", kLight, kDefault, {
+    colors: {
+      frame: "#000000",
+      tab_background_text: "#000000",
+    },
+  });
+
+  await testTheme(
+    "Semi-transparent toolbar backgrounds are ignored.",
+    kLight,
+    kDefault,
+    {
+      colors: {
+        toolbar: "rgba(0, 0, 0, .2)",
+        toolbar_text: "#000",
+      },
+    }
+  );
 });

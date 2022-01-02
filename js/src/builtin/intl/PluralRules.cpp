@@ -70,9 +70,7 @@ static const JSFunctionSpec pluralRules_methods[] = {
                       0),
     JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
 #ifdef NIGHTLY_BUILD
-#  ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
     JS_SELF_HOSTED_FN("selectRange", "Intl_PluralRules_selectRange", 2, 0),
-#  endif
 #endif
     JS_FN(js_toSource_str, pluralRules_toSource, 0, 0), JS_FS_END};
 
@@ -339,7 +337,6 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
-#ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
 
@@ -373,9 +370,6 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(str);
   return true;
-#else
-  MOZ_CRASH("ICU draft API not enabled");
-#endif
 }
 
 bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {

@@ -183,11 +183,16 @@ using namespace mozilla::a11y;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       [self moxPostNotification:
                 NSAccessibilityFocusedUIElementChangedNotification];
+      MOZ_ASSERT(mGeckoAccessible->IsRemote() ||
+                     mGeckoAccessible->AsLocal()->IsRoot() ||
+                     mGeckoAccessible->AsLocal()->AsDoc()->ParentDocument(),
+                 "Non-root doc without a parent!");
       if ((mGeckoAccessible->IsRemote() &&
            mGeckoAccessible->AsRemote()->IsDoc() &&
            mGeckoAccessible->AsRemote()->AsDoc()->IsTopLevel()) ||
           (mGeckoAccessible->IsLocal() &&
            !mGeckoAccessible->AsLocal()->IsRoot() &&
+           mGeckoAccessible->AsLocal()->AsDoc()->ParentDocument() &&
            mGeckoAccessible->AsLocal()->AsDoc()->ParentDocument()->IsRoot())) {
         // we fire an AXLoadComplete event on top-level documents only
         [self moxPostNotification:@"AXLoadComplete"];

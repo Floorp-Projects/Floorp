@@ -10,6 +10,20 @@ fi{
     units{
         acceleration{
             g-force{
+                case{
+                    elative{
+                        one{"{0} G-voimasta"}
+                        other{"{0} G-voimasta"}
+                    }
+                    illative{
+                        one{"{0} G-voimaan"}
+                        other{"{0} G-voimaan"}
+                    }
+                    partitive{
+                        one{"{0} G-voimaa"}
+                        other{"{0} G-voimaa"}
+                    }
+                }
                 dnam{"G-voimat"}
                 one{"{0} G-voima"}
                 other{"{0} G-voimaa"}
@@ -22,26 +36,96 @@ fi{
         }
         angle{
             arc-minute{
+                case{
+                    elative{
+                        one{"{0} kulmaminuutista"}
+                        other{"{0} kulmaminuutista"}
+                    }
+                    illative{
+                        one{"{0} kulmaminuuttiin"}
+                        other{"{0} kulmaminuuttiin"}
+                    }
+                    partitive{
+                        one{"{0} kulmaminuuttia"}
+                        other{"{0} kulmaminuuttia"}
+                    }
+                }
                 dnam{"kulmaminuutit"}
                 one{"{0} kulmaminuutti"}
                 other{"{0} kulmaminuuttia"}
             }
             arc-second{
+                case{
+                    elative{
+                        one{"{0} kulmasekunnista"}
+                        other{"{0} kulmasekunnista"}
+                    }
+                    illative{
+                        one{"{0} kulmasekuntiin"}
+                        other{"{0} kulmasekuntiin"}
+                    }
+                    partitive{
+                        one{"{0} kulmasekuntia"}
+                        other{"{0} kulmasekuntia"}
+                    }
+                }
                 dnam{"kulmasekunnit"}
                 one{"{0} kulmasekunti"}
                 other{"{0} kulmasekuntia"}
             }
             degree{
+                case{
+                    elative{
+                        one{"{0} asteesta"}
+                        other{"{0} asteesta"}
+                    }
+                    illative{
+                        one{"{0} asteeseen"}
+                        other{"{0} asteeseen"}
+                    }
+                    partitive{
+                        one{"{0} astetta"}
+                        other{"{0} astetta"}
+                    }
+                }
                 dnam{"asteet"}
                 one{"{0} aste"}
                 other{"{0} astetta"}
             }
             radian{
+                case{
+                    elative{
+                        one{"{0} radiaanista"}
+                        other{"{0} radiaanista"}
+                    }
+                    illative{
+                        one{"{0} radiaaniin"}
+                        other{"{0} radiaaniin"}
+                    }
+                    partitive{
+                        one{"{0} radiaania"}
+                        other{"{0} radiaania"}
+                    }
+                }
                 dnam{"radiaanit"}
                 one{"{0} radiaani"}
                 other{"{0} radiaania"}
             }
             revolution{
+                case{
+                    elative{
+                        one{"{0} kierroksesta"}
+                        other{"{0} kierroksesta"}
+                    }
+                    illative{
+                        one{"{0} kierrokseen"}
+                        other{"{0} kierrokseen"}
+                    }
+                    partitive{
+                        one{"{0} kierrosta"}
+                        other{"{0} kierrosta"}
+                    }
+                }
                 dnam{"kierros"}
                 one{"{0} kierros"}
                 other{"{0} kierrosta"}
@@ -59,6 +143,20 @@ fi{
                 other{"{0} dunamia"}
             }
             hectare{
+                case{
+                    elative{
+                        one{"{0} hehtaarista"}
+                        other{"{0} hehtaarista"}
+                    }
+                    illative{
+                        one{"{0} hehtaariin"}
+                        other{"{0} hehtaariin"}
+                    }
+                    partitive{
+                        one{"{0} hehtaaria"}
+                        other{"{0} hehtaaria"}
+                    }
+                }
                 dnam{"hehtaarit"}
                 one{"{0} hehtaari"}
                 other{"{0} hehtaaria"}
@@ -160,42 +258,131 @@ fi{
             }
         }
         concentr{
+            item{
+                dnam{"kohteet"}
+                one{"{0} kohde"}
+                other{"{0} kohdetta"}
+            }
             karat{
+                case{
+                    elative{
+                        one{"{0} karaatista"}
+                        other{"{0} karaatista"}
+                    }
+                    illative{
+                        one{"{0} karaattiin"}
+                        other{"{0} karaattiin"}
+                    }
+                    partitive{
+                        one{"{0} karaattia"}
+                        other{"{0} karaattia"}
+                    }
+                }
                 dnam{"karaatit"}
                 one{"{0} karaatti"}
                 other{"{0} karaattia"}
             }
             milligram-ofglucose-per-deciliter{
-                dnam{"mg/dl"}
-                one{"{0} mg/dl"}
-                other{"{0} mg/dl"}
+                dnam{"milligrammat desilitrassa"}
+                one{"{0} milligramma desilitrassa"}
+                other{"{0} milligrammaa desilitrassa"}
             }
             millimole-per-liter{
-                dnam{"mmol/l"}
-                one{"{0} mmol/l"}
-                other{"{0} mmol/l"}
+                dnam{"millimoolit litrassa"}
+                one{"{0} millimooli litrassa"}
+                other{"{0} millimoolia litrassa"}
             }
             mole{
+                case{
+                    elative{
+                        one{"{0} moolista"}
+                        other{"{0} moolista"}
+                    }
+                    illative{
+                        one{"{0} mooliin"}
+                        other{"{0} mooliin"}
+                    }
+                    partitive{
+                        one{"{0} moolia"}
+                        other{"{0} moolia"}
+                    }
+                }
                 dnam{"moolit"}
                 one{"{0} mooli"}
                 other{"{0} moolia"}
             }
             percent{
+                case{
+                    elative{
+                        one{"{0} prosentista"}
+                        other{"{0} prosentista"}
+                    }
+                    illative{
+                        one{"{0} prosenttiin"}
+                        other{"{0} prosenttiin"}
+                    }
+                    partitive{
+                        one{"{0} prosenttia"}
+                        other{"{0} prosenttia"}
+                    }
+                }
                 dnam{"prosentit"}
                 one{"{0} prosentti"}
                 other{"{0} prosenttia"}
             }
             permille{
+                case{
+                    elative{
+                        one{"{0} promillesta"}
+                        other{"{0} promillesta"}
+                    }
+                    illative{
+                        one{"{0} promilleen"}
+                        other{"{0} promilleen"}
+                    }
+                    partitive{
+                        one{"{0} promillea"}
+                        other{"{0} promillea"}
+                    }
+                }
                 dnam{"promillet"}
                 one{"{0} promille"}
                 other{"{0} promillea"}
             }
             permillion{
+                case{
+                    elative{
+                        one{"{0} miljoonasosasta"}
+                        other{"{0} miljoonasosasta"}
+                    }
+                    illative{
+                        one{"{0} miljoonasosaan"}
+                        other{"{0} miljoonasosaan"}
+                    }
+                    partitive{
+                        one{"{0} miljoonasosaa"}
+                        other{"{0} miljoonasosaa"}
+                    }
+                }
                 dnam{"miljoonasosat"}
                 one{"{0} miljoonasosa"}
                 other{"{0} miljoonasosaa"}
             }
             permyriad{
+                case{
+                    elative{
+                        one{"{0} peruspisteestä"}
+                        other{"{0} peruspisteestä"}
+                    }
+                    illative{
+                        one{"{0} peruspisteeseen"}
+                        other{"{0} peruspisteeseen"}
+                    }
+                    partitive{
+                        one{"{0} peruspistettä"}
+                        other{"{0} peruspistettä"}
+                    }
+                }
                 dnam{"peruspiste"}
                 one{"{0} peruspiste"}
                 other{"{0} peruspistettä"}
@@ -232,11 +419,39 @@ fi{
         }
         digital{
             bit{
+                case{
+                    elative{
+                        one{"{0} bitistä"}
+                        other{"{0} bitistä"}
+                    }
+                    illative{
+                        one{"{0} bittiin"}
+                        other{"{0} bittiin"}
+                    }
+                    partitive{
+                        one{"{0} bittiä"}
+                        other{"{0} bittiä"}
+                    }
+                }
                 dnam{"bitit"}
                 one{"{0} bitti"}
                 other{"{0} bittiä"}
             }
             byte{
+                case{
+                    elative{
+                        one{"{0} tavusta"}
+                        other{"{0} tavusta"}
+                    }
+                    illative{
+                        one{"{0} tavuun"}
+                        other{"{0} tavuun"}
+                    }
+                    partitive{
+                        one{"{0} tavua"}
+                        other{"{0} tavua"}
+                    }
+                }
                 dnam{"tavut"}
                 one{"{0} tavu"}
                 other{"{0} tavua"}
@@ -289,22 +504,78 @@ fi{
         }
         duration{
             century{
+                case{
+                    elative{
+                        one{"{0} vuosisadasta"}
+                        other{"{0} vuosisadasta"}
+                    }
+                    illative{
+                        one{"{0} vuosisataan"}
+                        other{"{0} vuosisataan"}
+                    }
+                    partitive{
+                        one{"{0} vuosisataa"}
+                        other{"{0} vuosisataa"}
+                    }
+                }
                 dnam{"vuosisadat"}
                 one{"{0} vuosisata"}
                 other{"{0} vuosisataa"}
             }
             day{
+                case{
+                    elative{
+                        one{"{0} päivästä"}
+                        other{"{0} päivästä"}
+                    }
+                    illative{
+                        one{"{0} päivään"}
+                        other{"{0} päivään"}
+                    }
+                    partitive{
+                        one{"{0} päivää"}
+                        other{"{0} päivää"}
+                    }
+                }
                 dnam{"päivät"}
                 one{"{0} päivä"}
                 other{"{0} päivää"}
                 per{"{0} / päivä"}
             }
             decade{
+                case{
+                    elative{
+                        one{"{0} vuosikymmenestä"}
+                        other{"{0} vuosikymmenestä"}
+                    }
+                    illative{
+                        one{"{0} vuosikymmeneen"}
+                        other{"{0} vuosikymmeneen"}
+                    }
+                    partitive{
+                        one{"{0} vuosikymmentä"}
+                        other{"{0} vuosikymmentä"}
+                    }
+                }
                 dnam{"vuosikymmenet"}
                 one{"{0} vuosikymmen"}
                 other{"{0} vuosikymmentä"}
             }
             hour{
+                case{
+                    elative{
+                        one{"{0} tunnista"}
+                        other{"{0} tunnista"}
+                    }
+                    illative{
+                        one{"{0} tuntiin"}
+                        other{"{0} tuntiin"}
+                    }
+                    partitive{
+                        one{"{0} tuntia"}
+                        other{"{0} tuntia"}
+                    }
+                }
                 dnam{"tunnit"}
                 one{"{0} tunti"}
                 other{"{0} tuntia"}
@@ -321,12 +592,40 @@ fi{
                 other{"{0} millisekuntia"}
             }
             minute{
+                case{
+                    elative{
+                        one{"{0} minuutista"}
+                        other{"{0} minuutista"}
+                    }
+                    illative{
+                        one{"{0} minuuttiin"}
+                        other{"{0} minuutista"}
+                    }
+                    partitive{
+                        one{"{0} minuuttia"}
+                        other{"{0} minuuttia"}
+                    }
+                }
                 dnam{"minuutit"}
                 one{"{0} minuutti"}
                 other{"{0} minuuttia"}
                 per{"{0} / minuutti"}
             }
             month{
+                case{
+                    elative{
+                        one{"{0} kuukaudesta"}
+                        other{"{0} kuukaudesta"}
+                    }
+                    illative{
+                        one{"{0} kuukauteen"}
+                        other{"{0} kuukauteen"}
+                    }
+                    partitive{
+                        one{"{0} kuukautta"}
+                        other{"{0} kuukautta"}
+                    }
+                }
                 dnam{"kuukaudet"}
                 one{"{0} kuukausi"}
                 other{"{0} kuukautta"}
@@ -338,18 +637,60 @@ fi{
                 other{"{0} nanosekuntia"}
             }
             second{
+                case{
+                    elative{
+                        one{"{0} sekunnista"}
+                        other{"{0} sekunnista"}
+                    }
+                    illative{
+                        one{"{0} sekuntiin"}
+                        other{"{0} sekuntiin"}
+                    }
+                    partitive{
+                        one{"{0} sekuntia"}
+                        other{"{0} sekuntia"}
+                    }
+                }
                 dnam{"sekunnit"}
                 one{"{0} sekunti"}
                 other{"{0} sekuntia"}
                 per{"{0} / sekunti"}
             }
             week{
+                case{
+                    elative{
+                        one{"{0} viikosta"}
+                        other{"{0} viikosta"}
+                    }
+                    illative{
+                        one{"{0} viikkoon"}
+                        other{"{0} viikkoon"}
+                    }
+                    partitive{
+                        one{"{0} viikkoa"}
+                        other{"{0} viikkoa"}
+                    }
+                }
                 dnam{"viikot"}
                 one{"{0} viikko"}
                 other{"{0} viikkoa"}
                 per{"{0} / viikko"}
             }
             year{
+                case{
+                    elative{
+                        one{"{0} vuodesta"}
+                        other{"{0} vuodesta"}
+                    }
+                    illative{
+                        one{"{0} vuoteen"}
+                        other{"{0} vuoteen"}
+                    }
+                    partitive{
+                        one{"{0} vuotta"}
+                        other{"{0} vuoteen"}
+                    }
+                }
                 dnam{"vuodet"}
                 one{"{0} vuosi"}
                 other{"{0} vuotta"}
@@ -358,6 +699,20 @@ fi{
         }
         electric{
             ampere{
+                case{
+                    elative{
+                        one{"{0} ampeerista"}
+                        other{"{0} ampeerista"}
+                    }
+                    illative{
+                        one{"{0} ampeeriin"}
+                        other{"{0} ampeeriin"}
+                    }
+                    partitive{
+                        one{"{0} ampeeria"}
+                        other{"{0} ampeeria"}
+                    }
+                }
                 dnam{"ampeerit"}
                 one{"{0} ampeeri"}
                 other{"{0} ampeeria"}
@@ -368,11 +723,39 @@ fi{
                 other{"{0} milliampeeria"}
             }
             ohm{
+                case{
+                    elative{
+                        one{"{0} ohmista"}
+                        other{"{0} ohmista"}
+                    }
+                    illative{
+                        one{"{0} ohmiin"}
+                        other{"{0} ohmiin"}
+                    }
+                    partitive{
+                        one{"{0} ohmia"}
+                        other{"{0} ohmia"}
+                    }
+                }
                 dnam{"ohmit"}
                 one{"{0} ohmi"}
                 other{"{0} ohmia"}
             }
             volt{
+                case{
+                    elative{
+                        one{"{0} voltista"}
+                        other{"{0} voltista"}
+                    }
+                    illative{
+                        one{"{0} volttiin"}
+                        other{"{0} volttiin"}
+                    }
+                    partitive{
+                        one{"{0} volttia"}
+                        other{"{0} volttia"}
+                    }
+                }
                 dnam{"voltit"}
                 one{"{0} voltti"}
                 other{"{0} volttia"}
@@ -385,6 +768,20 @@ fi{
                 other{"{0} brittiläistä termistä yksikköä"}
             }
             calorie{
+                case{
+                    elative{
+                        one{"{0} kalorista"}
+                        other{"{0} kalorista"}
+                    }
+                    illative{
+                        one{"{0} kaloriin"}
+                        other{"{0} kaloriin"}
+                    }
+                    partitive{
+                        one{"{0} kaloria"}
+                        other{"{0} kaloria"}
+                    }
+                }
                 dnam{"kalorit"}
                 one{"{0} kalori"}
                 other{"{0} kaloria"}
@@ -400,6 +797,20 @@ fi{
                 other{"{0} kilokaloria"}
             }
             joule{
+                case{
+                    elative{
+                        one{"{0} joulesta"}
+                        other{"{0} joulesta"}
+                    }
+                    illative{
+                        one{"{0} jouleen"}
+                        other{"{0} jouleen"}
+                    }
+                    partitive{
+                        one{"{0} joulea"}
+                        other{"{0} joulea"}
+                    }
+                }
                 dnam{"joulet"}
                 one{"{0} joule"}
                 other{"{0} joulea"}
@@ -421,7 +832,26 @@ fi{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowattitunnit 100 kilometrillä"}
+                one{"{0} kilowattitunti 100 kilometrillä"}
+                other{"{0} kilowattituntia 100 kilometrillä"}
+            }
             newton{
+                case{
+                    elative{
+                        one{"{0} newtonista"}
+                        other{"{0} newtonista"}
+                    }
+                    illative{
+                        one{"{0} newtoniin"}
+                        other{"{0} newtoniin"}
+                    }
+                    partitive{
+                        one{"{0} newtonia"}
+                        other{"{0} newtonia"}
+                    }
+                }
                 dnam{"newtonit"}
                 one{"{0} newton"}
                 other{"{0} newtonia"}
@@ -439,6 +869,20 @@ fi{
                 other{"{0} gigahertsiä"}
             }
             hertz{
+                case{
+                    elative{
+                        one{"{0} hertsistä"}
+                        other{"{0} hertsistä"}
+                    }
+                    illative{
+                        one{"{0} hertsiin"}
+                        other{"{0} hertsiin"}
+                    }
+                    partitive{
+                        one{"{0} hertsiä"}
+                        other{"{0} hertsiä"}
+                    }
+                }
                 dnam{"hertsit"}
                 one{"{0} hertsi"}
                 other{"{0} hertsiä"}
@@ -459,6 +903,44 @@ fi{
                 dnam{"piste"}
                 one{"{0} piste"}
                 other{"{0} pistettä"}
+            }
+            em{
+                case{
+                    elative{
+                        one{"{0} em-välistä"}
+                        other{"{0} em-välistä"}
+                    }
+                    illative{
+                        one{"{0} em-väliin"}
+                        other{"{0} em-väliin"}
+                    }
+                    partitive{
+                        one{"{0} em-väliä"}
+                        other{"{0} em-väliä"}
+                    }
+                }
+                dnam{"em-väli"}
+                one{"{0} em"}
+                other{"{0} em-väliä"}
+            }
+            pixel{
+                case{
+                    elative{
+                        one{"{0} pikselistä"}
+                        other{"{0} pikselistä"}
+                    }
+                    illative{
+                        one{"{0} pikseliin"}
+                        other{"{0} pikseliin"}
+                    }
+                    partitive{
+                        one{"{0} pikseliä"}
+                        other{"{0} pikseliä"}
+                    }
+                }
+                dnam{"pikselit"}
+                one{"{0} pikseli"}
+                other{"{0} pikseliä"}
             }
         }
         length{
@@ -517,6 +999,20 @@ fi{
                 other{"{0} valovuotta"}
             }
             meter{
+                case{
+                    elative{
+                        one{"{0} metristä"}
+                        other{"{0} metristä"}
+                    }
+                    illative{
+                        one{"{0} metriin"}
+                        other{"{0} metriin"}
+                    }
+                    partitive{
+                        one{"{0} metriä"}
+                        other{"{0} metriä"}
+                    }
+                }
                 dnam{"metrit"}
                 one{"{0} metri"}
                 other{"{0} metriä"}
@@ -533,6 +1029,20 @@ fi{
                 other{"{0} mailia"}
             }
             mile-scandinavian{
+                case{
+                    elative{
+                        one{"{0} peninkulmasta"}
+                        other{"{0} peninkulmasta"}
+                    }
+                    illative{
+                        one{"{0} peninkulmaan"}
+                        other{"{0} peninkulmaan"}
+                    }
+                    partitive{
+                        one{"{0} peninkulmaa"}
+                        other{"{0} peninkulmaa"}
+                    }
+                }
                 dnam{"peninkulmat"}
                 one{"{0} peninkulma"}
                 other{"{0} peninkulmaa"}
@@ -580,16 +1090,58 @@ fi{
         }
         light{
             candela{
+                case{
+                    elative{
+                        one{"{0} kandelasta"}
+                        other{"{0} kandelasta"}
+                    }
+                    illative{
+                        one{"{0} kandelaan"}
+                        other{"{0} kandelaan"}
+                    }
+                    partitive{
+                        one{"{0} kandelaa"}
+                        other{"{0} kandelaa"}
+                    }
+                }
                 dnam{"kandelat"}
                 one{"{0} kandela"}
                 other{"{0} kandelaa"}
             }
             lumen{
+                case{
+                    elative{
+                        one{"{0} luumenista"}
+                        other{"{0} luumenista"}
+                    }
+                    illative{
+                        one{"{0} luumeniin"}
+                        other{"{0} luumeniin"}
+                    }
+                    partitive{
+                        one{"{0} luumenia"}
+                        other{"{0} luumenia"}
+                    }
+                }
                 dnam{"luumenit"}
                 one{"{0} luumen"}
                 other{"{0} luumenia"}
             }
             lux{
+                case{
+                    elative{
+                        one{"{0} luksista"}
+                        other{"{0} luksista"}
+                    }
+                    illative{
+                        one{"{0} luksiin"}
+                        other{"{0} luksiin"}
+                    }
+                    partitive{
+                        one{"{0} luksia"}
+                        other{"{0} luksia"}
+                    }
+                }
                 dnam{"luksit"}
                 one{"{0} luksi"}
                 other{"{0} luksia"}
@@ -602,6 +1154,20 @@ fi{
         }
         mass{
             carat{
+                case{
+                    elative{
+                        one{"{0} karaatista"}
+                        other{"{0} karaatista"}
+                    }
+                    illative{
+                        one{"{0} karaattiin"}
+                        other{"{0} karaattiin"}
+                    }
+                    partitive{
+                        one{"{0} karaattia"}
+                        other{"{0} karaattia"}
+                    }
+                }
                 dnam{"karaatit"}
                 one{"{0} karaatti"}
                 other{"{0} karaattia"}
@@ -622,18 +1188,60 @@ fi{
                 other{"{0} graania"}
             }
             gram{
+                case{
+                    elative{
+                        one{"{0} grammasta"}
+                        other{"{0} grammasta"}
+                    }
+                    illative{
+                        one{"{0} grammaan"}
+                        other{"{0} grammaan"}
+                    }
+                    partitive{
+                        one{"{0} grammaa"}
+                        other{"{0} grammaa"}
+                    }
+                }
                 dnam{"grammat"}
                 one{"{0} gramma"}
                 other{"{0} grammaa"}
                 per{"{0} / gramma"}
             }
             kilogram{
+                case{
+                    elative{
+                        one{"{0} kilogrammasta"}
+                        other{"{0} kilogrammasta"}
+                    }
+                    illative{
+                        one{"{0} kilogrammaan"}
+                        other{"{0} kilogrammaan"}
+                    }
+                    partitive{
+                        one{"{0} kilogrammaa"}
+                        other{"{0} kilogrammaa"}
+                    }
+                }
                 dnam{"kilogrammat"}
                 one{"{0} kilogramma"}
                 other{"{0} kilogrammaa"}
                 per{"{0} / kilogramma"}
             }
             metric-ton{
+                case{
+                    elative{
+                        one{"{0} tonnista"}
+                        other{"{0} tonnista"}
+                    }
+                    illative{
+                        one{"{0} tonniin"}
+                        other{"{0} tonniin"}
+                    }
+                    partitive{
+                        one{"{0} tonnia"}
+                        other{"{0} tonnia"}
+                    }
+                }
                 dnam{"tonnit"}
                 one{"{0} tonni"}
                 other{"{0} tonnia"}
@@ -708,6 +1316,20 @@ fi{
                 other{"{0} milliwattia"}
             }
             watt{
+                case{
+                    elative{
+                        one{"{0} watista"}
+                        other{"{0} watista"}
+                    }
+                    illative{
+                        one{"{0} wattiin"}
+                        other{"{0} wattiin"}
+                    }
+                    partitive{
+                        one{"{0} wattia"}
+                        other{"{0} wattia"}
+                    }
+                }
                 dnam{"watit"}
                 one{"{0} watti"}
                 other{"{0} wattia"}
@@ -715,11 +1337,39 @@ fi{
         }
         pressure{
             atmosphere{
+                case{
+                    elative{
+                        one{"{0} normaali-ilmakehästä"}
+                        other{"{0} normaali-ilmakehästä"}
+                    }
+                    illative{
+                        one{"{0} normaali-ilmakehään"}
+                        other{"{0} normaali-ilmakehään"}
+                    }
+                    partitive{
+                        one{"{0} normaali-ilmakehää"}
+                        other{"{0} normaali-ilmakehää"}
+                    }
+                }
                 dnam{"normaali-ilmakehät"}
                 one{"{0} normaali-ilmakehä"}
                 other{"{0} normaali-ilmakehää"}
             }
             bar{
+                case{
+                    elative{
+                        one{"{0} baarista"}
+                        other{"{0} baarista"}
+                    }
+                    illative{
+                        one{"{0} baariin"}
+                        other{"{0} baariin"}
+                    }
+                    partitive{
+                        one{"{0} baaria"}
+                        other{"{0} baaria"}
+                    }
+                }
                 dnam{"baarit"}
                 one{"{0} baari"}
                 other{"{0} baaria"}
@@ -755,6 +1405,20 @@ fi{
                 other{"{0} elohopeamillimetriä"}
             }
             pascal{
+                case{
+                    elative{
+                        one{"{0} pascalista"}
+                        other{"{0} pascalista"}
+                    }
+                    illative{
+                        one{"{0} pascaliin"}
+                        other{"{0} pascaliin"}
+                    }
+                    partitive{
+                        one{"{0} pascalia"}
+                        other{"{0} pascalia"}
+                    }
+                }
                 dnam{"pascalit"}
                 one{"{0} pascal"}
                 other{"{0} pascalia"}
@@ -772,7 +1436,7 @@ fi{
                 other{"{0} kilometriä tunnissa"}
             }
             knot{
-                dnam{"solmu"}
+                dnam{"solmut"}
                 one{"{0} solmu"}
                 other{"{0} solmua"}
             }
@@ -789,6 +1453,20 @@ fi{
         }
         temperature{
             celsius{
+                case{
+                    elative{
+                        one{"{0} celsiusasteesta"}
+                        other{"{0} celsiusasteesta"}
+                    }
+                    illative{
+                        one{"{0} celsiusasteeseen"}
+                        other{"{0} celsiusasteeseen"}
+                    }
+                    partitive{
+                        one{"{0} celsiusastetta"}
+                        other{"{0} celsiusastetta"}
+                    }
+                }
                 dnam{"celsiusasteet"}
                 one{"{0} celsiusaste"}
                 other{"{0} celsiusastetta"}
@@ -799,11 +1477,39 @@ fi{
                 other{"{0} fahrenheitastetta"}
             }
             generic{
-                dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
+                case{
+                    elative{
+                        one{"{0} asteesta"}
+                        other{"{0} asteesta"}
+                    }
+                    illative{
+                        one{"{0} asteeseen"}
+                        other{"{0} asteeseen"}
+                    }
+                    partitive{
+                        one{"{0} astetta"}
+                        other{"{0} astetta"}
+                    }
+                }
+                dnam{"asteet"}
+                one{"{0} aste"}
+                other{"{0} astetta"}
             }
             kelvin{
+                case{
+                    elative{
+                        one{"{0} kelvinistä"}
+                        other{"{0} kelvinistä"}
+                    }
+                    illative{
+                        one{"{0} kelviniin"}
+                        other{"{0} kelviniin"}
+                    }
+                    partitive{
+                        one{"{0} kelviniä"}
+                        other{"{0} kelviniä"}
+                    }
+                }
                 dnam{"kelvinit"}
                 one{"{0} kelvin"}
                 other{"{0} kelviniä"}
@@ -885,6 +1591,20 @@ fi{
                 other{"{0} kuppia"}
             }
             cup-metric{
+                case{
+                    elative{
+                        one{"{0} teekupista"}
+                        other{"{0} teekupista"}
+                    }
+                    illative{
+                        one{"{0} teekuppiin"}
+                        other{"{0} teekuppiin"}
+                    }
+                    partitive{
+                        one{"{0} teekuppia"}
+                        other{"{0} teekuppia"}
+                    }
+                }
                 dnam{"teekupit"}
                 one{"{0} teekuppi"}
                 other{"{0} teekuppia"}
@@ -900,9 +1620,9 @@ fi{
                 other{"{0} jälkiruokalusikkaa"}
             }
             dessert-spoon-imperial{
-                dnam{"Imp. jälkiruokalusikat"}
-                one{"{0} imp. jälkiruokalusikka"}
-                other{"{0} imp. jälkiruokalusikkaa"}
+                dnam{"br. jälkiruokalusikat"}
+                one{"{0} br. jälkiruokalusikka"}
+                other{"{0} br. jälkiruokalusikkaa"}
             }
             dram{
                 dnam{"dramit"}
@@ -920,9 +1640,9 @@ fi{
                 other{"{0} nesteunssia"}
             }
             fluid-ounce-imperial{
-                dnam{"imp. nesteunssit"}
-                one{"{0} imp. nesteunssi"}
-                other{"{0} imp. nesteunssia"}
+                dnam{"br. nesteunssit"}
+                one{"{0} br. nesteunssi"}
+                other{"{0} br. nesteunssia"}
             }
             gallon{
                 dnam{"am. gallonat"}
@@ -947,6 +1667,20 @@ fi{
                 other{"{0} jiggeriä"}
             }
             liter{
+                case{
+                    elative{
+                        one{"{0} litrasta"}
+                        other{"{0} litrasta"}
+                    }
+                    illative{
+                        one{"{0} litraan"}
+                        other{"{0} litraan"}
+                    }
+                    partitive{
+                        one{"{0} litraa"}
+                        other{"{0} litraa"}
+                    }
+                }
                 dnam{"litrat"}
                 one{"{0} litra"}
                 other{"{0} litraa"}
@@ -973,6 +1707,20 @@ fi{
                 other{"{0} pinttiä"}
             }
             pint-metric{
+                case{
+                    elative{
+                        one{"{0} tuopista"}
+                        other{"{0} tuopista"}
+                    }
+                    illative{
+                        one{"{0} tuoppiin"}
+                        other{"{0} tuoppiin"}
+                    }
+                    partitive{
+                        one{"{0} tuoppia"}
+                        other{"{0} tuoppia"}
+                    }
+                }
                 dnam{"tuopit"}
                 one{"{0} tuoppi"}
                 other{"{0} tuoppia"}
@@ -983,9 +1731,9 @@ fi{
                 other{"{0} neljännesgallonaa"}
             }
             quart-imperial{
-                dnam{"Imp. neljännesgallonat"}
-                one{"{0} imp. neljännesgallona"}
-                other{"{0} imp. neljännesgallonaa"}
+                dnam{"br. neljännesgallonat"}
+                one{"{0} br. neljännesgallona"}
+                other{"{0} br. neljännesgallonaa"}
             }
             tablespoon{
                 dnam{"ruokalusikat"}
@@ -1123,6 +1871,11 @@ fi{
             }
         }
         concentr{
+            item{
+                dnam{"kohde"}
+                one{"{0} kohde"}
+                other{"{0} kohdetta"}
+            }
             karat{
                 dnam{"ka"}
                 one{"{0}ka"}
@@ -1374,8 +2127,17 @@ fi{
                 one{"{0}kWh"}
                 other{"{0}kWh"}
             }
+            therm-us{
+                one{"{0}US therm"}
+                other{"{0}US therm"}
+            }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0}kWh/100 km"}
+                other{"{0}kWh/100 km"}
+            }
             newton{
                 dnam{"N"}
                 one{"{0}N"}
@@ -1410,6 +2172,10 @@ fi{
             }
         }
         graphics{
+            dot{
+                one{"{0}piste"}
+                other{"{0}pistettä"}
+            }
             dot-per-centimeter{
                 one{"{0}dpcm"}
                 other{"{0}dpcm"}
@@ -1455,6 +2221,10 @@ fi{
                 dnam{"dm"}
                 one{"{0}dm"}
                 other{"{0}dm"}
+            }
+            earth-radius{
+                one{"{0}R⊕"}
+                other{"{0}R⊕"}
             }
             fathom{
                 dnam{"fm"}
@@ -1551,6 +2321,14 @@ fi{
             }
         }
         light{
+            candela{
+                one{"{0}cd"}
+                other{"{0}cd"}
+            }
+            lumen{
+                one{"{0}lm"}
+                other{"{0}lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0}lx"}
@@ -1577,6 +2355,10 @@ fi{
                 dnam{"M⊕"}
                 one{"{0}M⊕"}
                 other{"{0}M⊕"}
+            }
+            grain{
+                one{"{0}graani"}
+                other{"{0}graania"}
             }
             gram{
                 dnam{"g"}
@@ -1767,6 +2549,10 @@ fi{
                 one{"{0}Nm"}
                 other{"{0}Nm"}
             }
+            pound-force-foot{
+                one{"{0}lbf⋅ft"}
+                other{"{0}lbf⋅ft"}
+            }
         }
         volume{
             acre-foot{
@@ -1841,13 +2627,33 @@ fi{
                 one{"{0}dl"}
                 other{"{0}dl"}
             }
+            dessert-spoon{
+                one{"{0}jrkl"}
+                other{"{0}jrkl"}
+            }
+            dessert-spoon-imperial{
+                dnam{"br. jrkl"}
+                one{"{0} br. jrkl"}
+                other{"{0} br. jrkl"}
+            }
+            dram{
+                one{"{0}dram"}
+                other{"{0}dramia"}
+            }
+            drop{
+                dnam{"gtt"}
+                one{"{0}gtt"}
+                other{"{0}gtt"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0}fl oz"}
                 other{"{0}fl oz"}
             }
             fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
+                dnam{"br. nesteunssi"}
+                one{"{0}fl oz br."}
+                other{"{0}fl oz br."}
             }
             gallon{
                 dnam{"am.gal"}
@@ -1866,6 +2672,10 @@ fi{
                 one{"{0}hl"}
                 other{"{0}hl"}
             }
+            jigger{
+                one{"{0}jigger"}
+                other{"{0}jiggeriä"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0}l"}
@@ -1882,6 +2692,10 @@ fi{
                 one{"{0}ml"}
                 other{"{0}ml"}
             }
+            pinch{
+                one{"{0}ripaus"}
+                other{"{0}ripausta"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0}pt"}
@@ -1896,6 +2710,11 @@ fi{
                 dnam{"qt"}
                 one{"{0}qt"}
                 other{"{0}qt"}
+            }
+            quart-imperial{
+                dnam{"qt br"}
+                one{"{0}qt br."}
+                other{"{0}qt br."}
             }
             tablespoon{
                 dnam{"rkl"}
@@ -2034,6 +2853,11 @@ fi{
             }
         }
         concentr{
+            item{
+                dnam{"kohde"}
+                one{"{0} kohde"}
+                other{"{0} kohde"}
+            }
             karat{
                 dnam{"ka"}
                 one{"{0} ka"}
@@ -2288,6 +3112,11 @@ fi{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 dnam{"newton"}
             }
@@ -2717,9 +3546,9 @@ fi{
                 other{"{0} jrkl"}
             }
             dessert-spoon-imperial{
-                dnam{"imp. jrkl"}
-                one{"{0} imp. jrkl"}
-                other{"{0} imp. jrkl"}
+                dnam{"br. jrkl"}
+                one{"{0} br. jrkl"}
+                other{"{0} br. jrkl"}
             }
             dram{
                 dnam{"dramit"}
@@ -2737,7 +3566,9 @@ fi{
                 other{"{0} fl oz"}
             }
             fluid-ounce-imperial{
-                dnam{"imp. nesteunssi"}
+                dnam{"br. nesteunssi"}
+                one{"{0} fl oz br."}
+                other{"{0} fl oz br."}
             }
             gallon{
                 dnam{"am. gal"}
@@ -2796,6 +3627,11 @@ fi{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                dnam{"qt br"}
+                one{"{0} qt br."}
+                other{"{0} qt br."}
             }
             tablespoon{
                 dnam{"rkl"}

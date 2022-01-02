@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=642338
 //   * resizable is false
 //   * scrollbars is false
 //   * status is false
-//   * width is specified
 var featuresList = [
   {
     type: 'non-popup',
@@ -78,10 +77,17 @@ var featuresList = [
       + ',resizable=no',
   },
   {
-    type: 'popup',
+    type: 'non-popup',
     target: 'width-sized',
     features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
       + ',width=500',
+  },
+  {
+    // if features isnt empty, toolbar and location defaults to false,
+    // and that results in popup.
+    type: 'popup',
+    target: 'only-width-sized',
+    features: 'width=500',
   },
   {
     type: 'non-popup',
@@ -90,10 +96,15 @@ var featuresList = [
       + ',height=500',
   },
   {
-    type: 'popup',
+    type: 'non-popup',
     target: 'sized',
     features: 'toolbar=yes,menubar=yes,status=yes,scrollbars=yes'
       + ',width=500,height=500',
+  },
+  {
+    type: 'popup',
+    target: 'only-sized',
+    features: 'width=500,height=500',
   },
 ];
 
@@ -110,19 +121,13 @@ function testWindow(w)
     }
   }
 
-  // If popup is opened, the following properties become false:
-  //   * menubar.visible
-  //   * toolbar.visible
-  //   * personalbar.visible
-  //   * status.visible
+  // If popup is opened, all BarProp.visible become false.
   checkFeature('menubar');
   checkFeature('toolbar');
   checkFeature('personalbar');
-
-  // The following aren't affected by feature.
-  is(w.scrollbars.visible, true, `scrollbars should always be visible (${w.name}).`);
-  is(w.statusbar.visible, true, `statusbar should always be visible (${w.name}).`);
-  is(w.locationbar.visible, true, `locationbar should always be visible (${w.name}).`);
+  checkFeature('scrollbars');
+  checkFeature('statusbar');
+  checkFeature('locationbar');
 
   w.close();
 

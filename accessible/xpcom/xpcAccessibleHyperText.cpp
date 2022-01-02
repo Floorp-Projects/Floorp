@@ -164,11 +164,12 @@ xpcAccessibleHyperText::GetTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsRemote()) {
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<AccAttributes> attributes = IntlLocal()->TextAttributes(
+  RefPtr<AccAttributes> attributes = Intl()->TextAttributes(
       aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   nsAutoString unused;
@@ -194,11 +195,12 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsRemote()) {
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<AccAttributes> attributes = IntlLocal()->DefaultTextAttributes();
+  RefPtr<AccAttributes> attributes = Intl()->DefaultTextAttributes();
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   nsAutoString unused;
   for (auto iter : *attributes) {
@@ -695,21 +697,14 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   if (!mIntl) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
-  if (LocalAccessible* accLink = xpcLink->ToInternalAccessible()) {
-    *aIndex = IntlLocal()->LinkIndexOf(accLink);
-  } else {
+  Accessible* accLink = xpcLink->ToInternalGeneric();
 #if defined(XP_WIN)
+  if (accLink->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    xpcAccessibleHyperText* linkHyperText =
-        static_cast<xpcAccessibleHyperText*>(xpcLink.get());
-    RemoteAccessible* proxyLink = linkHyperText->mIntl->AsRemote();
-    if (proxyLink) {
-      *aIndex = mIntl->AsRemote()->LinkIndexOf(proxyLink);
-    }
-#endif
   }
-
+#endif
+  *aIndex = Intl()->LinkIndexOf(accLink);
   return NS_OK;
 }
 
@@ -721,14 +716,13 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aLinkIndex = IntlLocal()->LinkIndexAtOffset(aOffset);
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aLinkIndex = mIntl->AsRemote()->LinkIndexAtOffset(aOffset);
-#endif
   }
+#endif
+
+  *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
   return NS_OK;
 }

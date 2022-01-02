@@ -55,7 +55,7 @@ enum DataType : uint8_t {
   Type_Int32,
   Type_Double,
   Type_Pointer,
-  Type_Object,
+  Type_Cell,
   Type_Value,
   Type_Handle
 };
@@ -148,7 +148,6 @@ struct VMFunctionData {
     RootObject,
     RootString,
     RootId,
-    RootFunction,
     RootValue,
     RootCell,
     RootBigInt
@@ -217,7 +216,7 @@ struct VMFunctionData {
   // Whether this function returns anything more than a boolean flag for
   // failures.
   bool returnsData() const {
-    return returnType == Type_Object || outParam != Type_Void;
+    return returnType == Type_Cell || outParam != Type_Void;
   }
 
   ArgProperties argProperties(uint32_t explicitArg) const {
@@ -323,7 +322,7 @@ struct VMFunctionData {
     MOZ_ASSERT_IF(outParam != Type_Void,
                   returnType == Type_Void || returnType == Type_Bool);
     MOZ_ASSERT(returnType == Type_Void || returnType == Type_Bool ||
-               returnType == Type_Object);
+               returnType == Type_Cell);
   }
 
   constexpr VMFunctionData(const VMFunctionData& o) = default;
@@ -427,10 +426,10 @@ JSObject* WrapObjectPure(JSContext* cx, JSObject* obj);
 
 [[nodiscard]] bool DebugPrologue(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugEpilogue(JSContext* cx, BaselineFrame* frame,
-                                 jsbytecode* pc, bool ok);
+                                 const jsbytecode* pc, bool ok);
 [[nodiscard]] bool DebugEpilogueOnBaselineReturn(JSContext* cx,
                                                  BaselineFrame* frame,
-                                                 jsbytecode* pc);
+                                                 const jsbytecode* pc);
 void FrameIsDebuggeeCheck(BaselineFrame* frame);
 
 JSObject* CreateGeneratorFromFrame(JSContext* cx, BaselineFrame* frame);
@@ -439,9 +438,9 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 [[nodiscard]] bool NormalSuspend(JSContext* cx, HandleObject obj,
                                  BaselineFrame* frame, uint32_t frameSize,
-                                 jsbytecode* pc);
+                                 const jsbytecode* pc);
 [[nodiscard]] bool FinalSuspend(JSContext* cx, HandleObject obj,
-                                jsbytecode* pc);
+                                const jsbytecode* pc);
 [[nodiscard]] bool InterpretResume(JSContext* cx, HandleObject obj,
                                    Value* stackValues, MutableHandleValue rval);
 [[nodiscard]] bool DebugAfterYield(JSContext* cx, BaselineFrame* frame);
@@ -452,7 +451,7 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 [[nodiscard]] bool GlobalDeclInstantiationFromIon(JSContext* cx,
                                                   HandleScript script,
-                                                  jsbytecode* pc);
+                                                  const jsbytecode* pc);
 [[nodiscard]] bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                   BaselineFrame* frame);
 
@@ -466,7 +465,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                             HandleObject res);
 
 [[nodiscard]] bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame,
-                                   uint8_t* retAddr);
+                                   const uint8_t* retAddr);
 [[nodiscard]] bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool GlobalHasLiveOnDebuggerStatement(JSContext* cx);
 
@@ -480,17 +479,17 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                                     Handle<ClassBodyScope*> scope);
 [[nodiscard]] bool DebugLeaveThenPopLexicalEnv(JSContext* cx,
                                                BaselineFrame* frame,
-                                               jsbytecode* pc);
+                                               const jsbytecode* pc);
 [[nodiscard]] bool FreshenLexicalEnv(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugLeaveThenFreshenLexicalEnv(JSContext* cx,
                                                    BaselineFrame* frame,
-                                                   jsbytecode* pc);
+                                                   const jsbytecode* pc);
 [[nodiscard]] bool RecreateLexicalEnv(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx,
                                                     BaselineFrame* frame,
-                                                    jsbytecode* pc);
+                                                    const jsbytecode* pc);
 [[nodiscard]] bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                        jsbytecode* pc);
+                                        const jsbytecode* pc);
 
 [[nodiscard]] bool PushVarEnv(JSContext* cx, BaselineFrame* frame,
                               HandleScope scope);
@@ -643,25 +642,26 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 BigInt* AtomicsLoad64(JSContext* cx, TypedArrayObject* typedArray,
                       size_t index);
 
-void AtomicsStore64(TypedArrayObject* typedArray, size_t index, BigInt* value);
+void AtomicsStore64(TypedArrayObject* typedArray, size_t index,
+                    const BigInt* value);
 
 BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                                 size_t index, BigInt* expected,
-                                 BigInt* replacement);
+                                 size_t index, const BigInt* expected,
+                                 const BigInt* replacement);
 
 BigInt* AtomicsExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                          size_t index, BigInt* value);
+                          size_t index, const BigInt* value);
 
 BigInt* AtomicsAdd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsAnd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsOr64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                    BigInt* value);
+                    const BigInt* value);
 BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 
 JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str);
 

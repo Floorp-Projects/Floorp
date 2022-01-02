@@ -45,7 +45,7 @@ impl super::AdapterShared {
             Tf::Rg32Float => (glow::RG32F, glow::RG, glow::FLOAT),
             Tf::Rgba16Uint => (glow::RGBA16UI, glow::RGBA_INTEGER, glow::UNSIGNED_SHORT),
             Tf::Rgba16Sint => (glow::RGBA16I, glow::RGBA_INTEGER, glow::SHORT),
-            Tf::Rgba16Float => (glow::RGBA16F, glow::RG, glow::HALF_FLOAT),
+            Tf::Rgba16Float => (glow::RGBA16F, glow::RGBA, glow::HALF_FLOAT),
             Tf::Rgba32Uint => (glow::RGBA32UI, glow::RGBA_INTEGER, glow::UNSIGNED_INT),
             Tf::Rgba32Sint => (glow::RGBA32I, glow::RGBA_INTEGER, glow::INT),
             Tf::Rgba32Float => (glow::RGBA32F, glow::RGBA, glow::FLOAT),
@@ -75,22 +75,29 @@ impl super::AdapterShared {
             | Tf::Bc6hRgbSfloat
             | Tf::Bc7RgbaUnorm
             | Tf::Bc7RgbaUnormSrgb => unimplemented!(),
-            Tf::Etc2RgbUnorm => (glow::COMPRESSED_RGB8_ETC2, glow::RGB, 0),
-            Tf::Etc2RgbUnormSrgb => (glow::COMPRESSED_SRGB8_ETC2, glow::RGB, 0),
-            Tf::Etc2RgbA1Unorm => (
+            Tf::Etc2Rgb8Unorm => (glow::COMPRESSED_RGB8_ETC2, glow::RGB, 0),
+            Tf::Etc2Rgb8UnormSrgb => (glow::COMPRESSED_SRGB8_ETC2, glow::RGB, 0),
+            Tf::Etc2Rgb8A1Unorm => (
                 glow::COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
                 glow::RGBA,
                 0,
             ),
-            Tf::Etc2RgbA1UnormSrgb => (
+            Tf::Etc2Rgb8A1UnormSrgb => (
                 glow::COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
                 glow::RGBA,
                 0,
             ),
-            Tf::EacRUnorm => (glow::COMPRESSED_R11_EAC, glow::RED, 0),
-            Tf::EacRSnorm => (glow::COMPRESSED_SIGNED_R11_EAC, glow::RED, 0),
-            Tf::EacRgUnorm => (glow::COMPRESSED_RG11_EAC, glow::RG, 0),
-            Tf::EacRgSnorm => (glow::COMPRESSED_SIGNED_RG11_EAC, glow::RG, 0),
+            Tf::Etc2Rgba8Unorm => (
+                //TODO: this is a lie, it's not sRGB
+                glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+                glow::RGBA,
+                0,
+            ),
+            Tf::Etc2Rgba8UnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC, glow::RGBA, 0),
+            Tf::EacR11Unorm => (glow::COMPRESSED_R11_EAC, glow::RED, 0),
+            Tf::EacR11Snorm => (glow::COMPRESSED_SIGNED_R11_EAC, glow::RED, 0),
+            Tf::EacRg11Unorm => (glow::COMPRESSED_RG11_EAC, glow::RG, 0),
+            Tf::EacRg11Snorm => (glow::COMPRESSED_SIGNED_RG11_EAC, glow::RG, 0),
             Tf::Astc4x4RgbaUnorm
             | Tf::Astc4x4RgbaUnormSrgb
             | Tf::Astc5x4RgbaUnorm
@@ -247,7 +254,7 @@ pub(super) fn map_primitive_state(state: &wgt::PrimitiveState) -> super::Primiti
             Some(wgt::Face::Back) => glow::BACK,
             None => 0,
         },
-        clamp_depth: state.clamp_depth,
+        unclipped_depth: state.unclipped_depth,
     }
 }
 

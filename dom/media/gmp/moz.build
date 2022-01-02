@@ -149,6 +149,3 @@ LOCAL_INCLUDES += [
     "/xpcom/build",
     "/xpcom/threads",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

@@ -67,7 +67,10 @@ describe("<CardGrid>", () => {
       compact: true,
       loadMoreEnabled: true,
       lastCardMessageEnabled: true,
-      data: { recommendations: [{}, {}] },
+      loadMoreThreshold: 2,
+      data: {
+        recommendations: [{}, {}, {}],
+      },
     });
 
     const loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
@@ -85,5 +88,25 @@ describe("<CardGrid>", () => {
 
     const lastCard = wrapper.find(LastCardMessage);
     assert.ok(lastCard.exists());
+  });
+
+  it("should only show load more with more than threshold number of stories", () => {
+    wrapper.setProps({
+      loadMoreEnabled: true,
+      loadMoreThreshold: 2,
+      data: {
+        recommendations: [{}, {}, {}],
+      },
+    });
+
+    let loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
+    assert.ok(loadMoreButton.exists());
+
+    wrapper.setProps({
+      loadMoreThreshold: 3,
+    });
+
+    loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
+    assert.ok(!loadMoreButton.exists());
   });
 });

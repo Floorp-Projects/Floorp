@@ -459,9 +459,10 @@ def run_mochitest_general(
 
         app = kwargs.get("app")
         if not app:
-            app = "org.mozilla.geckoview.test"
+            app = "org.mozilla.geckoview.test_runner"
         device_serial = kwargs.get("deviceSerial")
         install = InstallIntent.NO if kwargs.get("no_install") else InstallIntent.YES
+        aab = kwargs.get("aab")
 
         # verify installation
         verify_android_device(
@@ -470,6 +471,7 @@ def run_mochitest_general(
             xre=False,
             network=True,
             app=app,
+            aab=aab,
             device_serial=device_serial,
         )
 

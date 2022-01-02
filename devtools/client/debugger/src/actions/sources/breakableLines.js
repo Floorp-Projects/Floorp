@@ -5,7 +5,6 @@
 import { isOriginalId } from "devtools-source-map";
 import { getSourceActorsForSource, getBreakableLines } from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
-import { union } from "lodash";
 import { loadSourceActorBreakableLines } from "../source-actors";
 
 function calculateBreakableLines(positions) {
@@ -30,7 +29,9 @@ export function setBreakableLines(cx, sourceId) {
 
       const existingBreakableLines = getBreakableLines(getState(), sourceId);
       if (existingBreakableLines) {
-        breakableLines = union(existingBreakableLines, breakableLines);
+        breakableLines = [
+          ...new Set([...existingBreakableLines, ...breakableLines]),
+        ];
       }
 
       dispatch({

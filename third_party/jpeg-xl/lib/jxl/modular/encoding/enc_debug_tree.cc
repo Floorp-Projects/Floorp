@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "lib/jxl/base/os_macros.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/encoding/dec_ma.h"
@@ -22,9 +23,7 @@
 
 namespace jxl {
 
-namespace {
-
-inline const char *PredictorName(Predictor p) {
+const char *PredictorName(Predictor p) {
   switch (p) {
     case Predictor::Zero:
       return "Zero";
@@ -59,7 +58,7 @@ inline const char *PredictorName(Predictor p) {
   };
 }
 
-inline std::string PropertyName(size_t i) {
+std::string PropertyName(size_t i) {
   static_assert(kNumNonrefProperties == 16, "Update this function");
   switch (i) {
     case 0:
@@ -98,8 +97,6 @@ inline std::string PropertyName(size_t i) {
       return "ch[" + ToString(15 - (int)i) + "]";
   }
 }
-
-}  // namespace
 
 void PrintTree(const Tree &tree, const std::string &path) {
   FILE *f = fopen((path + ".dot").c_str(), "w");

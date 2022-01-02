@@ -61,10 +61,7 @@ function run_test() {
   httpserv.registerPathHandler("/path/cached", path_cached);
   httpserv.start(-1);
 
-  var obs = Cc["@mozilla.org/observer-service;1"].getService(
-    Ci.nsIObserverService
-  );
-  obs.addObserver(observer, "http-on-examine-merged-response");
+  Services.obs.addObserver(observer, "http-on-examine-merged-response");
 
   do_timeout(0, do_test);
   do_test_pending();
@@ -74,10 +71,7 @@ function do_test() {
   if (test_nr < tests.length) {
     tests[test_nr]();
   } else {
-    var obs = Cc["@mozilla.org/observer-service;1"].getService(
-      Ci.nsIObserverService
-    );
-    obs.removeObserver(observer, "http-on-examine-merged-response");
+    Services.obs.removeObserver(observer, "http-on-examine-merged-response");
     httpserv.stop(do_test_finished);
   }
 }

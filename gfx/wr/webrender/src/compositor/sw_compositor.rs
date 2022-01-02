@@ -13,7 +13,7 @@ use std::thread;
 use crate::{
     api::units::*, api::ColorDepth, api::ColorF, api::ExternalImageId, api::ImageRendering, api::YuvRangedColorSpace,
     Compositor, CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    profiler, MappableCompositor, SWGLCompositeSurfaceInfo,
+    profiler, MappableCompositor, SWGLCompositeSurfaceInfo, WindowVisibility,
 };
 
 pub struct SwTile {
@@ -72,8 +72,8 @@ impl SwTile {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds(surface);
-        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out().to_i32();
-        device_rect.intersection(clip_rect)
+        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out();
+        Some(device_rect.intersection(&clip_rect.to_f32())?.to_i32())
     }
 
     /// Determine if the tile's bounds may overlap the dependency rect if it were
@@ -101,8 +101,8 @@ impl SwTile {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.local_bounds(surface);
         // The destination rect is the valid rect transformed and then clipped.
-        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out().to_i32();
-        if !dest_rect.intersects(clip_rect) {
+        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out();
+        if !dest_rect.intersects(&clip_rect.to_f32()) {
             return None;
         }
         // To get a valid source rect, we need to inverse transform the clipped destination rect to find out the effect
@@ -110,11 +110,17 @@ impl SwTile {
         // a source rect that is now relative to the surface origin rather than absolute.
         let inv_transform = transform.inverse()?;
         let src_rect = inv_transform
-            .outer_transformed_box2d(&dest_rect.to_f32())?
+            .outer_transformed_box2d(&dest_rect)?
             .round()
-            .to_i32()
-            .translate(-valid.min.to_vector());
-        Some((src_rect, dest_rect, transform.m22 < 0.0))
+            .translate(-valid.min.to_vector().to_f32());
+        // Ensure source and dest rects when transformed from Box2D to Rect formats will still fit in an i32.
+        // If p0=i32::MIN and p1=i32::MAX, then evaluating the size with p1-p0 will overflow an i32 and not
+        // be representable. 
+        if src_rect.size().try_cast::<i32>().is_none() ||
+           dest_rect.size().try_cast::<i32>().is_none() {
+            return None;
+        }
+        Some((src_rect.try_cast()?, dest_rect.try_cast()?, transform.m22 < 0.0))
     }
 }
 
@@ -157,8 +163,8 @@ impl SwSurface {
         clip_rect: &DeviceIntRect,
     ) -> Option<DeviceIntRect> {
         let bounds = self.local_bounds();
-        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out().to_i32();
-        device_rect.intersection(clip_rect)
+        let device_rect = transform.outer_transformed_box2d(&bounds.to_f32())?.round_out();
+        Some(device_rect.intersection(&clip_rect.to_f32())?.to_i32())
     }
 }
 
@@ -1187,6 +1193,10 @@ impl Compositor for SwCompositor {
             let mut tile = SwTile::new(id.x, id.y);
             tile.color_id = self.gl.gen_textures(1)[0];
             tile.fbo_id = self.gl.gen_framebuffers(1)[0];
+            let mut prev_fbo = [0];
+            unsafe {
+                self.gl.get_integer_v(gl::DRAW_FRAMEBUFFER_BINDING, &mut prev_fbo);
+            }
             self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, tile.fbo_id);
             self.gl.framebuffer_texture_2d(
                 gl::DRAW_FRAMEBUFFER,
@@ -1202,7 +1212,7 @@ impl Compositor for SwCompositor {
                 self.depth_id,
                 0,
             );
-            self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, 0);
+            self.gl.bind_framebuffer(gl::DRAW_FRAMEBUFFER, prev_fbo[0] as gl::GLuint);
 
             surface.tiles.push(tile);
         }
@@ -1493,5 +1503,9 @@ impl Compositor for SwCompositor {
 
     fn get_capabilities(&self) -> CompositorCapabilities {
         self.compositor.get_capabilities()
+    }
+
+    fn get_window_visibility(&self) -> WindowVisibility {
+        self.compositor.get_window_visibility()
     }
 }

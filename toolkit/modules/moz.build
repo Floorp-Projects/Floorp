@@ -251,13 +251,6 @@ if "Android" != CONFIG["OS_TARGET"]:
     DIRS += [
         "subprocess",
     ]
-else:
-    DEFINES["ANDROID"] = True
-    EXTRA_JS_MODULES += [
-        "secondscreen/RokuApp.jsm",
-        "secondscreen/SimpleServiceDiscovery.jsm",
-    ]
-
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES += [

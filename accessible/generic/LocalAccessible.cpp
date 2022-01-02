@@ -300,6 +300,12 @@ void LocalAccessible::TranslateString(const nsString& aKey,
 }
 
 uint64_t LocalAccessible::VisibilityState() const {
+  if (IPCAccessibilityActive() &&
+      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Visibility states must be calculated by RemoteAccessible, so there's no
+    // point calculating them here.
+    return 0;
+  }
   nsIFrame* frame = GetFrame();
   if (!frame) {
     // Element having display:contents is considered visible semantically,
@@ -900,7 +906,7 @@ void LocalAccessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
 nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
   NS_ENSURE_ARG_POINTER(aEvent);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
     nsAutoCString strMarker;
@@ -948,7 +954,8 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
         case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
           ipcDoc->SendCaretMoveEvent(id, event->GetCaretOffset(),
-                                     event->IsSelectionCollapsed());
+                                     event->IsSelectionCollapsed(),
+                                     event->IsAtEndOfLine());
           break;
         }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -2724,17 +2731,18 @@ LocalAccessible* LocalAccessible::EmbeddedChildAt(uint32_t aIndex) {
   return LocalChildAt(aIndex);
 }
 
-int32_t LocalAccessible::GetIndexOfEmbeddedChild(LocalAccessible* aChild) {
+int32_t LocalAccessible::IndexOfEmbeddedChild(Accessible* aChild) {
+  MOZ_ASSERT(aChild->IsLocal());
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
     }
     return mEmbeddedObjCollector.get()
-               ? mEmbeddedObjCollector->GetIndexAt(aChild)
+               ? mEmbeddedObjCollector->GetIndexAt(aChild->AsLocal())
                : -1;
   }
 
-  return GetIndexOf(aChild);
+  return GetIndexOf(aChild->AsLocal());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2744,13 +2752,6 @@ bool LocalAccessible::IsLink() const {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
   return mParent && mParent->IsHyperText() && !IsText();
-}
-
-uint32_t LocalAccessible::StartOffset() {
-  MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
-
-  HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
-  return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
 uint32_t LocalAccessible::EndOffset() {
@@ -2963,6 +2964,44 @@ LocalAccessible* LocalAccessible::ContainerWidget() const {
   return nullptr;
 }
 
+bool LocalAccessible::IsActiveDescendant(LocalAccessible** aWidget) const {
+  if (!HasOwnContent() || !mContent->HasID()) {
+    return false;
+  }
+
+  dom::DocumentOrShadowRoot* docOrShadowRoot =
+      mContent->GetUncomposedDocOrConnectedShadowRoot();
+  if (!docOrShadowRoot) {
+    return false;
+  }
+
+  nsAutoCString selector;
+  selector.AppendPrintf(
+      "[aria-activedescendant=\"%s\"]",
+      NS_ConvertUTF16toUTF8(mContent->GetID()->GetUTF16String()).get());
+  ErrorResult er;
+
+  dom::Element* widgetElm =
+      docOrShadowRoot->AsNode().QuerySelector(selector, er);
+
+  if (!widgetElm || er.Failed()) {
+    return false;
+  }
+
+  if (widgetElm->IsInclusiveDescendantOf(mContent)) {
+    // Don't want a cyclical descendant relationship. That would be bad.
+    return false;
+  }
+
+  LocalAccessible* widget = mDoc->GetAccessible(widgetElm);
+
+  if (aWidget) {
+    *aWidget = widget;
+  }
+
+  return !!widget;
+}
+
 void LocalAccessible::Announce(const nsAString& aAnnouncement,
                                uint16_t aPriority) {
   RefPtr<AccAnnouncementEvent> event =
@@ -3165,37 +3204,56 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  // We only cache text on leaf Accessibles.
-  if ((aCacheDomain & CacheDomain::Text) && !HasChildren()) {
-    // Only text Accessibles can have actual text.
-    if (IsText()) {
-      nsString text;
-      AppendTextTo(text);
-      fields->SetAttribute(nsGkAtoms::text, std::move(text));
+  if (aCacheDomain & CacheDomain::Text) {
+    if (!HasChildren()) {
+      // We only cache text and line offsets on leaf Accessibles.
+      // Only text Accessibles can have actual text.
+      if (IsText()) {
+        nsString text;
+        AppendTextTo(text);
+        fields->SetAttribute(nsGkAtoms::text, std::move(text));
+        TextLeafPoint point(this, 0);
+        RefPtr<AccAttributes> attrs = point.GetTextAttributesLocalAcc(
+            /* aIncludeDefaults */ false);
+        fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
+      }
+      // We cache line start offsets for both text and non-text leaf Accessibles
+      // because non-text leaf Accessibles can still start a line.
+      nsTArray<int32_t> lineStarts;
+      for (TextLeafPoint lineStart =
+               TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
+                   /* aIncludeOrigin */ true);
+           lineStart;
+           lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
+        lineStarts.AppendElement(lineStart.mOffset);
+      }
+      if (!lineStarts.IsEmpty()) {
+        fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+      }
     }
-    // We cache line start offsets for both text and non-text leaf Accessibles
-    // because non-text leaf Accessibles can still start a line.
-    nsTArray<int32_t> lineStarts;
-    for (TextLeafPoint lineStart =
-             TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
-                 /* aIncludeOrigin */ true);
-         lineStart;
-         lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
-      lineStarts.AppendElement(lineStart.mOffset);
-    }
-    if (!lineStarts.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+    if (HyperTextAccessible* ht = AsHyperText()) {
+      RefPtr<AccAttributes> attrs = ht->DefaultTextAttributes();
+      fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
     }
   }
 
-  if (aCacheDomain & CacheDomain::DOMNodeID) {
-    MOZ_ASSERT(mContent);
+  if (aCacheDomain & CacheDomain::DOMNodeID && mContent) {
     nsAtom* id = mContent->GetID();
     if (id) {
       fields->SetAttribute(nsGkAtoms::id, id);
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::id, DeleteEntry());
     }
+  }
+
+  // State is only included in the initial push. Thereafter, cached state is
+  // updated via events.
+  if (aCacheDomain & CacheDomain::State &&
+      aUpdateType == CacheUpdateType::Initial) {
+    uint64_t state = State();
+    // Exclude states which must be calculated by RemoteAccessible.
+    state &= ~kRemoteCalculatedStates;
+    fields->SetAttribute(nsGkAtoms::state, state);
   }
 
   return fields.forget();

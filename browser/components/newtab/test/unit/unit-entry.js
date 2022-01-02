@@ -218,6 +218,24 @@ const TEST_GLOBAL = {
     writeJSON() {
       return Promise.resolve(0);
     },
+    readJSON() {
+      return Promise.resolve({});
+    },
+    makeDirectory() {
+      return Promise.resolve(0);
+    },
+    write() {
+      return Promise.resolve(0);
+    },
+    exists() {
+      return Promise.resolve(0);
+    },
+    remove() {
+      return Promise.resolve(0);
+    },
+    stat() {
+      return Promise.resolve(0);
+    },
   },
   NewTabUtils: {
     activityStreamProvider: {
@@ -249,6 +267,9 @@ const TEST_GLOBAL = {
   },
   PathUtils: {
     join(...parts) {
+      return parts[parts.length - 1];
+    },
+    joinRelative(...parts) {
       return parts[parts.length - 1];
     },
     getProfileDir() {

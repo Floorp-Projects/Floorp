@@ -12,10 +12,10 @@
 
 #include <stdint.h>  // int32_t, uint32_t
 
-#include "ds/Nestable.h"               // Nestable
-#include "frontend/BytecodeSection.h"  // BytecodeOffset
-#include "frontend/JumpList.h"         // JumpList, JumpTarget
-#include "frontend/ParserAtom.h"       // TaggedParserAtomIndex
+#include "ds/Nestable.h"              // Nestable
+#include "frontend/BytecodeOffset.h"  // BytecodeOffset
+#include "frontend/JumpList.h"        // JumpList, JumpTarget
+#include "frontend/ParserAtom.h"      // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"  // StatementKind, StatementKindIsLoop, StatementKindIsUnlabeledBreakTarget
 #include "frontend/TDZCheckCache.h"  // TDZCheckCache
 #include "vm/StencilEnums.h"         // TryNoteKind

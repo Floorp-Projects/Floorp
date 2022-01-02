@@ -343,6 +343,10 @@ ms{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt jam setiap 100 kilometer"}
+                other{"{0} kilowatt jam setiap 100 kilometer"}
+            }
             newton{
                 dnam{"newton"}
                 other{"{0} newton"}
@@ -844,6 +848,9 @@ ms{
             degree{
                 other{"{0}°"}
             }
+            radian{
+                dnam{"rad"}
+            }
         }
         area{
             acre{
@@ -853,7 +860,12 @@ ms{
                 other{"{0} ha"}
             }
             square-foot{
+                dnam{"ka²"}
                 other{"{0} ka²"}
+            }
+            square-inch{
+                dnam{"in²"}
+                per{"{0}/in²"}
             }
             square-kilometer{
                 other{"{0} km²"}
@@ -862,6 +874,7 @@ ms{
                 other{"{0} m²"}
             }
             square-mile{
+                dnam{"bt²"}
                 other{"{0} bt²"}
             }
         }
@@ -869,6 +882,10 @@ ms{
             per{"{0}/{1}"}
         }
         concentr{
+            mole{
+                dnam{"mol"}
+                other{"{0}mol"}
+            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -879,6 +896,10 @@ ms{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
+            mile-per-gallon-imperial{
+                dnam{"mpg UK"}
+                other{"{0}m/gUK"}
+            }
         }
         coordinate{
             dnam{"arah"}
@@ -886,6 +907,51 @@ ms{
             north{"{0}N"}
             south{"{0}S"}
             west{"{0}W"}
+        }
+        digital{
+            bit{
+                dnam{"bit"}
+                other{"{0}bit"}
+            }
+            byte{
+                dnam{"B"}
+                other{"{0}B"}
+            }
+            gigabit{
+                dnam{"Gb"}
+                other{"{0}Gb"}
+            }
+            gigabyte{
+                dnam{"GB"}
+                other{"{0}GB"}
+            }
+            kilobit{
+                dnam{"kb"}
+                other{"{0}kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+                other{"{0}kB"}
+            }
+            megabit{
+                dnam{"Mb"}
+                other{"{0}Mb"}
+            }
+            megabyte{
+                dnam{"MB"}
+                other{"{0}MB"}
+            }
+            petabyte{
+                other{"{0}PB"}
+            }
+            terabit{
+                dnam{"Tb"}
+                other{"{0}Tb"}
+            }
+            terabyte{
+                dnam{"TB"}
+                other{"{0}TB"}
+            }
         }
         duration{
             century{
@@ -937,6 +1003,69 @@ ms{
                 dnam{"thn"}
                 other{"{0} thn"}
                 per{"{0}/thn"}
+            }
+        }
+        electric{
+            ampere{
+                other{"{0}A"}
+            }
+            milliampere{
+                other{"{0}mA"}
+            }
+            ohm{
+                other{"{0}Ω"}
+            }
+            volt{
+                other{"{0}V"}
+            }
+        }
+        energy{
+            british-thermal-unit{
+                other{"{0}Btu"}
+            }
+            calorie{
+                other{"{0}kal"}
+            }
+            electronvolt{
+                other{"{0}eV"}
+            }
+            foodcalorie{
+                other{"{0}Kal"}
+            }
+            joule{
+                other{"{0}J"}
+            }
+            kilocalorie{
+                other{"{0}kkal"}
+            }
+            kilojoule{
+                other{"{0}kJ"}
+            }
+            kilowatt-hour{
+                other{"{0}kWh"}
+            }
+            therm-us{
+                other{"{0}terma US"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWj/100km"}
+                other{"{0}kWh/100km"}
+            }
+        }
+        frequency{
+            gigahertz{
+                other{"{0}GHz"}
+            }
+            hertz{
+                other{"{0}Hz"}
+            }
+            kilohertz{
+                other{"{0}kHz"}
+            }
+            megahertz{
+                other{"{0}MHz"}
             }
         }
         length{
@@ -1025,10 +1154,22 @@ ms{
                 other{"{0} ela"}
             }
         }
+        light{
+            lux{
+                other{"{0}lx"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
+            }
+        }
         mass{
             carat{
                 dnam{"karat"}
                 other{"{0} CD"}
+            }
+            grain{
+                dnam{"gr"}
+                other{"{0}gr"}
             }
             gram{
                 dnam{"gram"}
@@ -1076,17 +1217,32 @@ ms{
             }
         }
         power{
+            gigawatt{
+                other{"{0}GW"}
+            }
             horsepower{
                 other{"{0} hp"}
             }
             kilowatt{
                 other{"{0} kW"}
             }
+            megawatt{
+                other{"{0}MW"}
+            }
+            milliwatt{
+                other{"{0}mW"}
+            }
             watt{
                 other{"{0} W"}
             }
         }
         pressure{
+            atmosphere{
+                other{"{0}atm"}
+            }
+            bar{
+                other{"{0}bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 other{"{0} hPa"}
@@ -1095,6 +1251,12 @@ ms{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
+            kilopascal{
+                other{"{0}kPa"}
+            }
+            megapascal{
+                other{"{0}MPa"}
+            }
             millibar{
                 dnam{"mbar"}
                 other{"{0} mb"}
@@ -1102,6 +1264,9 @@ ms{
             millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                other{"{0}Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -1131,6 +1296,7 @@ ms{
                 other{"{0}°C"}
             }
             fahrenheit{
+                dnam{"°F"}
                 other{"{0}°F"}
             }
             generic{
@@ -1149,9 +1315,38 @@ ms{
             cubic-mile{
                 other{"{0} bt³"}
             }
+            dessert-spoon{
+                dnam{"dsp"}
+                other{"{0} dsp"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dsp Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            dram{
+                other{"{0}dr.fl."}
+            }
+            fluid-ounce{
+                other{"{0}fl oz"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp fl oz"}
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                other{"{0}galIm"}
+            }
             liter{
                 dnam{"liter"}
                 other{"{0} l"}
+            }
+            tablespoon{
+                dnam{"tbsp"}
+                other{"{0}tbsp"}
+            }
+            teaspoon{
+                dnam{"tsp"}
+                other{"{0}tsp"}
             }
         }
     }
@@ -1439,6 +1634,12 @@ ms{
             therm-us{
                 dnam{"terma US"}
                 other{"{0} terma US"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWj/100km"}
+                other{"{0} kWj/100km"}
             }
         }
         frequency{

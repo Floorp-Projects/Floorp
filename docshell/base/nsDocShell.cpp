@@ -146,6 +146,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollObserver.h"
+#include "nsISupportsPrimitives.h"
 #include "nsISecureBrowserUI.h"
 #include "nsISeekableStream.h"
 #include "nsISelectionDisplay.h"
@@ -203,7 +204,6 @@
 #include "nsEscape.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindow.h"
-#include "nsISearchService.h"
 #include "nsJSEnvironment.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -1290,7 +1290,7 @@ NS_IMETHODIMP
 nsDocShell::StartDelayedAutoplayMediaComponents() {
   RefPtr<nsPIDOMWindowOuter> outerWindow = GetWindow();
   if (outerWindow) {
-    outerWindow->SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+    outerWindow->ActivateMediaComponents();
   }
   return NS_OK;
 }
@@ -2456,8 +2456,14 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
     return;
   }
 
+  // We cannot get inherited foreign partitioned principal here. Instead, we
+  // directly check which principal we want to inherit for the service worker.
   nsIPrincipal* principal =
-      aPrincipal ? aPrincipal : GetInheritedPrincipal(false);
+      aPrincipal
+          ? aPrincipal
+          : GetInheritedPrincipal(
+                false, StoragePrincipalHelper::
+                           ShouldUsePartitionPrincipalForServiceWorker(this));
 
   // Sometimes there is no principal available when we are called from
   // CreateAboutBlankContentViewer.  For example, sometimes the principal
@@ -6625,7 +6631,14 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       partitionedPrincipal = aPartitionedPrincipal;
     }
 
-    MaybeCreateInitialClientSource(principal);
+    // We cannot get the foreign partitioned prinicpal for the initial
+    // about:blank page. So, we change to check if we need to use the
+    // partitioned principal for the service worker here.
+    MaybeCreateInitialClientSource(
+        StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
+            this)
+            ? partitionedPrincipal
+            : principal);
 
     // generate (about:blank) document to load
     blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal,
@@ -6804,13 +6817,13 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 }
 
 /* static */
-void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
+void nsDocShell::ReportBFCacheComboTelemetry(uint32_t aCombo) {
   // There are 11 possible reasons to make a request fails to use BFCache
   // (see BFCacheStatus in dom/base/Document.h), and we'd like to record
   // the common combinations for reasons which make requests fail to use
   // BFCache. These combinations are generated based on some local browsings,
   // we need to adjust them when necessary.
-  enum BFCacheStatusCombo : uint16_t {
+  enum BFCacheStatusCombo : uint32_t {
     BFCACHE_SUCCESS,
     NOT_ONLY_TOPLEVEL = mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
     // If both unload and beforeunload listeners are presented, it'll be
@@ -7906,7 +7919,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!parentSite.Equals(thisSite)) {
-        if (profiler_thread_is_being_profiled()) {
+        if (profiler_thread_is_being_profiled_for_markers()) {
           nsCOMPtr<nsIURI> prinURI;
           BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
           nsPrintfCString marker("Iframe loaded in background: %s",
@@ -8928,8 +8941,11 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
       bool hadActiveEntry = !!mActiveEntry;
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
+      // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
+      // does require a non-null uri if this is for a refresh load of the same
+      // URI, but in that case mCurrentURI won't be null here.
       mBrowsingContext->SessionHistoryCommit(
-          *mLoadingEntry, mLoadType, hadActiveEntry, true, true,
+          *mLoadingEntry, mLoadType, mCurrentURI, hadActiveEntry, true, true,
           /* No expiration update on the same document loads*/
           false);
       // FIXME Need to set postdata.
@@ -11101,9 +11117,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   }
 
   // Check that the state object isn't too long.
-  // Default max length: 2097152 (0x200000) bytes.
-  int32_t maxStateObjSize =
-      Preferences::GetInt("browser.history.maxStateObjectSize", 2097152);
+  int32_t maxStateObjSize = StaticPrefs::browser_history_maxStateObjectSize();
   if (maxStateObjSize < 0) {
     maxStateObjSize = 0;
   }
@@ -12754,7 +12768,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
             extProtService->IsExposedProtocol(scheme.get(), &isExposed);
         if (NS_SUCCEEDED(rv) && !isExposed) {
           return extProtService->LoadURI(aLoadState->URI(), triggeringPrincipal,
-                                         mBrowsingContext,
+                                         nullptr, mBrowsingContext,
                                          /* aTriggeredExternally */ false);
         }
       }
@@ -13034,6 +13048,16 @@ bool nsDocShell::ServiceWorkerAllowedToControlWindow(nsIPrincipal* aPrincipal,
   StorageAccess storage =
       StorageAllowedForNewWindow(aPrincipal, aURI, parentInner);
 
+  // If the partitioned service worker is enabled, service worker is allowed to
+  // control the window if partition is enabled.
+  if (StaticPrefs::privacy_partition_serviceWorkers() && parentInner) {
+    RefPtr<Document> doc = parentInner->GetExtantDoc();
+
+    if (doc && StoragePartitioningEnabled(storage, doc->CookieJarSettings())) {
+      return true;
+    }
+  }
+
   return storage == StorageAccess::eAllow;
 }
 
@@ -13231,20 +13255,19 @@ void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
   if (aProvider.IsEmpty()) {
     return;
   }
+  nsresult rv;
+  nsCOMPtr<nsISupportsString> isupportsString =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsCOMPtr<nsISearchService> searchSvc =
-      do_GetService("@mozilla.org/browser/search-service;1");
-  if (searchSvc) {
-    nsCOMPtr<nsISearchEngine> searchEngine;
-    searchSvc->GetEngineByName(aProvider, getter_AddRefs(searchEngine));
-    if (searchEngine) {
-      nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
-      if (obsSvc) {
-        // Note that "keyword-search" refers to a search via the url
-        // bar, not a bookmarks keyword search.
-        obsSvc->NotifyObservers(searchEngine, "keyword-search", aKeyword.get());
-      }
-    }
+  rv = isupportsString->SetData(aProvider);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
+  if (obsSvc) {
+    // Note that "keyword-search" refers to a search via the url
+    // bar, not a bookmarks keyword search.
+    obsSvc->NotifyObservers(isupportsString, "keyword-search", aKeyword.get());
   }
 }
 
@@ -13457,8 +13480,13 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired) {
     MOZ_ASSERT(loadingEntry);
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
-    mBrowsingContext->SessionHistoryCommit(
-        *loadingEntry, loadType, hadActiveEntry, aPersist, false, aExpired);
+
+    // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
+    // does require a non-null uri if this is for a refresh load of the same
+    // URI, but in that case mCurrentURI won't be null here.
+    mBrowsingContext->SessionHistoryCommit(*loadingEntry, loadType, mCurrentURI,
+                                           hadActiveEntry, aPersist, false,
+                                           aExpired);
   }
 }
 

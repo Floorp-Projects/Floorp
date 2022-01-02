@@ -219,7 +219,11 @@ extern {
                                          contentsDeallocator: CFAllocatorRef)
                                          -> CFStringRef;
     //fn CFStringCreateWithCharacters
-    //fn CFStringCreateWithCharactersNoCopy
+    pub fn CFStringCreateWithCharactersNoCopy(alloc: CFAllocatorRef,
+                                              chars: *const UniChar,
+                                              numChars: CFIndex,
+                                              contentsDeallocator: CFAllocatorRef)
+                                              -> CFStringRef;
     pub fn CFStringCreateWithCString(alloc: CFAllocatorRef,
                                      cStr: *const c_char,
                                      encoding: CFStringEncoding)

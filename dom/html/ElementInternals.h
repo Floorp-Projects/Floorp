@@ -10,10 +10,12 @@
 #include "js/TypeDecls.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIConstraintValidation.h"
 #include "nsIFormControl.h"
 #include "nsWrapperCache.h"
 
 class nsINodeList;
+class nsGenericHTMLElement;
 
 namespace mozilla {
 
@@ -25,11 +27,15 @@ class HTMLElement;
 class HTMLFieldSetElement;
 class HTMLFormElement;
 class ShadowRoot;
+class ValidityState;
 
-class ElementInternals final : public nsIFormControl, public nsWrapperCache {
+class ElementInternals final : public nsIFormControl,
+                               public nsIConstraintValidation,
+                               public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ElementInternals)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ElementInternals,
+                                                         nsIFormControl)
 
   explicit ElementInternals(HTMLElement* aTarget);
 
@@ -44,6 +50,15 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
                     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
                     ErrorResult& aRv);
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
+  void SetValidity(const ValidityStateFlags& aFlags,
+                   const Optional<nsAString>& aMessage,
+                   const Optional<NonNull<nsGenericHTMLElement>>& aAnchor,
+                   ErrorResult& aRv);
+  bool GetWillValidate(ErrorResult& aRv) const;
+  ValidityState* GetValidity(ErrorResult& aRv);
+  void GetValidationMessage(nsAString& aValidationMessage,
+                            ErrorResult& aRv) const;
+  bool CheckValidity(ErrorResult& aRv);
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
   // nsIFormControl
@@ -62,6 +77,7 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
   }
 
   void UpdateFormOwner();
+  void UpdateBarredFromConstraintValidation();
 
   void Unlink();
 
@@ -90,6 +106,9 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
   // TODO: Bug 1734841 - Figure out how to support form restoration or
   //       autocomplete for form-associated custom element
   Nullable<OwningFileOrUSVStringOrFormData> mState;
+
+  // https://html.spec.whatwg.org/#face-validation-message
+  nsString mValidationMessage;
 };
 
 }  // namespace dom

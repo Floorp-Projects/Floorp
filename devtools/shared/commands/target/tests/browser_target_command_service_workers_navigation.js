@@ -337,11 +337,11 @@ async function watchServiceWorkerTargets({
     hooks.targets.splice(hooks.targets.indexOf(targetFront), 1);
   };
 
-  await targetCommand.watchTargets(
-    [targetCommand.TYPES.SERVICE_WORKER],
+  await targetCommand.watchTargets({
+    types: [targetCommand.TYPES.SERVICE_WORKER],
     onAvailable,
-    onDestroyed
-  );
+    onDestroyed,
+  });
 
   return { hooks, commands, targetCommand };
 }

@@ -9,10 +9,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpserver;
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 function makeChan(path) {
   return NetUtil.newChannel({
@@ -133,10 +130,7 @@ function run_test() {
   if (!inChildProcess()) {
     tests.push(function() {
       // Simulate all private browsing instances being closed
-      var obsvc = Cc["@mozilla.org/observer-service;1"].getService(
-        Ci.nsIObserverService
-      );
-      obsvc.notifyObservers(null, "last-pb-context-exited");
+      Services.obs.notifyObservers(null, "last-pb-context-exited");
       // Check that all private cookies are now unavailable in new private requests
       check_cookie_presence("C2=V2", true, false, runNextTest);
     });

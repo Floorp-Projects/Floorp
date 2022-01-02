@@ -346,10 +346,9 @@ class nsContentUtils {
   // Check whether we should avoid leaking distinguishing information to JS/CSS.
   // This function can be called both in the main thread and worker threads.
   static bool ShouldResistFingerprinting();
+  static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
   static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
-  static bool ShouldResistFingerprinting(
-      mozilla::dom::WorkerPrivate* aWorkerPrivate);
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
 
@@ -3253,12 +3252,16 @@ class nsContentUtils {
     bool mMustRevalidate = false;
   };
 
+  enum class SubresourceKind {
+    Style,
+    Image,
+  };
   /**
    * Gets cache validation info for subresources such as images or CSS
    * stylesheets.
    */
   static SubresourceCacheValidationInfo GetSubresourceCacheValidationInfo(
-      nsIRequest*, nsIURI*);
+      nsIRequest*, nsIURI*, SubresourceKind);
 
   static uint32_t SecondsFromPRTime(PRTime aTime) {
     return uint32_t(int64_t(aTime) / int64_t(PR_USEC_PER_SEC));

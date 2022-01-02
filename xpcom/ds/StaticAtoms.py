@@ -2229,10 +2229,13 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_available", "-moz-gtk-csd-available"),
     Atom("_moz_gtk_csd_titlebar_radius", "-moz-gtk-csd-titlebar-radius"),
     Atom("_moz_gtk_csd_minimize_button", "-moz-gtk-csd-minimize-button"),
+    Atom("_moz_gtk_csd_minimize_button_position", "-moz-gtk-csd-minimize-button-position"),
     Atom("_moz_gtk_csd_maximize_button", "-moz-gtk-csd-maximize-button"),
+    Atom("_moz_gtk_csd_maximize_button_position", "-moz-gtk-csd-maximize-button-position"),
     Atom("_moz_gtk_csd_close_button", "-moz-gtk-csd-close-button"),
+    Atom("_moz_gtk_csd_close_button_position", "-moz-gtk-csd-close-button-position"),
     Atom("_moz_gtk_csd_reversed_placement", "-moz-gtk-csd-reversed-placement"),
-    Atom("_moz_gtk_menu_radius", "-moz-gtk-menu-radius"),
+    Atom("_moz_gtk_csd_menu_radius", "-moz-gtk-csd-menu-radius"),
     Atom("_moz_proton", "-moz-proton"),
     Atom("_moz_proton_places_tooltip", "-moz-proton-places-tooltip"),
     Atom("_moz_system_dark_theme", "-moz-system-dark-theme"),
@@ -2452,6 +2455,7 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
     PseudoElementAtom("PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"),
     PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
+    PseudoElementAtom("PseudoElement_mozTextControlShowPasswordButton", ":-moz-text-control-show-password-button"),
     PseudoElementAtom("PseudoElement_fileSelectorButton", ":file-selector-button"),
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h

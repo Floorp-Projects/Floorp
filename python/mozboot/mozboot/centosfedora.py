@@ -36,11 +36,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "gcc-c++",
         ]
 
-        self.mobile_android_packages = [
-            "java-1.8.0-openjdk-devel",
-            # For downloading the Android SDK and NDK.
-            "wget",
-        ]
+        self.mobile_android_packages = []
 
         if self.distro in ("centos", "rocky"):
             self.group_packages += ["Development Tools"]
@@ -71,10 +67,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
             self.mobile_android_packages += ["ncurses-compat-libs"]
 
-        if self.distro in ("centos", "rocky") and self.version == 8:
-            self.packages += ["python3-devel"]
-        else:
-            self.packages += ["python-devel"]
+        self.packages += ["python3-devel"]
 
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
@@ -92,7 +85,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # Install Android specific packages.
         self.dnf_install(*self.mobile_android_packages)
 
-        self.ensure_java(mozconfig_builder)
         super().install_mobile_android_packages(
             mozconfig_builder, artifact_mode=artifact_mode
         )

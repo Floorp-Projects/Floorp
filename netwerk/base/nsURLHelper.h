@@ -295,8 +295,11 @@ class URLParams final {
 
   /**
    * Serializes the current state to a query string.
+   *
+   * \param[out] aValue will be assigned the result of the serialization
+   * \param aEncode If this is true, the serialization will encode the string.
    */
-  void Serialize(nsAString& aValue) const;
+  void Serialize(nsAString& aValue, bool aEncode) const;
 
   void Get(const nsAString& aName, nsString& aRetval);
 

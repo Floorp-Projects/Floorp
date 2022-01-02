@@ -183,6 +183,3 @@ LOCAL_INCLUDES += [
     "/layout/xul",
     "/layout/xul/tree/",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

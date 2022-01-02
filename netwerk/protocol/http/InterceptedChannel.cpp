@@ -111,19 +111,5 @@ InterceptedChannelBase::SetReleaseHandle(nsISupports* aHandle) {
   return NS_OK;
 }
 
-/* static */
-already_AddRefed<nsIURI> InterceptedChannelBase::SecureUpgradeChannelURI(
-    nsIChannel* aChannel) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIURI> upgradedURI;
-  rv = NS_GetSecureUpgradedURI(uri, getter_AddRefs(upgradedURI));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return upgradedURI.forget();
-}
-
 }  // namespace net
 }  // namespace mozilla

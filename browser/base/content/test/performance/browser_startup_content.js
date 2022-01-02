@@ -51,9 +51,6 @@ const known_scripts = {
   frameScripts: new Set([
     // Test related
     "chrome://mochikit/content/shutdown-leaks-collector.js",
-
-    // Extensions
-    "resource://gre/modules/addons/Content.js",
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
@@ -65,6 +62,18 @@ const known_scripts = {
 if (!gFissionBrowser) {
   known_scripts.modules.add(
     "resource:///modules/sessionstore/ContentSessionStore.jsm"
+  );
+}
+
+if (AppConstants.NIGHTLY_BUILD) {
+  // URL Query Stripping. This will only be loaded if the URL Query Stripping
+  // is enabled by default during the startup. This currently only happens in
+  // Nightly channel.
+  //
+  // Bug 1743418 will try to remove this from content startup script.
+
+  known_scripts.modules.add(
+    "resource://gre/modules/URLQueryStrippingListService.jsm"
   );
 }
 

@@ -21,10 +21,10 @@
 //       options:   -v         verbose
 //                  -? or -h   help
 //
-//   The input rule filew is are plain text files containing confusable character
+//   The input rule file are plain text files containing confusable character
 //    definitions in the input format defined by Unicode UAX39 for the files
 //    confusables.txt.  This source (.txt) format
-//    is also accepted direaccepted by ICU spoof detedtors.  The
+//    is also accepted by ICU spoof detectors. The
 //    files must be encoded in utf-8 format, with or without a BOM.
 //
 //   The script used to compile confusablesWholeScript.txt into the CFU file

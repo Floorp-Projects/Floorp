@@ -21,10 +21,10 @@ declare_args() {
 
 config("libyuv_config") {
   include_dirs = [ "include" ]
-  if (is_android && current_cpu == "arm64") {
+  if (is_android && target_cpu == "arm64") {
     ldflags = [ "-Wl,--dynamic-linker,/system/bin/linker64" ]
   }
-  if (is_android && current_cpu != "arm64") {
+  if (is_android && target_cpu != "arm64") {
     ldflags = [ "-Wl,--dynamic-linker,/system/bin/linker" ]
   }
 }
@@ -204,7 +204,7 @@ if (libyuv_use_neon) {
       configs += [ "//build/config/compiler:optimize_max" ]
     }
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
     }

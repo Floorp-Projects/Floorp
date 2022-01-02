@@ -176,6 +176,8 @@ nsHttpTransaction::~nsHttpTransaction() {
   // Force the callbacks and connection to be released right now
   mCallbacks = nullptr;
 
+  mEarlyHintObserver = nullptr;
+
   delete mResponseHead;
   delete mChunkedDecoder;
   ReleaseBlockingTransaction();
@@ -416,8 +418,14 @@ static inline void CreateAndStartTimer(nsCOMPtr<nsITimer>& aTimer,
                           nsITimer::TYPE_ONE_SHOT);
 }
 
-void nsHttpTransaction::OnPendingQueueInserted() {
+void nsHttpTransaction::OnPendingQueueInserted(
+    const nsACString& aConnectionHashKey) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  {
+    MutexAutoLock lock(mLock);
+    mHashKeyOfConnectionEntry.Assign(aConnectionHashKey);
+  }
 
   // Don't create mHttp3BackupTimer if HTTPS RR is in play.
   if (mConnInfo->IsHttp3() && !mOrigConnInfo) {
@@ -441,6 +449,8 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
   NS_ENSURE_SUCCESS(rv, rv);
 
   transactionPump.forget(pump);
+  MutexAutoLock lock(mLock);
+  mEarlyHintObserver = do_QueryInterface(listener);
   return NS_OK;
 }
 
@@ -517,6 +527,9 @@ void nsHttpTransaction::SetConnection(nsAHttpConnection* conn) {
     mConnection = conn;
     if (mConnection) {
       mIsHttp3Used = mConnection->Version() == HttpVersion::v3_0;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mConnection->SanityCheck();
+#endif
     }
   }
 }
@@ -1120,7 +1133,9 @@ bool nsHttpTransaction::PrepareSVCBRecordsForRetry(
   for (const auto& record : records) {
     nsAutoCString name;
     record->GetName(name);
-    if (name == aFailedDomainName) {
+    // If all records are in the http3 excluded list, we'll give the previous
+    // failed record one more chance.
+    if (name == aFailedDomainName && !mAllRecordsInH3ExcludedListBefore) {
       // Skip the failed one.
       continue;
     }
@@ -1336,6 +1351,11 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
 void nsHttpTransaction::Close(nsresult reason) {
   LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));
+
+  {
+    MutexAutoLock lock(mLock);
+    mEarlyHintObserver = nullptr;
+  }
 
   if (!mClosed) {
     gHttpHandler->ConnMgr()->RemoveActiveTransaction(this);
@@ -1963,13 +1983,38 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
     mLineBuf.Truncate();
     // discard this response if it is a 100 continue or other 1xx status.
     uint16_t status = mResponseHead->Status();
+    if (status == 103) {
+      nsCString linkHeader;
+      nsresult rv = mResponseHead->GetHeader(nsHttp::Link, linkHeader);
+      if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
+        nsCOMPtr<nsIEarlyHintObserver> earlyHint;
+        {
+          MutexAutoLock lock(mLock);
+          earlyHint = mEarlyHintObserver;
+        }
+        if (earlyHint) {
+          DebugOnly<nsresult> rv = NS_DispatchToMainThread(
+              NS_NewRunnableFunction(
+                  "nsIEarlyHintObserver->EarlyHint",
+                  [obs{std::move(earlyHint)}, header{std::move(linkHeader)}]() {
+                    obs->EarlyHint(header);
+                  }),
+              NS_DISPATCH_NORMAL);
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
+      }
+    }
     if ((status != 101) && (status / 100 == 1)) {
-      LOG(("ignoring 1xx response\n"));
+      LOG(("ignoring 1xx response except 101 and 103\n"));
       mHaveStatusLine = false;
       mHttpResponseMatched = false;
       mConnection->SetLastTransactionExpectedNoContent(true);
       mResponseHead->Reset();
       return NS_OK;
+    }
+    {
+      MutexAutoLock lock(mLock);
+      mEarlyHintObserver = nullptr;
     }
     mHaveAllHeaders = true;
   }
@@ -2517,20 +2562,25 @@ void nsHttpTransaction::DisableSpdy() {
   }
 }
 
-void nsHttpTransaction::DisableHttp3() {
+void nsHttpTransaction::DisableHttp3(bool aAllowRetryHTTPSRR) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  mCaps |= NS_HTTP_DISALLOW_HTTP3;
 
   // mOrigConnInfo is an indicator that HTTPS RR is used, so don't mess up the
   // connection info.
   // When HTTPS RR is used, PrepareConnInfoForRetry() could select other h3
   // record to connect.
   if (mOrigConnInfo) {
-    LOG(("nsHttpTransaction::DisableHttp3 this=%p mOrigConnInfo=%s", this,
-         mOrigConnInfo->HashKey().get()));
+    LOG(
+        ("nsHttpTransaction::DisableHttp3 this=%p mOrigConnInfo=%s "
+         "aAllowRetryHTTPSRR=%d",
+         this, mOrigConnInfo->HashKey().get(), aAllowRetryHTTPSRR));
+    if (!aAllowRetryHTTPSRR) {
+      mCaps |= NS_HTTP_DISALLOW_HTTP3;
+    }
     return;
   }
+
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
 
   MOZ_ASSERT(mConnInfo);
   if (mConnInfo) {
@@ -3136,8 +3186,8 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   RefPtr<nsHttpConnectionInfo> newInfo =
       mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
   bool needFastFallback = newInfo->IsHttp3();
-  bool foundInPendingQ =
-      gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(this);
+  bool foundInPendingQ = gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(
+      this, mHashKeyOfConnectionEntry);
 
   // Adopt the new connection info, so this transaction will be added into the
   // new connection entry.
@@ -3344,8 +3394,8 @@ void nsHttpTransaction::HandleFallback(
   LOG(("nsHttpTransaction %p HandleFallback to connInfo[%s]", this,
        aFallbackConnInfo->HashKey().get()));
 
-  bool foundInPendingQ =
-      gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(this);
+  bool foundInPendingQ = gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(
+      this, mHashKeyOfConnectionEntry);
   if (!foundInPendingQ) {
     MOZ_ASSERT(false, "transaction not in entry");
     return;
@@ -3412,6 +3462,11 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
 
   Telemetry::AccumulateTimeDelta(hist, key, mTimings.requestStart,
                                  mTimings.responseStart);
+}
+
+void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
+  MutexAutoLock lock(mLock);
+  aResult.Assign(mHashKeyOfConnectionEntry);
 }
 
 }  // namespace net

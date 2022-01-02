@@ -1915,7 +1915,7 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
       }
       ParentEndpoint parent;
       nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-          pid, request.mChildProcessId, &parent, &request.mChildEndpoint);
+          &parent, &request.mChildEndpoint);
 
       if (NS_FAILED(rv)) {
         request.mPromise->Reject(false, __func__);

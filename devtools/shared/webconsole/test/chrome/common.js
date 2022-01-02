@@ -8,7 +8,9 @@
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { DevToolsServer } = require("devtools/server/devtools-server");
 // eslint-disable-next-line mozilla/reject-some-requires
 const { DevToolsClient } = require("devtools/client/devtools-client");
@@ -67,14 +69,20 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
       target = await targetDescriptor.getTarget();
     } else {
       const targetDescriptor = await client.mainRoot.getTab();
+      // As there is no real tab in mochitest chrome, we can use CommandsFactory
+      // and fallback to create the commands manually
+      const {
+        createCommandsDictionary,
+      } = require("devtools/shared/commands/index");
+      const commands = await createCommandsDictionary(targetDescriptor);
+      // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
+      await commands.targetCommand.startListening();
       target = await targetDescriptor.getTarget();
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);
         await waitForMessage(worker);
 
-        // listWorkers only works if the browsing context target actor is attached
-        await target.attach();
         const { workers } = await target.listWorkers();
         target = workers.filter(w => w.url == workerName)[0];
         if (!target) {
@@ -83,11 +91,13 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
           );
           return null;
         }
+        // This is still important to attach workers as target is still a descriptor front
+        // which "becomes" a target when calling its attach method.
+        await target.attach();
       }
     }
 
     // Attach the Target and the target thread in order to instantiate the console client.
-    await target.attach();
     await target.attachThread();
 
     const webConsoleFront = await target.getFront("console");

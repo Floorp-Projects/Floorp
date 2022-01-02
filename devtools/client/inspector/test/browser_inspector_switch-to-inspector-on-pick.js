@@ -6,7 +6,7 @@
 // panel.
 
 const TEST_URI =
-  "data:text/html;charset=UTF-8,<script>console.log(`hello`)</script><p>Switch to inspector on pick</p>";
+  "data:text/html;charset=UTF-8,<!DOCTYPE html><script>console.log(`hello`)</script><p>Switch to inspector on pick</p>";
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 const DATA = [
@@ -66,7 +66,7 @@ add_task(async function() {
   await startPickerAndAssertSwitchToInspector(toolbox);
 
   info("Stopping element picker.");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 
   checkResults();
 });

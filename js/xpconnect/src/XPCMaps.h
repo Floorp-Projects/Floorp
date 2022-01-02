@@ -80,7 +80,7 @@ class JSObject2WrappedJSMap {
     }
   }
 
-  void UpdateWeakPointersAfterGC();
+  void UpdateWeakPointersAfterGC(JSTracer* trc);
 
   void ShutdownMarker();
 
@@ -151,9 +151,7 @@ struct IIDHasher {
     return mozilla::HashGeneric(v);
   }
 
-  static bool match(Key key, Lookup lookup) {
-    return key->Equals(*lookup);
-  }
+  static bool match(Key key, Lookup lookup) { return key->Equals(*lookup); }
 };
 
 class IID2NativeInterfaceMap {
@@ -253,8 +251,7 @@ class ClassInfo2WrappedNativeProtoMap {
     return ptr ? ptr->value() : nullptr;
   }
 
-  XPCWrappedNativeProto* Add(nsIClassInfo* info,
-                                    XPCWrappedNativeProto* proto) {
+  XPCWrappedNativeProto* Add(nsIClassInfo* info, XPCWrappedNativeProto* proto) {
     MOZ_ASSERT(info, "bad param");
     auto ptr = mMap.lookupForAdd(info);
     if (ptr) {
@@ -385,7 +382,7 @@ class JSObject2JSObjectMap {
 
   inline uint32_t Count() { return mTable.count(); }
 
-  void Sweep() { mTable.sweep(); }
+  void UpdateWeakPointers(JSTracer* trc) { mTable.traceWeak(trc); }
 
  private:
   Map mTable{XPC_WRAPPER_MAP_LENGTH};

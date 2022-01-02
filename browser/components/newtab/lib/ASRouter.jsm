@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloader: "resource://services-settings/Attachments.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
@@ -330,29 +331,22 @@ const MessageLoaderUtils = {
     return RemoteSettings(bucket).get();
   },
 
-  async _experimentsAPILoader(provider, options) {
-    await ExperimentAPI.ready();
-
+  async _experimentsAPILoader(provider) {
     let experiments = [];
     for (const featureId of provider.messageGroups) {
-      let experimentData = ExperimentAPI.getExperiment({ featureId });
+      let FeatureAPI = NimbusFeatures[featureId];
+      let experimentData = ExperimentAPI.getExperimentMetaData({
+        featureId,
+      });
       // Not enrolled in any experiment for this feature, we can skip
       if (!experimentData) {
         continue;
       }
 
-      // If the feature is not enabled there is no message to send back.
-      // Other branches might be enabled so we check those as well in case we
-      // need to send a reach ping.
-      let featureData = experimentData.branch[featureId];
-      if (featureData?.value?.id) {
-        experiments.push({
-          forExposureEvent: {
-            experimentSlug: experimentData.slug,
-            branchSlug: experimentData.branch.slug,
-          },
-          ...featureData.value,
-        });
+      let message = FeatureAPI.getAllVariables();
+
+      if (message?.id) {
+        experiments.push(message);
       }
 
       if (!REACH_EVENT_GROUPS.includes(featureId)) {
@@ -1661,16 +1655,18 @@ class _ASRouter {
       }
     }
 
-    // Exposure events only apply to messages that come from the
-    // messaging-experiments provider
-    if (nonReachMessages.length && nonReachMessages[0].forExposureEvent) {
-      ExperimentAPI.recordExposureEvent({
-        // Any message processed by ASRouter will report the exposure event
-        // as `cfr`
-        featureId: "cfr",
-        // experimentSlug and branchSlug
-        ...nonReachMessages[0].forExposureEvent,
-      });
+    if (nonReachMessages.length) {
+      // Map from message template to Nimbus feature
+      let featureMap = {
+        cfr_doorhanger: "cfr",
+        spotlight: "spotlight",
+        infobar: "infobar",
+        update_action: "moments-page",
+      };
+      let feature = featureMap[nonReachMessages[0].template];
+      if (feature) {
+        NimbusFeatures[feature].recordExposureEvent({ once: true });
+      }
     }
 
     return this.routeCFRMessage(

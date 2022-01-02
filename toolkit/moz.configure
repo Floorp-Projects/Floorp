@@ -1193,6 +1193,7 @@ def x11_libs(webrtc):
             "xdamage",
             "xfixes",
             "xi",
+            "xtst",
         ]
     return libs
 
@@ -2110,6 +2111,8 @@ def wasm_sandboxing_libraries():
         "graphite",
         "ogg",
         "hunspell",
+        "expat",
+        "woff2",
     )
 
 

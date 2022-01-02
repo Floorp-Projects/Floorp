@@ -19,8 +19,9 @@ typedef struct _D3DKMTQS_COUNTER {
 
 typedef struct _D3DKMTQS_ADAPTER_INFO {
   ULONG NbSegments;
+  ULONG NodeCount;
 
-  ULONG Filler[4];
+  ULONG Filler[3];
   ULONGLONG Filler2[2];  // Assumed sizeof(LONGLONG) = sizeof(ULONGLONG)
   struct {
     ULONG Filler[14];
@@ -121,11 +122,20 @@ typedef struct _D3DKMTQS_PROCESS_SEGMENT_INFO {
   ULONG64 Reserved[8];
 } D3DKMTQS_PROCESS_SEGMENT_INFO;
 
+typedef struct _D3DKMTQS_PROCESS_NODE_INFO {
+  LARGE_INTEGER RunningTime;  // 100ns
+  ULONG ContextSwitch;
+  ULONG PreemptionStatistics[16];
+  ULONG PacketStatistics[32];
+  ULONG64 Reserved[8];
+} D3DKMTQS_PROCESS_NODE_INFO;
+
 typedef enum _D3DKMTQS_TYPE {
   D3DKMTQS_ADAPTER = 0,
   D3DKMTQS_PROCESS = 1,
   D3DKMTQS_SEGMENT = 3,
   D3DKMTQS_PROCESS_SEGMENT = 4,
+  D3DKMTQS_PROCESS_NODE = 6,
 } D3DKMTQS_TYPE;
 
 typedef union _D3DKMTQS_RESULT {
@@ -134,11 +144,16 @@ typedef union _D3DKMTQS_RESULT {
   D3DKMTQS_SEGMENT_INFO_WIN8 SegmentInfoWin8;
   D3DKMTQS_PROCESS_INFO ProcessInfo;
   D3DKMTQS_PROCESS_SEGMENT_INFO ProcessSegmentInfo;
+  D3DKMTQS_PROCESS_NODE_INFO ProcessNodeInformation;
 } D3DKMTQS_RESULT;
 
 typedef struct _D3DKMTQS_QUERY_SEGMENT {
   ULONG SegmentId;
 } D3DKMTQS_QUERY_SEGMENT;
+
+typedef struct _D3DKMTQS_QUERY_NODE {
+  ULONG NodeId;
+} D3DKMTQS_QUERY_NODE;
 
 typedef struct _D3DKMTQS {
   D3DKMTQS_TYPE Type;
@@ -149,6 +164,7 @@ typedef struct _D3DKMTQS {
   union {
     D3DKMTQS_QUERY_SEGMENT QuerySegment;
     D3DKMTQS_QUERY_SEGMENT QueryProcessSegment;
+    D3DKMTQS_QUERY_NODE QueryProcessNode;
   };
 } D3DKMTQS;
 

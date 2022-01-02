@@ -35,8 +35,5 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 with Files("**"):
     BUG_COMPONENT = ("Core", "Permission Manager")

@@ -11,6 +11,7 @@
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
+#include "CrashAnnotations.h"
 #include "DllBlocklist.h"
 #include "LoaderPrivateAPI.h"
 #include "ModuleLoadFrame.h"
@@ -40,6 +41,8 @@ DLL_BLOCKLIST_DEFINITIONS_BEGIN
 DLL_BLOCKLIST_DEFINITIONS_END
 #endif
 
+using WritableBuffer = mozilla::glue::detail::WritableBuffer<1024>;
+
 class MOZ_STATIC_CLASS MOZ_TRIVIAL_CTOR_DTOR NativeNtBlockSet final {
   struct NativeNtBlockSetEntry {
     NativeNtBlockSetEntry() = default;
@@ -58,7 +61,7 @@ class MOZ_STATIC_CLASS MOZ_TRIVIAL_CTOR_DTOR NativeNtBlockSet final {
   ~NativeNtBlockSet() = default;
 
   void Add(const UNICODE_STRING& aName, uint64_t aVersion);
-  void Write(HANDLE aFile);
+  void Write(WritableBuffer& buffer);
 
  private:
   static NativeNtBlockSetEntry* NewEntry(const UNICODE_STRING& aName,
@@ -95,10 +98,9 @@ void NativeNtBlockSet::Add(const UNICODE_STRING& aName, uint64_t aVersion) {
   }
 }
 
-void NativeNtBlockSet::Write(HANDLE aFile) {
+void NativeNtBlockSet::Write(WritableBuffer& aBuffer) {
   // NB: If this function is called, it is long after kernel32 is initialized,
   // so it is safe to use Win32 calls here.
-  DWORD nBytes;
   char buf[MAX_PATH];
 
   // It would be nicer to use RAII here. However, its destructor
@@ -117,26 +119,24 @@ void NativeNtBlockSet::Write(HANDLE aFile) {
       }
 
       // write name[,v.v.v.v];
-      if (!WriteFile(aFile, buf, convOk, &nBytes, nullptr)) {
-        continue;
-      }
+      aBuffer.Write(buf, convOk);
 
       if (entry->mVersion != DllBlockInfo::ALL_VERSIONS) {
-        WriteFile(aFile, ",", 1, &nBytes, nullptr);
+        aBuffer.Write(",", 1);
         uint16_t parts[4];
         parts[0] = entry->mVersion >> 48;
         parts[1] = (entry->mVersion >> 32) & 0xFFFF;
         parts[2] = (entry->mVersion >> 16) & 0xFFFF;
         parts[3] = entry->mVersion & 0xFFFF;
         for (size_t p = 0; p < mozilla::ArrayLength(parts); ++p) {
-          ltoa(parts[p], buf, 10);
-          WriteFile(aFile, buf, strlen(buf), &nBytes, nullptr);
+          _ltoa_s(parts[p], buf, sizeof(buf), 10);
+          aBuffer.Write(buf, strlen(buf));
           if (p != mozilla::ArrayLength(parts) - 1) {
-            WriteFile(aFile, ".", 1, &nBytes, nullptr);
+            aBuffer.Write(".", 1);
           }
         }
       }
-      WriteFile(aFile, ";", 1, &nBytes, nullptr);
+      aBuffer.Write(";", 1);
     }
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {}
@@ -146,8 +146,12 @@ void NativeNtBlockSet::Write(HANDLE aFile) {
 
 static NativeNtBlockSet gBlockSet;
 
-extern "C" void MOZ_EXPORT NativeNtBlockSet_Write(HANDLE aHandle) {
-  gBlockSet.Write(aHandle);
+extern "C" void MOZ_EXPORT
+NativeNtBlockSet_Write(CrashReporter::AnnotationWriter& aWriter) {
+  WritableBuffer buffer;
+  gBlockSet.Write(buffer);
+  aWriter.Write(CrashReporter::Annotation::BlockedDllList, buffer.Data(),
+                buffer.Length());
 }
 
 enum class BlockAction {

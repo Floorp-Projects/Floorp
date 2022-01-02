@@ -12,116 +12,14 @@ namespace mozilla::widget {
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-HeadlessLookAndFeel::HeadlessLookAndFeel() {}
+HeadlessLookAndFeel::HeadlessLookAndFeel() = default;
 
 HeadlessLookAndFeel::~HeadlessLookAndFeel() = default;
 
 nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
-                                             nscolor& aColor) {
-  // For headless mode, we use GetStandinForNativeColor for everything we can,
-  // and hardcoded values for everything else.
-  //
-  // TODO(emilio): We should probably just move these to
-  // GetStandinForNativeColor.
-
-  nsresult res = NS_OK;
-
-  switch (aID) {
-    // Override the solid black that GetStandinForNativeColor provides for
-    // FieldText, to match our behavior under the real GTK.
-    case ColorID::Fieldtext:
-      aColor = NS_RGB(0x21, 0x21, 0x21);
-      break;
-
-    // The rest are not provided by GetStandinForNativeColor.
-    case ColorID::IMESelectedRawTextBackground:
-    case ColorID::IMESelectedConvertedTextBackground:
-    case ColorID::IMERawInputBackground:
-    case ColorID::IMEConvertedTextBackground:
-      aColor = NS_TRANSPARENT;
-      break;
-    case ColorID::IMESelectedRawTextForeground:
-    case ColorID::IMESelectedConvertedTextForeground:
-    case ColorID::IMERawInputForeground:
-    case ColorID::IMEConvertedTextForeground:
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
-      break;
-    case ColorID::IMERawInputUnderline:
-    case ColorID::IMEConvertedTextUnderline:
-      aColor = NS_40PERCENT_FOREGROUND_COLOR;
-      break;
-    case ColorID::IMESelectedRawTextUnderline:
-    case ColorID::IMESelectedConvertedTextUnderline:
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
-      break;
-    case ColorID::MozEventreerow:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::MozButtonactivetext:
-    case ColorID::MozMacDefaultbuttontext:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::SpellCheckerUnderline:
-      aColor = NS_RGB(0xff, 0x00, 0x00);
-      break;
-    case ColorID::TextBackground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::TextForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
-      break;
-    case ColorID::TextHighlightBackground:
-      aColor = NS_RGB(0xef, 0x0f, 0xff);
-      break;
-    case ColorID::TextHighlightForeground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::TextSelectBackgroundAttention:
-      aColor = NS_TRANSPARENT;
-      break;
-    case ColorID::TextSelectBackgroundDisabled:
-      aColor = NS_RGB(0xaa, 0xaa, 0xaa);
-      break;
-    case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-      break;
-    case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
-      break;
-    case ColorID::WidgetBackground:
-      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
-      break;
-    case ColorID::WidgetForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
-      break;
-    case ColorID::WidgetSelectBackground:
-      aColor = NS_RGB(0x80, 0x80, 0x80);
-      break;
-    case ColorID::WidgetSelectForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x80);
-      break;
-    case ColorID::WindowBackground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::WindowForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
-      break;
-    case ColorID::Highlight:
-    case ColorID::Selecteditem:
-    case ColorID::MozAccentColor:
-      aColor = NS_RGB(53, 132, 228);
-      break;
-    case ColorID::Highlighttext:
-    case ColorID::Selecteditemtext:
-    case ColorID::MozAccentColorForeground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    default:
-      aColor = GetStandinForNativeColor(aID, aScheme);
-      break;
-  }
-
-  return res;
+                                             nscolor& aResult) {
+  aResult = GetStandinForNativeColor(aID, aScheme);
+  return NS_OK;
 }
 
 nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
@@ -283,8 +181,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     default:
-      NS_WARNING(
-          "HeadlessLookAndFeel::NativeGetInt called with an unrecognized aID");
       aResult = 0;
       res = NS_ERROR_FAILURE;
       break;
@@ -309,9 +205,6 @@ nsresult HeadlessLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
       res = NS_ERROR_FAILURE;
       break;
     default:
-      NS_WARNING(
-          "HeadlessLookAndFeel::NativeGetFloat called with an unrecognized "
-          "aID");
       aResult = -1.0;
       res = NS_ERROR_FAILURE;
       break;
@@ -336,9 +229,5 @@ bool HeadlessLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
 char16_t HeadlessLookAndFeel::GetPasswordCharacterImpl() {
   return UNICODE_BULLET;
 }
-
-void HeadlessLookAndFeel::RefreshImpl() { nsXPLookAndFeel::RefreshImpl(); }
-
-bool HeadlessLookAndFeel::GetEchoPasswordImpl() { return false; }
 
 }  // namespace mozilla::widget

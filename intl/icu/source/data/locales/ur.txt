@@ -235,6 +235,14 @@ ur{
             }
         }
         minimalPairs{
+            case{
+                nominative{"دن باقی ہے۔ {0}"}
+                oblique{"باقی {0} دن۔"}
+            }
+            gender{
+                feminine{"{0} دنوں کی وارنٹی"}
+                masculine{"استعمال کے {0} دن"}
+            }
             ordinal{
                 other{"دایاں موڑ نمبر {0} مڑیں۔"}
             }
@@ -440,6 +448,16 @@ ur{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -456,6 +474,7 @@ ur{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E، d MMM، y G"}
                 GyMMMd{"d MMM، y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -654,6 +673,16 @@ ur{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -673,6 +702,7 @@ ur{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E، d MMM، y G"}
                 GyMMMd{"d MMM، y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1301,6 +1331,9 @@ ur{
             }
         }
         islamic{
+            availableFormats{
+                GyMd{"d/M/y GGGGG"}
+            }
             eras{
                 abbreviated{
                     "ہجری",

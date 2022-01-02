@@ -1950,6 +1950,9 @@ hr{
             lg{"jekaterinburško vrijeme"}
             ls{"jekaterinburško standardno vrijeme"}
         }
+        "meta:Yukon"{
+            ls{"jukonško vrijeme"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

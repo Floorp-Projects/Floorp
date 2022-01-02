@@ -386,6 +386,13 @@ fn color3_keywords() {
 }
 
 #[test]
+fn color4_hwb() {
+    run_color_tests(include_str!("css-parsing-tests/color4_hwb.json"), |c| {
+        c.ok().map(|v| v.to_json()).unwrap_or(Value::Null)
+    })
+}
+
+#[test]
 fn nth() {
     run_json_tests(include_str!("css-parsing-tests/An+B.json"), |input| {
         input

@@ -72,6 +72,7 @@ async function loadInitialState() {
 
 export async function bootstrap({
   commands,
+  fluentBundles,
   resourceCommand,
   workers: panelWorkers,
   panel,
@@ -108,7 +109,10 @@ export async function bootstrap({
     client: firefox.clientCommands,
   });
 
-  bootstrapApp(store, panel);
+  bootstrapApp(store, panel.getToolboxStore(), {
+    fluentBundles,
+    toolboxDoc: panel.panelWin.parent.document,
+  });
   await connected;
   return { store, actions, selectors, client: firefox.clientCommands };
 }

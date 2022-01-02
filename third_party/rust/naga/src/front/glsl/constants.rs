@@ -1,12 +1,12 @@
 use crate::{
-    arena::{Arena, Handle},
+    arena::{Arena, Handle, UniqueArena},
     BinaryOperator, Constant, ConstantInner, Expression, ScalarKind, ScalarValue, Type, TypeInner,
     UnaryOperator,
 };
 
 #[derive(Debug)]
 pub struct ConstantSolver<'a> {
-    pub types: &'a Arena<Type>,
+    pub types: &'a mut UniqueArena<Type>,
     pub expressions: &'a Arena<Expression>,
     pub constants: &'a mut Arena<Constant>,
 }
@@ -53,8 +53,10 @@ pub enum ConstantSolvingError {
     InvalidBinaryOpArgs,
     #[error("Cannot apply math function to type")]
     InvalidMathArg,
-    #[error("Splat/swizzle type is not registered")]
-    DestinationTypeNotFound,
+    #[error("Splat is defined only on scalar values")]
+    SplatScalarOnly,
+    #[error("Can only swizzle vector constants")]
+    SwizzleVectorOnly,
     #[error("Not implemented: {0}")]
     NotImplemented(String),
 }
@@ -64,7 +66,7 @@ impl<'a> ConstantSolver<'a> {
         &mut self,
         expr: Handle<Expression>,
     ) -> Result<Handle<Constant>, ConstantSolvingError> {
-        let span = self.expressions.get_span(expr).clone();
+        let span = self.expressions.get_span(expr);
         match self.expressions[expr] {
             Expression::Constant(constant) => Ok(constant),
             Expression::AccessIndex { base, index } => self.access(base, index as usize),
@@ -81,25 +83,24 @@ impl<'a> ConstantSolver<'a> {
                 let ty = match self.constants[value_constant].inner {
                     ConstantInner::Scalar { ref value, width } => {
                         let kind = value.scalar_kind();
-                        self.types
-                            .fetch_if(|t| t.inner == crate::TypeInner::Vector { size, kind, width })
+                        self.types.insert(
+                            Type {
+                                name: None,
+                                inner: TypeInner::Vector { size, kind, width },
+                            },
+                            span,
+                        )
                     }
-                    ConstantInner::Composite { .. } => None,
+                    ConstantInner::Composite { .. } => {
+                        return Err(ConstantSolvingError::SplatScalarOnly);
+                    }
                 };
 
-                //TODO: register the new type if needed
-                let ty = ty.ok_or(ConstantSolvingError::DestinationTypeNotFound)?;
-                Ok(self.constants.fetch_or_append(
-                    Constant {
-                        name: None,
-                        specialization: None,
-                        inner: ConstantInner::Composite {
-                            ty,
-                            components: vec![value_constant; size as usize],
-                        },
-                    },
-                    span,
-                ))
+                let inner = ConstantInner::Composite {
+                    ty,
+                    components: vec![value_constant; size as usize],
+                };
+                Ok(self.register_constant(inner, span))
             }
             Expression::Swizzle {
                 size,
@@ -108,7 +109,9 @@ impl<'a> ConstantSolver<'a> {
             } => {
                 let src_constant = self.solve(src_vector)?;
                 let (ty, src_components) = match self.constants[src_constant].inner {
-                    ConstantInner::Scalar { .. } => (None, &[][..]),
+                    ConstantInner::Scalar { .. } => {
+                        return Err(ConstantSolvingError::SwizzleVectorOnly);
+                    }
                     ConstantInner::Composite {
                         ty,
                         components: ref src_components,
@@ -118,44 +121,37 @@ impl<'a> ConstantSolver<'a> {
                             kind,
                             width,
                         } => {
-                            let dst_ty = self.types.fetch_if(|t| {
-                                t.inner == crate::TypeInner::Vector { size, kind, width }
-                            });
+                            let dst_ty = self.types.insert(
+                                Type {
+                                    name: None,
+                                    inner: crate::TypeInner::Vector { size, kind, width },
+                                },
+                                span,
+                            );
                             (dst_ty, &src_components[..])
                         }
-                        _ => (None, &[][..]),
+                        _ => {
+                            return Err(ConstantSolvingError::SwizzleVectorOnly);
+                        }
                     },
                 };
-                //TODO: register the new type if needed
-                let ty = ty.ok_or(ConstantSolvingError::DestinationTypeNotFound)?;
+
                 let components = pattern
                     .iter()
                     .map(|&sc| src_components[sc as usize])
                     .collect();
+                let inner = ConstantInner::Composite { ty, components };
 
-                Ok(self.constants.fetch_or_append(
-                    Constant {
-                        name: None,
-                        specialization: None,
-                        inner: ConstantInner::Composite { ty, components },
-                    },
-                    span,
-                ))
+                Ok(self.register_constant(inner, span))
             }
             Expression::Compose { ty, ref components } => {
                 let components = components
                     .iter()
                     .map(|c| self.solve(*c))
                     .collect::<Result<_, _>>()?;
+                let inner = ConstantInner::Composite { ty, components };
 
-                Ok(self.constants.fetch_or_append(
-                    Constant {
-                        name: None,
-                        specialization: None,
-                        inner: ConstantInner::Composite { ty, components },
-                    },
-                    span,
-                ))
+                Ok(self.register_constant(inner, span))
             }
             Expression::Unary { expr, op } => {
                 let expr_constant = self.solve(expr)?;
@@ -202,14 +198,8 @@ impl<'a> ConstantSolver<'a> {
                             _ => return Err(ConstantSolvingError::InvalidMathArg),
                         };
 
-                        Ok(self.constants.fetch_or_append(
-                            Constant {
-                                name: None,
-                                specialization: None,
-                                inner: ConstantInner::Scalar { width, value },
-                            },
-                            span,
-                        ))
+                        let inner = ConstantInner::Scalar { width, value };
+                        Ok(self.register_constant(inner, span))
                     }
                     _ => Err(ConstantSolvingError::NotImplemented(format!("{:?}", fun))),
                 }
@@ -303,16 +293,6 @@ impl<'a> ConstantSolver<'a> {
         target_width: crate::Bytes,
         span: crate::Span,
     ) -> Result<Handle<Constant>, ConstantSolvingError> {
-        fn inner_cast<A: num_traits::FromPrimitive>(value: ScalarValue) -> A {
-            match value {
-                ScalarValue::Sint(v) => A::from_i64(v),
-                ScalarValue::Uint(v) => A::from_u64(v),
-                ScalarValue::Float(v) => A::from_f64(v),
-                ScalarValue::Bool(v) => A::from_u64(v as u64),
-            }
-            .unwrap()
-        }
-
         let mut inner = self.constants[constant].inner.clone();
 
         match inner {
@@ -322,10 +302,30 @@ impl<'a> ConstantSolver<'a> {
             } => {
                 *width = target_width;
                 *value = match kind {
-                    ScalarKind::Sint => ScalarValue::Sint(inner_cast(*value)),
-                    ScalarKind::Uint => ScalarValue::Uint(inner_cast(*value)),
-                    ScalarKind::Float => ScalarValue::Float(inner_cast(*value)),
-                    ScalarKind::Bool => ScalarValue::Bool(inner_cast::<u64>(*value) != 0),
+                    ScalarKind::Sint => ScalarValue::Sint(match *value {
+                        ScalarValue::Sint(v) => v,
+                        ScalarValue::Uint(v) => v as i64,
+                        ScalarValue::Float(v) => v as i64,
+                        ScalarValue::Bool(v) => v as i64,
+                    }),
+                    ScalarKind::Uint => ScalarValue::Uint(match *value {
+                        ScalarValue::Sint(v) => v as u64,
+                        ScalarValue::Uint(v) => v,
+                        ScalarValue::Float(v) => v as u64,
+                        ScalarValue::Bool(v) => v as u64,
+                    }),
+                    ScalarKind::Float => ScalarValue::Float(match *value {
+                        ScalarValue::Sint(v) => v as f64,
+                        ScalarValue::Uint(v) => v as f64,
+                        ScalarValue::Float(v) => v,
+                        ScalarValue::Bool(v) => v as u64 as f64,
+                    }),
+                    ScalarKind::Bool => ScalarValue::Bool(match *value {
+                        ScalarValue::Sint(v) => v != 0,
+                        ScalarValue::Uint(v) => v != 0,
+                        ScalarValue::Float(v) => v != 0.0,
+                        ScalarValue::Bool(v) => v,
+                    }),
                 }
             }
             ConstantInner::Composite {
@@ -338,19 +338,12 @@ impl<'a> ConstantSolver<'a> {
                 }
 
                 for component in components {
-                    *component = self.cast(*component, kind, target_width, span.clone())?;
+                    *component = self.cast(*component, kind, target_width, span)?;
                 }
             }
         }
 
-        Ok(self.constants.fetch_or_append(
-            Constant {
-                name: None,
-                specialization: None,
-                inner,
-            },
-            span,
-        ))
+        Ok(self.register_constant(inner, span))
     }
 
     fn unary_op(
@@ -385,19 +378,12 @@ impl<'a> ConstantSolver<'a> {
                 }
 
                 for component in components {
-                    *component = self.unary_op(op, *component, span.clone())?
+                    *component = self.unary_op(op, *component, span)?
                 }
             }
         }
 
-        Ok(self.constants.fetch_or_append(
-            Constant {
-                name: None,
-                specialization: None,
-                inner,
-            },
-            span,
-        ))
+        Ok(self.register_constant(inner, span))
     }
 
     fn binary_op(
@@ -432,31 +418,36 @@ impl<'a> ConstantSolver<'a> {
                     _ => match (left_value, right_value) {
                         (ScalarValue::Sint(a), ScalarValue::Sint(b)) => {
                             ScalarValue::Sint(match op {
-                                BinaryOperator::Add => a + b,
-                                BinaryOperator::Subtract => a - b,
-                                BinaryOperator::Multiply => a * b,
-                                BinaryOperator::Divide => a / b,
-                                BinaryOperator::Modulo => a % b,
+                                BinaryOperator::Add => a.wrapping_add(b),
+                                BinaryOperator::Subtract => a.wrapping_sub(b),
+                                BinaryOperator::Multiply => a.wrapping_mul(b),
+                                BinaryOperator::Divide => a.checked_div(b).unwrap_or(0),
+                                BinaryOperator::Modulo => a.checked_rem(b).unwrap_or(0),
                                 BinaryOperator::And => a & b,
                                 BinaryOperator::ExclusiveOr => a ^ b,
                                 BinaryOperator::InclusiveOr => a | b,
-                                BinaryOperator::ShiftLeft => a << b,
-                                BinaryOperator::ShiftRight => a >> b,
+                                _ => return Err(ConstantSolvingError::InvalidBinaryOpArgs),
+                            })
+                        }
+                        (ScalarValue::Sint(a), ScalarValue::Uint(b)) => {
+                            ScalarValue::Sint(match op {
+                                BinaryOperator::ShiftLeft => a.wrapping_shl(b as u32),
+                                BinaryOperator::ShiftRight => a.wrapping_shr(b as u32),
                                 _ => return Err(ConstantSolvingError::InvalidBinaryOpArgs),
                             })
                         }
                         (ScalarValue::Uint(a), ScalarValue::Uint(b)) => {
                             ScalarValue::Uint(match op {
-                                BinaryOperator::Add => a + b,
-                                BinaryOperator::Subtract => a - b,
-                                BinaryOperator::Multiply => a * b,
-                                BinaryOperator::Divide => a / b,
-                                BinaryOperator::Modulo => a % b,
+                                BinaryOperator::Add => a.wrapping_add(b),
+                                BinaryOperator::Subtract => a.wrapping_sub(b),
+                                BinaryOperator::Multiply => a.wrapping_mul(b),
+                                BinaryOperator::Divide => a.checked_div(b).unwrap_or(0),
+                                BinaryOperator::Modulo => a.checked_rem(b).unwrap_or(0),
                                 BinaryOperator::And => a & b,
                                 BinaryOperator::ExclusiveOr => a ^ b,
                                 BinaryOperator::InclusiveOr => a | b,
-                                BinaryOperator::ShiftLeft => a << b,
-                                BinaryOperator::ShiftRight => a >> b,
+                                BinaryOperator::ShiftLeft => a.wrapping_shl(b as u32),
+                                BinaryOperator::ShiftRight => a.wrapping_shr(b as u32),
                                 _ => return Err(ConstantSolvingError::InvalidBinaryOpArgs),
                             })
                         }
@@ -486,28 +477,32 @@ impl<'a> ConstantSolver<'a> {
             (&ConstantInner::Composite { ref components, ty }, &ConstantInner::Scalar { .. }) => {
                 let mut components = components.clone();
                 for comp in components.iter_mut() {
-                    *comp = self.binary_op(op, *comp, right, span.clone())?;
+                    *comp = self.binary_op(op, *comp, right, span)?;
                 }
                 ConstantInner::Composite { ty, components }
             }
             (&ConstantInner::Scalar { .. }, &ConstantInner::Composite { ref components, ty }) => {
                 let mut components = components.clone();
                 for comp in components.iter_mut() {
-                    *comp = self.binary_op(op, left, *comp, span.clone())?;
+                    *comp = self.binary_op(op, left, *comp, span)?;
                 }
                 ConstantInner::Composite { ty, components }
             }
             _ => return Err(ConstantSolvingError::InvalidBinaryOpArgs),
         };
 
-        Ok(self.constants.fetch_or_append(
+        Ok(self.register_constant(inner, span))
+    }
+
+    fn register_constant(&mut self, inner: ConstantInner, span: crate::Span) -> Handle<Constant> {
+        self.constants.fetch_or_append(
             Constant {
                 name: None,
                 specialization: None,
                 inner,
             },
             span,
-        ))
+        )
     }
 }
 
@@ -517,18 +512,18 @@ mod tests {
 
     use crate::{
         Arena, Constant, ConstantInner, Expression, ScalarKind, ScalarValue, Type, TypeInner,
-        UnaryOperator, VectorSize,
+        UnaryOperator, UniqueArena, VectorSize,
     };
 
     use super::ConstantSolver;
 
     #[test]
     fn unary_op() {
-        let mut types = Arena::new();
+        let mut types = UniqueArena::new();
         let mut expressions = Arena::new();
         let mut constants = Arena::new();
 
-        let vec_ty = types.append(
+        let vec_ty = types.insert(
             Type {
                 name: None,
                 inner: TypeInner::Vector {
@@ -604,7 +599,7 @@ mod tests {
         );
 
         let mut solver = ConstantSolver {
-            types: &types,
+            types: &mut types,
             expressions: &expressions,
             constants: &mut constants,
         };
@@ -684,7 +679,7 @@ mod tests {
         );
 
         let mut solver = ConstantSolver {
-            types: &Arena::new(),
+            types: &mut UniqueArena::new(),
             expressions: &expressions,
             constants: &mut constants,
         };
@@ -702,11 +697,11 @@ mod tests {
 
     #[test]
     fn access() {
-        let mut types = Arena::new();
+        let mut types = UniqueArena::new();
         let mut expressions = Arena::new();
         let mut constants = Arena::new();
 
-        let matrix_ty = types.append(
+        let matrix_ty = types.insert(
             Type {
                 name: None,
                 inner: TypeInner::Matrix {
@@ -718,7 +713,7 @@ mod tests {
             Default::default(),
         );
 
-        let vec_ty = types.append(
+        let vec_ty = types.insert(
             Type {
                 name: None,
                 inner: TypeInner::Vector {
@@ -815,7 +810,7 @@ mod tests {
         );
 
         let mut solver = ConstantSolver {
-            types: &types,
+            types: &mut types,
             expressions: &expressions,
             constants: &mut constants,
         };

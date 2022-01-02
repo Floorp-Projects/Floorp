@@ -23,17 +23,15 @@ export function setKeyboardAccessForNonDialogElements(enableKeyboardAccess) {
     "login-item, login-list, menu-button, login-filter, fxaccounts-button, [tabindex]"
   );
 
+  let { activeElement: docActiveElement } = document;
   if (
     !enableKeyboardAccess &&
-    document.activeElement &&
-    !document.activeElement.closest("confirmation-dialog")
+    docActiveElement &&
+    !docActiveElement.closest("confirmation-dialog")
   ) {
-    let { activeElement } = document;
-    if (activeElement.shadowRoot && activeElement.shadowRoot.activeElement) {
-      activeElement.shadowRoot.activeElement.blur();
-    } else {
-      document.activeElement.blur();
-    }
+    let elementToBlur =
+      docActiveElement?.shadowRoot?.activeElement ?? docActiveElement;
+    elementToBlur.blur();
   }
 
   pageElements.forEach(el => {

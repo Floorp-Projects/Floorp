@@ -76,7 +76,7 @@ async function testChromeTab() {
 // Test that Main process Target can debug chrome scripts
 async function testMainProcess() {
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const customLoader = new DevToolsLoader({
     invisibleToDebugger: true,
@@ -106,7 +106,6 @@ async function testMainProcess() {
 
   const targetDescriptor = await client.mainRoot.getMainProcess();
   const target = await targetDescriptor.getTarget();
-  await target.attach();
 
   const threadFront = await target.attachThread();
   const { sources } = await threadFront.getSources();

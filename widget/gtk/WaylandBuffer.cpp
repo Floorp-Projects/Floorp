@@ -28,6 +28,8 @@ extern mozilla::LazyLogModule gWidgetWaylandLog;
 #  define LOGWAYLAND(args)
 #endif /* MOZ_LOGGING */
 
+using namespace mozilla::gl;
+
 namespace mozilla::widget {
 
 #define BUFFER_BPP 4
@@ -72,7 +74,10 @@ static int WaylandAllocateShmMemory(int aSize) {
   do {
     ret = posix_fallocate(fd, 0, aSize);
   } while (ret == EINTR);
-  if (ret != 0) {
+  if (ret == 0) {
+    return fd;
+  }
+  if (ret != ENODEV && ret != EINVAL && ret != EOPNOTSUPP) {
     NS_WARNING(
         nsPrintfCString("posix_fallocate() fails to allocate shm memory: %s",
                         strerror(ret))
@@ -80,7 +85,7 @@ static int WaylandAllocateShmMemory(int aSize) {
     close(fd);
     return -1;
   }
-#else
+#endif
   do {
     ret = ftruncate(fd, aSize);
   } while (ret < 0 && errno == EINTR);
@@ -91,7 +96,6 @@ static int WaylandAllocateShmMemory(int aSize) {
     close(fd);
     fd = -1;
   }
-#endif
 
   return fd;
 }

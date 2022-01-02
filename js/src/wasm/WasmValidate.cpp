@@ -1877,7 +1877,7 @@ static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
     return d.fail("expected global type");
   }
 
-  if (type->isReference() && !type->isNullable()) {
+  if (type->isRefType() && !type->isNullable()) {
     return d.fail("non-nullable references not supported in globals");
   }
 

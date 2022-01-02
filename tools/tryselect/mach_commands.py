@@ -13,7 +13,7 @@ from mach.decorators import (
     SettingsProvider,
     SubCommand,
 )
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.base import BuildEnvironmentNotFoundException
 from mozbuild.util import memoize
 

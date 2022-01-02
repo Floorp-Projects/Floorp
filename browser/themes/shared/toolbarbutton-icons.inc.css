@@ -442,6 +442,7 @@ toolbar[brighttext] #panic-button[open] {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+  margin: 7px !important;
 }
 
 toolbarbutton.bookmark-item {

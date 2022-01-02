@@ -67,7 +67,7 @@ int js::shell::FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
 
 #ifdef LIBFUZZER
   fuzzer::FuzzerDriver(&shell::sArgc, &shell::sArgv, FuzzJSRuntimeFuzz);
-#elif __AFL_COMPILER
+#elif AFLFUZZ
   MOZ_CRASH("AFL is unsupported for JS runtime fuzzing integration");
 #endif
   return 0;

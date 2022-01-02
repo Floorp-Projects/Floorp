@@ -381,6 +381,7 @@ or{
         raj{"ରାଜସ୍ଥାନୀ"}
         rap{"ରାପାନୁଇ"}
         rar{"ରାରୋତୋଙ୍ଗନ୍"}
+        rhg{"ରୋହିଙ୍ଗ୍ୟା"}
         rm{"ରୋମାନଶ୍‌"}
         rn{"ରୁଣ୍ଡି"}
         ro{"ରୋମାନିଆନ୍"}
@@ -760,19 +761,9 @@ or{
         VALENCIA{"ଭେଲେନସିଆନ୍"}
     }
     characterLabelPattern{
-        all{"{0} — ସମସ୍ତ"}
-        category-list{"{0}: {1}"}
-        compatibility{"{0} — ସୁସଙ୍ଗତି"}
-        enclosed{"{0} — ଆବଦ୍ଧ"}
-        extended{"{0} — ବର୍ଦ୍ଧିତ"}
-        historic{"{0} — ଐତିହାସିକ"}
-        miscellaneous{"{0} — ବିବିଧ"}
         other{"{0} — ଅନ୍ୟ"}
-        scripts{"ଲିପି — {0}"}
-        strokes{
-            one{"{0} ଷ୍ଟ୍ରୋକ୍‍"}
-            other{"{0} ଷ୍ଟ୍ରୋକ୍‍"}
-        }
+        subscript{"ସବସ୍କ୍ରିପ୍ଟ {0}"}
+        superscript{"ସୁପରସ୍କ୍ରିପ୍ଟ {0}"}
     }
     codePatterns{
         language{"ଭାଷା: {0}"}

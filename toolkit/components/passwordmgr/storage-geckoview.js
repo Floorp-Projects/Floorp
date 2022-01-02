@@ -89,32 +89,36 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
    * @resolve {nsILoginInfo[]}
    */
   async getAllLoginsAsync() {
-    let [logins, ids] = this._searchLogins({});
-    if (!logins.length) {
-      return [];
-    }
-
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+    return this._getLoginsAsync({});
   }
 
   async searchLoginsAsync(matchData) {
     this.log("searchLoginsAsync:", matchData);
+    return this._getLoginsAsync(matchData);
+  }
 
-    let originURI = Services.io.newURI(matchData.origin);
-    let baseHostname;
+  _baseHostnameFromOrigin(origin) {
+    if (!origin) {
+      return null;
+    }
+
+    let originURI = Services.io.newURI(origin);
     try {
-      baseHostname = Services.eTLD.getBaseDomain(originURI);
+      return Services.eTLD.getBaseDomain(originURI);
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
         // `getBaseDomain` cannot handle IP addresses and `nsIURI` cannot return
         // IPv6 hostnames with the square brackets so use `URL.hostname`.
-        baseHostname = new URL(matchData.origin).hostname;
+        return new URL(origin).hostname;
       } else if (ex.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-        baseHostname = originURI.asciiHost;
-      } else {
-        throw ex;
+        return originURI.asciiHost;
       }
+      throw ex;
     }
+  }
+
+  async _getLoginsAsync(matchData) {
+    let baseHostname = this._baseHostnameFromOrigin(matchData.origin);
 
     // Query all logins for the eTLD+1 and then filter the logins in _searchLogins
     // so that we can handle the logic for scheme upgrades, subdomains, etc.

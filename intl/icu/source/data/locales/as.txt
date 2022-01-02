@@ -257,6 +257,16 @@ as{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -273,6 +283,7 @@ as{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -435,6 +446,16 @@ as{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMdd",
+                "yMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -454,6 +475,7 @@ as{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1536,23 +1558,6 @@ as{
                 past{
                     one{"{0} মঙ্গলবাৰৰ পূৰ্বে"}
                     other{"{0} মঙ্গলবাৰৰ পূৰ্বে"}
-                }
-            }
-        }
-        tue-narrow{
-            relative{
-                "-1"{"যোৱা মঙ্গল"}
-                "0"{"এই মঙ্গল"}
-                "1"{"অহা মঙ্গল"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} মঙ্গলে"}
-                    other{"{0} মঙ্গলে"}
-                }
-                past{
-                    one{"{0} মঙ্গলৰ পূৰ্বে"}
-                    other{"{0} মঙ্গলৰ পূৰ্বে"}
                 }
             }
         }

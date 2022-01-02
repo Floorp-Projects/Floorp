@@ -36,17 +36,13 @@ const lazy = createLazyLoaders({
     ),
 });
 
-const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
-const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
-const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
-
 /** @type {PerformancePref["UIBaseUrl"]} */
 const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
 /** @type {PerformancePref["UIBaseUrlPathPref"]} */
 const UI_BASE_URL_PATH_PREF = "devtools.performance.recording.ui-base-url-path";
 
 const UI_BASE_URL_DEFAULT = "https://profiler.firefox.com";
-const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
+const UI_BASE_URL_PATH_DEFAULT = "/from-browser";
 
 /**
  * This file contains all of the privileged browser-specific functionality. This helps
@@ -58,23 +54,13 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
 /**
  * Once a profile is received from the actor, it needs to be opened up in
  * profiler.firefox.com to be analyzed. This function opens up profiler.firefox.com
- * into a new browser tab, and injects the profile via a frame script.
- *
- * @param {MinimallyTypedGeckoProfile | ArrayBuffer | {}} profile - The Gecko profile.
+ * into a new browser tab.
  * @param {ProfilerViewMode | undefined} profilerViewMode - View mode for the Firefox Profiler
  *   front-end timeline. While opening the url, we should append a query string
  *   if a view other than "full" needs to be displayed.
- * @param {SymbolicationService} symbolicationService - An object which implements the
- *   SymbolicationService interface, whose getSymbolTable method will be invoked
- *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
- *   method should obtain a symbol table for the requested binary and resolve the
- *   returned promise with it.
+ * @returns {MockedExports.Browser} The browser for the opened tab.
  */
-function openProfilerAndDisplayProfile(
-  profile,
-  profilerViewMode,
-  symbolicationService
-) {
+function openProfilerTab(profilerViewMode) {
   const Services = lazy.Services();
   // Find the most recently used window, as the DevTools client could be in a variety
   // of hosts.
@@ -115,36 +101,7 @@ function openProfilerAndDisplayProfile(
     }
   );
   browser.selectedTab = tab;
-  const mm = tab.linkedBrowser.messageManager;
-  mm.loadFrameScript(
-    "chrome://devtools/content/performance-new/frame-script.js",
-    false
-  );
-  mm.sendAsyncMessage(TRANSFER_EVENT, profile);
-  mm.addMessageListener(SYMBOL_TABLE_REQUEST_EVENT, e => {
-    const { debugName, breakpadId } = e.data;
-    symbolicationService.getSymbolTable(debugName, breakpadId).then(
-      result => {
-        const [addr, index, buffer] = result;
-        mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
-          status: "success",
-          debugName,
-          breakpadId,
-          result: [addr, index, buffer],
-        });
-      },
-      error => {
-        // Re-wrap the error object into an object that is Structured Clone-able.
-        const { name, message, lineNumber, fileName } = error;
-        mm.sendAsyncMessage(SYMBOL_TABLE_RESPONSE_EVENT, {
-          status: "error",
-          debugName,
-          breakpadId,
-          error: { name, message, lineNumber, fileName },
-        });
-      }
-    );
-  });
+  return tab.linkedBrowser;
 }
 
 /**
@@ -221,7 +178,7 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
 }
 
 module.exports = {
-  openProfilerAndDisplayProfile,
+  openProfilerTab,
   sharedLibrariesFromProfile,
   restartBrowserWithEnvironmentVariable,
   getEnvironmentVariable,

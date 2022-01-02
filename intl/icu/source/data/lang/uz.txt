@@ -85,6 +85,7 @@ uz{
         de_CH{"yuqori nemis (Shveytsariya)"}
         dgr{"dogrib"}
         dje{"zarma"}
+        doi{"dogri"}
         dsb{"quyi sorb"}
         dua{"duala"}
         dv{"divexi"}
@@ -274,6 +275,7 @@ uz{
         nmg{"kvasio"}
         nn{"norveg-nyunorsk"}
         nnh{"ngiyembun"}
+        no{"norveg"}
         nog{"no‘g‘ay"}
         nqo{"nko"}
         nr{"janubiy ndebel"}
@@ -302,6 +304,7 @@ uz{
         quc{"kiche"}
         rap{"rapanui"}
         rar{"rarotongan"}
+        rhg{"rohinja"}
         rm{"romansh"}
         rn{"rundi"}
         ro{"rumincha"}

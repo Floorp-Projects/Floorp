@@ -328,7 +328,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
     }
 
     if (aAGR && agrFrame != aAGR) {
-      mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
+      mBuilder.MarkFrameForDisplayIfVisible(f, RootReferenceFrame());
     }
 
     // If we're going to keep this linked list and not merge it, then mark the
@@ -1296,8 +1296,8 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
     mBuilder.AddFrameMarkedForDisplayIfVisible(f);
     FindContainingBlocks(f, extraFrames);
 
-    if (!ProcessFrame(f, &mBuilder, mBuilder.RootReferenceFrame(),
-                      aOutFramesWithProps, true, aOutDirty, aOutModifiedAGR)) {
+    if (!ProcessFrame(f, &mBuilder, RootReferenceFrame(), aOutFramesWithProps,
+                      true, aOutDirty, aOutModifiedAGR)) {
       return false;
     }
   }
@@ -1309,8 +1309,8 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
   for (nsIFrame* f : extraFrames) {
     f->SetFrameIsModified(true);
 
-    if (!ProcessFrame(f, &mBuilder, mBuilder.RootReferenceFrame(),
-                      aOutFramesWithProps, true, aOutDirty, aOutModifiedAGR)) {
+    if (!ProcessFrame(f, &mBuilder, RootReferenceFrame(), aOutFramesWithProps,
+                      true, aOutDirty, aOutModifiedAGR)) {
       return false;
     }
   }
@@ -1426,9 +1426,12 @@ void RetainedDisplayListBuilder::ClearFramesWithProps() {
 
 PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     nscolor aBackstop) {
+  DL_LOGI("RDL - AttemptPartialUpdate, root frame: %p", RootReferenceFrame());
+
   mBuilder.RemoveModifiedWindowRegions();
 
   if (mBuilder.ShouldSyncDecodeImages()) {
+    DL_LOGI("RDL - Sync decoding images");
     MarkFramesWithItemsAndImagesModified(&mList);
   }
 
@@ -1448,6 +1451,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   bool shouldBuildPartial = ShouldBuildPartial(modifiedFrames.Frames());
 
   nsRect modifiedDirty;
+  nsDisplayList modifiedDL;
   nsIFrame* modifiedAGR = nullptr;
   PartialUpdateResult result = PartialUpdateResult::NoChange;
   if (!shouldBuildPartial ||
@@ -1463,39 +1467,38 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   // This is normally handled by EnterPresShell, but we skipped it so that we
   // didn't call MarkFrameForDisplayIfVisible before ComputeRebuildRegion.
-  nsIScrollableFrame* sf = mBuilder.RootReferenceFrame()
-                               ->PresShell()
-                               ->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf =
+      RootReferenceFrame()->PresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
     if (canvasFrame) {
-      mBuilder.MarkFrameForDisplayIfVisible(canvasFrame,
-                                            mBuilder.RootReferenceFrame());
+      mBuilder.MarkFrameForDisplayIfVisible(canvasFrame, RootReferenceFrame());
     }
   }
 
   modifiedDirty.IntersectRect(
-      modifiedDirty,
-      mBuilder.RootReferenceFrame()->InkOverflowRectRelativeToSelf());
+      modifiedDirty, RootReferenceFrame()->InkOverflowRectRelativeToSelf());
 
   mBuilder.SetDirtyRect(modifiedDirty);
   mBuilder.SetPartialUpdate(true);
   mBuilder.SetPartialBuildFailed(false);
 
-  nsDisplayList modifiedDL;
-  mBuilder.RootReferenceFrame()->BuildDisplayListForStackingContext(
-      &mBuilder, &modifiedDL);
+  DL_LOGI("RDL - Starting display list build");
+  RootReferenceFrame()->BuildDisplayListForStackingContext(&mBuilder,
+                                                           &modifiedDL);
+  DL_LOGI("RDL - Finished display list build");
+
   if (!modifiedDL.IsEmpty()) {
     nsLayoutUtils::AddExtraBackgroundItems(
-        &mBuilder, &modifiedDL, mBuilder.RootReferenceFrame(),
-        nsRect(nsPoint(0, 0), mBuilder.RootReferenceFrame()->GetSize()),
-        mBuilder.RootReferenceFrame()->InkOverflowRectRelativeToSelf(),
-        aBackstop);
+        &mBuilder, &modifiedDL, RootReferenceFrame(),
+        nsRect(nsPoint(0, 0), RootReferenceFrame()->GetSize()),
+        RootReferenceFrame()->InkOverflowRectRelativeToSelf(), aBackstop);
   }
   mBuilder.SetPartialUpdate(false);
 
   if (mBuilder.PartialBuildFailed()) {
-    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), nullptr);
+    DL_LOGI("RDL - Partial update failed!");
+    mBuilder.LeavePresShell(RootReferenceFrame(), nullptr);
     mList.DeleteAll(&mBuilder);
     modifiedDL.DeleteAll(&mBuilder);
     Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Content;

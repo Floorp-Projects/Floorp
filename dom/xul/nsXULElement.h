@@ -377,8 +377,6 @@ class nsXULElement : public nsStyledElement {
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
 
-  virtual void RecompileScriptEventListeners() override;
-
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   using DOMString = mozilla::dom::DOMString;

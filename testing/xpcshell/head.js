@@ -408,7 +408,9 @@ function _setupDevToolsServer(breakpointFiles, callback) {
 
   let require;
   try {
-    ({ require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm"));
+    ({ require } = ChromeUtils.import(
+      "resource://devtools/shared/loader/Loader.jsm"
+    ));
   } catch (e) {
     throw new Error(
       "resource://devtools appears to be inaccessible from the " +

@@ -12,7 +12,7 @@ const TEST_URI = `${URL_ROOT_COM_SSL}test-console-evaluation-context-selector.ht
 const IFRAME_FILE = `test-console-evaluation-context-selector-child.html`;
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
+  await pushPref("devtools.webconsole.input.context", true);
 
   const tab = await addTab(TEST_URI);
 
@@ -43,6 +43,16 @@ add_task(async function() {
   const evaluationContextSelectorButton = hud.ui.outputNode.querySelector(
     ".webconsole-evaluation-selector-button"
   );
+
+  if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
+    is(
+      evaluationContextSelectorButton,
+      null,
+      "context selector is only displayed when Fission or EFT is enabled"
+    );
+    return;
+  }
+
   await waitFor(
     () => evaluationContextSelectorButton.innerText.includes("example.org"),
     "The context selector wasn't updated"

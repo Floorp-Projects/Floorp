@@ -329,7 +329,7 @@ struct AVIFDecodedData : layers::PlanarYCbCrData {
   CICP::MatrixCoefficients mMatrixCoefficients = CICP::MC_UNSPECIFIED;
 
   void SetCicpValues(
-      const NclxColourInformation* aNclx,
+      const Mp4parseNclxColourInformation* aNclx,
       const CICP::ColourPrimaries aAv1ColourPrimaries,
       const CICP::TransferCharacteristics aAv1TransferCharacteristics,
       const CICP::MatrixCoefficients aAv1MatrixCoefficients);
@@ -346,8 +346,8 @@ struct AVIFDecodedData : layers::PlanarYCbCrData {
 // that work unnecessarily because in addition to wasted effort, it would make
 // the logging more confusing.
 template <typename F>
-static gfx::YUVColorSpace GetAVIFColorSpace(const NclxColourInformation* aNclx,
-                                            F&& aBitstreamColorSpaceFunc) {
+static gfx::YUVColorSpace GetAVIFColorSpace(
+    const Mp4parseNclxColourInformation* aNclx, F&& aBitstreamColorSpaceFunc) {
   return ToMaybe(aNclx)
       .map([=](const auto& nclx) {
         return gfxUtils::CicpToColorSpace(
@@ -359,8 +359,9 @@ static gfx::YUVColorSpace GetAVIFColorSpace(const NclxColourInformation* aNclx,
       .valueOr(gfx::YUVColorSpace::BT601);
 }
 
-static gfx::ColorRange GetAVIFColorRange(const NclxColourInformation* aNclx,
-                                         const gfx::ColorRange av1ColorRange) {
+static gfx::ColorRange GetAVIFColorRange(
+    const Mp4parseNclxColourInformation* aNclx,
+    const gfx::ColorRange av1ColorRange) {
   return ToMaybe(aNclx)
       .map([=](const auto& nclx) {
         return aNclx->full_range_flag ? gfx::ColorRange::FULL
@@ -370,7 +371,7 @@ static gfx::ColorRange GetAVIFColorRange(const NclxColourInformation* aNclx,
 }
 
 void AVIFDecodedData::SetCicpValues(
-    const NclxColourInformation* aNclx,
+    const Mp4parseNclxColourInformation* aNclx,
     const CICP::ColourPrimaries aAv1ColourPrimaries,
     const CICP::TransferCharacteristics aAv1TransferCharacteristics,
     const CICP::MatrixCoefficients aAv1MatrixCoefficients) {
@@ -645,7 +646,7 @@ class Dav1dDecoder final : AVIFDecoderInterface {
   }
 
   static AVIFDecodedData Dav1dPictureToDecodedData(
-      const NclxColourInformation* aNclx, Dav1dPicture* aPicture,
+      const Mp4parseNclxColourInformation* aNclx, Dav1dPicture* aPicture,
       Dav1dPicture* aAlphaPlane, bool aPremultipliedAlpha);
 
   Dav1dContext* mContext = nullptr;
@@ -926,7 +927,7 @@ class AOMDecoder final : AVIFDecoderInterface {
   };
 
   static AVIFDecodedData AOMImageToToDecodedData(
-      const NclxColourInformation* aNclx, aom_image_t* aImage,
+      const Mp4parseNclxColourInformation* aNclx, aom_image_t* aImage,
       aom_image_t* aAlphaPlane, bool aPremultipliedAlpha);
 
   Maybe<aom_codec_ctx_t> mContext;
@@ -936,7 +937,7 @@ class AOMDecoder final : AVIFDecoderInterface {
 
 /* static */
 AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
-    const NclxColourInformation* aNclx, Dav1dPicture* aPicture,
+    const Mp4parseNclxColourInformation* aNclx, Dav1dPicture* aPicture,
     Dav1dPicture* aAlphaPlane, bool aPremultipliedAlpha) {
   MOZ_ASSERT(aPicture);
 
@@ -1026,7 +1027,7 @@ AVIFDecodedData Dav1dDecoder::Dav1dPictureToDecodedData(
 
 /* static */
 AVIFDecodedData AOMDecoder::AOMImageToToDecodedData(
-    const NclxColourInformation* aNclx, aom_image_t* aImage,
+    const Mp4parseNclxColourInformation* aNclx, aom_image_t* aImage,
     aom_image_t* aAlphaPlane, bool aPremultipliedAlpha) {
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aImage->stride[AOM_PLANE_Y] == aImage->stride[AOM_PLANE_ALPHA]);

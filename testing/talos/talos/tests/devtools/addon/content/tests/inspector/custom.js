@@ -118,11 +118,11 @@ async function selectNodeWithManyRulesAndLog(toolbox) {
 
   // Retrieve the node front for the test node.
   let root = await getRootNodeFront(inspector);
-  let referenceNodeFront = await inspector.walker.querySelector(
+  let referenceNodeFront = await root.walkerFront.querySelector(
     root,
     ".no-css-rules"
   );
-  let testNodeFront = await inspector.walker.querySelector(
+  let testNodeFront = await root.walkerFront.querySelector(
     root,
     ".many-css-rules"
   );
@@ -152,7 +152,7 @@ async function selectNodeWithManyVariablesAndLog(toolbox) {
 
   // Retrieve the node front for the test node.
   let root = await getRootNodeFront(inspector);
-  let testNodeFront = await inspector.walker.querySelector(
+  let testNodeFront = await root.walkerFront.querySelector(
     root,
     ".many-css-variables"
   );
@@ -173,7 +173,7 @@ async function collapseExpandAllAndLog(toolbox) {
   let root = await getRootNodeFront(inspector);
 
   dump("Select expand-many-children node\n");
-  let many = await inspector.walker.querySelector(
+  let many = await root.walkerFront.querySelector(
     root,
     ".expand-many-children"
   );
@@ -190,7 +190,7 @@ async function collapseExpandAllAndLog(toolbox) {
   test.done();
 
   dump("Select expand-balanced node\n");
-  let balanced = await inspector.walker.querySelector(root, ".expand-balanced");
+  let balanced = await root.walkerFront.querySelector(root, ".expand-balanced");
   await selectNodeFront(inspector, balanced);
 
   dump("Expand all children of expand-balanced\n");

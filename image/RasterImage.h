@@ -166,8 +166,6 @@ class RasterImage final : public ImageResource,
 
   virtual size_t SizeOfSourceWithComputedFallback(
       SizeOfState& aState) const override;
-  virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
-                                     MallocSizeOf aMallocSizeOf) const override;
 
   /* Triggers discarding. */
   void Discard();
@@ -232,12 +230,10 @@ class RasterImage final : public ImageResource,
   //////////////////////////////////////////////////////////////////////////////
 
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aStatus,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aStatus,
                                        bool aLastPart) override;
 
   void NotifyForLoadEvent(Progress aProgress);
@@ -293,16 +289,6 @@ class RasterImage final : public ImageResource,
                              const ImageRegion& aRegion,
                              gfx::SamplingFilter aSamplingFilter,
                              uint32_t aFlags, float aOpacity);
-
-  Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
-  GetFrameInternal(const gfx::IntSize& aSize,
-                   const Maybe<SVGImageContext>& aSVGContext,
-                   const Maybe<ImageIntRegion>& aRegion, uint32_t aWhichFrame,
-                   uint32_t aFlags) override;
-
-  Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
-      WindowRenderer* aRenderer, const gfx::IntSize& aSize,
-      uint32_t aFlags) override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Decoding.

@@ -117,9 +117,6 @@ include css-valid/reftest.list
 # css invalid
 include css-invalid/reftest.list
 
-# css-submit-invalid
-include css-submit-invalid/reftest.list
-
 # css text-overflow
 include text-overflow/reftest.list
 

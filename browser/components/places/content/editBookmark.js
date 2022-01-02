@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// TODO: Bug 1711726 - Enable these.
-/* eslint-disable valid-jsdoc */
-
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -219,19 +216,19 @@ var gEditItemOverlay = {
   /**
    * Initialize the panel.
    *
-   * @param aInfo
-   *        An object having:
-   *        1. one of the following properties:
-   *        - node: either a result node or a node-like object representing the
-   *          item to be edited. A node-like object must have the following
-   *          properties (with values that match exactly those a result node
-   *          would have): itemId, bookmarkGuid, uri, title, type.
-   *        - uris: an array of uris for bulk tagging.
-   *
-   *        2. any of the following optional properties:
-   *          - hiddenRows (Strings array): list of rows to be hidden regardless
-   *            of the item edited. Possible values: "title", "location",
-   *            "keyword", "folderPicker".
+   * @param {object} aInfo
+   * @param {object} [aInfo.node]
+   *   If aInfo.uris is not specified, this must be specified.
+   *   Either a result node or a node-like object representing the item to be edited.
+   *   A node-like object must have the following properties (with values that
+   *   match exactly those a result node would have):
+   *   itemId, bookmarkGuid, uri, title, type.
+   * @param {nsIURI[]} [aInfo.uris]
+   *   If aInfo.node is not specified, this must be specified.
+   *   An array of uris for bulk tagging.
+   * @param {string[]} [hiddenRows]
+   *   List of rows to be hidden regardless of the item edited. Possible values:
+   *   "title", "location", "keyword", "folderPicker".
    */
   initPanel(aInfo) {
     if (typeof aInfo != "object" || aInfo === null) {
@@ -388,6 +385,8 @@ var gEditItemOverlay = {
 
   /**
    * Finds tags that are in common among this._currentInfo.uris;
+   *
+   * @returns {string[]}
    */
   _getCommonTags() {
     if ("_cachedCommonTags" in this._paneInfo) {
@@ -441,13 +440,15 @@ var gEditItemOverlay = {
 
   /**
    * Appends a menu-item representing a bookmarks folder to a menu-popup.
-   * @param aMenupopup
-   *        The popup to which the menu-item should be added.
-   * @param aFolderGuid
-   *        The identifier of the bookmarks folder.
-   * @param aTitle
-   *        The title to use as a label.
-   * @return the new menu item.
+   *
+   * @param {DOMElement} aMenupopup
+   *   The popup to which the menu-item should be added.
+   * @param {string} aFolderGuid
+   *   The identifier of the bookmarks folder.
+   * @param {string} aTitle
+   *   The title to use as a label.
+   * @returns {DOMElement}
+   *   The new menu item.
    */
   _appendFolderItemToMenupopup(aMenupopup, aFolderGuid, aTitle) {
     // First make sure the folders-separator is visible
@@ -613,9 +614,14 @@ var gEditItemOverlay = {
   },
 
   /**
-   * For a given array of currently-set tags and the tags-input-field
-   * value, returns which tags should be removed and which should be added in
-   * the form of { removedTags: [...], newTags: [...] }.
+   * Works out the necessary changes for a given array of currently-set tags and
+   * the tags-input-field value.
+   *
+   * @param {string[]} aCurrentTags
+   *   The tags to compare.
+   * @returns {object}
+   *   Returns which tags should be removed and which should be added in
+   *   the form of an object: `{ removedTags: [...], newTags: [...] }`.
    */
   _getTagsChanges(aCurrentTags) {
     let inputTags = this._getTagsArrayFromTagsInputField();
@@ -711,10 +717,10 @@ var gEditItemOverlay = {
 
   /**
    * Stores the first-edit field for this dialog, if the passed-in field
-   * is indeed the first edited field
-   * @param aNewField
-   *        the id of the field that may be set (without the "editBMPanel_"
-   *        prefix)
+   * is indeed the first edited field.
+   *
+   * @param {string} aNewField
+   *   The id of the field that may be set (without the "editBMPanel_" prefix).
    */
   _mayUpdateFirstEditField(aNewField) {
     // * The first-edit-field behavior is not applied in the multi-edit case
@@ -861,11 +867,13 @@ var gEditItemOverlay = {
    * folder. If the items-count limit (see
    * browser.bookmarks.editDialog.maxRecentFolders preference) is reached, the
    * new item replaces the last menu-item.
-   * @param aFolderGuid
-   *        The identifier of the bookmarks folder.
-   * @param aTitle
-   *        The title to use in case of menuitem creation.
-   * @return handle to the menuitem.
+   *
+   * @param {string} aFolderGuid
+   *   The identifier of the bookmarks folder.
+   * @param {string} aTitle
+   *   The title to use in case of menuitem creation.
+   * @returns {DOMElement}
+   *   The handle to the menuitem.
    */
   _getFolderMenuItem(aFolderGuid, aTitle) {
     let menupopup = this._folderMenuList.menupopup;
@@ -1069,7 +1077,8 @@ var gEditItemOverlay = {
   /**
    * Splits "tagsField" element value, returning an array of valid tag strings.
    *
-   * @return Array of tag strings found in the field value.
+   * @returns {string[]}
+   *   Array of tag strings found in the field value.
    */
   _getTagsArrayFromTagsInputField() {
     let tags = this._element("tagsField").value;

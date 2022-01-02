@@ -8,7 +8,7 @@ import shutil
 import sys
 
 import hglib
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 import mozpack.path as mozpath
 
 from compare_locales.merge import merge_channels

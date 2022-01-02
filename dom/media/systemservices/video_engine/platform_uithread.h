@@ -12,18 +12,19 @@
 #define RTC_BASE_PLATFORM_UITHREAD_H_
 
 #include "rtc_base/platform_thread.h"
+#include "rtc_base/deprecated/recursive_critical_section.h"
 
 namespace rtc {
 
 #if defined(WEBRTC_WIN)
 class PlatformUIThread : public PlatformThread {
  public:
-  PlatformUIThread(ThreadRunFunctionDeprecated func, void* obj,
-                   const char* thread_name)
+  PlatformUIThread(ThreadRunFunction func, void* obj, const char* thread_name)
       : PlatformThread(func, obj, thread_name),
         hwnd_(nullptr),
         timerid_(0),
-        timeout_(0) {}
+        timeout_(0),
+        stop_(false) {}
   virtual ~PlatformUIThread() {}
 
   void Stop() override;
@@ -44,6 +45,7 @@ class PlatformUIThread : public PlatformThread {
   HWND hwnd_;
   UINT_PTR timerid_;
   unsigned int timeout_;
+  bool stop_;
 };
 #endif
 

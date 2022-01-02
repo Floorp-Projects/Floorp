@@ -39,16 +39,13 @@ class UpdateOcclusionStateRunnable;
 
 // This class handles window occlusion tracking by using HWND.
 // Implementation is borrowed from chromium's NativeWindowOcclusionTrackerWin.
-class WinWindowOcclusionTracker final
-    : public SupportsThreadSafeWeakPtr<WinWindowOcclusionTracker>,
-      public DisplayStatusListener,
-      public SessionChangeListener {
+class WinWindowOcclusionTracker final : public DisplayStatusListener,
+                                        public SessionChangeListener {
  public:
-  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(WinWindowOcclusionTracker)
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(WinWindowOcclusionTracker)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WinWindowOcclusionTracker)
 
   /// Can only be called from the main thread.
-  static RefPtr<WinWindowOcclusionTracker> Get();
+  static WinWindowOcclusionTracker* Get();
 
   /// Can only be called from the main thread.
   static void Ensure();
@@ -61,8 +58,6 @@ class WinWindowOcclusionTracker final
 
   /// Can be called from any thread.
   static bool IsInWinWindowOcclusionThread();
-
-  virtual ~WinWindowOcclusionTracker();
 
   // Enables notifying to widget via NotifyOcclusionState() when the occlusion
   // state has been computed.
@@ -86,6 +81,7 @@ class WinWindowOcclusionTracker final
   friend class ::WinWindowOcclusionTrackerInteractiveTest;
 
   explicit WinWindowOcclusionTracker(base::Thread* aThread);
+  virtual ~WinWindowOcclusionTracker();
 
   // This class computes the occlusion state of the tracked windows.
   // It runs on a separate thread, and notifies the main thread of
@@ -244,8 +240,6 @@ class WinWindowOcclusionTracker final
 
     // Used to serialize tasks related to mRootWindowHwndsOcclusionState.
     RefPtr<SerializedTaskDispatcher> mSerializedTaskDispatcher;
-
-    ThreadSafeWeakPtr<WinWindowOcclusionTracker> mOcclusionTracker;
 
     friend class OcclusionUpdateRunnable;
   };

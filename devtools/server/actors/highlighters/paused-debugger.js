@@ -8,11 +8,19 @@ const {
   CanvasFrameAnonymousContentHelper,
 } = require("devtools/server/actors/highlighters/utils/markup");
 
-loader.lazyGetter(this, "L10N", () => {
-  const { LocalizationHelper } = require("devtools/shared/l10n");
-  const STRINGS_URI = "devtools/client/locales/debugger.properties";
-  return new LocalizationHelper(STRINGS_URI);
+loader.lazyGetter(this, "PausedReasonsBundle", () => {
+  return new Localization(
+    ["devtools/shared/debugger-paused-reasons.ftl"],
+    true
+  );
 });
+
+loader.lazyRequireGetter(
+  this,
+  "DEBUGGER_PAUSED_REASONS_L10N_MAPPING",
+  "devtools/shared/constants",
+  true
+);
 
 /**
  * The PausedDebuggerOverlay is a class that displays a semi-transparent mask on top of
@@ -30,7 +38,8 @@ function PausedDebuggerOverlay(highlighterEnv, options = {}) {
 
   this.markup = new CanvasFrameAnonymousContentHelper(
     highlighterEnv,
-    this._buildMarkup.bind(this)
+    this._buildMarkup.bind(this),
+    { waitForDocumentToLoad: false }
   );
   this.isReady = this.markup.initialize();
 }
@@ -206,17 +215,6 @@ PausedDebuggerOverlay.prototype = {
       return false;
     }
 
-    try {
-      reason = L10N.getStr(`whyPaused.${reason}`);
-    } catch (e) {
-      // This is a temporary workaround (See Bug 1591025).
-      // This actors relies on a client side properties file. This file will not
-      // be available when debugging Firefox for Android / Gecko View.
-      // The highlighter also shows buttons that use client only images and are
-      // therefore invisible when remote debugging a mobile Firefox.
-      return false;
-    }
-
     // Only track mouse movement when the the overlay is shown
     // Prevents mouse tracking when the user isn't paused
     const { pageListenerTarget } = this.env;
@@ -229,7 +227,11 @@ PausedDebuggerOverlay.prototype = {
 
     // Set the text to appear in the toolbar.
     const toolbar = this.getElement("toolbar");
-    this.getElement("reason").setTextContent(reason);
+    this.getElement("reason").setTextContent(
+      PausedReasonsBundle.formatValueSync(
+        DEBUGGER_PAUSED_REASONS_L10N_MAPPING[reason]
+      )
+    );
     toolbar.removeAttribute("hidden");
 
     // When the debugger pauses execution in a page, events will not be delivered
@@ -250,6 +252,9 @@ PausedDebuggerOverlay.prototype = {
 
     // Hide the overlay.
     this.getElement("root").setAttribute("hidden", "true");
+    // Remove the hover state
+    this.getElement("step-button-wrapper").classList.remove("hover");
+    this.getElement("resume-button-wrapper").classList.remove("hover");
   },
 };
 exports.PausedDebuggerOverlay = PausedDebuggerOverlay;

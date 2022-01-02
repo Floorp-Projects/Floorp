@@ -9,8 +9,8 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions
-#include "js/GCVector.h"        // JS::GCVector
 #include "js/SourceText.h"  // JS::SourceText
 #include "js/TypeDecls.h"   // JS::Handle (fwd)
 #include "js/UniquePtr.h"   // js::UniquePtr
@@ -78,6 +78,9 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               JS::Handle<JSFunction*> fun);
 
+extern UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunction(
+    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex);
+
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
   return !options.discardSource && !options.sourceIsLazy &&
@@ -86,9 +89,6 @@ inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
 
 void FireOnNewScript(JSContext* cx, const JS::InstantiateOptions& options,
                      JS::Handle<JSScript*> script);
-
-void FireOnNewScripts(JSContext* cx, const JS::InstantiateOptions& options,
-                      JS::Handle<JS::GCVector<JSScript*>> scripts);
 
 }  // namespace frontend
 

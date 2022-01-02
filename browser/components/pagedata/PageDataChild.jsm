@@ -11,19 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
-  return console.createInstance({
-    prefix: "PageData",
-    maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
-      ? "Debug"
-      : "Warn",
-  });
 });
 
 // We defer any attempt to check for page data for a short time after a page
@@ -36,17 +25,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 /**
- * Returns the list of page data collectors for a document.
- *
- * @param {Document} document
- *   The DOM document to collect data for.
- * @returns {PageDataCollector[]}
- */
-function getCollectors(document) {
-  return [new SchemaOrgPageData(document), new OpenGraphPageData(document)];
-}
-
-/**
  * The actor responsible for monitoring a page for page data.
  */
 class PageDataChild extends JSWindowActorChild {
@@ -56,12 +34,6 @@ class PageDataChild extends JSWindowActorChild {
    * @type {Timer | null}
    */
   #deferTimer = null;
-  /**
-   * The current set of page data collectors for the page and their current data
-   * or null if data collection has not begun.
-   * @type {Map<PageDataCollector, Data[]> | null}
-   */
-  #collectors = null;
 
   /**
    * Called when the actor is created for a new page.
@@ -104,82 +76,6 @@ class PageDataChild extends JSWindowActorChild {
   }
 
   /**
-   * Coalesces the data from the page data collectors into a single array.
-   *
-   * @returns {Data[]}
-   */
-  #buildData() {
-    if (!this.#collectors) {
-      return [];
-    }
-
-    let results = [];
-    for (let data of this.#collectors.values()) {
-      if (data !== null) {
-        results = results.concat(data);
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Begins page data collection on the page.
-   */
-  async #beginCollection() {
-    if (this.#collectors !== null) {
-      // Already collecting.
-      return this.#buildData();
-    }
-
-    logConsole.debug("Starting collection", this.document.documentURI);
-
-    // let initialCollection = true;
-
-    this.#collectors = new Map();
-    let pending = [];
-    for (let collector of getCollectors(this.document)) {
-      // TODO: Implement monitoring of pages for changes, e.g. for SPAs changing
-      // video without reloading.
-      //
-      // The commented out code below is a first attempt, that would allow
-      // individual collectors to provide updates. It will need fixing to
-      // ensure that listeners are either removed or not re-added on fresh
-      // page loads, as would happen currently.
-      //
-      // collector.on("data", (type, data) => {
-      //   this.#collectors.set(collector, data);
-      //
-      //   // Do nothing if intial collection is still ongoing.
-      //   if (!initialCollection) {
-      //     // TODO debounce this.
-      //     this.sendAsyncMessage("PageData:Collected", {
-      //       url: this.document.documentURI,
-      //       data: this.#buildData(),
-      //     });
-      //   }
-      // });
-
-      pending.push(
-        collector.init().then(
-          data => {
-            this.#collectors.set(collector, data);
-          },
-          error => {
-            this.#collectors.set(collector, []);
-            logConsole.error(`Failed collecting page data`, error);
-          }
-        )
-      );
-    }
-
-    await Promise.all(pending);
-    // initialCollection = false;
-
-    return this.#buildData();
-  }
-
-  /**
    * Called when a message is received from the parent process.
    *
    * @param {ReceiveMessageArgument} msg
@@ -202,7 +98,7 @@ class PageDataChild extends JSWindowActorChild {
         }
         break;
       case "PageData:Collect":
-        return this.#beginCollection();
+        return PageDataSchema.collectPageData(this.document);
     }
 
     return undefined;

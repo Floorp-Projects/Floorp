@@ -27,7 +27,7 @@ HOST = {"platform": buildconfig.substs["HOST_OS_ARCH"], "readelf": "readelf"}
 
 TARGET = {
     "platform": buildconfig.substs["OS_TARGET"],
-    "readelf": "{}readelf".format(buildconfig.substs.get("TOOLCHAIN_PREFIX", "")),
+    "readelf": buildconfig.substs.get("READELF", "readelf"),
 }
 
 ADDR_RE = re.compile(r"[0-9a-f]{8,16}")

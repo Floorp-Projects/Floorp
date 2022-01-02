@@ -7,6 +7,7 @@
 #include "frontend/Stencil.h"
 
 #include "mozilla/AlreadyAddRefed.h"        // already_AddRefed
+#include "mozilla/Maybe.h"                  // mozilla::Maybe
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 #include "mozilla/PodOperations.h"          // mozilla::PodCopy
 #include "mozilla/RefPtr.h"                 // RefPtr
@@ -21,6 +22,7 @@
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationState, ExtensibleCompilationStencil, CompilationGCOutput, CompilationStencilMerger
 #include "frontend/NameAnalysisTypes.h"   // EnvironmentCoordinate
 #include "frontend/SharedContext.h"
+#include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
 #include "gc/AllocKind.h"               // gc::AllocKind
 #include "gc/Rooting.h"                 // RootedAtom
 #include "gc/Tracer.h"                  // TraceNullableRoot
@@ -32,7 +34,8 @@
 #include "js/Transcoding.h"             // JS::TranscodeBuffer
 #include "js/Value.h"                   // ObjectValue
 #include "js/WasmModule.h"              // JS::WasmModule
-#include "vm/BindingKind.h"             // BindingKind
+#include "vm/BigIntType.h"   // ParseBigIntLiteral, BigIntLiteralIsZero
+#include "vm/BindingKind.h"  // BindingKind
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/HelperThreads.h"          // js::StartOffThreadParseScript
@@ -44,12 +47,12 @@
 #include "vm/JSScript.h"      // BaseScript, JSScript
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
-#include "vm/Scope.h"  // Scope, *Scope, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
-#include "vm/ScopeKind.h"     // ScopeKind
-#include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
+#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
+#include "vm/ScopeKind.h"    // ScopeKind
+#include "vm/SelfHosting.h"  // SetClonedSelfHostedFunctionName
+#include "vm/StaticStrings.h"
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
-#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRStencilEncoder, XDRStencilDecoder
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 
@@ -59,10 +62,90 @@
 using namespace js;
 using namespace js::frontend;
 
+// These 2 functions are used to write the same code with lambda using auto
+// arguments. The auto argument type is set by the Variant.match function of the
+// InputScope variant. Thus dispatching to either a Scope* or to a
+// ScopeStencilRef. This function can then be used as a way to specialize the
+// code within the lambda without duplicating the code.
+//
+// Identically, an InputName is constructed using the scope type and the
+// matching binding name type. This way, functions which are called by this
+// lambda can manipulate an InputName and do not have to be duplicated.
+//
+// for (InputScopeIter si(...); si; si++) {
+//   si.scope().match([](auto& scope) {
+//     for (auto bi = InputBindingIter(scope); bi; bi++) {
+//       InputName name(scope, bi.name());
+//     }
+//   });
+// }
+static js::BindingIter InputBindingIter(Scope* ptr) {
+  return js::BindingIter(ptr);
+}
+
+static ParserBindingIter InputBindingIter(const ScopeStencilRef& ref) {
+  return ParserBindingIter(ref);
+}
+
+InputName InputScript::displayAtom() const {
+  return script_.match(
+      [](BaseScript* ptr) {
+        return InputName(ptr, ptr->function()->displayAtom());
+      },
+      [](const ScriptStencilRef& ref) {
+        return InputName(ref, ref.scriptData().functionAtom);
+      });
+}
+
+TaggedParserAtomIndex InputName::internInto(JSContext* cx,
+                                            ParserAtomsTable& parserAtoms,
+                                            CompilationAtomCache& atomCache) {
+  return variant_.match(
+      [&](JSAtom* ptr) -> TaggedParserAtomIndex {
+        return parserAtoms.internJSAtom(cx, atomCache, ptr);
+      },
+      [&](NameStencilRef& ref) -> TaggedParserAtomIndex {
+        return parserAtoms.internExternalParserAtomIndex(cx, ref.context_,
+                                                         ref.atomIndex_);
+      });
+}
+
+bool InputName::isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+                          CompilationAtomCache& atomCache,
+                          TaggedParserAtomIndex other,
+                          JSAtom** otherCached) const {
+  return variant_.match(
+      [&](const JSAtom* ptr) -> bool {
+        if (!*otherCached) {
+          // TODO-Stencil:
+          // Here, we convert our name into a JSAtom*, and hard-crash on failure
+          // to allocate. This conversion should not be required as we should be
+          // able to iterate up snapshotted scope chains that use parser atoms.
+          //
+          // This will be fixed when the enclosing scopes are snapshotted.
+          //
+          // See bug 1690277.
+          AutoEnterOOMUnsafeRegion oomUnsafe;
+          *otherCached = parserAtoms.toJSAtom(cx, other, atomCache);
+          if (!*otherCached) {
+            oomUnsafe.crash("InputName::isEqualTo");
+          }
+        } else {
+          MOZ_ASSERT(atomCache.getExistingAtomAt(cx, other) == *otherCached);
+        }
+        return ptr == *otherCached;
+      },
+      [&](const NameStencilRef& ref) -> bool {
+        return parserAtoms.isEqualToExternalParserAtomIndex(other, ref.context_,
+                                                            ref.atomIndex_);
+      });
+}
+
 bool ScopeContext::init(JSContext* cx, CompilationInput& input,
                         ParserAtomsTable& parserAtoms, InheritThis inheritThis,
                         JSObject* enclosingEnv) {
-  Scope* maybeNonDefaultEnclosingScope = input.maybeNonDefaultEnclosingScope();
+  InputScope maybeNonDefaultEnclosingScope(
+      input.maybeNonDefaultEnclosingScope());
 
   // If this eval is in response to Debugger.Frame.eval, we may have an
   // incomplete scope chain. In order to provide a better debugging experience,
@@ -73,7 +156,7 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   // NOTE: This is used to compute the ThisBinding kind and to allow access to
   //       private fields and methods, while other contextual information only
   //       uses the actual scope passed to the compile.
-  JS::Rooted<Scope*> effectiveScope(
+  JS::Rooted<InputScope> effectiveScope(
       cx, determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv));
 
   if (inheritThis == InheritThis::Yes) {
@@ -97,35 +180,33 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
+void ScopeContext::computeThisEnvironment(const InputScope& enclosingScope) {
   uint32_t envCount = 0;
-  for (ScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-
       // Arrow function inherit the "this" environment of the enclosing script,
       // so continue ignore them.
-      if (!fun->isArrow()) {
+      if (!si.scope().isArrow()) {
         allowNewTarget = true;
 
-        if (fun->allowSuperProperty()) {
+        if (si.scope().allowSuperProperty()) {
           allowSuperProperty = true;
           enclosingThisEnvironmentHops = envCount;
         }
 
-        if (fun->isClassConstructor()) {
+        if (si.scope().isClassConstructor()) {
           memberInitializers =
-              fun->baseScript()->useMemberInitializers()
-                  ? mozilla::Some(fun->baseScript()->getMemberInitializers())
+              si.scope().useMemberInitializers()
+                  ? mozilla::Some(si.scope().getMemberInitializers())
                   : mozilla::Some(MemberInitializers::Empty());
           MOZ_ASSERT(memberInitializers->valid);
         } else {
-          if (fun->isSyntheticFunction()) {
+          if (si.scope().isSyntheticFunction()) {
             allowArguments = false;
           }
         }
 
-        if (fun->isDerivedClassConstructor()) {
+        if (si.scope().isDerivedClassConstructor()) {
           allowSuperCall = true;
         }
 
@@ -134,32 +215,30 @@ void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
       }
     }
 
-    if (si.scope()->hasEnvironment()) {
+    if (si.scope().hasEnvironment()) {
       envCount++;
     }
   }
 }
 
-void ScopeContext::computeThisBinding(Scope* scope) {
+void ScopeContext::computeThisBinding(const InputScope& scope) {
   // Inspect the scope-chain.
-  for (ScopeIter si(scope); si; si++) {
+  for (InputScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Module) {
       thisBinding = ThisBinding::Module;
       return;
     }
 
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-
       // Arrow functions don't have their own `this` binding.
-      if (fun->isArrow()) {
+      if (si.scope().isArrow()) {
         continue;
       }
 
       // Derived class constructors (and their nested arrow functions and evals)
       // use ThisBinding::DerivedConstructor, which ensures TDZ checks happen
       // when accessing |this|.
-      if (fun->isDerivedClassConstructor()) {
+      if (si.scope().isDerivedClassConstructor()) {
         thisBinding = ThisBinding::DerivedConstructor;
       } else {
         thisBinding = ThisBinding::Function;
@@ -172,8 +251,8 @@ void ScopeContext::computeThisBinding(Scope* scope) {
   thisBinding = ThisBinding::Global;
 }
 
-void ScopeContext::computeInScope(Scope* enclosingScope) {
-  for (ScopeIter si(enclosingScope); si; si++) {
+void ScopeContext::computeInScope(const InputScope& enclosingScope) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::ClassBody) {
       inClass = true;
     }
@@ -184,39 +263,35 @@ void ScopeContext::computeInScope(Scope* enclosingScope) {
   }
 }
 
-void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
-  if (!enclosingScope) {
+void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
+  if (enclosingScope.isNull()) {
     return;
   }
 
   enclosingScopeEnvironmentChainLength =
-      enclosingScope->environmentChainLength();
+      enclosingScope.environmentChainLength();
+  enclosingScopeKind = enclosingScope.kind();
 
-  enclosingScopeKind = enclosingScope->kind();
-
-  if (enclosingScope->is<FunctionScope>()) {
-    MOZ_ASSERT(enclosingScope->as<FunctionScope>().canonicalFunction());
-    enclosingScopeIsArrow =
-        enclosingScope->as<FunctionScope>().canonicalFunction()->isArrow();
+  if (enclosingScopeKind == ScopeKind::Function) {
+    enclosingScopeIsArrow = enclosingScope.isArrow();
   }
 
-  enclosingScopeHasEnvironment = enclosingScope->hasEnvironment();
+  enclosingScopeHasEnvironment = enclosingScope.hasEnvironment();
 
 #ifdef DEBUG
   hasNonSyntacticScopeOnChain =
-      enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
+      enclosingScope.hasOnChain(ScopeKind::NonSyntactic);
 
   // This computes a general answer for the query "does the enclosing scope
   // have a function scope that needs a home object?", but it's only asserted
   // if the parser parses eval body that contains `super` that needs a home
   // object.
-  for (ScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-      if (fun->isArrow()) {
+      if (si.scope().isArrow()) {
         continue;
       }
-      if (fun->allowSuperProperty() && fun->baseScript()->needsHomeObject()) {
+      if (si.scope().allowSuperProperty() && si.scope().needsHomeObject()) {
         hasFunctionNeedsHomeObjectOnChain = true;
       }
       break;
@@ -225,12 +300,12 @@ void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
 #endif
 }
 
-Scope* ScopeContext::determineEffectiveScope(Scope* scope,
-                                             JSObject* environment) {
+InputScope ScopeContext::determineEffectiveScope(InputScope& scope,
+                                                 JSObject* environment) {
   MOZ_ASSERT(effectiveScopeHops == 0);
   // If the scope-chain is non-syntactic, we may still determine a more precise
   // effective-scope to use instead.
-  if (environment && scope->hasOnChain(ScopeKind::NonSyntactic)) {
+  if (environment && scope.hasOnChain(ScopeKind::NonSyntactic)) {
     JSObject* env = environment;
     while (env) {
       // Look at target of any DebugEnvironmentProxy, but be sure to use
@@ -245,7 +320,7 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
 
       if (unwrapped->is<CallObject>()) {
         JSFunction* callee = &unwrapped->as<CallObject>().callee();
-        return callee->nonLazyScript()->bodyScope();
+        return InputScope(callee->nonLazyScript()->bodyScope());
       }
 
       env = env->enclosingEnvironment();
@@ -256,65 +331,98 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
   return scope;
 }
 
+static uint32_t DepthOfNearestVarScopeForDirectEval(const InputScope& scope) {
+  uint32_t depth = 0;
+  if (scope.isNull()) {
+    return depth;
+  }
+  for (InputScopeIter si(scope); si; si++) {
+    depth++;
+    switch (si.scope().kind()) {
+      case ScopeKind::Function:
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::Global:
+      case ScopeKind::NonSyntactic:
+        return depth;
+      default:
+        break;
+    }
+  }
+  return depth;
+}
+
 bool ScopeContext::cacheEnclosingScopeBindingForEval(
     JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms) {
   enclosingLexicalBindingCache_.emplace();
 
-  js::Scope* varScope =
-      EvalScope::nearestVarScopeForDirectEval(input.enclosingScope);
-  MOZ_ASSERT(varScope);
-  for (ScopeIter si(input.enclosingScope); si; si++) {
-    for (js::BindingIter bi(si.scope()); bi; bi++) {
-      switch (bi.kind()) {
-        case BindingKind::Let: {
-          // Annex B.3.5 allows redeclaring simple (non-destructured)
-          // catch parameters with var declarations.
-          bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
-          if (!annexB35Allowance) {
-            auto kind = ScopeKindIsCatch(si.kind())
-                            ? EnclosingLexicalBindingKind::CatchParameter
-                            : EnclosingLexicalBindingKind::Let;
-            if (!addToEnclosingLexicalBindingCache(cx, input, parserAtoms,
-                                                   bi.name(), kind)) {
+  uint32_t varScopeDepth =
+      DepthOfNearestVarScopeForDirectEval(input.enclosingScope);
+  uint32_t depth = 0;
+  for (InputScopeIter si(input.enclosingScope); si; si++) {
+    bool success = si.scope().match([&](auto& scope_ref) {
+      for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+        switch (bi.kind()) {
+          case BindingKind::Let: {
+            // Annex B.3.5 allows redeclaring simple (non-destructured)
+            // catch parameters with var declarations.
+            bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
+            if (!annexB35Allowance) {
+              auto kind = ScopeKindIsCatch(si.kind())
+                              ? EnclosingLexicalBindingKind::CatchParameter
+                              : EnclosingLexicalBindingKind::Let;
+              InputName binding(scope_ref, bi.name());
+              if (!addToEnclosingLexicalBindingCache(
+                      cx, parserAtoms, input.atomCache, binding, kind)) {
+                return false;
+              }
+            }
+            break;
+          }
+
+          case BindingKind::Const: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::Const)) {
               return false;
             }
+            break;
           }
-          break;
+
+          case BindingKind::Synthetic: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::Synthetic)) {
+              return false;
+            }
+            break;
+          }
+
+          case BindingKind::PrivateMethod: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::PrivateMethod)) {
+              return false;
+            }
+            break;
+          }
+
+          case BindingKind::Import:
+          case BindingKind::FormalParameter:
+          case BindingKind::Var:
+          case BindingKind::NamedLambdaCallee:
+            break;
         }
-
-        case BindingKind::Const:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::Const)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::Synthetic:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::Synthetic)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::PrivateMethod:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::PrivateMethod)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::Import:
-        case BindingKind::FormalParameter:
-        case BindingKind::Var:
-        case BindingKind::NamedLambdaCallee:
-          break;
       }
+      return true;
+    });
+    if (!success) {
+      return false;
     }
 
-    if (si.scope() == varScope) {
+    if (++depth == varScopeDepth) {
       break;
     }
   }
@@ -323,9 +431,11 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
 }
 
 bool ScopeContext::addToEnclosingLexicalBindingCache(
-    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
-    JSAtom* name, EnclosingLexicalBindingKind kind) {
-  auto parserName = parserAtoms.internJSAtom(cx, input.atomCache, name);
+    JSContext* cx, ParserAtomsTable& parserAtoms,
+    CompilationAtomCache& atomCache, InputName& name,
+    EnclosingLexicalBindingKind kind) {
+  TaggedParserAtomIndex parserName =
+      name.internInto(cx, parserAtoms, atomCache);
   if (!parserName) {
     return false;
   }
@@ -350,7 +460,7 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
   return true;
 }
 
-static bool IsPrivateField(JSAtom* atom) {
+static bool IsPrivateField(Scope*, JSAtom* atom) {
   MOZ_ASSERT(atom->length() > 0);
 
   JS::AutoCheckCannotGC nogc;
@@ -361,10 +471,34 @@ static bool IsPrivateField(JSAtom* atom) {
   return atom->twoByteChars(nogc)[0] == '#';
 }
 
+static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
+  if (atom.isParserAtomIndex()) {
+    const CompilationStencil& context = scope.context_;
+    ParserAtom* parserAtom = context.parserAtomData[atom.toParserAtomIndex()];
+    return parserAtom->isPrivateName();
+  }
+
+#ifdef DEBUG
+  if (atom.isWellKnownAtomId()) {
+    const auto& info = GetWellKnownAtomInfo(atom.toWellKnownAtomId());
+    // #constructor is a well-known term, but it is invalid private name.
+    MOZ_ASSERT(!(info.length > 1 && info.content[0] == '#'));
+  } else if (atom.isLength2StaticParserString()) {
+    char content[2];
+    ParserAtomsTable::getLength2Content(atom.toLength2StaticParserString(),
+                                        content);
+    // # character is not part of the allowed character of static strings.
+    MOZ_ASSERT(content[0] != '#');
+  }
+#endif
+
+  return false;
+}
+
 bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
                                              CompilationInput& input,
                                              JSObject* enclosingEnvironment,
-                                             Scope* effectiveScope,
+                                             const InputScope& effectiveScope,
                                              ParserAtomsTable& parserAtoms) {
   if (!input.options.privateClassFields) {
     return true;
@@ -377,28 +511,35 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
   // we re-map them to include the hops to get the to the effective scope:
   // see EmitterScope::lookupPrivate
   uint32_t hops = effectiveScopeHops;
-  for (ScopeIter si(effectiveScope); si; si++) {
-    if (si.scope()->kind() == ScopeKind::ClassBody) {
+  for (InputScopeIter si(effectiveScope); si; si++) {
+    if (si.scope().kind() == ScopeKind::ClassBody) {
       uint32_t slots = 0;
-      for (js::BindingIter bi(si.scope()); bi; bi++) {
-        if (bi.kind() == BindingKind::PrivateMethod ||
-            (bi.kind() == BindingKind::Synthetic &&
-             IsPrivateField(bi.name()))) {
-          auto parserName =
-              parserAtoms.internJSAtom(cx, input.atomCache, bi.name());
-          if (!parserName) {
-            return false;
-          }
+      bool success = si.scope().match([&](auto& scope_ref) {
+        for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+          if (bi.kind() == BindingKind::PrivateMethod ||
+              (bi.kind() == BindingKind::Synthetic &&
+               IsPrivateField(scope_ref, bi.name()))) {
+            InputName binding(scope_ref, bi.name());
+            auto parserName =
+                binding.internInto(cx, parserAtoms, input.atomCache);
+            if (!parserName) {
+              return false;
+            }
 
-          NameLocation loc =
-              NameLocation::DebugEnvironmentCoordinate(bi.kind(), hops, slots);
+            NameLocation loc = NameLocation::DebugEnvironmentCoordinate(
+                bi.kind(), hops, slots);
 
-          if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
-            ReportOutOfMemory(cx);
-            return false;
+            if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
+              ReportOutOfMemory(cx);
+              return false;
+            }
           }
+          slots++;
         }
-        slots++;
+        return true;
+      });
+      if (!success) {
+        return false;
       }
     }
 
@@ -415,34 +556,45 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
 }
 
 #ifdef DEBUG
-static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
-  for (BindingIter bi(scope); bi; bi++) {
-    // If found, the name must already be on the environment or an import,
-    // or else there is a bug in the closed-over name analysis in the
-    // Parser.
-    if (bi.name() == name) {
-      BindingLocation::Kind kind = bi.location().kind();
+static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
+                                CompilationAtomCache& atomCache,
+                                InputScope& scope, TaggedParserAtomIndex name) {
+  JSAtom* jsname = nullptr;
+  return scope.match([&](auto& scope_ref) {
+    for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+      // If found, the name must already be on the environment or an import,
+      // or else there is a bug in the closed-over name analysis in the
+      // Parser.
+      InputName binding(scope_ref, bi.name());
+      if (binding.isEqualTo(cx, parserAtoms, atomCache, name, &jsname)) {
+        BindingLocation::Kind kind = bi.location().kind();
 
-      if (bi.hasArgumentSlot()) {
-        JSScript* script = scope->as<FunctionScope>().script();
-        if (script->functionAllowsParameterRedeclaration()) {
-          // Check for duplicate positional formal parameters.
-          for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-            if (bi2.name() == name) {
-              kind = bi2.location().kind();
+        if (bi.hasArgumentSlot()) {
+          // The following is equivalent to
+          // functionScope.script()->functionAllowsParameterRedeclaration()
+          if (scope.hasMappedArgsObj()) {
+            // Check for duplicate positional formal parameters.
+            using InputBindingIter = decltype(bi);
+            for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
+                 bi2++) {
+              InputName binding2(scope_ref, bi2.name());
+              if (binding2.isEqualTo(cx, parserAtoms, atomCache, name,
+                                     &jsname)) {
+                kind = bi2.location().kind();
+              }
             }
           }
         }
+
+        return kind == BindingLocation::Kind::Global ||
+               kind == BindingLocation::Kind::Environment ||
+               kind == BindingLocation::Kind::Import;
       }
-
-      return kind == BindingLocation::Kind::Global ||
-             kind == BindingLocation::Kind::Environment ||
-             kind == BindingLocation::Kind::Import;
     }
-  }
 
-  // If not found, assume it's on the global or dynamically accessed.
-  return true;
+    // If not found, assume it's on the global or dynamically accessed.
+    return true;
+  });
 }
 #endif
 
@@ -456,56 +608,54 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
 
-  // TODO-Stencil
-  //   Here, we convert our name into a JSAtom*, and hard-crash on failure
-  //   to allocate.  This conversion should not be required as we should be
-  //   able to iterate up snapshotted scope chains that use parser atoms.
-  //
-  //   This will be fixed when the enclosing scopes are snapshotted.
-  //
-  //   See bug 1690277.
+  // Cached JSAtom equivalent of the TaggedParserAtomIndex `name` argument.
   JSAtom* jsname = nullptr;
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    jsname = parserAtoms.toJSAtom(cx, name, input.atomCache);
-    if (!jsname) {
-      oomUnsafe.crash("EmitterScope::searchAndCache");
-    }
-  }
 
-  for (ScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(si.scope(), jsname));
+  // NameLocation which contains relative locations to access `name`.
+  mozilla::Maybe<NameLocation> result;
+
+  for (InputScopeIter si(input.enclosingScope); si; si++) {
+    MOZ_ASSERT(NameIsOnEnvironment(cx, parserAtoms, input.atomCache, si.scope(),
+                                   name));
 
     bool hasEnv = si.hasSyntacticEnvironment();
 
     switch (si.kind()) {
       case ScopeKind::Function:
         if (hasEnv) {
-          JSScript* script = si.scope()->as<FunctionScope>().script();
-          if (script->funHasExtensibleScope()) {
+          if (si.scope().funHasExtensibleScope()) {
             return NameLocation::Dynamic();
           }
 
-          for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
-              continue;
-            }
+          si.scope().match([&](auto& scope_ref) {
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              InputName binding(scope_ref, bi.name());
+              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+                                     &jsname)) {
+                continue;
+              }
 
-            BindingLocation bindLoc = bi.location();
-            if (bi.hasArgumentSlot() &&
-                script->functionAllowsParameterRedeclaration()) {
-              // Check for duplicate positional formal parameters.
-              for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-                if (bi2.name() == jsname) {
-                  bindLoc = bi2.location();
+              BindingLocation bindLoc = bi.location();
+              // hasMappedArgsObj == script.functionAllowsParameterRedeclaration
+              if (bi.hasArgumentSlot() && si.scope().hasMappedArgsObj()) {
+                // Check for duplicate positional formal parameters.
+                using InputBindingIter = decltype(bi);
+                for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
+                     bi2++) {
+                  InputName binding2(scope_ref, bi2.name());
+                  if (binding2.isEqualTo(cx, parserAtoms, input.atomCache, name,
+                                         &jsname)) {
+                    bindLoc = bi2.location();
+                  }
                 }
               }
-            }
 
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
-          }
+              MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+              result.emplace(NameLocation::EnvironmentCoordinate(
+                  bi.kind(), hops, bindLoc.slot()));
+              return;
+            }
+          });
         }
         break;
 
@@ -519,19 +669,24 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
       case ScopeKind::FunctionLexical:
       case ScopeKind::ClassBody:
         if (hasEnv) {
-          for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
-              continue;
-            }
+          si.scope().match([&](auto& scope_ref) {
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              InputName binding(scope_ref, bi.name());
+              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+                                     &jsname)) {
+                continue;
+              }
 
-            // The name must already have been marked as closed
-            // over. If this assertion is hit, there is a bug in the
-            // name analysis.
-            BindingLocation bindLoc = bi.location();
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
-          }
+              // The name must already have been marked as closed
+              // over. If this assertion is hit, there is a bug in the
+              // name analysis.
+              BindingLocation bindLoc = bi.location();
+              MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+              result.emplace(NameLocation::EnvironmentCoordinate(
+                  bi.kind(), hops, bindLoc.slot()));
+              return;
+            }
+          });
         }
         break;
 
@@ -540,25 +695,31 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
         // module.
         // Initial compilation of module doesn't have enlcosing scope.
         if (hasEnv) {
-          for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
-              continue;
+          si.scope().match([&](auto& scope_ref) {
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              InputName binding(scope_ref, bi.name());
+              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+                                     &jsname)) {
+                continue;
+              }
+
+              BindingLocation bindLoc = bi.location();
+
+              // Imports are on the environment but are indirect
+              // bindings and must be accessed dynamically instead of
+              // using an EnvironmentCoordinate.
+              if (bindLoc.kind() == BindingLocation::Kind::Import) {
+                MOZ_ASSERT(si.kind() == ScopeKind::Module);
+                result.emplace(NameLocation::Import());
+                return;
+              }
+
+              MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+              result.emplace(NameLocation::EnvironmentCoordinate(
+                  bi.kind(), hops, bindLoc.slot()));
+              return;
             }
-
-            BindingLocation bindLoc = bi.location();
-
-            // Imports are on the environment but are indirect
-            // bindings and must be accessed dynamically instead of
-            // using an EnvironmentCoordinate.
-            if (bindLoc.kind() == BindingLocation::Kind::Import) {
-              MOZ_ASSERT(si.kind() == ScopeKind::Module);
-              return NameLocation::Import();
-            }
-
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
-          }
+          });
         }
         break;
 
@@ -566,8 +727,11 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
         // As an optimization, if the eval doesn't have its own var
         // environment and its immediate enclosing scope is a global
         // scope, all accesses are global.
-        if (!hasEnv && si.scope()->enclosing()->is<GlobalScope>()) {
-          return NameLocation::Global(BindingKind::Var);
+        if (!hasEnv) {
+          ScopeKind kind = si.scope().enclosing().kind();
+          if (kind == ScopeKind::Global || kind == ScopeKind::NonSyntactic) {
+            return NameLocation::Global(BindingKind::Var);
+          }
         }
         return NameLocation::Dynamic();
 
@@ -581,6 +745,10 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
       case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
         MOZ_CRASH("No direct eval inside wasm functions");
+    }
+
+    if (result.isSome()) {
+      return result.value();
     }
 
     if (hasEnv) {
@@ -638,7 +806,7 @@ bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
   if (!initScriptSource(cx)) {
     return false;
   }
-  enclosingScope = functionEnclosingScope;
+  enclosingScope = InputScope(functionEnclosingScope);
   return true;
 }
 
@@ -669,23 +837,45 @@ FunctionSyntaxKind CompilationInput::functionSyntaxKind() const {
   return FunctionSyntaxKind::Statement;
 }
 
+void InputScope::trace(JSTracer* trc) {
+  using ScopePtr = Scope*;
+  if (scope_.is<ScopePtr>()) {
+    ScopePtr* ptrAddr = &scope_.as<ScopePtr>();
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-scope");
+  }
+}
+
+void InputScript::trace(JSTracer* trc) {
+  using ScriptPtr = BaseScript*;
+  if (script_.is<ScriptPtr>()) {
+    ScriptPtr* ptrAddr = &script_.as<ScriptPtr>();
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-lazy");
+  }
+}
+
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
-  TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");
-  TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
+  lazy_.trace(trc);
+  enclosingScope.trace(trc);
 }
 
 bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
                                        ParserAtomsTable& parseAtoms,
                                        CompilationAtomCache& atomCache,
-                                       BaseScript* lazy) {
+                                       const InputScript& lazy) {
   if (!copyFunctionInfo(cx, parseAtoms, atomCache, lazy)) {
     return false;
   }
-  if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, lazy)) {
-    return false;
-  }
-  if (!copyClosedOverBindings(cx, alloc, parseAtoms, atomCache, lazy)) {
+  bool success = lazy.raw().match([&](auto& ref) {
+    if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, ref)) {
+      return false;
+    }
+    if (!copyClosedOverBindings(cx, alloc, parseAtoms, atomCache, ref)) {
+      return false;
+    }
+    return true;
+  });
+  if (!success) {
     return false;
   }
 #ifdef DEBUG
@@ -696,20 +886,19 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
 
 bool CompilationSyntaxParseCache::copyFunctionInfo(
     JSContext* cx, ParserAtomsTable& parseAtoms,
-    CompilationAtomCache& atomCache, BaseScript* lazy) {
-  if (lazy->function()->displayAtom()) {
-    displayAtom_ =
-        parseAtoms.internJSAtom(cx, atomCache, lazy->function()->displayAtom());
+    CompilationAtomCache& atomCache, const InputScript& lazy) {
+  InputName name = lazy.displayAtom();
+  if (!name.isNull()) {
+    displayAtom_ = name.internInto(cx, parseAtoms, atomCache);
     if (!displayAtom_) {
       return false;
     }
   }
 
-  funExtra_.immutableFlags = lazy->immutableFlags();
-  funExtra_.extent = lazy->extent();
+  funExtra_.immutableFlags = lazy.immutableFlags();
+  funExtra_.extent = lazy.extent();
   if (funExtra_.useMemberInitializers()) {
-    funExtra_.setMemberInitializers(
-        lazy->function()->baseScript()->getMemberInitializers());
+    funExtra_.setMemberInitializers(lazy.getMemberInitializers());
   }
 
   return true;
@@ -787,6 +976,68 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   return true;
 }
 
+bool CompilationSyntaxParseCache::copyScriptInfo(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
+  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
+  using ScriptDataSpan = mozilla::Span<ScriptStencil>;
+  using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
+  cachedGCThings_ = GCThingsSpan(nullptr);
+  cachedScriptData_ = ScriptDataSpan(nullptr);
+  cachedScriptExtra_ = ScriptExtraSpan(nullptr);
+
+  size_t offset = lazy.scriptData().gcThingsOffset.index;
+  size_t length = lazy.scriptData().gcThingsLength;
+  if (length == 0) {
+    return true;
+  }
+
+  // Reduce the length to the first element which is not a function.
+  for (size_t i = offset; i < offset + length; i++) {
+    if (!lazy.context_.gcThingData[i].isFunction()) {
+      length = i - offset;
+      break;
+    }
+  }
+
+  TaggedScriptThingIndex* gcThingsData =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
+  ScriptStencil* scriptData =
+      alloc.newArrayUninitialized<ScriptStencil>(length);
+  ScriptStencilExtra* scriptExtra =
+      alloc.newArrayUninitialized<ScriptStencilExtra>(length);
+  if (!gcThingsData || !scriptData || !scriptExtra) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    ScriptStencilRef inner{lazy.context_,
+                           lazy.context_.gcThingData[i + offset].toFunction()};
+    gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
+    new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
+    ScriptStencil& data = scriptData[i];
+    ScriptStencilExtra& extra = scriptExtra[i];
+
+    InputName name{inner, inner.scriptData().functionAtom};
+    if (!name.isNull()) {
+      auto displayAtom = name.internInto(cx, parseAtoms, atomCache);
+      if (!displayAtom) {
+        return false;
+      }
+      data.functionAtom = displayAtom;
+    }
+    data.functionFlags = inner.scriptData().functionFlags;
+
+    extra = inner.scriptExtra();
+  }
+
+  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
+  cachedScriptData_ = ScriptDataSpan(scriptData, length);
+  cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
+  return true;
+}
+
 bool CompilationSyntaxParseCache::copyClosedOverBindings(
     JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, BaseScript* lazy) {
@@ -833,6 +1084,56 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
   return true;
 }
 
+bool CompilationSyntaxParseCache::copyClosedOverBindings(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
+  using ClosedOverBindingsSpan = mozilla::Span<TaggedParserAtomIndex>;
+  closedOverBindings_ = ClosedOverBindingsSpan(nullptr);
+
+  // The gcthings array contains the inner function list followed by the
+  // closed-over bindings data. Skip the inner function list, as it is already
+  // cached in cachedGCThings_. See also: BaseScript::CreateLazy.
+  size_t offset = lazy.scriptData().gcThingsOffset.index;
+  size_t length = lazy.scriptData().gcThingsLength;
+  size_t start = cachedGCThings_.Length();
+  MOZ_ASSERT(start <= length);
+  if (length - start == 0) {
+    return true;
+  }
+  length -= start;
+  start += offset;
+
+  // Atoms from the lazy.context (CompilationStencil) are not registered in the
+  // the parseAtoms table. Thus we create a new span which will contain all the
+  // interned atoms.
+  TaggedParserAtomIndex* closedOverBindings =
+      alloc.newArrayUninitialized<TaggedParserAtomIndex>(length);
+  if (!closedOverBindings) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    auto gcThing = lazy.context_.gcThingData[i + start];
+    if (gcThing.isNull()) {
+      closedOverBindings[i] = TaggedParserAtomIndex::null();
+      continue;
+    }
+
+    MOZ_ASSERT(gcThing.isAtom());
+    InputName name(lazy, gcThing.toAtom());
+    auto parserAtom = name.internInto(cx, parseAtoms, atomCache);
+    if (!parserAtom) {
+      return false;
+    }
+
+    closedOverBindings[i] = parserAtom;
+  }
+
+  closedOverBindings_ = ClosedOverBindingsSpan(closedOverBindings, length);
+  return true;
+}
+
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationGCOutput::trace(JSTracer* trc) {
@@ -876,7 +1177,14 @@ Scope* ScopeStencil::enclosingExistingScope(
     return result;
   }
 
-  return input.enclosingScope;
+  // When creating a scope based on the input and a gc-output, we assume that
+  // the scope stencil that we are looking at has not been merged into another
+  // stencil, and thus that we still have the compilation input of the stencil.
+  //
+  // Otherwise, if this was in the case of an input generated from a Stencil
+  // instead of live-gc values, we would not know its associated gcOutput as it
+  // might not even have one yet.
+  return input.enclosingScope.variant().as<Scope*>();
 }
 
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
@@ -1118,20 +1426,10 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
     return false;
   }
 
-  // Off-thread compilations do all their GC heap allocation, including the
-  // SSO, in a temporary compartment. Hence, for the SSO to refer to the
-  // gc-heap-allocated values in |options|, it would need cross-compartment
-  // wrappers from the temporary compartment to the real compartment --- which
-  // would then be inappropriate once we merged the temporary and real
-  // compartments.
-  //
-  // Instead, we put off populating those SSO slots in off-thread compilations
-  // until after we've merged compartments.
-  if (!cx->isHelperThreadContext()) {
-    Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
-    if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
-      return false;
-    }
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+  Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
+  if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
+    return false;
   }
 
   return true;
@@ -1325,8 +1623,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   MOZ_ASSERT(stencil.sharedData.get(CompilationStencil::TopLevelIndex));
 
   if (!stencil.isInitialStencil()) {
-    MOZ_ASSERT(input.lazyOuterScript());
-    RootedScript script(cx, JSScript::CastFromLazy(input.lazyOuterScript()));
+    MOZ_ASSERT(input.lazyOuterBaseScript());
+    RootedScript script(cx,
+                        JSScript::CastFromLazy(input.lazyOuterBaseScript()));
     if (!JSScript::fullyInitFromStencil(cx, input.atomCache, stencil, gcOutput,
                                         script,
                                         CompilationStencil::TopLevelIndex)) {
@@ -1371,12 +1670,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
       return false;
     }
 
-    // Off-thread compilation with parseGlobal will freeze the module object
-    // in GlobalHelperThreadState::finishSingleParseTask instead.
-    if (!cx->isHelperThreadContext()) {
-      if (!ModuleObject::Freeze(cx, module)) {
-        return false;
-      }
+    MOZ_ASSERT(!cx->isHelperThreadContext());
+    if (!ModuleObject::Freeze(cx, module)) {
+      return false;
     }
   }
 
@@ -1524,13 +1820,92 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
   MOZ_ASSERT(gcOutput.functions.empty());
   gcOutput.functions.infallibleAppend(input.function());
 
-  for (JS::GCCellPtr elem : input.lazyOuterScript()->gcthings()) {
+  for (JS::GCCellPtr elem : input.lazyOuterBaseScript()->gcthings()) {
     if (!elem.is<JSObject>()) {
       continue;
     }
     JSFunction* fun = &elem.as<JSObject>().as<JSFunction>();
     gcOutput.functions.infallibleAppend(fun);
   }
+}
+
+void CompilationStencil::borrowFromExtensibleCompilationStencil(
+    ExtensibleCompilationStencil& extensibleStencil) {
+  canLazilyParse = extensibleStencil.canLazilyParse;
+  functionKey = extensibleStencil.functionKey;
+
+  // Borrow the vector content as span.
+  scriptData = extensibleStencil.scriptData;
+  scriptExtra = extensibleStencil.scriptExtra;
+
+  gcThingData = extensibleStencil.gcThingData;
+
+  scopeData = extensibleStencil.scopeData;
+  scopeNames = extensibleStencil.scopeNames;
+
+  regExpData = extensibleStencil.regExpData;
+  bigIntData = extensibleStencil.bigIntData;
+  objLiteralData = extensibleStencil.objLiteralData;
+
+  // Borrow the parser atoms as span.
+  parserAtomData = extensibleStencil.parserAtoms.entries_;
+
+  // Borrow container.
+  sharedData.setBorrow(&extensibleStencil.sharedData);
+
+  // Share ref-counted data.
+  source = extensibleStencil.source;
+  asmJS = extensibleStencil.asmJS;
+  moduleMetadata = extensibleStencil.moduleMetadata;
+}
+
+#ifdef DEBUG
+template <typename SpanT, typename VecT>
+void AssertBorrowingSpan(const SpanT& span, const VecT& vec) {
+  MOZ_ASSERT(span.size() == vec.length());
+  MOZ_ASSERT(span.data() == vec.begin());
+}
+
+void CompilationStencil::assertBorrowingFromExtensibleCompilationStencil(
+    const ExtensibleCompilationStencil& extensibleStencil) const {
+  MOZ_ASSERT(canLazilyParse == extensibleStencil.canLazilyParse);
+  MOZ_ASSERT(functionKey == extensibleStencil.functionKey);
+
+  AssertBorrowingSpan(scriptData, extensibleStencil.scriptData);
+  AssertBorrowingSpan(scriptExtra, extensibleStencil.scriptExtra);
+
+  AssertBorrowingSpan(gcThingData, extensibleStencil.gcThingData);
+
+  AssertBorrowingSpan(scopeData, extensibleStencil.scopeData);
+  AssertBorrowingSpan(scopeNames, extensibleStencil.scopeNames);
+
+  AssertBorrowingSpan(regExpData, extensibleStencil.regExpData);
+  AssertBorrowingSpan(bigIntData, extensibleStencil.bigIntData);
+  AssertBorrowingSpan(objLiteralData, extensibleStencil.objLiteralData);
+
+  AssertBorrowingSpan(parserAtomData, extensibleStencil.parserAtoms.entries_);
+
+  MOZ_ASSERT(sharedData.isBorrow());
+  MOZ_ASSERT(sharedData.asBorrow() == &extensibleStencil.sharedData);
+
+  MOZ_ASSERT(source == extensibleStencil.source);
+  MOZ_ASSERT(asmJS == extensibleStencil.asmJS);
+  MOZ_ASSERT(moduleMetadata == extensibleStencil.moduleMetadata);
+}
+#endif
+
+CompilationStencil::CompilationStencil(
+    UniquePtr<ExtensibleCompilationStencil>&& extensibleStencil)
+    : alloc(LifoAllocChunkSize) {
+  ownedBorrowStencil = std::move(extensibleStencil);
+
+  storageType = StorageType::OwnedExtensible;
+
+  borrowFromExtensibleCompilationStencil(*ownedBorrowStencil);
+
+#ifdef DEBUG
+  assertNoExternalDependency();
+#endif
 }
 
 /* static */
@@ -1571,9 +1946,9 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
     if (stencil.moduleMetadata) {
       // The enclosing script of a module is always the global scope. Fetch the
       // scope of the current global and update input data.
-      MOZ_ASSERT(input.enclosingScope == nullptr);
-      input.enclosingScope = &cx->global()->emptyGlobalScope();
-      MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
+      MOZ_ASSERT(input.enclosingScope.isNull());
+      input.enclosingScope = InputScope(&cx->global()->emptyGlobalScope());
+      MOZ_ASSERT(input.enclosingScope.environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
       if (!InstantiateModuleObject(cx, atomCache, stencil, gcOutput)) {
@@ -1912,34 +2287,9 @@ CompilationState::CompilationState(JSContext* cx,
 BorrowingCompilationStencil::BorrowingCompilationStencil(
     ExtensibleCompilationStencil& extensibleStencil)
     : CompilationStencil(extensibleStencil.source) {
-  hasExternalDependency = true;
+  storageType = StorageType::Borrowed;
 
-  canLazilyParse = extensibleStencil.canLazilyParse;
-  functionKey = extensibleStencil.functionKey;
-
-  // Borrow the vector content as span.
-  scriptData = extensibleStencil.scriptData;
-  scriptExtra = extensibleStencil.scriptExtra;
-
-  gcThingData = extensibleStencil.gcThingData;
-
-  scopeData = extensibleStencil.scopeData;
-  scopeNames = extensibleStencil.scopeNames;
-
-  regExpData = extensibleStencil.regExpData;
-  bigIntData = extensibleStencil.bigIntData;
-  objLiteralData = extensibleStencil.objLiteralData;
-
-  // Borrow the parser atoms as span.
-  parserAtomData = extensibleStencil.parserAtoms.entries_;
-
-  // Borrow container.
-  sharedData.setBorrow(&extensibleStencil.sharedData);
-
-  // Share ref-counted data.
-  source = extensibleStencil.source;
-  asmJS = extensibleStencil.asmJS;
-  moduleMetadata = extensibleStencil.moduleMetadata;
+  borrowFromExtensibleCompilationStencil(extensibleStencil);
 }
 
 SharedDataContainer::~SharedDataContainer() {
@@ -2126,6 +2476,13 @@ bool SharedDataContainer::addExtraWithoutShare(
 
 #ifdef DEBUG
 void CompilationStencil::assertNoExternalDependency() const {
+  if (ownedBorrowStencil) {
+    ownedBorrowStencil->assertNoExternalDependency();
+
+    assertBorrowingFromExtensibleCompilationStencil(*ownedBorrowStencil);
+    return;
+  }
+
   MOZ_ASSERT_IF(!scriptData.empty(), alloc.contains(scriptData.data()));
   MOZ_ASSERT_IF(!scriptExtra.empty(), alloc.contains(scriptExtra.data()));
 
@@ -2177,86 +2534,6 @@ void ExtensibleCompilationStencil::assertNoExternalDependency() const {
 #endif  // DEBUG
 
 template <typename T, typename VectorT>
-bool CopyVectorToSpan(JSContext* cx, LifoAlloc& alloc, mozilla::Span<T>& span,
-                      VectorT& vec) {
-  auto len = vec.length();
-  if (len == 0) {
-    return true;
-  }
-
-  auto* p = alloc.newArrayUninitialized<T>(len);
-  if (!p) {
-    js::ReportOutOfMemory(cx);
-    return false;
-  }
-  span = mozilla::Span(p, len);
-  memcpy(span.data(), vec.begin(), sizeof(T) * len);
-  return true;
-}
-
-bool CompilationStencil::steal(JSContext* cx,
-                               ExtensibleCompilationStencil&& other) {
-#ifdef DEBUG
-  other.assertNoExternalDependency();
-#endif
-
-  canLazilyParse = other.canLazilyParse;
-  functionKey = other.functionKey;
-
-  MOZ_ASSERT(alloc.isEmpty());
-  alloc.steal(&other.alloc);
-
-  if (!CopyVectorToSpan(cx, alloc, scriptData, other.scriptData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, scriptExtra, other.scriptExtra)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, gcThingData, other.gcThingData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, scopeData, other.scopeData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, scopeNames, other.scopeNames)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, regExpData, other.regExpData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, bigIntData, other.bigIntData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, objLiteralData, other.objLiteralData)) {
-    return false;
-  }
-
-  if (!CopyVectorToSpan(cx, alloc, parserAtomData,
-                        other.parserAtoms.entries())) {
-    return false;
-  }
-
-  sharedData = std::move(other.sharedData);
-
-  moduleMetadata = std::move(other.moduleMetadata);
-
-  asmJS = std::move(other.asmJS);
-
-#ifdef DEBUG
-  assertNoExternalDependency();
-#endif
-
-  return true;
-}
-
-template <typename T, typename VectorT>
 [[nodiscard]] bool CopySpanToVector(JSContext* cx, VectorT& vec,
                                     mozilla::Span<T>& span) {
   auto len = span.size();
@@ -2292,11 +2569,45 @@ BaseParserScopeData* CopyScopeData(JSContext* cx, LifoAlloc& alloc,
 bool ExtensibleCompilationStencil::steal(JSContext* cx,
                                          CompilationStencil&& other) {
   MOZ_ASSERT(alloc.isEmpty());
+  using StorageType = CompilationStencil::StorageType;
+
+  if (other.storageType == StorageType::OwnedExtensible) {
+    auto& otherExtensible = other.ownedBorrowStencil;
+
+    canLazilyParse = otherExtensible->canLazilyParse;
+    functionKey = otherExtensible->functionKey;
+
+    alloc.steal(&otherExtensible->alloc);
+
+    source = std::move(otherExtensible->source);
+
+    scriptData = std::move(otherExtensible->scriptData);
+    scriptExtra = std::move(otherExtensible->scriptExtra);
+    gcThingData = std::move(otherExtensible->gcThingData);
+    scopeData = std::move(otherExtensible->scopeData);
+    scopeNames = std::move(otherExtensible->scopeNames);
+    regExpData = std::move(otherExtensible->regExpData);
+    bigIntData = std::move(otherExtensible->bigIntData);
+    objLiteralData = std::move(otherExtensible->objLiteralData);
+
+    parserAtoms = std::move(otherExtensible->parserAtoms);
+    parserAtoms.fixupAlloc(alloc);
+
+    sharedData = std::move(otherExtensible->sharedData);
+    moduleMetadata = std::move(otherExtensible->moduleMetadata);
+    asmJS = std::move(otherExtensible->asmJS);
+
+#ifdef DEBUG
+    assertNoExternalDependency();
+#endif
+
+    return true;
+  }
 
   canLazilyParse = other.canLazilyParse;
   functionKey = other.functionKey;
 
-  if (!other.hasExternalDependency) {
+  if (other.storageType == StorageType::Owned) {
 #ifdef DEBUG
     other.assertNoExternalDependency();
 #endif
@@ -2318,7 +2629,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return false;
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     size_t scopeSize = other.scopeData.size();
 
     if (!CopySpanToVector(cx, scopeData, other.scopeData)) {
@@ -2353,7 +2664,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return false;
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     // If CompilationStencil has external dependency, peform deep copy.
 
     size_t bigIntSize = other.bigIntData.size();
@@ -2372,7 +2683,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     }
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     size_t objLiteralSize = other.objLiteralData.size();
     if (!objLiteralData.reserve(objLiteralSize)) {
       js::ReportOutOfMemory(cx);
@@ -2412,9 +2723,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
   }
 
   sharedData = std::move(other.sharedData);
-
   moduleMetadata = std::move(other.moduleMetadata);
-
   asmJS = std::move(other.asmJS);
 
 #ifdef DEBUG
@@ -2455,6 +2764,16 @@ bool BigIntStencil::init(JSContext* cx, LifoAlloc& alloc,
   mozilla::PodCopy(p, buf.data(), length);
   source_ = mozilla::Span(p, length);
   return true;
+}
+
+BigInt* BigIntStencil::createBigInt(JSContext* cx) const {
+  mozilla::Range<const char16_t> source(source_.data(), source_.size());
+  return js::ParseBigIntLiteral(cx, source);
+}
+
+bool BigIntStencil::isZero() const {
+  mozilla::Range<const char16_t> source(source_.data(), source_.size());
+  return js::BigIntLiteralIsZero(source);
 }
 
 #ifdef DEBUG
@@ -4070,7 +4389,7 @@ JSScript* JS::InstantiateGlobalStencil(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
-  return stencil->hasExternalDependency;
+  return stencil->storageType == CompilationStencil::StorageType::Borrowed;
 }
 
 JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {

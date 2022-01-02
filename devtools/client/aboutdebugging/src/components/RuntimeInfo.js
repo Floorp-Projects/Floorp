@@ -52,7 +52,7 @@ class RuntimeInfo extends PureComponent {
           {
             className: "qa-runtime-name runtime-info__title",
           },
-          `${name} (${version})`
+          `${name} (8.1.2)`
         )
       ),
       deviceName

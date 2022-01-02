@@ -190,6 +190,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     return Cast(nsPIDOMWindowOuter::From(aWin));
   }
 
+  bool IsOuterWindow() const final { return true; }  // Overriding EventTarget
+
   static nsGlobalWindowOuter* GetOuterWindowWithId(uint64_t aWindowID) {
     AssertIsOnMainThread();
 
@@ -229,6 +231,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                JS::Handle<JSObject*> aGivenProto) override {
     return EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
+
+  // nsIGlobalObject
+  bool ShouldResistFingerprinting() const final;
+  uint32_t GetPrincipalHashValue() const final;
 
   // nsIGlobalJSObjectHolder
   JSObject* GetGlobalJSObject() final { return GetWrapper(); }
@@ -626,8 +632,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                  bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
                  bool aShowDialog, mozilla::ErrorResult& aError);
   uint64_t GetMozPaintCountOuter();
-
-  bool ShouldResistFingerprinting();
 
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialogOuter(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,

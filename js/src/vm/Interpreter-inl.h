@@ -17,6 +17,7 @@
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
+#include "vm/StaticStrings.h"
 #include "vm/ThrowMsgKind.h"
 
 #include "vm/EnvironmentObject-inl.h"
@@ -229,14 +230,6 @@ inline bool SetIntrinsicOperation(JSContext* cx, JSScript* script,
                                   jsbytecode* pc, HandleValue val) {
   RootedPropertyName name(cx, script->getName(pc));
   return GlobalObject::setIntrinsicValue(cx, cx->global(), name, val);
-}
-
-inline void SetAliasedVarOperation(JSContext* cx, JSScript* script,
-                                   jsbytecode* pc, EnvironmentObject& obj,
-                                   EnvironmentCoordinate ec, const Value& val,
-                                   MaybeCheckTDZ checkTDZ) {
-  MOZ_ASSERT_IF(checkTDZ, !IsUninitializedLexical(obj.aliasedBinding(ec)));
-  obj.setAliasedBinding(cx, ec, val);
 }
 
 inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
@@ -604,7 +597,7 @@ inline bool InitElemIncOperation(JSContext* cx, HandleArrayObject arr,
 
 static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
                                                        HandleScript script,
-                                                       jsbytecode* pc) {
+                                                       const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::CallSiteObj);
 
   RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());

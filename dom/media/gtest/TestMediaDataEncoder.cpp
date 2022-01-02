@@ -152,7 +152,8 @@ already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
   VideoInfo videoInfo(aWidth, aHeight);
   videoInfo.mMimeType = nsCString(aMimeType);
   const RefPtr<TaskQueue> taskQueue(
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
+                    "TestMediaDataEncoder"));
 
   RefPtr<MediaDataEncoder> e;
   if (aSpecific) {

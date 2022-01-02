@@ -5,29 +5,17 @@
 #ifndef mozilla_intl_LineBreaker_h__
 #define mozilla_intl_LineBreaker_h__
 
-#include "nscore.h"
+#include <cstdint>
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
 namespace mozilla {
 namespace intl {
+enum class LineBreakRule : uint8_t;
+enum class WordBreakRule : uint8_t;
 
 class LineBreaker final {
  public:
-  enum class WordBreak : uint8_t {
-    Normal = 0,    // default
-    BreakAll = 1,  // break all
-    KeepAll = 2    // always keep
-  };
-
-  enum class Strictness : uint8_t {
-    Auto = 0,
-    Loose = 1,
-    Normal = 2,
-    Strict = 3,
-    Anywhere = 4
-  };
-
   // LineBreaker is a utility class with only static methods. No need to
   // instantiate it.
   LineBreaker() = delete;
@@ -38,6 +26,8 @@ class LineBreaker final {
   //
   // If aPos is already at the end of aText or beyond, i.e. aPos >= aLen, return
   // NS_LINEBREAKER_NEED_MORE_TEXT.
+  //
+  // DEPRECATED: Use LineBreakIteratorUtf16 instead.
   static int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
@@ -47,11 +37,13 @@ class LineBreaker final {
   // aLength is the length of the aText array and also the length of the
   // aBreakBefore output array.
   static void ComputeBreakPositions(const char16_t* aText, uint32_t aLength,
-                                    WordBreak aWordBreak, Strictness aLevel,
+                                    WordBreakRule aWordBreak,
+                                    LineBreakRule aLevel,
                                     bool aIsChineseOrJapanese,
                                     uint8_t* aBreakBefore);
   static void ComputeBreakPositions(const uint8_t* aText, uint32_t aLength,
-                                    WordBreak aWordBreak, Strictness aLevel,
+                                    WordBreakRule aWordBreak,
+                                    LineBreakRule aLevel,
                                     bool aIsChineseOrJapanese,
                                     uint8_t* aBreakBefore);
 };

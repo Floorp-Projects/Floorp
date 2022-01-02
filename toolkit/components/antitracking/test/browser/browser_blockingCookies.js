@@ -2,6 +2,12 @@
 
 requestLongerTimeout(4);
 
+// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
+});
+
 AntiTracking.runTestInNormalAndPrivateMode(
   "Set/Get Cookies",
   // Blocking callback

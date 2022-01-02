@@ -40,7 +40,7 @@ static inline AllocKind GetGCObjectKind(const JSClass* clasp) {
   return GetGCObjectKind(nslots);
 }
 
-static bool CanUseFixedElementsForArray(size_t numElements) {
+static constexpr bool CanUseFixedElementsForArray(size_t numElements) {
   if (numElements > NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
     return false;
   }

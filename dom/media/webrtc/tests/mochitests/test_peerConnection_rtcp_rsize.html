@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
   <script type="application/javascript" src="sdpUtils.js"></script>
 </head>
 <body>
@@ -62,8 +63,8 @@
     test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
       async function PC_LOCAL_AND_REMOTE_CHECK_FOR_RTCP_STATS(test) {
         await Promise.all([
-          test.pcLocal.waitForSyncedRtcp(),
-          test.pcRemote.waitForSyncedRtcp(),
+          waitForSyncedRtcp(test.pcLocal._pc),
+          waitForSyncedRtcp(test.pcRemote._pc),
         ]);
         // The work is done by waitForSyncedRtcp which will throw if
         // RTCP stats are not received.

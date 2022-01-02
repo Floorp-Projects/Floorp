@@ -67,8 +67,8 @@ If you don't have the Firefox source code available, you should edit your Mercur
     [defaults]
     commit = -v
 
-On Windows, these settings can be added to `$HOME\.hgrc` or `$HOME\Mercurial.ini`, or, if you'd like global settings, `C:\mozilla-build\hg\Mercurial.ini`
-or `C:\Program Files\Mercurial\Mercurial.ini.` On UNIX-like systems, they should be in your `$HOME/.hgrc` file.
+On Windows, these settings can be added to ``$HOME\.hgrc`` or ``$HOME\Mercurial.ini``, or, if you'd like global settings, ``C:\mozilla-build\hg\Mercurial.ini``
+or ``C:\Program Files\Mercurial\Mercurial.ini``. On UNIX-like systems, they should be in your ``$HOME/.hgrc`` file.
 
 You can configure the editor to use for commit messages using the `editor` option in the `[ui]` section or by setting the `EDITOR` environment variable.
 

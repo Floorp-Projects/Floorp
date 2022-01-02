@@ -535,9 +535,6 @@ const SNAPSHOT_SCHEMA = {
         windowLayerManagerRemote: {
           type: "boolean",
         },
-        windowUsingAdvancedLayers: {
-          type: "boolean",
-        },
         numAcceleratedWindowsMessage: {
           type: "object",
           properties: {

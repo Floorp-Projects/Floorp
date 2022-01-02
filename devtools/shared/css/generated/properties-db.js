@@ -226,7 +226,6 @@ exports.CSS_PROPERTIES = {
       "button-arrow-next",
       "button-arrow-previous",
       "button-arrow-up",
-      "button-focus",
       "checkbox",
       "checkbox-container",
       "checkbox-label",
@@ -1437,7 +1436,6 @@ exports.CSS_PROPERTIES = {
       "button-arrow-next",
       "button-arrow-previous",
       "button-arrow-up",
-      "button-focus",
       "checkbox",
       "checkbox-container",
       "checkbox-label",
@@ -2866,6 +2864,7 @@ exports.CSS_PROPERTIES = {
       "shape-outside",
       "touch-action",
       "-webkit-line-clamp",
+      "scrollbar-gutter",
       "column-width",
       "column-count",
       "column-fill",
@@ -3306,7 +3305,6 @@ exports.CSS_PROPERTIES = {
       "button-arrow-next",
       "button-arrow-previous",
       "button-arrow-up",
-      "button-focus",
       "checkbox",
       "checkbox-container",
       "checkbox-label",
@@ -5438,6 +5436,23 @@ exports.CSS_PROPERTIES = {
       "linearrgb",
       "revert",
       "srgb",
+      "unset"
+    ]
+  },
+  "color-scheme": {
+    "isInherited": true,
+    "subproperties": [
+      "color-scheme"
+    ],
+    "supports": [],
+    "values": [
+      "dark",
+      "inherit",
+      "initial",
+      "light",
+      "normal",
+      "only",
+      "revert",
       "unset"
     ]
   },
@@ -10989,6 +11004,10 @@ exports.PREFERENCES = [
   [
     "overflow-anchor",
     "layout.css.scroll-anchoring.enabled"
+  ],
+  [
+    "scrollbar-gutter",
+    "layout.css.scrollbar-gutter.enabled"
   ],
   [
     "touch-action",

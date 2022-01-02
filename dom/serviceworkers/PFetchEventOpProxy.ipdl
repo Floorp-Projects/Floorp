@@ -5,11 +5,12 @@
 include protocol PRemoteWorker;
 
 include ServiceWorkerOpArgs;
+include FetchTypes;
 
 namespace mozilla {
 namespace dom {
 
-protocol PFetchEventOpProxy {
+[RefCounted] protocol PFetchEventOpProxy {
   manager PRemoteWorker;
 
  parent:
@@ -17,9 +18,12 @@ protocol PFetchEventOpProxy {
                  uint32_t aColumnNumber, nsCString aMessageName,
                  nsString[] aParams);
 
-  async RespondWith(IPCFetchEventRespondWithResult aResult);
+  async RespondWith(ChildToParentFetchEventRespondWithResult aResult);
 
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
+
+ child:
+  async PreloadResponse(ParentToChildInternalResponse aResponse);
 };
 
 }  // namespace dom

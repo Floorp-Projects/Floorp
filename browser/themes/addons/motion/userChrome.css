@@ -1,0 +1,88 @@
+@charset "UTF-8";
+
+@-moz-document url(chrome://browser/content/browser.xhtml) {
+
+    :root[tabsintitlebar]{
+        --uc-window-control-width: 138px;
+        --uc-window-drag-space-width: 0px; 
+      }
+      
+      #nav-bar::before,
+      #nav-bar::after{
+        content: "";
+        display: -moz-box;
+        width: var(--uc-window-drag-space-width,0);
+      }
+      toolbar#nav-bar::after{ width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-width,0px)) }
+      @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+        :root{ --uc-window-control-width: 72px; }
+        :root[tabsintitlebar="true"]:not([sizemode="fullscreen"]) #nav-bar::before{
+          width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-width,0px))
+        }
+        :root[tabsintitlebar="true"]:not([sizemode="fullscreen"]) toolbar#nav-bar::after{ width: var(--uc-window-drag-space-width,0px); }
+      }
+      
+      
+      @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+      
+      .tab-content:not([pinned])::before{
+        display: -moz-box;
+        content: "";
+        -moz-box-flex: 1;
+      }
+      
+      
+      :root{ --uc-titlebar-padding: 0px; }
+      :root[sizemode="maximized"][tabsintitlebar]{ --uc-titlebar-padding: 8px }
+      
+      #toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
+      #TabsToolbar > .titlebar-buttonbox-container{
+        position: fixed;
+        display: block;
+        top: var(--uc-titlebar-padding,0px);
+        right:0;
+        height: 40px;
+      }
+      /*macOS用（使われることはないと思うが）*/
+      @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+        @media not (-moz-os-version: windows-win10){
+          :root{ --uc-titlebar-padding: 0px !important }
+        }
+        .titlebar-buttonbox-container{ left:0; right: unset !important; }
+      }
+      
+      :root[uidensity="compact"] #TabsToolbar > .titlebar-buttonbox-container{ height: 32px }
+      
+      #toolbar-menubar[inactive] > .titlebar-buttonbox-container{ opacity: 0 }
+      
+      #navigator-toolbox{ padding-top: var(--uc-titlebar-padding,0px) !important; }
+      
+      
+      .titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
+      
+      #titlebar{
+        -moz-box-ordinal-group: 2;
+        -moz-appearance: none !important;
+        --tabs-navbar-shadow-size: 0px;
+      }
+      
+      .titlebar-placeholder,
+      #TabsToolbar .titlebar-spacer{ display: none; }
+      #navigator-toolbox::after{ display: none !important; }
+      
+      @media (-moz-gtk-csd-close-button){ .titlebar-button{ -moz-box-orient: vertical } }
+      
+      toolbox#navigator-toolbox > toolbar#nav-bar.browser-toolbar{ animation: none; }
+      #navigator-toolbox:hover #TabsToolbar{ animation: slidein ease-out 48ms 1 }
+      
+      .toolbar-items{
+          display: none !important;
+      }
+      .browser-toolbar titlebar-color{
+          display: none;
+      }
+      
+      #navigator-toolbox :is(toolbar, #nav-bar-customization-target):not(#toolbar-menubar) {
+          min-height: 0px !important;
+      }
+}

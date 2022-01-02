@@ -249,9 +249,6 @@ extern "C" MOZ_EXPORT const wchar_t* GetDependentModulePaths() {
     return nullptr;
   }
 
-  // Remap a write-copy section to take the latest update in mModulePathArray.
-  gSharedSection.Reset();
-
   LauncherResult<SharedSection::Layout*> resultView = gSharedSection.GetView();
   if (resultView.isErr()) {
     return nullptr;

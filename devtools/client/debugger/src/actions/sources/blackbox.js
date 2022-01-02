@@ -9,7 +9,6 @@
 
 import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
 import { recordEvent } from "../../utils/telemetry";
-import { features } from "../../utils/prefs";
 import { getSourceActorsForSource } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
@@ -21,10 +20,16 @@ async function blackboxActors(state, client, sourceId, isBlackBoxed, range) {
   return { isBlackBoxed: !isBlackBoxed };
 }
 
-async function getSourceId(source, sourceMaps) {
+async function getBlackboxRangeForSource(source, sourceMaps) {
   let sourceId = source.id,
     range;
-  if (features.originalBlackbox && isOriginalId(source.id)) {
+
+  // If the source is the original, then get the source id of its generated file
+  // and the range for where the original is represented in the generated file
+  // (which might be a bundle including other files).
+  // If the source is the generated, there's no need for the range as the whole file
+  // gets blackboxed.
+  if (isOriginalId(source.id)) {
     range = await sourceMaps.getFileGeneratedRange(source.id);
     sourceId = originalToGeneratedId(source.id);
   }
@@ -39,7 +44,10 @@ export function toggleBlackBox(cx, source) {
       recordEvent("blackbox");
     }
 
-    const { sourceId, range } = await getSourceId(source, sourceMaps);
+    const { sourceId, range } = await getBlackboxRangeForSource(
+      source,
+      sourceMaps
+    );
 
     return dispatch({
       type: "BLACKBOX",
@@ -69,7 +77,10 @@ export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
 
     const promises = [
       ...sources.map(async source => {
-        const { sourceId, range } = await getSourceId(source, sourceMaps);
+        const { sourceId, range } = await getBlackboxRangeForSource(
+          source,
+          sourceMaps
+        );
 
         return getSourceActorsForSource(state, sourceId).map(actor =>
           client.blackBox(actor, source.isBlackBoxed, range)

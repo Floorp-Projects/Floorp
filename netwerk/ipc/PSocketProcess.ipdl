@@ -80,6 +80,7 @@ struct SocketPorcessInitAttributes {
   FileDescriptor? mSandboxBroker;
 };
 
+[NeedsOtherPid]
 sync protocol PSocketProcess
 {
   manages PDNSRequest;
@@ -185,6 +186,9 @@ child:
     returns (HttpRetParams[] params);
 
   async InitProxyAutoConfigChild(Endpoint<PProxyAutoConfigChild> endpoint);
+
+  async RecheckIPConnectivity();
+  async RecheckDNS();
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);

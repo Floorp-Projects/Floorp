@@ -55,6 +55,7 @@ export GB   = 11;
 export H    = 4;
 export IV   = 2;
 export MH   = 21;
+export ML   = 33;
 export MR   = 22;
 export MW   = 23;
 export MY   = 24;
@@ -76,9 +77,9 @@ k = (Ra As H);			# Kinzi
 
 c = C|Ra;			# is_consonant
 
-medial_group = MY? As? MR? ((MW MH? | MH) As?)?;
+medial_group = MY? As? MR? ((MW MH? ML? | MH ML? | ML) As?)?;
 main_vowel_group = (VPre.VS?)* VAbv* VBlw* A* (DB As?)?;
-post_vowel_group = VPst MH? As* VAbv* A* (DB As?)?;
+post_vowel_group = VPst MH? ML? As* VAbv* A* (DB As?)?;
 pwo_tone_group = PT A* DB? As?;
 
 complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* pwo_tone_group* V* j?;

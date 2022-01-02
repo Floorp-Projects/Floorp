@@ -541,7 +541,7 @@ sl{
         }
         LSL{
             "LSL",
-            "lesoški loti",
+            "lesotski loti",
         }
         LTL{
             "LTL",
@@ -1710,6 +1710,12 @@ sl{
             one{"liberijski dolar"}
             other{"liberijskih dolarjev"}
             two{"liberijska dolarja"}
+        }
+        LSL{
+            few{"lesotski loti"}
+            one{"lesotski lot"}
+            other{"lesotskih lotov"}
+            two{"lesotska lota"}
         }
         LTL{
             few{"litovski litas"}

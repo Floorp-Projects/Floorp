@@ -1,5 +1,6 @@
+====
 AWSY
-#####
+====
 
 Are We Slim Yet project (commonly known as AWSY) tracks memory usage across builds.
 
@@ -8,6 +9,160 @@ On treeherder, the AWSY builds are listed in subgroups of `SY`.
 AWSY tests consist of three types: TP5*, TP6, and Base Memory Usage.
 
 *\*TP5 tests are out of date and no longer maintained. These tests are scheduled to be removed:* https://bugzilla.mozilla.org/show_bug.cgi?id=1712406
+
+Awsy tests
+----------
+
+
+.. dropdown:: base (FF)
+   :container: + anchor-id-base-Awsy-tests
+
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: None
+            * awsy-base-fis-e10s: None
+
+      * test-linux1804-64-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: None
+            * awsy-base-fis-e10s: None
+
+      * test-linux1804-64-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+      * test-macosx1015-64-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+      * test-windows10-32-2004-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: None
+            * awsy-base-fis-e10s: None
+
+      * test-windows10-32-2004-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: None
+            * awsy-base-fis-e10s: None
+
+      * test-windows10-64-2004-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: None
+            * awsy-base-fis-e10s: None
+
+      * test-windows10-64-2004-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+
+.. dropdown:: dmd (FF)
+   :container: + anchor-id-dmd-Awsy-tests
+
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-linux1804-64-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-linux1804-64-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-macosx1015-64-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-windows10-32-2004-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-windows10-32-2004-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-windows10-64-2004-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+      * test-windows10-64-2004-shippable-qr/opt
+            * awsy-base-dmd-e10s: None
+            * awsy-dmd-e10s: None
+
+
+.. dropdown:: tp5 (FF)
+   :container: + anchor-id-tp5-Awsy-tests
+
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * awsy-e10s: None
+
+      * test-linux1804-64-qr/opt
+            * awsy-e10s: None
+
+      * test-linux1804-64-shippable-qr/opt
+            * awsy-e10s: None
+
+      * test-macosx1015-64-shippable-qr/opt
+            * awsy-e10s: None
+
+      * test-windows10-32-2004-qr/opt
+            * awsy-e10s: None
+
+      * test-windows10-32-2004-shippable-qr/opt
+            * awsy-e10s: None
+
+      * test-windows10-64-2004-qr/opt
+            * awsy-e10s: None
+
+      * test-windows10-64-2004-shippable-qr/opt
+            * awsy-e10s: None
+
+
+.. dropdown:: tp6 (FF)
+   :container: + anchor-id-tp6-Awsy-tests
+
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * awsy-tp6-e10s: None
+            * awsy-tp6-fis-e10s: None
+
+      * test-linux1804-64-qr/opt
+            * awsy-tp6-e10s: None
+            * awsy-tp6-fis-e10s: None
+
+      * test-linux1804-64-shippable-qr/opt
+            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+      * test-macosx1015-64-shippable-qr/opt
+            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+      * test-windows10-32-2004-qr/opt
+            * awsy-tp6-e10s: None
+            * awsy-tp6-fis-e10s: None
+
+      * test-windows10-32-2004-shippable-qr/opt
+            * awsy-tp6-e10s: None
+            * awsy-tp6-fis-e10s: None
+
+      * test-windows10-64-2004-qr/opt
+            * awsy-tp6-e10s: None
+            * awsy-tp6-fis-e10s: None
+
+      * test-windows10-64-2004-shippable-qr/opt
+            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
+
+
+
 
 Running AWSY Locally
 *********************

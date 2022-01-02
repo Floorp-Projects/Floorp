@@ -29,10 +29,10 @@
 #include "mozilla/layers/WebRenderCommandBuilder.h"  // for WebRenderCommandBuilder
 #include "mozilla/layers/WebRenderScrollData.h"      // for WebRenderScrollData
 #include "WindowRenderer.h"
-#include "nsHashKeys.h"                              // for nsRefPtrHashKey
-#include "nsRegion.h"                                // for nsIntRegion
-#include "nsStringFwd.h"                             // for nsCString, nsAString
-#include "nsTArray.h"                                // for nsTArray
+#include "nsHashKeys.h"   // for nsRefPtrHashKey
+#include "nsRegion.h"     // for nsIntRegion
+#include "nsStringFwd.h"  // for nsCString, nsAString
+#include "nsTArray.h"     // for nsTArray
 #include "nsTHashSet.h"
 
 class gfxContext;

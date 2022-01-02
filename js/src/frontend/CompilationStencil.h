@@ -16,8 +16,8 @@
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 #include "mozilla/RefPtr.h"           // RefPtr
 #include "mozilla/Span.h"
+#include "mozilla/Variant.h"  // mozilla::Variant
 
-#include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/NameAnalysisTypes.h"  // EnvironmentCoordinate
 #include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
@@ -29,9 +29,7 @@
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/GCVector.h"
 #include "js/HashTable.h"
-#include "js/RealmOptions.h"
 #include "js/RefCounted.h"  // AtomicRefCounted
-#include "js/SourceText.h"
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Vector.h"
@@ -50,6 +48,7 @@ class JSString;
 namespace js {
 
 class JSONPrinter;
+class ModuleObject;
 
 namespace frontend {
 
@@ -57,7 +56,326 @@ struct CompilationInput;
 struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
-class ParserAtomsTable;
+struct InputName;
+
+// Reference to a Scope within a CompilationStencil.
+struct ScopeStencilRef {
+  const CompilationStencil& context_;
+  const ScopeIndex scopeIndex_;
+
+  // Lookup the ScopeStencil referenced by this ScopeStencilRef.
+  inline const ScopeStencil& scope() const;
+};
+
+// Wraps a scope for a CompilationInput. The scope is either as a GC pointer to
+// an instantiated scope, or as a reference to a CompilationStencil.
+//
+// Note: A scope reference may be nullptr/InvalidIndex if there is no such
+// scope, such as the enclosingScope at the end of a scope chain. See `isNull`
+// helper.
+class InputScope {
+  using InputScopeStorage = mozilla::Variant<Scope*, ScopeStencilRef>;
+  InputScopeStorage scope_;
+
+ public:
+  // Create an InputScope given an instantiated scope.
+  explicit InputScope(Scope* ptr) : scope_(ptr) {}
+
+  // Create an InputScope given a CompilationStencil and the ScopeIndex which is
+  // an offset within the same CompilationStencil given as argument.
+  InputScope(const CompilationStencil& context, ScopeIndex scopeIndex)
+      : scope_(ScopeStencilRef{context, scopeIndex}) {}
+
+  // Returns the variant used by the InputScope. This can be useful for complex
+  // cases where the following accessors are not enough.
+  const InputScopeStorage& variant() const { return scope_; }
+  InputScopeStorage& variant() { return scope_; }
+
+  // This match function will unwrap the variant for each type, and will
+  // specialize and call the Matcher given as argument with the type and value
+  // of the stored pointer / reference.
+  //
+  // This is useful for cases where the code is literally identical despite
+  // having different specializations. This is achiveable by relying on
+  // function overloading when the usage differ between the 2 types.
+  //
+  // Example:
+  //   inputScope.match([](auto& scope) {
+  //     // scope is either a `Scope*` or a `ScopeStencilRef`.
+  //     for (auto bi = InputBindingIter(scope); bi; bi++) {
+  //       InputName name(scope, bi.name());
+  //       // ...
+  //     }
+  //   });
+  template <typename Matcher>
+  decltype(auto) match(Matcher&& matcher) const& {
+    return scope_.match(std::forward<Matcher>(matcher));
+  }
+  template <typename Matcher>
+  decltype(auto) match(Matcher&& matcher) & {
+    return scope_.match(std::forward<Matcher>(matcher));
+  }
+
+  bool isNull() const {
+    return scope_.match(
+        [](const Scope* ptr) { return !ptr; },
+        [](const ScopeStencilRef& ref) { return !ref.scopeIndex_.isValid(); });
+  }
+
+  ScopeKind kind() const {
+    return scope_.match(
+        [](const Scope* ptr) { return ptr->kind(); },
+        [](const ScopeStencilRef& ref) { return ref.scope().kind(); });
+  };
+  bool hasEnvironment() const {
+    return scope_.match([](const Scope* ptr) { return ptr->hasEnvironment(); },
+                        [](const ScopeStencilRef& ref) {
+                          return ref.scope().hasEnvironment();
+                        });
+  };
+  inline InputScope enclosing() const;
+  bool hasOnChain(ScopeKind kind) const {
+    return scope_.match(
+        [=](const Scope* ptr) { return ptr->hasOnChain(kind); },
+        [=](const ScopeStencilRef& ref) {
+          ScopeStencilRef it = ref;
+          while (true) {
+            const ScopeStencil& scope = it.scope();
+            if (scope.kind() == kind) {
+              return true;
+            }
+            if (!scope.hasEnclosing()) {
+              break;
+            }
+            new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
+          }
+          return false;
+        });
+  }
+  uint32_t environmentChainLength() const {
+    return scope_.match(
+        [](const Scope* ptr) { return ptr->environmentChainLength(); },
+        [](const ScopeStencilRef& ref) {
+          uint32_t length = 0;
+          ScopeStencilRef it = ref;
+          while (true) {
+            const ScopeStencil& scope = it.scope();
+            if (scope.hasEnvironment() &&
+                scope.kind() != ScopeKind::NonSyntactic) {
+              length++;
+            }
+            if (!scope.hasEnclosing()) {
+              break;
+            }
+            new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
+          }
+          return length;
+        });
+  }
+  void trace(JSTracer* trc);
+  bool isStencil() const { return scope_.is<ScopeStencilRef>(); };
+
+  // Various accessors which are valid only when the InputScope is a
+  // FunctionScope. Some of these accessors are returning values associated with
+  // the canonical function.
+ private:
+  inline FunctionFlags functionFlags() const;
+  inline ImmutableScriptFlags immutableFlags() const;
+
+ public:
+  inline MemberInitializers getMemberInitializers() const;
+  RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
+  bool isArrow() const { return functionFlags().isArrow(); }
+  bool allowSuperProperty() const {
+    return functionFlags().allowSuperProperty();
+  }
+  bool isClassConstructor() const {
+    return functionFlags().isClassConstructor();
+  }
+};
+
+// Reference to a Script within a CompilationStencil.
+struct ScriptStencilRef {
+  const CompilationStencil& context_;
+  const ScriptIndex scriptIndex_;
+
+  inline const ScriptStencil& scriptData() const;
+  inline const ScriptStencilExtra& scriptExtra() const;
+};
+
+// Wraps a script for a CompilationInput. The script is either as a BaseScript
+// pointer to an instantiated script, or as a reference to a CompilationStencil.
+class InputScript {
+  using InputScriptStorage = mozilla::Variant<BaseScript*, ScriptStencilRef>;
+  InputScriptStorage script_;
+
+ public:
+  // Create an InputScript given an instantiated BaseScript pointer.
+  explicit InputScript(BaseScript* ptr) : script_(ptr) {}
+
+  // Create an InputScript given a CompilationStencil and the ScriptIndex which
+  // is an offset within the same CompilationStencil given as argument.
+  InputScript(const CompilationStencil& context, ScriptIndex scriptIndex)
+      : script_(ScriptStencilRef{context, scriptIndex}) {}
+
+  const InputScriptStorage& raw() const { return script_; }
+  InputScriptStorage& raw() { return script_; }
+
+  SourceExtent extent() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->extent(); },
+        [](const ScriptStencilRef& ref) { return ref.scriptExtra().extent; });
+  }
+  ImmutableScriptFlags immutableFlags() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->immutableFlags(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptExtra().immutableFlags;
+        });
+  }
+  RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
+  FunctionFlags functionFlags() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->function()->flags(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptData().functionFlags;
+        });
+  }
+  FunctionSyntaxKind functionSyntaxKind() const;
+  bool hasPrivateScriptData() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->hasPrivateScriptData(); },
+        [](const ScriptStencilRef& ref) {
+          // See BaseScript::CreateRawLazy.
+          return ref.scriptData().hasGCThings() ||
+                 ref.scriptExtra().useMemberInitializers();
+        });
+  }
+  InputScope enclosingScope() const {
+    return script_.match(
+        [](const BaseScript* ptr) {
+          return InputScope(ptr->function()->enclosingScope());
+        },
+        [](const ScriptStencilRef& ref) {
+          // The ScriptStencilRef only reference lazy Script, otherwise we
+          // should fetch the enclosing scope using the bodyScope field of the
+          // immutable data which is a reference to the vector of gc-things.
+          MOZ_RELEASE_ASSERT(!ref.scriptData().hasSharedData());
+          MOZ_ASSERT(ref.scriptData().hasLazyFunctionEnclosingScopeIndex());
+          auto scopeIndex = ref.scriptData().lazyFunctionEnclosingScopeIndex();
+          return InputScope(ref.context_, scopeIndex);
+        });
+  }
+  MemberInitializers getMemberInitializers() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->getMemberInitializers(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptExtra().memberInitializers();
+        });
+  }
+
+  InputName displayAtom() const;
+  void trace(JSTracer* trc);
+  bool isNull() const {
+    return script_.match([](const BaseScript* ptr) { return !ptr; },
+                         [](const ScriptStencilRef& ref) { return false; });
+  }
+  bool isStencil() const {
+    return script_.match([](const BaseScript* ptr) { return false; },
+                         [](const ScriptStencilRef&) { return true; });
+  };
+};
+
+// Iterator for walking the scope chain, this is identical to ScopeIter but
+// accept an InputScope instead of a Scope pointer.
+//
+// It may be placed in GC containers; for example:
+//
+//   for (Rooted<InputScopeIter> si(cx, InputScopeIter(scope)); si; si++) {
+//     use(si);
+//     SomeMayGCOperation();
+//     use(si);
+//   }
+//
+class MOZ_STACK_CLASS InputScopeIter {
+  InputScope scope_;
+
+ public:
+  explicit InputScopeIter(const InputScope& scope) : scope_(scope) {}
+
+  InputScope& scope() {
+    MOZ_ASSERT(!done());
+    return scope_;
+  }
+
+  const InputScope& scope() const {
+    MOZ_ASSERT(!done());
+    return scope_;
+  }
+
+  bool done() const { return scope_.isNull(); }
+  explicit operator bool() const { return !done(); }
+  void operator++(int) { scope_ = scope_.enclosing(); }
+  ScopeKind kind() const { return scope_.kind(); }
+
+  // Returns whether this scope has a syntactic environment (i.e., an
+  // Environment that isn't a non-syntactic With or NonSyntacticVariables)
+  // on the environment chain.
+  bool hasSyntacticEnvironment() const {
+    return scope_.hasEnvironment() && scope_.kind() != ScopeKind::NonSyntactic;
+  }
+
+  void trace(JSTracer* trc) { scope_.trace(trc); }
+};
+
+// Reference to a Binding Name within an existing CompilationStencil.
+// TaggedParserAtomIndex are in some cases indexes in the parserAtomData of the
+// CompilationStencil.
+struct NameStencilRef {
+  const CompilationStencil& context_;
+  const TaggedParserAtomIndex atomIndex_;
+};
+
+// Wraps a name for a CompilationInput. The name is either as a GC pointer to
+// a JSAtom, or a TaggedParserAtomIndex which might reference to a non-included.
+//
+// The constructor for this class are using an InputScope as argument. This
+// InputScope is made to fetch back the CompilationStencil associated with the
+// TaggedParserAtomIndex when using a Stencil as input.
+struct InputName {
+  using InputNameStorage = mozilla::Variant<JSAtom*, NameStencilRef>;
+  InputNameStorage variant_;
+
+  InputName(Scope*, JSAtom* ptr) : variant_(ptr) {}
+  InputName(const ScopeStencilRef& scope, TaggedParserAtomIndex index)
+      : variant_(NameStencilRef{scope.context_, index}) {}
+  InputName(BaseScript*, JSAtom* ptr) : variant_(ptr) {}
+  InputName(const ScriptStencilRef& script, TaggedParserAtomIndex index)
+      : variant_(NameStencilRef{script.context_, index}) {}
+
+  // The InputName is either from an instantiated name, or from another
+  // CompilationStencil. This method interns the current name in the parser atom
+  // table of a CompilationState, which has a corresponding CompilationInput.
+  TaggedParserAtomIndex internInto(JSContext* cx, ParserAtomsTable& parserAtoms,
+                                   CompilationAtomCache& atomCache);
+
+  // Compare an InputName, which is not yet interned, with `other` is either an
+  // interned name or a well-known or static string.
+  //
+  // The `otherCached` argument should be a reference to a JSAtom*, initialized
+  // to nullptr, which is used to cache the JSAtom representation of the `other`
+  // argument if needed. If a different `other` parameter is provided, the
+  // `otherCached` argument should be reset to nullptr.
+  bool isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+                 CompilationAtomCache& atomCache, TaggedParserAtomIndex other,
+                 JSAtom** otherCached) const;
+
+  bool isNull() const {
+    return variant_.match(
+        [](JSAtom* ptr) { return !ptr; },
+        [](const NameStencilRef& ref) { return !ref.atomIndex_; });
+  }
+};
 
 // ScopeContext holds information derived from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
@@ -162,24 +480,25 @@ struct ScopeContext {
       TaggedParserAtomIndex name);
 
  private:
-  void computeThisBinding(Scope* scope);
-  void computeThisEnvironment(Scope* enclosingScope);
-  void computeInScope(Scope* enclosingScope);
-  void cacheEnclosingScope(Scope* enclosingScope);
+  void computeThisBinding(const InputScope& scope);
+  void computeThisEnvironment(const InputScope& enclosingScope);
+  void computeInScope(const InputScope& enclosingScope);
+  void cacheEnclosingScope(const InputScope& enclosingScope);
 
-  Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
+  InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);
+
+  bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
+                                 JSObject* enclosingEnvironment,
+                                 const InputScope& effectiveScope,
+                                 ParserAtomsTable& parserAtoms);
 
   bool cacheEnclosingScopeBindingForEval(JSContext* cx, CompilationInput& input,
                                          ParserAtomsTable& parserAtoms);
 
-  bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
-                                 JSObject* enclosingEnvironment,
-                                 Scope* effectiveScope,
-                                 ParserAtomsTable& parserAtoms);
-
-  bool addToEnclosingLexicalBindingCache(JSContext* cx, CompilationInput& input,
+  bool addToEnclosingLexicalBindingCache(JSContext* cx,
                                          ParserAtomsTable& parserAtoms,
-                                         JSAtom* name,
+                                         CompilationAtomCache& atomCache,
+                                         InputName& name,
                                          EnclosingLexicalBindingKind kind);
 };
 
@@ -238,7 +557,7 @@ struct CompilationInput {
   CompilationAtomCache atomCache;
 
  private:
-  BaseScript* lazy_ = nullptr;
+  InputScript lazy_ = InputScript(nullptr);
 
  public:
   RefPtr<ScriptSource> source;
@@ -254,7 +573,7 @@ struct CompilationInput {
   //    (See EmitterScope::checkEnvironmentChainLength)
   //  * If the target is Delazification, the non-null enclosing scope of
   //    the function
-  Scope* enclosingScope = nullptr;
+  InputScope enclosingScope = InputScope(nullptr);
 
   explicit CompilationInput(const JS::ReadOnlyCompileOptions& options)
       : options(options) {}
@@ -278,7 +597,7 @@ struct CompilationInput {
     if (!initScriptSource(cx)) {
       return false;
     }
-    enclosingScope = &cx->global()->emptyGlobalScope();
+    enclosingScope = InputScope(&cx->global()->emptyGlobalScope());
     return true;
   }
 
@@ -290,7 +609,7 @@ struct CompilationInput {
     if (!initScriptSource(cx)) {
       return false;
     }
-    enclosingScope = evalEnclosingScope;
+    enclosingScope = InputScope(evalEnclosingScope);
     return true;
   }
 
@@ -311,9 +630,17 @@ struct CompilationInput {
     // function's immediately enclosing scope.
     MOZ_ASSERT(lazyScript->isReadyForDelazification());
     target = CompilationTarget::Delazification;
-    lazy_ = lazyScript;
+    lazy_ = InputScript(lazyScript);
     source = ss;
-    enclosingScope = lazy_->function()->enclosingScope();
+    enclosingScope = lazy_.enclosingScope();
+  }
+
+  void initFromStencil(CompilationStencil& context, ScriptIndex scriptIndex,
+                       ScriptSource* ss) {
+    target = CompilationTarget::Delazification;
+    lazy_ = InputScript(context, scriptIndex);
+    source = ss;
+    enclosingScope = lazy_.enclosingScope();
   }
 
   // Returns true if enclosingScope field is provided to init* function,
@@ -326,37 +653,34 @@ struct CompilationInput {
 
   // Returns the enclosing scope provided to init* function.
   // nullptr otherwise.
-  Scope* maybeNonDefaultEnclosingScope() const {
+  InputScope maybeNonDefaultEnclosingScope() const {
     if (hasNonDefaultEnclosingScope()) {
       return enclosingScope;
     }
-    return nullptr;
+    return InputScope(nullptr);
   }
 
-  // CompilationSyntaxParseCache needs a BaseScript to copy the
-  // closed-over-binding, and inner functions, as needed for skipping over
-  // already computed parameters in the FullParseHandler.
-  BaseScript* lazyOuterScript() {
-    MOZ_ASSERT(isInitialStencil() == !lazy_);
-    return lazy_;
-  }
+  // The BaseScript* is needed when instantiating a lazy function.
+  // See InstantiateTopLevel and FunctionsFromExistingLazy.
+  InputScript lazyOuterScript() { return lazy_; }
+  BaseScript* lazyOuterBaseScript() { return lazy_.raw().as<BaseScript*>(); }
 
-  // When compiling a lazy function, this is needed to initialize the
-  // FunctionBox as well as the CompilationState.
-  JSFunction* function() const { return lazy_->function(); }
+  // The JSFunction* is needed when instantiating a lazy function.
+  // See FunctionsFromExistingLazy.
+  JSFunction* function() const {
+    return lazy_.raw().as<BaseScript*>()->function();
+  }
 
   // When compiling an inner function, we want to know the unique identifier
   // which identify a function. This is computed from the source extend.
-  SourceExtent extent() const { return lazy_->extent(); }
+  SourceExtent extent() const { return lazy_.extent(); }
 
   // See `BaseScript::immutableFlags_`.
-  ImmutableScriptFlags immutableFlags() const {
-    return lazy_->immutableFlags();
-  }
+  ImmutableScriptFlags immutableFlags() const { return lazy_.immutableFlags(); }
 
   RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
 
-  FunctionFlags functionFlags() const { return function()->flags(); }
+  FunctionFlags functionFlags() const { return lazy_.functionFlags(); }
 
   // When delazifying, return the kind of function which is defined.
   FunctionSyntaxKind functionSyntaxKind() const;
@@ -364,12 +688,12 @@ struct CompilationInput {
   bool hasPrivateScriptData() const {
     // This is equivalent to: ngcthings != 0 || useMemberInitializers()
     // See BaseScript::CreateRawLazy.
-    return lazy_->hasPrivateScriptData();
+    return lazy_.hasPrivateScriptData();
   }
 
   // Whether this CompilationInput is parsing the top-level of a script, or
   // false if we are parsing an inner function.
-  bool isInitialStencil() { return !lazy_; }
+  bool isInitialStencil() { return lazy_.isNull(); }
 
   // Whether this CompilationInput is parsing a specific function with already
   // pre-parsed contextual information.
@@ -456,7 +780,8 @@ class CompilationSyntaxParseCache {
   // used for reporting allocation errors.
   [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
                           ParserAtomsTable& parseAtoms,
-                          CompilationAtomCache& atomCache, BaseScript* lazy);
+                          CompilationAtomCache& atomCache,
+                          const InputScript& lazy);
 
  private:
   // Return the script index of a given inner function.
@@ -476,15 +801,23 @@ class CompilationSyntaxParseCache {
   [[nodiscard]] bool copyFunctionInfo(JSContext* cx,
                                       ParserAtomsTable& parseAtoms,
                                       CompilationAtomCache& atomCache,
-                                      BaseScript* lazy);
+                                      const InputScript& lazy);
   [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
                                     BaseScript* lazy);
+  [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
+                                    ParserAtomsTable& parseAtoms,
+                                    CompilationAtomCache& atomCache,
+                                    const ScriptStencilRef& lazy);
   [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, LifoAlloc& alloc,
                                             ParserAtomsTable& parseAtoms,
                                             CompilationAtomCache& atomCache,
                                             BaseScript* lazy);
+  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, LifoAlloc& alloc,
+                                            ParserAtomsTable& parseAtoms,
+                                            CompilationAtomCache& atomCache,
+                                            const ScriptStencilRef& lazy);
 };
 
 // AsmJS scripts are very rare on-average, so we use a HashMap to associate
@@ -650,6 +983,8 @@ struct ExtensibleCompilationStencil;
 // The dependent XDR buffer or ExtensibleCompilationStencil must be kept
 // alive manually.
 struct CompilationStencil {
+  friend struct ExtensibleCompilationStencil;
+
   static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
 
   static constexpr size_t LifoAllocChunkSize = 512;
@@ -664,9 +999,24 @@ struct CompilationStencil {
   // See: JS::StencilAddRef/Release
   mutable mozilla::Atomic<uintptr_t> refCount{0};
 
-  // Set to true if any pointer/span contains external data instead of
-  // LifoAlloc or owned memory.
-  bool hasExternalDependency = false;
+ private:
+  // On-heap ExtensibleCompilationStencil that this CompilationStencil owns,
+  // and this CompilationStencil borrows each data from.
+  UniquePtr<ExtensibleCompilationStencil> ownedBorrowStencil;
+
+ public:
+  enum class StorageType {
+    // Pointers and spans point LifoAlloc or owned buffer.
+    Owned,
+
+    // Pointers and spans point external data, such as XDR buffer, or not-owned
+    // ExtensibleCompilationStencil (see BorrowingCompilationStencil).
+    Borrowed,
+
+    // Pointers and spans point data owned by ownedBorrowStencil.
+    OwnedExtensible,
+  };
+  StorageType storageType = StorageType::Owned;
 
   // Value of CanLazilyParse(CompilationInput) on compilation.
   // Used during instantiation.
@@ -734,6 +1084,21 @@ struct CompilationStencil {
   explicit CompilationStencil(ScriptSource* source)
       : alloc(LifoAllocChunkSize), source(source) {}
 
+  // Take the ownership of on-heap ExtensibleCompilationStencil and
+  // borrow from it.
+  explicit CompilationStencil(
+      UniquePtr<ExtensibleCompilationStencil>&& extensibleStencil);
+
+ protected:
+  void borrowFromExtensibleCompilationStencil(
+      ExtensibleCompilationStencil& extensibleStencil);
+
+#ifdef DEBUG
+  void assertBorrowingFromExtensibleCompilationStencil(
+      const ExtensibleCompilationStencil& extensibleStencil) const;
+#endif
+
+ public:
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
     // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
     // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
@@ -793,9 +1158,6 @@ struct CompilationStencil {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
-
-  // Steal ExtensibleCompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, ExtensibleCompilationStencil&& other);
 
   bool isModule() const;
 
@@ -966,7 +1328,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
     // gcThings is later used by the full parser initialization.
     if (input.isDelazifying()) {
-      BaseScript* lazy = input.lazyOuterScript();
+      InputScript lazy = input.lazyOuterScript();
       auto& atomCache = input.atomCache;
       if (!previousParseCache.init(cx, alloc, parserAtoms, atomCache, lazy)) {
         return false;
@@ -1025,6 +1387,10 @@ class MOZ_STACK_CLASS BorrowingCompilationStencil : public CompilationStencil {
 // LifoAlloc) and RefPtrs since we are not the unique owner.
 inline size_t CompilationStencil::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
+  if (ownedBorrowStencil) {
+    return ownedBorrowStencil->sizeOfIncludingThis(mallocSizeOf);
+  }
+
   size_t moduleMetadataSize =
       moduleMetadata ? moduleMetadata->sizeOfIncludingThis(mallocSizeOf) : 0;
   size_t asmJSSize = asmJS ? asmJS->sizeOfIncludingThis(mallocSizeOf) : 0;
@@ -1305,7 +1671,78 @@ struct CompilationStencilMerger {
       JSContext* cx, const CompilationStencil& delazification);
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
+  UniquePtr<ExtensibleCompilationStencil> takeResult() {
+    return std::move(initial_);
+  }
 };
+
+const ScopeStencil& ScopeStencilRef::scope() const {
+  return context_.scopeData[scopeIndex_];
+}
+
+InputScope InputScope::enclosing() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        // This may return a nullptr Scope pointer.
+        return InputScope(ptr->enclosing());
+      },
+      [](const ScopeStencilRef& ref) {
+        if (ref.scope().hasEnclosing()) {
+          return InputScope(ref.context_, ref.scope().enclosing());
+        }
+        return InputScope(nullptr);
+      });
+}
+
+FunctionFlags InputScope::functionFlags() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->flags();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencil& data = ref.context_.scriptData[scriptIndex];
+        return data.functionFlags;
+      });
+}
+
+ImmutableScriptFlags InputScope::immutableFlags() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->baseScript()->immutableFlags();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
+        return extra.immutableFlags;
+      });
+}
+
+MemberInitializers InputScope::getMemberInitializers() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->baseScript()->getMemberInitializers();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
+        return extra.memberInitializers();
+      });
+}
+
+const ScriptStencil& ScriptStencilRef::scriptData() const {
+  return context_.scriptData[scriptIndex_];
+}
+
+const ScriptStencilExtra& ScriptStencilRef::scriptExtra() const {
+  return context_.scriptExtra[scriptIndex_];
+}
 
 }  // namespace frontend
 }  // namespace js

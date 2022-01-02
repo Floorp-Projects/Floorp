@@ -6,7 +6,7 @@
 
 add_task(function() {
   const { DevToolsLoader, require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
 
   // Force-load the module once in the global loader to avoid Bug 1622718.

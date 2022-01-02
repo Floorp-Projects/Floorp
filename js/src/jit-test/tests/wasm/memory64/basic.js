@@ -243,7 +243,14 @@ if (getBuildConfiguration()["pointer-byte-size"] == 8) {
     // TODO: "index" is not yet part of the spec
     // https://github.com/WebAssembly/memory64/issues/24
 
-    new WebAssembly.Memory({index:"i64", initial:65536 * 1.5, maximum:65536 * 2});
+    try {
+        new WebAssembly.Memory({index:"i64", initial:65536 * 1.5, maximum:65536 * 2});
+    } catch (e) {
+        // OOM is OK.
+        if (!(e instanceof WebAssembly.RuntimeError) || !String(e).match(/too many memory pages/)) {
+            throw e;
+        }
+    }
 }
 
 // JS-API

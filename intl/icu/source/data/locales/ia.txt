@@ -2,6 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ia{
+    AuxExemplarCharacters{
+        "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ"
+        "]"
+    }
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -10,7 +14,12 @@ ia{
         word-initial{"… {0}"}
         word-medial{"{0} … {1}"}
     }
-    ExemplarCharacters{"[a b c {ch} d e f g h i j k l m n o p {ph} q r s t u v w x y z]"}
+    ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         latn{
@@ -28,51 +37,51 @@ ia{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 mil"}
+                        one{"0 mille"}
                         other{"0 milles"}
                     }
                     10000{
-                        one{"00 mil"}
+                        one{"00 mille"}
                         other{"00 milles"}
                     }
                     100000{
-                        one{"000 mil"}
+                        one{"000 mille"}
                         other{"000 milles"}
                     }
                     1000000{
-                        one{"0 mln"}
+                        one{"0 million"}
                         other{"0 milliones"}
                     }
                     10000000{
-                        one{"00 mln"}
+                        one{"00 million"}
                         other{"00 milliones"}
                     }
                     100000000{
-                        one{"000 mln"}
+                        one{"000 million"}
                         other{"000 milliones"}
                     }
                     1000000000{
-                        one{"0 mld"}
+                        one{"0 milliardo"}
                         other{"0 milliardos"}
                     }
                     10000000000{
-                        one{"00 mld"}
+                        one{"00 milliardo"}
                         other{"00 milliardos"}
                     }
                     100000000000{
-                        one{"000 mld"}
+                        one{"000 milliardo"}
                         other{"000 milliardos"}
                     }
                     1000000000000{
-                        one{"0 bln"}
+                        one{"0 billion"}
                         other{"0 billiones"}
                     }
                     10000000000000{
-                        one{"00 bln"}
+                        one{"00 billion"}
                         other{"00 billiones"}
                     }
                     100000000000000{
-                        one{"000 bln"}
+                        one{"000 billion"}
                         other{"000 billiones"}
                     }
                 }
@@ -211,6 +220,16 @@ ia{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -345,6 +364,16 @@ ia{
                 "{1} 'a' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -848,40 +877,20 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} dies"}
+                    one{"in {0} die"}
                     other{"in {0} dies"}
                 }
                 past{
-                    one{"{0} dies retro"}
+                    one{"{0} die retro"}
                     other{"{0} dies retro"}
                 }
             }
         }
         day-narrow{
             dn{"d."}
-            relativeTime{
-                future{
-                    one{"in {0} dies"}
-                    other{"in {0} dies"}
-                }
-                past{
-                    one{"{0} dies retro"}
-                    other{"{0} dies retro"}
-                }
-            }
         }
         day-short{
             dn{"die"}
-            relativeTime{
-                future{
-                    one{"in {0} dies"}
-                    other{"in {0} dies"}
-                }
-                past{
-                    one{"{0} dies retro"}
-                    other{"{0} dies retro"}
-                }
-            }
         }
         dayOfYear{
             dn{"die del anno"}
@@ -918,45 +927,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} venerdis"}
+                    one{"in {0} venerdi"}
                     other{"in {0} venerdis"}
                 }
                 past{
-                    one{"{0} venerdis retro"}
+                    one{"{0} venerdi retro"}
                     other{"{0} venerdis retro"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"ven. passate"}
-                "0"{"iste ven."}
-                "1"{"ven. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} venerdis"}
-                    other{"in {0} ven."}
-                }
-                past{
-                    one{"{0} venerdis retro"}
-                    other{"{0} ven. retro"}
                 }
             }
         }
         fri-short{
             relative{
-                "-1"{"ven. passate"}
+                "-1"{"ven. pass."}
                 "0"{"iste ven."}
-                "1"{"ven. proxime"}
+                "1"{"ven. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} venerdis"}
+                    one{"in {0} ven."}
                     other{"in {0} ven."}
                 }
                 past{
-                    one{"{0} venerdis retro"}
+                    one{"{0} ven. retro"}
                     other{"{0} ven. retro"}
                 }
             }
@@ -968,37 +960,27 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} horas"}
+                    one{"in {0} hora"}
                     other{"in {0} horas"}
                 }
                 past{
-                    one{"{0} horas retro"}
+                    one{"{0} hora retro"}
                     other{"{0} horas retro"}
                 }
             }
         }
         hour-narrow{
             dn{"h."}
-            relativeTime{
-                future{
-                    one{"in {0} horas"}
-                    other{"in {0} hr."}
-                }
-                past{
-                    one{"{0} horas retro"}
-                    other{"{0} hr. retro"}
-                }
-            }
         }
         hour-short{
             dn{"hr."}
             relativeTime{
                 future{
-                    one{"in {0} horas"}
+                    one{"in {0} hr."}
                     other{"in {0} hr."}
                 }
                 past{
-                    one{"{0} horas retro"}
+                    one{"{0} hr. retro"}
                     other{"{0} hr. retro"}
                 }
             }
@@ -1010,37 +992,27 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} minutas"}
+                    one{"in {0} minuta"}
                     other{"in {0} minutas"}
                 }
                 past{
-                    one{"{0} minutas retro"}
+                    one{"{0} minuta retro"}
                     other{"{0} minutas retro"}
                 }
             }
         }
         minute-narrow{
             dn{"m."}
-            relativeTime{
-                future{
-                    one{"in {0} minutas"}
-                    other{"in {0} min."}
-                }
-                past{
-                    one{"{0} minutas retro"}
-                    other{"{0} min. retro"}
-                }
-            }
         }
         minute-short{
             dn{"min."}
             relativeTime{
                 future{
-                    one{"in {0} minutas"}
+                    one{"in {0} min."}
                     other{"in {0} min."}
                 }
                 past{
-                    one{"{0} minutas retro"}
+                    one{"{0} min. retro"}
                     other{"{0} min. retro"}
                 }
             }
@@ -1053,45 +1025,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} lunedis"}
+                    one{"in {0} lunedi"}
                     other{"in {0} lunedis"}
                 }
                 past{
-                    one{"{0} lunedis retro"}
+                    one{"{0} lunedi retro"}
                     other{"{0} lunedis retro"}
-                }
-            }
-        }
-        mon-narrow{
-            relative{
-                "-1"{"lun. passate"}
-                "0"{"iste lun."}
-                "1"{"lun. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} lunedis"}
-                    other{"in {0} lun."}
-                }
-                past{
-                    one{"{0} lunedis retro"}
-                    other{"{0} lun. retro"}
                 }
             }
         }
         mon-short{
             relative{
-                "-1"{"lun. passate"}
+                "-1"{"lun. pass."}
                 "0"{"iste lun."}
-                "1"{"lun. proxime"}
+                "1"{"lun. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} lunedis"}
+                    one{"in {0} lun."}
                     other{"in {0} lun."}
                 }
                 past{
-                    one{"{0} lunedis retro"}
+                    one{"{0} lun. retro"}
                     other{"{0} lun. retro"}
                 }
             }
@@ -1105,37 +1060,32 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} menses"}
+                    one{"in {0} mense"}
                     other{"in {0} menses"}
                 }
                 past{
-                    one{"{0} menses retro"}
+                    one{"{0} mense retro"}
                     other{"{0} menses retro"}
                 }
             }
         }
         month-narrow{
             dn{"m."}
-            relativeTime{
-                future{
-                    one{"in {0} menses"}
-                    other{"in {0} mns."}
-                }
-                past{
-                    one{"{0} menses retro"}
-                    other{"{0} mns. retro"}
-                }
-            }
         }
         month-short{
             dn{"mns."}
+            relative{
+                "-1"{"mns. pass."}
+                "0"{"iste mns."}
+                "1"{"mns. prox."}
+            }
             relativeTime{
                 future{
-                    one{"in {0} menses"}
+                    one{"in {0} mns."}
                     other{"in {0} mns."}
                 }
                 past{
-                    one{"{0} menses retro"}
+                    one{"{0} mns. retro"}
                     other{"{0} mns. retro"}
                 }
             }
@@ -1149,37 +1099,27 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} trimestres"}
+                    one{"in {0} trimestre"}
                     other{"in {0} trimestres"}
                 }
                 past{
-                    one{"in {0} trimestres"}
-                    other{"in {0} trimestres"}
+                    one{"{0} trimestre retro"}
+                    other{"{0} trimestres retro"}
                 }
             }
         }
         quarter-narrow{
             dn{"t."}
-            relativeTime{
-                future{
-                    one{"in {0} trimestres"}
-                    other{"in {0} trim."}
-                }
-                past{
-                    one{"in {0} trimestres"}
-                    other{"{0} trim. retro"}
-                }
-            }
         }
         quarter-short{
             dn{"trim."}
             relativeTime{
                 future{
-                    one{"in {0} trimestres"}
+                    one{"in {0} trim."}
                     other{"in {0} trim."}
                 }
                 past{
-                    one{"in {0} trimestres"}
+                    one{"{0} trim. retro"}
                     other{"{0} trim. retro"}
                 }
             }
@@ -1192,45 +1132,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} sabbatos"}
+                    one{"in {0} sabbato"}
                     other{"in {0} sabbatos"}
                 }
                 past{
-                    one{"{0} sabbatos retro"}
+                    one{"{0} sabbato retro"}
                     other{"{0} sabbatos retro"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"sab. passate"}
-                "0"{"iste sab."}
-                "1"{"sab. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} sabbatos"}
-                    other{"in {0} sab."}
-                }
-                past{
-                    one{"{0} sabbatos retro"}
-                    other{"{0} sab. retro"}
                 }
             }
         }
         sat-short{
             relative{
-                "-1"{"sab. passate"}
+                "-1"{"sab. pass."}
                 "0"{"iste sab."}
-                "1"{"sab. proxime"}
+                "1"{"sab. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} sabbatos"}
+                    one{"in {0} sab."}
                     other{"in {0} sab."}
                 }
                 past{
-                    one{"{0} sabbatos retro"}
+                    one{"{0} sab. retro"}
                     other{"{0} sab. retro"}
                 }
             }
@@ -1242,37 +1165,27 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} secundas"}
+                    one{"in {0} secunda"}
                     other{"in {0} secundas"}
                 }
                 past{
-                    one{"{0} secundas retro"}
+                    one{"{0} secunda retro"}
                     other{"{0} secundas retro"}
                 }
             }
         }
         second-narrow{
             dn{"s."}
-            relativeTime{
-                future{
-                    one{"in {0} secundas"}
-                    other{"in {0} sec."}
-                }
-                past{
-                    one{"{0} secundas retro"}
-                    other{"{0} sec. retro"}
-                }
-            }
         }
         second-short{
             dn{"sec."}
             relativeTime{
                 future{
-                    one{"in {0} secundas"}
+                    one{"in {0} sec."}
                     other{"in {0} sec."}
                 }
                 past{
-                    one{"{0} secundas retro"}
+                    one{"{0} sec. retro"}
                     other{"{0} sec. retro"}
                 }
             }
@@ -1285,45 +1198,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} dominicas"}
+                    one{"in {0} dominica"}
                     other{"in {0} dominicas"}
                 }
                 past{
-                    one{"{0} dominicas retro"}
+                    one{"{0} dominica retro"}
                     other{"{0} dominicas retro"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"dom. passate"}
-                "0"{"iste dom."}
-                "1"{"dom. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} dominicas"}
-                    other{"in {0} dom."}
-                }
-                past{
-                    one{"{0} dominicas retro"}
-                    other{"{0} dom. retro"}
                 }
             }
         }
         sun-short{
             relative{
-                "-1"{"dom. passate"}
+                "-1"{"dom. pass."}
                 "0"{"iste dom."}
-                "1"{"dom. proxime"}
+                "1"{"dom. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} dominicas"}
+                    one{"in {0} dom."}
                     other{"in {0} dom."}
                 }
                 past{
-                    one{"{0} dominicas retro"}
+                    one{"{0} dom. retro"}
                     other{"{0} dom. retro"}
                 }
             }
@@ -1336,45 +1232,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} jovedis"}
+                    one{"in {0} jovedi"}
                     other{"in {0} jovedis"}
                 }
                 past{
-                    one{"{0} jovedis retro"}
+                    one{"{0} jovedi retro"}
                     other{"{0} jovedis retro"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"jov. passate"}
-                "0"{"iste jov."}
-                "1"{"jov. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} jovedis"}
-                    other{"in {0} jov."}
-                }
-                past{
-                    one{"{0} jovedis retro"}
-                    other{"{0} jov. retro"}
                 }
             }
         }
         thu-short{
             relative{
-                "-1"{"jov. passate"}
+                "-1"{"jov. pass."}
                 "0"{"iste jov."}
-                "1"{"jov. proxime"}
+                "1"{"jov. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} jovedis"}
+                    one{"in {0} jov."}
                     other{"in {0} jov."}
                 }
                 past{
-                    one{"{0} jovedis retro"}
+                    one{"{0} jov. retro"}
                     other{"{0} jov. retro"}
                 }
             }
@@ -1387,45 +1266,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} martedis"}
+                    one{"in {0} martedi"}
                     other{"in {0} martedis"}
                 }
                 past{
-                    one{"{0} martedis retro"}
+                    one{"{0} martedi retro"}
                     other{"{0} martedis retro"}
-                }
-            }
-        }
-        tue-narrow{
-            relative{
-                "-1"{"mar. passate"}
-                "0"{"iste mar."}
-                "1"{"mar. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} martedis"}
-                    other{"in {0} mar."}
-                }
-                past{
-                    one{"{0} martedis retro"}
-                    other{"{0} mar. retro"}
                 }
             }
         }
         tue-short{
             relative{
-                "-1"{"mar. passate"}
+                "-1"{"mar. pass."}
                 "0"{"iste mar."}
-                "1"{"mar. proxime"}
+                "1"{"mar. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} martedis"}
+                    one{"in {0} mar."}
                     other{"in {0} mar."}
                 }
                 past{
-                    one{"{0} martedis retro"}
+                    one{"{0} mar. retro"}
                     other{"{0} mar. retro"}
                 }
             }
@@ -1438,45 +1300,28 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} mercuridis"}
+                    one{"in {0} mercuridi"}
                     other{"in {0} mercuridis"}
                 }
                 past{
-                    one{"{0} mercuridis retro"}
+                    one{"{0} mercuridi retro"}
                     other{"{0} mercuridis retro"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"mer. passate"}
-                "0"{"iste mer."}
-                "1"{"mer. proxime"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} mercuridis"}
-                    other{"in {0} mer."}
-                }
-                past{
-                    one{"{0} mercuridis retro"}
-                    other{"{0} mer. retro"}
                 }
             }
         }
         wed-short{
             relative{
-                "-1"{"mer. passate"}
+                "-1"{"mer. pass."}
                 "0"{"iste mer."}
-                "1"{"mer. proxime"}
+                "1"{"mer. prox."}
             }
             relativeTime{
                 future{
-                    one{"in {0} mercuridis"}
+                    one{"in {0} mer."}
                     other{"in {0} mer."}
                 }
                 past{
-                    one{"{0} mercuridis retro"}
+                    one{"{0} mer. retro"}
                     other{"{0} mer. retro"}
                 }
             }
@@ -1491,39 +1336,33 @@ ia{
             relativePeriod{"le septimana de {0}"}
             relativeTime{
                 future{
-                    one{"in {0} septimanas"}
+                    one{"in {0} septimana"}
                     other{"in {0} septimanas"}
                 }
                 past{
-                    one{"{0} septimanas retro"}
+                    one{"{0} septimana retro"}
                     other{"{0} septimanas retro"}
                 }
             }
         }
         week-narrow{
             dn{"s."}
-            relativePeriod{"le sept. de {0}"}
-            relativeTime{
-                future{
-                    one{"in {0} septimanas"}
-                    other{"in {0} sept."}
-                }
-                past{
-                    one{"{0} septimanas retro"}
-                    other{"{0} sept. retro"}
-                }
-            }
         }
         week-short{
             dn{"sept."}
+            relative{
+                "-1"{"sept. pass."}
+                "0"{"iste sept."}
+                "1"{"sept. prox."}
+            }
             relativePeriod{"le sept. de {0}"}
             relativeTime{
                 future{
-                    one{"in {0} septimanas"}
+                    one{"in {0} sept."}
                     other{"in {0} sept."}
                 }
                 past{
-                    one{"{0} septimanas retro"}
+                    one{"{0} sept. retro"}
                     other{"{0} sept. retro"}
                 }
             }
@@ -1564,37 +1403,32 @@ ia{
             }
             relativeTime{
                 future{
-                    one{"in {0} annos"}
+                    one{"in {0} anno"}
                     other{"in {0} annos"}
                 }
                 past{
-                    one{"{0} annos retro"}
+                    one{"{0} anno retro"}
                     other{"{0} annos retro"}
                 }
             }
         }
         year-narrow{
             dn{"a."}
-            relativeTime{
-                future{
-                    one{"in {0} annos"}
-                    other{"in {0} an."}
-                }
-                past{
-                    one{"{0} annos retro"}
-                    other{"{0} an. retro"}
-                }
-            }
         }
         year-short{
             dn{"an."}
+            relative{
+                "-1"{"an. pass."}
+                "0"{"iste an."}
+                "1"{"an. prox."}
+            }
             relativeTime{
                 future{
-                    one{"in {0} annos"}
+                    one{"in {0} an."}
                     other{"in {0} an."}
                 }
                 past{
-                    one{"{0} annos retro"}
+                    one{"{0} an. retro"}
                     other{"{0} an. retro"}
                 }
             }

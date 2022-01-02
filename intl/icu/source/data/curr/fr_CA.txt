@@ -28,7 +28,7 @@ fr_CA{
             "dollar bélizéen",
         }
         CAD{
-            "$ CA",
+            "$",
             "dollar canadien",
         }
         CLP{

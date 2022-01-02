@@ -116,7 +116,7 @@ void wasm2c_shadow_memory_reserve(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t 
   });
 }
 
-static void report_error(const char* func_name, const char* error_message, uint32_t index, cell_data_t* data) {
+static void report_error(wasm_rt_memory_t* mem, const char* func_name, const char* error_message, uint32_t index, cell_data_t* data) {
   const char* alloc_state_string = "<>";
   const char* used_state_string = "<>";
   const char* own_state_string = "<>";
@@ -126,9 +126,11 @@ static void report_error(const char* func_name, const char* error_message, uint3
     used_state_string = used_state_strings[(int) data->used_state];
     own_state_string = own_state_strings[(int) data->own_state];
   }
-  printf("WASM Shadow memory ASAN failed! %s (Func: %s, Index: %" PRIu32 ") (Cell state: %s, %s, %s)!\n",
+  const uint64_t used_mem = wasm2c_shadow_memory_print_total_allocations(mem);
+  printf("WASM Shadow memory ASAN failed! %s (Func: %s, Index: %" PRIu32 ") (Cell state: %s, %s, %s) (Allocated mem: %" PRIu64 ")!\n",
     error_message, func_name, index,
-    alloc_state_string, used_state_string, own_state_string
+    alloc_state_string, used_state_string, own_state_string,
+    used_mem
   );
   fflush(stdout);
   #ifndef WASM_CHECK_SHADOW_MEMORY_NO_ABORT_ON_FAIL
@@ -137,14 +139,19 @@ static void report_error(const char* func_name, const char* error_message, uint3
 }
 
 void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t ptr_size) {
+  if (ptr == 0) {
+    // malloc failed
+    return;
+  }
+
   const char* func_name = "<MALLOC>";
   if (ptr < mem->shadow_memory.heap_base) {
-    report_error(func_name, "malloc returning a pointer outside the heap", ptr, 0);
+    report_error(mem, func_name, "malloc returning a pointer outside the heap", ptr, 0);
   }
 
   memory_state_iterate(mem, ptr, ptr_size, [&](uint32_t index, cell_data_t* data){
     if (data->alloc_state != ALLOC_STATE::UNINIT) {
-      report_error(func_name, "Malloc returned a pointer in already occupied memory!", index, data);
+      report_error(mem, func_name, "Malloc returned a pointer in already occupied memory!", index, data);
     } else {
       data->alloc_state = ALLOC_STATE::ALLOCED;
     }
@@ -155,19 +162,24 @@ void wasm2c_shadow_memory_dlmalloc(wasm_rt_memory_t* mem, uint32_t ptr, uint32_t
 }
 
 void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr) {
+  if (ptr == 0) {
+    // free noop
+    return;
+  }
+
   const char* func_name = "<FREE>";
 
   auto alloc_map = allocation_sizes_map(mem);
   auto it = alloc_map->find(ptr);
   if (it == alloc_map->end()) {
-    report_error(func_name, "Freeing a pointer that was not allocated!", ptr, 0);
+    report_error(mem, func_name, "Freeing a pointer that was not allocated!", ptr, 0);
   } else {
     uint32_t ptr_size = it->second;
     alloc_map->erase(it);
 
     memory_state_iterate(mem, ptr, ptr_size, [&](uint32_t index, cell_data_t* data){
       if (data->alloc_state == ALLOC_STATE::UNINIT) {
-        report_error(func_name, "Freeing uninitialized memory", index, data);
+        report_error(mem, func_name, "Freeing uninitialized memory", index, data);
       } else {
         data->alloc_state = ALLOC_STATE::UNINIT;
       }
@@ -190,13 +202,13 @@ static void check_heap_base_straddle(wasm_rt_memory_t* mem, const char* func_nam
 
   if (ptr < heap_base) {
     if (ptr + ptr_size > heap_base) {
-      report_error(func_name, "Memory operation straddling heap base!", ptr, 0 /* cell_data */);
+      report_error(mem, func_name, "Memory operation straddling heap base!", ptr, 0 /* cell_data */);
     }
   }
 }
 
 static bool is_malloc_family_function(const char* func_name, bool include_calloc, bool include_realloc) {
-  if(strcmp(func_name, "w2c_dlmalloc") == 0 || strcmp(func_name, "w2c_dlfree") == 0) {
+  if(strcmp(func_name, "w2c_dlmalloc") == 0 || strcmp(func_name, "w2c_dlfree") == 0 || strcmp(func_name, "w2c_sbrk") == 0) {
     return true;
   }
   if (include_calloc) {
@@ -246,11 +258,11 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const c
     if (!exempt) {
 #ifdef WASM_CHECK_SHADOW_MEMORY_UNINIT_READ
       if (data->alloc_state != ALLOC_STATE::INITIALIZED) {
-        report_error(func_name, "Reading uninitialized or unallocated memory", index, data);
+        report_error(mem, func_name, "Reading uninitialized or unallocated memory", index, data);
       }
 #else
       if (data->alloc_state == ALLOC_STATE::UNINIT) {
-        report_error(func_name, "Reading uninitialized memory", index, data);
+        report_error(mem, func_name, "Reading uninitialized memory", index, data);
       }
 #endif
     }
@@ -260,7 +272,7 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const c
       if (malloc_core_family) {
         // Accessing C globals from core malloc functions
         if(data->own_state == OWN_STATE::PROGRAM) {
-          report_error(func_name, "Core malloc functions reading non malloc globals", index, data);
+          report_error(mem, func_name, "Core malloc functions reading non malloc globals", index, data);
         }
         data->own_state = OWN_STATE::MALLOC;
       } else if (malloc_any_family) {
@@ -268,7 +280,7 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_load(wasm_rt_memory_t* mem, const c
         // hard to infer as these access both regular and chunk memory, so leave things unchanged
       } else {
         if(data->own_state == OWN_STATE::MALLOC) {
-          report_error(func_name, "Program reading malloc globals", index, data);
+          report_error(mem, func_name, "Program reading malloc globals", index, data);
         }
         data->own_state = OWN_STATE::PROGRAM;
       }
@@ -295,7 +307,7 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const 
 
     if (!exempt) {
       if (data->alloc_state == ALLOC_STATE::UNINIT) {
-        report_error(func_name, "Writing uninitialized memory", index, data);
+        report_error(mem, func_name, "Writing uninitialized memory", index, data);
       } else if (data->alloc_state == ALLOC_STATE::ALLOCED) {
         data->alloc_state = ALLOC_STATE::INITIALIZED;
       }
@@ -306,7 +318,7 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const 
       if (malloc_core_family) {
         // Accessing C globals from core malloc functions
         if(data->own_state == OWN_STATE::PROGRAM) {
-          report_error(func_name, "Core malloc functions writing non malloc globals", index, data);
+          report_error(mem, func_name, "Core malloc functions writing non malloc globals", index, data);
         }
         data->own_state = OWN_STATE::MALLOC;
       } else if (malloc_any_family) {
@@ -314,7 +326,7 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_store(wasm_rt_memory_t* mem, const 
         // hard to infer as these access both regular and chunk memory, so leave things unchanged
       } else {
         if(data->own_state == OWN_STATE::MALLOC) {
-          report_error(func_name, "Program writing malloc globals", index, data);
+          report_error(mem, func_name, "Program writing malloc globals", index, data);
         }
         data->own_state = OWN_STATE::PROGRAM;
       }
@@ -336,4 +348,14 @@ WASM2C_FUNC_EXPORT void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t*
     }
   }
   puts(" }");
+}
+
+WASM2C_FUNC_EXPORT uint64_t wasm2c_shadow_memory_print_total_allocations(wasm_rt_memory_t* mem) {
+  auto alloc_map = allocation_sizes_map(mem);
+  uint64_t used_memory = mem->shadow_memory.heap_base;
+  for (auto i = alloc_map->begin(); i != alloc_map->end(); ++i)
+  {
+    used_memory += i->second;
+  }
+  return used_memory;
 }

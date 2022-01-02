@@ -80,7 +80,7 @@ class AccessibilityPrefs extends Component {
           tooltip: L10N.getStr("accessibility.pref.scroll.into.view.title"),
           onClick: this.onPrefClick.bind(this, PREFS.SCROLL_INTO_VIEW),
         }),
-        hr(),
+        hr({ key: "hr" }),
         MenuItem({
           role: "link",
           key: "accessibility-tree-filters-prefs-menu-help",

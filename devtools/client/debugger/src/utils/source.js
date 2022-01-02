@@ -18,7 +18,6 @@ import { renderWasmText } from "./wasm";
 import { toEditorLine } from "./editor";
 export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
-import { features } from "./prefs";
 
 import { isFulfilled } from "./async-value";
 
@@ -56,10 +55,6 @@ export function shouldBlackbox(source) {
   }
 
   if (!source.url) {
-    return false;
-  }
-
-  if (!features.originalBlackbox && isOriginalSource(source)) {
     return false;
   }
 

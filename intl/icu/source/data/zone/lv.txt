@@ -1907,6 +1907,9 @@ lv{
             lg{"Jekaterinburgas laiks"}
             ls{"Jekaterinburgas ziemas laiks"}
         }
+        "meta:Yukon"{
+            ls{"Jukonas laiks"}
+        }
         fallbackFormat{"{0} ({1})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

@@ -41,15 +41,15 @@ const CLEARKEY_VERSION = "0.1";
 
 const FIRST_CONTENT_PROCESS_TOPIC = "ipc:first-content-process-created";
 
-const GMP_LICENSE_INFO = "gmp_license_info";
-const GMP_PRIVACY_INFO = "gmp_privacy_info";
+const GMP_LICENSE_INFO = "plugins-gmp-license-info";
+const GMP_PRIVACY_INFO = "plugins-gmp-privacy-info";
 const GMP_LEARN_MORE = "learn_more_label";
 
 const GMP_PLUGINS = [
   {
     id: OPEN_H264_ID,
-    name: "openH264_name",
-    description: "openH264_description2",
+    name: "plugins-openh264-name",
+    description: "plugins-openh264-description",
     // The following licenseURL is part of an awful hack to include the OpenH264
     // license without having bug 624602 fixed yet, and intentionally ignores
     // localisation.
@@ -58,9 +58,8 @@ const GMP_PLUGINS = [
   },
   {
     id: WIDEVINE_ID,
-    name: "widevine_description",
-    // Describe the purpose of both CDMs in the same way.
-    description: "cdm_description2",
+    name: "plugins-widevine-name",
+    description: "plugins-widevine-description",
     licenseURL: "https://www.google.com/policies/privacy/",
     homepageURL: "https://www.widevine.com/",
     isEME: true,
@@ -68,8 +67,10 @@ const GMP_PLUGINS = [
 ];
 XPCOMUtils.defineConstant(this, "GMP_PLUGINS", GMP_PLUGINS);
 
-XPCOMUtils.defineLazyGetter(this, "pluginsBundle", () =>
-  Services.strings.createBundle("chrome://global/locale/plugins.properties")
+XPCOMUtils.defineLazyGetter(
+  this,
+  "pluginsBundle",
+  () => new Localization(["toolkit/about/aboutPlugins.ftl"], true)
 );
 XPCOMUtils.defineLazyGetter(this, "gmpService", () =>
   Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
@@ -192,7 +193,7 @@ GMPWrapper.prototype = {
         let a = doc.createElementNS(XHTML, "a");
         a.href = plugin[urlProp];
         a.target = "_blank";
-        a.textContent = pluginsBundle.GetStringFromName(labelId);
+        a.textContent = pluginsBundle.formatValueSync(labelId);
 
         if (frag.childElementCount) {
           frag.append(
@@ -833,8 +834,8 @@ var GMPProvider = {
     for (let aPlugin of GMP_PLUGINS) {
       let plugin = {
         id: aPlugin.id,
-        name: pluginsBundle.GetStringFromName(aPlugin.name),
-        description: pluginsBundle.GetStringFromName(aPlugin.description),
+        name: pluginsBundle.formatValueSync(aPlugin.name),
+        description: pluginsBundle.formatValueSync(aPlugin.description),
         homepageURL: aPlugin.homepageURL,
         optionsURL: aPlugin.optionsURL,
         wrapper: null,

@@ -403,6 +403,7 @@ pt{
         raj{"rajastani"}
         rap{"rapanui"}
         rar{"rarotongano"}
+        rhg{"ruainga"}
         rm{"romanche"}
         rn{"rundi"}
         ro{"romeno"}
@@ -692,7 +693,7 @@ pt{
         Yiii{"yi"}
         Zinh{"herdado"}
         Zmth{"notação matemática"}
-        Zsye{"Emoji"}
+        Zsye{"emoji"}
         Zsym{"zsym"}
         Zxxx{"ágrafo"}
         Zyyy{"comum"}

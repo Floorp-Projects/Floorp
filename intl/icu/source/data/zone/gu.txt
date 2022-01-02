@@ -1938,6 +1938,9 @@ gu{
             lg{"યેકાટેરિનબર્ગ સમય"}
             ls{"યેકાટેરિનબર્ગ માનક સમય"}
         }
+        "meta:Yukon"{
+            ls{"યુકોન સમય"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

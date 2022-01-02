@@ -275,7 +275,9 @@ class XPCShellTestThread(Thread):
 
         return proc.communicate()
 
-    def launchProcess(self, cmd, stdout, stderr, env, cwd, timeout=None):
+    def launchProcess(
+        self, cmd, stdout, stderr, env, cwd, timeout=None, test_name=None
+    ):
         """
         Simple wrapper to launch a process.
         On a remote system, this is more complex and we need to overload this function.
@@ -821,6 +823,7 @@ class XPCShellTestThread(Thread):
                 env=self.env,
                 cwd=test_dir,
                 timeout=testTimeoutInterval,
+                test_name=name,
             )
 
             if hasattr(proc, "pid"):

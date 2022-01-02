@@ -51,7 +51,7 @@ ExpandedPrincipal::ExpandedPrincipal(
 ExpandedPrincipal::~ExpandedPrincipal() = default;
 
 already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
-    nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
+    const nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
     const OriginAttributes& aAttrs) {
   // We force the principals to be sorted by origin so that ExpandedPrincipal
   // origins can have a canonical form.

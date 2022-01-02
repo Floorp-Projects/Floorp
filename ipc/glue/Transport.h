@@ -20,17 +20,11 @@
 namespace mozilla {
 namespace ipc {
 
-class FileDescriptor;
-
 typedef IPC::Channel Transport;
 
-nsresult CreateTransport(base::ProcessId aProcIdOne, TransportDescriptor* aOne,
-                         TransportDescriptor* aTwo);
+nsresult CreateTransport(TransportDescriptor* aOne, TransportDescriptor* aTwo);
 
 UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
-                                    Transport::Mode aMode);
-
-UniquePtr<Transport> OpenDescriptor(const FileDescriptor& aFd,
                                     Transport::Mode aMode);
 
 TransportDescriptor DuplicateDescriptor(const TransportDescriptor& aTd);

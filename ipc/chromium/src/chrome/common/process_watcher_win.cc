@@ -6,6 +6,7 @@
 
 #include "chrome/common/process_watcher.h"
 
+#include <processthreadsapi.h>
 #include "base/message_loop.h"
 #include "base/object_watcher.h"
 
@@ -35,6 +36,10 @@ class ChildReaper : public mozilla::Runnable,
   virtual void WillDestroyCurrentMessageLoop() {
     MOZ_ASSERT(!force_);
     if (process_) {
+#ifdef NS_FREE_PERMANENT_DATA
+      printf_stderr("Waiting in WillDestroyCurrentMessageLoop for pid %lu\n",
+                    GetProcessId(process_));
+#endif
       WaitForSingleObject(process_, INFINITE);
       base::CloseProcessHandle(process_);
       process_ = 0;

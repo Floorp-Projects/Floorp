@@ -34,6 +34,17 @@ add_task(async () => {
         "Double-click caused us to enter fullscreen."
       );
 
+      await BrowserTestUtils.waitForCondition(
+        () => {
+          let close = pipWin.document.getElementById("close");
+          let opacity = parseFloat(pipWin.getComputedStyle(close).opacity);
+          return opacity == 0.0;
+        },
+        "Close button in player should have reached 0.0 opacity",
+        100,
+        100
+      );
+
       // First, we'll test exiting fullscreen by double-clicking again
       // on the document body.
 

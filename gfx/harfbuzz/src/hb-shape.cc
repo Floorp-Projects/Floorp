@@ -48,9 +48,7 @@
  **/
 
 
-#if HB_USE_ATEXIT
-static void free_static_shaper_list ();
-#endif
+static inline void free_static_shaper_list ();
 
 static const char *nil_shaper_list[] = {nullptr};
 
@@ -69,9 +67,7 @@ static struct hb_shaper_list_lazy_loader_t : hb_lazy_loader_t<const char *,
       shaper_list[i] = shapers[i].name;
     shaper_list[i] = nullptr;
 
-#if HB_USE_ATEXIT
-    atexit (free_static_shaper_list);
-#endif
+    hb_atexit (free_static_shaper_list);
 
     return shaper_list;
   }
@@ -81,13 +77,11 @@ static struct hb_shaper_list_lazy_loader_t : hb_lazy_loader_t<const char *,
   { return nil_shaper_list; }
 } static_shaper_list;
 
-#if HB_USE_ATEXIT
-static
+static inline
 void free_static_shaper_list ()
 {
   static_shaper_list.free_instance ();
 }
-#endif
 
 
 /**

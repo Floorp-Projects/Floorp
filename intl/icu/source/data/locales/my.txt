@@ -4,7 +4,7 @@
 my{
     AuxExemplarCharacters{
         "[၀႐ ၁႑ ၂႒ ၃႓ ၄႔ ၅႕ ၆႖ ၇႗ ၈႘ ၉႙ ၵ ၚ ၽ ၾ ၐ ၑ ၥ ဨ ဢ ၒ ၓ ၔ ၕ \u1033 ၖ ၗ \u1058 "
-        "\u1059 \u1034 ၢ \u1086 ၤ ႈ ႊ ႏ]"
+        "\u1059 \u1086 \u1034 ၢ ၤ ႈ ႊ ႏ]"
     }
     Ellipsis{
         final{"{0}…"}
@@ -209,8 +209,8 @@ my{
             DateTimePatterns{
                 "zzzz HH:mm:ss",
                 "z HH:mm:ss",
-                "B HH:mm:ss",
-                "B H:mm",
+                "H:mm:ss",
+                "H:mm",
                 "EEEE G dd MMMM y",
                 "G dd MMMM y",
                 "G d MMM y",
@@ -220,6 +220,16 @@ my{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "Hmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMdd",
+                "GyMMMd",
+                "GGGGGyyMMdd",
             }
             availableFormats{
                 Bh{"B h"}
@@ -243,7 +253,7 @@ my{
                 M{"L"}
                 MEd{"d/M Eနေ့"}
                 MMM{"LLL"}
-                MMMEd{"MMM d၊ E"}
+                MMMEd{"MMM d- E"}
                 MMMMEd{"MMMM d Eနေ့"}
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
@@ -386,17 +396,27 @@ my{
             DateTimePatterns{
                 "zzzz HH:mm:ss",
                 "z HH:mm:ss",
-                "B HH:mm:ss",
-                "B H:mm",
-                "y၊ MMMM d၊ EEEE",
-                "y၊ d MMMM",
-                "y၊ MMM d",
+                "H:mm:ss",
+                "H:mm",
+                "y- MMMM d- EEEE",
+                "y- MMMM d",
+                "y- MMM d",
                 "dd-MM-yy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
             }
             appendItems{
                 Timezone{"{1} {0}"}
@@ -415,17 +435,17 @@ my{
                 Ehms{"E B h:mm:ss"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
-                GyMMMEd{"G y၊ MMM d၊ E"}
-                GyMMMd{"G y၊ MMM d"}
+                GyMMMEd{"G y- MMM d- E"}
+                GyMMMd{"G y- MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 Hmsv{"v HH:mm:ss"}
                 Hmv{"v HH:mm"}
                 M{"L"}
-                MEd{"d/M၊ E"}
+                MEd{"d-M- E"}
                 MMM{"LLL"}
-                MMMEd{"MMM d၊ E"}
+                MMMEd{"MMM d- E"}
                 MMMMEd{"MMMM d ရက် Eနေ့"}
                 MMMMW{
                     other{"MMMM လ W ပတ်မြောက်"}
@@ -442,11 +462,11 @@ my{
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
-                yMEd{"d/M/y၊ E"}
+                yMEd{"d/M/y- E"}
                 yMMM{"MMM y"}
-                yMMMEd{"y၊ MMM d၊ E"}
+                yMMMEd{"y- MMM d- E"}
                 yMMMM{"y MMMM"}
-                yMMMd{"y၊ MMM d"}
+                yMMMd{"y- MMM d"}
                 yMd{"dd-MM-y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
@@ -676,15 +696,15 @@ my{
                     M{"M – M"}
                 }
                 MEd{
-                    M{"d/M၊ EEEE – d/M၊ EEEE"}
-                    d{"d/M၊ EEEE – d/M၊ EEEE"}
+                    M{"d/M- EEEE – d/M- EEEE"}
+                    d{"d/M- EEEE – d/M- EEEE"}
                 }
                 MMM{
                     M{"MMM – MMM"}
                 }
                 MMMEd{
-                    M{"MMM d၊ E – MMM d၊ E"}
-                    d{"MMM d၊ E – MMM d၊ E"}
+                    M{"MMM d- E – MMM d- E"}
+                    d{"MMM d- E – MMM d- E"}
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
@@ -724,27 +744,27 @@ my{
                     y{"M/y – M/y"}
                 }
                 yMEd{
-                    M{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
-                    d{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
-                    y{"d/M/y၊ EEEE – d/M/y၊ EEEE"}
+                    M{"d/M/y- EEEE – d/M/y- EEEE"}
+                    d{"d/M/y- EEEE – d/M/y- EEEE"}
+                    y{"d/M/y- EEEE – d/M/y- EEEE"}
                 }
                 yMMM{
                     M{"y MMM – MMM"}
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    M{"y၊ MMM d၊ EEEE – MMM d၊ EEEE"}
-                    d{"y၊ MMM d၊ EEEE – MMM d၊ EEEE"}
-                    y{"y၊ MMM d၊ EEEE – y၊ MMM d၊ EEEE"}
+                    M{"y- MMM d- EEEE – MMM d- EEEE"}
+                    d{"y- MMM d- EEEE – MMM d- EEEE"}
+                    y{"y- MMM d- EEEE – y- MMM d- EEEE"}
                 }
                 yMMMM{
                     M{"y MMMM – MMMM"}
                     y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
-                    M{"y၊ MMM d – MMM d"}
-                    d{"y၊ MMM d – d"}
-                    y{"y၊ MMM d – y၊ MMM d"}
+                    M{"y- MMM d – MMM d"}
+                    d{"y- MMM d – d"}
+                    y{"y- MMM d – y- MMM d"}
                 }
                 yMd{
                     M{"d/M/y – d/M/y"}
@@ -1677,37 +1697,38 @@ my{
         or{
             2{"{0} သို့မဟုတ် {1}"}
             end{"{0} သို့မဟုတ် {1}"}
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         or-narrow{
-            middle{"{0}၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         or-short{
-            middle{"{0}၊ {1}"}
-            start{"{0} ၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         standard{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         standard-narrow{
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         standard-short{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0} - {1}"}
+            start{"{0} - {1}"}
         }
         unit{
             2{"{0}နှင့်{1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0}- {1}"}
+            start{"{0}- {1}"}
         }
         unit-narrow{
             2{"{0}နှင့် {1}"}
@@ -1718,8 +1739,8 @@ my{
         unit-short{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
-            middle{"{0}၊ {1}"}
-            start{"{0}၊ {1}"}
+            middle{"{0}- {1}"}
+            start{"{0}- {1}"}
         }
     }
     measurementSystemNames{

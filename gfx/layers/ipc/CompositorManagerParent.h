@@ -40,8 +40,8 @@ class CompositorManagerParent final : public PCompositorManagerParent {
                                           bool aUseExternalSurfaceSize,
                                           const gfx::IntSize& aSurfaceSize);
 
-  mozilla::ipc::IPCResult RecvAddSharedSurface(
-      const wr::ExternalImageId& aId, const SurfaceDescriptorShared& aDesc);
+  mozilla::ipc::IPCResult RecvAddSharedSurface(const wr::ExternalImageId& aId,
+                                               SurfaceDescriptorShared&& aDesc);
   mozilla::ipc::IPCResult RecvRemoveSharedSurface(
       const wr::ExternalImageId& aId);
   mozilla::ipc::IPCResult RecvReportSharedSurfacesMemory(
@@ -50,6 +50,9 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   mozilla::ipc::IPCResult RecvNotifyMemoryPressure();
 
   mozilla::ipc::IPCResult RecvReportMemory(ReportMemoryResolver&&);
+
+  mozilla::ipc::IPCResult RecvInitCanvasManager(
+      Endpoint<PCanvasManagerParent>&&);
 
   void BindComplete(bool aIsRoot);
   void ActorDestroy(ActorDestroyReason aReason) override;

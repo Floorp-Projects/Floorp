@@ -95,3 +95,7 @@ user_pref("startup.homepage_welcome_url.additional", "");
 // tests (bug 1725270). Can be removed once non-about:blank intermediate pages
 // are used instead (bug 1724261).
 user_pref("browser.tabs.remote.systemTriggeredAboutBlankAnywhere", true);
+// Explicitly turn off fission so we don't accidentally use the wrong default
+// value. This can be removed once harnesses and tasks assume fission by
+// default.
+user_pref("fission.autostart", false);

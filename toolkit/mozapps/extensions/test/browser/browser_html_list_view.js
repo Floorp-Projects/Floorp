@@ -13,14 +13,6 @@ const SUPPORT_URL = Services.urlFormatter.formatURL(
 );
 const REMOVE_SUMO_URL = SUPPORT_URL + "cant-remove-addon";
 
-const SECTION_INDEXES = {
-  enabled: 0,
-  disabled: 1,
-};
-function getSection(doc, type) {
-  return doc.querySelector(`section[section="${SECTION_INDEXES[type]}"]`);
-}
-
 function getTestCards(root) {
   return root.querySelectorAll('addon-card[addon-id$="@mochi.test"]');
 }

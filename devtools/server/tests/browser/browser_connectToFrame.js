@@ -26,7 +26,7 @@ add_task(async function() {
   // this fake actor is destroyed.
   await SpecialPowers.spawn(browser, [], () => {
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const { DevToolsServer } = require("devtools/server/devtools-server");
     const {

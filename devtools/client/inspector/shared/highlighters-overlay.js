@@ -180,7 +180,7 @@ class HighlightersOverlay {
 
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
-    this.onWillNavigate = this.onWillNavigate.bind(this);
+    this.hideAllHighlighters = this.hideAllHighlighters.bind(this);
     this.hideFlexboxHighlighter = this.hideFlexboxHighlighter.bind(this);
     this.hideGridHighlighter = this.hideGridHighlighter.bind(this);
     this.hideShapesHighlighter = this.hideShapesHighlighter.bind(this);
@@ -557,7 +557,7 @@ class HighlightersOverlay {
 
     if (this._pendingHighlighters.get(type) !== id) {
       return;
-    } else if (skipShow) {
+    } else if (skipShow || nodeFront.isDestroyed()) {
       this._pendingHighlighters.delete(type);
       return;
     }
@@ -1057,7 +1057,11 @@ class HighlightersOverlay {
     try {
       // Save grid highlighter state.
       const { url } = this.target;
-      const selectors = await node.getAllSelectors();
+
+      const selectors = await this.inspector.commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
+        node
+      );
+
       this.state.grids.set(node, { selectors, options, url });
 
       // Emit the NodeFront of the grid container element that the grid highlighter was
@@ -1381,7 +1385,9 @@ class HighlightersOverlay {
       return;
     }
 
-    const nodeFront = await this.inspectorFront.walker.findNodeFront(selectors);
+    const nodeFront = await this.inspector.commands.inspectorCommand.findNodeFrontFromSelectors(
+      selectors
+    );
 
     if (nodeFront) {
       await showFunction(nodeFront, options);
@@ -1831,9 +1837,11 @@ class HighlightersOverlay {
   }
 
   /**
-   * Clear saved highlighter shown properties on will-navigate.
+   * Hides any visible highlighter and clear internal state. This should be called to
+   * have a clean slate, for example when the page navigates or when a given frame is
+   * selected in the iframe picker.
    */
-  async onWillNavigate() {
+  async hideAllHighlighters() {
     this.destroyEditors();
 
     // Hide any visible highlighters and clear any timers set to autohide highlighters.

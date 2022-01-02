@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Result.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsDebug.h"
 #include "prio.h"
 

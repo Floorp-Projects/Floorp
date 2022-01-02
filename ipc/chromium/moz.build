@@ -71,7 +71,6 @@ if os_posix:
         "src/base/string16.cc",
         "src/base/thread_local_posix.cc",
         "src/base/waitable_event_posix.cc",
-        "src/chrome/common/file_descriptor_set_posix.cc",
         "src/chrome/common/ipc_channel_posix.cc",
         "src/chrome/common/process_watcher_posix_sigchld.cc",
     ]
@@ -85,7 +84,7 @@ if os_macosx:
         "src/base/scoped_nsautorelease_pool.mm",
         "src/base/sys_string_conversions_mac.mm",
         "src/base/time_mac.cc",
-        "src/chrome/common/mach_ipc_mac.mm",
+        "src/chrome/common/mach_ipc_mac.cc",
         "src/chrome/common/mach_message_source_mac.cc",
     ]
     SOURCES += [
@@ -133,8 +132,5 @@ TEST_DIRS += [
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 REQUIRES_UNIFIED_BUILD = True

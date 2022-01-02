@@ -1,0 +1,141 @@
+#nav-bar {
+  min-height: 38px !important;
+  box-shadow: none !important;
+  padding-inline: 6px !important;
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+#reload-button[disabled]:not(:-moz-window-inactive)>.toolbarbutton-icon {
+  opacity: 1 !important;
+}
+
+.toolbarbutton-badge:not(.feature-callout) {
+  box-shadow: 0 0 0 1px #0001 !important;
+  margin: 10px 0 0 !important;
+  margin-inline-end: -6px !important;
+}
+
+#nav-bar .toolbarbutton-badge:not(.feature-callout) {
+  box-shadow: 0 0 0 1px var(--toolbar-bgcolor) !important;
+}
+
+panel .toolbarbutton-badge:not(.feature-callout) {
+  box-shadow: 0 0 0 1px var(--arrowpanel-background) !important;
+}
+
+/* Windows */
+#PanelUI-button {
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#PanelUI-menu-button[badge-status|="update"] .toolbarbutton-badge {
+  display: none !important;
+}
+
+:root[privatebrowsingmode] #fxa-toolbar-menu-button {
+  pointer-events: none !important;
+}
+
+#navigator-toolbox #fxa-toolbar-menu-button {
+  margin-inline: 5px !important;
+  border-radius: 99px !important;
+  margin-block: -2px !important;
+}
+
+#navigator-toolbox #fxa-toolbar-menu-button> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+#navigator-toolbox #fxa-toolbar-menu-button> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+  padding: 3px !important;
+  background: 0 !important;
+}
+
+#fxa-avatar-image {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* show "Private" label for en languages only */
+:root[privatebrowsingmode] #fxa-toolbar-menu-button::before {
+  content: "Private" !important;
+  display: -moz-box !important;
+  margin-inline-start: 12px !important;
+  margin-inline-end: 6px !important;
+}
+
+:root[privatebrowsingmode] #navigator-toolbox #fxa-toolbar-menu-button {
+  background-color: var(--private-browsing-indicator, #006cbe) !important;
+  color: white !important;
+  margin-inline: 0 !important;
+}
+
+#nav-bar-customization-target {
+  overflow: visible !important;
+}
+
+/* Compact mode */
+:root[uidensity="compact"] {
+  --button-padding: 8px !important;
+}
+
+:root[uidensity="compact"] #nav-bar {
+  padding-inline: 4px !important;
+}
+
+:root[uidensity="compact"] :is(#navigator-toolbox .webextension-browser-action > :is(.toolbarbutton-badge-stack, .toolbarbutton-icon),
+  #navigator-toolbox #nav-bar .toolbarbutton-1:not(#fxa-toolbar-menu-button) > :is(.toolbarbutton-badge-stack, .toolbarbutton-icon)) {
+  padding-inline: var(--button-padding) !important;
+  width: calc(16px + var(--button-padding) * 2) !important;
+}
+
+:root[uidensity="compact"] #fxa-toolbar-menu-button {
+  margin-inline: 1px !important;
+}
+
+:root[uidensity="compact"] :is(#reload-button > .toolbarbutton-animatable-box, #stop-button > .toolbarbutton-animatable-box,
+  #nav-bar-overflow-button > .toolbarbutton-animatable-box) {
+  margin-inline-start: calc((16px + 2 * var(--button-padding) - 18px) / 2) !important;
+}
+
+:root[uidensity="compact"] #PersonalToolbar {
+  padding-inline: 2px;
+}
+
+#reload-button>.toolbarbutton-animatable-box,
+#stop-button>.toolbarbutton-animatable-box,
+#nav-bar-overflow-button>.toolbarbutton-animatable-box {
+  margin-inline-start: calc((16px + 2 * 12px - 18px) / 2) !important;
+  width: 18px !important;
+}
+
+@media (-moz-proton) {
+  /* fix animation with the new Firefox icons (Firefox: 89 or higher) */
+  @keyframes reload-stop-animation {
+    from { transform: translateX(0); }
+    to { transform: translateX(-450px); }
+  }
+
+  #stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+  #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+    animation-name: reload-stop-animation !important;
+  }
+
+  #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+    animation-timing-function: steps(25) !important;
+    animation-duration: 417ms !important;
+  }
+
+  #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+    animation-timing-function: steps(25) !important;
+    animation-duration: 417ms !important;
+  }
+
+  :where(#reload-button, #stop-button) > .toolbarbutton-icon,
+  :where(#reload-button, #stop-button) > .toolbarbutton-animatable-box {
+    translate: 0 !important;
+  }
+}

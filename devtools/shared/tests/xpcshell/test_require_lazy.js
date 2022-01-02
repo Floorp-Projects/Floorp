@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { loader } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 // Test devtools.lazyRequireGetter
 
 function run_test() {

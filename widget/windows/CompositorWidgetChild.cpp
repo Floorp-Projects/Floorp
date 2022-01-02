@@ -74,6 +74,11 @@ void CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode) {
   Unused << SendUpdateTransparency(aMode);
 }
 
+void CompositorWidgetChild::NotifyVisibilityUpdated(nsSizeMode aSizeMode,
+                                                    bool aIsFullyOccluded) {
+  Unused << SendNotifyVisibilityUpdated(aSizeMode, aIsFullyOccluded);
+};
+
 void CompositorWidgetChild::ClearTransparentWindow() {
   Unused << SendClearTransparentWindow();
 }

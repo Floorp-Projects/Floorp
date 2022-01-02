@@ -13,6 +13,25 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v96
+- Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
+  GeckoView.
+  ([bug 1733423]({{bugzilla}}1733423)).
+- Added [`GeckoResult.finally_`][96.2] to unconditionally run an action after
+  the GeckoResult has been completed.
+  ([bug 1736433]({{bugzilla}}1736433)).
+- Added [`ERROR_INVALID_DOMAIN`][96.3] to WebExtension.InstallException.ErrorCodes.
+  ([bug 1740634]({{bugzilla}}1740634)).
+- Added [`SelectionActionDelegate.Selection.pasteAsPlainText`][96.4] to paste
+  HTML content as plain text.
+- Removed deprecated Content Blocking APIs.
+  ([bug 1743706]({{bugzilla}}1743706)).
+
+[96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
+[96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
+[96.3]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
+[96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText--
+
 ## v95
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
   the application of changing pointer icon. If the application wants to handle
@@ -1072,4 +1091,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d44de923c2ba7fb152398b9001d26b4ed2689138
+[api-version]: f8a31bdc9d6debf2e34c1a231d13bfaad76a08aa

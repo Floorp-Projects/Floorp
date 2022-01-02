@@ -449,9 +449,7 @@ nsresult nsProcess::RunProcess(bool aBlocking, char** aMyArgv,
 // can cause TSAN to complain about thread leaks. We handle this with a TSAN
 // suppression, and route thread creation through this helper so that the
 // suppression is as narrowly-scoped as possible.
-PRThread*
-nsProcess::CreateMonitorThread()
-{
+PRThread* nsProcess::CreateMonitorThread() {
   return PR_CreateThread(PR_SYSTEM_THREAD, Monitor, this, PR_PRIORITY_NORMAL,
                          PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 }

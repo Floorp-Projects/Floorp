@@ -28,8 +28,14 @@
         src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
 <iframe id="iframe4" width="300" height="150"
         src="data:text/html,&lt;div contenteditable id='contenteditable'&gt;&lt;/div&gt;"></iframe><br/>
-<iframe id="iframe5" width="200" height="50" src="data:text/html,&lt;input id='input'&gt;"></iframe>
-<iframe id="iframe6" width="200" height="50" src="data:text/html,&lt;input id='password' type='password'&gt;"></iframe><br/>
+<!--
+  NOTE: the width for the next two iframes is chosen to be small enough to make
+  the Show Password button (for type=password) be outside the viewport so that
+  it doesn't affect the rendering compared to the type=text control.
+  But still large enough to comfortably fit the input values we test.
+-->
+<iframe id="iframe5" style="width:10ch" height="50" src="data:text/html,&lt;input id='input'&gt;"></iframe>
+<iframe id="iframe6" style="width:10ch" height="50" src="data:text/html,&lt;input id='password' type='password'&gt;"></iframe><br/>
 <iframe id="iframe7" width="300" height="150"
         src="data:text/html,&lt;span contenteditable id='contenteditable'&gt;&lt;/span&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>

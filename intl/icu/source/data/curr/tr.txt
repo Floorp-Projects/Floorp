@@ -1880,6 +1880,10 @@ tr{
             one{"Liberya doları"}
             other{"Liberya doları"}
         }
+        LSL{
+            one{"Lesotho lotisi"}
+            other{"Lesotho lotisi"}
+        }
         LTL{
             one{"Litvanya litası"}
             other{"Litvanya litası"}

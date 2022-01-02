@@ -211,6 +211,10 @@ hsb{
             "CLP",
             "chilski peso",
         }
+        CNH{
+            "CNH",
+            "chinski yuan (offshore)",
+        }
         CNY{
             "CN¥",
             "chinski yuan",
@@ -422,6 +426,10 @@ hsb{
         LRD{
             "LRD",
             "liberiski dolar",
+        }
+        LSL{
+            "LSL",
+            "lesothiski loti",
         }
         LTL{
             "LTL",
@@ -1068,6 +1076,12 @@ hsb{
             other{"chilskich pesow"}
             two{"chilskej pesaj"}
         }
+        CNH{
+            few{"chinske yuany (offshore)"}
+            one{"chinski yuan (offshore)"}
+            other{"chinskich yuanow (offshore)"}
+            two{"chinskej yuanaj (offshore)"}
+        }
         CNY{
             few{"chinske yuany"}
             one{"chinski yuan"}
@@ -1385,6 +1399,12 @@ hsb{
             one{"liberiski dolar"}
             other{"liberiskich dolarow"}
             two{"liberiskej dolaraj"}
+        }
+        LSL{
+            few{"lesothiske lotije"}
+            one{"lesothiski loti"}
+            other{"lesothiskich lotijow"}
+            two{"lesothiskej lotijej"}
         }
         LTL{
             few{"litawske litasy"}

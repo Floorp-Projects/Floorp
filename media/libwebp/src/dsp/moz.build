@@ -9,11 +9,15 @@ with Files('**'):
 
 SOURCES += [
     'alpha_processing.c',
+    'cost.c',
     'dec.c',
     'dec_clip_tables.c',
+    'enc.c',
     'filters.c',
     'lossless.c',
+    'lossless_enc.c',
     'rescaler.c',
+    'ssim.c',
     'upsampling.c',
     'yuv.c',
 ]
@@ -25,8 +29,11 @@ LOCAL_INCLUDES += [
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += [
         'alpha_processing_neon.c',
+        'cost_neon.c',
         'dec_neon.c',
+        'enc_neon.c',
         'filters_neon.c',
+        'lossless_enc_neon.c',
         'lossless_neon.c',
         'rescaler_neon.c',
         'upsampling_neon.c',
@@ -39,8 +46,11 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 elif CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += [
         'alpha_processing_neon.c',
+        'cost_neon.c',
         'dec_neon.c',
+        'enc_neon.c',
         'filters_neon.c',
+        'lossless_enc_neon.c',
         'lossless_neon.c',
         'rescaler_neon.c',
         'upsampling_neon.c',
@@ -51,12 +61,18 @@ elif CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += [
         'alpha_processing_sse2.c',
         'alpha_processing_sse41.c',
+        'cost_sse2.c',
         'dec_sse2.c',
         'dec_sse41.c',
+        'enc_sse2.c',
+        'enc_sse41.c',
         'filters_sse2.c',
+        'lossless_enc_sse2.c',
+        'lossless_enc_sse41.c',
         'lossless_sse2.c',
         'lossless_sse41.c',
         'rescaler_sse2.c',
+        'ssim_sse2.c',
         'upsampling_sse2.c',
         'upsampling_sse41.c',
         'yuv_sse2.c',
@@ -72,9 +88,15 @@ elif CONFIG['INTEL_ARCHITECTURE']:
 elif CONFIG['CPU_ARCH'].startswith('mips'):
     SOURCES += [
         'alpha_processing_mips_dsp_r2.c',
+        'cost_mips32.c',
+        'cost_mips_dsp_r2.c',
         'dec_mips32.c',
         'dec_mips_dsp_r2.c',
+        'enc_mips32.c',
+        'enc_mips_dsp_r2.c',
         'filters_mips_dsp_r2.c',
+        'lossless_enc_mips32.c',
+        'lossless_enc_mips_dsp_r2.c',
         'lossless_mips_dsp_r2.c',
         'lossless_msa.c',
         'rescaler_mips32.c',

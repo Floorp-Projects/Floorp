@@ -190,28 +190,48 @@ impl super::Adapter {
 
         let ver = Self::parse_version(&version).ok()?;
 
+        let supports_storage = ver >= (3, 1);
+        let supports_work_group_params = ver >= (3, 1);
+
         let shading_language_version = {
             let sl_version = gl.get_parameter_string(glow::SHADING_LANGUAGE_VERSION);
-            log::info!("SL version: {}", sl_version);
+            log::info!("SL version: {}", &sl_version);
             let (sl_major, sl_minor) = Self::parse_version(&sl_version).ok()?;
             let value = sl_major as u16 * 100 + sl_minor as u16 * 10;
             naga::back::glsl::Version::Embedded(value)
         };
 
-        let vertex_shader_storage_blocks =
-            gl.get_parameter_i32(glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS) as u32;
-        let fragment_shader_storage_blocks =
-            gl.get_parameter_i32(glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS) as u32;
-        let vertex_shader_storage_textures =
-            gl.get_parameter_i32(glow::MAX_VERTEX_IMAGE_UNIFORMS) as u32;
-        let fragment_shader_storage_textures =
-            gl.get_parameter_i32(glow::MAX_FRAGMENT_IMAGE_UNIFORMS) as u32;
-        let max_storage_block_size =
-            gl.get_parameter_i32(glow::MAX_SHADER_STORAGE_BLOCK_SIZE) as u32;
+        let vertex_shader_storage_blocks = if supports_storage {
+            gl.get_parameter_i32(glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS) as u32
+        } else {
+            0
+        };
+        let fragment_shader_storage_blocks = if supports_storage {
+            gl.get_parameter_i32(glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS) as u32
+        } else {
+            0
+        };
+        let vertex_shader_storage_textures = if supports_storage {
+            gl.get_parameter_i32(glow::MAX_VERTEX_IMAGE_UNIFORMS) as u32
+        } else {
+            0
+        };
+        let fragment_shader_storage_textures = if supports_storage {
+            gl.get_parameter_i32(glow::MAX_FRAGMENT_IMAGE_UNIFORMS) as u32
+        } else {
+            0
+        };
+        let max_storage_block_size = if supports_storage {
+            gl.get_parameter_i32(glow::MAX_SHADER_STORAGE_BLOCK_SIZE) as u32
+        } else {
+            0
+        };
 
-        // WORKAROUND:
-        // In order to work around an issue with GL on RPI4 and similar, we ignore a zero vertex ssbo count if there are vertex sstos. (more info: https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961)
-        // The hardware does not want us to write to these SSBOs, but GLES cannot express that. We detect this case and disable writing to SSBOs.
+        // WORKAROUND: In order to work around an issue with GL on RPI4 and similar, we ignore a
+        // zero vertex ssbo count if there are vertex sstos. (more info:
+        // https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961) The hardware does not
+        // want us to write to these SSBOs, but GLES cannot express that. We detect this case and
+        // disable writing to SSBOs.
         let vertex_ssbo_false_zero =
             vertex_shader_storage_blocks == 0 && vertex_shader_storage_textures != 0;
         if vertex_ssbo_false_zero {
@@ -238,7 +258,7 @@ impl super::Adapter {
         downlevel_flags.set(wgt::DownlevelFlags::COMPUTE_SHADERS, ver >= (3, 1));
         downlevel_flags.set(
             wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE,
-            ver >= (3, 1) && max_storage_block_size != 0,
+            max_storage_block_size != 0,
         );
         downlevel_flags.set(wgt::DownlevelFlags::INDIRECT_EXECUTION, ver >= (3, 1));
         //TODO: we can actually support positive `base_vertex` in the same way
@@ -250,17 +270,17 @@ impl super::Adapter {
         );
         downlevel_flags.set(
             wgt::DownlevelFlags::VERTEX_STORAGE,
-            ver >= (3, 1)
-                && max_storage_block_size != 0
+            max_storage_block_size != 0
                 && (vertex_shader_storage_blocks != 0 || vertex_ssbo_false_zero),
         );
+        downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
 
         let mut features = wgt::Features::empty()
             | wgt::Features::TEXTURE_COMPRESSION_ETC2
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | wgt::Features::CLEAR_COMMANDS;
         features.set(
-            wgt::Features::DEPTH_CLAMPING,
+            wgt::Features::DEPTH_CLIP_CONTROL,
             extensions.contains("GL_EXT_depth_clamp"),
         );
         features.set(
@@ -270,6 +290,10 @@ impl super::Adapter {
         );
 
         let mut private_caps = super::PrivateCapabilities::empty();
+        private_caps.set(
+            super::PrivateCapabilities::BUFFER_ALLOCATION,
+            extensions.contains("GL_EXT_buffer_storage"),
+        );
         private_caps.set(
             super::PrivateCapabilities::SHADER_BINDING_LAYOUT,
             ver >= (3, 1),
@@ -282,6 +306,14 @@ impl super::Adapter {
         private_caps.set(
             super::PrivateCapabilities::VERTEX_BUFFER_LAYOUT,
             ver >= (3, 1),
+        );
+        private_caps.set(
+            super::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE,
+            cfg!(not(target_arch = "wasm32")),
+        );
+        private_caps.set(
+            super::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER,
+            cfg!(not(target_arch = "wasm32")),
         );
 
         let max_texture_size = gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as u32;
@@ -297,6 +329,15 @@ impl super::Adapter {
         let max_uniform_buffers_per_shader_stage =
             gl.get_parameter_i32(glow::MAX_VERTEX_UNIFORM_BLOCKS)
                 .min(gl.get_parameter_i32(glow::MAX_FRAGMENT_UNIFORM_BLOCKS)) as u32;
+
+        let max_compute_workgroups_per_dimension = if supports_work_group_params {
+            gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, 0)
+                .min(gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, 1))
+                .min(gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, 2))
+                as u32
+        } else {
+            0
+        };
 
         let limits = wgt::Limits {
             max_texture_dimension_1d: max_texture_size,
@@ -337,9 +378,31 @@ impl super::Adapter {
             max_push_constant_size: 0,
             min_uniform_buffer_offset_alignment,
             min_storage_buffer_offset_alignment,
+            max_compute_workgroup_size_x: if supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, 0) as u32
+            } else {
+                0
+            },
+            max_compute_workgroup_size_y: if supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, 1) as u32
+            } else {
+                0
+            },
+            max_compute_workgroup_size_z: if supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, 2) as u32
+            } else {
+                0
+            },
+            max_compute_workgroups_per_dimension,
         };
 
         let mut workarounds = super::Workarounds::empty();
+
+        workarounds.set(
+            super::Workarounds::EMULATE_BUFFER_MAP,
+            cfg!(target_arch = "wasm32"),
+        );
+
         let r = renderer.to_lowercase();
         // Check for Mesa sRGB clear bug. See
         // [`super::PrivateCapabilities::MESA_I915_SRGB_SHADER_CLEAR`].
@@ -358,6 +421,9 @@ impl super::Adapter {
         let downlevel_defaults = wgt::DownlevelLimits {};
 
         // Drop the GL guard so we can move the context into AdapterShared
+        // ( on WASM the gl handle is just a ref so we tell clippy to allow
+        // dropping the ref )
+        #[allow(clippy::drop_ref)]
         drop(gl);
 
         Some(crate::ExposedAdapter {
@@ -395,12 +461,12 @@ impl super::Adapter {
         let vertex = gl
             .create_shader(glow::VERTEX_SHADER)
             .expect("Could not create shader");
-        gl.shader_source(vertex, include_str!("./shader_clear.vert"));
+        gl.shader_source(vertex, include_str!("./shaders/clear.vert"));
         gl.compile_shader(vertex);
         let fragment = gl
             .create_shader(glow::FRAGMENT_SHADER)
             .expect("Could not create shader");
-        gl.shader_source(fragment, include_str!("./shader_clear.frag"));
+        gl.shader_source(fragment, include_str!("./shaders/clear.frag"));
         gl.compile_shader(fragment);
         gl.attach_shader(program, vertex);
         gl.attach_shader(program, fragment);
@@ -419,6 +485,7 @@ impl crate::Adapter<super::Api> for super::Adapter {
     unsafe fn open(
         &self,
         features: wgt::Features,
+        _limits: &wgt::Limits,
     ) -> Result<crate::OpenDevice<super::Api>, crate::DeviceError> {
         let gl = &self.shared.context.lock();
         gl.pixel_store_i32(glow::UNPACK_ALIGNMENT, 1);
@@ -461,6 +528,7 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 zero_buffer,
                 temp_query_results: Vec::new(),
                 draw_buffer_count: 1,
+                current_index_buffer: None,
             },
         })
     }
@@ -512,14 +580,16 @@ impl crate::Adapter<super::Api> for super::Adapter {
             | Tf::Bc6hRgbUfloat
             | Tf::Bc7RgbaUnorm
             | Tf::Bc7RgbaUnormSrgb
-            | Tf::Etc2RgbUnorm
-            | Tf::Etc2RgbUnormSrgb
-            | Tf::Etc2RgbA1Unorm
-            | Tf::Etc2RgbA1UnormSrgb
-            | Tf::EacRUnorm
-            | Tf::EacRSnorm
-            | Tf::EacRgUnorm
-            | Tf::EacRgSnorm
+            | Tf::Etc2Rgb8Unorm
+            | Tf::Etc2Rgb8UnormSrgb
+            | Tf::Etc2Rgb8A1Unorm
+            | Tf::Etc2Rgb8A1UnormSrgb
+            | Tf::Etc2Rgba8Unorm
+            | Tf::Etc2Rgba8UnormSrgb
+            | Tf::EacR11Unorm
+            | Tf::EacR11Snorm
+            | Tf::EacRg11Unorm
+            | Tf::EacRg11Snorm
             | Tf::Astc4x4RgbaUnorm
             | Tf::Astc4x4RgbaUnormSrgb
             | Tf::Astc5x4RgbaUnorm
@@ -557,14 +627,16 @@ impl crate::Adapter<super::Api> for super::Adapter {
     ) -> Option<crate::SurfaceCapabilities> {
         if surface.presentable {
             Some(crate::SurfaceCapabilities {
-                formats: if surface.enable_srgb {
+                formats: if surface.supports_srgb() {
                     vec![
                         wgt::TextureFormat::Rgba8UnormSrgb,
+                        #[cfg(not(target_arch = "wasm32"))]
                         wgt::TextureFormat::Bgra8UnormSrgb,
                     ]
                 } else {
                     vec![
                         wgt::TextureFormat::Rgba8Unorm,
+                        #[cfg(not(target_arch = "wasm32"))]
                         wgt::TextureFormat::Bgra8Unorm,
                     ]
                 },
@@ -588,6 +660,12 @@ impl crate::Adapter<super::Api> for super::Adapter {
         }
     }
 }
+
+// SAFE: WASM doesn't have threads
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for super::Adapter {}
+#[cfg(target_arch = "wasm32")]
+unsafe impl Send for super::Adapter {}
 
 #[cfg(test)]
 mod tests {

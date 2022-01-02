@@ -77,7 +77,6 @@
 #include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationStencil.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"
@@ -138,7 +137,6 @@
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
-#include "js/OffThreadScriptCompilation.h"  // JS::SetUseOffThreadParseGlobal, js::UseOffThreadParseGlobal
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineFunction, JS_DefineFunctions, JS_DefineProperties, JS_DefineProperty, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetElement, JS_SetProperty, JS_SetPropertyById
 #include "js/PropertySpec.h"
@@ -378,8 +376,7 @@ class js::shell::OffThreadJob {
  public:
   using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-  OffThreadJob(ShellContext* sc, ScriptKind kind, bool useOffThreadParseGlobal,
-               Source&& source);
+  OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source);
   ~OffThreadJob();
 
   void cancel();
@@ -392,7 +389,6 @@ class js::shell::OffThreadJob {
  public:
   const int32_t id;
   const ScriptKind kind;
-  const bool useOffThreadParseGlobal;
 
  private:
   js::Monitor& monitor;
@@ -405,8 +401,8 @@ static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
                                      CompileOptions& options,
                                      OffThreadJob::Source&& source) {
   ShellContext* sc = GetShellContext(cx);
-  UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(
-      sc, kind, options.useOffThreadParseGlobal, std::move(source)));
+  UniquePtr<OffThreadJob> job(
+      cx->new_<OffThreadJob>(sc, kind, std::move(source)));
   if (!job) {
     return nullptr;
   }
@@ -536,11 +532,9 @@ static void CancelOffThreadJobsForRuntime(JSContext* cx) {
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind,
-                           bool useOffThreadParseGlobal, Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
     : id(gOffThreadJobSerial++),
       kind(kind),
-      useOffThreadParseGlobal(useOffThreadParseGlobal),
       monitor(sc->offThreadMonitor),
       state(RUNNING),
       token(nullptr),
@@ -606,7 +600,8 @@ bool shell::enableWasmOptimizing = false;
 #define WASM_DEFAULT_FEATURE(NAME, ...) bool shell::enableWasm##NAME = true;
 #define WASM_EXPERIMENTAL_FEATURE(NAME, ...) \
   bool shell::enableWasm##NAME = false;
-JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                     WASM_EXPERIMENTAL_FEATURE);
 #undef WASM_DEFAULT_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 
@@ -633,8 +628,11 @@ bool shell::enableErgonomicBrandChecks = true;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
 #endif
-bool shell::useOffThreadParseGlobal = true;
+#ifdef ENABLE_NEW_SET_METHODS
+bool shell::enableNewSetMethods = true;
+#endif
 bool shell::enableClassStaticBlocks = true;
+bool shell::enableImportAssertions = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -2312,6 +2310,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   RootedString elementAttributeName(cx);
 
   if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(cx, "evaluate: The 2nd argument must be an object");
+      return false;
+    }
+
     RootedObject opts(cx, &args[1].toObject());
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
@@ -4317,7 +4320,11 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
-      .setIteratorHelpersEnabled(enableIteratorHelpers);
+      .setIteratorHelpersEnabled(enableIteratorHelpers)
+#ifdef ENABLE_NEW_SET_METHODS
+      .setNewSetMethodsEnabled(enableNewSetMethods)
+#endif
+      ;
 }
 
 [[nodiscard]] static bool CheckRealmOptions(JSContext* cx,
@@ -5315,9 +5322,8 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
   RootedString elementAttributeName(cx);
 
   if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "compile");
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(cx, "compile: The 2nd argument must be an object");
       return false;
     }
 
@@ -5523,8 +5529,13 @@ static bool InstantiateModuleStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
-    RootedObject opts(cx, &args[1].toObject());
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "instantiateModuleStencil: The 2nd argument must be an object");
+      return false;
+    }
 
+    RootedObject opts(cx, &args[1].toObject());
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
@@ -5558,14 +5569,14 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "InstantiateModuleStencilXDR", 1)) {
+  if (!args.requireAtLeast(cx, "instantiateModuleStencilXDR", 1)) {
     return false;
   }
 
   /* Prepare the input byte array. */
   if (!args[0].isObject() || !args[0].toObject().is<StencilXDRBufferObject>()) {
     JS_ReportErrorASCII(
-        cx, "InstantiateModuleStencilXDR: stencil XDR object expected");
+        cx, "instantiateModuleStencilXDR: stencil XDR object expected");
     return false;
   }
   Rooted<StencilXDRBufferObject*> xdrObj(
@@ -5575,8 +5586,14 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
-    RootedObject opts(cx, &args[1].toObject());
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx,
+          "instantiateModuleStencilXDR: The 2nd argument must be an object");
+      return false;
+    }
 
+    RootedObject opts(cx, &args[1].toObject());
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
@@ -5603,7 +5620,7 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
 
   if (!stencil.isModule()) {
     JS_ReportErrorASCII(cx,
-                        "InstantiateModuleStencilXDR: Module stencil expected");
+                        "instantiateModuleStencilXDR: Module stencil expected");
     return false;
   }
 
@@ -5652,7 +5669,8 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject moduleRequest(cx, ModuleRequestObject::create(cx, specifier));
+  RootedObject moduleRequest(
+      cx, ModuleRequestObject::create(cx, specifier, nullptr));
   if (!moduleRequest) {
     return false;
   }
@@ -5887,11 +5905,10 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
-      const char* typeName = InformalValueTypeName(args[1]);
-      JS_ReportErrorASCII(cx, "expected object (options) to parse, got %s",
-                          typeName);
+      JS_ReportErrorASCII(cx, "The 2nd argument must be an object");
       return false;
     }
+
     RootedObject objOptions(cx, &args[1].toObject());
 
     RootedValue optionModule(cx);
@@ -6207,9 +6224,9 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
       .setDeferDebugMetadata();
 
   if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "evaluate");
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "offThreadCompileScript: The 2nd argument must be an object");
       return false;
     }
 
@@ -6286,11 +6303,6 @@ static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (job->useOffThreadParseGlobal &&
-      OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
-  }
-
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
@@ -6352,9 +6364,9 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
       .setDeferDebugMetadata();
 
   if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "evaluate");
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "offThreadCompileToStencil: The 2nd argument must be an object");
       return false;
     }
 
@@ -6431,8 +6443,6 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   if (!job) {
     return false;
   }
-
-  MOZ_ASSERT(!job->useOffThreadParseGlobal);
 
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
@@ -6526,11 +6536,6 @@ static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (job->useOffThreadParseGlobal &&
-      OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
-  }
-
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
@@ -6575,18 +6580,10 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
 
   options.borrowBuffer = true;
 
-  // In browser, we always use off-thread parse global for decode task, for
-  // performance reason.
-  // (see ScriptLoader::AttemptAsyncScriptCompile)
-  //
-  // This code should be removed, and the above code should be used, once
-  // bug 1687973 gets fixed.
-  options.useOffThreadParseGlobal = true;
-
   if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "evaluate");
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "offThreadDecodeScript: The 2nd argument must be an object");
       return false;
     }
 
@@ -6646,11 +6643,6 @@ static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
       LookupOffThreadJobForArgs(cx, ScriptKind::DecodeScript, args, 0);
   if (!job) {
     return false;
-  }
-
-  if (job->useOffThreadParseGlobal &&
-      OffThreadParsingMustWaitForGC(cx->runtime())) {
-    gc::FinishGC(cx);
   }
 
   JS::OffThreadToken* token = job->waitUntilDone(cx);
@@ -9425,11 +9417,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      saveIncrementalBytecode: if true, and if the source is a\n"
 "         CacheEntryObject, the bytecode would be incrementally encoded and\n"
 "         saved into the cache entry.\n"
-"         If --off-thread-parse-global is not used, the encoded bytecode's\n"
-"         kind is 'stencil'. If not, the encoded bytecode's kind is 'script'\n"
-"         If both loadBytecode and saveIncrementalBytecode are set,\n"
-"         and --off-thread-parse-global is not used, the input bytecode's\n"
-"         kind should be 'stencil'."
 "      transcodeOnly: if true, do not execute the script.\n"
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
 "         saveIncrementalBytecode is true, then the loaded\n"
@@ -11279,7 +11266,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                   COMPILER_PRED, FLAG_PRED, SHELL, ...) \
   enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
-  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                       WASM_EXPERIMENTAL_FEATURE);
 #undef WASM_DEFAULT_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 
@@ -11309,8 +11297,11 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
 #endif
+#ifdef ENABLE_NEW_SET_METHODS
+  enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
+#endif
   enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
-  useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
+  enableImportAssertions = op.getBoolOption("enable-import-assertions");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
@@ -11327,7 +11318,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 
 #define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -11344,9 +11335,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(enableChangeArrayByCopy)
 #endif
-      .setClassStaticBlocks(enableClassStaticBlocks);
+      .setClassStaticBlocks(enableClassStaticBlocks)
+      .setImportAssertions(enableImportAssertions);
 
-  JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
   // Check --fast-warmup first because it sets default warm-up thresholds. These
@@ -11592,6 +11583,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.traceRegExpPeephole = true;
   }
 
+  if (op.getBoolOption("less-debug-code")) {
+    jit::JitOptions.lessDebugCode = true;
+  }
+
   int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
   if (inliningEntryThreshold > 0) {
     jit::JitOptions.inliningEntryThreshold = inliningEntryThreshold;
@@ -11724,7 +11719,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmIon(enableWasmOptimizing)
 #endif
 #define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -12236,12 +12231,20 @@ int main(int argc, char** argv) {
 #define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
                              FLAG_PRED, SHELL, ...)                         \
   !op.addBoolOption('\0', "no-wasm-" SHELL, "Disable wasm " SHELL "feature.") ||
+#define WASM_TENTATIVE_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                               FLAG_PRED, SHELL, ...)                         \
+  !op.addBoolOption('\0', "no-wasm-" SHELL,                                   \
+                    "Disable wasm " SHELL "feature.") ||                      \
+      !op.addBoolOption('\0', "wasm-" SHELL, "No-op.") ||
 #define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                   COMPILER_PRED, FLAG_PRED, SHELL, ...) \
   !op.addBoolOption('\0', "wasm-" SHELL,                                \
-                    "Enable experimental wasm " SHELL "feature.") ||
-      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+                    "Enable experimental wasm " SHELL "feature.") ||    \
+      !op.addBoolOption('\0', "no-wasm-" SHELL, "No-op.") ||
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_TENTATIVE_FEATURE,
+                           WASM_EXPERIMENTAL_FEATURE)
 #undef WASM_DEFAULT_FEATURE
+#undef WASM_TENTATIVE_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
           !op.addBoolOption('\0', "wasm-simd-wormhole",
@@ -12263,6 +12266,9 @@ int main(int argc, char** argv) {
                         "Trace regexp interpreter") ||
       !op.addBoolOption('\0', "trace-regexp-peephole",
                         "Trace regexp peephole optimization") ||
+      !op.addBoolOption('\0', "less-debug-code",
+                        "Emit less machine code for "
+                        "checking assertions under DEBUG.") ||
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
@@ -12303,14 +12309,23 @@ int main(int argc, char** argv) {
       !op.addBoolOption('\0', "enable-change-array-by-copy", "no-op") ||
       !op.addBoolOption('\0', "disable-change-array-by-copy", "no-op") ||
 #endif
+#ifdef ENABLE_NEW_SET_METHODS
+      !op.addBoolOption('\0', "enable-new-set-methods",
+                        "Enable New Set methods") ||
+      !op.addBoolOption('\0', "disable-new-set-methods",
+                        "Disable New Set methods") ||
+#else
+      !op.addBoolOption('\0', "enable-new-set-methods", "no-op") ||
+      !op.addBoolOption('\0', "disable-new-set-methods", "no-op") ||
+#endif
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "disable-class-static-blocks",
                         "Disable class static blocks") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
                         "(no-op) Enable class static blocks") ||
-      !op.addBoolOption('\0', "off-thread-parse-global",
-                        "Use parseGlobal in all off-thread compilation") ||
+      !op.addBoolOption('\0', "enable-import-assertions",
+                        "Enable import assertions") ||
       !op.addBoolOption('\0', "no-large-arraybuffers",
                         "Disallow creating ArrayBuffers larger than 2 GB on "
                         "64-bit platforms") ||
@@ -12904,7 +12919,8 @@ int main(int argc, char** argv) {
 #  define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                     COMPILER_PRED, FLAG_PRED, SHELL, ...) \
     "--wasm-" SHELL,
-      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                           WASM_EXPERIMENTAL_FEATURE)
 #  undef WASM_DEFAULT_FEATURE
 #  undef WASM_EXPERIMENTAL_FEATURE
       // Feature selection options

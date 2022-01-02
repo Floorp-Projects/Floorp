@@ -3,6 +3,31 @@ if (!wasmIsSupported())
 
 load(libdir + "asserts.js");
 
+function canRunHugeMemoryTests() {
+    let conf = getBuildConfiguration();
+    // We're aiming for 64-bit desktop builds with no interesting analysis
+    // running that might inflate memory consumption unreasonably.  It's OK if
+    // they're debug builds, though.
+    //
+    // The build configuration object may be extended at any time with new
+    // properties, so neither an allowlist of properties that can be true or a
+    // blocklist of properties that can't be true is great.  But the latter is
+    // probably better.
+    let blocked = ['rooting-analysis','simulator',
+                   'android','wasi','asan','tsan','ubsan','dtrace','valgrind'];
+    for ( let b of blocked ) {
+        if (conf[b]) {
+            print("Failing canRunHugeMemoryTests() because '" + b + "' is true");
+            return false;
+        }
+    }
+    if (conf['pointer-byte-size'] != 8) {
+        print("Failing canRunHugeMemoryTests() because the build is not 64-bit");
+        return false;
+    }
+    return true;
+}
+
 // On 64-bit systems with explicit bounds checking, ion and baseline can handle
 // 65536 pages but cranelift can handle only 65534 pages; thus the presence of
 // cranelift forces the max for the system as a whole to 65534.  We will

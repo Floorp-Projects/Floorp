@@ -64,6 +64,8 @@ class RemoteWorkerChild final
   void ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
                                     bool aIsErrorEvent);
 
+  void NotifyLock(bool aCreated);
+
   void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
 
   void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
@@ -121,14 +123,12 @@ class RemoteWorkerChild final
   mozilla::ipc::IPCResult RecvExecServiceWorkerOp(
       ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve);
 
-  PFetchEventOpProxyChild* AllocPFetchEventOpProxyChild(
-      const ServiceWorkerFetchEventOpArgs& aArgs);
+  already_AddRefed<PFetchEventOpProxyChild> AllocPFetchEventOpProxyChild(
+      const ParentToChildServiceWorkerFetchEventOpArgs& aArgs);
 
   mozilla::ipc::IPCResult RecvPFetchEventOpProxyConstructor(
       PFetchEventOpProxyChild* aActor,
-      const ServiceWorkerFetchEventOpArgs& aArgs) override;
-
-  bool DeallocPFetchEventOpProxyChild(PFetchEventOpProxyChild* aActor);
+      const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) override;
 
   nsresult ExecWorkerOnMainThread(RemoteWorkerData&& aData);
 

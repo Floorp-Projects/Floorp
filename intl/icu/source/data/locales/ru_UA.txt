@@ -8,7 +8,6 @@ ru_UA{
     calendar{
         gregorian{
             availableFormats{
-                GyMMM{"LLL y 'г'. G"}
                 yMEd{"ccc, d.MM.y"}
             }
             intervalFormats{

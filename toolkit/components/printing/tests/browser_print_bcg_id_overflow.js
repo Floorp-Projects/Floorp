@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 // The actual uri we open doesn't really matter.
-const OPENED_URI = PrintHelper.defaultTestPageUrl;
+const OPENED_URI = PrintHelper.defaultTestPageUrlHTTPS;
 
 // Test for bug 1669554:
 //

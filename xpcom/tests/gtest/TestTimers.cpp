@@ -19,6 +19,7 @@
 
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_timer.h"
 
 #include <list>
@@ -889,4 +890,34 @@ TEST(Timers, ClosureCallback)
     mon.Wait();
   }
   ASSERT_EQ(notifiedThread, testThread);
+}
+
+static void SetTime(nsITimer* aTimer, void* aClosure) {
+  *static_cast<TimeStamp*>(aClosure) = TimeStamp::Now();
+}
+
+TEST(Timers, HighResFuncCallback)
+{
+  TimeStamp first;
+  TimeStamp second;
+  TimeStamp third;
+  nsCOMPtr<nsITimer> t1 = NS_NewTimer(GetCurrentSerialEventTarget());
+  nsCOMPtr<nsITimer> t2 = NS_NewTimer(GetCurrentSerialEventTarget());
+  nsCOMPtr<nsITimer> t3 = NS_NewTimer(GetCurrentSerialEventTarget());
+
+  // Reverse order, since if the timers are not high-res we'd end up
+  // out-of-order.
+  MOZ_ALWAYS_SUCCEEDS(t3->InitHighResolutionWithNamedFuncCallback(
+      &SetTime, &third, TimeDuration::FromMicroseconds(300),
+      nsITimer::TYPE_ONE_SHOT, "TestTimers::HighResFuncCallback::third"));
+  MOZ_ALWAYS_SUCCEEDS(t2->InitHighResolutionWithNamedFuncCallback(
+      &SetTime, &second, TimeDuration::FromMicroseconds(200),
+      nsITimer::TYPE_ONE_SHOT, "TestTimers::HighResFuncCallback::second"));
+  MOZ_ALWAYS_SUCCEEDS(t1->InitHighResolutionWithNamedFuncCallback(
+      &SetTime, &first, TimeDuration::FromMicroseconds(100),
+      nsITimer::TYPE_ONE_SHOT, "TestTimers::HighResFuncCallback::first"));
+
+  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      "TestTimers::HighResFuncCallback"_ns,
+      [&] { return !first.IsNull() && !second.IsNull() && !third.IsNull(); });
 }

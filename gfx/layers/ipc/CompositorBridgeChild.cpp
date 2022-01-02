@@ -308,9 +308,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
   for (const auto& id : aTransactionIds) {
     if (mLayerManager) {
       MOZ_ASSERT(!aId.IsValid());
-      MOZ_ASSERT(mLayerManager->GetBackendType() ==
-                     LayersBackend::LAYERS_CLIENT ||
-                 mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
+      MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
       // Hold a reference to keep LayerManager alive. See Bug 1242668.
       RefPtr<WebRenderLayerManager> m = mLayerManager;
       m->DidComposite(id, aCompositeStart, aCompositeEnd);
@@ -423,7 +421,7 @@ bool CompositorBridgeChild::SendStopFrameTimeRecording(
 }
 
 PTextureChild* CompositorBridgeChild::AllocPTextureChild(
-    const SurfaceDescriptor&, const ReadLockDescriptor&, const LayersBackend&,
+    const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
     const TextureFlags&, const LayersId&, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   return TextureClient::CreateIPDLActor();
@@ -555,7 +553,7 @@ CompositorBridgeChild::GetTileLockAllocator() {
 }
 
 PTextureChild* CompositorBridgeChild::CreateTexture(
-    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
     wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
   PTextureChild* textureChild =
@@ -568,7 +566,7 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
   }
 
   return SendPTextureConstructor(
-      textureChild, aSharedData, aReadLock, aLayersBackend, aFlags,
+      textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
       LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
 }
 

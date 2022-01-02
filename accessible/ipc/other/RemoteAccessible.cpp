@@ -20,7 +20,10 @@
 namespace mozilla {
 namespace a11y {
 
-uint64_t RemoteAccessible::State() const {
+uint64_t RemoteAccessible::State() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::State();
+  }
   uint64_t state = 0;
   Unused << mDoc->SendState(mID, &state);
   return state;
@@ -226,16 +229,26 @@ char16_t RemoteAccessible::CharAt(int32_t aOffset) {
   return static_cast<char16_t>(retval);
 }
 
-void RemoteAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
-                                      RefPtr<AccAttributes>* aAttributes,
-                                      int32_t* aStartOffset,
-                                      int32_t* aEndOffset) {
-  Unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset,
-                                     aAttributes, aStartOffset, aEndOffset);
+already_AddRefed<AccAttributes> RemoteAccessible::TextAttributes(
+    bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+    int32_t* aEndOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextAttributes(
+        aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
+  }
+  RefPtr<AccAttributes> attrs;
+  Unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset, &attrs,
+                                     aStartOffset, aEndOffset);
+  return attrs.forget();
 }
 
-void RemoteAccessible::DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs) {
-  Unused << mDoc->SendDefaultTextAttributes(mID, aAttrs);
+already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::DefaultTextAttributes();
+  }
+  RefPtr<AccAttributes> attrs;
+  Unused << mDoc->SendDefaultTextAttributes(mID, &attrs);
+  return attrs.forget();
 }
 
 nsIntRect RemoteAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
@@ -355,9 +368,13 @@ nsIntSize RemoteAccessible::ImageSize() {
   return retVal;
 }
 
-uint32_t RemoteAccessible::StartOffset(bool* aOk) {
+uint32_t RemoteAccessible::StartOffset() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::StartOffset();
+  }
   uint32_t retVal = 0;
-  Unused << mDoc->SendStartOffset(mID, &retVal, aOk);
+  bool ok;
+  Unused << mDoc->SendStartOffset(mID, &retVal, &ok);
   return retVal;
 }
 
@@ -404,16 +421,10 @@ RemoteAccessible* RemoteAccessible::LinkAt(const uint32_t& aIndex) {
   return ok ? mDoc->GetAccessible(linkID) : nullptr;
 }
 
-int32_t RemoteAccessible::LinkIndexOf(RemoteAccessible* aLink) {
-  int32_t retVal = -1;
-  if (aLink) {
-    Unused << mDoc->SendLinkIndexOf(mID, aLink->ID(), &retVal);
-  }
-
-  return retVal;
-}
-
 int32_t RemoteAccessible::LinkIndexAtOffset(uint32_t aOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::LinkIndexAtOffset(aOffset);
+  }
   int32_t retVal = -1;
   Unused << mDoc->SendLinkIndexAtOffset(mID, aOffset, &retVal);
   return retVal;
@@ -805,8 +816,6 @@ double RemoteAccessible::Step() const {
   Unused << mDoc->SendStep(mID, &step);
   return step;
 }
-
-void RemoteAccessible::TakeFocus() { Unused << mDoc->SendTakeFocus(mID); }
 
 RemoteAccessible* RemoteAccessible::FocusedChild() {
   if (IsOuterDoc()) {

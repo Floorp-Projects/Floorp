@@ -738,7 +738,7 @@ class Raptor(
 
         # Disable verification and install the APK
         self.device.shell_output("settings put global verifier_verify_adb_installs 0")
-        self.install_apk(chromeapk, replace=True)
+        self.install_android_app(chromeapk, replace=True)
 
         # Re-enable verification and delete the temporary directory
         self.device.shell_output("settings put global verifier_verify_adb_installs 1")
@@ -966,13 +966,13 @@ class Raptor(
         if not os.path.isdir(upload_dir):
             self.mkdir_p(upload_dir)
 
-    def install_apk(self, apk, replace=False):
-        # Override AndroidMixin's install_apk in order to capture
+    def install_android_app(self, apk, replace=False):
+        # Override AndroidMixin's install_android_app in order to capture
         # logcat during the installation. If the installation fails,
         # the logcat file will be left in the upload directory.
         self.logcat_start()
         try:
-            super(Raptor, self).install_apk(apk, replace=replace)
+            super(Raptor, self).install_android_app(apk, replace=replace)
         finally:
             self.logcat_stop()
 
@@ -1045,7 +1045,7 @@ class Raptor(
         if not self.config.get("noinstall", False):
             if self.app in self.firefox_android_browsers:
                 self.device.uninstall_app(self.binary_path)
-                self.install_apk(self.installer_path)
+                self.install_android_app(self.installer_path)
             else:
                 super(Raptor, self).install()
 

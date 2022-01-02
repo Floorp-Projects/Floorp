@@ -1078,6 +1078,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   // with the IOInterposer will be properly tracked.
   mozilla::IOInterposerInit ioInterposerGuard;
 
+  XRE_InitCommandLine(argc, argv);
+
   char aLocal;
   profiler_init(&aLocal);
 
@@ -1378,7 +1380,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
           result = FuzzXPCRuntimeStart(&jsapi, &argc, &argv,
                                        aShellData->fuzzerDriver);
-#  elif __AFL_COMPILER
+#  elif AFLFUZZ
           MOZ_CRASH("AFL is unsupported for XPC runtime fuzzing integration");
 #  endif
         } else {
@@ -1443,6 +1445,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   profiler_shutdown();
 
   NS_LogTerm();
+
+  XRE_DeinitCommandLine();
 
   return result;
 }

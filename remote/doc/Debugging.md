@@ -23,7 +23,7 @@ To dump events produced by EventEmitter,
 including CDP events produced by the Remote Agent,
 you can use the `toolkit.dump.emit` [preference]:
 
-  ./mach run --setpref "toolkit.dump.emit=true" --remote-debuggiing-port
+  ./mach run --setpref "toolkit.dump.emit=true" --remote-debugging-port
 
 
 Logging observer notifications

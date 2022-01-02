@@ -297,8 +297,10 @@ interface nsIChannel : nsIRequest
      * Setting contentDisposition provides a hint to the channel about the
      * disposition.  If the hint is DISPOSITION_ATTACHMENT and a normal
      * Content-Disposition header is present, the hinted value will always be
-     * used.  The value from Content-Disposition header is only used when
-     * the hinted value is not DISPOSITION_ATTACHMENT.
+     * used. If the hint is DISPOSITION_FORCE_INLINE then the disposition is
+     * inline and the header is not used. The value from Content-Disposition
+     * header is only used when the hinted value is not DISPOSITION_INLINE or
+     * DISPOSITION_FORCE_INLINE.
      * If the header is missing the hinted value will be used if set.
      *
      * Implementations should throw NS_ERROR_NOT_AVAILABLE if the header either
@@ -308,6 +310,7 @@ interface nsIChannel : nsIRequest
     attribute unsigned long contentDisposition;
     const unsigned long DISPOSITION_INLINE = 0;
     const unsigned long DISPOSITION_ATTACHMENT = 1;
+    const unsigned long DISPOSITION_FORCE_INLINE = 2;
 
     /**
      * Access to the filename portion of the Content-Disposition header if

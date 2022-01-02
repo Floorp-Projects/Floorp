@@ -300,8 +300,8 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
 
     RefPtr<EventTarget> target;
     change->GetTarget(getter_AddRefs(target));
-    nsCOMPtr<nsIContent> node(do_QueryInterface(target));
-    if (!node || !node->IsHTMLElement()) {
+    nsIContent* content(nsIContent::FromEventTargetOrNull(target));
+    if (!content || !content->IsHTMLElement()) {
       continue;
     }
 
@@ -310,15 +310,15 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (changeCount) {
-      Document* ownerDoc = node->OwnerDoc();
+      Document* ownerDoc = content->OwnerDoc();
       DocAccessible* document = GetExistingDocAccessible(ownerDoc);
 
       if (document) {
-        LocalAccessible* acc = document->GetAccessible(node);
-        if (!acc && nsCoreUtils::HasClickListener(node)) {
+        LocalAccessible* acc = document->GetAccessible(content);
+        if (!acc && nsCoreUtils::HasClickListener(content)) {
           // Create an accessible for a inaccessible element having click event
           // handler.
-          document->ContentInserted(node, node->GetNextSibling());
+          document->ContentInserted(content, content->GetNextSibling());
         } else if (acc && acc->IsHTMLLink() && !acc->AsHTMLLink()->IsLinked()) {
           // Notify of a LINKED state change if an HTML link gets a click
           // listener but does not have an href attribute.

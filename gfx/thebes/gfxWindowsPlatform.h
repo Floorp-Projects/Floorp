@@ -6,12 +6,6 @@
 #ifndef GFX_WINDOWS_PLATFORM_H
 #define GFX_WINDOWS_PLATFORM_H
 
-/**
- * XXX to get CAIRO_HAS_DWRITE_FONT
- * and cairo_win32_scaled_font_select_font
- */
-#include "cairo-win32.h"
-
 #include "gfxCrashReporterUtils.h"
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
@@ -47,9 +41,6 @@ class DrawTarget;
 class FeatureState;
 class DeviceManagerDx;
 }  // namespace gfx
-namespace layers {
-class ReadbackManagerD3D11;
-}
 }  // namespace mozilla
 struct IDirect3DDevice9;
 struct ID3D11Device;
@@ -177,9 +168,9 @@ class gfxWindowsPlatform final : public gfxPlatform {
   }
 
  public:
-  bool DwmCompositionEnabled();
+  static nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult);
 
-  mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
+  bool DwmCompositionEnabled();
 
   static bool IsOptimus();
 
@@ -247,7 +238,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   void RecordStartupTelemetry();
 
-  RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
   bool mInitializedDevices = false;
 
   mozilla::Atomic<DwmCompositionStatus, mozilla::ReleaseAcquire>

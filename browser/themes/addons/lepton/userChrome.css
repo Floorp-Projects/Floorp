@@ -1,0 +1,84 @@
+@charset "UTF-8";
+
+@-moz-document url(chrome://browser/content/browser.xhtml) {
+
+   /* WINDOWS BOTTOM SPACE https://github.com/MrOtherGuy/firefox-csshacks/blob/master/chrome/window_control_placeholder_support.css*/
+:root[tabsintitlebar]{
+    --uc-window-control-width: 138px; /* Space reserved for window controls */
+    --uc-window-drag-space-width: 0px; /* Extra space reserved on both sides of the nav-bar to be able to drag the window */
+  }
+  
+  #nav-bar::before,
+  #nav-bar::after{
+    content: "";
+    display: -moz-box;
+    width: var(--uc-window-drag-space-width,0);
+  }
+  toolbar#nav-bar::after{ width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-width,0px)) }
+  
+  /* Use this pref to check Mac OS where window controls are on left */
+  /* This pref defaults to true on Mac and doesn't actually do anything on other platforms. So if your system has window controls on LEFT side you can set the pref to true */
+  @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+    :root{ --uc-window-control-width: 72px; }
+    :root[tabsintitlebar="true"]:not([sizemode="fullscreen"]) #nav-bar::before{
+      width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-width,0px))
+    }
+    :root[tabsintitlebar="true"]:not([sizemode="fullscreen"]) toolbar#nav-bar::after{ width: var(--uc-window-drag-space-width,0px); }
+  }
+  
+  
+  @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* only needed once */
+  
+  
+  .tab-content:not([pinned])::before{
+    display: -moz-box;
+    content: "";
+    -moz-box-flex: 1;
+  }
+  /* tabs_on_bottom https://github.com/MrOtherGuy/firefox-csshacks/blob/master/chrome/tabs_on_bottom.css  */
+
+:root{ --uc-titlebar-padding: 0px; }
+:root[sizemode="maximized"][tabsintitlebar]{ --uc-titlebar-padding: 8px }
+
+#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
+#TabsToolbar > .titlebar-buttonbox-container{
+  position: fixed;
+  display: block;
+  top: var(--uc-titlebar-padding,0px);
+  right:0;
+  height: 40px;
+}
+/* Mac specific. You should set that font-smoothing pref to true if you are on any platform where window controls are on left */
+@supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+  @media not (-moz-os-version: windows-win10){
+    :root{ --uc-titlebar-padding: 0px !important }
+  }
+  .titlebar-buttonbox-container{ left:0; right: unset !important; }
+}
+
+:root[uidensity="compact"] #TabsToolbar > .titlebar-buttonbox-container{ height: 32px }
+
+#toolbar-menubar[inactive] > .titlebar-buttonbox-container{ opacity: 0 }
+
+#navigator-toolbox{ padding-top: var(--uc-titlebar-padding,0px) !important; }
+
+
+.titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
+
+#titlebar{
+  -moz-box-ordinal-group: 2;
+  -moz-appearance: none !important;
+  --tabs-navbar-shadow-size: 0px;
+}
+
+.titlebar-placeholder,
+#TabsToolbar .titlebar-spacer{ display: none; }
+/* Also hide the toolbox bottom border which isn't at bottom with this setup */
+#navigator-toolbox::after{ display: none !important; }
+
+@media (-moz-gtk-csd-close-button){ .titlebar-button{ -moz-box-orient: vertical } }
+
+/* These exist only for compatibility with autohide-tabstoolbar.css */
+toolbox#navigator-toolbox > toolbar#nav-bar.browser-toolbar{ animation: none; }
+#navigator-toolbox:hover #TabsToolbar{ animation: slidein ease-out 48ms 1 }
+}

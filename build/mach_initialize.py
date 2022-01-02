@@ -8,8 +8,6 @@ import math
 import os
 import platform
 import shutil
-import site
-import subprocess
 import sys
 
 if sys.version_info[0] < 3:
@@ -168,100 +166,14 @@ install a recent enough Python 3.
 """.strip()
 
 
-def _scrub_system_site_packages():
-    site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
-    sys.path = [path for path in sys.path if path not in site_paths]
+def _activate_python_environment(topsrcdir, get_state_dir):
+    from mach.site import MachSiteManager
 
-
-def _activate_python_environment(topsrcdir):
-    # We need the "mach" module to access the logic to parse virtualenv
-    # requirements. Since that depends on "packaging" (and, transitively,
-    # "pyparsing"), we add those to the path too.
-    sys.path[0:0] = [
-        os.path.join(topsrcdir, module)
-        for module in (
-            os.path.join("python", "mach"),
-            os.path.join("third_party", "python", "packaging"),
-            os.path.join("third_party", "python", "pyparsing"),
-        )
-    ]
-
-    from mach.requirements import MachEnvRequirements
-
-    thunderbird_dir = os.path.join(topsrcdir, "comm")
-    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
-        os.listdir(thunderbird_dir)
-    )
-
-    requirements = MachEnvRequirements.from_requirements_definition(
+    mach_environment = MachSiteManager.from_environment(
         topsrcdir,
-        is_thunderbird,
-        True,
-        os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
+        get_state_dir,
     )
-
-    if os.environ.get("MACH_USE_SYSTEM_PYTHON") or os.environ.get("MOZ_AUTOMATION"):
-        env_var = (
-            "MOZ_AUTOMATION"
-            if os.environ.get("MOZ_AUTOMATION")
-            else "MACH_USE_SYSTEM_PYTHON"
-        )
-
-        has_pip = (
-            subprocess.run(
-                [sys.executable, "-c", "import pip"], stderr=subprocess.DEVNULL
-            ).returncode
-            == 0
-        )
-        # There are environments in CI that aren't prepared to provide any Mach dependency
-        # packages. Changing this is a nontrivial endeavour, so guard against having
-        # non-optional Mach requirements.
-        assert (
-            not requirements.pypi_requirements
-        ), "Mach pip package requirements must be optional."
-        if has_pip:
-            pip = [sys.executable, "-m", "pip"]
-            check_result = subprocess.run(
-                pip + ["check"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-            )
-            if check_result.returncode:
-                print(check_result.stdout, file=sys.stderr)
-                subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
-                raise Exception(
-                    'According to "pip check", the current Python '
-                    "environment has package-compatibility issues."
-                )
-
-            package_result = requirements.validate_environment_packages(pip)
-            if not package_result.has_all_packages:
-                print(
-                    "Skipping automatic management of Python dependencies since "
-                    f"the '{env_var}' environment variable is set.\n"
-                    "The following issues were found while validating your Python "
-                    "environment:"
-                )
-                print(package_result.report())
-                sys.exit(1)
-        else:
-            # Pip isn't installed to the system Python environment, so we can't use
-            # it to verify compatibility with Mach. Remove the system site-packages
-            # from the import scope so that Mach behaves as though all of its
-            # (optional) dependencies are not installed.
-            _scrub_system_site_packages()
-
-    elif sys.prefix == sys.base_prefix:
-        # We're in an environment where we normally use the Mach virtualenv,
-        # but we're running a "nativecmd" such as "create-mach-environment".
-        # Remove global site packages from sys.path to improve isolation accordingly.
-        _scrub_system_site_packages()
-
-    sys.path[0:0] = [
-        os.path.join(topsrcdir, pth.path)
-        for pth in requirements.pth_requirements + requirements.vendored_requirements
-    ]
+    mach_environment.activate()
 
 
 def initialize(topsrcdir):
@@ -287,13 +199,29 @@ def initialize(topsrcdir):
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
+    # We need the "mach" module to access the logic to parse virtualenv
+    # requirements. Since that depends on "packaging" (and, transitively,
+    # "pyparsing"), we add those to the path too.
+    sys.path[0:0] = [
+        os.path.join(topsrcdir, module)
+        for module in (
+            os.path.join("python", "mach"),
+            os.path.join("third_party", "python", "packaging"),
+            os.path.join("third_party", "python", "pyparsing"),
+        )
+    ]
+
+    from mach.util import setenv, get_state_dir
+
     state_dir = _create_state_dir()
-    _activate_python_environment(topsrcdir)
+
+    # normpath state_dir to normalize msys-style slashes.
+    _activate_python_environment(
+        topsrcdir, lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir))
+    )
 
     import mach.base
     import mach.main
-    from mach.util import setenv
-    from mozboot.util import get_state_dir
 
     # Set a reasonable limit to the number of open files.
     #
@@ -397,7 +325,7 @@ def initialize(topsrcdir):
             return state_dir
 
         if key == "local_state_dir":
-            return get_state_dir(srcdir=True)
+            return get_state_dir(specific_to_topsrcdir=True)
 
         if key == "topdir":
             return topsrcdir
@@ -481,8 +409,8 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
 
     has_psutil, logical_cores, physical_cores, memory_total = get_psutil_stats()
     if has_psutil:
-        # psutil may not be available (we allow `mach create-mach-environment`
-        # to fail to install it).
+        # psutil may not be available (we may not have been able to download
+        # a wheel or build it from source).
         system_metrics.logical_cores.add(logical_cores)
         system_metrics.physical_cores.add(physical_cores)
         if memory_total is not None:

@@ -32,68 +32,68 @@ namespace mozilla::intl {
  * Return true if |language| is a valid language subtag.
  */
 template <typename CharT>
-bool IsStructurallyValidLanguageTag(mozilla::Span<const CharT> language);
+bool IsStructurallyValidLanguageTag(mozilla::Span<const CharT> aLanguage);
 
 /**
  * Return true if |script| is a valid script subtag.
  */
 template <typename CharT>
-bool IsStructurallyValidScriptTag(mozilla::Span<const CharT> script);
+bool IsStructurallyValidScriptTag(mozilla::Span<const CharT> aScript);
 
 /**
  * Return true if |region| is a valid region subtag.
  */
 template <typename CharT>
-bool IsStructurallyValidRegionTag(mozilla::Span<const CharT> region);
+bool IsStructurallyValidRegionTag(mozilla::Span<const CharT> aRegion);
 
 #ifdef DEBUG
 /**
  * Return true if |variant| is a valid variant subtag.
  */
-bool IsStructurallyValidVariantTag(mozilla::Span<const char> variant);
+bool IsStructurallyValidVariantTag(mozilla::Span<const char> aVariant);
 
 /**
  * Return true if |extension| is a valid Unicode extension subtag.
  */
 bool IsStructurallyValidUnicodeExtensionTag(
-    mozilla::Span<const char> extension);
+    mozilla::Span<const char> aExtension);
 
 /**
  * Return true if |privateUse| is a valid private-use subtag.
  */
-bool IsStructurallyValidPrivateUseTag(mozilla::Span<const char> privateUse);
+bool IsStructurallyValidPrivateUseTag(mozilla::Span<const char> aPrivateUse);
 
 #endif
 
 template <typename CharT>
-char AsciiToLowerCase(CharT c) {
-  MOZ_ASSERT(mozilla::IsAscii(c));
-  return mozilla::IsAsciiUppercaseAlpha(c) ? (c + 0x20) : c;
+char AsciiToLowerCase(CharT aChar) {
+  MOZ_ASSERT(mozilla::IsAscii(aChar));
+  return mozilla::IsAsciiUppercaseAlpha(aChar) ? (aChar + 0x20) : aChar;
 }
 
 template <typename CharT>
-char AsciiToUpperCase(CharT c) {
-  MOZ_ASSERT(mozilla::IsAscii(c));
-  return mozilla::IsAsciiLowercaseAlpha(c) ? (c - 0x20) : c;
+char AsciiToUpperCase(CharT aChar) {
+  MOZ_ASSERT(mozilla::IsAscii(aChar));
+  return mozilla::IsAsciiLowercaseAlpha(aChar) ? (aChar - 0x20) : aChar;
 }
 
 template <typename CharT>
-void AsciiToLowerCase(CharT* chars, size_t length, char* dest) {
+void AsciiToLowerCase(CharT* aChars, size_t aLength, char* aDest) {
   char (&fn)(CharT) = AsciiToLowerCase;
-  std::transform(chars, chars + length, dest, fn);
+  std::transform(aChars, aChars + aLength, aDest, fn);
 }
 
 template <typename CharT>
-void AsciiToUpperCase(CharT* chars, size_t length, char* dest) {
+void AsciiToUpperCase(CharT* aChars, size_t aLength, char* aDest) {
   char (&fn)(CharT) = AsciiToUpperCase;
-  std::transform(chars, chars + length, dest, fn);
+  std::transform(aChars, aChars + aLength, aDest, fn);
 }
 
 template <typename CharT>
-void AsciiToTitleCase(CharT* chars, size_t length, char* dest) {
-  if (length > 0) {
-    AsciiToUpperCase(chars, 1, dest);
-    AsciiToLowerCase(chars + 1, length - 1, dest + 1);
+void AsciiToTitleCase(CharT* aChars, size_t aLength, char* aDest) {
+  if (aLength > 0) {
+    AsciiToUpperCase(aChars, 1, aDest);
+    AsciiToLowerCase(aChars + 1, aLength - 1, aDest + 1);
   }
 }
 
@@ -120,10 +120,10 @@ static constexpr size_t TransformKeyLength = 2;
 }  // namespace LanguageTagLimits
 
 // Fixed size language subtag which is stored inline in Locale.
-template <size_t Length>
+template <size_t SubtagLength>
 class LanguageTagSubtag final {
-  uint8_t length_ = 0;
-  char chars_[Length] = {};  // zero initialize
+  uint8_t mLength = 0;
+  char mChars[SubtagLength] = {};  // zero initialize
 
  public:
   LanguageTagSubtag() = default;
@@ -131,39 +131,40 @@ class LanguageTagSubtag final {
   LanguageTagSubtag(const LanguageTagSubtag&) = delete;
   LanguageTagSubtag& operator=(const LanguageTagSubtag&) = delete;
 
-  size_t length() const { return length_; }
-  bool missing() const { return length_ == 0; }
-  bool present() const { return length_ > 0; }
+  size_t Length() const { return mLength; }
+  bool Missing() const { return mLength == 0; }
+  bool Present() const { return mLength > 0; }
 
-  mozilla::Span<const char> span() const { return {chars_, length_}; }
+  mozilla::Span<const char> Span() const { return {mChars, mLength}; }
 
   template <typename CharT>
-  void set(mozilla::Span<const CharT> str) {
-    MOZ_ASSERT(str.size() <= Length);
-    std::copy_n(str.data(), str.size(), chars_);
-    length_ = str.size();
+  void Set(mozilla::Span<const CharT> str) {
+    MOZ_ASSERT(str.size() <= SubtagLength);
+    std::copy_n(str.data(), str.size(), mChars);
+    mLength = str.size();
   }
 
-  // The toXYZCase() methods are using |Length| instead of |length()|, because
-  // current compilers (tested GCC and Clang) can't infer the maximum string
-  // length - even when using hints like |std::min| - and instead are emitting
-  // SIMD optimized code. Using a fixed sized length avoids emitting the SIMD
-  // code. (Emitting SIMD code doesn't make sense here, because the SIMD code
-  // only kicks in for long strings.) A fixed length will additionally ensure
-  // the compiler unrolls the loop in the case conversion code.
+  // The toXYZCase() methods are using |SubtagLength| instead of |length()|,
+  // because current compilers (tested GCC and Clang) can't infer the maximum
+  // string length - even when using hints like |std::min| - and instead are
+  // emitting SIMD optimized code. Using a fixed sized length avoids emitting
+  // the SIMD code. (Emitting SIMD code doesn't make sense here, because the
+  // SIMD code only kicks in for long strings.) A fixed length will
+  // additionally ensure the compiler unrolls the loop in the case conversion
+  // code.
 
-  void toLowerCase() { AsciiToLowerCase(chars_, Length, chars_); }
+  void ToLowerCase() { AsciiToLowerCase(mChars, SubtagLength, mChars); }
 
-  void toUpperCase() { AsciiToUpperCase(chars_, Length, chars_); }
+  void ToUpperCase() { AsciiToUpperCase(mChars, SubtagLength, mChars); }
 
-  void toTitleCase() { AsciiToTitleCase(chars_, Length, chars_); }
+  void ToTitleCase() { AsciiToTitleCase(mChars, SubtagLength, mChars); }
 
   template <size_t N>
-  bool equalTo(const char (&str)[N]) const {
-    static_assert(N - 1 <= Length,
+  bool EqualTo(const char (&str)[N]) const {
+    static_assert(N - 1 <= SubtagLength,
                   "subtag literals must not exceed the maximum subtag length");
 
-    return length_ == N - 1 && memcmp(chars_, str, N - 1) == 0;
+    return mLength == N - 1 && memcmp(mChars, str, N - 1) == 0;
   }
 };
 
@@ -180,16 +181,16 @@ using UniqueChars = UniquePtr<char[]>;
  * All subtags are already in canonicalized case.
  */
 class MOZ_STACK_CLASS Locale final {
-  LanguageSubtag language_ = {};
-  ScriptSubtag script_ = {};
-  RegionSubtag region_ = {};
+  LanguageSubtag mLanguage = {};
+  ScriptSubtag mScript = {};
+  RegionSubtag mRegion = {};
 
   using VariantsVector = Vector<UniqueChars, 2>;
   using ExtensionsVector = Vector<UniqueChars, 2>;
 
-  VariantsVector variants_;
-  ExtensionsVector extensions_;
-  UniqueChars privateuse_ = nullptr;
+  VariantsVector mVariants;
+  ExtensionsVector mExtensions;
+  UniqueChars mPrivateUse = nullptr;
 
   friend class LocaleParser;
 
@@ -201,44 +202,44 @@ class MOZ_STACK_CLASS Locale final {
   };
 
  private:
-  Result<Ok, CanonicalizationError> canonicalizeUnicodeExtension(
+  Result<Ok, CanonicalizationError> CanonicalizeUnicodeExtension(
       UniqueChars& unicodeExtension);
 
-  Result<Ok, CanonicalizationError> canonicalizeTransformExtension(
+  Result<Ok, CanonicalizationError> CanonicalizeTransformExtension(
       UniqueChars& transformExtension);
 
  public:
-  static bool languageMapping(LanguageSubtag& language);
-  static bool complexLanguageMapping(const LanguageSubtag& language);
+  static bool LanguageMapping(LanguageSubtag& aLanguage);
+  static bool ComplexLanguageMapping(const LanguageSubtag& aLanguage);
 
  private:
-  static bool scriptMapping(ScriptSubtag& script);
-  static bool regionMapping(RegionSubtag& region);
-  static bool complexRegionMapping(const RegionSubtag& region);
+  static bool ScriptMapping(ScriptSubtag& aScript);
+  static bool RegionMapping(RegionSubtag& aRegion);
+  static bool ComplexRegionMapping(const RegionSubtag& aRegion);
 
-  void performComplexLanguageMappings();
-  void performComplexRegionMappings();
-  [[nodiscard]] bool performVariantMappings();
+  void PerformComplexLanguageMappings();
+  void PerformComplexRegionMappings();
+  [[nodiscard]] bool PerformVariantMappings();
 
-  [[nodiscard]] bool updateLegacyMappings();
+  [[nodiscard]] bool UpdateLegacyMappings();
 
-  static bool signLanguageMapping(LanguageSubtag& language,
-                                  const RegionSubtag& region);
+  static bool SignLanguageMapping(LanguageSubtag& aLanguage,
+                                  const RegionSubtag& aRegion);
 
-  static const char* replaceTransformExtensionType(
-      mozilla::Span<const char> key, mozilla::Span<const char> type);
+  static const char* ReplaceTransformExtensionType(
+      mozilla::Span<const char> aKey, mozilla::Span<const char> aType);
 
  public:
   /**
    * Given a Unicode key and type, return the null-terminated preferred
    * replacement for that type if there is one, or null if there is none, e.g.
    * in effect
-   * |replaceUnicodeExtensionType("ca", "islamicc") == "islamic-civil"|
+   * |ReplaceUnicodeExtensionType("ca", "islamicc") == "islamic-civil"|
    * and
-   * |replaceUnicodeExtensionType("ca", "islamic-civil") == nullptr|.
+   * |ReplaceUnicodeExtensionType("ca", "islamic-civil") == nullptr|.
    */
-  static const char* replaceUnicodeExtensionType(
-      mozilla::Span<const char> key, mozilla::Span<const char> type);
+  static const char* ReplaceUnicodeExtensionType(
+      mozilla::Span<const char> aKey, mozilla::Span<const char> aType);
 
  public:
   Locale() = default;
@@ -249,10 +250,10 @@ class MOZ_STACK_CLASS Locale final {
   class SubtagIterator {
     using Iter = decltype(std::declval<const Vec>().begin());
 
-    Iter iter_;
+    Iter mIter;
 
    public:
-    explicit SubtagIterator(Iter iter) : iter_(iter) {}
+    explicit SubtagIterator(Iter iter) : mIter(iter) {}
 
     // std::iterator traits.
     using iterator_category = std::input_iterator_tag;
@@ -262,7 +263,7 @@ class MOZ_STACK_CLASS Locale final {
     using reference = value_type&;
 
     SubtagIterator& operator++() {
-      iter_++;
+      mIter++;
       return *this;
     }
 
@@ -273,43 +274,43 @@ class MOZ_STACK_CLASS Locale final {
     }
 
     bool operator==(const SubtagIterator& aOther) const {
-      return iter_ == aOther.iter_;
+      return mIter == aOther.mIter;
     }
 
     bool operator!=(const SubtagIterator& aOther) const {
       return !(*this == aOther);
     }
 
-    value_type operator*() const { return MakeStringSpan(iter_->get()); }
+    value_type operator*() const { return MakeStringSpan(mIter->get()); }
   };
 
   template <size_t N>
   class SubtagEnumeration {
     using Vec = Vector<UniqueChars, N>;
 
-    const Vec& vector_;
+    const Vec& mVector;
 
    public:
-    explicit SubtagEnumeration(const Vec& vector) : vector_(vector) {}
+    explicit SubtagEnumeration(const Vec& aVector) : mVector(aVector) {}
 
-    size_t length() const { return vector_.length(); }
-    bool empty() const { return vector_.empty(); }
+    size_t length() const { return mVector.length(); }
+    bool empty() const { return mVector.empty(); }
 
-    auto begin() const { return SubtagIterator<Vec>(vector_.begin()); }
-    auto end() const { return SubtagIterator<Vec>(vector_.end()); }
+    auto begin() const { return SubtagIterator<Vec>(mVector.begin()); }
+    auto end() const { return SubtagIterator<Vec>(mVector.end()); }
 
-    Span<const char> operator[](size_t index) const {
-      return MakeStringSpan(vector_[index].get());
+    Span<const char> operator[](size_t aIndex) const {
+      return MakeStringSpan(mVector[aIndex].get());
     }
   };
 
-  const LanguageSubtag& language() const { return language_; }
-  const ScriptSubtag& script() const { return script_; }
-  const RegionSubtag& region() const { return region_; }
-  auto variants() const { return SubtagEnumeration(variants_); }
-  auto extensions() const { return SubtagEnumeration(extensions_); }
-  Maybe<Span<const char>> privateuse() const {
-    if (const char* p = privateuse_.get()) {
+  const LanguageSubtag& Language() const { return mLanguage; }
+  const ScriptSubtag& Script() const { return mScript; }
+  const RegionSubtag& Region() const { return mRegion; }
+  auto Variants() const { return SubtagEnumeration(mVariants); }
+  auto Extensions() const { return SubtagEnumeration(mExtensions); }
+  Maybe<Span<const char>> PrivateUse() const {
+    if (const char* p = mPrivateUse.get()) {
       return Some(MakeStringSpan(p));
     }
     return Nothing();
@@ -318,91 +319,93 @@ class MOZ_STACK_CLASS Locale final {
   /**
    * Return the Unicode extension subtag or Nothing if not present.
    */
-  Maybe<Span<const char>> unicodeExtension() const;
+  Maybe<Span<const char>> GetUnicodeExtension() const;
 
  private:
-  ptrdiff_t unicodeExtensionIndex() const;
+  ptrdiff_t UnicodeExtensionIndex() const;
 
  public:
   /**
    * Set the language subtag. The input must be a valid language subtag.
    */
   template <size_t N>
-  void setLanguage(const char (&language)[N]) {
-    mozilla::Span<const char> span(language, N - 1);
+  void SetLanguage(const char (&aLanguage)[N]) {
+    mozilla::Span<const char> span(aLanguage, N - 1);
     MOZ_ASSERT(IsStructurallyValidLanguageTag(span));
-    language_.set(span);
+    mLanguage.Set(span);
   }
 
   /**
    * Set the language subtag. The input must be a valid language subtag.
    */
-  void setLanguage(const LanguageSubtag& language) {
-    MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
-    language_.set(language.span());
+  void SetLanguage(const LanguageSubtag& aLanguage) {
+    MOZ_ASSERT(IsStructurallyValidLanguageTag(aLanguage.Span()));
+    mLanguage.Set(aLanguage.Span());
   }
 
   /**
    * Set the script subtag. The input must be a valid script subtag.
    */
   template <size_t N>
-  void setScript(const char (&script)[N]) {
-    mozilla::Span<const char> span(script, N - 1);
+  void SetScript(const char (&aScript)[N]) {
+    mozilla::Span<const char> span(aScript, N - 1);
     MOZ_ASSERT(IsStructurallyValidScriptTag(span));
-    script_.set(span);
+    mScript.Set(span);
   }
 
   /**
    * Set the script subtag. The input must be a valid script subtag or the empty
    * string.
    */
-  void setScript(const ScriptSubtag& script) {
-    MOZ_ASSERT(script.missing() || IsStructurallyValidScriptTag(script.span()));
-    script_.set(script.span());
+  void SetScript(const ScriptSubtag& aScript) {
+    MOZ_ASSERT(aScript.Missing() ||
+               IsStructurallyValidScriptTag(aScript.Span()));
+    mScript.Set(aScript.Span());
   }
 
   /**
    * Set the region subtag. The input must be a valid region subtag.
    */
   template <size_t N>
-  void setRegion(const char (&region)[N]) {
-    mozilla::Span<const char> span(region, N - 1);
+  void SetRegion(const char (&aRegion)[N]) {
+    mozilla::Span<const char> span(aRegion, N - 1);
     MOZ_ASSERT(IsStructurallyValidRegionTag(span));
-    region_.set(span);
+    mRegion.Set(span);
   }
 
   /**
    * Set the region subtag. The input must be a valid region subtag or the empty
    * empty string.
    */
-  void setRegion(const RegionSubtag& region) {
-    MOZ_ASSERT(region.missing() || IsStructurallyValidRegionTag(region.span()));
-    region_.set(region.span());
+  void SetRegion(const RegionSubtag& aRegion) {
+    MOZ_ASSERT(aRegion.Missing() ||
+               IsStructurallyValidRegionTag(aRegion.Span()));
+    mRegion.Set(aRegion.Span());
   }
 
   /**
    * Removes all variant subtags.
    */
-  void clearVariants() { variants_.clearAndFree(); }
+  void ClearVariants() { mVariants.clearAndFree(); }
 
   /**
    * Set the Unicode extension subtag. The input must be a valid Unicode
    * extension subtag.
    */
-  ICUResult setUnicodeExtension(Span<const char> extension);
+  ICUResult SetUnicodeExtension(Span<const char> aExtension);
 
   /**
    * Remove any Unicode extension subtag if present.
    */
-  void clearUnicodeExtension();
+  void ClearUnicodeExtension();
 
   /** Canonicalize the base-name (language, script, region, variant) subtags. */
-  Result<Ok, CanonicalizationError> canonicalizeBaseName();
+  Result<Ok, CanonicalizationError> CanonicalizeBaseName();
 
   /**
    * Canonicalize all extension subtags.
    */
-  Result<Ok, CanonicalizationError> canonicalizeExtensions();
+  Result<Ok, CanonicalizationError> CanonicalizeExtensions();
 
   /**
    * Canonicalizes the given structurally valid Unicode BCP 47 locale
@@ -423,29 +426,29 @@ class MOZ_STACK_CLASS Locale final {
    *
    * Spec: ECMAScript Internationalization API Specification, 6.2.3.
    */
-  Result<Ok, CanonicalizationError> canonicalize() {
-    MOZ_TRY(canonicalizeBaseName());
-    return canonicalizeExtensions();
+  Result<Ok, CanonicalizationError> Canonicalize() {
+    MOZ_TRY(CanonicalizeBaseName());
+    return CanonicalizeExtensions();
   }
 
   /**
    * Fill the buffer with a string representation of the locale.
    */
   template <typename B>
-  ICUResult toString(B& buffer) const {
+  ICUResult ToString(B& aBuffer) const {
     static_assert(std::is_same_v<typename B::CharType, char>);
 
-    size_t capacity = toStringCapacity();
+    size_t capacity = ToStringCapacity();
 
     // Attempt to reserve needed capacity
-    if (!buffer.reserve(capacity)) {
+    if (!aBuffer.reserve(capacity)) {
       return Err(ICUError::OutOfMemory);
     }
 
-    size_t offset = toStringAppend(buffer.data());
+    size_t offset = ToStringAppend(aBuffer.data());
 
     MOZ_ASSERT(capacity == offset);
-    buffer.written(offset);
+    aBuffer.written(offset);
 
     return Ok();
   }
@@ -455,14 +458,14 @@ class MOZ_STACK_CLASS Locale final {
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  ICUResult addLikelySubtags();
+  ICUResult AddLikelySubtags();
 
   /**
    * Remove likely-subtags from the locale.
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  ICUResult removeLikelySubtags();
+  ICUResult RemoveLikelySubtags();
 
   /**
    * Returns the default locale as an ICU locale identifier. The returned string
@@ -486,10 +489,10 @@ class MOZ_STACK_CLASS Locale final {
   }
 
  private:
-  static UniqueChars DuplicateStringToUniqueChars(const char* s);
-  static UniqueChars DuplicateStringToUniqueChars(Span<const char> s);
-  size_t toStringCapacity() const;
-  size_t toStringAppend(char* buffer) const;
+  static UniqueChars DuplicateStringToUniqueChars(const char* aStr);
+  static UniqueChars DuplicateStringToUniqueChars(Span<const char> aStr);
+  size_t ToStringCapacity() const;
+  size_t ToStringAppend(char* aBuffer) const;
 };
 
 /**
@@ -517,89 +520,89 @@ class MOZ_STACK_CLASS LocaleParser final {
 
  private:
   class Token final {
-    size_t index_;
-    size_t length_;
-    TokenKind kind_;
+    size_t mIndex;
+    size_t mLength;
+    TokenKind mKind;
 
    public:
-    Token(TokenKind kind, size_t index, size_t length)
-        : index_(index), length_(length), kind_(kind) {}
+    Token(TokenKind aKind, size_t aIndex, size_t aLength)
+        : mIndex(aIndex), mLength(aLength), mKind(aKind) {}
 
-    TokenKind kind() const { return kind_; }
-    size_t index() const { return index_; }
-    size_t length() const { return length_; }
+    TokenKind Kind() const { return mKind; }
+    size_t Index() const { return mIndex; }
+    size_t Length() const { return mLength; }
 
-    bool isError() const { return kind_ == TokenKind::Error; }
-    bool isNone() const { return kind_ == TokenKind::None; }
-    bool isAlpha() const { return kind_ == TokenKind::Alpha; }
-    bool isDigit() const { return kind_ == TokenKind::Digit; }
-    bool isAlphaDigit() const { return kind_ == TokenKind::AlphaDigit; }
+    bool IsError() const { return mKind == TokenKind::Error; }
+    bool IsNone() const { return mKind == TokenKind::None; }
+    bool IsAlpha() const { return mKind == TokenKind::Alpha; }
+    bool IsDigit() const { return mKind == TokenKind::Digit; }
+    bool IsAlphaDigit() const { return mKind == TokenKind::AlphaDigit; }
   };
 
-  const char* locale_;
-  size_t length_;
-  size_t index_ = 0;
+  const char* mLocale;
+  size_t mLength;
+  size_t mIndex = 0;
 
-  explicit LocaleParser(Span<const char> locale)
-      : locale_(locale.data()), length_(locale.size()) {}
+  explicit LocaleParser(Span<const char> aLocale)
+      : mLocale(aLocale.data()), mLength(aLocale.size()) {}
 
-  char charAt(size_t index) const { return locale_[index]; }
+  char CharAt(size_t aIndex) const { return mLocale[aIndex]; }
 
   // Copy the token characters into |subtag|.
   template <size_t N>
-  void copyChars(const Token& tok, LanguageTagSubtag<N>& subtag) const {
-    subtag.set(mozilla::Span(locale_ + tok.index(), tok.length()));
+  void CopyChars(const Token& aTok, LanguageTagSubtag<N>& aSubtag) const {
+    aSubtag.Set(mozilla::Span(mLocale + aTok.Index(), aTok.Length()));
   }
 
   // Create a string copy of |length| characters starting at |index|.
-  UniqueChars chars(size_t index, size_t length) const;
+  UniqueChars Chars(size_t aIndex, size_t aLength) const;
 
   // Create a string copy of the token characters.
-  UniqueChars chars(const Token& tok) const {
-    return chars(tok.index(), tok.length());
+  UniqueChars Chars(const Token& aTok) const {
+    return Chars(aTok.Index(), aTok.Length());
   }
 
-  UniqueChars extension(const Token& start, const Token& end) const {
-    MOZ_ASSERT(start.index() < end.index());
+  UniqueChars Extension(const Token& aStart, const Token& aEnd) const {
+    MOZ_ASSERT(aStart.Index() < aEnd.Index());
 
-    size_t length = end.index() - 1 - start.index();
-    return chars(start.index(), length);
+    size_t length = aEnd.Index() - 1 - aStart.Index();
+    return Chars(aStart.Index(), length);
   }
 
-  Token nextToken();
+  Token NextToken();
 
   // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
   //
   // Four character language subtags are not allowed in Unicode BCP 47 locale
   // identifiers. Also see the comparison to Unicode CLDR locale identifiers in
   // <https://unicode.org/reports/tr35/#BCP_47_Conformance>.
-  bool isLanguage(const Token& tok) const {
-    return tok.isAlpha() && ((2 <= tok.length() && tok.length() <= 3) ||
-                             (5 <= tok.length() && tok.length() <= 8));
+  bool IsLanguage(const Token& aTok) const {
+    return aTok.IsAlpha() && ((2 <= aTok.Length() && aTok.Length() <= 3) ||
+                              (5 <= aTok.Length() && aTok.Length() <= 8));
   }
 
   // unicode_script_subtag = alpha{4} ;
-  bool isScript(const Token& tok) const {
-    return tok.isAlpha() && tok.length() == 4;
+  bool IsScript(const Token& aTok) const {
+    return aTok.IsAlpha() && aTok.Length() == 4;
   }
 
   // unicode_region_subtag = (alpha{2} | digit{3}) ;
-  bool isRegion(const Token& tok) const {
-    return (tok.isAlpha() && tok.length() == 2) ||
-           (tok.isDigit() && tok.length() == 3);
+  bool IsRegion(const Token& aTok) const {
+    return (aTok.IsAlpha() && aTok.Length() == 2) ||
+           (aTok.IsDigit() && aTok.Length() == 3);
   }
 
   // unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3}) ;
-  bool isVariant(const Token& tok) const {
-    return (5 <= tok.length() && tok.length() <= 8) ||
-           (tok.length() == 4 && mozilla::IsAsciiDigit(charAt(tok.index())));
+  bool IsVariant(const Token& aTok) const {
+    return (5 <= aTok.Length() && aTok.Length() <= 8) ||
+           (aTok.Length() == 4 && mozilla::IsAsciiDigit(CharAt(aTok.Index())));
   }
 
   // Returns the code unit of the first character at the given singleton token.
   // Always returns the lower case form of an alphabetical character.
-  char singletonKey(const Token& tok) const {
-    MOZ_ASSERT(tok.length() == 1);
-    return AsciiToLowerCase(charAt(tok.index()));
+  char SingletonKey(const Token& aTok) const {
+    MOZ_ASSERT(aTok.Length() == 1);
+    return AsciiToLowerCase(CharAt(aTok.Index()));
   }
 
   // extensions = unicode_locale_extensions |
@@ -613,70 +616,71 @@ class MOZ_STACK_CLASS LocaleParser final {
   //                                    (sep tfield)+) ;
   //
   // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
-  bool isExtensionStart(const Token& tok) const {
-    return tok.length() == 1 && singletonKey(tok) != 'x';
+  bool IsExtensionStart(const Token& aTok) const {
+    return aTok.Length() == 1 && SingletonKey(aTok) != 'x';
   }
 
   // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
-  bool isOtherExtensionPart(const Token& tok) const {
-    return 2 <= tok.length() && tok.length() <= 8;
+  bool IsOtherExtensionPart(const Token& aTok) const {
+    return 2 <= aTok.Length() && aTok.Length() <= 8;
   }
 
   // unicode_locale_extensions = sep [uU] ((sep keyword)+ |
   //                                       (sep attribute)+ (sep keyword)*) ;
   // keyword = key (sep type)? ;
-  bool isUnicodeExtensionPart(const Token& tok) const {
-    return isUnicodeExtensionKey(tok) || isUnicodeExtensionType(tok) ||
-           isUnicodeExtensionAttribute(tok);
+  bool IsUnicodeExtensionPart(const Token& aTok) const {
+    return IsUnicodeExtensionKey(aTok) || IsUnicodeExtensionType(aTok) ||
+           IsUnicodeExtensionAttribute(aTok);
   }
 
   // attribute = alphanum{3,8} ;
-  bool isUnicodeExtensionAttribute(const Token& tok) const {
-    return 3 <= tok.length() && tok.length() <= 8;
+  bool IsUnicodeExtensionAttribute(const Token& aTok) const {
+    return 3 <= aTok.Length() && aTok.Length() <= 8;
   }
 
   // key = alphanum alpha ;
-  bool isUnicodeExtensionKey(const Token& tok) const {
-    return tok.length() == 2 && mozilla::IsAsciiAlpha(charAt(tok.index() + 1));
+  bool IsUnicodeExtensionKey(const Token& aTok) const {
+    return aTok.Length() == 2 &&
+           mozilla::IsAsciiAlpha(CharAt(aTok.Index() + 1));
   }
 
   // type = alphanum{3,8} (sep alphanum{3,8})* ;
-  bool isUnicodeExtensionType(const Token& tok) const {
-    return 3 <= tok.length() && tok.length() <= 8;
+  bool IsUnicodeExtensionType(const Token& aTok) const {
+    return 3 <= aTok.Length() && aTok.Length() <= 8;
   }
 
   // tkey = alpha digit ;
-  bool isTransformExtensionKey(const Token& tok) const {
-    return tok.length() == 2 && mozilla::IsAsciiAlpha(charAt(tok.index())) &&
-           mozilla::IsAsciiDigit(charAt(tok.index() + 1));
+  bool IsTransformExtensionKey(const Token& aTok) const {
+    return aTok.Length() == 2 && mozilla::IsAsciiAlpha(CharAt(aTok.Index())) &&
+           mozilla::IsAsciiDigit(CharAt(aTok.Index() + 1));
   }
 
   // tvalue = (sep alphanum{3,8})+ ;
-  bool isTransformExtensionPart(const Token& tok) const {
-    return 3 <= tok.length() && tok.length() <= 8;
+  bool IsTransformExtensionPart(const Token& aTok) const {
+    return 3 <= aTok.Length() && aTok.Length() <= 8;
   }
 
   // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
-  bool isPrivateUseStart(const Token& tok) const {
-    return tok.length() == 1 && singletonKey(tok) == 'x';
+  bool IsPrivateUseStart(const Token& aTok) const {
+    return aTok.Length() == 1 && SingletonKey(aTok) == 'x';
   }
 
   // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
-  bool isPrivateUsePart(const Token& tok) const {
-    return 1 <= tok.length() && tok.length() <= 8;
+  bool IsPrivateUsePart(const Token& aTok) const {
+    return 1 <= aTok.Length() && aTok.Length() <= 8;
   }
 
-  // Helper function for use in |parseBaseName| and
-  // |parseTlangInTransformExtension|.  Do not use this directly!
-  static Result<Ok, ParserError> internalParseBaseName(LocaleParser& ts,
-                                                       Locale& tag, Token& tok);
+  // Helper function for use in |ParseBaseName| and
+  // |ParseTlangInTransformExtension|.  Do not use this directly!
+  static Result<Ok, ParserError> InternalParseBaseName(
+      LocaleParser& aLocaleParser, Locale& aTag, Token& aTok);
 
   // Parse the `unicode_language_id` production, i.e. the
-  // language/script/region/variants portion of a locale, into |tag|.
-  // |tok| must be the current token.
-  static Result<Ok, ParserError> parseBaseName(LocaleParser& ts, Locale& tag,
-                                               Token& tok) {
-    return internalParseBaseName(ts, tag, tok);
+  // language/script/region/variants portion of a locale, into |aTag|.
+  // |aTok| must be the current token.
+  static Result<Ok, ParserError> ParseBaseName(LocaleParser& aLocaleParser,
+                                               Locale& aTag, Token& aTok) {
+    return InternalParseBaseName(aLocaleParser, aTag, aTok);
   }
 
   // Parse the `tlang` production within a parsed 't' transform extension.
@@ -691,23 +695,23 @@ class MOZ_STACK_CLASS LocaleParser final {
   // there was no `tlang`, then |tag.language().missing()|. But if there was a
   // `tlang`, then |tag| is filled with subtags exactly as they appeared in the
   // parse input.
-  static Result<Ok, ParserError> parseTlangInTransformExtension(
-      LocaleParser& ts, Locale& tag, Token& tok) {
-    MOZ_ASSERT(ts.isLanguage(tok));
-    return internalParseBaseName(ts, tag, tok);
+  static Result<Ok, ParserError> ParseTlangInTransformExtension(
+      LocaleParser& aLocaleParser, Locale& aTag, Token& aTok) {
+    MOZ_ASSERT(aLocaleParser.IsLanguage(aTok));
+    return InternalParseBaseName(aLocaleParser, aTag, aTok);
   }
 
   friend class Locale;
 
   class Range final {
-    size_t begin_;
-    size_t length_;
+    size_t mBegin;
+    size_t mLength;
 
    public:
-    Range(size_t begin, size_t length) : begin_(begin), length_(length) {}
+    Range(size_t aBegin, size_t aLength) : mBegin(aBegin), mLength(aLength) {}
 
-    size_t begin() const { return begin_; }
-    size_t length() const { return length_; }
+    size_t Begin() const { return mBegin; }
+    size_t Length() const { return mLength; }
   };
 
   using TFieldVector = Vector<Range, 8>;
@@ -718,32 +722,34 @@ class MOZ_STACK_CLASS LocaleParser final {
   // `transformed_extensions` subtag, and fill |tag| and |fields| from the
   // `tlang` and `tfield` components. Data in |tag| is lowercase, consistent
   // with |extension|.
-  static Result<Ok, ParserError> parseTransformExtension(
-      mozilla::Span<const char> extension, Locale& tag, TFieldVector& fields);
+  static Result<Ok, ParserError> ParseTransformExtension(
+      mozilla::Span<const char> aExtension, Locale& aTag,
+      TFieldVector& aFields);
 
   // Parse |extension|, which must be a validated, fully lowercase
   // `unicode_locale_extensions` subtag, and fill |attributes| and |keywords|
   // from the `attribute` and `keyword` components.
-  static Result<Ok, ParserError> parseUnicodeExtension(
-      mozilla::Span<const char> extension, AttributesVector& attributes,
-      KeywordsVector& keywords);
+  static Result<Ok, ParserError> ParseUnicodeExtension(
+      mozilla::Span<const char> aExtension, AttributesVector& aAttributes,
+      KeywordsVector& aKeywords);
 
  public:
   // Parse the input string as a locale.
-  static Result<Ok, ParserError> tryParse(Span<const char> locale, Locale& tag);
+  static Result<Ok, ParserError> TryParse(Span<const char> aLocale,
+                                          Locale& aTag);
 
   // Parse the input string as the base-name parts (language, script, region,
   // variants) of a locale.
-  static Result<Ok, ParserError> tryParseBaseName(Span<const char> locale,
-                                                  Locale& tag);
+  static Result<Ok, ParserError> TryParseBaseName(Span<const char> aLocale,
+                                                  Locale& aTag);
 
   // Return Ok() iff |extension| can be parsed as a Unicode extension subtag.
-  static Result<Ok, ParserError> canParseUnicodeExtension(
-      Span<const char> extension);
+  static Result<Ok, ParserError> CanParseUnicodeExtension(
+      Span<const char> aExtension);
 
   // Return Ok() iff |unicodeType| can be parsed as a Unicode extension type.
-  static Result<Ok, ParserError> canParseUnicodeExtensionType(
-      Span<const char> unicodeType);
+  static Result<Ok, ParserError> CanParseUnicodeExtensionType(
+      Span<const char> aUnicodeType);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LocaleParser::TokenKind)

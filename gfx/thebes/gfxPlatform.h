@@ -138,6 +138,8 @@ inline const char* GetBackendName(mozilla::gfx::BackendType aBackend) {
       return "webrender text";
     case mozilla::gfx::BackendType::NONE:
       return "none";
+    case mozilla::gfx::BackendType::WEBGL:
+      return "webgl";
     case mozilla::gfx::BackendType::BACKEND_LAST:
       return "invalid";
   }

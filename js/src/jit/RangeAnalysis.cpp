@@ -1383,6 +1383,9 @@ void MBitXor::computeRange(TempAllocator& alloc) {
 }
 
 void MBitNot::computeRange(TempAllocator& alloc) {
+  if (type() == MIRType::Int64) {
+    return;
+  }
   MOZ_ASSERT(type() == MIRType::Int32);
 
   Range op(getOperand(0));

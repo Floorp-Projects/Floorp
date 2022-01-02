@@ -10,7 +10,6 @@
 "use strict";
 
 const Telemetry = Services.telemetry;
-const Path = OS.Path;
 const HistogramId = "FX_SESSION_RESTORE_ALL_FILES_CORRUPT";
 
 // Prepare the session file.
@@ -29,15 +28,18 @@ function promise_reset_session(backups = {}) {
     Telemetry.getHistogramById(HistogramId).clear();
 
     // Reset the contents of the backups directory
-    OS.File.makeDir(SessionFile.Paths.backups);
+    await IOUtils.makeDirectory(SessionFile.Paths.backups);
+    let basePath = do_get_cwd().path;
     for (let key of SessionFile.Paths.loadOrder) {
       if (backups.hasOwnProperty(key)) {
-        let s = await OS.File.read(backups[key]);
-        await OS.File.writeAtomic(SessionFile.Paths[key], s, {
-          compression: "lz4",
+        let path = backups[key];
+        const fullPath = PathUtils.join(basePath, ...path);
+        let s = await IOUtils.read(fullPath);
+        await IOUtils.write(SessionFile.Paths[key], s, {
+          compress: true,
         });
       } else {
-        await OS.File.remove(SessionFile.Paths[key]);
+        await IOUtils.remove(SessionFile.Paths[key]);
       }
     }
   })();
@@ -75,8 +77,8 @@ add_task(async function test_no_files_exist() {
  */
 add_task(async function test_one_file_valid() {
   // Corrupting some backup files.
-  let invalidSession = "data/sessionstore_invalid.js";
-  let validSession = "data/sessionstore_valid.js";
+  let invalidSession = ["data", "sessionstore_invalid.js"];
+  let validSession = ["data", "sessionstore_valid.js"];
   await promise_reset_session({
     clean: invalidSession,
     cleanBackup: validSession,
@@ -98,7 +100,7 @@ add_task(async function test_one_file_valid() {
  */
 add_task(async function test_all_files_corrupt() {
   // Corrupting all backup files.
-  let invalidSession = "data/sessionstore_invalid.js";
+  let invalidSession = ["data", "sessionstore_invalid.js"];
   await promise_reset_session({
     clean: invalidSession,
     cleanBackup: invalidSession,

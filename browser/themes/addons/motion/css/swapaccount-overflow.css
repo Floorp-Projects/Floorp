@@ -1,0 +1,11 @@
+/* (BUGGY: USE AT OWN RISK!) Swap Account icon and Overflow icon (must be placed next to each other) */
+
+@media (min-width: 687px) {
+  :root:not([customizing]) #nav-bar-overflow-button {
+    transform: translateX(-44px);
+  }
+
+  :root:not([customizing]) #fxa-toolbar-menu-button {
+    transform: translateX(44px);
+  }
+}

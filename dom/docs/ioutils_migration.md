@@ -23,14 +23,14 @@ The most up-to-date API can always be found in
 
 `IOUtils` has a similar API to `OS.File`, but one should keep in mind some key differences.
 
-### No `File` instances
+### No `File` instances (except `SyncReadFile` in workers)
 
-At no point does `IOUtils` expose a file descriptor/handle to the caller.
-This API operates only on absolute path strings.
-Platform-specific file descriptors may have been exposed by instances of `OS.File` through the
+Most of the `IOUtils` methods only operate on absolute path strings, and don't expose a file handle to the caller.
+The exception to this rule is the `openFileForSyncReading` API, which is only available in workers.
+
+Furthermore, `OS.File` was exposing platform-specific file descriptors through the
 [`fd`](https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/OSFile.jsm/OS.File_for_workers#Attributes)
-attribute.
-This will no longer be possible.
+attribute. `IOUtils` does not expose file descriptors.
 
 ### WebIDL has no `Date` type
 
@@ -88,12 +88,14 @@ whose name depends on the failure:
 | `OperationError` | Something went wrong during the I/O operation. E.g. failed to allocate a buffer. The exception message should have more details. |
 | `UnknownError` | An unknown error occurred in the implementation. An nsresult error code should be included in the exception message to assist with debugging and improving `IOUtils` internal error handling. |
 
-### `IOUtils` is async only
+### `IOUtils` is mostly async-only
 
 `OS.File` provided an asynchronous front-end for main-thread consumers,
-and a synchronous front-end for servicer workers.
-`IOUtils` only provides an asynchronous API,
-which can still be called from both the main thread and service workers.
+and a synchronous front-end for workers.
+`IOUtils` only provides an asynchronous API for the vast majority of its API surface.
+These asynchronous methods can be called from both the main thread and from chrome-privileged worker threads.
+
+The one exception to this rule is `openFileForSyncReading`, which allows synchronous file reading in workers.
 
 ## `OS.File` vs `IOUtils`
 
@@ -106,12 +108,18 @@ The following is a detailed comparison with examples of the methods and options 
 `IOUtils` provides the following methods to read data from a file. Like
 `OS.File`, they accept an `options` dictionary.
 
+Note: The maximum file size that can be read is `UINT32_MAX` bytes. Attempting
+to read a file larger will result in a `NotReadableError`.
+
 ```idl
 Promise<Uint8Array> read(DOMString path, ...);
 
 Promise<DOMString> readUTF8(DOMString path, ...);
 
 Promise<any> readJSON(DOMString path, ...);
+
+// Workers only:
+SyncReadFile openFileForSyncReading(DOMString path);
 ```
 
 #### Options
@@ -169,6 +177,25 @@ let utf8 = await OS.File.read(path, {
 ```js
 let bytes = await IOUtils.read(path, { decompress: true }); // Uint8Array
 let utf8 = await IOUtils.readUTF8(path, { decompress: true }); // string
+```
+
+##### Synchronously read a fragment of a file into a buffer, from a worker
+
+**`OS.File`**
+```js
+// Read 64 bytes at offset 128, workers only:
+let file = OS.File.open(path, { read: true });
+file.setPosition(128);
+let bytes = file.read({ bytes: 64 }); // Uint8Array
+file.close();
+```
+**`IOUtils`**
+```js
+// Read 64 bytes at offset 128, workers only:
+let file = IOUtils.openFileForSyncReading(path);
+let bytes = new Uint8Array(64);
+file.readBytesInto(bytes, 128);
+file.close();
 ```
 
 ### Writing to a file
@@ -309,7 +336,7 @@ await OS.File.remove(path, { ignoreAbsent: true });
 await IOUtils.remove(path);
 ```
 
-##### Remove a directory
+##### Remove a directory and all its contents
 
 **`OS.File`**
 ```js
@@ -325,11 +352,12 @@ await IOUtils.remove(path, { recursive: true });
 
 **`OS.File`**
 ```js
-await OS.File.removeEmptyDir(path, { ignoreAbsent: true });
+await OS.File.removeEmptyDir(path); // Will throw an exception if `path` is not empty.
 ```
+
 **`IOUtils`**
 ```js
-await IOUtils.remove(path, { recursive: true });
+await IOUtils.remove(path); // Will throw an exception if `path` is not empty.
 ```
 
 ### Make a directory
@@ -366,7 +394,7 @@ await IOUtils.makeDirectory(srcPath, destPath);
 `IOUtils` provides the following method to update a file's modification time.
 
 ```idl
-Promise<void> touch(DOMString path, optional long long modification);
+Promise<void> setModificationTime(DOMString path, optional long long modification);
 ```
 
 #### Example
@@ -378,7 +406,7 @@ await OS.File.setDates(path, new Date(), new Date());
 
 **`IOUtils`**
 ```js
-await IOUtils.touch(path, new Date().valueOf());
+await IOUtils.setModificationTime(path, new Date().valueOf());
 ```
 
 ### Get file metadata

@@ -108,7 +108,7 @@ bool URLQueryStringStripper::StripQueryString(nsIURI* aURI,
   }
 
   nsAutoString newQuery;
-  params.Serialize(newQuery);
+  params.Serialize(newQuery, false);
 
   Unused << NS_MutateURI(uri)
                 .SetQuery(NS_ConvertUTF16toUTF8(newQuery))

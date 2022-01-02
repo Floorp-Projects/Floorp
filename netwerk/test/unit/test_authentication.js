@@ -6,10 +6,7 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // Turn off the authentication dialog blocking for this test.
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
-prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
+Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort;
@@ -283,11 +280,10 @@ var listener = {
 };
 
 function makeChan(url, loadingUrl) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
+  var principal = Services.scriptSecurityManager.createContentPrincipal(
+    Services.io.newURI(loadingUrl),
+    {}
   );
-  var principal = ssm.createContentPrincipal(ios.newURI(loadingUrl), {});
   return NetUtil.newChannel({
     uri: url,
     loadingPrincipal: principal,

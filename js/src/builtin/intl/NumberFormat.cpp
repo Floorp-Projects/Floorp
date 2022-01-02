@@ -103,11 +103,9 @@ static const JSFunctionSpec numberFormat_methods[] = {
                       0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_NumberFormat_formatToParts", 1, 0),
 #ifdef NIGHTLY_BUILD
-#  ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
     JS_SELF_HOSTED_FN("formatRange", "Intl_NumberFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_NumberFormat_formatRangeToParts", 2, 0),
-#  endif
 #endif
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
     JS_FS_END,
@@ -276,7 +274,7 @@ bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
 
 static constexpr size_t MaxUnitLength() {
   size_t length = 0;
-  for (const auto& unit : simpleMeasureUnits) {
+  for (const auto& unit : intl::simpleMeasureUnits) {
     length = std::max(length, std::char_traits<char>::length(unit.name));
   }
   return length * 2 + std::char_traits<char>::length("-per-");
@@ -329,7 +327,7 @@ static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
   }
 
   intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
+  if (auto result = tag.ToString(buffer); result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
@@ -990,13 +988,9 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value,
   // See also "intl/icu/source/i18n/decContext.h".
   constexpr int32_t maximumExponent = 999'999'999;
 
-  // When formatting a number range, ICU inserts the integer digits of the
-  // second number into the middle of the result string. This leads to calling
-  // memmove for each digit, which causes tremendous slowdowns. Therefore we
-  // additionally limit the maximum positive exponent.
-  //
-  // Filed at <https://unicode-org.atlassian.net/browse/ICU-21684>.
-  constexpr int32_t maximumPositiveExponent = 99'999;
+  // We further limit the maximum positive exponent to avoid spending multiple
+  // seconds or even minutes in ICU when formatting large numbers.
+  constexpr int32_t maximumPositiveExponent = 9'999'999;
 
   // Compute the maximum BigInt digit length from the maximum positive exponent.
   //
@@ -1005,8 +999,8 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value,
   //   |maximumPositiveExponent| * Log_DigitBase(10)
   // = |maximumPositiveExponent| * Log2(10) / Log2(2 ** BigInt::DigitBits)
   // = |maximumPositiveExponent| * Log2(10) / BigInt::DigitBits
-  // = 332189.4875606413... / BigInt::DigitBits
-  constexpr size_t maximumBigIntLength = 332189.4875606413 / BigInt::DigitBits;
+  // = 33219277.626945525... / BigInt::DigitBits
+  constexpr size_t maximumBigIntLength = 33219277.626945525 / BigInt::DigitBits;
 
   if (!value.isString()) {
     if (!ToNumeric(cx, value)) {
@@ -1252,7 +1246,6 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
 static JSLinearString* ToLinearString(JSContext* cx, HandleValue val) {
   // Special case to preserve negative zero.
   if (val.isDouble() && mozilla::IsNegativeZero(val.toDouble())) {
@@ -1464,10 +1457,8 @@ static bool ValidateNumberRange(JSContext* cx, MutableHandleValue start,
 
   return true;
 }
-#endif
 
 bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isObject());
@@ -1585,7 +1576,4 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(str);
   return true;
-#else
-  MOZ_CRASH("ICU draft API not enabled");
-#endif
 }

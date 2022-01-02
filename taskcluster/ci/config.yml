@@ -38,6 +38,7 @@ treeherder:
         'iris': 'Iris testing suite'
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
+        'M-aab': 'Mochitests with AAB test_runner.'
         'M-1proc': 'Mochitests without e10s'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-fis': 'Mochitests with fission enabled'
@@ -66,6 +67,7 @@ treeherder:
         'M-f-swr': 'Mochitests failures with software webrender enabled'
         'M-f-swr-1proc': 'Mochitests failures with software webrender enabled without e10s'
         'M-f-wayland': 'Mochitests failures with Wayland backend enabled'
+        'M-dt-no-eft-no-fis': 'DevTools Mochitests with EFT and Fission disabled'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
@@ -351,19 +353,6 @@ merge-automation:
             end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
             to-repo: 'https://hg.mozilla.org/mozilla-central'
             to-branch: 'central'
-        bump-esr:
-            fetch-version-from: "browser/config/version.txt"
-            version-files:
-                - filename: "config/milestone.txt"
-                  version-bump: "minor"
-                - filename: "browser/config/version.txt"
-                  version-bump: "minor"
-                - filename: "browser/config/version_display.txt"
-                  version-bump: "minor"
-            replacements: []
-            merge-old-head: false
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr78'
-            to-branch: 'esr78'
         bump-esr91:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -588,7 +577,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        win10-64-2004(|-gpu|-ssd|-source):
+        win10-64-2004(|-gpu|-ssd|-source|-ssd-gpu):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows

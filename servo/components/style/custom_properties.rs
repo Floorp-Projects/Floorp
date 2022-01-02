@@ -49,19 +49,19 @@ macro_rules! make_variable {
 }
 
 fn get_safearea_inset_top(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.safe_area_insets().top)
+    VariableValue::pixels(device.safe_area_insets().top)
 }
 
 fn get_safearea_inset_bottom(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.safe_area_insets().bottom)
+    VariableValue::pixels(device.safe_area_insets().bottom)
 }
 
 fn get_safearea_inset_left(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.safe_area_insets().left)
+    VariableValue::pixels(device.safe_area_insets().left)
 }
 
 fn get_safearea_inset_right(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.safe_area_insets().right)
+    VariableValue::pixels(device.safe_area_insets().right)
 }
 
 static ENVIRONMENT_VARIABLES: [EnvironmentVariable; 4] = [
@@ -71,17 +71,47 @@ static ENVIRONMENT_VARIABLES: [EnvironmentVariable; 4] = [
     make_variable!(atom!("safe-area-inset-right"), get_safearea_inset_right),
 ];
 
-fn get_titlebar_radius(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.titlebar_radius())
+macro_rules! lnf_int {
+    ($id:ident) => {
+        unsafe {
+            crate::gecko_bindings::bindings::Gecko_GetLookAndFeelInt(
+                crate::gecko_bindings::bindings::LookAndFeel_IntID::$id as i32,
+            )
+        }
+    };
 }
 
-fn get_menu_radius(device: &Device) -> VariableValue {
-    VariableValue::pixel(device.menu_radius())
+macro_rules! lnf_int_variable {
+    ($atom:expr, $id:ident, $ctor:ident) => {{
+        fn __eval(_: &Device) -> VariableValue {
+            VariableValue::$ctor(lnf_int!($id))
+        }
+        make_variable!($atom, __eval)
+    }};
 }
 
-static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 2] = [
-    make_variable!(atom!("-moz-gtk-csd-titlebar-radius"), get_titlebar_radius),
-    make_variable!(atom!("-moz-gtk-menu-radius"), get_menu_radius),
+static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 5] = [
+    lnf_int_variable!(
+        atom!("-moz-gtk-csd-titlebar-radius"),
+        TitlebarRadius,
+        int_pixels
+    ),
+    lnf_int_variable!(atom!("-moz-gtk-csd-menu-radius"), GtkMenuRadius, int_pixels),
+    lnf_int_variable!(
+        atom!("-moz-gtk-csd-close-button-position"),
+        GTKCSDCloseButtonPosition,
+        integer
+    ),
+    lnf_int_variable!(
+        atom!("-moz-gtk-csd-minimize-button-position"),
+        GTKCSDMinimizeButtonPosition,
+        integer
+    ),
+    lnf_int_variable!(
+        atom!("-moz-gtk-csd-maximize-button-position"),
+        GTKCSDMaximizeButtonPosition,
+        integer
+    ),
 ];
 
 impl CssEnvironment {
@@ -93,7 +123,9 @@ impl CssEnvironment {
         if !device.is_chrome_document() {
             return None;
         }
-        let var = CHROME_ENVIRONMENT_VARIABLES.iter().find(|var| var.name == *name)?;
+        let var = CHROME_ENVIRONMENT_VARIABLES
+            .iter()
+            .find(|var| var.name == *name)?;
         Some((var.evaluator)(device))
     }
 }
@@ -278,17 +310,39 @@ impl VariableValue {
         }))
     }
 
-    /// Create VariableValue from css pixel value
-    pub fn pixel(number: f32) -> Self {
+    /// Create VariableValue from an int.
+    fn integer(number: i32) -> Self {
+        Self::from_token(Token::Number {
+            has_sign: false,
+            value: number as f32,
+            int_value: Some(number),
+        })
+    }
+
+    /// Create VariableValue from a float amount of CSS pixels.
+    fn pixels(number: f32) -> Self {
         // FIXME (https://github.com/servo/rust-cssparser/issues/266):
         // No way to get TokenSerializationType::Dimension without creating
         // Token object.
-        let token = Token::Dimension {
+        Self::from_token(Token::Dimension {
             has_sign: false,
             value: number,
             int_value: None,
             unit: CowRcStr::from("px"),
-        };
+        })
+    }
+
+    /// Create VariableValue from an integer amount of CSS pixels.
+    fn int_pixels(number: i32) -> Self {
+        Self::from_token(Token::Dimension {
+            has_sign: false,
+            value: number as f32,
+            int_value: Some(number),
+            unit: CowRcStr::from("px"),
+        })
+    }
+
+    fn from_token(token: Token) -> Self {
         let token_type = token.serialization_type();
         let mut css = token.to_css_string();
         css.shrink_to_fit();
@@ -682,10 +736,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
 /// (meaning we should use the inherited value).
 ///
 /// It does cycle dependencies removal at the same time as substitution.
-fn substitute_all(
-    custom_properties_map: &mut CustomPropertiesMap,
-    device: &Device,
-) {
+fn substitute_all(custom_properties_map: &mut CustomPropertiesMap, device: &Device) {
     // The cycle dependencies removal in this function is a variant
     // of Tarjan's algorithm. It is mostly based on the pseudo-code
     // listed in
@@ -999,7 +1050,9 @@ fn substitute_block<'i>(
                         let first_token_type = input
                             .next_including_whitespace_and_comments()
                             .ok()
-                            .map_or_else(TokenSerializationType::nothing, |t| t.serialization_type());
+                            .map_or_else(TokenSerializationType::nothing, |t| {
+                                t.serialization_type()
+                            });
                         input.reset(&after_comma);
                         let mut position = (after_comma.position(), first_token_type);
                         last_token_type = substitute_block(
@@ -1014,7 +1067,7 @@ fn substitute_block<'i>(
                     Ok(())
                 })?;
                 set_position_at_next_iteration = true
-            }
+            },
             Token::Function(_) |
             Token::ParenthesisBlock |
             Token::CurlyBracketBlock |

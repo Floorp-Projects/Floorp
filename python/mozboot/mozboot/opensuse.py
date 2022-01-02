@@ -37,7 +37,7 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     BROWSER_GROUP_PACKAGES = ["devel_C_C++", "devel_gnome"]
 
-    MOBILE_ANDROID_COMMON_PACKAGES = ["java-1_8_0-openjdk", "wget"]
+    MOBILE_ANDROID_COMMON_PACKAGES = ["java-1_8_0-openjdk"]
 
     def __init__(self, version, dist_id, **kwargs):
         print("Using an experimental bootstrapper for openSUSE.")

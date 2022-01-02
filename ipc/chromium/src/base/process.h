@@ -22,10 +22,23 @@ namespace base {
 #if defined(OS_WIN)
 typedef HANDLE ProcessHandle;
 typedef DWORD ProcessId;
+
+const ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
+
+// In theory, on Windows, this is a valid process ID, but in practice they are
+// currently divisible by four. Process IDs share the kernel handle allocation
+// code and they are guaranteed to be divisible by four.
+// As this could change for process IDs we shouldn't generally rely on this
+// property, however even if that were to change, it seems safe to rely on this
+// particular value never being used.
+const ProcessId kInvalidProcessId = kuint32max;
 #elif defined(OS_POSIX)
 // On POSIX, our ProcessHandle will just be the PID.
 typedef pid_t ProcessHandle;
 typedef pid_t ProcessId;
+
+const ProcessHandle kInvalidProcessHandle = -1;
+const ProcessId kInvalidProcessId = -1;
 #endif
 
 }  // namespace base

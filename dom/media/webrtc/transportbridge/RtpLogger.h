@@ -7,7 +7,7 @@
 #ifndef rtplogger_h__
 #define rtplogger_h__
 
-#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "test/rtp_header_parser.h"
 #include "transport/mediapacket.h"
 
 namespace mozilla {

@@ -15,7 +15,7 @@ INPUT = sys.argv[3]
 CURRENT_SOURCE_DIR = os.path.dirname(INPUT)
 
 try:
-	with open (OUTPUT, "r") as old_output:
+	with open (OUTPUT, "r", encoding='utf-8') as old_output:
 		for line in old_output:
 			old_version = re.match (r"#define HB_VERSION_STRING \"(\d.\d.\d)\"", line)
 			if old_version and old_version[1] == version:

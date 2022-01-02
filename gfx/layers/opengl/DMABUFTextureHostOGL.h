@@ -24,18 +24,9 @@ class DMABUFTextureHostOGL : public TextureHost {
   DMABUFTextureHostOGL(TextureFlags aFlags, const SurfaceDescriptor& aDesc);
   virtual ~DMABUFTextureHostOGL();
 
-  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
-
-  bool Lock() override;
-  void Unlock() override;
   bool IsValid() override { return !!mSurface; }
 
   gfx::SurfaceFormat GetFormat() const override;
-
-  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override {
-    aTexture = mTextureSource;
-    return !!aTexture;
-  }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;  // XXX - implement this (for MOZ_DUMP_PAINTING)
@@ -66,9 +57,6 @@ class DMABUFTextureHostOGL : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
-
- private:
-  GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
 
  protected:
   RefPtr<GLTextureSource> mTextureSource;

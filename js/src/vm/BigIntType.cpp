@@ -108,6 +108,7 @@
 #include "util/CheckedArithmetic.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
+#include "vm/StaticStrings.h"
 
 #include "gc/FreeOp-inl.h"
 #include "gc/Nursery-inl.h"
@@ -2451,9 +2452,9 @@ BigInt* BigInt::bitNot(JSContext* cx, HandleBigInt x) {
   }
 }
 
-int64_t BigInt::toInt64(BigInt* x) { return WrapToSigned(toUint64(x)); }
+int64_t BigInt::toInt64(const BigInt* x) { return WrapToSigned(toUint64(x)); }
 
-uint64_t BigInt::toUint64(BigInt* x) {
+uint64_t BigInt::toUint64(const BigInt* x) {
   if (x->isZero()) {
     return 0;
   }

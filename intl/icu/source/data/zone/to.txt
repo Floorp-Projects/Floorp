@@ -1937,6 +1937,9 @@ to{
             lg{"houa fakalūsia-ʻiekatelinepūki"}
             ls{"houa fakalūsia-ʻiekatelinepūki taimi totonu"}
         }
+        "meta:Yukon"{
+            ls{"houa fakaiukoni"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

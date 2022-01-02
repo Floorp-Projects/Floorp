@@ -6,7 +6,7 @@
 #ifndef mozilla_EditorBase_h
 #define mozilla_EditorBase_h
 
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Assertions.h"          // for MOZ_ASSERT, etc.
 #include "mozilla/EditAction.h"          // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"      // for EditorDOMPoint
@@ -39,6 +39,8 @@
 #include "nsTArray.h"                // for nsTArray and nsAutoTArray
 #include "nsWeakReference.h"         // for nsSupportsWeakReference
 #include "nscore.h"                  // for nsresult, nsAString, etc.
+
+#include <tuple>  // for std::tuple
 
 class mozInlineSpellChecker;
 class nsAtom;
@@ -94,6 +96,8 @@ class TextInputListener;
 class TextServicesDocument;
 class TypeInState;
 class WhiteSpaceVisibilityKeeper;
+
+enum class SplitNodeDirection;  // Declrared in HTMLEditor.h
 
 template <typename NodeType>
 class CreateNodeResultBase;
@@ -875,13 +879,11 @@ class EditorBase : public nsIEditor,
     void DidInsertContent(EditorBase& aEditorBase, nsIContent& aNewContent);
     void WillDeleteContent(EditorBase& aEditorBase,
                            nsIContent& aRemovingContent);
-    void DidSplitContent(EditorBase& aEditorBase,
-                         nsIContent& aExistingRightContent,
-                         nsIContent& aNewLeftContent);
-    void WillJoinContents(EditorBase& aEditorBase, nsIContent& aLeftContent,
-                          nsIContent& aRightContent);
-    void DidJoinContents(EditorBase& aEditorBase, nsIContent& aLeftContent,
-                         nsIContent& aRightContent);
+    void DidSplitContent(EditorBase& aEditorBase, nsIContent& aSplitContent,
+                         nsIContent& aNewContent,
+                         SplitNodeDirection aSplitNodeDirection);
+    void DidJoinContents(EditorBase& aEditorBase,
+                         const EditorRawDOMPoint& aJoinedPoint);
     void DidInsertText(EditorBase& aEditorBase,
                        const EditorRawDOMPoint& aInsertionBegin,
                        const EditorRawDOMPoint& aInsertionEnd);
@@ -937,8 +939,6 @@ class EditorBase : public nsIEditor,
   };
 
   struct MOZ_STACK_CLASS EditSubActionData final {
-    uint32_t mJoinedLeftNodeLength;
-
     // While this is set to false, TopLevelEditSubActionData::mChangedRange
     // shouldn't be modified since in some cases, modifying it in the setter
     // itself may be faster.  Note that we should affect this only for current
@@ -946,10 +946,7 @@ class EditorBase : public nsIEditor,
     bool mAdjustChangedRangeFromListener;
 
    private:
-    void Clear() {
-      mJoinedLeftNodeLength = 0;
-      mAdjustChangedRangeFromListener = true;
-    }
+    void Clear() { mAdjustChangedRangeFromListener = true; }
 
     friend EditorBase;
   };
@@ -1826,24 +1823,6 @@ class EditorBase : public nsIEditor,
                                     ErrorResult& aRv);
 
   /**
-   * Create an element node whose name is aTag at before aPointToInsert.  When
-   * this succeed to create an element node, this sets aPointToInsert to the
-   * new element because the relation of child and offset may be broken.
-   * If the caller needs to collapse the selection to next to the new element
-   * node, it should call |aPointToInsert.AdvanceOffset()| after calling this.
-   *
-   * @param aTag            The element name to create.
-   * @param aPointToInsert  The insertion point of new element.  If this refers
-   *                        end of the container or after, the transaction
-   *                        will append the element to the container.
-   *                        Otherwise, will insert the element before the
-   *                        child node referred by this.
-   * @return                The created new element node or an error.
-   */
-  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateNodeWithTransaction(nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
-
-  /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode.
    *
    * @param aTextNode           The text node which should be modified.
@@ -1985,7 +1964,7 @@ class EditorBase : public nsIEditor,
     void MaybeUpdateCaretBidiLevel(const EditorBase& aEditorBase) const;
 
    private:
-    Maybe<mozilla::intl::Bidi::EmbeddingLevel> mNewCaretBidiLevel;
+    Maybe<mozilla::intl::BidiEmbeddingLevel> mNewCaretBidiLevel;
     bool mFailed = false;
     bool mCanceled = false;
   };
@@ -2530,7 +2509,7 @@ class EditorBase : public nsIEditor,
    * in a text node.  If mutation event listener changed the text data, this
    * returns a range which covers all over the text data.
    */
-  Tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
+  std::tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
       const EditorDOMPointInText& aInsertedPoint,
       const nsAString& aInsertedString) const;
 

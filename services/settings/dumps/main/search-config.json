@@ -1,6 +1,421 @@
 {
   "data": [
     {
+      "schema": 1639069022290,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-drp"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "2039342",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-planb"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1857376",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-portals"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923034",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-ru"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923018",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-tr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1953197",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-tr-gezginler"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1945716",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-tr-tamindir"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1945686",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "uk"
+              ]
+            }
+          },
+          "application": {
+            "distributions": [
+              "yandex-uk"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "1923018",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
+          "webExtension": {
+            "locales": [
+              "ua"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "yandex-ru-mz"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "2320519",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "ru",
+                "tr",
+                "be",
+                "kk"
+              ],
+              "startsWith": [
+                "en"
+              ]
+            },
+            "regions": [
+              "ru",
+              "tr",
+              "by",
+              "kz"
+            ]
+          },
+          "telemetryId": "yandex-en",
+          "webExtension": {
+            "locales": [
+              "en"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "az"
+              ]
+            }
+          },
+          "telemetryId": "yandex-az",
+          "webExtension": {
+            "locales": [
+              "az"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "be"
+              ]
+            }
+          },
+          "telemetryId": "yandex-by",
+          "webExtension": {
+            "locales": [
+              "by"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "kk"
+              ]
+            }
+          },
+          "telemetryId": "yandex-kk",
+          "webExtension": {
+            "locales": [
+              "kk"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ru"
+              ]
+            }
+          },
+          "telemetryId": "yandex-ru",
+          "webExtension": {
+            "locales": [
+              "ru"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "tr"
+              ]
+            }
+          },
+          "telemetryId": "yandex-tr",
+          "webExtension": {
+            "locales": [
+              "tr"
+            ]
+          }
+        },
+        {
+          "default": "no",
+          "override": true,
+          "application": {
+            "distributions": [
+              "mailru-001",
+              "okru-001"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "text",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "clid",
+              "value": "2508838",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            },
+            {
+              "name": "clid",
+              "value": "2508841",
+              "purpose": "keyword",
+              "condition": "purpose"
+            }
+          ],
+          "telemetryId": "yandex-mint"
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "clid",
+          "value": "2186618",
+          "purpose": "searchbar",
+          "condition": "purpose"
+        },
+        {
+          "name": "clid",
+          "value": "2186621",
+          "purpose": "keyword",
+          "condition": "purpose"
+        },
+        {
+          "name": "clid",
+          "value": "2186623",
+          "purpose": "contextmenu",
+          "condition": "purpose"
+        },
+        {
+          "name": "clid",
+          "value": "2186617",
+          "purpose": "homepage",
+          "condition": "purpose"
+        },
+        {
+          "name": "clid",
+          "value": "2186620",
+          "purpose": "newtab",
+          "condition": "purpose"
+        }
+      ],
+      "webExtension": {
+        "id": "yandex@search.mozilla.org"
+      },
+      "id": "a0e7f96a-14e0-4d56-9f54-e0c7e49fd306",
+      "last_modified": 1639155658146
+    },
+    {
       "params": {
         "searchUrlGetParams": [
           {
@@ -13,7 +428,7 @@
           }
         ]
       },
-      "schema": 1631783318084,
+      "schema": 1638818935195,
       "appliesTo": [
         {
           "default": "yes-if-no-other",
@@ -246,6 +661,53 @@
             }
           ],
           "telemetryId": "google-canonical"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-lm"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "telemetryId": "google-b-lm"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefox-b-1-lm"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "included": {
+            "regions": [
+              "us"
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "telemetryId": "google-b-1-lm"
         }
       ],
       "extraParams": [
@@ -260,7 +722,7 @@
         "id": "google@search.mozilla.org"
       },
       "id": "cb8e7210-9f0b-48fa-8708-b9a03df79eea",
-      "last_modified": 1631888538882
+      "last_modified": 1639155658144
     },
     {
       "params": {
@@ -2189,389 +2651,6 @@
       },
       "id": "f59fddbc-580b-4672-9cda-32941ceec730",
       "last_modified": 1589299342073
-    },
-    {
-      "schema": 1589053296453,
-      "appliesTo": [
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-drp"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "2039342",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-planb"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1857376",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-portals"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1923034",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-ru"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1923018",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-tr"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1953197",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-tr-gezginler"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1945716",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-tr-tamindir"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1945686",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "uk"
-              ]
-            }
-          },
-          "application": {
-            "distributions": [
-              "yandex-uk"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "1923018",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ],
-          "webExtension": {
-            "locales": [
-              "ua"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "text",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "yandex-ru-mz"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "clid",
-              "value": "2320519",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        },
-        {
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "ru",
-                "tr",
-                "be",
-                "kk"
-              ],
-              "startsWith": [
-                "en"
-              ]
-            },
-            "regions": [
-              "ru",
-              "tr",
-              "by",
-              "kz"
-            ]
-          },
-          "telemetryId": "yandex-en",
-          "webExtension": {
-            "locales": [
-              "en"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "az"
-              ]
-            }
-          },
-          "telemetryId": "yandex-az",
-          "webExtension": {
-            "locales": [
-              "az"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "be"
-              ]
-            }
-          },
-          "telemetryId": "yandex-by",
-          "webExtension": {
-            "locales": [
-              "by"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "kk"
-              ]
-            }
-          },
-          "telemetryId": "yandex-kk",
-          "webExtension": {
-            "locales": [
-              "kk"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ru"
-              ]
-            }
-          },
-          "telemetryId": "yandex-ru",
-          "webExtension": {
-            "locales": [
-              "ru"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "tr"
-              ]
-            }
-          },
-          "telemetryId": "yandex-tr",
-          "webExtension": {
-            "locales": [
-              "tr"
-            ]
-          }
-        },
-        {
-          "default": "no",
-          "override": true,
-          "application": {
-            "distributions": [
-              "mailru-001",
-              "okru-001"
-            ]
-          }
-        }
-      ],
-      "extraParams": [
-        {
-          "name": "clid",
-          "value": "2186618",
-          "purpose": "searchbar",
-          "condition": "purpose"
-        },
-        {
-          "name": "clid",
-          "value": "2186621",
-          "purpose": "keyword",
-          "condition": "purpose"
-        },
-        {
-          "name": "clid",
-          "value": "2186623",
-          "purpose": "contextmenu",
-          "condition": "purpose"
-        },
-        {
-          "name": "clid",
-          "value": "2186617",
-          "purpose": "homepage",
-          "condition": "purpose"
-        },
-        {
-          "name": "clid",
-          "value": "2186620",
-          "purpose": "newtab",
-          "condition": "purpose"
-        }
-      ],
-      "webExtension": {
-        "id": "yandex@search.mozilla.org"
-      },
-      "id": "a0e7f96a-14e0-4d56-9f54-e0c7e49fd306",
-      "last_modified": 1589299342036
     },
     {
       "schema": 1588177656482,

@@ -233,7 +233,7 @@ class LoadInfo final : public nsILoadInfo {
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       nsINode* aCspToInheritLoadingContext, net::LoadInfo** outLoadInfo);
 
-  ~LoadInfo() = default;
+  ~LoadInfo();
 
   void ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow);
   void ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal);
@@ -254,6 +254,7 @@ class LoadInfo final : public nsILoadInfo {
     mFrameBrowsingContextID = aFrameBrowsingContextID;
   }
   bool DispatchRelease();
+  MOZ_NEVER_INLINE void ReleaseMembers();
 
   // if you add a member, please also update the copy constructor and consider
   // if it should be merged from parent channel through

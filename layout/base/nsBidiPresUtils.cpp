@@ -41,7 +41,7 @@
 #undef REALLY_NOISY_BIDI
 
 using namespace mozilla;
-using EmbeddingLevel = mozilla::intl::Bidi::EmbeddingLevel;
+using BidiEmbeddingLevel = mozilla::intl::BidiEmbeddingLevel;
 
 static const char16_t kSpace = 0x0020;
 static const char16_t kZWSP = 0x200B;
@@ -166,7 +166,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   nsPresContext* mPresContext;
   bool mIsVisual;
   bool mRequiresBidi;
-  EmbeddingLevel mParaLevel;
+  BidiEmbeddingLevel mParaLevel;
   nsIContent* mPrevContent;
 
   /**
@@ -347,16 +347,16 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   }
 
   /**
-   * mParaLevel can be intl::Bidi::Direction::LTR as well as
-   * intl::Bidi::Direction::LTR or intl::Bidi::Direction::RTL.
+   * mParaLevel can be intl::BidiDirection::LTR as well as
+   * intl::BidiDirection::LTR or intl::BidiDirection::RTL.
    * GetParagraphEmbeddingLevel() returns the actual (resolved) paragraph level
-   * which is always either intl::Bidi::Direction::LTR or
-   * intl::Bidi::Direction::RTL
+   * which is always either intl::BidiDirection::LTR or
+   * intl::BidiDirection::RTL
    */
-  EmbeddingLevel GetParagraphEmbeddingLevel() {
-    EmbeddingLevel paraLevel = mParaLevel;
-    if (paraLevel == EmbeddingLevel::DefaultLTR() ||
-        paraLevel == EmbeddingLevel::DefaultRTL()) {
+  BidiEmbeddingLevel GetParagraphEmbeddingLevel() {
+    BidiEmbeddingLevel paraLevel = mParaLevel;
+    if (paraLevel == BidiEmbeddingLevel::DefaultLTR() ||
+        paraLevel == BidiEmbeddingLevel::DefaultRTL()) {
       paraLevel = mPresContext->GetBidiEngine().GetParagraphEmbeddingLevel();
     }
     return paraLevel;
@@ -376,7 +376,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   }
 
   void GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimit,
-                     EmbeddingLevel* aLevel) {
+                     BidiEmbeddingLevel* aLevel) {
     mPresContext->GetBidiEngine().GetLogicalRun(aLogicalStart, aLogicalLimit,
                                                 aLevel);
     if (mIsVisual) {
@@ -480,7 +480,7 @@ struct MOZ_STACK_CLASS BidiLineData {
   AutoTArray<nsIFrame*, 16> mLogicalFrames;
   AutoTArray<nsIFrame*, 16> mVisualFrames;
   AutoTArray<int32_t, 16> mIndexMap;
-  AutoTArray<EmbeddingLevel, 16> mLevels;
+  AutoTArray<BidiEmbeddingLevel, 16> mLevels;
   bool mIsReordered;
 
   BidiLineData(nsIFrame* aFirstFrameOnLine, int32_t aNumFramesOnLine) {
@@ -492,7 +492,7 @@ struct MOZ_STACK_CLASS BidiLineData {
     bool hasRTLFrames = false;
     bool hasVirtualControls = false;
 
-    auto appendFrame = [&](nsIFrame* frame, EmbeddingLevel level) {
+    auto appendFrame = [&](nsIFrame* frame, BidiEmbeddingLevel level) {
       mLogicalFrames.AppendElement(frame);
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
@@ -880,8 +880,7 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
   nsresult rv = aBpd->SetPara();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  intl::Bidi::EmbeddingLevel embeddingLevel =
-      aBpd->GetParagraphEmbeddingLevel();
+  BidiEmbeddingLevel embeddingLevel = aBpd->GetParagraphEmbeddingLevel();
 
   rv = aBpd->CountRuns(&runCount);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -937,8 +936,8 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
   }
 
   BidiParagraphData::FrameInfo lastRealFrame;
-  EmbeddingLevel lastEmbeddingLevel = kBidiLevelNone;
-  EmbeddingLevel precedingControl = kBidiLevelNone;
+  BidiEmbeddingLevel lastEmbeddingLevel = kBidiLevelNone;
+  BidiEmbeddingLevel precedingControl = kBidiLevelNone;
 
   auto storeBidiDataToFrame = [&]() {
     FrameBidiData bidiData;
@@ -1523,11 +1522,11 @@ FrameBidiData nsBidiPresUtils::GetFrameBidiData(nsIFrame* aFrame) {
   return GetFirstLeaf(aFrame)->GetBidiData();
 }
 
-EmbeddingLevel nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame) {
+BidiEmbeddingLevel nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame) {
   return GetFirstLeaf(aFrame)->GetEmbeddingLevel();
 }
 
-EmbeddingLevel nsBidiPresUtils::GetFrameBaseLevel(const nsIFrame* aFrame) {
+BidiEmbeddingLevel nsBidiPresUtils::GetFrameBaseLevel(const nsIFrame* aFrame) {
   const nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
     firstLeaf = firstLeaf->PrincipalChildList().FirstChild();
@@ -2161,7 +2160,7 @@ void nsBidiPresUtils::CalculateCharType(intl::Bidi* aBidiEngine,
 }
 
 nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
-                                      EmbeddingLevel aBaseLevel,
+                                      BidiEmbeddingLevel aBaseLevel,
                                       nsPresContext* aPresContext,
                                       BidiProcessor& aprocessor, Mode aMode,
                                       nsBidiPositionResolve* aPosResolve,
@@ -2199,10 +2198,10 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   }
 
   for (i = 0; i < runCount; i++) {
-    mozilla::intl::Bidi::Direction dir =
+    mozilla::intl::BidiDirection dir =
         aBidiEngine->GetVisualRun(i, &start, &length);
 
-    EmbeddingLevel level;
+    BidiEmbeddingLevel level;
     aBidiEngine->GetLogicalRun(start, &limit, &level);
 
     dir = level.Direction();
@@ -2224,9 +2223,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
      * x-coordinate of the end of the run for the start of the next run.
      */
 
-    if (dir == intl::Bidi::Direction::RTL) {
-      aprocessor.SetText(text + start, subRunLength,
-                         intl::Bidi::Direction::RTL);
+    if (dir == intl::BidiDirection::RTL) {
+      aprocessor.SetText(text + start, subRunLength, intl::BidiDirection::RTL);
       width = aprocessor.GetWidth();
       xOffset += width;
       xEndRun = xOffset;
@@ -2248,7 +2246,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
       aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();
       totalWidth += width;
-      if (dir == mozilla::intl::Bidi::Direction::RTL) {
+      if (dir == mozilla::intl::BidiDirection::RTL) {
         xOffset -= width;
       }
       if (aMode == MODE_DRAW) {
@@ -2318,7 +2316,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
             // The position in the text where this run's "left part" begins.
             const char16_t* visualLeftPart;
             const char16_t* visualRightSide;
-            if (dir == mozilla::intl::Bidi::Direction::RTL) {
+            if (dir == mozilla::intl::BidiDirection::RTL) {
               // One day, son, this could all be replaced with
               // mPresContext->GetBidiEngine().GetVisualIndex() ...
               posResolve->visualIndex =
@@ -2347,7 +2345,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
         }
       }
 
-      if (dir == intl::Bidi::Direction::LTR) {
+      if (dir == intl::BidiDirection::LTR) {
         xOffset += width;
       }
 
@@ -2356,7 +2354,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
       subRunLimit = typeLimit;
       subRunLength = typeLimit - lineOffset;
     }  // while
-    if (dir == intl::Bidi::Direction::RTL) {
+    if (dir == intl::BidiDirection::RTL) {
       xOffset = xEndRun;
     }
 
@@ -2388,8 +2386,8 @@ class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
   ~nsIRenderingContextBidiProcessor() { mFontMetrics->SetTextRunRTL(false); }
 
   virtual void SetText(const char16_t* aText, int32_t aLength,
-                       intl::Bidi::Direction aDirection) override {
-    mFontMetrics->SetTextRunRTL(aDirection == intl::Bidi::Direction::RTL);
+                       intl::BidiDirection aDirection) override {
+    mFontMetrics->SetTextRunRTL(aDirection == intl::BidiDirection::RTL);
     mText = aText;
     mLength = aLength;
   }
@@ -2420,7 +2418,7 @@ class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
 };
 
 nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
-    const char16_t* aText, int32_t aLength, EmbeddingLevel aBaseLevel,
+    const char16_t* aText, int32_t aLength, BidiEmbeddingLevel aBaseLevel,
     nsPresContext* aPresContext, gfxContext& aRenderingContext,
     DrawTarget* aTextRunConstructionDrawTarget, nsFontMetrics& aFontMetrics,
     Mode aMode, nscoord aX, nscoord aY, nsBidiPositionResolve* aPosResolve,
@@ -2434,16 +2432,16 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
 }
 
 /* static */
-EmbeddingLevel nsBidiPresUtils::BidiLevelFromStyle(
+BidiEmbeddingLevel nsBidiPresUtils::BidiLevelFromStyle(
     ComputedStyle* aComputedStyle) {
   if (aComputedStyle->StyleTextReset()->mUnicodeBidi &
       NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    return EmbeddingLevel::DefaultLTR();
+    return BidiEmbeddingLevel::DefaultLTR();
   }
 
   if (aComputedStyle->StyleVisibility()->mDirection == StyleDirection::Rtl) {
-    return EmbeddingLevel::RTL();
+    return BidiEmbeddingLevel::RTL();
   }
 
-  return EmbeddingLevel::LTR();
+  return BidiEmbeddingLevel::LTR();
 }

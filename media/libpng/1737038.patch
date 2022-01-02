@@ -1,0 +1,31 @@
+diff --git a/pngwutil.c b/pngwutil.c
+--- a/media/libpng/pngwutil.c
++++ b/media/libpng/pngwutil.c
+@@ -336,8 +336,10 @@ png_deflate_claim(png_structrp png_ptr, 
+          if ((png_ptr->flags & PNG_FLAG_ZLIB_CUSTOM_STRATEGY) != 0)
+             strategy = png_ptr->zlib_strategy;
+ 
++#ifdef PNG_WRITE_FILTER_SUPPORTED
+          else if (png_ptr->do_filter != PNG_FILTER_NONE)
+             strategy = PNG_Z_DEFAULT_STRATEGY;
++#endif
+ 
+          else
+             strategy = PNG_Z_DEFAULT_NOFILTER_STRATEGY;
+@@ -828,12 +830,16 @@ png_write_IHDR(png_structrp png_ptr, png
+ 
+    if ((png_ptr->do_filter) == PNG_NO_FILTERS)
+    {
++#ifdef PNG_WRITE_FILTER_SUPPORTED
+       if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
+           png_ptr->bit_depth < 8)
+          png_ptr->do_filter = PNG_FILTER_NONE;
+ 
+       else
+          png_ptr->do_filter = PNG_ALL_FILTERS;
++#else
++      png_ptr->do_filter = PNG_FILTER_NONE;
++#endif
+    }
+ 
+    png_ptr->mode = PNG_HAVE_IHDR; /* not READY_FOR_ZTXT */

@@ -31,13 +31,6 @@ class nsIConsoleListenerWatcher {
       return;
     }
 
-    // The following code expects the ThreadActor to be instantiated (in prepareStackForRemote)
-    // The Thread Actor is instantiated via Target.attach, but we should probably review
-    // this and only instantiate the actor instead of attaching the target.
-    if (!targetActor.threadActor) {
-      targetActor.attach();
-    }
-
     // Create the consoleListener.
     const listener = {
       QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),

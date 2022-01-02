@@ -67,6 +67,16 @@ class JsepCodecDescription {
     return true;
   }
 
+  Maybe<std::string> GetMatchingFormat(
+      const SdpMediaSection& remoteMsection) const {
+    for (const auto& fmt : remoteMsection.GetFormats()) {
+      if (Matches(fmt, remoteMsection)) {
+        return Some(fmt);
+      }
+    }
+    return Nothing();
+  }
+
   virtual bool Negotiate(const std::string& pt,
                          const SdpMediaSection& remoteMsection, bool isOffer) {
     if (mDirection == sdp::kSend || isOffer) {
@@ -510,9 +520,13 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   void NegotiateRtcpFb(const SdpMediaSection& remoteMsection,
                        SdpRtcpFbAttributeList::Type type,
                        std::vector<std::string>* supportedTypes) {
+    Maybe<std::string> remoteFmt = GetMatchingFormat(remoteMsection);
+    if (!remoteFmt) {
+      return;
+    }
     std::vector<std::string> temp;
     for (auto& subType : *supportedTypes) {
-      if (remoteMsection.HasRtcpFb(mDefaultPt, type, subType)) {
+      if (remoteMsection.HasRtcpFb(*remoteFmt, type, subType)) {
         temp.push_back(subType);
       }
     }
@@ -522,9 +536,13 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   void NegotiateRtcpFb(
       const SdpMediaSection& remoteMsection,
       std::vector<SdpRtcpFbAttributeList::Feedback>* supportedFbs) {
+    Maybe<std::string> remoteFmt = GetMatchingFormat(remoteMsection);
+    if (!remoteFmt) {
+      return;
+    }
     std::vector<SdpRtcpFbAttributeList::Feedback> temp;
     for (auto& fb : *supportedFbs) {
-      if (remoteMsection.HasRtcpFb(mDefaultPt, fb.type, fb.parameter)) {
+      if (remoteMsection.HasRtcpFb(*remoteFmt, fb.type, fb.parameter)) {
         temp.push_back(fb);
       }
     }

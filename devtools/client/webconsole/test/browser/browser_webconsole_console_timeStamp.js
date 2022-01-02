@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,<meta charset=utf8>";
+const TEST_URI = "data:text/html,<!DOCTYPE html><meta charset=utf8>";
 
 add_task(async function() {
   // We open the console and an empty tab, as we only want to evaluate something.

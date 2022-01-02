@@ -17,19 +17,10 @@ use std::cell::Cell;
 use std::{fmt::Debug, marker::PhantomData, mem, ops};
 
 /// A simple structure to manage identities of objects.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct IdentityManager {
     free: Vec<Index>,
     epochs: Vec<Epoch>,
-}
-
-impl Default for IdentityManager {
-    fn default() -> Self {
-        Self {
-            free: Default::default(),
-            epochs: Default::default(),
-        }
-    }
 }
 
 impl IdentityManager {
@@ -54,10 +45,6 @@ impl IdentityManager {
 
     pub fn free<I: id::TypedId + Debug>(&mut self, id: I) {
         let (index, epoch, _backend) = id.unzip();
-        // avoid doing this check in release
-        if cfg!(debug_assertions) {
-            assert!(!self.free.contains(&index));
-        }
         let pe = &mut self.epochs[index as usize];
         assert_eq!(*pe, epoch);
         *pe += 1;
@@ -644,19 +631,12 @@ impl<A: HalApi, F: GlobalIdentityHandlerFactory> Hub<A, F> {
                 }
             }
         }
-        {
-            let textures = self.textures.data.read();
-            for element in self.texture_views.data.write().map.drain(..) {
-                if let Element::Occupied(texture_view, _) = element {
-                    // the texture should generally be present, unless it's a surface
-                    // texture, and we are in emergency shutdown.
-                    if textures.contains(texture_view.parent_id.value.0) {
-                        let texture = &textures[texture_view.parent_id.value];
-                        let device = &devices[texture.device_id.value];
-                        unsafe {
-                            device.raw.destroy_texture_view(texture_view.raw);
-                        }
-                    }
+
+        for element in self.texture_views.data.write().map.drain(..) {
+            if let Element::Occupied(texture_view, _) = element {
+                let device = &devices[texture_view.device_id.value];
+                unsafe {
+                    device.raw.destroy_texture_view(texture_view.raw);
                 }
             }
         }
@@ -1038,6 +1018,7 @@ impl HalApi for hal::api::Dx11 {
 impl HalApi for hal::api::Gles {
     const VARIANT: Backend = Backend::Gl;
     fn create_instance_from_hal(name: &str, hal_instance: Self::Instance) -> Instance {
+        #[allow(clippy::needless_update)]
         Instance {
             name: name.to_owned(),
             gl: Some(hal_instance),

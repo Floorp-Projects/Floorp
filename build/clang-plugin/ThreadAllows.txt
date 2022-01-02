@@ -46,6 +46,7 @@ MWQThread
 MediaCache
 MediaTelemetry
 MediaTrackGrph
+MemoryPoller
 mtransport
 NamedPipeSrv
 Netlink Monitor
@@ -72,6 +73,7 @@ SpinEventLoop
 StressRunner
 SuicideManager
 SuicideThread
+System Proxy
 TEQ AwaitIdle
 TelemetryModule
 Test Thread

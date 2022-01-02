@@ -16,6 +16,7 @@ webidl Node;
 #define NS_ACCESSIBLE_CACHE_TOPIC "accessible-cache"
 namespace mozilla {
 namespace a11y {
+class Accessible;
 class LocalAccessible;
 }
 }
@@ -338,6 +339,7 @@ interface nsIAccessible : nsISupports
 
   %{C++
   virtual mozilla::a11y::LocalAccessible* ToInternalAccessible() const = 0;
+  virtual mozilla::a11y::Accessible* ToInternalGeneric() const = 0;
   %}
 
 };

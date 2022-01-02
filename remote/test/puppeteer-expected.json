@@ -102,7 +102,7 @@
     "FAIL"
   ],
   "Page.click should click the button (click.spec.ts)": [
-    "PASS", "FAIL"
+    "PASS"
   ],
   "Page.click should click svg (click.spec.ts)": [
     "PASS"
@@ -150,7 +150,7 @@
     "PASS"
   ],
   "Page.click should double click the button (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Page.click should click a partially obscured button (click.spec.ts)": [
     "PASS"
@@ -165,13 +165,13 @@
     "PASS"
   ],
   "Page.click should click the button inside an iframe (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Page.click should click the button with fixed position inside an iframe (click.spec.ts)": [
     "SKIP"
   ],
   "Page.click should click the button with deviceScaleFactor set (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Cookie specs Page.cookies should return no cookies in pristine browser context (cookies.spec.ts)": [
     "PASS"
@@ -303,7 +303,7 @@
     "PASS"
   ],
   "ElementHandle specs ElementHandle.hover should work (elementhandle.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "ElementHandle specs ElementHandle.isIntersectingViewport should work (elementhandle.spec.ts)": [
     "PASS"
@@ -860,6 +860,9 @@
   "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.ts)": [
     "PASS"
   ],
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.ts)":[
+    "PASS"
+  ],
   "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore state (launcher.spec.ts)": [
     "PASS"
   ],
@@ -876,13 +879,13 @@
     "FAIL", "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments (launcher.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have default URL when launching browser (launcher.spec.ts)": [
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.ts)": [
-    "PASS", "TIMEOUT"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.ts)": [
     "PASS"
@@ -900,7 +903,7 @@
     "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch falls back to launching chrome if there is an unknown product but logs a warning (launcher.spec.ts)": [
-    "FAIL"
+    "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.ts)": [
     "SKIP"
@@ -939,10 +942,10 @@
     "PASS"
   ],
   "Mouse should resize the textarea (mouse.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Mouse should select the text with mouse (mouse.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Mouse should trigger hover state (mouse.spec.ts)": [
     "PASS", "FAIL"

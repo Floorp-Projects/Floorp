@@ -10,7 +10,10 @@
 #include "mozilla/dom/ConstructibleEventTarget.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#include "nsGlobalWindowInner.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla::dom {
@@ -190,6 +193,44 @@ Nullable<WindowProxyHolder> EventTarget::GetOwnerGlobalForBindings() {
   }
 
   return WindowProxyHolder(win->GetBrowsingContext());
+}
+
+nsPIDOMWindowInner* EventTarget::GetAsWindowInner() {
+  return IsInnerWindow() ? static_cast<nsGlobalWindowInner*>(this) : nullptr;
+}
+
+const nsPIDOMWindowInner* EventTarget::GetAsWindowInner() const {
+  return IsInnerWindow() ? static_cast<const nsGlobalWindowInner*>(this)
+                         : nullptr;
+}
+
+nsPIDOMWindowOuter* EventTarget::GetAsWindowOuter() {
+  return IsOuterWindow() ? static_cast<nsGlobalWindowOuter*>(this) : nullptr;
+}
+
+const nsPIDOMWindowOuter* EventTarget::GetAsWindowOuter() const {
+  return IsOuterWindow() ? static_cast<const nsGlobalWindowOuter*>(this)
+                         : nullptr;
+}
+
+nsPIDOMWindowInner* EventTarget::AsWindowInner() {
+  MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());
+  return static_cast<nsGlobalWindowInner*>(this);
+}
+
+const nsPIDOMWindowInner* EventTarget::AsWindowInner() const {
+  MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());
+  return static_cast<const nsGlobalWindowInner*>(this);
+}
+
+nsPIDOMWindowOuter* EventTarget::AsWindowOuter() {
+  MOZ_DIAGNOSTIC_ASSERT(IsOuterWindow());
+  return static_cast<nsGlobalWindowOuter*>(this);
+}
+
+const nsPIDOMWindowOuter* EventTarget::AsWindowOuter() const {
+  MOZ_DIAGNOSTIC_ASSERT(IsOuterWindow());
+  return static_cast<const nsGlobalWindowOuter*>(this);
 }
 
 }  // namespace mozilla::dom

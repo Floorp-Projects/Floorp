@@ -345,6 +345,8 @@ class SourcesManager extends EventEmitter {
     if (topic == "devtools-html-content") {
       const { parserID, uri, contents, complete } = JSON.parse(data);
       if (this._urlContents.has(uri)) {
+        // We received many devtools-html-content events, if we already received one,
+        // aggregate the data with the one we already received.
         const existing = this._urlContents.get(uri);
         if (existing.parserID == parserID) {
           assert(!existing.complete);
@@ -364,7 +366,11 @@ class SourcesManager extends EventEmitter {
             }
           }
         }
-      } else {
+      } else if (contents) {
+        // Ensure that `contents` is non-empty. We may miss all the devtools-html-content events except the last
+        // one which has a empty `contents` and complete set to true.
+        // This reproduces when opening a same-process iframe. In this particular scenario, we instantiate the target and thread actor
+        // on `DOMDocElementInserted` and the HTML document is already parsed, but we still receive this one very last notification.
         this._urlContents.set(uri, {
           content: contents,
           complete,

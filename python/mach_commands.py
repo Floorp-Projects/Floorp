@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
-import sys
 import tempfile
 from multiprocessing import cpu_count
 
@@ -17,24 +16,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, thread
 
 import mozinfo
 from mozfile import which
+from mach.decorators import CommandArgument, Command
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
-
-
-from mach.decorators import CommandArgument, Command
-from mach.requirements import MachEnvRequirements
-from mach.util import UserError
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
 @Command("python", category="devenv", description="Run Python.")
-@CommandArgument(
-    "--no-virtualenv", action="store_true", help="Do not set up a virtualenv"
-)
-@CommandArgument(
-    "--no-activate", action="store_true", help="Do not activate the virtualenv"
-)
 @CommandArgument(
     "--exec-file", default=None, help="Execute this Python file using `exec`"
 )
@@ -45,18 +34,17 @@ here = os.path.abspath(os.path.dirname(__file__))
     help="Use ipython instead of the default Python REPL.",
 )
 @CommandArgument(
-    "--requirements",
+    "--virtualenv",
     default=None,
-    help="Install this requirements file before running Python",
+    help="Prepare and use the virtualenv with the provided name. If not specified, "
+    "then the Mach context is used instead.",
 )
 @CommandArgument("args", nargs=argparse.REMAINDER)
 def python(
     command_context,
-    no_virtualenv,
-    no_activate,
     exec_file,
     ipython,
-    requirements,
+    virtualenv,
     args,
 ):
     # Avoid logging the command
@@ -65,52 +53,34 @@ def python(
     # Note: subprocess requires native strings in os.environ on Windows.
     append_env = {"PYTHONDONTWRITEBYTECODE": str("1")}
 
-    if requirements and no_virtualenv:
-        raise UserError("Cannot pass both --requirements and --no-virtualenv.")
-
-    if no_virtualenv:
-        python_path = sys.executable
-        requirements = MachEnvRequirements.from_requirements_definition(
-            command_context.topsrcdir,
-            False,
-            True,
-            os.path.join(
-                command_context.topsrcdir, "build", "mach_virtualenv_packages.txt"
-            ),
-        )
-
-        append_env["PYTHONPATH"] = os.pathsep.join(
-            os.path.join(command_context.topsrcdir, pth.path)
-            for pth in requirements.pth_requirements
-            + requirements.vendored_requirements
-        )
-    else:
-        command_context.virtualenv_manager.ensure()
-        if not no_activate:
-            command_context.virtualenv_manager.activate()
-        python_path = command_context.virtualenv_manager.python_path
-        if requirements:
-            command_context.virtualenv_manager.install_pip_requirements(
-                requirements, require_hashes=False
-            )
+    if virtualenv:
+        command_context._virtualenv_name = virtualenv
 
     if exec_file:
+        command_context.activate_virtualenv()
         exec(open(exec_file).read())
         return 0
 
     if ipython:
-        bindir = os.path.dirname(python_path)
-        python_path = which("ipython", path=bindir)
-        if not python_path:
-            if not no_virtualenv:
-                # Use `_run_pip` directly rather than `install_pip_package` to bypass
-                # `req.check_if_exists()` which may detect a system installed ipython.
-                command_context.virtualenv_manager._run_pip(["install", "ipython"])
-                python_path = which("ipython", path=bindir)
-
+        if virtualenv:
+            command_context.virtualenv_manager.ensure()
+            python_path = which(
+                "ipython", path=command_context.virtualenv_manager.bin_path
+            )
             if not python_path:
-                print("error: could not detect or install ipython")
-                return 1
+                raise Exception(
+                    "--ipython was specified, but the provided "
+                    '--virtualenv doesn\'t have "ipython" installed.'
+                )
+        else:
+            command_context._virtualenv_name = "ipython"
+            command_context.virtualenv_manager.ensure()
+            python_path = which(
+                "ipython", path=command_context.virtualenv_manager.bin_path
+            )
+    else:
+        command_context.virtualenv_manager.ensure()
+        python_path = command_context.virtualenv_manager.python_path
 
     return command_context.run_process(
         [python_path] + args,
@@ -219,12 +189,7 @@ def run_python_tests(
     elif subsuite:
         filters.append(mpf.subsuite(subsuite))
 
-    tests = mp.active_tests(
-        filters=filters,
-        disabled=False,
-        python=command_context.virtualenv_manager.version_info()[0],
-        **mozinfo.info
-    )
+    tests = mp.active_tests(filters=filters, disabled=False, python=3, **mozinfo.info)
 
     if not tests:
         submsg = "for subsuite '{}' ".format(subsuite) if subsuite else ""

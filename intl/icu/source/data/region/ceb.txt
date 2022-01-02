@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ceb{
     Countries{
-        001{"Kalibutan"}
+        001{"kalibutan"}
         002{"Africa"}
         003{"Amihanang Amerika"}
         005{"South America"}

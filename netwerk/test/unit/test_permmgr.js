@@ -33,17 +33,11 @@ var results = [
 
 function run_test() {
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
-  var pm = Cc["@mozilla.org/permissionmanager;1"].getService(
-    Ci.nsIPermissionManager
-  );
+  var pm = Services.perms;
 
-  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
+  var ioService = Services.io;
 
-  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  var secMan = Services.scriptSecurityManager;
 
   // nsIPermissionManager implementation is an extension; don't fail if it's not there
   if (!pm) {

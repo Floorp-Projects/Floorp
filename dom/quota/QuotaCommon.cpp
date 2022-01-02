@@ -17,6 +17,7 @@
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
@@ -118,13 +119,14 @@ void CacheUseDOSDevicePathSyntaxPrefValue() {
 #endif
 
 Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
-  QM_TRY_UNWRAP(auto file,
-                ToResultInvoke<nsCOMPtr<nsIFile>>(NS_NewLocalFile, aPath,
-                                                  /* aFollowLinks */ false),
-                QM_PROPAGATE, [&aPath](const nsresult rv) {
-                  QM_WARNING("Failed to construct a file for path (%s)",
-                             NS_ConvertUTF16toUTF8(aPath).get());
-                });
+  QM_TRY_UNWRAP(
+      auto file,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, NS_NewLocalFile, aPath,
+                                 /* aFollowLinks */ false),
+      QM_PROPAGATE, [&aPath](const nsresult rv) {
+        QM_WARNING("Failed to construct a file for path (%s)",
+                   NS_ConvertUTF16toUTF8(aPath).get());
+      });
 
 #ifdef XP_WIN
   MOZ_ASSERT(gUseDOSDevicePathSyntax != -1);
@@ -160,8 +162,8 @@ nsDependentCSubstring GetLeafName(const nsACString& aPath) {
 
 Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
     nsIFile& aDirectory, const nsAString& aPathElement) {
-  QM_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>,
-                                                            aDirectory, Clone));
+  QM_TRY_UNWRAP(auto resultFile, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                     nsCOMPtr<nsIFile>, aDirectory, Clone));
 
   QM_TRY(MOZ_TO_RESULT(resultFile->Append(aPathElement)));
 
@@ -175,10 +177,11 @@ Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
   // NS_ERROR_FILE_TARGET_DOES_NOT_EXIST and NS_ERROR_FILE_FS_CORRUPTED results
   // and not spam the reports.
   QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
-      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory).map([](const bool isDirectory) {
-        return isDirectory ? nsIFileKind::ExistsAsDirectory
-                           : nsIFileKind::ExistsAsFile;
-      }),
+      MOZ_TO_RESULT_INVOKE_MEMBER(aFile, IsDirectory)
+          .map([](const bool isDirectory) {
+            return isDirectory ? nsIFileKind::ExistsAsDirectory
+                               : nsIFileKind::ExistsAsFile;
+          }),
       ([](const nsresult rv) {
         return rv == NS_ERROR_FILE_NOT_FOUND ||
                rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
@@ -191,16 +194,16 @@ Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
 
 Result<nsCOMPtr<mozIStorageStatement>, nsresult> CreateStatement(
     mozIStorageConnection& aConnection, const nsACString& aStatementString) {
-  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
-                                           aConnection, CreateStatement,
-                                           aStatementString));
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+      nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
+      aStatementString));
 }
 
 template <SingleStepResult ResultHandling>
 Result<SingleStepSuccessType<ResultHandling>, nsresult> ExecuteSingleStep(
     nsCOMPtr<mozIStorageStatement>&& aStatement) {
   QM_TRY_INSPECT(const bool& hasResult,
-                 MOZ_TO_RESULT_INVOKE(aStatement, ExecuteStep));
+                 MOZ_TO_RESULT_INVOKE_MEMBER(aStatement, ExecuteStep));
 
   if constexpr (ResultHandling == SingleStepResult::AssertHasResult) {
     MOZ_ASSERT(hasResult);
@@ -226,7 +229,7 @@ template <SingleStepResult ResultHandling>
 Result<SingleStepSuccessType<ResultHandling>, nsresult>
 CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
                                     const nsACString& aStatementString) {
-  QM_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_TYPED(
+  QM_TRY_UNWRAP(auto stmt, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                                nsCOMPtr<mozIStorageStatement>, aConnection,
                                CreateStatement, aStatementString));
 

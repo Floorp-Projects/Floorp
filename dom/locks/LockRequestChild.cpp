@@ -46,6 +46,9 @@ LockRequestChild::LockRequestChild(
   if (aSignal.WasPassed()) {
     Follow(&aSignal.Value());
   }
+}
+
+void LockRequestChild::MaybeSetWorkerRef() {
   if (!NS_IsMainThread()) {
     mWorkerRef = StrongWorkerRef::Create(
         GetCurrentThreadWorkerPrivate(), "LockManager",
@@ -86,14 +89,15 @@ IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
   return IPC_OK();
 }
 
-IPCResult LockRequestChild::RecvAbort() {
+IPCResult LockRequestChild::Recv__delete__(bool aAborted) {
+  MOZ_ASSERT(aAborted, "__delete__ is currently only for abort");
   Unfollow();
   mRequest.mPromise->MaybeRejectWithAbortError("The lock request is aborted");
   return IPC_OK();
 }
 
 void LockRequestChild::RunAbortAlgorithm() {
-  RecvAbort();
+  Recv__delete__(true);
   Send__delete__(this, true);
 }
 

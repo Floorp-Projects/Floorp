@@ -96,16 +96,28 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize,
   return provider.forget();
 }
 
+PersistentBufferProviderAccelerated::PersistentBufferProviderAccelerated(
+    DrawTarget* aDt)
+    : PersistentBufferProviderBasic(aDt) {
+  MOZ_COUNT_CTOR(PersistentBufferProviderAccelerated);
+}
+
+PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
+  MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
+}
+
+ClientWebGLContext* PersistentBufferProviderAccelerated::AsWebgl() {
+  return (ClientWebGLContext*)mDrawTarget->GetNativeSurface(
+      NativeSurfaceType::WEBGL_CONTEXT);
+}
+
 // static
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat,
                                        KnowsCompositor* aKnowsCompositor) {
   if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder() ||
-      !aKnowsCompositor->GetTextureForwarder()->IPCOpen() ||
-      // Bug 1556433 - shared buffer provider and direct texture mapping do not
-      // synchronize properly
-      aKnowsCompositor->SupportsTextureDirectMapping()) {
+      !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 
@@ -160,15 +172,9 @@ PersistentBufferProviderShared::PersistentBufferProviderShared(
     }
   }
 
-  // If we are using webrender and our textures don't have an intermediate
-  // buffer, then we have to hold onto the textures for longer to make sure that
-  // the GPU has finished using them. So, we need to allow more TextureClients
-  // to be created.
-  if (!aTexture->HasIntermediateBuffer() && gfxVars::UseWebRender()) {
+  // XXX KnowsCompositor could be used for mMaxAllowedTextures
+  if (gfxVars::UseWebRenderTripleBufferingWin()) {
     ++mMaxAllowedTextures;
-    if (gfxVars::UseWebRenderTripleBufferingWin()) {
-      ++mMaxAllowedTextures;
-    }
   }
 
   MOZ_COUNT_CTOR(PersistentBufferProviderShared);
@@ -182,15 +188,6 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared() {
   }
 
   Destroy();
-}
-
-LayersBackend PersistentBufferProviderShared::GetType() {
-  if (mKnowsCompositor->GetCompositorBackendType() ==
-      LayersBackend::LAYERS_WR) {
-    return LayersBackend::LAYERS_WR;
-  } else {
-    return LayersBackend::LAYERS_CLIENT;
-  }
 }
 
 bool PersistentBufferProviderShared::SetKnowsCompositor(

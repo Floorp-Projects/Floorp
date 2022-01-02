@@ -227,7 +227,8 @@ evaluate.sandbox = function(
  *     stale, indicating it is no longer attached to the DOM, or its node
  *     document is no longer the active document.
  */
-evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
+evaluate.fromJSON = function(options = {}) {
+  const { obj, seenEls, win } = options;
   switch (typeof obj) {
     case "boolean":
     case "number":
@@ -241,7 +242,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
 
         // arrays
       } else if (Array.isArray(obj)) {
-        return obj.map(e => evaluate.fromJSON(e, seenEls, win));
+        return obj.map(e => evaluate.fromJSON({ obj: e, seenEls, win }));
 
         // ElementIdentifier and ReferenceStore (used by JSWindowActor)
       } else if (WebElement.isReference(obj.webElRef)) {
@@ -258,7 +259,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
       // arbitrary objects
       let rv = {};
       for (let prop in obj) {
-        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, win);
+        rv[prop] = evaluate.fromJSON({ obj: obj[prop], seenEls, win });
       }
       return rv;
   }
@@ -333,7 +334,7 @@ evaluate.toJSON = function(obj, seenEls) {
     return obj;
 
     // Element (HTMLElement, SVGElement, XULElement, et al.)
-  } else if (element.isElement(obj)) {
+  } else if (element.isElement(obj) || element.isShadowRoot(obj)) {
     // Parent
     if (seenEls instanceof element.ReferenceStore) {
       throw new TypeError(`ReferenceStore can't be used with Element`);

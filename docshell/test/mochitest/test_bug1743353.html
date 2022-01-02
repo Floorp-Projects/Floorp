@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test back/forward after pushState</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      let bc = new BroadcastChannel("bug1743353");
+      new Promise((resolve) => {
+        bc.addEventListener("message", () => {
+          resolve();
+        }, { once: true });
+
+        window.open("file_bug1743353.html", "", "noopener");
+      }).then(() => {
+        return new Promise(resolve => {
+          bc.addEventListener("message", () => {
+            resolve();
+          }, { once: true });
+
+          bc.postMessage("load");
+        })
+      }).then(() => {
+        return new Promise(resolve => {
+          let results = [];
+          bc.addEventListener("message", function listener({ data }) {
+            results.push(data);
+            if (results.length == 3) {
+              bc.removeEventListener("message", listener);
+              resolve(results);
+            }
+          });
+
+          bc.postMessage("back");
+        });
+      }).then((results) => {
+        is(results[0], "pagehide", "First event should be 'pagehide'.");
+        is(results[1], "unload", "Second event should be 'unload'.");
+        is(results[2], "pageshow", "Third event should be 'pageshow'.");
+
+        bc.postMessage("close");
+
+        SimpleTest.finish();
+      });
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

@@ -11,7 +11,7 @@ function getServerConnections(browser) {
   ok(browser.isRemoteBrowser, "Content browser is remote");
   return SpecialPowers.spawn(browser, [], async function() {
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const { DevToolsServer } = require("devtools/server/devtools-server");
     if (!DevToolsServer._connections) {

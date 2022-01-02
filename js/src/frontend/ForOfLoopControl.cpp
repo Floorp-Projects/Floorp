@@ -7,10 +7,8 @@
 #include "frontend/ForOfLoopControl.h"
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
-#include "frontend/EmitterScope.h"     // EmitterScope
 #include "frontend/IfEmitter.h"        // InternalIfEmitter
 #include "vm/CompletionKind.h"         // CompletionKind
-#include "vm/JSScript.h"               // TryNoteKind::ForOfIterClose
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;

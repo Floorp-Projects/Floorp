@@ -500,15 +500,12 @@ add_task(async function test_app_permission() {
     port.postMessage({ test: "test" });
   }
 
-  let extension = ExtensionTestUtils.loadExtension(
-    {
-      background,
-      manifest: {
-        permissions: ["nativeMessaging"],
-      },
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["nativeMessaging"],
     },
-    "somethingelse@tests.mozilla.org"
-  );
+  });
 
   await extension.startup();
 

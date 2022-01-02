@@ -182,6 +182,9 @@ def make_task_description(config, jobs):
         if dep_job.kind in task["dependencies"]:
             task["if-dependencies"] = [dep_job.kind]
 
+        if "linux" in build_platform:
+            task["release-artifacts"] = ["public/build/KEY"]
+
         if "macosx" in build_platform:
             shippable = "false"
             if "shippable" in attributes and attributes["shippable"]:

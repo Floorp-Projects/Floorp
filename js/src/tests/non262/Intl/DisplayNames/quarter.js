@@ -6,22 +6,22 @@ const tests = {
   "en": {
     long: ["1st quarter", "2nd quarter", "3rd quarter", "4th quarter"],
     short: ["Q1", "Q2", "Q3", "Q4"],
-    narrow: ["Q1", "Q2", "Q3", "Q4"],
+    narrow: ["1", "2", "3", "4"],
   },
   "de": {
     long: ["1. Quartal", "2. Quartal", "3. Quartal", "4. Quartal"],
     short: ["Q1", "Q2", "Q3", "Q4"],
-    narrow: ["Q1", "Q2", "Q3", "Q4"],
+    narrow: ["1", "2", "3", "4"],
   },
   "fr": {
     long: ["1er trimestre", "2e trimestre", "3e trimestre", "4e trimestre"],
     short: ["T1", "T2", "T3", "T4"],
-    narrow: ["T1", "T2", "T3", "T4"],
+    narrow: ["1", "2", "3", "4"],
   },
   "zh": {
     long: ["第一季度", "第二季度", "第三季度", "第四季度"],
     short: ["1季度", "2季度", "3季度", "4季度"],
-    narrow: ["1季度", "2季度", "3季度", "4季度"],
+    narrow: ["1", "2", "3", "4"],
   },
 };
 

@@ -29,10 +29,22 @@ namespace a11y {
 
 struct FontSize {
   int32_t mValue;
+
+  bool operator==(const FontSize& aOther) const {
+    return mValue == aOther.mValue;
+  }
+
+  bool operator!=(const FontSize& aOther) const {
+    return mValue != aOther.mValue;
+  }
 };
 
 struct Color {
   nscolor mValue;
+
+  bool operator==(const Color& aOther) const { return mValue == aOther.mValue; }
+
+  bool operator!=(const Color& aOther) const { return mValue != aOther.mValue; }
 };
 
 // A special type. If an entry has a value of this type, it instructs the
@@ -40,12 +52,22 @@ struct Color {
 struct DeleteEntry {
   DeleteEntry() : mValue(true) {}
   bool mValue;
+
+  bool operator==(const DeleteEntry& aOther) const { return true; }
+
+  bool operator!=(const DeleteEntry& aOther) const { return false; }
 };
 
 class AccAttributes {
+  // Warning! An AccAttributes can contain another AccAttributes. This is
+  // intended for object and text attributes. However, the nested
+  // AccAttributes should never itself contain another AccAttributes, nor
+  // should it create a cycle. We don't do cycle collection here for
+  // performance reasons, so violating this rule will cause leaks!
   using AttrValueType =
       Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
-              CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>>;
+              CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
+              RefPtr<AccAttributes>, uint64_t>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
@@ -101,6 +123,17 @@ class AccAttributes {
     return Nothing();
   }
 
+  template <typename T>
+  RefPtr<const T> GetAttributeRefPtr(nsAtom* aAttrName) {
+    if (auto value = mData.Lookup(aAttrName)) {
+      if (value->is<RefPtr<T>>()) {
+        RefPtr<const T> ref = value->as<RefPtr<T>>();
+        return ref;
+      }
+    }
+    return nullptr;
+  }
+
   // Get stringified value
   bool GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue);
 
@@ -111,6 +144,21 @@ class AccAttributes {
   // Update one instance with the entries in another. The supplied AccAttributes
   // will be emptied.
   void Update(AccAttributes* aOther);
+
+  /**
+   * Return true if all the attributes in this instance are equal to all the
+   * attributes in another instance.
+   */
+  bool Equal(const AccAttributes* aOther) const;
+
+  /**
+   * Copy attributes from this instance to another instance.
+   * This should only be used in very specific cases; e.g. merging two sets of
+   * cached attributes without modifying the cache. It can only copy simple
+   * value types; e.g. it can't copy array values. Attempting to copy an
+   * AccAttributes with uncopyable values will cause an assertion.
+   */
+  void CopyTo(AccAttributes* aDest) const;
 
   // An entry class for our iterator.
   class Entry {

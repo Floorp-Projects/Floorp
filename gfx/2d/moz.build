@@ -26,6 +26,7 @@ EXPORTS.mozilla.gfx += [
     "DrawEventRecorder.h",
     "DrawTargetOffset.h",
     "DrawTargetRecording.h",
+    "DrawTargetSkia.h",
     "Filters.h",
     "FontVariation.h",
     "Helpers.h",
@@ -38,6 +39,7 @@ EXPORTS.mozilla.gfx += [
     "MatrixFwd.h",
     "NumericTools.h",
     "PathHelpers.h",
+    "PathSkia.h",
     "PatternHelpers.h",
     "Point.h",
     "Polygon.h",
@@ -194,9 +196,6 @@ SOURCES += [
 
 if CONFIG["CC_TYPE"] == "clang":
     SOURCES["Factory.cpp"].flags += ["-Wno-implicit-fallthrough"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS.mozilla.gfx += [

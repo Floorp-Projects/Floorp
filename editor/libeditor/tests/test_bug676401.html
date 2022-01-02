@@ -47,20 +47,23 @@ function ensureNobodyHasFocus() {
 }
 
 function IsCommandEnabled(command) {
-  var enabled;
-
   ensureNobodyHasFocus();
 
   // non-editable div: should return false unless alwaysEnabled
   window.getSelection().selectAllChildren(gBlock1);
-  enabled = document.queryCommandEnabled(command);
-  is(enabled, alwaysEnabledCommands.includes(command),
-     "'" + command + "' should not be enabled on a non-editable block.");
+  is(
+    document.queryCommandEnabled(command),
+    alwaysEnabledCommands.includes(command) && document.queryCommandSupported(command),
+     "'" + command + "' should not be enabled on a non-editable block."
+  );
 
-  // editable div: should return true
+  // editable div: should return true if it's supported
   window.getSelection().selectAllChildren(gBlock2);
-  enabled = document.queryCommandEnabled(command);
-  is(enabled, true, "'" + command + "' should be enabled on an editable block.");
+  is(
+    document.queryCommandEnabled(command),
+    document.queryCommandSupported(command),
+    "'" + command + "' should be enabled on an editable block."
+  );
 }
 
 function runTests() {

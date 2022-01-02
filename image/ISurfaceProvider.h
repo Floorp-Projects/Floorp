@@ -17,6 +17,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/image/WebRenderImageProvider.h"
 
 #include "imgFrame.h"
 #include "SurfaceCache.h"
@@ -31,7 +32,7 @@ class DrawableSurface;
  * An interface for objects which can either store a surface or dynamically
  * generate one.
  */
-class ISurfaceProvider {
+class ISurfaceProvider : public WebRenderImageProvider {
  public:
   // Subclasses may or may not be XPCOM classes, so we just require that they
   // implement AddRef and Release.
@@ -45,8 +46,8 @@ class ISurfaceProvider {
   /// entry in the surface cache.
   const SurfaceKey& GetSurfaceKey() const { return mSurfaceKey; }
 
-  /// @return a (potentially lazily computed) drawable reference to a surface.
-  virtual DrawableSurface Surface();
+  /// @return a drawable reference to a surface.
+  DrawableSurface Surface();
 
   /// @return true if DrawableRef() will return a completely decoded surface.
   virtual bool IsFinished() const = 0;
@@ -81,6 +82,8 @@ class ISurfaceProvider {
 
   virtual void Reset() {}
   virtual void Advance(size_t aFrame) {}
+  virtual bool MayAdvance() const { return false; }
+  virtual void MarkMayAdvance() {}
 
   /// @return the availability state of this ISurfaceProvider, which indicates
   /// whether DrawableRef() could successfully return a surface. Should only be
@@ -92,7 +95,8 @@ class ISurfaceProvider {
  protected:
   ISurfaceProvider(const ImageKey aImageKey, const SurfaceKey& aSurfaceKey,
                    AvailabilityState aAvailability)
-      : mImageKey(aImageKey),
+      : WebRenderImageProvider(aImageKey),
+        mImageKey(aImageKey),
         mSurfaceKey(aSurfaceKey),
         mAvailability(aAvailability) {
     MOZ_ASSERT(aImageKey, "Must have a valid image key");
@@ -144,10 +148,6 @@ class ISurfaceProvider {
 class MOZ_STACK_CLASS DrawableSurface final {
  public:
   DrawableSurface() : mHaveSurface(false) {}
-
-  explicit DrawableSurface(DrawableFrameRef&& aDrawableRef)
-      : mDrawableRef(std::move(aDrawableRef)),
-        mHaveSurface(bool(mDrawableRef)) {}
 
   explicit DrawableSurface(NotNull<ISurfaceProvider*> aProvider)
       : mProvider(aProvider), mHaveSurface(true) {}
@@ -222,6 +222,24 @@ class MOZ_STACK_CLASS DrawableSurface final {
     mProvider->Advance(aFrame);
   }
 
+  bool MayAdvance() const {
+    if (!mProvider) {
+      MOZ_ASSERT_UNREACHABLE("Trying to advance a static DrawableSurface?");
+      return false;
+    }
+
+    return mProvider->MayAdvance();
+  }
+
+  void MarkMayAdvance() {
+    if (!mProvider) {
+      MOZ_ASSERT_UNREACHABLE("Trying to advance a static DrawableSurface?");
+      return;
+    }
+
+    mProvider->MarkMayAdvance();
+  }
+
   bool IsFullyDecoded() const {
     if (!mProvider) {
       MOZ_ASSERT_UNREACHABLE(
@@ -230,6 +248,10 @@ class MOZ_STACK_CLASS DrawableSurface final {
     }
 
     return mProvider->IsFullyDecoded();
+  }
+
+  void TakeProvider(WebRenderImageProvider** aOutProvider) {
+    mProvider.forget(aOutProvider);
   }
 
   explicit operator bool() const { return mHaveSurface; }
@@ -261,10 +283,9 @@ class MOZ_STACK_CLASS DrawableSurface final {
 };
 
 // Surface() is implemented here so that DrawableSurface's definition is
-// visible. This default implementation eagerly obtains a DrawableFrameRef for
-// the first frame and is intended for static ISurfaceProviders.
+// visible.
 inline DrawableSurface ISurfaceProvider::Surface() {
-  return DrawableSurface(DrawableRef(/* aFrame = */ 0));
+  return DrawableSurface(WrapNotNull(this));
 }
 
 /**
@@ -288,6 +309,10 @@ class SimpleSurfaceProvider final : public ISurfaceProvider {
     gfx::IntSize size = mSurface->GetSize();
     return size.width * size.height * mSurface->GetBytesPerPixel();
   }
+
+  nsresult UpdateKey(layers::RenderRootStateManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources,
+                     wr::ImageKey& aKey) override;
 
  protected:
   DrawableFrameRef DrawableRef(size_t aFrame) override {

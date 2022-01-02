@@ -7,20 +7,52 @@
 #ifndef jit_JitScript_h
 #define jit_JitScript_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 #include "jstypes.h"
+#include "NamespaceImports.h"
+
+#include "gc/Barrier.h"
 #include "jit/BaselineIC.h"
-#include "jit/TrialInlining.h"
+#include "jit/ICStubSpace.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Vector.h"
 #include "util/TrailingArray.h"
 #include "vm/EnvironmentObject.h"
 
 class JS_PUBLIC_API JSScript;
+class JS_PUBLIC_API JSTracer;
+struct JS_PUBLIC_API JSContext;
+
+class JSFreeOp;
+
+namespace JS {
+class Zone;
+}
 
 namespace js {
+
+class SystemAllocPolicy;
+
+namespace gc {
+class AllocSite;
+}
+
 namespace jit {
 
+class BaselineScript;
+class InliningRoot;
+class IonScript;
+class JitScript;
 class JitZone;
 
 // Information about a script's bytecode, used by WarpBuilder. This is cached
@@ -46,9 +78,6 @@ static IonScript* const IonDisabledScriptPtr =
     reinterpret_cast<IonScript*>(IonDisabledScript);
 static IonScript* const IonCompilingScriptPtr =
     reinterpret_cast<IonScript*>(IonCompilingScript);
-
-class JitScript;
-class InliningRoot;
 
 /* [SMDOC] ICScript Lifetimes
  *
@@ -341,17 +370,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   JitScript(JSScript* script, Offset fallbackStubsOffset, Offset endOffset,
             const char* profileString);
 
-#ifdef DEBUG
-  ~JitScript() {
-    // The contents of the stub space are removed and freed separately after the
-    // next minor GC. See prepareForDestruction.
-    MOZ_ASSERT(jitScriptStubSpace_.isEmpty());
-
-    // BaselineScript and IonScript must have been destroyed at this point.
-    MOZ_ASSERT(!hasBaselineScript());
-    MOZ_ASSERT(!hasIonScript());
-  }
-#endif
+  ~JitScript();
 
   [[nodiscard]] bool ensureHasCachedIonData(JSContext* cx, HandleScript script);
 

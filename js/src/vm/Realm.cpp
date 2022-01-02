@@ -62,9 +62,6 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
       debuggers_(zone_),
       wasm(runtime_) {
-  MOZ_ASSERT_IF(creationOptions_.mergeable(),
-                creationOptions_.invisibleToDebugger());
-
   runtime_->numRealms++;
 }
 
@@ -400,20 +397,6 @@ void Realm::purge() {
   objects_.iteratorCache.clearAndCompact();
   arraySpeciesLookup.purge();
   promiseLookup.purge();
-}
-
-void Realm::clearTables() {
-  global_.unbarrieredGet()->releaseData(runtime_->defaultFreeOp());
-  global_.set(nullptr);
-
-  // No scripts should have run in this realm. This is used when merging
-  // a realm that has been used off thread into another realm and zone.
-  compartment()->assertNoCrossCompartmentWrappers();
-  MOZ_ASSERT(!jitRealm_);
-  MOZ_ASSERT(!debugEnvs_);
-  MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
-
-  savedStacks_.clear();
 }
 
 // Check to see if this individual realm is recording allocations. Debuggers or

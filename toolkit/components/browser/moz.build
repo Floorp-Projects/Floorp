@@ -42,9 +42,6 @@ LOCAL_INCLUDES += [
     "/layout/style",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 EXPORTS += [
     "nsEmbedCID.h",
     "nsWebBrowser.h",

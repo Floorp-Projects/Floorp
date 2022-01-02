@@ -291,6 +291,8 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
                                  ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
 
+  mSWDescriptorId = mWorkerPrivate->ServiceWorkerID();
+
   auto* workerScope = mWorkerPrivate->GlobalScope();
   if (NS_WARN_IF(!workerScope)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -426,7 +428,7 @@ already_AddRefed<ExtensionAPIRequest> RequestWorkerRunnable::CreateAPIRequest(
 
   RefPtr<ExtensionAPIRequest> request = new ExtensionAPIRequest(
       mOuterRequest->GetRequestType(), *mOuterRequest->GetRequestTarget());
-  request->Init(mClientInfo, callArgs, callerStackValue);
+  request->Init(mClientInfo, mSWDescriptorId, callArgs, callerStackValue);
 
   if (mEventListener) {
     request->SetEventListener(mEventListener.forget());
@@ -623,6 +625,78 @@ void RequestWorkerRunnable::ReadResult(JSContext* aCx,
 
   MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected API request ResultType");
   aRv.Throw(NS_ERROR_UNEXPECTED);
+}
+
+// RequestInitWorkerContextRunnable
+
+RequestInitWorkerRunnable::RequestInitWorkerRunnable(
+    dom::WorkerPrivate* aWorkerPrivate, Maybe<dom::ClientInfo>& aSWClientInfo)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               "extensions::RequestInitWorkerRunnable"_ns) {
+  MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
+  MOZ_ASSERT(aSWClientInfo.isSome());
+  mClientInfo = aSWClientInfo;
+}
+
+bool RequestInitWorkerRunnable::MainThreadRun() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto* baseURI = mWorkerPrivate->GetBaseURI();
+  RefPtr<WebExtensionPolicy> policy =
+      ExtensionPolicyService::GetSingleton().GetByURL(baseURI);
+
+  RefPtr<ExtensionServiceWorkerInfo> swInfo = new ExtensionServiceWorkerInfo(
+      *mClientInfo, mWorkerPrivate->ServiceWorkerID());
+
+  nsCOMPtr<mozIExtensionAPIRequestHandler> handler =
+      &ExtensionAPIRequestForwarder::APIRequestHandler();
+  MOZ_ASSERT(handler);
+
+  if (NS_FAILED(handler->InitExtensionWorker(policy, swInfo))) {
+    NS_WARNING("nsIExtensionAPIRequestHandler.initExtensionWorker call failed");
+  }
+
+  return true;
+}
+
+// NotifyWorkerLoadedRunnable
+
+nsresult NotifyWorkerLoadedRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<WebExtensionPolicy> policy =
+      ExtensionPolicyService::GetSingleton().GetByURL(mSWBaseURI.get());
+
+  nsCOMPtr<mozIExtensionAPIRequestHandler> handler =
+      &ExtensionAPIRequestForwarder::APIRequestHandler();
+  MOZ_ASSERT(handler);
+
+  if (NS_FAILED(handler->OnExtensionWorkerLoaded(policy, mSWDescriptorId))) {
+    NS_WARNING(
+        "nsIExtensionAPIRequestHandler.onExtensionWorkerLoaded call failed");
+  }
+
+  return NS_OK;
+}
+
+// NotifyWorkerDestroyedRunnable
+
+nsresult NotifyWorkerDestroyedRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<WebExtensionPolicy> policy =
+      ExtensionPolicyService::GetSingleton().GetByURL(mSWBaseURI.get());
+
+  nsCOMPtr<mozIExtensionAPIRequestHandler> handler =
+      &ExtensionAPIRequestForwarder::APIRequestHandler();
+  MOZ_ASSERT(handler);
+
+  if (NS_FAILED(handler->OnExtensionWorkerDestroyed(policy, mSWDescriptorId))) {
+    NS_WARNING(
+        "nsIExtensionAPIRequestHandler.onExtensionWorkerDestroyed call failed");
+  }
+
+  return NS_OK;
 }
 
 }  // namespace extensions

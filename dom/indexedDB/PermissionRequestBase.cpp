@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsXULAppAPI.h"
@@ -63,9 +64,10 @@ PermissionRequestBase::GetCurrentPermission(nsIPrincipal& aPrincipal) {
   const nsCOMPtr<nsIPermissionManager> permMan = GetPermissionManager();
   QM_TRY(OkIf(permMan), Err(NS_ERROR_FAILURE));
 
-  QM_TRY_INSPECT(const uint32_t& intPermission,
-                 MOZ_TO_RESULT_INVOKE(permMan, TestExactPermissionFromPrincipal,
-                                      &aPrincipal, kPermissionString));
+  QM_TRY_INSPECT(
+      const uint32_t& intPermission,
+      MOZ_TO_RESULT_INVOKE_MEMBER(permMan, TestExactPermissionFromPrincipal,
+                                  &aPrincipal, kPermissionString));
 
   const PermissionValue permission =
       PermissionValueForIntPermission(intPermission);

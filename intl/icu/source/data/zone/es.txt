@@ -10,7 +10,7 @@ es{
             ec{"Acra"}
         }
         "Africa:Addis_Ababa"{
-            ec{"Addis Abeba"}
+            ec{"Adís Abeba"}
         }
         "Africa:Algiers"{
             ec{"Argel"}
@@ -55,7 +55,7 @@ es{
             ec{"Dakar"}
         }
         "Africa:Dar_es_Salaam"{
-            ec{"Dar es Salaam"}
+            ec{"Dar es-Salam"}
         }
         "Africa:Djibouti"{
             ec{"Yibuti"}
@@ -85,7 +85,7 @@ es{
             ec{"Kampala"}
         }
         "Africa:Khartoum"{
-            ec{"Jartún"}
+            ec{"Jartum"}
         }
         "Africa:Kigali"{
             ec{"Kigali"}
@@ -1941,6 +1941,9 @@ es{
             ld{"hora de verano de Ekaterimburgo"}
             lg{"hora de Ekaterimburgo"}
             ls{"hora estándar de Ekaterimburgo"}
+        }
+        "meta:Yukon"{
+            ls{"hora de Yukón"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

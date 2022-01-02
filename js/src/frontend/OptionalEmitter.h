@@ -8,7 +8,8 @@
 #define frontend_OptionalEmitter_h
 
 #include "mozilla/Attributes.h"
-#include "frontend/IfEmitter.h"  // IfEmitter, InternalIfEmitter, CondEmitter
+
+#include "frontend/JumpList.h"
 #include "frontend/TDZCheckCache.h"
 
 namespace js {

@@ -9,7 +9,6 @@
 #include "CompositorD3D11.h"
 #include "Effects.h"
 #include "MainThreadUtils.h"
-#include "ReadbackManagerD3D11.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxWindowsPlatform.h"
@@ -289,9 +288,7 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
     : mSize(aSize),
       mFormat(aFormat),
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
-      mNeedsClearWhite(aFlags & ALLOC_CLEAR_BUFFER_WHITE),
       mHasSynchronization(HasKeyedMutex(aTexture)),
-      mIsForOutOfBandContent(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
       mTexture(aTexture),
       mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
@@ -322,7 +319,7 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
     return false;
   }
 
-  if (NS_IsMainThread() && !mIsForOutOfBandContent) {
+  if (NS_IsMainThread()) {
     if (!PrepareDrawTargetInLock(aMode)) {
       Unlock();
       return false;
@@ -335,8 +332,7 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
 bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   // Make sure that successful write-lock means we will have a DrawTarget to
   // write into.
-  if (!mDrawTarget &&
-      (aMode & OpenMode::OPEN_WRITE || mNeedsClear || mNeedsClearWhite)) {
+  if (!mDrawTarget && (aMode & OpenMode::OPEN_WRITE || mNeedsClear)) {
     mDrawTarget = BorrowDrawTarget();
     if (!mDrawTarget) {
       return false;
@@ -350,11 +346,6 @@ bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
     mDrawTarget->ClearRect(Rect(0, 0, mSize.width, mSize.height));
     mNeedsClear = false;
   }
-  if (mNeedsClearWhite) {
-    mDrawTarget->FillRect(Rect(0, 0, mSize.width, mSize.height),
-                          ColorPattern(DeviceColor(1.0, 1.0, 1.0, 1.0)));
-    mNeedsClearWhite = false;
-  }
 
   return true;
 }
@@ -367,7 +358,6 @@ void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = true;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = mHasSynchronization;
 }
 
@@ -463,7 +453,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   }
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-  if (!NS_IsMainThread() || !!(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) {
+  if (!NS_IsMainThread()) {
     // On the main thread we use the syncobject to handle synchronization.
     if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION)) {
       newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
@@ -677,7 +667,6 @@ void DXGIYCbCrTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = gfx::SurfaceFormat::YUV;
   aInfo.supportsMoz2D = false;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
 }
 
@@ -819,60 +808,15 @@ RefPtr<ID3D11Device> DXGITextureHostD3D11::GetDevice() {
     return nullptr;
   }
 
-  if (mProvider) {
-    return mProvider->GetD3D11Device();
-  } else {
-    return mDevice;
-  }
-}
-
-void DXGITextureHostD3D11::SetTextureSourceProvider(
-    TextureSourceProvider* aProvider) {
-  if (!aProvider || !aProvider->GetD3D11Device()) {
-    mDevice = nullptr;
-    mProvider = nullptr;
-    mTextureSource = nullptr;
-    return;
-  }
-
-  if (mDevice && (aProvider->GetD3D11Device() != mDevice)) {
-    if (mTextureSource) {
-      mTextureSource->Reset();
-    }
-    mTextureSource = nullptr;
-    return;
-  }
-
-  mProvider = aProvider;
-  mDevice = aProvider->GetD3D11Device();
-
-  if (mTextureSource) {
-    mTextureSource->SetTextureSourceProvider(aProvider);
-  }
-}
-
-bool DXGITextureHostD3D11::Lock() {
-  if (!mProvider) {
-    // Make an early return here if we call SetTextureSourceProvider() with an
-    // incompatible compositor. This check tries to prevent the problem where we
-    // use that incompatible compositor to compose this texture.
-    return false;
-  }
-
-  return LockInternal();
+  return mDevice;
 }
 
 bool DXGITextureHostD3D11::LockWithoutCompositor() {
-  // Unlike the normal Lock() function, this function may be called when
-  // mProvider is nullptr such as during WebVR frame submission. So, there is
-  // no 'mProvider' checking here.
   if (!mDevice) {
     mDevice = DeviceManagerDx::Get()->GetCompositorDevice();
   }
   return LockInternal();
 }
-
-void DXGITextureHostD3D11::Unlock() { UnlockInternal(); }
 
 void DXGITextureHostD3D11::UnlockWithoutCompositor() { UnlockInternal(); }
 
@@ -961,14 +905,7 @@ bool DXGITextureHostD3D11::EnsureTextureSource() {
     return false;
   }
 
-  if (mProvider) {
-    if (!mProvider->IsValid()) {
-      return false;
-    }
-    mTextureSource = new DataTextureSourceD3D11(mFormat, mProvider, mTexture);
-  } else {
-    mTextureSource = new DataTextureSourceD3D11(mDevice, mFormat, mTexture);
-  }
+  mTextureSource = new DataTextureSourceD3D11(mDevice, mFormat, mTexture);
   return true;
 }
 
@@ -976,29 +913,12 @@ void DXGITextureHostD3D11::UnlockInternal() {
   UnlockD3DTexture(mTextureSource->GetD3D11Texture());
 }
 
-bool DXGITextureHostD3D11::BindTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  MOZ_ASSERT(mIsLocked);
-  // If Lock was successful we must have a valid TextureSource.
-  MOZ_ASSERT(mTextureSource);
-  return AcquireTextureSource(aTexture);
-}
-
-bool DXGITextureHostD3D11::AcquireTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  if (!EnsureTextureSource()) {
-    return false;
-  }
-  aTexture = mTextureSource;
-  return true;
-}
-
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mFormat, mYUVColorSpace, mColorRange, mSize);
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 
@@ -1211,95 +1131,16 @@ bool DXGIYCbCrTextureHostD3D11::EnsureTexture() {
   return true;
 }
 
-RefPtr<ID3D11Device> DXGIYCbCrTextureHostD3D11::GetDevice() {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
+RefPtr<ID3D11Device> DXGIYCbCrTextureHostD3D11::GetDevice() { return nullptr; }
 
-  return mProvider->GetD3D11Device();
-}
-
-void DXGIYCbCrTextureHostD3D11::SetTextureSourceProvider(
-    TextureSourceProvider* aProvider) {
-  if (!aProvider || !aProvider->GetD3D11Device()) {
-    mProvider = nullptr;
-    mTextureSources[0] = nullptr;
-    mTextureSources[1] = nullptr;
-    mTextureSources[2] = nullptr;
-    return;
-  }
-
-  mProvider = aProvider;
-
-  if (mTextureSources[0]) {
-    mTextureSources[0]->SetTextureSourceProvider(aProvider);
-  }
-}
-
-bool DXGIYCbCrTextureHostD3D11::Lock() {
-  if (!EnsureTextureSource()) {
-    return false;
-  }
-
-  mIsLocked = LockD3DTexture(mTextureSources[0]->GetD3D11Texture()) &&
-              LockD3DTexture(mTextureSources[1]->GetD3D11Texture()) &&
-              LockD3DTexture(mTextureSources[2]->GetD3D11Texture());
-
-  return mIsLocked;
-}
-
-bool DXGIYCbCrTextureHostD3D11::EnsureTextureSource() {
-  if (!mProvider) {
-    NS_WARNING("no suitable compositor");
-    return false;
-  }
-
-  if (!GetDevice()) {
-    NS_WARNING("trying to lock a TextureHost without a D3D device");
-    return false;
-  }
-  if (!mTextureSources[0]) {
-    if (!EnsureTexture()) {
-      return false;
-    }
-
-    MOZ_ASSERT(mTextures[1] && mTextures[2]);
-
-    mTextureSources[0] =
-        new DataTextureSourceD3D11(SurfaceFormat::A8, mProvider, mTextures[0]);
-    mTextureSources[1] =
-        new DataTextureSourceD3D11(SurfaceFormat::A8, mProvider, mTextures[1]);
-    mTextureSources[2] =
-        new DataTextureSourceD3D11(SurfaceFormat::A8, mProvider, mTextures[2]);
-    mTextureSources[0]->SetNextSibling(mTextureSources[1]);
-    mTextureSources[1]->SetNextSibling(mTextureSources[2]);
-  }
-  return true;
-}
-
-void DXGIYCbCrTextureHostD3D11::Unlock() {
-  MOZ_ASSERT(mIsLocked);
-  UnlockD3DTexture(mTextureSources[0]->GetD3D11Texture());
-  UnlockD3DTexture(mTextureSources[1]->GetD3D11Texture());
-  UnlockD3DTexture(mTextureSources[2]->GetD3D11Texture());
-  mIsLocked = false;
-}
-
-bool DXGIYCbCrTextureHostD3D11::BindTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  MOZ_ASSERT(mIsLocked);
-  // If Lock was successful we must have a valid TextureSource.
-  MOZ_ASSERT(mTextureSources[0] && mTextureSources[1] && mTextureSources[2]);
-  aTexture = mTextureSources[0].get();
-  return !!aTexture;
-}
+bool DXGIYCbCrTextureHostD3D11::EnsureTextureSource() { return false; }
 
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGIYCbCrTextureHost(
       mHandles, mYUVColorSpace, mColorDepth, mColorRange, mSizeY, mSizeCbCr);
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 
@@ -1371,15 +1212,6 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
 bool DXGIYCbCrTextureHostD3D11::SupportsExternalCompositing(
     WebRenderBackend aBackend) {
   return aBackend == WebRenderBackend::SOFTWARE;
-}
-
-bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  if (!EnsureTextureSource()) {
-    return false;
-  }
-  aTexture = mTextureSources[0].get();
-  return !!aTexture;
 }
 
 bool DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,

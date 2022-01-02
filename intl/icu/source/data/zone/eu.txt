@@ -1219,6 +1219,9 @@ eu{
         }
         "Pacific:Honolulu"{
             ec{"Honolulu"}
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
         }
         "Pacific:Johnston"{
             ec{"Johnston"}
@@ -1292,6 +1295,11 @@ eu{
         "Pacific:Wallis"{
             ec{"Wallis"}
         }
+        "meta:Acre"{
+            ld{"Acreko udako ordua"}
+            lg{"Acreko ordua"}
+            ls{"Acreko ordu estandarra"}
+        }
         "meta:Afghanistan"{
             ls{"Afganistango ordua"}
         }
@@ -1313,6 +1321,14 @@ eu{
             ld{"Alaskako udako ordua"}
             lg{"Alaskako ordua"}
             ls{"Alaskako ordu estandarra"}
+            sd{"AKDT"}
+            sg{"AKT"}
+            ss{"AKST"}
+        }
+        "meta:Almaty"{
+            ld{"Almatyko udako ordua"}
+            lg{"Almatyko ordua"}
+            ls{"Almatyko ordu estandarra"}
         }
         "meta:Amazon"{
             ld{"Amazoniako udako ordua"}
@@ -1323,21 +1339,33 @@ eu{
             ld{"Ipar Amerikako erdialdeko udako ordua"}
             lg{"Ipar Amerikako erdialdeko ordua"}
             ls{"Ipar Amerikako erdialdeko ordu estandarra"}
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
         }
         "meta:America_Eastern"{
             ld{"Ipar Amerikako ekialdeko udako ordua"}
             lg{"Ipar Amerikako ekialdeko ordua"}
             ls{"Ipar Amerikako ekialdeko ordu estandarra"}
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
         }
         "meta:America_Mountain"{
             ld{"Ipar Amerikako mendialdeko udako ordua"}
             lg{"Ipar Amerikako mendialdeko ordua"}
             ls{"Ipar Amerikako mendialdeko ordu estandarra"}
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
         }
         "meta:America_Pacific"{
             ld{"Ipar Amerikako Pazifikoko udako ordua"}
             lg{"Ipar Amerikako Pazifikoko ordua"}
             ls{"Ipar Amerikako Pazifikoko ordu estandarra"}
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
         }
         "meta:Anadyr"{
             ld{"Anadyrreko udako ordua"}
@@ -1348,6 +1376,16 @@ eu{
             ld{"Apiako udako ordua"}
             lg{"Apiako ordua"}
             ls{"Apiako ordu estandarra"}
+        }
+        "meta:Aqtau"{
+            ld{"Aktauko udako ordua"}
+            lg{"Aktauko ordua"}
+            ls{"Aktauko ordu estandarra"}
+        }
+        "meta:Aqtobe"{
+            ld{"Aktobeko udako ordua"}
+            lg{"Aktobeko ordua"}
+            ls{"Aktobeko ordu estandarra"}
         }
         "meta:Arabian"{
             ld{"Arabiako udako ordua"}
@@ -1373,6 +1411,9 @@ eu{
             ld{"Ipar Amerikako Atlantikoko udako ordua"}
             lg{"Ipar Amerikako Atlantikoko ordua"}
             ls{"Ipar Amerikako Atlantikoko ordu estandarra"}
+            sd{"ADT"}
+            sg{"AT"}
+            ss{"AST"}
         }
         "meta:Australia_Central"{
             ld{"Australiako erdialdeko udako ordua"}
@@ -1427,6 +1468,9 @@ eu{
             ld{"Cabo Verdeko udako ordua"}
             lg{"Cabo Verdeko ordua"}
             ls{"Cabo Verdeko ordu estandarra"}
+        }
+        "meta:Casey"{
+            ls{"Caseyko ordua"}
         }
         "meta:Chamorro"{
             ls{"Chamorroko ordu estandarra"}
@@ -1560,6 +1604,9 @@ eu{
             lg{"Groenlandiako mendebaldeko ordua"}
             ls{"Groenlandiako mendebaldeko ordu estandarra"}
         }
+        "meta:Guam"{
+            ls{"Guameko ordu estandarra"}
+        }
         "meta:Gulf"{
             ls{"Golkoko ordu estandarra"}
         }
@@ -1570,6 +1617,9 @@ eu{
             ld{"Hawaii-Aleutiar uharteetako udako ordua"}
             lg{"Hawaii-Aleutiar uharteetako ordua"}
             ls{"Hawaii-Aleutiar uharteetako ordu estandarra"}
+            sd{"HADT"}
+            sg{"HAT"}
+            ss{"HAST"}
         }
         "meta:Hong_Kong"{
             ld{"Hong Kongo udako ordua"}
@@ -1739,6 +1789,9 @@ eu{
             lg{"Fernando de Noronhako ordua"}
             ls{"Fernando de Noronhako ordu estandarra"}
         }
+        "meta:North_Mariana"{
+            ls{"Ipar Mariana uharteetako ordua"}
+        }
         "meta:Novosibirsk"{
             ld{"Novosibirskeko udako ordua"}
             lg{"Novosibirskeko ordua"}
@@ -1791,6 +1844,11 @@ eu{
         }
         "meta:Pyongyang"{
             ls{"Piongiangeko ordua"}
+        }
+        "meta:Qyzylorda"{
+            ld{"Kyzylordako udako ordua"}
+            lg{"Kyzylordako ordua"}
+            ls{"Kyzylordako ordu estandarra"}
         }
         "meta:Reunion"{
             ls{"Reunioneko ordua"}
@@ -1908,12 +1966,15 @@ eu{
             lg{"Jekaterinburgeko ordua"}
             ls{"Jekaterinburgeko ordu estandarra"}
         }
+        "meta:Yukon"{
+            ls{"Yukongo ordua"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} aldeko ordua"}
         regionFormatDaylight{"{0} (udako ordua)"}
-        regionFormatStandard{"{0}(e)ko ordu estandarra"}
+        regionFormatStandard{"{0} aldeko ordu estandarra"}
     }
 }

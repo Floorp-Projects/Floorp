@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PCanvasManager;
 include protocol PCompositorBridge;
 include LayersSurfaces;
 include "mozilla/GfxMessageUtils.h";
@@ -14,7 +15,7 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
-using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+[MoveOnly] using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/LayersMessageUtils.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MemoryReport from "mozilla/webrender/WebRenderTypes.h";
@@ -58,6 +59,7 @@ union CompositorBridgeOptions {
  * compositor thread for compositor data that is only shared once, rather than
  * per PCompositorBridge instance.
  */
+[NeedsOtherPid]
 sync protocol PCompositorManager
 {
   manages PCompositorBridge;
@@ -83,6 +85,8 @@ parent:
   async NotifyMemoryPressure();
 
   async ReportMemory() returns (MemoryReport aReport);
+
+  async InitCanvasManager(Endpoint<PCanvasManagerParent> endpoint);
 
 child:
   async NotifyWebRenderError(WebRenderError error);

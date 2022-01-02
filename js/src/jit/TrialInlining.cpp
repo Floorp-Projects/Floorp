@@ -9,7 +9,9 @@
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
+#include "jit/CacheIRCloner.h"
 #include "jit/CacheIRHealth.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/Ion.h"  // TooManyFormalArguments
 
 #include "vm/BytecodeLocation-inl.h"

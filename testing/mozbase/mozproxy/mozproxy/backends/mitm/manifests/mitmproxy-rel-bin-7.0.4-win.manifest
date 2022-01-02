@@ -1,0 +1,10 @@
+[
+    {
+        "filename": "mitmproxy-7.0.4-windows.zip",
+        "size": 55150536,
+        "algorithm": "sha512",
+        "digest": "fb89dc5f0781f56741d4e288bef62f7c9b301d96a9258fef7ea467d51b1533f2caa13fe9ac382eaf69770d40399336dca004506f7d55db86afd053e7432e85ae",
+        "visibility": "public",
+        "unpack": true
+    }
+]

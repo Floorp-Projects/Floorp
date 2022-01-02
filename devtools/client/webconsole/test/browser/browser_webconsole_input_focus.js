@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf-8,Test input focused
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test input focused
   <script>
     console.log("console message 1");
   </script>`;

@@ -613,10 +613,14 @@ bool SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                          HandleValue thisv, HandleValue callee, HandleValue arr,
                          HandleValue newTarget, MutableHandleValue res);
 
-bool OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized);
+bool OptimizeSpreadCall(JSContext* cx, HandleValue arg,
+                        MutableHandleValue result);
+
+ArrayObject* ArrayFromArgumentsObject(JSContext* cx,
+                                      Handle<ArgumentsObject*> args);
 
 JSObject* NewObjectOperation(JSContext* cx, HandleScript script,
-                             jsbytecode* pc);
+                             const jsbytecode* pc);
 
 JSObject* NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
                                          gc::AllocKind allocKind,
@@ -625,8 +629,6 @@ JSObject* NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
 JSObject* NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
                                           gc::AllocKind allocKind,
                                           gc::InitialHeap initialHeap);
-
-JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
 
 ArrayObject* NewArrayOperation(JSContext* cx, uint32_t length,
                                NewObjectKind newKind = GenericObject);

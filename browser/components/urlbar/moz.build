@@ -51,7 +51,7 @@ EXTRA_JS_MODULES += [
 ]
 
 TESTING_JS_MODULES += [
-    "tests/QuickSuggestTestUtils.jsm",
+    "tests/quicksuggest/QuickSuggestTestUtils.jsm",
     "tests/UrlbarTestUtils.jsm",
 ]
 BROWSER_CHROME_MANIFESTS += [
@@ -59,7 +59,11 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser-updateResults/browser.ini",
     "tests/browser/browser.ini",
     "tests/ext/browser/browser.ini",
+    "tests/quicksuggest/browser/browser.ini",
 ]
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += [
+    "tests/quicksuggest/unit/xpcshell.ini",
+    "tests/unit/xpcshell.ini",
+]
 
 SPHINX_TREES["/browser/urlbar"] = "docs"

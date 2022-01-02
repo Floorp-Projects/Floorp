@@ -5,4 +5,6 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);

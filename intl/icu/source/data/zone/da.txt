@@ -1946,6 +1946,9 @@ da{
             lg{"Jekaterinburg-tid"}
             ls{"Jekaterinburg-normaltid"}
         }
+        "meta:Yukon"{
+            ls{"Yukon-tid"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

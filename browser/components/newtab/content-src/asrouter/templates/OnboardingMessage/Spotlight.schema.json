@@ -4,175 +4,263 @@
   "version": "1.1.0",
   "type": "object",
   "properties": {
-    "template": {
+    "id": {
       "type": "string",
-      "description": "Specify the layout template for the Spotlight",
-      "enum": ["logo-and-content"]
+      "description": "Message identifier"
     },
-    "logo": {
-      "properties": {
-        "imageURL": {
-          "type": "string",
-          "description": "URL for image to use with the content"
-        }
+    "groups": {
+      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Preference name"
       }
     },
-    "logoImageURL": {
-      "type": "string",
-      "description": "URL for image to use with the content"
-    },
-    "body": {
+    "content": {
+      "type": "object",
       "properties": {
-        "title": {
-          "type": "object",
-          "properties": {
-            "label": {
-              "description": "The title shown in the Spotlight message",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the header element"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the header element"
-                    }
-                  },
-                  "required": ["string_id"]
-                }
-              ]
-            }
-          },
-          "required": ["label"]
+        "template": {
+          "type": "string",
+          "description": "Specify the layout template for the Spotlight",
+          "enum": ["logo-and-content"]
         },
-        "text": {
-          "type": "object",
+        "logo": {
           "properties": {
-            "label": {
-              "description": "The content shown in the Spotlight message",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the paragraph element"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the paragraph element"
-                    }
-                  },
-                  "required": ["string_id"]
-                }
-              ]
+            "imageURL": {
+              "type": "string",
+              "description": "URL for image to use with the content"
             }
-          },
-          "required": ["label"]
+          }
         },
-        "primary": {
-          "type": "object",
+        "logoImageURL": {
+          "type": "string",
+          "description": "URL for image to use with the content"
+        },
+        "body": {
           "properties": {
-            "label": {
-              "description": "The label for the primary button",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the button element"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the button element"
-                    }
-                  },
-                  "required": ["string_id"]
-                }
-              ]
-            },
-            "action": {
+            "title": {
               "type": "object",
               "properties": {
-                "type": {
-                  "type": "string",
-                  "description": "Action dispatched by the button."
-                },
-                "data": {
-                  "type": "object"
+                "label": {
+                  "description": "The title shown in the Spotlight message",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Message shown in the header element"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string for the header element"
+                        }
+                      },
+                      "required": ["string_id"]
+                    }
+                  ]
                 }
               },
-              "required": ["type"],
-              "additionalProperties": false
-            }
-          },
-          "required": ["label", "action"]
-        },
-        "secondary": {
-          "type": "object",
-          "properties": {
-            "label": {
-              "description": "The label for the secondary button",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the button element"
+              "required": ["label"]
+            },
+            "text": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "The content shown in the Spotlight message",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Message shown in the paragraph element"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string for the paragraph element"
+                        }
+                      },
+                      "required": ["string_id"]
+                    }
+                  ]
+                }
+              },
+              "required": ["label"]
+            },
+            "primary": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "The label for the primary button",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Message shown in the button element"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string for the button element"
+                        }
+                      },
+                      "required": ["string_id"]
+                    }
+                  ]
                 },
-                {
+                "action": {
                   "type": "object",
                   "properties": {
-                    "string_id": {
+                    "type": {
                       "type": "string",
-                      "description": "Id of localized string for the button element"
+                      "description": "Action dispatched by the button."
+                    },
+                    "data": {
+                      "type": "object"
                     }
                   },
-                  "required": ["string_id"]
+                  "required": ["type"],
+                  "additionalProperties": false
                 }
-              ]
+              },
+              "required": ["label", "action"]
+            },
+            "secondary": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "The label for the secondary button",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Message shown in the button element"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string for the button element"
+                        }
+                      },
+                      "required": ["string_id"]
+                    }
+                  ]
+                }
+              },
+              "required": ["label", "action"]
             }
           },
-          "required": ["label", "action"]
+          "additionalProperties": false,
+          "required": ["title", "text", "primary", "secondary"]
+        },
+        "extra": {
+          "properties": {
+            "expanded": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "The label for the secondary button",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Message shown in the button element"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string for the button element"
+                        }
+                      },
+                      "required": ["string_id"]
+                    }
+                  ]
+                }
+              },
+              "required": ["label"]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
-      "required": ["title", "text", "primary", "secondary"]
+      "required": ["body", "template"]
     },
-    "extra": {
+    "frequency": {
+      "type": "object",
+      "description": "An object containing frequency cap information for a message.",
       "properties": {
-        "expanded": {
-          "type": "object",
-          "properties": {
-            "label": {
-              "description": "The label for the secondary button",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the button element"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the button element"
-                    }
+        "lifetime": {
+          "type": "integer",
+          "description": "The maximum lifetime impressions for a message.",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "custom": {
+          "type": "array",
+          "description": "An array of custom frequency cap definitions.",
+          "items": {
+            "description": "A frequency cap definition containing time and max impression information",
+            "type": "object",
+            "properties": {
+              "period": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
                   },
-                  "required": ["string_id"]
-                }
-              ]
-            }
-          },
-          "required": ["label"]
+                  {
+                    "type": "string",
+                    "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                    "enum": ["daily"]
+                  }
+                ]
+              },
+              "cap": {
+                "type": "integer",
+                "description": "The maximum impressions for the message within the defined period.",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            "required": ["period", "cap"]
+          }
+        }
+      }
+    },
+    "priority": {
+      "type": "integer"
+    },
+    "targeting": {
+      "type": "string",
+      "description": "A JEXL expression representing targeting information"
+    },
+    "template": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "object",
+      "description": "An action to trigger potentially showing the message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A string identifying the trigger action"
+        },
+        "params": {
+          "type": "array",
+          "description": "An optional array of string parameters for the trigger action",
+          "items": {
+            "anyOf": [{ "type": "integer" }, { "type": "string" }]
+          }
         }
       },
-      "additionalProperties": false
+      "required": ["id"]
     }
   },
-  "additionalProperties": false,
-  "required": ["body", "template"]
+  "additionalProperties": true,
+  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
 }
-

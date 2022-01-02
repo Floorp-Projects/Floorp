@@ -4,10 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ActorsChild.h"
-
 #include <type_traits>
 
+#include "ActorsChild.h"
 #include "BackgroundChildImpl.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
@@ -39,6 +38,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ProfilerLabels.h"
@@ -901,7 +901,7 @@ nsresult GetFileHandleResult(const RefPtr<IDBFileRequest>& aFileRequest,
   }
 
   nsString tmpString;
-  Tie(rv, Ignore) = encoding->Decode(data, tmpString);
+  std::tie(rv, std::ignore) = encoding->Decode(data, tmpString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
   }
@@ -2691,7 +2691,7 @@ nsresult BackgroundRequestChild::PreprocessHelper::Init(
   // We use a TaskQueue here in order to be sure that the events are dispatched
   // in the correct order. This is not guaranteed in case we use the I/O thread
   // directly.
-  mTaskQueue = MakeRefPtr<TaskQueue>(target.forget());
+  mTaskQueue = MakeRefPtr<TaskQueue>(target.forget(), "BackgroundRequestChild");
 
   ErrorResult errorResult;
 

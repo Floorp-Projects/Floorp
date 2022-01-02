@@ -32,9 +32,7 @@ CubebDeviceEnumerator* GetEnumerator() {
   return CubebDeviceEnumerator::GetInstance();
 }
 
-MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
-    : mDelayAgnostic(aPrefs.mDelayAgnostic),
-      mExtendedFilter(aPrefs.mExtendedFilter) {
+MediaEngineWebRTC::MediaEngineWebRTC() {
   AssertIsOnOwningThread();
 
   GetChildAndCall(
@@ -136,7 +134,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     LOG(("Number of Capabilities %d", numCaps));
     for (int j = 0; j < numCaps; j++) {
       if (GetChildAndCall(&CamerasChild::GetCaptureCapability, aCapEngine,
-                          uniqueId, j, cap) != 0) {
+                          uniqueId, j, &cap) != 0) {
         break;
       }
       LOG(("type=%d width=%d height=%d maxFPS=%d",
@@ -144,17 +142,9 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
 #endif
 
-    if (uniqueId[0] == '\0') {
-      // In case a device doesn't set uniqueId!
-      strncpy(uniqueId, deviceName, sizeof(uniqueId));
-      uniqueId[sizeof(uniqueId) - 1] = '\0';  // strncpy isn't safe
-    }
-
-    NS_ConvertUTF8toUTF16 uuid(uniqueId);
-    RefPtr<MediaEngineSource> vSource;
-
-    vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
-                                               scaryKind || scarySource);
+    RefPtr<MediaEngineSource> vSource = new MediaEngineRemoteVideoSource(
+        NS_ConvertUTF8toUTF16(deviceName), nsDependentCString(uniqueId),
+        aCapEngine, scaryKind || scarySource);
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
         vSource->GetGroupId(), u""_ns));
@@ -185,7 +175,7 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
           devices[i], devices[i]->Name(),
           // Lie and provide the name as UUID
           NS_ConvertUTF16toUTF8(devices[i]->Name()), devices[i]->GroupID(),
-          devices[i]->MaxChannels(), mDelayAgnostic, mExtendedFilter);
+          devices[i]->MaxChannels());
       RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
           source, source->GetName(), NS_ConvertUTF8toUTF16(source->GetUUID()),
           source->GetGroupId(), u""_ns);

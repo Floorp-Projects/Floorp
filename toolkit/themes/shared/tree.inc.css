@@ -23,8 +23,12 @@ tree {
 
 treechildren::-moz-tree-row {
   border: 1px solid transparent;
-  min-height: 24px;
-  height: 1.3em;
+}
+
+treechildren::-moz-tree-row,
+treecol:not([hideheader="true"]),
+treecolpicker {
+  min-height: max(24px, 1.3em);
 }
 
 treechildren::-moz-tree-row(multicol, odd) {

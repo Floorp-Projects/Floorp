@@ -52,5 +52,8 @@ OS_LIBS += [
     "shlwapi",
 ]
 
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["tests/gtest"]
+
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Application Update")

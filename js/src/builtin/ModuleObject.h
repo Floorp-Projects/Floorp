@@ -55,12 +55,12 @@ using HandleModuleEnvironmentObject = Handle<ModuleEnvironmentObject*>;
 
 class ModuleRequestObject : public NativeObject {
  public:
-  enum { SpecifierSlot = 0, SlotCount };
+  enum { SpecifierSlot = 0, AssertionSlot, SlotCount };
 
   static const JSClass class_;
   static bool isInstance(HandleValue value);
-  [[nodiscard]] static ModuleRequestObject* create(JSContext* cx,
-                                                   HandleAtom specifier);
+  [[nodiscard]] static ModuleRequestObject* create(
+      JSContext* cx, HandleAtom specifier, HandleArrayObject maybeAssertions);
 
   JSAtom* specifier() const;
 };
@@ -330,7 +330,6 @@ class ModuleObject : public NativeObject {
 #ifdef DEBUG
   static bool AssertFrozen(JSContext* cx, HandleModuleObject self);
 #endif
-  void fixEnvironmentsAfterRealmMerge();
 
   JSScript* maybeScript() const;
   JSScript* script() const;
@@ -355,7 +354,6 @@ class ModuleObject : public NativeObject {
   static PromiseObject* createTopLevelCapability(JSContext* cx,
                                                  HandleModuleObject module);
   bool isAsync() const;
-  void setAsync(bool isAsync);
   bool isAsyncEvaluating() const;
   void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
@@ -444,7 +442,7 @@ bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
                                          Value* vp);
 
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                   HandleValue specifier);
+                                   HandleValue specifier, HandleValue options);
 
 bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise);
 

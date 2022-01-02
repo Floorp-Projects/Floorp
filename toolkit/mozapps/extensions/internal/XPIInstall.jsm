@@ -172,7 +172,9 @@ function getFile(path, base = null) {
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
-  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Services.ppmm.broadcastAsyncMessage(MSG_JAR_FLUSH, {
+    path: aJarFile.path,
+  });
 }
 
 const PREF_EM_UPDATE_BACKGROUND_URL = "extensions.update.background.url";
@@ -189,7 +191,7 @@ const TEMP_INSTALL_ID_GEN_SESSION = new Uint8Array(
   Float64Array.of(Math.random()).buffer
 );
 
-const MSG_JAR_FLUSH = "AddonJarFlush";
+const MSG_JAR_FLUSH = "Extension:FlushJarCache";
 
 /**
  * Valid IDs fit this pattern.
@@ -460,31 +462,23 @@ async function loadManifestFromWebManifest(aPackage) {
     throw error;
   }
 
-  let bss =
-    (manifest.browser_specific_settings &&
-      manifest.browser_specific_settings.gecko) ||
-    (manifest.applications && manifest.applications.gecko) ||
-    {};
-  if (manifest.browser_specific_settings && manifest.applications) {
-    logger.warn("Ignoring applications property in manifest");
-  }
+  let bss = manifest.applications?.gecko || {};
 
   // A * is illegal in strict_min_version
-  if (
-    bss.strict_min_version &&
-    bss.strict_min_version.split(".").some(part => part == "*")
-  ) {
+  if (bss.strict_min_version?.split(".").some(part => part == "*")) {
     throw new Error("The use of '*' in strict_min_version is invalid");
   }
 
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
+  addon.manifestVersion = manifest.manifest_version;
   addon.type = extension.type === "langpack" ? "locale" : extension.type;
   addon.loader = null;
   addon.strictCompatibility = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
+  addon.installOrigins = manifest.install_origins;
   addon.optionsBrowserStyle = true;
   addon.optionsURL = null;
   addon.optionsType = null;
@@ -1650,10 +1644,21 @@ class AddonInstall {
         try {
           await this.promptHandler(info);
         } catch (err) {
-          logger.info(`Install of ${this.addon.id} cancelled by user`);
-          this.state = AddonManager.STATE_CANCELLED;
-          this._cleanup();
-          this._callInstallListeners("onInstallCancelled");
+          if (this.error < 0) {
+            logger.info(`Install of ${this.addon.id} failed ${this.error}`);
+            this.state = AddonManager.STATE_INSTALL_FAILED;
+            this._cleanup();
+            // In some cases onOperationCancelled is called during failures
+            // to install/uninstall/enable/disable addons.  We may need to
+            // do that here in the future.
+            this._callInstallListeners("onInstallFailed");
+            this.removeTemporaryFile();
+          } else {
+            logger.info(`Install of ${this.addon.id} cancelled by user`);
+            this.state = AddonManager.STATE_CANCELLED;
+            this._cleanup();
+            this._callInstallListeners("onInstallCancelled");
+          }
           return;
         }
       }
@@ -2656,6 +2661,14 @@ AddonInstallWrapper.prototype = {
     return AppConstants.DEBUG ? installFor(this) : undefined;
   },
 
+  get error() {
+    return installFor(this).error;
+  },
+
+  set error(err) {
+    installFor(this).error = err;
+  },
+
   get type() {
     return installFor(this).type;
   },
@@ -2740,7 +2753,6 @@ AddonInstallWrapper.prototype = {
   "releaseNotesURI",
   "file",
   "state",
-  "error",
   "progress",
   "maxProgress",
 ].forEach(function(aProp) {
@@ -3970,14 +3982,6 @@ var XPIInstall = {
 
     let addon = await loadManifestFromFile(source, location);
 
-    // Ensure a staged addon is compatible with the current running version of
-    // Firefox.  If a prior version of the addon is installed, it will remain.
-    if (!addon.isCompatible) {
-      throw new Error(
-        `Add-on ${addon.id} is not compatible with application version.`
-      );
-    }
-
     if (
       XPIDatabase.mustSign(addon.type) &&
       addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
@@ -3987,7 +3991,16 @@ var XPIInstall = {
       );
     }
 
+    // Import saved metadata before checking for compatibility.
     addon.importMetadata(metadata);
+
+    // Ensure a staged addon is compatible with the current running version of
+    // Firefox.  If a prior version of the addon is installed, it will remain.
+    if (!addon.isCompatible) {
+      throw new Error(
+        `Add-on ${addon.id} is not compatible with application version.`
+      );
+    }
 
     logger.debug(`Processing install of ${id} in ${location.name}`);
     let existingAddon = XPIStates.findAddon(id);

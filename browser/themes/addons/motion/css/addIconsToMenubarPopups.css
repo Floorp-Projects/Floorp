@@ -1,0 +1,71 @@
+/* (UNFINISHED) (TESTED ON MACOS ONLY!) Add icons to menubar popups  */
+
+#menu_newNavigatorTab {
+    list-style-image: url(chrome://browser/skin/motion/new-tab-image.svg) !important;
+}
+#menu_newNavigator {
+    list-style-image: url(chrome://browser/skin/motion/new-window.svg) !important;
+}
+#menu_newPrivateWindow {
+    list-style-image: url(chrome://browser/skin/motion/new-private-window.svg) !important;
+}
+#menu_openLocation {
+    list-style-image: url(chrome://browser/skin/motion/globe.svg) !important;
+}
+#menu_openFile {
+    list-style-image: url(chrome://browser/skin/motion/folder.svg) !important;
+}
+#menu_close, #menu_closeWindow, #menu_findAgain, #historyRestoreLastSession, #hiddenTabsMenu, #historyUndoMenu, #historyUndoWindowMenu {
+    list-style-image: url(chrome://browser/skin/motion/blank.svg) !important;
+}
+#menu_savePage {
+    list-style-image: url(chrome://browser/skin/motion/savefile.svg) !important;
+}
+#menu_sendLink {
+    list-style-image: url(chrome://browser/skin/motion/email.svg) !important;
+}
+#menu_printSetup, #menu_print {
+    list-style-image: url(chrome://browser/skin/motion/print.svg) !important;
+}
+#menu_undo {
+    list-style-image: url(chrome://browser/skin/motion/icons/undo.svg) !important;
+}
+#menu_redo {
+    list-style-image: url(chrome://browser/skin/motion/icons/redo.svg) !important;
+}
+#menu_cut {
+    list-style-image: url(chrome://browser/skin/motion/icons/cut.svg) !important;
+}
+#menu_copy {
+    list-style-image: url(chrome://browser/skin/motion/icons/copy.svg) !important;
+}
+#menu_paste {
+    list-style-image: url(chrome://browser/skin/motion/icons/paste.svg) !important;
+}
+#menu_delete {
+    list-style-image: url(chrome://browser/skin/motion/icons/delete.svg) !important;
+}
+#menu_selectAll {
+    list-style-image: url(chrome://browser/skin/motion/icons/select-all.svg) !important;
+}
+#menu_find {
+    list-style-image: url(chrome://browser/skin/motion/search-file.svg) !important;
+}
+#toggle_PersonalToolbar, #menu_bookmarksSidebar {
+    list-style-image: url(chrome://browser/skin/motion/bookmark.svg) !important;
+}
+#menu_customizeToolbars {
+    list-style-image: url(chrome://browser/skin/motion/brush.svg) !important;
+}
+#menu_historySidebar {
+    list-style-image: url(chrome://browser/skin/motion/history.svg) !important;
+}
+#menu_tabsSidebar, #sync-tabs-menuitem {
+    list-style-image: url(chrome://browser/skin/motion/synced-tabs.svg) !important;
+}
+#menu_showAllHistory {
+    list-style-image: url(chrome://browser/skin/motion/history.svg) !important;
+}
+#sanitizeItem {
+    list-style-image: url(chrome://browser/skin/motion/forget.svg) !important;
+}

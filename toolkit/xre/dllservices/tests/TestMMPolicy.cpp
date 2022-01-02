@@ -189,6 +189,12 @@ bool TestFindRegion() {
 }
 
 extern "C" int wmain(int argc, wchar_t* argv[]) {
+  // Preload delayload modules (e.g. advapi32.dll, bcryptPrimitives.dll, etc.)
+  // by calling rand_s(), which is used in MMPolicy::FindRegion, before
+  // depleting the process memory during the test.
+  unsigned int rnd = 0;
+  rand_s(&rnd);
+
   if (!TestFindRegion()) {
     return 1;
   }

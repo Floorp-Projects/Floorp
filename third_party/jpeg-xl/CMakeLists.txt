@@ -355,7 +355,12 @@ if(JPEGXL_ENABLE_MANPAGES)
 find_program(ASCIIDOC a2x)
 if(NOT "${ASCIIDOC}" STREQUAL "ASCIIDOC-NOTFOUND")
 file(STRINGS "${ASCIIDOC}" ASCIIDOC_SHEBANG LIMIT_COUNT 1)
-if(ASCIIDOC_SHEBANG MATCHES "python2")
+if(ASCIIDOC_SHEBANG MATCHES "/sh")
+  set(ASCIIDOC_PY_FOUND ON)
+  # Run the program directly and set ASCIIDOC as empty.
+  set(ASCIIDOC_PY "${ASCIIDOC}")
+  set(ASCIIDOC "")
+elseif(ASCIIDOC_SHEBANG MATCHES "python2")
   find_package(Python2 COMPONENTS Interpreter)
   set(ASCIIDOC_PY_FOUND "${Python2_Interpreter_FOUND}")
   set(ASCIIDOC_PY Python2::Interpreter)
@@ -386,7 +391,7 @@ if (ASCIIDOC_PY_FOUND)
     add_custom_command(
       OUTPUT "${PAGE}.1"
       COMMAND "${ASCIIDOC_PY}"
-      ARGS "${ASCIIDOC}"
+      ARGS ${ASCIIDOC}
         --format manpage --destination-dir="${CMAKE_CURRENT_BINARY_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/doc/man/${PAGE}.txt"
       MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/doc/man/${PAGE}.txt")

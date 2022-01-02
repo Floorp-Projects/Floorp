@@ -5,7 +5,7 @@
 
 // Test that properties starting with underscores or dollars can be
 // autocompleted (bug 967468).
-const TEST_URI = `data:text/html;charset=utf8,test autocompletion with $ or _`;
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>test autocompletion with $ or _`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

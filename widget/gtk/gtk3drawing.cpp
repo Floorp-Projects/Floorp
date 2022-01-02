@@ -18,6 +18,7 @@
 #include "WidgetStyleCache.h"
 #include "nsString.h"
 #include "nsDebug.h"
+#include "WidgetUtilsGtk.h"
 
 #include <math.h>
 #include <dlfcn.h>
@@ -426,30 +427,25 @@ size_t GetGtkHeaderBarButtonLayout(Span<ButtonLayout> aButtonLayout,
 
   nsDependentCSubstring layout(decorationLayout, strlen(decorationLayout));
 
-  bool right = false;
   size_t activeButtons = 0;
   for (const auto& part : layout.Split(':')) {
     for (const auto& button : part.Split(',')) {
       if (button.EqualsLiteral("close")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_CLOSE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_CLOSE};
       } else if (button.EqualsLiteral("minimize")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE};
       } else if (button.EqualsLiteral("maximize")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE};
       }
       if (activeButtons == aButtonLayout.Length()) {
         return activeButtons;
       }
     }
-    right = true;
   }
   return activeButtons;
 }
 
-static void EnsureToolbarMetrics(void) {
+static void EnsureToolbarMetrics() {
   if (!sToolbarMetrics.initialized) {
     // Make sure we have clean cache after theme reset, etc.
     memset(&sToolbarMetrics, 0, sizeof(sToolbarMetrics));
@@ -457,7 +453,7 @@ static void EnsureToolbarMetrics(void) {
     // Calculate titlebar button visibility and positions.
     ButtonLayout aButtonLayout[TOOLBAR_BUTTONS];
     size_t activeButtonNums =
-        GetGtkHeaderBarButtonLayout(mozilla::Span(aButtonLayout), nullptr);
+        GetGtkHeaderBarButtonLayout(Span(aButtonLayout), nullptr);
 
     for (size_t i = 0; i < activeButtonNums; i++) {
       int buttonIndex =
@@ -2187,7 +2183,11 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
 
   // We don't need to draw window decoration for MOZ_GTK_HEADER_BAR_MAXIMIZED,
   // i.e. when main window is maximized.
-  if (widgetType == MOZ_GTK_HEADER_BAR) {
+  //
+  // We also don't need to draw this on Wayland, since the compositor takes care
+  // of it.
+  if (widgetType == MOZ_GTK_HEADER_BAR &&
+      !mozilla::widget::GdkIsWaylandDisplay()) {
     GtkStyleContext* windowStyle =
         GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->scale);
     bool solidDecorations =

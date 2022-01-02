@@ -1,0 +1,854 @@
+.urlbarView-body-inner {
+  border: 0 !important;
+}
+
+.urlbarView-row {
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.urlbarView-row:last-of-type {
+  margin-bottom: 8px !important;
+}
+
+.urlbarView-row-inner {
+  align-items: center !important;
+  position: relative !important;
+  padding: 10px 0 !important;
+  padding-inline: 41px 16px !important;
+  max-width: 100% !important;
+  width: auto !important;
+  border-radius: 0 !important;
+  border-left: 3px solid transparent !important;
+}
+
+.urlbarView-row:not([type="tip"], [type="dynamic"])[selected]>.urlbarView-row-inner,
+.urlbarView-row-inner[selected] {
+  border-color: var(--urlbar-popup-url-color) !important;
+}
+
+.urlbarView-no-wrap {
+  height: 16px !important;
+  align-items: center !important;
+  margin-inline-start: 0 !important;
+  max-width: 100% !important;
+}
+
+.urlbarView-row[type="tabtosearch"] .urlbarView-no-wrap {
+  height: 32px !important;
+}
+
+.urlbarView-row[has-url][type]:not([type=bookmark]) .urlbarView-row-inner {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.urlbarView-row[has-url][type]:not([type=bookmark]) .urlbarView-no-wrap {
+  height: auto !important;
+  align-self: flex-start !important;
+  width: 100% !important;
+}
+
+.urlbarView-title-separator {
+  visibility: visible !important;
+}
+
+.urlbarView-title-separator::before {
+  content: "-" !important;
+  color: inherit !important;
+}
+
+.urlbarView-title-separator,
+.urlbarView-action {
+  opacity: .6 !important;
+  color: inherit !important;
+  font-size: revert !important;
+}
+
+.urlbarView-favicon {
+  position: absolute !important;
+  left: 11px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  fill-opacity: .6 !important;
+  flex: unset !important;
+  margin: unset !important;
+}
+
+.urlbarView-title,
+.urlbarView-url {
+  text-overflow: ellipsis !important;
+  mask-image: none !important;
+}
+
+.urlbarView-title {
+  flex: 1 !important;
+  flex-basis: unset !important;
+}
+
+.urlbarView-url {
+  max-width: 100% !important;
+  font-size: revert !important;
+  color: var(--urlbar-popup-url-color) !important;
+  padding: 0 !important;
+}
+
+.urlbarView-url:not(:empty) {
+  visibility: visible !important;
+}
+
+.urlbarView-action:not(:empty) {
+  display: flex !important;
+}
+
+.urlbarView-row[type=search]~.urlbarView-row[type=search] .urlbarView-title-separator,
+.urlbarView-row[type=search]~.urlbarView-row[type=search] .urlbarView-action,
+.urlbarView-row[has-url][type]:not([type=bookmark]) .urlbarView-title-separator,
+.urlbarView-type-icon {
+  display: none !important;
+}
+
+.urlbarView-row[type=tip]>.urlbarView-row-inner>.urlbarView-favicon,
+.urlbarView-row[type=tip]>.urlbarView-row-inner>.urlbarView-title,
+.urlbarView-tip-button,
+.urlbarView-tip-help {
+  margin-block-end: 0 !important;
+}
+
+.urlbarView .search-one-offs {
+  padding: 4px !important;
+  display: flex !important;
+  margin-top: -8px !important;
+}
+
+.urlbarView .search-panel-one-offs-header {
+  margin-inline-start: 12px !important;
+  line-height: 40px !important;
+  transform: translateY(-1px) !important;
+}
+
+.urlbarView .search-panel-one-offs {
+  border-radius: 0 0 8px 8px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  float: left !important;
+  max-width: none !important;
+  height: auto !important;
+}
+
+.urlbarView .searchbar-engine-one-off-item {
+  height: 32px !important;
+  border-radius: 16px !important;
+  padding: 0 8px !important;
+  margin: 4px !important;
+  background-image: none !important;
+  color: inherit !important;
+  border: 0 !important;
+}
+
+#urlbar-container {
+  min-width: 208px !important;
+  max-height: 36px !important;
+}
+
+#urlbar,
+#searchbar {
+  --urlbar-shadow: 0 0 4px 0 #0001;
+  font-size: 14px !important;
+  border-radius: 4px !important;
+  background-color: var(--toolbar-field-background-color) !important;
+  border: 0 !important;
+  box-shadow: var(--urlbar-shadow) !important;
+  padding: 2px !important;
+  background-clip: padding-box !important;
+  transition: background-color .1s var(--ease-basic) !important;
+  -moz-box-align: center !important;
+  display: block !important;
+  margin: 0 !important;
+  top: 0 !important;
+  color: inherit !important;
+
+  --urlbar-height: 30px !important;
+
+  min-height: var(--urlbar-height) !important;
+}
+
+#urlbar:not(:-moz-lwtheme),
+#searchbar:not(:-moz-lwtheme) {
+  color: inherit !important;
+}
+
+#urlbar:hover,
+#searchbar:hover {
+  background-color: var(--toolbar-field-hover-background-color) !important;
+  box-shadow: 0 0 0 1px inset var(--toolbar-field-hover-border-color, transparent), var(--urlbar-shadow) !important;
+}
+
+#urlbar[focused],
+#urlbar[open],
+#searchbar[focused],
+#searchbar[open] {
+  background-color: var(--toolbar-field-focus-background-color) !important;
+}
+
+#urlbar[focused],
+#searchbar[focused] {
+  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color), inset 0 0 0 1px var(--toolbar-field-focus-border-color), var(--urlbar-shadow) !important;
+  border: 0 !important;
+  padding: 2px !important;
+  margin: 0 !important;
+}
+
+/* if only focused, don't break out the urlbar */
+#urlbar[focused]:not([open]) {
+  width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+#urlbar[open],
+#searchbar[open] {
+  border: 0 !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  min-height: 37px !important;
+  margin: -4px 0 -1px !important;
+  box-shadow:
+    0 1px 2px 1px rgba(0, 0, 0, 0.1),
+    0 5px 5px -3px rgba(0, 0, 0, .2),
+    0 6px 10px 1px rgba(0, 0, 0, .14),
+    0 3px 14px 2px rgba(0, 0, 0, .12) !important;
+  z-index: 99999 !important;
+}
+
+#urlbar[breakout][breakout-extend] {
+  top: -2px;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+#urlbar[open] #urlbar-input {
+  margin-right: 10px !important;
+}
+
+/* 71+ */
+#urlbar-background {
+  display: none !important;
+}
+
+#urlbar-input-container,
+#searchbar {
+  display: flex !important;
+  align-items: center !important;
+}
+
+#urlbar-input-container {
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.urlbar-input-box,
+.searchbar-textbox {
+  flex: 1 !important;
+}
+
+#urlbar-input {
+  width: 100% !important;
+}
+
+#urlbar-input,
+.searchbar-textbox {
+  color: var(--lwt-toolbar-field-color) !important;
+}
+
+#urlbar[focused],
+#urlbar[focused] #urlbar-input,
+.searchbar-textbox:focus {
+  color: var(--lwt-toolbar-field-focus-color) !important;
+}
+
+#urlbar-input::placeholder,
+.searchbar-textbox::placeholder {
+  opacity: .66 !important;
+}
+
+#urlbar[open] #urlbar-input-container {
+  height: 38px !important;
+  margin-inline: 1px !important;
+}
+
+#urlbar[open] #identity-box {
+  margin-inline-start: 1px !important;
+  margin-inline-end: 0px !important;
+}
+
+.urlbarView {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  position: relative !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  background: 0 !important;
+  margin: 0 !important;
+}
+
+#urlbar[open] .urlbarView {
+  display: block !important;
+  width: 100% !important;
+}
+
+#urlbar-results {
+  padding: 0 !important;
+}
+
+#urlbar-container,
+#searchbar-container {
+  overflow: visible !important;
+  padding: 0 !important;
+  margin-inline: 6px !important;
+}
+
+#identity-icon {
+  fill-opacity: 1 !important;
+}
+
+#identity-icon-label {
+  color: inherit !important;
+  opacity: 1 !important;
+  padding: 0 !important;
+  margin-inline-start: 8px !important;
+  margin-block-start: -1px !important;
+  display: none !important;
+  align-items: center !important;
+}
+
+#identity-box {
+  display: flex !important;
+  position: relative !important;
+}
+
+#urlbar-label-box {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* separator */
+#identity-icon-label::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  height: 16px !important;
+  right: 0 !important;
+  background: #9d9e9f !important;
+  width: 1px !important;
+  transition: opacity .2s var(--ease-basic) !important;
+}
+
+#urlbar[pageproxystate=valid]:not([open]) #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden),
+#urlbar-label-box {
+  margin-inline-end: 8px !important;
+}
+
+#urlbar[pageproxystate=valid]:not([open]) #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden) #identity-icon-label {
+  display: flex !important;
+}
+
+
+#urlbar[pageproxystate=valid] #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden):not(.no-hover):-moz-any([open], :hover) #identity-icon-label::after {
+  opacity: 0 !important;
+}
+
+#urlbar[pageproxystate=valid] #identity-box.extensionPage>#identity-icon {
+  list-style-image: none !important;
+  margin-inline-end: -16px !important;
+}
+
+/* no longer used as a connection icon */
+#connection-icon {
+  display: none !important;
+}
+
+#urlbar[pageproxystate=valid] #identity-box:-moz-any(.mixedActiveBlocked,
+  .mixedDisplayContentLoadedActiveBlocked,
+  .mixedActiveContent)>#connection-icon {
+  display: -moz-box !important;
+}
+
+#urlbar[pageproxystate=valid] #identity-box:-moz-any(.weakCipher, .certUserOverridden, .certErrorPage, .insecureLoginForms, .mixedActiveContent) {
+  color: #c94031 !important;
+}
+
+.urlbar-input {
+  padding: 0 !important;
+}
+
+.searchbar-textbox {
+  border: 0 !important;
+  background: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  -moz-appearance: none !important;
+}
+
+.searchbar-search-icon {
+  margin: 0 !important;
+  fill-opacity: 1 !important;
+}
+
+.searchbar-search-icon-overlay {
+  margin-inline-start: -11px !important;
+  margin-inline-end: 0 !important;
+
+  /* not really useful anyway */
+  display: none !important;
+}
+
+#page-action-buttons>#pageActionSeparator,
+.urlbar-history-dropmarker {
+  display: none !important;
+}
+
+#pageActionSeparator {
+  height: 24px !important;
+}
+
+.urlbar-icon-wrapper {
+  background: 0 !important;
+}
+
+.urlbar-icon,
+#page-action-buttons>toolbarbutton,
+.searchbar-search-button,
+#tracking-protection-icon-box,
+#identity-icon-box,
+#identity-permission-box {
+  min-width: 36px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 5px 10px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  fill-opacity: 1 !important;
+  transition: background-color .2s var(--ease-basic) !important;
+  background: 0 !important;
+  background-color: transparent !important;
+}
+
+#identity-box {
+  margin: 0 !important;
+}
+
+#identity-icon-box {
+  min-width: 40px !important;
+  padding: 5px 12px !important;
+}
+
+#identity-permission-box {
+  min-width: 28px !important;
+  padding: 5px 0px !important;
+  padding-inline-end: 12px !important;
+  margin: 0 0 0 -8px !important;
+}
+
+#tracking-protection-icon-container {
+  background: 0 !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  order: 97 !important;
+}
+
+#tracking-protection-icon-box {
+  display: block !important;
+  width: 32px !important;
+}
+
+#tracking-protection-icon-box {
+  transition:
+    background-color .2s var(--ease-basic),
+    width .15s var(--ease-in),
+    opacity .15s var(--ease-basic),
+    visibility 0s .2s !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+}
+
+#urlbar:hover #tracking-protection-icon-box,
+#tracking-protection-icon-container[open] #tracking-protection-icon-box,
+#tracking-protection-icon-box[active] {
+  transition:
+    background-color .2s var(--ease-basic),
+    width .3s var(--ease-out),
+    opacity .3s var(--ease-basic) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: 36px !important;
+}
+
+#tracking-protection-icon {
+  display: block !important;
+}
+
+#tracking-protection-icon-animatable-box {
+  display: none !important;
+}
+
+#identity-box #notification-popup-box {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#page-action-buttons {
+  height: 26px !important;
+  display: flex !important;
+  order: 99 !important;
+}
+
+#urlbar[open] #page-action-buttons,
+#urlbar[open] #tracking-protection-icon-container {
+  display: none !important;
+}
+
+.urlbar-icon:hover:not([disabled]),
+#page-action-buttons>toolbarbutton:hover:not([disabled]),
+.searchbar-search-button:hover,
+#identity-icon-box:hover,
+#identity-permission-box:hover,
+#tracking-protection-icon-container:hover #tracking-protection-icon-box {
+  background-color: var(--toolbarbutton-hover-background) !important;
+}
+
+.urlbar-icon:hover:active:not([disabled]),
+.urlbar-icon[open],
+#page-action-buttons>toolbarbutton:hover:active:not([disabled]),
+.searchbar-search-button:hover:active,
+:-moz-any(#identity-icon-box, #identity-permission-box):-moz-any(:active, [open]),
+#identity-box[open]:not(.no-hover),
+#tracking-protection-icon-container[open] #tracking-protection-icon-box {
+  background-color: var(--toolbarbutton-active-background) !important;
+  transition-duration: 0 !important;
+}
+
+#contextual-feature-recommendation {
+  width: auto !important;
+}
+
+.urlbar-page-action {
+  padding: 0 !important;
+  background: none !important;
+  width: unset !important;
+}
+
+.urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine) {
+  transition:
+    background-color .2s var(--ease-basic),
+    margin .15s var(--ease-in),
+    opacity .15s var(--ease-basic),
+    visibility 0s 4s !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  margin-inline-start: -36px !important;
+}
+
+#urlbar:hover .urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine),
+.urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine):-moz-any(:hover, [open], [readeractive]),
+.urlbar-page-action:-moz-any(:hover, [open])~.urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine),
+#tracking-protection-icon-container[open]~#page-action-buttons .urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine) {
+  transition:
+    background-color .2s var(--ease-basic),
+    margin .3s var(--ease-out),
+    opacity .3s var(--ease-basic) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  margin-inline-start: 0 !important;
+}
+
+.urlbar-display {
+  color: inherit !important;
+  margin: 0 !important;
+}
+
+#pocket-button-box[animate]>#pocket-animatable-box {
+  margin-inline-start: 6px !important;
+}
+
+#star-button-animatable-box {
+  display: none !important;
+}
+
+#userContext-icons {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  padding-inline: 8px !important;
+  margin: 0 !important;
+  color: var(--identity-tab-color) !important;
+}
+
+#userContext-icons:not([hidden]) {
+  display: flex !important;
+}
+
+#userContext-icons>* {
+  z-index: 1 !important;
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+#userContext-label {
+  margin: 0 !important;
+}
+
+#userContext-label+#userContext-indicator {
+  margin-inline-start: 6px !important;
+}
+
+#userContext-icons::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  background: var(--identity-tab-color) !important;
+  border-radius: 1px !important;
+  opacity: .1 !important;
+}
+
+#cfr-label-container {
+  background: 0 !important;
+}
+
+#cfr-label {
+  display: none !important;
+}
+
+#cfr-button {
+  fill: currentColor !important;
+}
+
+#urlbar[open] #urlbar-go-button,
+#searchbar[open] #search-go-button,
+/* < 71 */
+#urlbar[open] .urlbar-go-button,
+#searchbar[open] .search-go-button {
+  height: 32px !important;
+}
+
+#urlbar-go-button,
+#search-go-button,
+/* < 71 */
+.urlbar-go-button,
+.search-go-button {
+  list-style-image: url(go.svg) !important;
+}
+
+.search-go-container {
+  display: flex !important;
+}
+
+#searchbar .textbox-input {
+  padding: 0 !important;
+}
+
+/* lock (secure) */
+#identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,
+#identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon {
+  list-style-image: url(chrome://browser/skin/motion/connection.svg) !important;
+}
+
+#identity-popup[connection^="secure"] .identity-popup-security-connection {
+  background-image: url(chrome://browser/skin/motion/connection.svg) !important;
+}
+
+/* info (not secure) */
+#identity-box[pageproxystate="valid"].notSecure #identity-icon,
+#identity-box[pageproxystate="valid"].mixedActiveContent #identity-icon,
+#identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon {
+  list-style-image: url(chrome://browser/skin/motion/info.svg) !important;
+}
+
+.identity-popup-security-connection {
+  background-image: url(chrome://browser/skin/motion/info.svg) !important;
+}
+
+/* warning (dangerous) */
+#identity-box[pageproxystate="valid"]:-moz-any(.notSecure, .weakCipher, .certUserOverridden, .certErrorPage, .insecureLoginForms, .mixedActiveContent)>#identity-icon {
+  list-style-image: url(chrome://browser/skin/motion/connection-warning.svg) !important;
+}
+
+/* local file */
+#identity-box[pageproxystate="valid"].localResource #identity-icon {
+  list-style-image: url(chrome://browser/skin/motion/document.svg) !important;
+}
+
+#identity-popup[connection="file"] .identity-popup-security-connection {
+  background-image: url(chrome://browser/skin/motion/document.svg) !important;
+}
+
+/* permissions */
+#permissions-granted-icon {
+  list-style-image: url(chrome://browser/skin/motion/permissions.svg) !important;
+}
+
+.geo-icon {
+  list-style-image: url(chrome://browser/skin/motion/geo.svg) !important;
+}
+
+.geo-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/geo-blocked.svg) !important;
+}
+
+.xr-icon {
+  list-style-image: url(chrome://browser/skin/motion/xr.svg) !important;
+}
+
+.xr-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/xr-blocked.svg) !important;
+}
+
+.popup-notification-icon[popupid="web-notifications"],
+.desktop-notification-icon {
+  list-style-image: url(chrome://browser/skin/motion/desktop-notification.svg) !important;
+}
+
+.desktop-notification-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/desktop-notification-blocked.svg) !important;
+}
+
+.camera-icon {
+  list-style-image: url(chrome://browser/skin/motion/camera.svg) !important;
+}
+
+.camera-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/camera-blocked.svg) !important;
+}
+
+.microphone-icon {
+  list-style-image: url(chrome://browser/skin/motion/microphone.svg) !important;
+}
+
+.microphone-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/microphone-blocked.svg) !important;
+}
+
+.screen-icon {
+  list-style-image: url(chrome://browser/skin/motion/screen.svg) !important;
+}
+
+.screen-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/screen-blocked.svg) !important;
+}
+
+.popup-notification-icon[popupid="persistent-storage"],
+.persistent-storage-icon {
+  list-style-image: url(chrome://browser/skin/motion/persistent-storage.svg) !important;
+}
+
+.persistent-storage-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/persistent-storage-blocked.svg) !important;
+}
+
+.popup-icon {
+  list-style-image: url(chrome://browser/skin/motion/popup.svg) !important;
+}
+
+.autoplay-media-icon {
+  list-style-image: url(chrome://browser/skin/motion/autoplay-media.svg) !important;
+}
+
+.autoplay-media-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/autoplay-media-blocked.svg) !important;
+}
+
+#canvas-notification-icon,
+.popup-notification-icon[popupid="canvas-permissions-prompt"],
+.canvas-icon {
+  list-style-image: url(chrome://browser/skin/motion/canvas.svg) !important;
+}
+
+.canvas-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/motion/canvas-blocked.svg) !important;
+}
+
+.midi-icon,
+.midi-sysex-icon,
+.popup-notification-icon[popupid="midi"],
+.popup-notification-icon[popupid="midi-sysex"] {
+  list-style-image: url(chrome://browser/skin/motion/midi.svg) !important;
+}
+
+.install-icon {
+  list-style-image: url(chrome://browser/skin/motion/addon-install.svg) !important;
+}
+
+.install-icon.blocked-permission-icon,
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-origin-blocked"] {
+  list-style-image: url(chrome://browser/skin/motion/addon-install-blocked.svg) !important;
+}
+
+#urlbar-input,
+#searchbar-input,
+.searchbar-textbox
+
+/* < 71 */
+  {
+  transform: translateY(var(--input-offset)) !important;
+  line-height: 1.745em !important;
+}
+
+#urlbar,
+#searchbar {
+  --input-offset: -1px;
+}

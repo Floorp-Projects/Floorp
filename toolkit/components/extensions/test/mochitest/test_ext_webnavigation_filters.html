@@ -86,12 +86,12 @@ add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
 
   let testFilterScenarios = [
     {
-      url: "http://example.net/browser",
+      url: "https://example.net/browser",
       filters: [
         // schemes
         {
-          okFilter: [{schemes: ["http"]}],
-          failFilter: [{schemes: ["https"]}],
+          okFilter: [{schemes: ["https"]}],
+          failFilter: [{schemes: ["http"]}],
         },
         // ports
         {
@@ -105,19 +105,19 @@ add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
         // multiple criteria in a single filter:
         // if one of the criteria is not verified, the event should not be received.
         {
-          okFilter: [{schemes: ["http"], ports: [80, 22, 443]}],
-          failFilter: [{schemes: ["http"], ports: [81, 82, 83]}],
+          okFilter: [{schemes: ["https"], ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["https"], ports: [81, 82, 83]}],
         },
         // multiple urlFilters on the same listener
         // if at least one of the criteria is verified, the event should be received.
         {
-          okFilter: [{schemes: ["https"]}, {ports: [80, 22, 443]}],
-          failFilter: [{schemes: ["https"]}, {ports: [81, 82, 83]}],
+          okFilter: [{schemes: ["http"]}, {ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["http"]}, {ports: [81, 82, 83]}],
         },
       ],
     },
     {
-      url: "http://example.net/browser?param=1#ref",
+      url: "https://example.net/browser?param=1#ref",
       filters: [
         // host: Equals, Contains, Prefix, Suffix
         {

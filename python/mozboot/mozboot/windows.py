@@ -58,8 +58,6 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     BROWSER_PACKAGES = ["mingw-w64-x86_64-nasm", "mingw-w64-i686-nsis"]
 
-    MOBILE_ANDROID_COMMON_PACKAGES = ["wget"]
-
     def __init__(self, **kwargs):
         if (
             "MOZ_WINDOWS_BOOTSTRAP" not in os.environ

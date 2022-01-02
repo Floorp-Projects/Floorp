@@ -122,6 +122,31 @@ AVD_DICT = {
         ],
         False,
     ),
+    "arm64": AvdInfo(
+        "Android arm64",
+        "mozemulator-arm64",
+        [
+            "-skip-adb-auth",
+            "-verbose",
+            "-show-kernel",
+            "-ranchu",
+            "-selinux",
+            "permissive",
+            "-memory",
+            "3072",
+            "-cores",
+            "4",
+            "-skin",
+            "800x1280",
+            "-gpu",
+            "on",
+            "-no-snapstorage",
+            "-no-snapshot",
+            "-prop",
+            "ro.test_harness=true",
+        ],
+        False,
+    ),
     "x86_64": AvdInfo(
         "Android x86_64",
         "mozemulator-x86_64",
@@ -258,6 +283,7 @@ def verify_android_device(
     verbose=False,
     app=None,
     device_serial=None,
+    aab=False,
 ):
     """
     Determine if any Android device is connected via adb.
@@ -326,7 +352,7 @@ def verify_android_device(
         #  - it prevents testing against other builds (downloaded apk)
         #  - installation may take a couple of minutes.
         if not app:
-            app = "org.mozilla.geckoview.test"
+            app = "org.mozilla.geckoview.test_runner"
         device = _get_device(build_obj.substs, device_serial)
         response = ""
         installed = device.is_app_installed(app)
@@ -342,15 +368,31 @@ def verify_android_device(
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview AndroidTest...")
-            sub = "geckoview:installWithGeckoBinariesDebugAndroidTest"
             build_obj._mach_context.commands.dispatch(
-                "gradle", build_obj._mach_context, args=[sub]
+                "android",
+                build_obj._mach_context,
+                subcommand="install-geckoview-test",
+                args=[],
+            )
+        elif app == "org.mozilla.geckoview.test_runner":
+            if installed:
+                device.uninstall_app(app)
+            _log_info("Installing geckoview test_runner...")
+            sub = (
+                "install-geckoview-test_runner-aab"
+                if aab
+                else "install-geckoview-test_runner"
+            )
+            build_obj._mach_context.commands.dispatch(
+                "android", build_obj._mach_context, subcommand=sub, args=[]
             )
         elif app == "org.mozilla.geckoview_example":
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview_example...")
-            sub = "install-geckoview_example"
+            sub = (
+                "install-geckoview_example-aab" if aab else "install-geckoview_example"
+            )
             build_obj._mach_context.commands.dispatch(
                 "android", build_obj._mach_context, subcommand=sub, args=[]
             )
@@ -528,7 +570,7 @@ def get_adb_path(build_obj):
 def grant_runtime_permissions(build_obj, app, device_serial=None):
     """
     Grant required runtime permissions to the specified app
-    (eg. org.mozilla.geckoview.test).
+    (eg. org.mozilla.geckoview.test_runner).
     """
     device = _get_device(build_obj.substs, device_serial)
     device.run_as_package = app
@@ -827,9 +869,10 @@ class AndroidEmulator(object):
         if requested in AVD_DICT.keys():
             return requested
         if self.substs:
-            if not self.substs["TARGET_CPU"].startswith("arm"):
-                return "x86_64"
-            else:
+            target_cpu = self.substs["TARGET_CPU"]
+            if target_cpu == "aarch64":
+                return "arm64"
+            elif target_cpu.startswith("arm"):
                 return "arm"
         return "x86_64"
 

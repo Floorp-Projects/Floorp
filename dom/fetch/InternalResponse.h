@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_InternalResponse_h
 #define mozilla_dom_InternalResponse_h
 
+#include "mozilla/dom/FetchTypes.h"
 #include "nsIInputStream.h"
 #include "nsICacheInfoChannel.h"
 #include "nsISupportsImpl.h"
@@ -16,65 +17,76 @@
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/ChannelInfo.h"
+#include "mozilla/dom/SafeRefPtr.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
 class AutoIPCStream;
 class PBackgroundChild;
+class PBackgroundParent;
 class PrincipalInfo;
 }  // namespace ipc
 
 namespace dom {
 
-class IPCInternalResponse;
+class ChildToParentInternalResponse;
 class InternalHeaders;
+class ParentToChildInternalResponse;
+class ParentToParentInternalResponse;
 
-class InternalResponse final {
+class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   friend class FetchDriver;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalResponse)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(InternalResponse)
 
   InternalResponse(
       uint16_t aStatus, const nsACString& aStatusText,
       RequestCredentials aCredentialsMode = RequestCredentials::Omit);
 
-  static RefPtr<InternalResponse> FromIPC(
-      const IPCInternalResponse& aIPCResponse);
+  static SafeRefPtr<InternalResponse> FromIPC(
+      const ParentToChildInternalResponse& aIPCResponse);
 
-  // Note: the AutoIPCStreams must outlive the IPCInternalResponse.
-  void ToIPC(
-      IPCInternalResponse* aIPCResponse,
+  static SafeRefPtr<InternalResponse> FromIPC(
+      const ParentToParentInternalResponse& aIPCResponse);
+
+  // Note: the AutoIPCStreams must outlive the ChildToParentInternalResponse.
+  void ToChildToParentInternalResponse(
+      ChildToParentInternalResponse* aIPCResponse,
       mozilla::ipc::PBackgroundChild* aManager,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
+
+  ParentToParentInternalResponse ToParentToParentInternalResponse();
 
   enum CloneType {
     eCloneInputStream,
     eDontCloneInputStream,
   };
 
-  already_AddRefed<InternalResponse> Clone(CloneType eCloneType);
+  SafeRefPtr<InternalResponse> Clone(CloneType aCloneType);
 
-  static already_AddRefed<InternalResponse> NetworkError(nsresult aRv) {
+  static SafeRefPtr<InternalResponse> NetworkError(nsresult aRv) {
     MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aRv));
-    RefPtr<InternalResponse> response = new InternalResponse(0, ""_ns);
+    SafeRefPtr<InternalResponse> response =
+        MakeSafeRefPtr<InternalResponse>(0, ""_ns);
     ErrorResult result;
     response->Headers()->SetGuard(HeadersGuardEnum::Immutable, result);
     MOZ_ASSERT(!result.Failed());
     response->mType = ResponseType::Error;
     response->mErrorCode = aRv;
-    return response.forget();
+    return response;
   }
 
-  already_AddRefed<InternalResponse> OpaqueResponse();
+  SafeRefPtr<InternalResponse> OpaqueResponse();
 
-  already_AddRefed<InternalResponse> OpaqueRedirectResponse();
+  SafeRefPtr<InternalResponse> OpaqueRedirectResponse();
 
-  already_AddRefed<InternalResponse> BasicResponse();
+  SafeRefPtr<InternalResponse> BasicResponse();
 
-  already_AddRefed<InternalResponse> CORSResponse();
+  SafeRefPtr<InternalResponse> CORSResponse();
 
   ResponseType Type() const {
     MOZ_ASSERT_IF(mType == ResponseType::Error, !mWrappedResponse);
@@ -327,18 +339,23 @@ class InternalResponse final {
 
   LoadTainting GetTainting() const;
 
-  already_AddRefed<InternalResponse> Unfiltered();
+  SafeRefPtr<InternalResponse> Unfiltered();
 
- private:
   ~InternalResponse();
 
+ private:
   explicit InternalResponse(const InternalResponse& aOther) = delete;
   InternalResponse& operator=(const InternalResponse&) = delete;
 
   // Returns an instance of InternalResponse which is a copy of this
   // InternalResponse, except headers, body and wrapped response (if any) which
   // are left uninitialized. Used for cloning and filtering.
-  already_AddRefed<InternalResponse> CreateIncompleteCopy();
+  SafeRefPtr<InternalResponse> CreateIncompleteCopy();
+
+  template <typename T>
+  static SafeRefPtr<InternalResponse> FromIPCTemplate(const T& aIPCResponse);
+
+  InternalResponseMetadata GetMetadata();
 
   ResponseType mType;
   // A response has an associated url list (a list of zero or more fetch URLs).
@@ -366,8 +383,8 @@ class InternalResponse final {
   bool mCloned;
 
  public:
-  static const int64_t UNKNOWN_BODY_SIZE = -1;
-  static const int64_t UNKNOWN_PADDING_SIZE = -1;
+  static constexpr int64_t UNKNOWN_BODY_SIZE = -1;
+  static constexpr int64_t UNKNOWN_PADDING_SIZE = -1;
 
  private:
   ChannelInfo mChannelInfo;
@@ -377,8 +394,12 @@ class InternalResponse final {
   // Cache, and SW interception should always serialize/access the underlying
   // unfiltered headers and when deserializing, create an InternalResponse
   // with the unfiltered headers followed by wrapping it.
-  RefPtr<InternalResponse> mWrappedResponse;
+  SafeRefPtr<InternalResponse> mWrappedResponse;
 };
+
+ParentToChildInternalResponse ToParentToChild(
+    const ParentToParentInternalResponse& aResponse,
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent);
 
 }  // namespace dom
 }  // namespace mozilla

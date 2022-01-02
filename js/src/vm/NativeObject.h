@@ -1704,6 +1704,9 @@ inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
   InitReservedSlot(obj, slot, ptr, sizeof(T), use);
 }
 
+bool AddSlotAndCallAddPropHook(JSContext* cx, HandleNativeObject obj,
+                               HandleValue v, HandleShape newShape);
+
 }  // namespace js
 
 #endif /* vm_NativeObject_h */

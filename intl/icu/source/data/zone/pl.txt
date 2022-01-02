@@ -1293,7 +1293,7 @@ pl{
             ec{"Wallis"}
         }
         "meta:Afghanistan"{
-            ls{"Afganistan"}
+            ls{"czas Afganistan"}
         }
         "meta:Africa_Central"{
             ls{"czas środkowoafrykański"}
@@ -1906,6 +1906,9 @@ pl{
             ld{"Jekaterynburg (czas letni)"}
             lg{"czas Jekaterynburg"}
             ls{"Jekaterynburg (czas standardowy)"}
+        }
+        "meta:Yukon"{
+            ls{"czas Jukon"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

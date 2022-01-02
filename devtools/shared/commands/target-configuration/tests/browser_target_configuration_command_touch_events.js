@@ -74,10 +74,10 @@ add_task(async function() {
   await otherTargetCommand.startListening();
   // Watch targets so we wait for server communication to settle (e.g. attach calls), as
   // this could cause intermittent failures.
-  await otherTargetCommand.watchTargets(
-    [otherTargetCommand.TYPES.FRAME],
-    () => {}
-  );
+  await otherTargetCommand.watchTargets({
+    types: [otherTargetCommand.TYPES.FRAME],
+    onAvailable: () => {},
+  });
 
   // Let's update the configuration with this commands instance to make sure we hit the TargetConfigurationActor
   await otherTargetConfigurationCommand.updateConfiguration({

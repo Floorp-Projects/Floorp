@@ -11,79 +11,105 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
+  ConsoleAPIListener:
+    "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm",
+  ConsoleListener:
+    "chrome://remote/content/shared/listeners/ConsoleListener.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
+  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
 class Log extends Module {
+  #consoleAPIListener;
+  #consoleMessageListener;
+
   constructor(messageHandler) {
     super(messageHandler);
 
-    this._onConsoleAPILogEvent = this._onConsoleAPILogEvent.bind(this);
+    // Create the console-api listener and listen on "message" events.
+    this.#consoleAPIListener = new ConsoleAPIListener(
+      this.messageHandler.innerWindowId
+    );
+    this.#consoleAPIListener.on("message", this.#onConsoleAPIMessage);
+
+    // Create the console listener and listen on error messages.
+    this.#consoleMessageListener = new ConsoleListener(
+      this.messageHandler.innerWindowId
+    );
+    this.#consoleMessageListener.on("error", this.#onJavaScriptError);
   }
 
   destroy() {
-    Services.obs.removeObserver(
-      this._onConsoleAPILogEvent,
-      "console-api-log-event"
-    );
+    this.#consoleAPIListener.off("message", this.#onConsoleAPIMessage);
+    this.#consoleAPIListener.destroy();
+    this.#consoleMessageListener.off("error", this.#onJavaScriptError);
+    this.#consoleMessageListener.destroy();
   }
 
   /**
-   * Commands
+   * Private methods
    */
-  _subscribeEvent(params) {
-    if (params.event === "log.entryAdded") {
-      Services.obs.addObserver(
-        this._onConsoleAPILogEvent,
-        "console-api-log-event"
-      );
+
+  _applySessionData(params) {
+    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
+    // class.
+    const { category, added = [], removed = [] } = params;
+    if (category === "event") {
+      for (const event of added) {
+        this._subscribeEvent(event);
+      }
+      for (const event of removed) {
+        this._unsubscribeEvent(event);
+      }
     }
   }
 
-  _onConsoleAPILogEvent(message) {
-    const browsingContext = BrowsingContext.get(this.messageHandler.contextId);
-    const innerWindowId =
-      browsingContext.window.windowGlobalChild?.innerWindowId;
-
-    const messageObject = message.wrappedJSObject;
-    if (innerWindowId !== messageObject.innerID) {
-      // If the message doesn't match the innerWindowId of the current context
-      // ignore it.
-      return;
+  _subscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.startListening();
+      this.#consoleMessageListener.startListening();
     }
+  }
+
+  _unsubscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.stopListening();
+      this.#consoleMessageListener.stopListening();
+    }
+  }
+
+  #onConsoleAPIMessage = (eventName, data = {}) => {
+    // `arguments` cannot be used as variable name in functions
+    // `level` corresponds to the console method used
+    const { arguments: messageArguments, level: method, timeStamp } = data;
 
     // Step numbers below refer to the specifications at
     //   https://w3c.github.io/webdriver-bidi/#event-log-entryAdded
 
-    // 1. The console method used to create the messageObject is stored in the
-    // `level` property. Translate it to a log.LogEntry level
-    const method = messageObject.level;
-    const level = this._getLogEntryLevelFromConsoleMethod(method);
+    // 1. Translate the console message method to a log.LogEntry level
+    const logEntrylevel = this._getLogEntryLevelFromConsoleMethod(method);
 
     // 2. Use the message's timeStamp or fallback on the current time value.
-    const timestamp = messageObject.timeStamp || Date.now();
+    const timestamp = timeStamp || Date.now();
 
     // 3. Start assembling the text representation of the message.
     let text = "";
 
     // 4. Formatters have already been applied at this points.
-    // messageObject.arguments corresponds to the "formatted args" from the
+    // message.arguments corresponds to the "formatted args" from the
     // specifications.
 
     // 5. Concatenate all formatted arguments in text
     // TODO: For m1 we only support string arguments, so we rely on the builtin
     // toString for each argument which will be available in message.arguments.
-    const args = messageObject.arguments || [];
+    const args = messageArguments || [];
     text += args.map(String).join(" ");
 
-    // 6. Start building the serialized args
+    // Step 6 and 7: Serialize each arg as remote value.
     const serializedArgs = [];
-
-    // 7. Add the string representation of all arguments to serializedArgs.
-    // TODO: again, for m1 we only support string arguments.
-    args.forEach(arg => serializedArgs.push(String(arg)));
+    for (const arg of args) {
+      serializedArgs.push(serialize(arg /*, null, true, new Set() */));
+    }
 
     // 8. TODO: set realm to the current realm id.
 
@@ -91,13 +117,13 @@ class Log extends Module {
 
     // 10. Build the ConsoleLogEntry
     const entry = {
-      level,
+      type: "console",
+      level: logEntrylevel,
       text,
       timestamp,
       method,
       realm: null,
       args: serializedArgs,
-      type: "console",
     };
 
     // TODO: steps 11. to 15. Those steps relate to:
@@ -109,7 +135,22 @@ class Log extends Module {
     //   to those events.
 
     this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
-  }
+  };
+
+  #onJavaScriptError = (eventName, data = {}) => {
+    const { level, message, timeStamp } = data;
+
+    const entry = {
+      type: "javascript",
+      level,
+      text: message,
+      timestamp: timeStamp || Date.now(),
+      // TODO: Bug 1731553
+      stackTrace: undefined,
+    };
+
+    this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
+  };
 
   _getLogEntryLevelFromConsoleMethod(method) {
     switch (method) {

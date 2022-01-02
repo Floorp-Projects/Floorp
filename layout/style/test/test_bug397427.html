@@ -40,17 +40,17 @@ addLoadEvent(function() {
   is(document.defaultView.getComputedStyle($("one")).color,
      "rgb(0, 128, 0)", "Redirect 1 did not work");
   is(document.defaultView.getComputedStyle($("one")).backgroundImage,
-     "url(\"http://example.org/tests/layout/style/test/post-redirect-1.css#\")",
+     "url(\"http://example.org/tests/layout/style/test/post-redirect-1.css?1\")",
       "Redirect 1 did not get right base URI");
   is(document.defaultView.getComputedStyle($("two")).color,
      "rgb(0, 128, 0)", "Redirect 2 did not work");
   is(document.defaultView.getComputedStyle($("two")).backgroundImage,
-     "url(\"http://example.org/tests/layout/style/test/post-redirect-2.css#\")",
+     "url(\"http://example.org/tests/layout/style/test/post-redirect-2.css?1\")",
       "Redirect 2 did not get right base URI");
   is(document.defaultView.getComputedStyle($("three")).color,
      "rgb(0, 128, 0)", "Redirect 3 did not work");
   is(document.defaultView.getComputedStyle($("three")).backgroundImage,
-     "url(\"http://example.org/tests/layout/style/test/post-redirect-3.css#\")",
+     "url(\"http://example.org/tests/layout/style/test/post-redirect-3.css?1\")",
       "Redirect 3 did not get right base URI");
 
   var ruleList = $("a").sheet.cssRules;

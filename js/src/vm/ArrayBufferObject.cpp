@@ -1103,7 +1103,7 @@ bool ArrayBufferObject::wasmGrowToPagesInPlace(
     return false;
   }
   MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
-             newPages.byteLength() < ArrayBufferObject::maxBufferByteLength());
+             newPages.byteLength() <= ArrayBufferObject::maxBufferByteLength());
 
   // We have checked against the clamped maximum and so we know we can convert
   // to byte lengths now.
@@ -1741,7 +1741,7 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
       JSObject* buffer = MaybeForwarded(nurseryKeys[i]);
       Map::Ptr p = map.lookup(buffer);
       if (p &&
-          !Map::SweepPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
+          !Map::EntryGCPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
         map.remove(p);
       }
     }
@@ -1785,7 +1785,7 @@ JS_PUBLIC_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
   return aobj->dataPointer();
 }
 
-static ArrayBufferObject* UnwrapArrayBuffer(
+static ArrayBufferObject* UnwrapOrReportArrayBuffer(
     JSContext* cx, JS::Handle<JSObject*> maybeArrayBuffer) {
   JSObject* obj = CheckedUnwrapStatic(maybeArrayBuffer);
   if (!obj) {
@@ -1807,7 +1807,8 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
   if (!unwrappedBuffer) {
     return false;
   }
@@ -1865,7 +1866,7 @@ JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
   MOZ_ASSERT(arrayBuffer != nullptr);
 
   Rooted<ArrayBufferObject*> unwrappedSource(
-      cx, UnwrapArrayBuffer(cx, arrayBuffer));
+      cx, UnwrapOrReportArrayBuffer(cx, arrayBuffer));
   if (!unwrappedSource) {
     return nullptr;
   }
@@ -1925,7 +1926,8 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
   if (!unwrappedBuffer) {
     return nullptr;
   }
@@ -2040,4 +2042,27 @@ JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
   }
   auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
   return fromObject(ab);
+}
+
+void JS::ArrayBufferCopyData(JSContext* cx, Handle<JSObject*> toBlock,
+                             size_t toIndex, Handle<JSObject*> fromBlock,
+                             size_t fromIndex, size_t count) {
+  MOZ_ASSERT(toBlock->is<ArrayBufferObjectMaybeShared>());
+  MOZ_ASSERT(fromBlock->is<ArrayBufferObjectMaybeShared>());
+
+  // If both are array bufferrs, can use ArrayBufferCopyData
+  if (toBlock->is<ArrayBufferObject>() && fromBlock->is<ArrayBufferObject>()) {
+    Rooted<ArrayBufferObject*> toArray(cx, &toBlock->as<ArrayBufferObject>());
+    Rooted<ArrayBufferObject*> fromArray(cx,
+                                         &fromBlock->as<ArrayBufferObject>());
+    ArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex, count);
+    return;
+  }
+
+  Rooted<ArrayBufferObjectMaybeShared*> toArray(
+      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+  Rooted<ArrayBufferObjectMaybeShared*> fromArray(
+      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+  SharedArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex,
+                                    count);
 }

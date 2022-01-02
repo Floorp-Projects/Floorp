@@ -648,12 +648,6 @@ uint64_t Navigator::HardwareConcurrency() {
   return rts->ClampedHardwareConcurrency();
 }
 
-void Navigator::RefreshMIMEArray() {
-  if (mMimeTypes) {
-    mMimeTypes->Refresh();
-  }
-}
-
 namespace {
 
 class VibrateWindowListener : public nsIDOMEventListener {
@@ -1417,6 +1411,8 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
     return nullptr;
   }
 
+  // TODO: Process file member, which we don't currently support.
+
   // If data's url member is present, try to resolve it...
   nsCOMPtr<nsIURI> url;
   if (aData.mUrl.WasPassed()) {
@@ -1474,7 +1470,31 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
   return mSharePromise;
 }
 
+//*****************************************************************************
+//    Navigator::CanShare() - Web Share API
+//*****************************************************************************
+bool Navigator::CanShare(const ShareData& aData) {
+  if (!mWindow || !mWindow->IsFullyActive()) {
+    return false;
+  }
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(mWindow->GetExtantDoc(),
+                                            u"web-share"_ns)) {
+    return false;
+  }
+
+  IgnoredErrorResult rv;
+  ValidateShareData(aData, rv);
+  return !rv.Failed();
+}
+
 void Navigator::ValidateShareData(const ShareData& aData, ErrorResult& aRv) {
+  // TODO: remove this check when we support files share.
+  if (aData.mFiles.WasPassed() && !aData.mFiles.Value().IsEmpty()) {
+    aRv.ThrowTypeError("Passing files is currently not supported.");
+    return;
+  }
+
   bool titleTextOrUrlPassed = aData.mTitle.WasPassed() ||
                               aData.mText.WasPassed() || aData.mUrl.WasPassed();
 
@@ -1521,8 +1541,7 @@ already_AddRefed<LegacyMozTCPSocket> Navigator::MozTCPSocket() {
 
 void Navigator::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads,
                             ErrorResult& aRv) {
-  if (!mWindow || !mWindow->GetExtantDoc()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (!mWindow || !mWindow->IsFullyActive()) {
     return;
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());

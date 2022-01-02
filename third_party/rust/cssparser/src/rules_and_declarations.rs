@@ -316,7 +316,7 @@ where
     ///
     /// This differs in that `<!--` and `-->` tokens
     /// should only be ignored at the stylesheet top-level.
-    /// (This is to deal with legacy work arounds for `<style>` HTML element parsing.)
+    /// (This is to deal with legacy workarounds for `<style>` HTML element parsing.)
     pub fn new_for_nested_rule(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
         RuleListParser {
             input: input,

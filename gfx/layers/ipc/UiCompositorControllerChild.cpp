@@ -164,6 +164,10 @@ void UiCompositorControllerChild::Destroy() {
     return;
   }
 
+  // Clear the process token so that we don't notify the GPUProcessManager
+  // about an abnormal shutdown, thereby tearing down the GPU process.
+  mProcessToken = 0;
+
   if (mWidget) {
     // Dispatch mWidget to main thread to prevent it from being destructed by
     // the ui thread.
@@ -317,6 +321,38 @@ void UiCompositorControllerChild::SendCachedValues() {
     mLayerUpdateEnabled.reset();
   }
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+void UiCompositorControllerChild::SetCompositorSurfaceManager(
+    java::CompositorSurfaceManager::Param aCompositorSurfaceManager) {
+  MOZ_ASSERT(!mCompositorSurfaceManager,
+             "SetCompositorSurfaceManager must only be called once.");
+  MOZ_ASSERT(mProcessToken != 0,
+             "SetCompositorSurfaceManager must only be called for GPU process "
+             "controllers.");
+  mCompositorSurfaceManager = aCompositorSurfaceManager;
+};
+
+void UiCompositorControllerChild::OnCompositorSurfaceChanged(
+    int32_t aWidgetId, java::sdk::Surface::Param aSurface) {
+  // If mCompositorSurfaceManager is not set then there is no GPU process and
+  // we do not need to do anything.
+  if (mCompositorSurfaceManager == nullptr) {
+    return;
+  }
+
+  nsresult result =
+      mCompositorSurfaceManager->OnSurfaceChanged(aWidgetId, aSurface);
+
+  // If our remote binder has died then notify the GPU process manager.
+  if (NS_FAILED(result)) {
+    if (mProcessToken) {
+      gfx::GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
+      mProcessToken = 0;
+    }
+  }
+}
+#endif
 
 }  // namespace layers
 }  // namespace mozilla

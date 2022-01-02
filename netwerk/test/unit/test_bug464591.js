@@ -47,9 +47,7 @@ function stringToURL(str) {
 
 function run_test() {
   // Make sure our prefs are set such that this test actually means something
-  let prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
+  let prefs = Services.prefs;
   for (let pref of prefData) {
     prefs.setBoolPref(pref.name, pref.newVal);
   }

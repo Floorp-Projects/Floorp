@@ -47,9 +47,6 @@ interface nsIWindowProvider : nsISupports
    *        window if this provider returns null.  See nsIWebBrowserChrome for
    *        the possible values of this field.
    *
-   * @param aWidthSpecified Whether the attempt to create a window is trying
-   *        to specify the width for the new window.
-   *
    * @param aURI The URI to be loaded in the new window (may be NULL).  The
    *        nsIWindowProvider implementation must not load this URI into the
    *        window it returns.  This URI is provided solely to help the
@@ -71,6 +68,10 @@ interface nsIWindowProvider : nsISupports
    *        be empty.  The nsIWindowProvider implementation is allowed to apply
    *        the feature string to the window it returns in any way it sees fit.
    *        See the nsIWindowWatcher interface for details on feature strings.
+   *
+   * @param aIsPopupRequested  True if this window is opened by window.open
+   *        with requesting a popup window.  This doesn't necessarily mean
+   *        whether the actual window is shown as minimal popup or not.
    *
    * @param aLoadState Specify setup information of the load in the new window
    *
@@ -97,12 +98,12 @@ interface nsIWindowProvider : nsISupports
   BrowsingContext provideWindow(in nsIOpenWindowInfo aOpenWindowInfo,
                                 in unsigned long aChromeFlags,
                                 in boolean aCalledFromJS,
-                                in boolean aWidthSpecified,
                                 in nsIURI aURI,
                                 in AString aName,
                                 in AUTF8String aFeatures,
                                 in boolean aForceNoOpener,
                                 in boolean aForceNoReferrer,
+                                in boolean aIsPopupRequested,
                                 in nsDocShellLoadStatePtr aLoadState,
                                 out boolean aWindowIsNew);
 };

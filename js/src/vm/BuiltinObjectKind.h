@@ -11,13 +11,15 @@
 
 #include "jstypes.h"
 
-#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
-
 class JS_PUBLIC_API JSAtom;
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
 
 namespace js {
+
+namespace frontend {
+class TaggedParserAtomIndex;
+}
 
 class GlobalObject;
 
@@ -33,6 +35,7 @@ enum class BuiltinObjectKind : uint8_t {
   Iterator,
   Promise,
   RegExp,
+  Set,
   SharedArrayBuffer,
   Symbol,
 

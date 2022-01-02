@@ -16,10 +16,12 @@
 //            that compile wasm bytecode
 //  instanceBox: if present, an object with a `value` property that will
 //               receive the constructed instance
-//  no_prefix: if true, do not add a prefix string (normally the end of the
-//             prologue)
-//  no_suffix: if true, do not add a suffix string (normally the start of the
-//             epilogue)
+//  no_prefix: by default, the required pattern must be immediately preceded
+//             by `x64_prefix`, and this is checked.  Setting this to true skips
+//             the check.
+//  no_suffix: by default, the required pattern must be immediately followed
+//             by `x64_suffix`, and this is checked.  Setting this to true skips
+//             the check.
 //  memory: if present, add a memory of length given by this property
 //  log: for debugging -- print the disassembly, then the preprocessed pattern
 

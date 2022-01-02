@@ -16,7 +16,7 @@ const text =
   new Date();
 
 const id = "select-me";
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 <body>
   <div>
     <h1>Testing copy command</h1>

@@ -462,9 +462,6 @@ class PageAction {
     this.window.document
       .getElementById("contextual-feature-recommendation-notification")
       .setAttribute("data-notification-bucket", content.bucket_id);
-    let notification = this.window.document.getElementById(
-      "notification-popup"
-    );
 
     let primaryBtnString = await this.getStrings(primary.label);
     let primaryActionCallback = () => {
@@ -508,29 +505,6 @@ class PageAction {
       },
     ];
 
-    let style = this.window.document.createElement("style");
-    style.textContent = `
-      .cfr-notification-milestone .panel-arrow {
-        fill: #0250BB !important;
-      }
-    `;
-    style.classList.add("milestone-style");
-
-    let arrow;
-    let manageClass = event => {
-      if (event === "dismissed" || event === "removed") {
-        style = notification.shadowRoot.querySelector(".milestone-style");
-        if (style) {
-          notification.shadowRoot.removeChild(style);
-        }
-        arrow.classList.remove("cfr-notification-milestone");
-      } else if (event === "showing") {
-        notification.shadowRoot.appendChild(style);
-        arrow = notification.shadowRoot.querySelector(".panel-arrowcontainer");
-        arrow.classList.add("cfr-notification-milestone");
-      }
-    };
-
     // Actually show the notification
     this.currentNotification = this.window.PopupNotifications.show(
       browser,
@@ -541,7 +515,6 @@ class PageAction {
       secondaryActions,
       {
         hideClose: true,
-        eventCallback: manageClass,
         persistWhileVisible: true,
       }
     );

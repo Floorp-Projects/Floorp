@@ -2,24 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[macro_use]
-extern crate log;
-extern crate once_cell;
-extern crate regex;
-extern crate tempfile;
-extern crate walkdir;
-
 pub mod adb;
 pub mod shell;
 
 #[cfg(test)]
 pub mod test;
 
+use log::{debug, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
-use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::iter::FromIterator;
@@ -28,6 +21,7 @@ use std::num::{ParseIntError, TryFromIntError};
 use std::path::{Component, Path};
 use std::str::{FromStr, Utf8Error};
 use std::time::{Duration, SystemTime};
+use thiserror::Error;
 pub use unix_path::{Path as UnixPath, PathBuf as UnixPathBuf};
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -73,67 +67,28 @@ pub enum AndroidStorage {
     Sdcard,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum DeviceError {
+    #[error("{0}")]
     Adb(String),
-    FromInt(TryFromIntError),
+    #[error(transparent)]
+    FromInt(#[from] TryFromIntError),
+    #[error("Invalid storage")]
     InvalidStorage,
-    Io(io::Error),
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    #[error("Missing package")]
     MissingPackage,
+    #[error("Multiple Android devices online")]
     MultipleDevices,
-    ParseInt(ParseIntError),
+    #[error(transparent)]
+    ParseInt(#[from] ParseIntError),
+    #[error("Unknown Android device with serial '{0}'")]
     UnknownDevice(String),
-    Utf8(Utf8Error),
-    WalkDir(walkdir::Error),
-}
-
-impl fmt::Display for DeviceError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            DeviceError::Adb(ref message) => message.fmt(f),
-            DeviceError::FromInt(ref int) => int.fmt(f),
-            DeviceError::InvalidStorage => write!(f, "Invalid storage"),
-            DeviceError::Io(ref error) => error.fmt(f),
-            DeviceError::MissingPackage => write!(f, "Missing package"),
-            DeviceError::MultipleDevices => write!(f, "Multiple Android devices online"),
-            DeviceError::ParseInt(ref error) => error.fmt(f),
-            DeviceError::UnknownDevice(ref serial) => {
-                write!(f, "Unknown Android device with serial '{}'", serial)
-            }
-            DeviceError::Utf8(ref error) => error.fmt(f),
-            DeviceError::WalkDir(ref error) => error.fmt(f),
-        }
-    }
-}
-
-impl From<io::Error> for DeviceError {
-    fn from(value: io::Error) -> DeviceError {
-        DeviceError::Io(value)
-    }
-}
-
-impl From<ParseIntError> for DeviceError {
-    fn from(value: ParseIntError) -> DeviceError {
-        DeviceError::ParseInt(value)
-    }
-}
-
-impl From<TryFromIntError> for DeviceError {
-    fn from(value: TryFromIntError) -> DeviceError {
-        DeviceError::FromInt(value)
-    }
-}
-
-impl From<Utf8Error> for DeviceError {
-    fn from(value: Utf8Error) -> DeviceError {
-        DeviceError::Utf8(value)
-    }
-}
-
-impl From<walkdir::Error> for DeviceError {
-    fn from(value: walkdir::Error) -> DeviceError {
-        DeviceError::WalkDir(value)
-    }
+    #[error(transparent)]
+    Utf8(#[from] Utf8Error),
+    #[error(transparent)]
+    WalkDir(#[from] walkdir::Error),
 }
 
 fn encode_message(payload: &str) -> Result<String> {
@@ -207,7 +162,7 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
 
     stream.read_exact(&mut bytes[0..4])?;
 
-    if &bytes[0..4] != SyncCommand::Okay.code() {
+    if !bytes.starts_with(SyncCommand::Okay.code()) {
         let n = bytes.len().min(read_length(stream)?);
         stream.read_exact(&mut bytes[0..n])?;
 
@@ -221,13 +176,13 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
     if has_output {
         stream.read_to_end(&mut response)?;
 
-        if response.len() >= 4 && &response[0..4] == SyncCommand::Okay.code() {
+        if response.starts_with(SyncCommand::Okay.code()) {
             // Sometimes the server produces OKAYOKAY.  Sometimes there is a transport OKAY and
             // then the underlying command OKAY.  This is straight from `chromedriver`.
             response = response.split_off(4);
         }
 
-        if response.len() >= 4 && &response[0..4] == SyncCommand::Fail.code() {
+        if response.starts_with(SyncCommand::Fail.code()) {
             // The server may even produce OKAYFAIL, which means the underlying
             // command failed. First split-off the `FAIL` and length of the message.
             response = response.split_off(8);
@@ -243,11 +198,12 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
                 let slice: &mut &[u8] = &mut &*response;
 
                 let n = read_length(slice)?;
-                warn!(
-                    "adb server response contained hexstring length {} and message length was {} \
-                     and message was {:?}",
-                    n,
-                    message.len(),
+                if n != message.len() {
+                    warn!("adb server response contained hexstring len {} but remaining message length is {}", n, message.len());
+                }
+
+                debug!(
+                    "adb server response was {:?}",
                     std::str::from_utf8(&message)?
                 );
 
@@ -796,7 +752,7 @@ impl Device {
         // Status.
         stream.read_exact(&mut buf[0..4])?;
 
-        if &buf[0..4] == SyncCommand::Okay.code() {
+        if buf.starts_with(SyncCommand::Okay.code()) {
             if enable_run_as {
                 // Use cp -a to preserve the permissions set by push.
                 let result = self.execute_host_shell_command_as(
@@ -809,7 +765,7 @@ impl Device {
                 result?;
             }
             Ok(())
-        } else if &buf[0..4] == SyncCommand::Fail.code() {
+        } else if buf.starts_with(SyncCommand::Fail.code()) {
             if enable_run_as && self.remove(dest1).is_err() {
                 debug!("Failed to remove {}", dest1.display());
             }

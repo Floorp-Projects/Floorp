@@ -1097,8 +1097,8 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     return NS_OK;
   }
 
-  EventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
-  nsCOMPtr<nsINode> eventTargetNode = do_QueryInterface(target);
+  nsCOMPtr<nsINode> eventTargetNode =
+      nsINode::FromEventTargetOrNull(aFocusEvent->GetOriginalDOMEventTarget());
   if (NS_WARN_IF(!eventTargetNode)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1180,8 +1180,7 @@ nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
     //       is in a shadow DOM tree whose host is in design mode.
     if (mEditorBase->IsHTMLEditor() &&
         mEditorBase->AsHTMLEditor()->IsInDesignMode()) {
-      if (nsCOMPtr<Element> targetElement =
-              do_QueryInterface(aBlurEvent->mTarget)) {
+      if (Element::FromEventTargetOrNull(aBlurEvent->mTarget)) {
         return NS_OK;
       }
     }

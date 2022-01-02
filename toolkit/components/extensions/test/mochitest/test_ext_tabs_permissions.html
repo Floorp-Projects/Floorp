@@ -13,9 +13,9 @@
 "use strict";
 
 const URL1 =
-  "http://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page1.html";
+  "https://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page1.html";
 const URL2 =
-  "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page2.html";
+  "https://example.net/tests/toolkit/components/extensions/test/mochitest/file_tabs_permission_page2.html";
 
 const helperExtensionDef = {
   manifest: {
@@ -184,7 +184,7 @@ async function test_query(testCases, permissions) {
   await helperExtension.unload();
 }
 
-// http://www.example.com host permission
+// https://www.example.com host permission
 add_task(function query_with_host_permission_url1() {
   return test_query(
     [
@@ -217,7 +217,7 @@ add_task(function query_with_host_permission_url1() {
   );
 });
 
-// http://example.net host permission
+// https://example.net host permission
 add_task(function query_with_host_permission_url2() {
   return test_query(
     [
@@ -504,11 +504,11 @@ async function test_restricted_properties(
   await helperExtension.unload();
 }
 
-// http://www.example.com host permission
+// https://www.example.com host permission
 add_task(function has_restricted_properties_with_host_permission_url1() {
   return test_restricted_properties(["*://www.example.com/*"], true);
 });
-// http://example.net host permission
+// https://example.net host permission
 add_task(function has_restricted_properties_with_host_permission_url2() {
   return test_restricted_properties(["*://example.net/*"], false);
 });
@@ -630,7 +630,7 @@ async function test_onUpdateFilter(testCases, permissions) {
   await helperExtension.unload();
 }
 
-// http://mozilla.org host permission
+// https://mozilla.org host permission
 add_task(function onUpdateFilter_with_host_permission_url3() {
   return test_onUpdateFilter(
     [
@@ -659,7 +659,7 @@ add_task(function onUpdateFilter_with_host_permission_url3() {
   );
 });
 
-// http://example.net host permission
+// https://example.net host permission
 add_task(function onUpdateFilter_with_host_permission_url2() {
   return test_onUpdateFilter(
     [

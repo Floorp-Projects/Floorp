@@ -11,8 +11,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616841
   <label value="Mozilla Bug 616841"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-
-    const FRAME_SCRIPT = 
+    /* global messageManager, sendAsyncMessage */
+    const FRAME_SCRIPT =
 "data:,addMessageListener(\n"+
 "  'cmp',\n"+
 "  function (m) {\n"+

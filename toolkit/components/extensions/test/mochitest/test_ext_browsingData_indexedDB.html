@@ -16,7 +16,7 @@
 
 add_task(async function testIndexedDB() {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.userContext.enabled", true], ["dom.security.https_first", false]],
+    set: [["privacy.userContext.enabled", true]],
   });
 
   async function background() {
@@ -37,14 +37,14 @@ add_task(async function testIndexedDB() {
     });
 
     // Create two tabs.
-    let tab = await browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
+    let tab = await browser.tabs.create({ url: `https://example.org${PAGE}` });
     tabs.push(tab.id);
 
-    tab = await browser.tabs.create({ url: `http://example.com${PAGE}` });
+    tab = await browser.tabs.create({ url: `https://example.com${PAGE}` });
     tabs.push(tab.id);
 
     // Create tab with cookieStoreId "firefox-container-1"
-    tab = await browser.tabs.create({ url: `http://example.net${PAGE}`, cookieStoreId: 'firefox-container-1' });
+    tab = await browser.tabs.create({ url: `https://example.net${PAGE}`, cookieStoreId: 'firefox-container-1' });
     tabs.push(tab.id);
   }
 
@@ -66,9 +66,9 @@ add_task(async function testIndexedDB() {
       content_scripts: [
         {
           matches: [
-            "http://mochi.test/*/file_indexedDB.html",
-            "http://example.com/*/file_indexedDB.html",
-            "http://example.net/*/file_indexedDB.html",
+            "https://example.org/*/file_indexedDB.html",
+            "https://example.com/*/file_indexedDB.html",
+            "https://example.net/*/file_indexedDB.html",
           ],
           js: ["script.js"],
           run_at: "document_start",
@@ -102,9 +102,9 @@ add_task(async function testIndexedDB() {
         continue;
       }
       if (
-        result[i].origin.startsWith("http://mochi.test") ||
-        result[i].origin.startsWith("http://example.com") ||
-        result[i].origin.startsWith("http://example.net")
+        result[i].origin.startsWith("https://example.org") ||
+        result[i].origin.startsWith("https://example.com") ||
+        result[i].origin.startsWith("https://example.net")
       ) {
         origins.push(result[i].origin);
       }
@@ -128,8 +128,8 @@ add_task(async function testIndexedDB() {
 
   origins = await getOrigins();
   is(origins.length, 2, "IndexedDB data only for only two domains left");
-  ok(origins[0].startsWith("http://example.net"), "example.net not deleted");
-  ok(origins[1].startsWith("http://mochi.test"), "mochi.test not deleted");
+  ok(origins[0].startsWith("https://example.net"), "example.net not deleted");
+  ok(origins[1].startsWith("https://example.org"), "example.org not deleted");
 
   // TODO: Bug 1643740
   if (AppConstants.platform != "android") {
@@ -139,7 +139,7 @@ add_task(async function testIndexedDB() {
 
     origins = await getOrigins();
     is(origins.length, 1, "IndexedDB data only for only one domain");
-    ok(origins[0].startsWith("http://mochi.test"), "mochi.test not deleted");
+    ok(origins[0].startsWith("https://example.org"), "example.org not deleted");
   }
 
   // Delete all

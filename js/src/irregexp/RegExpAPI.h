@@ -11,13 +11,35 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Range.h"
 
-#include "frontend/TokenStream.h"
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jstypes.h"
+
+#include "gc/Rooting.h"
 #include "irregexp/RegExpTypes.h"
-#include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
 
+struct JS_PUBLIC_API JSContext;
+
+namespace JS {
+class RegExpFlags;
+}
+
+namespace v8::internal {
+class RegExpStack;
+}
+
 namespace js {
+
+class VectorMatchPairs;
+
+namespace frontend {
+class TokenStreamAnyChars;
+}
+
 namespace irregexp {
 
 Isolate* CreateIsolate(JSContext* cx);

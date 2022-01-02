@@ -1,0 +1,349 @@
+/* Popup Icons */
+
+/* Picture-In-Picture Icons */
+#unpip {
+  background-image: url(chrome://browser/skin/motion/open.svg) !important;
+}
+
+#controls:not(.playing) #playpause {
+  background-image: url(chrome://browser/skin/motion/play.svg) !important;
+}
+
+#controls.playing #playpause {
+  background-image: url(chrome://browser/skin/motion/pause.svg) !important;
+}
+
+#controls:not(.muted) #audio {
+  background-image: url(chrome://browser/skin/motion/audio.svg#big) !important;
+}
+
+#controls.muted #audio {
+  background-image: url(chrome://browser/skin/motion/audio-mute.svg#big) !important;
+}
+
+#close {
+  background-image: url(chrome://browser/skin/motion/close.svg) !important;
+}
+
+/* Changing Existing Icons */
+
+#allTabsMenu-undoCloseTab {
+  list-style-image: url(chrome://browser/skin/motion/undo.svg) !important;
+}
+
+#allTabsMenu-searchTabs {
+  list-style-image: url(chrome://browser/skin/motion/search.svg) !important;
+}
+
+#context-media-loop:not([checked="true"]) {
+  list-style-image: url(chrome://browser/skin/motion/loop.svg) !important;
+}
+
+#context-video-pictureinpicture:not([checked="true"]) {
+  list-style-image: url(chrome://browser/skin/motion/picture-in-picture.svg#big) !important;
+}
+
+/* Displaying Custom Icons */
+/* menupopup:not(#ContentSelectDropdown > menupopup) :is(menuitem:not(.menuitem-iconic, [type], menu menuitem, .in-menulist menuitem), menu:not(.menu-iconic, menu menu)) {
+	padding-inline-start: 40px !important;
+	background-size: 16px !important;
+	background-repeat: no-repeat !important;
+	background-position: 12px center !important;
+	-moz-context-properties: fill, fill-opacity !important;
+	fill: currentColor !important;
+} */
+
+:not(menu, #ContentSelectDropdown)>menupopup>menuitem:not(.menuitem-iconic, [type="checkbox"], .in-menulist, .in-menulist menuitem, .unified-nav-current),
+:not(menu, #ContentSelectDropdown)>menupopup>menu:not(.menu-iconic, [type="checkbox"], .in-menulist, .in-menulist menu, .unified-nav-current) {
+  padding-inline-start: 40px !important;
+  background-size: 16px !important;
+  background-repeat: no-repeat !important;
+  background-position: 12px center !important;
+  -moz-context-properties: fill, fill-opacity !important;
+  fill: currentColor !important;
+  background-image: var(--menuitem-image) !important;
+}
+
+#context-inspect {
+  --menuitem-image: url(chrome://browser/skin/motion/inspect.svg) !important;
+}
+
+#context-savepage,
+#context-saveimage,
+#context-savevideo,
+#context-saveaudio {
+  --menuitem-image: url(chrome://browser/skin/motion/savefile.svg) !important;
+}
+
+#context-viewbgimage,
+#context-viewimage {
+  --menuitem-image: url(chrome://browser/skin/motion/image.svg) !important;
+}
+
+#context-viewinfo,
+#context-viewimageinfo,
+#context-viewimagedesc {
+  --menuitem-image: url(chrome://browser/skin/motion/info.svg) !important;
+}
+
+#context-viewsource,
+#context-viewpartialsource-selection {
+  --menuitem-image: url(chrome://browser/skin/motion/source.svg) !important;
+}
+
+#context-inspect-a11y {
+  --menuitem-image: url(chrome://browser/skin/motion/accessibility.svg) !important;
+}
+
+#context-undo,
+.textbox-contextmenu menuitem[cmd*="undo"] {
+  --menuitem-image: url(chrome://browser/skin/motion/undo.svg) !important;
+}
+
+#context-cut,
+.textbox-contextmenu menuitem[cmd*="cut"] {
+  --menuitem-image: url(chrome://browser/skin/motion/cut.svg) !important;
+}
+
+#context-copy,
+#context-copylink,
+#context-copyimage,
+.textbox-contextmenu menuitem[cmd*="copy"],
+#context-copyvideourl,
+#context-copyaudiourl {
+  --menuitem-image: url(chrome://browser/skin/motion/copy.svg) !important;
+}
+
+#context-paste,
+.textbox-contextmenu menuitem[cmd*="paste"],
+#placesContext_paste {
+  --menuitem-image: url(chrome://browser/skin/motion/paste.svg) !important;
+}
+
+#paste-and-go {
+  --menuitem-image: url(chrome://browser/skin/motion/paste.svg#url) !important;
+}
+
+#context-delete,
+.textbox-contextmenu menuitem[cmd*="delete"],
+.customize-context-removeExtension,
+.customize-context-removeFromToolbar {
+  --menuitem-image: url(chrome://browser/skin/motion/delete.svg) !important;
+}
+
+#context-searchselect {
+  --menuitem-image: url(chrome://browser/skin/motion/search.svg) !important;
+}
+
+#context-print-selection {
+  --menuitem-image: url(chrome://browser/skin/motion/print.svg) !important;
+}
+
+#context-openlinkintab,
+#context_openANewTab,
+#toolbar-context-openANewTab {
+  --menuitem-image: url(chrome://browser/skin/motion/new-tab-image.svg) !important;
+}
+
+#context-openlinkinusercontext-menu,
+#context_reopenInContainer {
+  --menuitem-image: url(chrome://browser/skin/motion/new-container-tab.svg) !important;
+}
+
+#context-openlink {
+  --menuitem-image: url(chrome://browser/skin/motion/new-window.svg) !important;
+}
+
+#context-openlinkprivate {
+  --menuitem-image: url(chrome://browser/skin/motion/new-private-window.svg) !important;
+}
+
+#context-bookmarklink {
+  --menuitem-image: url(chrome://browser/skin/motion/star.svg) !important;
+}
+
+#context-savelink {
+  --menuitem-image: url(chrome://browser/skin/motion/hyperlink.svg#save) !important;
+}
+
+#context-savelinktopocket,
+#context-pocket {
+  --menuitem-image: url(chrome://browser/skin/motion/save-pocket.svg) !important;
+}
+
+#context-copyimage-contents {
+  --menuitem-image: url(chrome://browser/skin/motion/image.svg#copy) !important;
+}
+
+#context-sendimage,
+#context-sendvideo,
+#context-sendaudio {
+  --menuitem-image: url(chrome://browser/skin/motion/email.svg) !important;
+}
+
+#context-setDesktopBackground,
+.viewCustomizeToolbar {
+  --menuitem-image: url(chrome://browser/skin/motion/brush.svg) !important;
+}
+
+#context-reloadimage {
+  --menuitem-image: url(chrome://browser/skin/motion/refresh.svg) !important;
+}
+
+menuitem[id*="placesContext_open"] {
+  --menuitem-image: url(chrome://browser/skin/motion/open.svg) !important;
+}
+
+#context_reloadTab,
+#context_reloadSelectedTabs,
+#toolbar-context-reloadSelectedTab,
+#toolbar-context-reloadSelectedTabs {
+  --menuitem-image: url(chrome://browser/skin/motion/refresh.svg) !important;
+}
+
+#context_toggleMuteTab,
+#context_toggleMuteSelectedTabs,
+#context-media-mute {
+  --menuitem-image: url(chrome://browser/skin/motion/audio-muted.svg#big) !important;
+}
+
+#context-media-unmute {
+  --menuitem-image: url(chrome://browser/skin/motion/audio.svg#big) !important;
+}
+
+#context_pinTab,
+#context_unpinTab,
+#context_pinSelectedTabs,
+#context_unpinSelectedTabs,
+.customize-context-moveToPanel {
+  --menuitem-image: url(chrome://browser/skin/motion/pin.svg) !important;
+}
+
+#context_duplicateTab,
+#context_duplicateTabs {
+  --menuitem-image: url(chrome://browser/skin/motion/new-tab-image.svg#copy) !important;
+}
+
+#context_selectAllTabs,
+#toolbar-context-selectAllTabs,
+#context-selectall,
+.textbox-contextmenu menuitem[cmd*="selectAll"] {
+  --menuitem-image: url(chrome://browser/skin/motion/select-all.svg) !important;
+}
+
+#context_bookmarkTab,
+#context_bookmarkSelectedTabs,
+#toolbar-context-bookmarkSelectedTab,
+#toolbar-context-bookmarkSelectedTabs,
+menuitem[id="#placesContext_new:bookmark"],
+#toggle_PersonalToolbar {
+  --menuitem-image: url(chrome://browser/skin/motion/star.svg) !important;
+}
+
+#context_undoCloseTab,
+#toolbar-context-undoCloseTab {
+  --menuitem-image: url(chrome://browser/skin/motion/undo.svg) !important;
+}
+
+#context_closeTab {
+  --menuitem-image: url(chrome://browser/skin/motion/close.svg) !important;
+}
+
+.customize-context-manageExtension {
+  --menuitem-image: url(chrome://browser/skin/motion/settings.svg) !important;
+}
+
+.customize-context-reportExtension {
+  --menuitem-image: url(chrome://browser/skin/motion/report.svg) !important;
+}
+
+#context_sendTabToDevice,
+#context-sendpagetodevice,
+#context-sendlinktodevice {
+  --menuitem-image: url(chrome://browser/skin/motion/send-to-device.svg) !important;
+}
+
+#context_moveTabOptions {
+  --menuitem-image: url(chrome://browser/skin/motion/move-tab.svg) !important;
+}
+
+#context_closeTabOptions {
+  --menuitem-image: url(chrome://browser/skin/motion/close.svg#multiple) !important;
+}
+
+#context-media-play {
+  --menuitem-image: url(chrome://browser/skin/motion/play.svg) !important;
+}
+
+#context-media-pause {
+  --menuitem-image: url(chrome://browser/skin/motion/pause.svg) !important;
+}
+
+#context-media-playbackrate {
+  --menuitem-image: url(chrome://browser/skin/motion/speed.svg) !important;
+}
+
+#context-media-showcontrols {
+  --menuitem-image: url(chrome://browser/skin/motion/controls.svg#show) !important;
+}
+
+#context-media-hidecontrols {
+  --menuitem-image: url(chrome://browser/skin/motion/controls.svg#hide) !important;
+}
+
+#context-video-fullscreen {
+  --menuitem-image: url(chrome://browser/skin/motion/fullscreen-enter.svg) !important;
+}
+
+#context-leave-dom-fullscreen {
+  --menuitem-image: url(chrome://browser/skin/motion/fullscreen-exit.svg) !important;
+}
+
+#context-video-saveimage {
+  --menuitem-image: url(chrome://browser/skin/motion/video-snapshot.svg) !important;
+}
+
+#context-viewvideo {
+  --menuitem-image: url(chrome://browser/skin/motion/video-clip.svg) !important;
+}
+
+#context-take-screenshot {
+  --menuitem-image: url(chrome://browser/skin/motion/screenshot.svg) !important;
+}
+
+
+/* Proton Icons */
+@media (-moz-proton) {
+  /* macOS specific */
+  @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled") {
+    #context-back {
+      --menuitem-image: url(chrome://browser/skin/motion/arrow-back.svg) !important;
+      list-style-image: none !important;
+    }
+
+    #context-forward {
+      --menuitem-image: url(chrome://browser/skin/motion/arrow-back.svg#flip) !important;
+      list-style-image: none !important;
+    }
+
+    #context-reload {
+      --menuitem-image: url(chrome://browser/skin/motion/refresh.svg) !important;
+      list-style-image: none !important;
+    }
+
+    #context-stop {
+      --menuitem-image: url(chrome://browser/skin/motion/stop.svg) !important;
+      list-style-image: none !important;
+    }
+
+    #context-bookmarkpage {
+      --menuitem-image: url(chrome://browser/skin/motion/star.svg) !important;
+      list-style-image: none !important;
+    }
+
+    #context-bookmarkpage[starred] {
+      --menuitem-image: url(chrome://browser/skin/motion/star.svg#fill) !important;
+      list-style-image: none !important;
+    }
+  }
+}

@@ -78,7 +78,7 @@ static UniquePtr<base::SharedMemory> GetHyphDictFromParent(nsIURI* aURI,
   if (!shm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!shm->SetHandle(handle, true)) {
+  if (!shm->SetHandle(std::move(handle), true)) {
     return nullptr;
   }
   if (!shm->Map(size)) {
@@ -487,18 +487,14 @@ void nsHyphenator::HyphenateWord(const nsAString& aString, uint32_t aStart,
   }
 }
 
-void nsHyphenator::ShareToProcess(base::ProcessId aPid,
-                                  base::SharedMemoryHandle* aOutHandle,
-                                  uint32_t* aOutSize) {
+void nsHyphenator::CloneHandle(base::SharedMemoryHandle* aOutHandle,
+                               uint32_t* aOutSize) {
   // If the resource is invalid, or if we fail to share it to the child
   // process, we'll just bail out and continue without hyphenation; no need
   // for this to be a fatal error.
   if (!mDict.is<UniquePtr<base::SharedMemory>>()) {
     return;
   }
-  if (!mDict.as<UniquePtr<base::SharedMemory>>()->ShareToProcess(aPid,
-                                                                 aOutHandle)) {
-    return;
-  }
+  *aOutHandle = mDict.as<UniquePtr<base::SharedMemory>>()->CloneHandle();
   *aOutSize = mDictSize;
 }

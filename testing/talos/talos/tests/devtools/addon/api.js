@@ -38,7 +38,7 @@ this.damp = class extends ExtensionAPI {
 
           dump("[damp-api] Retrieve the main DevTools loader\n");
           const { loader, require } = ChromeUtils.import(
-            "resource://devtools/shared/Loader.jsm"
+            "resource://devtools/shared/loader/Loader.jsm"
           );
 
           // The loader should already support the damp-test path mapping.

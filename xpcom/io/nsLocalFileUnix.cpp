@@ -1656,7 +1656,7 @@ nsLocalFile::IsExecutable(bool* aResult) {
 #ifdef MOZ_WIDGET_COCOA
         "fileloc",  // File location files can be used to point to other
                     // files.
-        "inetloc", // Shouldn't be able to do the same, but can, due to
+        "inetloc",  // Shouldn't be able to do the same, but can, due to
                     // macOS vulnerabilities.
 #endif
         "jar"  // java application bundle

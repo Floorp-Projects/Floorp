@@ -143,8 +143,8 @@ case $platform in
         if [ ! -x $CXX ]; then
            echo "ERROR: xlclang++ was not found, please check the PATH to make sure it is correct."; exit 1
         fi
-        RELEASE_CFLAGS="-O3"
-        RELEASE_CXXFLAGS="-O3"
+        RELEASE_CFLAGS="-O3 -qstrict=ieeefp"
+        RELEASE_CXXFLAGS="-O3 -qstrict=ieeefp"
         ;;
     AIX/GCC)
         THE_OS=AIX

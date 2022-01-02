@@ -416,6 +416,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
             return;
 
         case "unsigned long long":
+        case "EpochTimeStamp":
         case "DOMTimeStamp":
             assert_equals(typeof value, "number");
             assert_true(0 <= value, "unsigned long long is negative");

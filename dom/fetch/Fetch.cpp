@@ -310,7 +310,8 @@ class WorkerFetchResolver final : public FetchDriverObserver {
     return mFetchObserver;
   }
 
-  void OnResponseAvailableInternal(InternalResponse* aResponse) override;
+  void OnResponseAvailableInternal(
+      SafeRefPtr<InternalResponse> aResponse) override;
 
   void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
 
@@ -376,7 +377,8 @@ class MainThreadFetchResolver final : public FetchDriverObserver {
         mSignalImpl(aSignalImpl),
         mMozErrors(aMozErrors) {}
 
-  void OnResponseAvailableInternal(InternalResponse* aResponse) override;
+  void OnResponseAvailableInternal(
+      SafeRefPtr<InternalResponse> aResponse) override;
 
   void SetLoadGroup(nsILoadGroup* aLoadGroup) { mLoadGroup = aLoadGroup; }
 
@@ -625,7 +627,7 @@ class ResolveFetchPromise : public Runnable {
 };
 
 void MainThreadFetchResolver::OnResponseAvailableInternal(
-    InternalResponse* aResponse) {
+    SafeRefPtr<InternalResponse> aResponse) {
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
 
@@ -646,7 +648,7 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
       mFetchObserver->SetState(FetchState::Complete);
     }
 
-    mResponse = new Response(go, aResponse, mSignalImpl);
+    mResponse = new Response(go, std::move(aResponse), mSignalImpl);
     BrowsingContext* bc = inner ? inner->GetBrowsingContext() : nullptr;
     bc = bc ? bc->Top() : nullptr;
     if (bc && bc->IsLoading()) {
@@ -694,15 +696,15 @@ MainThreadFetchResolver::~MainThreadFetchResolver() {
 class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
   RefPtr<WorkerFetchResolver> mResolver;
   // Passed from main thread to worker thread after being initialized.
-  RefPtr<InternalResponse> mInternalResponse;
+  SafeRefPtr<InternalResponse> mInternalResponse;
 
  public:
   WorkerFetchResponseRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerFetchResolver* aResolver,
-                              InternalResponse* aResponse)
+                              SafeRefPtr<InternalResponse> aResponse)
       : MainThreadWorkerRunnable(aWorkerPrivate),
         mResolver(aResolver),
-        mInternalResponse(aResponse) {
+        mInternalResponse(std::move(aResponse)) {
     MOZ_ASSERT(mResolver);
   }
 
@@ -721,7 +723,7 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
 
       RefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
       RefPtr<Response> response =
-          new Response(global, mInternalResponse,
+          new Response(global, mInternalResponse.clonePtr(),
                        mResolver->GetAbortSignalForTargetThread());
       promise->MaybeResolve(response);
     } else {
@@ -825,7 +827,7 @@ class WorkerFetchResponseEndControlRunnable final
 };
 
 void WorkerFetchResolver::OnResponseAvailableInternal(
-    InternalResponse* aResponse) {
+    SafeRefPtr<InternalResponse> aResponse) {
   AssertIsOnMainThread();
 
   MutexAutoLock lock(mPromiseProxy->Lock());
@@ -834,7 +836,7 @@ void WorkerFetchResolver::OnResponseAvailableInternal(
   }
 
   RefPtr<WorkerFetchResponseRunnable> r = new WorkerFetchResponseRunnable(
-      mPromiseProxy->GetWorkerPrivate(), this, aResponse);
+      mPromiseProxy->GetWorkerPrivate(), this, std::move(aResponse));
 
   if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response");

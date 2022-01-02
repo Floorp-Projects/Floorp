@@ -73,32 +73,45 @@ def mock_task_definition():
     """Builds a mock task definition for use in testing.
 
     Args:
-        platform (str): represents the build platform.
+        os_name (str): represents the os.
+        os_version (str): represents the os version
         bits (int): software bits.
         build_type (str): opt or debug.
-        suite (str): name of the unittest suite.
-        test_platform (str, optional): full name of the platform and major version.
-        variant (str, optional): specify fission or vanilla.
+        build_attrs (list, optional): specify build attribute(s)
+        variants (list, optional): specify runtime variant(s)
 
     Returns:
         dict: mocked task definition.
     """
 
-    def inner(platform, bits, build_type, suite, test_platform="", variant=""):
-        bits = str(bits)
-        test_variant = [suite, "e10s"]
-        if "fis" in variant:
-            test_variant.insert(1, "fis")
-        output = {
-            "build-attributes": {
-                "build_platform": platform + bits,
-                "build_type": build_type,
+    def inner(os_name, os_version, bits, build_type, build_attrs=None, variants=None):
+        setting = {
+            "platform": {
+                "arch": str(bits),
+                "os": {
+                    "name": os_name,
+                    "version": os_version,
+                },
             },
-            "attributes": {"e10s": True, "unittest_variant": variant},
-            "test-name": "-".join(test_variant),
-            "test-platform": "".join([test_platform, "-", bits, "/", build_type]),
+            "build": {
+                "type": build_type,
+            },
+            "runtime": {},
         }
-        return output
+
+        # Optionally set build attributes and runtime variants.
+        if build_attrs:
+            if isinstance(build_attrs, str):
+                build_attrs = [build_attrs]
+            for attr in build_attrs:
+                setting["build"][attr] = True
+
+        if variants:
+            if isinstance(variants, str):
+                variants = [variants]
+            for variant in variants:
+                setting["runtime"][variant] = True
+        return {"test-name": "foo", "test-setting": setting}
 
     return inner
 
@@ -155,20 +168,20 @@ def mock_mozinfo():
 @pytest.mark.parametrize(
     "params,exception",
     [
-        [("win", 32, "opt", "web-platform-tests", "", ""), None],
-        [("win", 64, "opt", "web-platform-tests", "", ""), None],
-        [("linux", 64, "debug", "mochitest-plain", "", ""), None],
-        [("mac", 64, "debug", "mochitest-plain", "", ""), None],
-        [("mac", 64, "opt", "mochitest-plain-headless", "", ""), None],
-        [("android", 64, "debug", "xpcshell", "", ""), None],
-        [("and", 64, "debug", "awsy", "", ""), ValueError],
-        [("", 64, "opt", "", "", ""), ValueError],
-        [("linux-ccov", 64, "opt", "", "", ""), None],
-        [("linux-asan", 64, "opt", "", "", ""), None],
-        [("win-tsan", 64, "opt", "", "", ""), None],
-        [("mac-ccov", 64, "opt", "", "", ""), None],
-        [("android", 64, "opt", "crashtest", "arm64", "fission"), None],
-        [("win-aarch64", 64, "opt", "crashtest", "", ""), None],
+        [("win", "7", 32, "opt"), None],
+        [("win", "10", 64, "opt"), None],
+        [("linux", "1804", 64, "debug"), None],
+        [("macosx", "1015", 64, "debug"), None],
+        [("macosx", "1100", 64, "opt"), None],
+        [("android", "", 64, "debug"), None],
+        [("and", "", 64, "debug"), ValueError],
+        [("", "", 64, "opt"), ValueError],
+        [("linux", "1804", 64, "opt", ["ccov"]), None],
+        [("linux", "1804", 64, "opt", ["asan"]), None],
+        [("win", "10", 64, "opt", ["tsan"]), None],
+        [("mac", "1100", 64, "opt", ["ccov"]), None],
+        [("android", "", 64, "opt", None, ["fission"]), None],
+        [("win", "10", "aarch64", "opt"), None],
     ],
 )
 def test_guess_mozinfo_from_task(params, exception, mock_task_definition):
@@ -187,20 +200,22 @@ def test_guess_mozinfo_from_task(params, exception, mock_task_definition):
             "win": "windows",
         }
         result = chunking.guess_mozinfo_from_task(task)
+        setting = task["test-setting"]
 
-        assert result["bits"] == (32 if "32" in task["test-platform"] else 64)
+        assert str(result["bits"]) in setting["platform"]["arch"]
         assert result["os"] in ("android", "linux", "mac", "win")
-        assert result["os"] in task["build-attributes"]["build_platform"]
+        assert result["os"] in setting["platform"]["os"]["name"]
         assert result["toolkit"] == expected_toolkits[result["os"]]
 
         # Ensure the outcome of special build variants being present match what
         # guess_mozinfo_from_task method returns for these attributes.
-        assert ("asan" in task["build-attributes"]["build_platform"]) == result["asan"]
-        assert ("tsan" in task["build-attributes"]["build_platform"]) == result["tsan"]
-        assert ("ccov" in task["build-attributes"]["build_platform"]) == result["ccov"]
+        assert ("asan" in setting["build"]) == result["asan"]
+        assert ("tsan" in setting["build"]) == result["tsan"]
+        assert ("ccov" in setting["build"]) == result["ccov"]
 
-        assert result["fission"] == any(task["attributes"]["unittest_variant"])
-        assert result["e10s"]
+        # Ensure runtime variants match
+        assert ("fission" in setting["runtime"]) == result["fission"]
+        assert ("1proc" in setting["runtime"]) != result["e10s"]
 
 
 @pytest.mark.parametrize("platform", ["unix", "windows", "android"])

@@ -8,7 +8,7 @@
 // See Bug 1570524.
 requestLongerTimeout(2);
 
-const TEST_URI = `data:text/html,<meta charset=utf8><h1>Test cached messages</h1>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><h1>Test cached messages</h1>
   <style>
     h1 {
       color: cssColorBug611032;

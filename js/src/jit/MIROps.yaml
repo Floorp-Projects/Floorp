@@ -319,6 +319,9 @@
 - name: ApplyArray
   gen_boilerplate: false
 
+- name: ConstructArgs
+  gen_boilerplate: false
+
 - name: ConstructArray
   gen_boilerplate: false
 
@@ -378,9 +381,6 @@
 - name: AssertShape
   gen_boilerplate: false
 
-- name: CreateThisWithTemplate
-  gen_boilerplate: false
-
 # Caller-side allocation of |this| for |new|:
 # Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
 - name: CreateThis
@@ -400,6 +400,9 @@
   gen_boilerplate: false
 
 - name: GetInlinedArgument
+  gen_boilerplate: false
+
+- name: GetInlinedArgumentHole
   gen_boilerplate: false
 
 - name: GetArgumentsObjectArg
@@ -431,6 +434,27 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Load |arguments[index]| from a mapped or unmapped arguments object. Bails out
+# if any elements were overridden or deleted. Returns undefined if the index is
+# out of bounds.
+- name: LoadArgumentsObjectArgHole
+  operands:
+    argsObject: Object
+    index: Int32
+  result_type: Value
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+- name: InArgumentsObjectArg
+  operands:
+    argsObject: Object
+    index: Int32
+  result_type: Boolean
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 # Load |arguments.length|. Bails out if the length has been overriden.
 - name: ArgumentsObjectLength
   operands:
@@ -443,6 +467,15 @@
   # a normal property load, so we can treat this operation like any other
   # property read.
   alias_set: custom
+
+# Create an array from an arguments object.
+- name: ArrayFromArgumentsObject
+  operands:
+    argsObject: Object
+  arguments:
+    shape: Shape*
+  result_type: Object
+  possibly_calls: true
 
 # Guard that the given flags are not set on the arguments object.
 - name: GuardArgumentsObjectFlags
@@ -968,6 +1001,7 @@
 - name: DynamicImport
   operands:
     specifier: Value
+    options: Value
   result_type: Object
 
 - name: Lambda
@@ -1654,6 +1688,14 @@
   possibly_calls: true
   alias_set: custom
 
+- name: AddSlotAndCallAddPropHook
+  operands:
+    object: Object
+    value: Value
+  arguments:
+    shape: Shape*
+  possibly_calls: true
+
 - name: StoreDynamicSlot
   gen_boilerplate: false
 
@@ -1775,7 +1817,7 @@
 - name: OptimizeSpreadCallCache
   operands:
     value: Value
-  result_type: Boolean
+  result_type: Value
 
 - name: IteratorMore
   operands:
@@ -1845,6 +1887,21 @@
   # write to the argument frames. We create an arguments object in that case.
   alias_set: none
 
+# This MIR instruction is used to get an argument from the actual arguments.
+# Returns undefined if |index| is larger-or-equals to |length|. Bails out if
+# |index| is negative.
+- name: GetFrameArgumentHole
+  operands:
+    index: Int32
+    length: Int32
+  result_type: Value
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  # This instruction is never aliased, because ops like JSOp::SetArg don't
+  # write to the argument frames. We create an arguments object in that case.
+  alias_set: none
+
 - name: NewTarget
   result_type: Value
   movable: true
@@ -1860,6 +1917,7 @@
   result_type: Object
   possibly_calls: true
   alias_set: none
+  can_recover: true
 
 - name: PostWriteBarrier
   gen_boilerplate: false
@@ -1949,6 +2007,7 @@
     thisValue: Value
   result_type: Value
   guard: true
+  folds_to: custom
   alias_set: custom
 
 - name: CheckThis
@@ -2103,6 +2162,8 @@
   operands: 
     callee: Object
   result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
   alias_set: custom
 
 - name: InitHomeObject
@@ -2473,6 +2534,9 @@
   possibly_calls: true
 
 - name: WasmNeg
+  gen_boilerplate: false
+
+- name: WasmBinaryBitwise
   gen_boilerplate: false
 
 - name: WasmLoadTls

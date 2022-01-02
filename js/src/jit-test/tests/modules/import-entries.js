@@ -1,10 +1,32 @@
 // Test importEntries property
 
-function importEntryEq(a, b)
-{
-    return a['moduleRequest']['specifier'] === b['moduleRequest']['specifier'] &&
-           a['importName'] === b['importName'] &&
-           a['localName'] === b['localName'];
+function assertionEq(actual, expected) {
+    var actualAssertions = actual['assertions'];
+    var expectedAssertions = expected['assertions'];
+
+    if(actualAssertions === null) {
+        return expectedAssertions === actualAssertions
+    }
+
+    if(actualAssertions.length !== expectedAssertions.length) {
+        return false;
+    }
+
+    for (var i = 0; i < expected.length; i++) {
+        if(expected[i].type !== actual[i].type) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function importEntryEq(a, b) {
+    var r1 = a['moduleRequest']['specifier'] === b['moduleRequest']['specifier'] &&
+        a['importName'] === b['importName'] &&
+        a['localName'] === b['localName'];
+
+    return r1 && assertionEq(a['moduleRequest'], b['moduleRequest']);
 }
 
 function findImportEntry(array, target)
@@ -30,20 +52,34 @@ function testImportEntries(source, expected) {
 testImportEntries('', []);
 
 testImportEntries('import v from "mod";',
-                  [{moduleRequest: {specifier: 'mod'}, importName: 'default', localName: 'v'}]);
+                  [{moduleRequest: {specifier: 'mod', assertions: null}, importName: 'default', localName: 'v'}]);
 
 testImportEntries('import * as ns from "mod";',
-                  [{moduleRequest: {specifier: 'mod'}, importName: null, localName: 'ns'}]);
+                  [{moduleRequest: {specifier: 'mod', assertions: null}, importName: null, localName: 'ns'}]);
 
 testImportEntries('import {x} from "mod";',
-                  [{moduleRequest: {specifier: 'mod'}, importName: 'x', localName: 'x'}]);
+                  [{moduleRequest: {specifier: 'mod', assertions: null}, importName: 'x', localName: 'x'}]);
 
 testImportEntries('import {x as v} from "mod";',
-                  [{moduleRequest: {specifier: 'mod'}, importName: 'x', localName: 'v'}]);
+                  [{moduleRequest: {specifier: 'mod', assertions: null}, importName: 'x', localName: 'v'}]);
 
 testImportEntries('import "mod";',
                   []);
 
 testImportEntries('import {x} from "a"; import {y} from "b";',
-                  [{moduleRequest: {specifier: 'a'}, importName: 'x', localName: 'x'},
-                   {moduleRequest: {specifier: 'b'}, importName: 'y', localName: 'y'}]);
+                  [{moduleRequest: {specifier: 'a', assertions: null}, importName: 'x', localName: 'x'},
+                   {moduleRequest: {specifier: 'b', assertions: null}, importName: 'y', localName: 'y'}]);
+
+if(getRealmConfiguration()['importAssertions']) {
+    testImportEntries('import v from "mod" assert {};',
+                  [{moduleRequest: {specifier: 'mod', assertions: null}, importName: 'default', localName: 'v'}]);
+
+    testImportEntries('import v from "mod" assert { type: "js"};',
+        [{moduleRequest: {specifier: 'mod', assertions: [{ type: 'js'}]}, importName: 'default', localName: 'v'}]);
+
+    testImportEntries('import {x} from "mod" assert { type: "js"};',
+                  [{moduleRequest: {specifier: 'mod', assertions: [{ type: 'js'}]}, importName: 'x', localName: 'x'}]);
+
+    testImportEntries('import {x as v} from "mod" assert { type: "js"};',
+                  [{moduleRequest: {specifier: 'mod', assertions: [{ type: 'js'}]}, importName: 'x', localName: 'v'}]);
+}

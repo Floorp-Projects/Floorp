@@ -230,6 +230,19 @@ kn{
             }
         }
         minimalPairs{
+            case{
+                accusative{"{0} ರಾಮನು ಮರವನ್ನು ಹತ್ತಿದನು"}
+                dative{"{0} ರಾಮನು ಮರಕ್ಕೆ ಕಲ್ಲು ಹೊಡೆದನು"}
+                genitive{"{0} ರಾಮನು ಮರದ ಬಳಿ ಹೋದನು"}
+                locative{"{0} ರಾಮನು ಮರದಲ್ಲಿ ಹಣ್ಣನ್ನು ನೋಡಿದನು"}
+                nominative{"{0} ಮರವು ದೊಡ್ಡದಾಗಿದೆ"}
+                vocative{"{0} ಓಹ್ ಮರವೇ ! ಇದನ್ನು ಹತ್ತುವುದು ಬಹಳ ಕಷ್ಟ"}
+            }
+            gender{
+                feminine{"{0} ಸ್ತ್ರೀಲಿಂಗ"}
+                masculine{"{0} ಪುಲ್ಲಿಂಗ"}
+                neuter{"{0} ಅದು ಚಲಿಸುತ್ತದೆ"}
+            }
             ordinal{
                 other{"{0}ನೇ ಬಲತಿರುವನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ."}
             }
@@ -495,6 +508,16 @@ kn{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahhmmsszzzz",
+                "ahhmmssz",
+                "ahhmmss",
+                "ahhmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -663,6 +686,16 @@ kn{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahhmmsszzzz",
+                "ahhmmssz",
+                "ahhmmss",
+                "ahhmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}

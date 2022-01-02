@@ -457,7 +457,7 @@ void Zone::prepareForCompacting() {
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   traceWeakFinalizationRegistryEdges(trc, zone);
-  zone->weakRefMap().sweep(&storeBuffer());
+  zone->weakRefMap().traceWeak(trc, &storeBuffer());
 
   zone->traceWeakMaps(trc);
 
@@ -802,7 +802,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-    callWeakPointerCompartmentCallbacks(comp);
+    callWeakPointerCompartmentCallbacks(&trc, comp);
   }
 }
 
@@ -848,7 +848,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
-  callWeakPointerZonesCallbacks();
+  callWeakPointerZonesCallbacks(&trc);
 }
 
 void GCRuntime::clearRelocatedArenas(Arena* arenaList, JS::GCReason reason) {

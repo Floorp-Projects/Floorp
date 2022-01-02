@@ -20,7 +20,7 @@ const EXPORTED_SYMBOLS = [
 const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";
 
 const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);

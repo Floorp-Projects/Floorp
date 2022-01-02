@@ -67,7 +67,6 @@ void DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
 }
 

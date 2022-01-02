@@ -1287,12 +1287,7 @@ fn get_pssh_info(
             .try_into()
             .map_err(|_| Mp4parseStatus::Invalid)?;
         let mut data_len = TryVec::new();
-        if data_len
-            .write_u32::<byteorder::NativeEndian>(content_len)
-            .is_err()
-        {
-            return Err(Mp4parseStatus::Io);
-        }
+        data_len.write_u32::<byteorder::NativeEndian>(content_len)?;
         pssh_data.extend_from_slice(pssh.system_id.as_slice())?;
         pssh_data.extend_from_slice(data_len.as_slice())?;
         pssh_data.extend_from_slice(pssh.box_content.as_slice())?;
@@ -1312,8 +1307,8 @@ extern "C" fn error_read(_: *mut u8, _: usize, _: *mut std::os::raw::c_void) -> 
 extern "C" fn valid_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c_void) -> isize {
     let input: &mut std::fs::File = unsafe { &mut *(userdata as *mut _) };
 
-    let mut buf = unsafe { std::slice::from_raw_parts_mut(buf, size) };
-    match input.read(&mut buf) {
+    let buf = unsafe { std::slice::from_raw_parts_mut(buf, size) };
+    match input.read(buf) {
         Ok(n) => n as isize,
         Err(_) => -1,
     }

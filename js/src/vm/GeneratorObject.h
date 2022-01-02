@@ -7,7 +7,6 @@
 #ifndef vm_GeneratorObject_h
 #define vm_GeneratorObject_h
 
-#include "frontend/ParserAtom.h"  // frontend::TaggedParserAtomIndex
 #include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
@@ -18,6 +17,10 @@
 #include "vm/Stack.h"
 
 namespace js {
+
+namespace frontend {
+class TaggedParserAtomIndex;
+}
 
 extern const JSClass GeneratorFunctionClass;
 
@@ -62,7 +65,7 @@ class AbstractGeneratorObject : public NativeObject {
                      HandleValue resumeKind);
 
   static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame,
-                      jsbytecode* pc, unsigned nvalues);
+                      const jsbytecode* pc, unsigned nvalues);
 
   static void finalSuspend(HandleObject obj);
 
@@ -134,7 +137,7 @@ class AbstractGeneratorObject : public NativeObject {
     MOZ_ASSERT(isSuspended());
     setFixedSlot(RESUME_INDEX_SLOT, Int32Value(RESUME_INDEX_RUNNING));
   }
-  void setResumeIndex(jsbytecode* pc) {
+  void setResumeIndex(const jsbytecode* pc) {
     MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
                JSOp(*pc) == JSOp::Await);
 

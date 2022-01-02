@@ -342,7 +342,20 @@ test_gsub_would_substitute_SOURCES = test-gsub-would-substitute.cc
 test_gsub_would_substitute_CPPFLAGS = $(HBCFLAGS) $(FREETYPE_CFLAGS)
 test_gsub_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
 
-COMPILED_TESTS = test-algs test-array test-iter test-meta test-number test-ot-tag test-priority-queue test-unicode-ranges test-bimap test-repacker
+COMPILED_TESTS = \
+	test-algs \
+	test-array \
+	test-iter \
+	test-map \
+	test-number \
+	test-ot-tag \
+	test-priority-queue \
+	test-set \
+	test-unicode-ranges \
+	test-vector \
+	test-bimap \
+	test-repacker \
+	$(NULL)
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
 COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
 check_PROGRAMS += $(COMPILED_TESTS)
@@ -368,9 +381,9 @@ test_iter_SOURCES = test-iter.cc hb-static.cc
 test_iter_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_iter_LDADD = $(COMPILED_TESTS_LDADD)
 
-test_meta_SOURCES = test-meta.cc hb-static.cc
-test_meta_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
-test_meta_LDADD = $(COMPILED_TESTS_LDADD)
+test_map_SOURCES = test-map.cc hb-static.cc
+test_map_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_map_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_number_SOURCES = test-number.cc hb-number.cc
 test_number_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
@@ -380,9 +393,17 @@ test_ot_tag_SOURCES = hb-ot-tag.cc
 test_ot_tag_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_ot_tag_LDADD = $(COMPILED_TESTS_LDADD)
 
+test_set_SOURCES = test-set.cc hb-static.cc
+test_set_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_set_LDADD = $(COMPILED_TESTS_LDADD)
+
 test_unicode_ranges_SOURCES = test-unicode-ranges.cc
 test_unicode_ranges_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_unicode_ranges_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_vector_SOURCES = test-vector.cc hb-static.cc
+test_vector_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_vector_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_bimap_SOURCES = test-bimap.cc hb-static.cc
 test_bimap_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)

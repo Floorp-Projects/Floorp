@@ -339,9 +339,7 @@ var SessionStore = {
   },
 
   maybeDontSaveTabs(aWindow) {
-    if (this.willAutoRestore) {
-      aWindow._dontSaveTabs = true;
-    }
+    SessionStoreInternal.maybeDontSaveTabs(aWindow);
   },
 
   undoCloseWindow: function ss_undoCloseWindow(aIndex) {
@@ -1853,9 +1851,7 @@ var SessionStoreInternal = {
       // with tabs we deem not worth saving then we might end up with a
       // random closed or even a pop-up window re-opened. To prevent that
       // we explicitly allow saving an "empty" window state.
-      let isLastWindow =
-        Object.keys(this._windows).length == 1 &&
-        !this._closedWindows.some(win => win._shouldRestore || false);
+      let isLastWindow = this.isLastRestorableWindow();
 
       // clear this window from the list, since it has definitely been closed.
       delete this._windows[aWindow.__SSi];
@@ -2726,8 +2722,7 @@ var SessionStoreInternal = {
       if (TAB_STATE_FOR_BROWSER.get(browser) == TAB_STATE_NEEDS_RESTORE) {
         // If BROWSER_STATE is still available for the browser and it is
         // If __SS_restoreState is still on the browser and it is
-        // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
-        // this tab yet.
+        // TAB_STATE_NEEDS_RESTORE, then we haven't restored this tab yet.
         //
         // It's possible that this tab was recently revived, and that
         // we've deferred showing the tab crashed page for it (if the
@@ -3248,6 +3243,20 @@ var SessionStoreInternal = {
 
   getClosedWindowData: function ssi_getClosedWindowData() {
     return Cu.cloneInto(this._closedWindows, {});
+  },
+
+  maybeDontSaveTabs(aWindow) {
+    if (this.willAutoRestore && this.isLastRestorableWindow()) {
+      aWindow._dontSaveTabs = true;
+    }
+  },
+
+  isLastRestorableWindow() {
+    return (
+      Object.values(this._windows).filter(winData => !winData.isPrivate)
+        .length == 1 &&
+      !this._closedWindows.some(win => win._shouldRestore || false)
+    );
   },
 
   undoCloseWindow: function ssi_undoCloseWindow(aIndex) {

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form restoration for no-store pages</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      let bc = new BroadcastChannel("bug1740517");
+      new Promise(resolve => {
+        bc.addEventListener("message", resolve, { once: true });
+      }).then(() => {
+        return new Promise((resolve) => {
+          bc.postMessage("enter_data");
+          bc.addEventListener("message", resolve, { once: true });
+          bc.postMessage("navigate");
+        });
+      }).then(() => {
+        return new Promise((resolve) => {
+          bc.addEventListener("message", ({ data }) => {
+            resolve(data);
+          }, { once: true });
+          bc.postMessage("back");
+        });
+      }).then(({ persisted, formData }) => {
+        ok(!persisted, "Page with a no-store header shouldn't be bfcached.");
+        is(formData, "initial", "We shouldn't restore form data when going back to a page with a no-store header.");
+
+        bc.postMessage("close");
+
+        bc.close();
+
+        SimpleTest.finish();
+      });
+
+      window.open("file_bug1740517.html", "", "noopener");
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

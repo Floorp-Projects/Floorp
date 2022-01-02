@@ -43,7 +43,6 @@
 
 #include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/ReadbackManagerD3D11.h"
 
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
@@ -313,6 +312,69 @@ void gfxWindowsPlatform::InitMemoryReportersForGPUProcess() {
   RegisterStrongMemoryReporter(new D3DSharedTexturesReporter());
 }
 
+/* static */
+nsresult gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(
+    uint64_t* aResult) {
+  RefPtr<ID3D11Device> d3d11Device;
+  if (!(d3d11Device = mozilla::gfx::Factory::GetDirect3D11Device())) {
+    // If we don't have a D3DDevice, we likely didn't use any GPU time.
+    *aResult = 0;
+    return NS_OK;
+  }
+
+  nsModuleHandle module(LoadLibrary(L"gdi32.dll"));
+  if (!module) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  PFND3DKMTQS queryD3DKMTStatistics =
+      (PFND3DKMTQS)GetProcAddress(module, "D3DKMTQueryStatistics");
+  if (!queryD3DKMTStatistics) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  if (d3d11Device->QueryInterface(__uuidof(IDXGIDevice),
+                                  getter_AddRefs(dxgiDevice)) != S_OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  IDXGIAdapter* DXGIAdapter;
+  if (dxgiDevice->GetAdapter(&DXGIAdapter) != S_OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DXGI_ADAPTER_DESC adapterDesc;
+  DXGIAdapter->GetDesc(&adapterDesc);
+  DXGIAdapter->Release();
+
+  D3DKMTQS queryStatistics;
+  memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+  queryStatistics.Type = D3DKMTQS_ADAPTER;
+  queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
+  if (!NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint64_t result = 0;
+  ULONG nodeCount = queryStatistics.QueryResult.AdapterInfo.NodeCount;
+  for (ULONG i = 0; i < nodeCount; ++i) {
+    memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+    queryStatistics.Type = D3DKMTQS_PROCESS_NODE;
+    queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
+    queryStatistics.hProcess = GetCurrentProcess();
+    queryStatistics.QueryProcessNode.NodeId = i;
+    if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
+      result += queryStatistics.QueryResult.ProcessNodeInformation.RunningTime
+                    .QuadPart *
+                100 / PR_NSEC_PER_MSEC;
+    }
+  }
+
+  *aResult = result;
+  return NS_OK;
+}
+
 static void UpdateANGLEConfig() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::Disable(Feature::D3D11_HW_ANGLE, FeatureStatus::Disabled,
@@ -513,10 +575,6 @@ mozilla::gfx::BackendType gfxWindowsPlatform::GetContentBackendFor(
     mozilla::layers::LayersBackend aLayers) {
   mozilla::gfx::BackendType defaultBackend =
       gfxPlatform::GetDefaultContentBackend();
-  if (aLayers == LayersBackend::LAYERS_D3D11) {
-    return defaultBackend;
-  }
-
   if (aLayers == LayersBackend::LAYERS_WR &&
       gfx::gfxVars::UseWebRenderANGLE()) {
     return defaultBackend;
@@ -1067,14 +1125,6 @@ void gfxWindowsPlatform::FontsPrefsChanged(const char* aPref) {
       fc->Flush();
     }
   }
-}
-
-ReadbackManagerD3D11* gfxWindowsPlatform::GetReadbackManager() {
-  if (!mD3D11ReadbackManager) {
-    mD3D11ReadbackManager = new ReadbackManagerD3D11();
-  }
-
-  return mD3D11ReadbackManager;
 }
 
 bool gfxWindowsPlatform::IsOptimus() {

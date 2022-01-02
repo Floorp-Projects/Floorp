@@ -9,12 +9,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <string>
 #include <vector>
 
 #include "lib/jxl/modular/encoding/dec_ma.h"
 #include "lib/jxl/modular/options.h"
 
 namespace jxl {
+
+const char *PredictorName(Predictor p);
+std::string PropertyName(size_t i);
 
 void PrintTree(const Tree &tree, const std::string &path);
 

@@ -10,6 +10,8 @@
 #include "DrawTargetSkia.h"
 #include "DataSurfaceHelpers.h"
 #include "skia/include/core/SkData.h"
+#include "skia/include/core/SkImage.h"
+#include "skia/include/core/SkSurface.h"
 #include "mozilla/CheckedInt.h"
 
 namespace mozilla::gfx {
@@ -30,6 +32,15 @@ SourceSurfaceSkia::~SourceSurfaceSkia() {
 IntSize SourceSurfaceSkia::GetSize() const { return mSize; }
 
 SurfaceFormat SourceSurfaceSkia::GetFormat() const { return mFormat; }
+
+// This is only ever called by the DT destructor, which can only ever happen
+// from one place at a time. Therefore it doesn't need to hold the ChangeMutex
+// as mSurface is never read to directly and is just there to keep the object
+// alive, which itself is refcounted in a thread-safe manner.
+void SourceSurfaceSkia::GiveSurface(SkSurface* aSurface) {
+  mSurface.reset(aSurface);
+  mDrawTarget = nullptr;
+}
 
 sk_sp<SkImage> SourceSurfaceSkia::GetImage(Maybe<MutexAutoLock>* aLock) {
   // If we were provided a lock object, we can let the caller access

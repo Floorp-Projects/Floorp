@@ -18,9 +18,8 @@ protocol PLockRequest {
 
  child:
   async Resolve(LockMode aMode, bool aIsAvailable);
-  async Abort();
 
- parent:
+ both:
   async __delete__(bool aAborted);
 };
 

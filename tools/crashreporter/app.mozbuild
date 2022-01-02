@@ -5,5 +5,4 @@
 DIRS += [
     '/config/external/zlib',
     '/toolkit/crashreporter/google-breakpad/src/processor',
-    '/tools/crashreporter/minidump_stackwalk',
 ]

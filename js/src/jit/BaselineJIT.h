@@ -350,7 +350,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
                                                RetAddrEntry::Kind kind);
   const RetAddrEntry& prologueRetAddrEntry(RetAddrEntry::Kind kind);
   const RetAddrEntry& retAddrEntryFromReturnOffset(CodeOffset returnOffset);
-  const RetAddrEntry& retAddrEntryFromReturnAddress(uint8_t* returnAddr);
+  const RetAddrEntry& retAddrEntryFromReturnAddress(const uint8_t* returnAddr);
 
   uint8_t* nativeCodeForOSREntry(uint32_t pcOffset);
 

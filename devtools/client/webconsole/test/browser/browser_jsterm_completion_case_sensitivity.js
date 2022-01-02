@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,<p>test case-sensitivity completion.
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><p>test case-sensitivity completion.
   <script>
     fooBar = Object.create(null, Object.getOwnPropertyDescriptors({
       Foo: 1,

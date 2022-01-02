@@ -20,7 +20,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
-#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 
@@ -382,7 +381,7 @@ static RefPtr<GLContext> CreateForWidget(const HWND window,
                                         LOCAL_WGL_FULL_ACCELERATION_ARB,
                                         0};
     const int* attribs;
-    if (wr::RenderThread::IsInRenderThread()) {
+    if (isWebRender) {
       attribs = kAttribsForWebRender;
     } else {
       attribs = kAttribs;
@@ -414,7 +413,7 @@ static RefPtr<GLContext> CreateForWidget(const HWND window,
                                         0};
 
     const int* attribs;
-    if (wr::RenderThread::IsInRenderThread()) {
+    if (isWebRender) {
       attribs = kAttribsForWebRender;
     } else {
       attribs = kAttribs;

@@ -9,7 +9,7 @@
 :: NFD (NFC) ;
 # to do: make reversible
 # define special conversion characters.
-# varients of this could use different characters, or set one or the other to null.
+# variants of this could use different characters, or set one or the other to null.
 $pre = \← ;
 $post = \→ ;
 # Provide keyboard equivalents for common diacritics used in transliteration

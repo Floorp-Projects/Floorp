@@ -13,10 +13,8 @@ const specs = [
 ];
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
   for (var spec of specs) {
-    var uri = ios.newURI(spec);
+    var uri = Services.io.newURI(spec);
     if (uri.spec.includes("..")) {
       do_throw(
         "resource: traversal remains: '" + spec + "' ==> '" + uri.spec + "'"

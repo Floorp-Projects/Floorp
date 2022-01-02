@@ -10,12 +10,22 @@ program = (elts) => Pattern({
 importDeclaration = (specifiers, source) => Pattern({
     type: "ImportDeclaration",
     specifiers: specifiers,
-    source: source
+    moduleRequest: source
 });
 importSpecifier = (id, name) => Pattern({
     type: "ImportSpecifier",
     id: id,
     name: name
+});
+moduleRequest = (specifier, assertions) => Pattern({
+    type: "ModuleRequest",
+    source: specifier,
+    assertions: assertions
+});
+importAssertion = (key, value) => Pattern({
+    type: "ImportAssertion",
+    key: key,
+    value : value
 });
 importNamespaceSpecifier = (name) => Pattern({
   type: "ImportNamespaceSpecifier",
@@ -43,7 +53,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import a from 'b'"));
 
@@ -54,14 +67,20 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import * as a from 'b'"));
 
 program([
     importDeclaration(
         [],
-        lit("a")
+        moduleRequest(
+            lit("a"),
+            []
+        )
     )
 ]).assert(parseAsModule("import {} from 'a'"));
 
@@ -73,7 +92,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { a } from 'b'"));
 
@@ -85,7 +107,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { a, } from 'b'"));
 
@@ -97,7 +122,10 @@ program([
                 ident("b")
             )
         ],
-        lit("c")
+        moduleRequest(
+            lit("c"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { a as b } from 'c'"));
 
@@ -109,7 +137,10 @@ program([
                 ident("as")
             )
         ],
-        lit("a")
+        moduleRequest(
+            lit("a"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { as as as } from 'a'"));
 
@@ -124,7 +155,10 @@ program([
                 ident("b")
             )
         ],
-        lit("c")
+        moduleRequest(
+            lit("c"),
+            []
+        )
     )
 ]).assert(parseAsModule("import a, * as b from 'c'"));
 
@@ -136,7 +170,10 @@ program([
                 ident("d")
             )
         ],
-        lit("a")
+        moduleRequest(
+            lit("a"),
+            []
+        )
     )
 ]).assert(parseAsModule("import d, {} from 'a'"));
 
@@ -152,7 +189,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import d, { a } from 'b'"));
 
@@ -168,7 +208,10 @@ program([
                 ident("b")
             )
         ],
-        lit("c")
+        moduleRequest(
+            lit("c"),
+            []
+        )
     )
 ]).assert(parseAsModule("import d, { a as b } from 'c'"));
 
@@ -188,7 +231,10 @@ program([
                 ident("b")
             ),
         ],
-        lit("c")
+        moduleRequest(
+            lit("c"),
+            []
+        )
     )
 ]).assert(parseAsModule("import d, { a, b } from 'c'"));
 
@@ -208,7 +254,10 @@ program([
                 ident("f")
             ),
         ],
-        lit("e")
+        moduleRequest(
+            lit("e"),
+            []
+        )
     )
 ]).assert(parseAsModule("import d, { a as b, c as f } from 'e'"));
 
@@ -220,7 +269,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b")
+        moduleRequest(
+            lit("b"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { true as a } from 'b'"));
 
@@ -236,7 +288,10 @@ program([
                 ident("b")
             ),
         ],
-        lit("c")
+        moduleRequest(
+            lit("c"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { a, b } from 'c'"));
 
@@ -252,16 +307,95 @@ program([
                 ident("d")
             ),
         ],
-        lit("e")
+        moduleRequest(
+            lit("e"),
+            []
+        )
     )
 ]).assert(parseAsModule("import { a as b, c as d } from 'e'"));
 
 program([
     importDeclaration(
         [],
-        lit("a")
+        moduleRequest(
+            lit("a"),
+            []
+        )
     )
 ]).assert(parseAsModule("import 'a'"));
+
+if (getRealmConfiguration()['importAssertions']) {
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                []
+            )
+        )
+    ]).assert(parseAsModule("import a from 'b' assert {}"));
+
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('type'), lit('js')),
+                ]
+            )
+        )
+    ]).assert(parseAsModule("import a from 'b' assert { type: 'js' }"));
+
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('foo'), lit('bar')),
+                ]
+            )
+        )
+    ]).assert(parseAsModule("import a from 'b' assert { foo: 'bar' }"));
+
+    program([
+        importDeclaration(
+            [
+                importSpecifier(
+                    ident("default"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('type'), lit('js')),
+                    importAssertion(ident('foo'), lit('bar')),
+                ]
+            )
+        )
+    ]).assert(parseAsModule("import a from 'b' assert { type: 'js', foo: 'bar' }"));
+
+    assertThrowsInstanceOf(function () {
+        parseAsModule("import a from 'b' assert { type: type }");
+    }, SyntaxError);
+}
 
 var loc = parseAsModule("import { a as b } from 'c'", {
     loc: true

@@ -1887,15 +1887,13 @@ class CCGraphBuilder final : public nsCycleCollectionTraversalCallback,
                    uint64_t aCompartmentAddress) override;
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) override;
-  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aThing) override;
+  NS_IMETHOD_(void) NoteJSChild(JS::GCCellPtr aThing) override;
   NS_IMETHOD_(void)
   NoteNativeChild(void* aChild,
                   nsCycleCollectionParticipant* aParticipant) override;
   NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) override;
 
  private:
-  void NoteJSChild(JS::GCCellPtr aChild);
-
   NS_IMETHOD_(void)
   NoteRoot(void* aRoot, nsCycleCollectionParticipant* aParticipant) {
     MOZ_ASSERT(aRoot);
@@ -2178,7 +2176,7 @@ CCGraphBuilder::NoteNativeChild(void* aChild,
 }
 
 NS_IMETHODIMP_(void)
-CCGraphBuilder::NoteJSChild(const JS::GCCellPtr& aChild) {
+CCGraphBuilder::NoteJSChild(JS::GCCellPtr aChild) {
   if (!aChild) {
     return;
   }
@@ -2259,7 +2257,7 @@ class ChildFinder : public nsCycleCollectionTraversalCallback {
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports* aChild) override;
   NS_IMETHOD_(void)
   NoteNativeChild(void* aChild, nsCycleCollectionParticipant* aHelper) override;
-  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aThing) override;
+  NS_IMETHOD_(void) NoteJSChild(JS::GCCellPtr aThing) override;
 
   NS_IMETHOD_(void)
   DescribeRefCountedNode(nsrefcnt aRefcount, const char* aObjname) override {}
@@ -2298,7 +2296,7 @@ ChildFinder::NoteNativeChild(void* aChild,
 }
 
 NS_IMETHODIMP_(void)
-ChildFinder::NoteJSChild(const JS::GCCellPtr& aChild) {
+ChildFinder::NoteJSChild(JS::GCCellPtr aChild) {
   if (aChild && JS::GCThingIsMarkedGray(aChild)) {
     mMayHaveChild = true;
   }

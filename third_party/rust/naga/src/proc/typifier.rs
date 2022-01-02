@@ -1,12 +1,98 @@
-use crate::arena::{Arena, Handle};
+use crate::arena::{Arena, Handle, UniqueArena};
 
 use thiserror::Error;
 
+/// The result of computing an expression's type.
+///
+/// This is the (Rust) type returned by [`ResolveContext::resolve`] to represent
+/// the (Naga) type it ascribes to some expression.
+///
+/// You might expect such a function to simply return a `Handle<Type>`. However,
+/// we want type resolution to be a read-only process, and that would limit the
+/// possible results to types already present in the expression's associated
+/// `UniqueArena<Type>`. Naga IR does have certain expressions whose types are
+/// not certain to be present.
+///
+/// So instead, type resolution returns a `TypeResolution` enum: either a
+/// [`Handle`], referencing some type in the arena, or a [`Value`], holding a
+/// free-floating [`TypeInner`]. This extends the range to cover anything that
+/// can be represented with a `TypeInner` referring to the existing arena.
+///
+/// What sorts of expressions can have types not available in the arena?
+///
+/// -   An [`Access`] or [`AccessIndex`] expression applied to a [`Vector`] or
+///     [`Matrix`] must have a [`Scalar`] or [`Vector`] type. But since `Vector`
+///     and `Matrix` represent their element and column types implicitly, not
+///     via a handle, there may not be a suitable type in the expression's
+///     associated arena. Instead, resolving such an expression returns a
+///     `TypeResolution::Value(TypeInner::X { ... })`, where `X` is `Scalar` or
+///     `Vector`.
+///
+/// -   Similarly, the type of an [`Access`] or [`AccessIndex`] expression
+///     applied to a *pointer to* a vector or matrix must produce a *pointer to*
+///     a scalar or vector type. These cannot be represented with a
+///     [`TypeInner::Pointer`], since the `Pointer`'s `base` must point into the
+///     arena, and as before, we cannot assume that a suitable scalar or vector
+///     type is there. So we take things one step further and provide
+///     [`TypeInner::ValuePointer`], specifically for the case of pointers to
+///     scalars or vectors. This type fits in a `TypeInner` and is exactly
+///     equivalent to a `Pointer` to a `Vector` or `Scalar`.
+///
+/// So, for example, the type of an `Access` expression applied to a value of type:
+///
+/// ```ignore
+/// TypeInner::Matrix { columns, rows, width }
+/// ```
+///
+/// might be:
+///
+/// ```ignore
+/// TypeResolution::Value(TypeInner::Vector {
+///     size: rows,
+///     kind: ScalarKind::Float,
+///     width,
+/// })
+/// ```
+///
+/// and the type of an access to a pointer of storage class `class` to such a
+/// matrix might be:
+///
+/// ```ignore
+/// TypeResolution::Value(TypeInner::ValuePointer {
+///     size: Some(rows),
+///     kind: ScalarKind::Float,
+///     width,
+///     class
+/// })
+/// ```
+///
+/// [`Handle`]: TypeResolution::Handle
+/// [`Value`]: TypeResolution::Value
+///
+/// [`Access`]: crate::Expression::Access
+/// [`AccessIndex`]: crate::Expression::AccessIndex
+///
+/// [`TypeInner`]: crate::TypeInner
+/// [`Matrix`]: crate::TypeInner::Matrix
+/// [`Pointer`]: crate::TypeInner::Pointer
+/// [`Scalar`]: crate::TypeInner::Scalar
+/// [`ValuePointer`]: crate::TypeInner::ValuePointer
+/// [`Vector`]: crate::TypeInner::Vector
+///
+/// [`TypeInner::Pointer`]: crate::TypeInner::Pointer
+/// [`TypeInner::ValuePointer`]: crate::TypeInner::ValuePointer
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum TypeResolution {
+    /// A type stored in the associated arena.
     Handle(Handle<crate::Type>),
+
+    /// A free-floating [`TypeInner`], representing a type that may not be
+    /// available in the associated arena. However, the `TypeInner` itself may
+    /// contain `Handle<Type>` values referring to types from the arena.
+    ///
+    /// [`TypeInner`]: crate::TypeInner
     Value(crate::TypeInner),
 }
 
@@ -18,7 +104,7 @@ impl TypeResolution {
         }
     }
 
-    pub fn inner_with<'a>(&'a self, arena: &'a Arena<crate::Type>) -> &'a crate::TypeInner {
+    pub fn inner_with<'a>(&'a self, arena: &'a UniqueArena<crate::Type>) -> &'a crate::TypeInner {
         match *self {
             Self::Handle(handle) => &arena[handle].inner,
             Self::Value(ref inner) => inner,
@@ -111,7 +197,7 @@ pub enum ResolveError {
 
 pub struct ResolveContext<'a> {
     pub constants: &'a Arena<crate::Constant>,
-    pub types: &'a Arena<crate::Type>,
+    pub types: &'a UniqueArena<crate::Type>,
     pub global_vars: &'a Arena<crate::GlobalVariable>,
     pub local_vars: &'a Arena<crate::LocalVariable>,
     pub functions: &'a Arena<crate::Function>,
@@ -119,6 +205,21 @@ pub struct ResolveContext<'a> {
 }
 
 impl<'a> ResolveContext<'a> {
+    /// Determine the type of `expr`.
+    ///
+    /// The `past` argument must be a closure that can resolve the types of any
+    /// expressions that `expr` refers to. These can be gathered by caching the
+    /// results of prior calls to `resolve`, perhaps as done by the
+    /// [`front::Typifier`] utility type.
+    ///
+    /// Type resolution is a read-only process: this method takes `self` by
+    /// shared reference. However, this means that we cannot add anything to
+    /// `self.types` that we might need to describe `expr`. To work around this,
+    /// this method returns a [`TypeResolution`], rather than simply returning a
+    /// `Handle<Type>`; see the documentation for [`TypeResolution`] for
+    /// details.
+    ///
+    /// [`front::Typifier`]: crate::front::Typifier
     pub fn resolve(
         &self,
         expr: &crate::Expression,
@@ -525,15 +626,40 @@ impl<'a> ResolveContext<'a> {
             }
             crate::Expression::Select { accept, .. } => past(accept).clone(),
             crate::Expression::Derivative { axis: _, expr } => past(expr).clone(),
-            crate::Expression::Relational { .. } => TypeResolution::Value(Ti::Scalar {
-                kind: crate::ScalarKind::Bool,
-                width: crate::BOOL_WIDTH,
-            }),
+            crate::Expression::Relational { fun, argument } => match fun {
+                crate::RelationalFunction::All | crate::RelationalFunction::Any => {
+                    TypeResolution::Value(Ti::Scalar {
+                        kind: crate::ScalarKind::Bool,
+                        width: crate::BOOL_WIDTH,
+                    })
+                }
+                crate::RelationalFunction::IsNan
+                | crate::RelationalFunction::IsInf
+                | crate::RelationalFunction::IsFinite
+                | crate::RelationalFunction::IsNormal => match *past(argument).inner_with(types) {
+                    Ti::Scalar { .. } => TypeResolution::Value(Ti::Scalar {
+                        kind: crate::ScalarKind::Bool,
+                        width: crate::BOOL_WIDTH,
+                    }),
+                    Ti::Vector { size, .. } => TypeResolution::Value(Ti::Vector {
+                        kind: crate::ScalarKind::Bool,
+                        width: crate::BOOL_WIDTH,
+                        size,
+                    }),
+                    ref other => {
+                        return Err(ResolveError::IncompatibleOperands(format!(
+                            "{:?}({:?})",
+                            fun, other
+                        )))
+                    }
+                },
+            },
             crate::Expression::Math {
                 fun,
                 arg,
                 arg1,
                 arg2: _,
+                arg3: _,
             } => {
                 use crate::MathFunction as Mf;
                 let res_arg = past(arg);
@@ -656,7 +782,21 @@ impl<'a> ResolveContext<'a> {
                     },
                     // bits
                     Mf::CountOneBits |
-                    Mf::ReverseBits => res_arg.clone(),
+                    Mf::ReverseBits |
+                    Mf::ExtractBits |
+                    Mf::InsertBits => res_arg.clone(),
+                    // data packing
+                    Mf::Pack4x8snorm |
+                    Mf::Pack4x8unorm |
+                    Mf::Pack2x16snorm |
+                    Mf::Pack2x16unorm |
+                    Mf::Pack2x16float => TypeResolution::Value(Ti::Scalar { kind: crate::ScalarKind::Uint, width: 4 }),
+                    // data unpacking
+                    Mf::Unpack4x8snorm |
+                    Mf::Unpack4x8unorm => TypeResolution::Value(Ti::Vector { size: crate::VectorSize::Quad, kind: crate::ScalarKind::Float, width: 4 }),
+                    Mf::Unpack2x16snorm |
+                    Mf::Unpack2x16unorm |
+                    Mf::Unpack2x16float => TypeResolution::Value(Ti::Vector { size: crate::VectorSize::Bi, kind: crate::ScalarKind::Float, width: 4 }),
                 }
             }
             crate::Expression::As {

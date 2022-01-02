@@ -166,6 +166,28 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     return ConvertError(syscall(nr, args...));
   }
 
+  // Mesa's amdgpu driver uses kcmp with KCMP_FILE; see also bug
+  // 1624743.  This policy restricts it to the process's own pid,
+  // which should be sufficient on its own if we need to remove the
+  // `type` restriction in the future.
+  //
+  // (Note: if we end up with more Mesa-specific hooks needed in
+  // several process types, we could put them into this class's
+  // EvaluateSyscall guarded by a boolean member variable, or
+  // introduce another layer of subclassing.)
+  ResultExpr KcmpPolicyForMesa() const {
+    // The real KCMP_FILE is part of an anonymous enum in
+    // <linux/kcmp.h>, but we can't depend on having that header,
+    // and it's not a #define so the usual #ifndef approach
+    // doesn't work.
+    static const int kKcmpFile = 0;
+    const pid_t myPid = getpid();
+    Arg<pid_t> pid1(0), pid2(1);
+    Arg<int> type(2);
+    return If(AllOf(pid1 == myPid, pid2 == myPid, type == kKcmpFile), Allow())
+        .Else(InvalidSyscall());
+  }
+
  private:
   // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
   // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
@@ -768,6 +790,8 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
             .Case(F_GETFL, Allow())
             .Case(F_SETFL, If((flags & ~allowed_flags) == 0, Allow())
                                .Else(InvalidSyscall()))
+            // Not much different from other forms of dup(), and commonly used.
+            .Case(F_DUPFD_CLOEXEC, Allow())
             .Default(SandboxPolicyBase::EvaluateSyscall(sysno));
       }
 
@@ -832,9 +856,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Allow();
 
         // Signal handling
-#if defined(ANDROID) || defined(MOZ_ASAN)
       case __NR_sigaltstack:
-#endif
       CASES_FOR_sigreturn:
       CASES_FOR_sigprocmask:
       CASES_FOR_sigaction:
@@ -932,6 +954,16 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_getrandom:
         return Allow();
 
+        // Used by almost every process: GMP needs them for Clearkey
+        // because of bug 1576006 (but may not need them for other
+        // plugin types; see bug 1737092).  Given that fstat is
+        // allowed, the uid/gid are probably available anyway.
+      CASES_FOR_getuid:
+      CASES_FOR_getgid:
+      CASES_FOR_geteuid:
+      CASES_FOR_getegid:
+        return Allow();
+
 #ifdef DESKTOP
         // Bug 1543858: glibc's qsort calls sysinfo to check the
         // memory size; it falls back to assuming there's enough RAM.
@@ -945,6 +977,18 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // risk should be relatively low.
       case __NR_rseq:
         return Allow();
+
+      case __NR_ioctl: {
+        Arg<unsigned long> request(1);
+        // Make isatty() return false, because none of the terminal
+        // ioctls will be allowed; libraries sometimes call this for
+        // various reasons (e.g., to decide whether to emit ANSI/VT
+        // color codes when logging to stderr).  glibc uses TCGETS and
+        // musl uses TIOCGWINSZ.
+        return If(AnyOf(request == TCGETS, request == TIOCGWINSZ),
+                  Error(ENOTTY))
+            .Else(SandboxPolicyBase::EvaluateSyscall(sysno));
+      }
 
 #ifdef MOZ_ASAN
         // ASAN's error reporter wants to know if stderr is a tty.
@@ -1199,7 +1243,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
   }
 
 #ifdef DESKTOP
-  Maybe<ResultExpr> EvaluateIpcCall(int aCall) const override {
+  Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const override {
     switch (aCall) {
         // These are a problem: SysV IPC follows the Unix "same uid
         // policy" and can't be restricted/brokered like file access.
@@ -1219,9 +1263,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         if (mAllowSysV) {
           return Some(Allow());
         }
-        return SandboxPolicyCommon::EvaluateIpcCall(aCall);
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
       default:
-        return SandboxPolicyCommon::EvaluateIpcCall(aCall);
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
     }
   }
 #endif
@@ -1345,9 +1389,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return If(request == FIOCLEX, Allow())
             // Rust's stdlib also uses FIONBIO instead of equivalent fcntls.
             .ElseIf(request == FIONBIO, Allow())
-            // ffmpeg, and anything else that calls isatty(), will be told
-            // that nothing is a typewriter:
-            .ElseIf(request == TCGETS, Error(ENOTTY))
             // Allow anything that isn't a tty ioctl, for now; bug 1302711
             // will cover changing this to a default-deny policy.
             .ElseIf(shifted_type != kTtyIoctls, Allow())
@@ -1357,7 +1398,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       CASES_FOR_fcntl : {
         Arg<int> cmd(1);
         return Switch(cmd)
-            .Case(F_DUPFD_CLOEXEC, Allow())
             // Nvidia GL and fontconfig (newer versions) use fcntl file locking.
             .Case(F_SETLK, Allow())
 #ifdef F_SETLK64
@@ -1391,9 +1431,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
-      case __NR_sigaltstack:
-        return Allow();
-
 #ifdef __NR_set_thread_area
       case __NR_set_thread_area:
         return Allow();
@@ -1404,12 +1441,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return Allow();
 
       CASES_FOR_dup2:  // See ConnectTrapCommon
-        return Allow();
-
-      CASES_FOR_getuid:
-      CASES_FOR_getgid:
-      CASES_FOR_geteuid:
-      CASES_FOR_getegid:
         return Allow();
 
       case __NR_fsync:
@@ -1526,22 +1557,8 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_get_mempolicy:
         return Allow();
 
-        // Mesa's amdgpu driver uses kcmp with KCMP_FILE; see also bug
-        // 1624743.  The pid restriction should be sufficient on its
-        // own if we need to remove the type restriction in the future.
-      case __NR_kcmp: {
-        // The real KCMP_FILE is part of an anonymous enum in
-        // <linux/kcmp.h>, but we can't depend on having that header,
-        // and it's not a #define so the usual #ifndef approach
-        // doesn't work.
-        static const int kKcmpFile = 0;
-        const pid_t myPid = getpid();
-        Arg<pid_t> pid1(0), pid2(1);
-        Arg<int> type(2);
-        return If(AllOf(pid1 == myPid, pid2 == myPid, type == kKcmpFile),
-                  Allow())
-            .Else(InvalidSyscall());
-      }
+      case __NR_kcmp:
+        return KcmpPolicyForMesa();
 
 #endif  // DESKTOP
 
@@ -1667,13 +1684,6 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
         return Trap(OpenTrap, mFiles);
 
       case __NR_brk:
-      // Because Firefox on glibc resorts to the fallback implementation
-      // mentioned in bug 1576006, we must explicitly allow the get*id()
-      // functions in order to use NSS in the clearkey CDM.
-      CASES_FOR_getuid:
-      CASES_FOR_getgid:
-      CASES_FOR_geteuid:
-      CASES_FOR_getegid:
         return Allow();
       case __NR_sched_get_priority_min:
       case __NR_sched_get_priority_max:
@@ -1735,17 +1745,61 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
                             AllowUnsafeSocketPair::NO) {}
 
+#ifndef ANDROID
+  Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const override {
+    // The Intel media driver uses SysV IPC (semaphores and shared
+    // memory) on newer hardware models; it always uses this fixed
+    // key, so we can restrict semget and shmget.  Unfortunately, the
+    // calls that operate on these resources take "identifiers", which
+    // are unpredictable (by us) but guessable (by an adversary).
+    static constexpr key_t kIntelKey = 'D' << 24 | 'V' << 8 | 'X' << 0;
+
+    switch (aCall) {
+      case SEMGET:
+      case SHMGET: {
+        Arg<key_t> key(0 + aArgShift);
+        return Some(If(key == kIntelKey, Allow()).Else(InvalidSyscall()));
+      }
+
+      case SEMCTL:
+      case SEMOP:
+      case SEMTIMEDOP:
+      case SHMCTL:
+      case SHMAT:
+      case SHMDT:
+        return Some(Allow());
+
+      default:
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
+    }
+  }
+#endif
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
         return Allow();
+
       case __NR_ioctl: {
         Arg<unsigned long> request(1);
-        // ffmpeg, and anything else that calls isatty(), will be told
-        // that nothing is a typewriter:
-        return If(request == TCGETS, Error(ENOTTY)).Else(InvalidSyscall());
+        auto shifted_type = request & kIoctlTypeMask;
+        static constexpr unsigned long kDrmType =
+            static_cast<unsigned long>('d') << _IOC_TYPESHIFT;
+
+        // Allow DRI for VA-API
+        return If(shifted_type == kDrmType, Allow())
+            .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
-      // Pass through the common policy.
+
+        // Mesa/amdgpu
+      case __NR_kcmp:
+        return KcmpPolicyForMesa();
+
+        // We use this in our DMABuf support code.
+      case __NR_eventfd2:
+        return Allow();
+
+        // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }
@@ -1839,9 +1893,6 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
             .ElseIf(request == FIONBIO, Allow())
             // This is used by PR_Available in nsSocketInputStream::Available.
             .ElseIf(request == FIONREAD, Allow())
-            // ffmpeg, and anything else that calls isatty(), will be told
-            // that nothing is a typewriter:
-            .ElseIf(request == TCGETS, Error(ENOTTY))
             // Allow anything that isn't a tty ioctl, for now; bug 1302711
             // will cover changing this to a default-deny policy.
             .ElseIf(shifted_type != kTtyIoctls, Allow())
@@ -1884,12 +1935,6 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
             .Else(InvalidSyscall());
       }
 #endif  // DESKTOP
-
-      CASES_FOR_getuid:
-      CASES_FOR_getgid:
-      CASES_FOR_geteuid:
-      CASES_FOR_getegid:
-        return Allow();
 
       // Bug 1640612
       case __NR_uname:

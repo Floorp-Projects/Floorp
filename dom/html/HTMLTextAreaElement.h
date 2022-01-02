@@ -11,13 +11,13 @@
 #include "mozilla/TextControlElement.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/ConstraintValidation.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "nsIControllers.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
-#include "nsIConstraintValidation.h"
 #include "nsGkAtoms.h"
 
 class nsIControllers;
@@ -36,9 +36,9 @@ class FormData;
 
 class HTMLTextAreaElement final : public TextControlElement,
                                   public nsStubMutationObserver,
-                                  public nsIConstraintValidation {
+                                  public ConstraintValidation {
  public:
-  using nsIConstraintValidation::GetValidationMessage;
+  using ConstraintValidation::GetValidationMessage;
   using ValueSetterOption = TextControlState::ValueSetterOption;
   using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
@@ -160,6 +160,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   void UpdateTooShortValidityState();
   void UpdateValueMissingValidityState();
   void UpdateBarredFromConstraintValidation();
+
+  // ConstraintValidation
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType) override;
 

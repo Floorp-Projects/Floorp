@@ -3,13 +3,10 @@
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
-const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
 const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
-const mainThread = threadManager.currentThread;
+const mainThread = Services.tm.currentThread;
 
 function makeListenerBlock(next) {
   return {

@@ -201,6 +201,16 @@ ant copy-cldr-testdata
 # and add the following line to the beginning of these two files
 # # File copied from cldr common/testData/localeIdentifiers/localeCanonicalization.txt
 
+# 4e. For the time being, manually re-add the lstm entries in data/brkitr/root.txt
+
+open $ICU4C_DIR/source/data/brkitr/root.txt 
+
+# paste the following block at the end, after the dictionaries block>
+    lstm{
+        Thai{"Thai_graphclust_model4_heavy.res"}
+        Mymr{"Burmese_graphclust_model5_heavy.res"}
+    }
+
 # 5. Check which data files have modifications, which have been added or removed
 # (if there are no changes, you may not need to proceed further). Make sure the
 # list seems reasonable.

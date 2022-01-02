@@ -84,6 +84,10 @@ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
         for (size_t i = 0; CMSG_LEN(sizeof(int) * i) < cmsg->cmsg_len; ++i) {
           close(fds[i]);
         }
+        // In theory, the kernel should delete the message instead of
+        // giving us an empty one, if errors prevent transferring the
+        // fd.
+        MOZ_DIAGNOSTIC_ASSERT(cmsg->cmsg_len != 0);
         errno = EMSGSIZE;
         return -1;
       }
@@ -98,7 +102,14 @@ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
       close(*aPassedFdPtr);
       *aPassedFdPtr = -1;
     }
-    errno = EMSGSIZE;
+    // MSG_CTRUNC usually means the fd was dropped due to fd
+    // exhaustion in the receiving process, so map that to `EMFILE`.
+    // MSG_TRUNC (truncation of the data part) shouldn't ever happen.
+    // (If the sender is malicious it can send too many bytes or fds,
+    // but this is about getting an accurate error message in genuine
+    // error cases.)
+    MOZ_DIAGNOSTIC_ASSERT((msg.msg_flags & MSG_TRUNC) == 0);
+    errno = EMFILE;
     return -1;
   }
 

@@ -226,8 +226,7 @@ class EventStates {
 #define NS_EVENT_STATE_READWRITE NS_DEFINE_EVENT_STATE_MACRO(25)
 // Content is the default one (meaning depends of the context).
 #define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(26)
-// Content is a submit control and the form isn't valid.
-#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(27)
+// Free bit here.
 // Content is in the optimum region.
 #define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(28)
 // Content is in the suboptimal region.
@@ -278,6 +277,10 @@ class EventStates {
 #define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
 // Devtools style inspector stuff.
 #define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(46)
+// Element is an input with empty value (regardless of placeholder)
+#define NS_EVENT_STATE_VALUE_EMPTY NS_DEFINE_EVENT_STATE_MACRO(47)
+// Element is a password input which is revealed by the user.
+#define NS_EVENT_STATE_REVEALED NS_DEFINE_EVENT_STATE_MACRO(48)
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */
@@ -313,7 +316,7 @@ class EventStates {
    NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
    NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET |                           \
    NS_EVENT_STATE_MODAL_DIALOG | NS_EVENT_STATE_MOZINERT |                     \
-   NS_EVENT_STATE_TOPMOST_MODAL_DIALOG)
+   NS_EVENT_STATE_TOPMOST_MODAL_DIALOG | NS_EVENT_STATE_REVEALED)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 

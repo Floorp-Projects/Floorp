@@ -207,7 +207,7 @@ typedef enum JSGCParamKey {
   JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
 
   /**
-   * Lower limit for collecting a zone.
+   * Lower limit for collecting a zone (MB).
    *
    * Zones smaller than this size will not normally be collected.
    *
@@ -481,9 +481,9 @@ typedef enum JSFinalizeStatus {
 typedef void (*JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status,
                                    void* data);
 
-typedef void (*JSWeakPointerZonesCallback)(JSContext* cx, void* data);
+typedef void (*JSWeakPointerZonesCallback)(JSTracer* trc, void* data);
 
-typedef void (*JSWeakPointerCompartmentCallback)(JSContext* cx,
+typedef void (*JSWeakPointerCompartmentCallback)(JSTracer* trc,
                                                  JS::Compartment* comp,
                                                  void* data);
 
@@ -536,7 +536,6 @@ namespace JS {
   D(RESET, 9)                                                          \
   D(OUT_OF_NURSERY, 10)                                                \
   D(EVICT_NURSERY, 11)                                                 \
-  D(DELAYED_ATOMS_GC, 12)                                              \
   D(SHARED_MEMORY_LIMIT, 13)                                           \
   D(IDLE_TIME_COLLECTION, 14)                                          \
   D(BG_TASK_FINISHED, 15)                                              \
@@ -1130,6 +1129,10 @@ extern JS_PUBLIC_API void JS_RemoveFinalizeCallback(JSContext* cx,
  * referent has been moved then the pointer will be updated to point to the new
  * location.
  *
+ * The return value of JS_UpdateWeakPointerAfterGC() indicates whether the
+ * referent is still alive. If the referent is is about to be finalized, this
+ * will return false.
+ *
  * Callers of this method are responsible for updating any state that is
  * dependent on the object's address. For example, if the object's address is
  * used as a key in a hashtable, then the object must be removed and
@@ -1153,11 +1156,11 @@ template <typename T>
 class Heap;
 }
 
-extern JS_PUBLIC_API void JS_UpdateWeakPointerAfterGC(
-    JS::Heap<JSObject*>* objp);
+extern JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGC(
+    JSTracer* trc, JS::Heap<JSObject*>* objp);
 
-extern JS_PUBLIC_API void JS_UpdateWeakPointerAfterGCUnbarriered(
-    JSObject** objp);
+extern JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGCUnbarriered(
+    JSTracer* trc, JSObject** objp);
 
 extern JS_PUBLIC_API void JS_SetGCParameter(JSContext* cx, JSGCParamKey key,
                                             uint32_t value);

@@ -409,7 +409,7 @@ function MultipleCallbacks(number, goon, delayed) {
 function wait_for_cache_index(continue_func) {
   // This callback will not fire before the index is in the ready state.  nsICacheStorage.exists() will
   // no longer throw after this point.
-  get_cache_service().asyncGetDiskConsumption({
+  Services.cache2.asyncGetDiskConsumption({
     onNetworkCacheDiskConsumption() {
       continue_func();
     },

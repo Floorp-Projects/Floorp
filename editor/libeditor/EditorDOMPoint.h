@@ -294,6 +294,18 @@ class EditorDOMPointBase final {
   }
 
   /**
+   * GetCurrentChildAtOffset() returns current child at mOffset.
+   * I.e., mOffset needs to be fixed before calling this.
+   */
+  nsIContent* GetCurrentChildAtOffset() const {
+    MOZ_ASSERT(mOffset.isSome());
+    if (mOffset.isNothing()) {
+      return GetChild();
+    }
+    return mParent ? mParent->GetChildAt_Deprecated(*mOffset) : nullptr;
+  }
+
+  /**
    * GetChildOrContainerIfDataNode() returns the child content node,
    * or container content node if the container is a data node.
    */
@@ -688,6 +700,7 @@ class EditorDOMPointBase final {
         // We're already referring the start of the container or
         // the offset is invalid since perhaps, the offset was set before
         // the last DOM tree change.
+        NS_ASSERTION(false, "Failed to rewind offset");
         return false;
       }
       mOffset = mozilla::Some(mOffset.value() - 1);
@@ -1029,7 +1042,8 @@ class EditorDOMPointBase final {
                                   const SelfType& aDOMPoint) {
     aStream << "{ mParent=" << aDOMPoint.mParent.get();
     if (aDOMPoint.mParent) {
-      aStream << " (" << *aDOMPoint.mParent << ")";
+      aStream << " (" << *aDOMPoint.mParent
+              << ", Length()=" << aDOMPoint.mParent->Length() << ")";
     }
     aStream << ", mChild=" << aDOMPoint.mChild.get();
     if (aDOMPoint.mChild) {
@@ -1144,6 +1158,10 @@ class EditorDOMRangeBase final {
                   aStart.EqualsOrIsBefore(aEnd));
     mStart = aStart;
     mEnd = aEnd;
+  }
+  void Clear() {
+    mStart.Clear();
+    mEnd.Clear();
   }
 
   const EditorDOMPointType& StartRef() const { return mStart; }

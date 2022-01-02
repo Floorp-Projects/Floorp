@@ -14,7 +14,6 @@ from distutils.version import LooseVersion
 from mozboot import rust
 from mozboot.util import (
     get_mach_virtualenv_binary,
-    locate_java_bin_path,
     MINIMUM_RUST_VERSION,
 )
 from mozfile import which
@@ -329,13 +328,6 @@ class BaseBootstrapper(object):
             % __name__
         )
 
-    def ensure_mach_environment(self, checkout_root):
-        mach_binary = os.path.abspath(os.path.join(checkout_root, "mach"))
-        if not os.path.exists(mach_binary):
-            raise ValueError("mach not found at %s" % mach_binary)
-        cmd = [sys.executable, mach_binary, "create-mach-environment"]
-        subprocess.check_call(cmd, cwd=checkout_root)
-
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         """
         Install the clang static analysis package
@@ -408,7 +400,7 @@ class BaseBootstrapper(object):
             raise ValueError(
                 "Need a state directory (e.g. ~/.mozbuild) to download " "artifacts"
             )
-        python_location = get_mach_virtualenv_binary(state_dir=self.state_dir)
+        python_location = get_mach_virtualenv_binary()
         if not os.path.exists(python_location):
             raise ValueError("python not found at %s" % python_location)
 
@@ -526,7 +518,7 @@ class BaseBootstrapper(object):
             print("ERROR! Please enter a valid option!")
 
     def prompt_yesno(self, prompt):
-        """ Prompts the user with prompt and requires a yes/no answer."""
+        """Prompts the user with prompt and requires a yes/no answer."""
         if self.no_interactive:
             print(prompt)
             print('Selecting "Y" because context is not interactive.')
@@ -865,24 +857,3 @@ class BaseBootstrapper(object):
         if h.hexdigest() != hexhash:
             os.remove(dest)
             raise ValueError("Hash of downloaded file does not match expected hash")
-
-    def ensure_java(self, mozconfig_builder):
-        """Verify the presence of java.
-
-        Finds a valid Java (throwing an error if not possible) and encodes it to the mozconfig.
-        """
-
-        bin_dir = locate_java_bin_path()
-        mozconfig_builder.append(
-            """
-        # Use the same Java binary that was specified in bootstrap. This way, if the default system
-        # Java is different than what Firefox needs, users should just need to override it (with
-        # $JAVA_HOME) when running bootstrap, rather than when interacting with the build.
-        ac_add_options --with-java-bin-path={}
-        """.format(
-                bin_dir
-            )
-        )
-
-        print("Your version of Java ({}) is 1.8.".format(bin_dir))
-        return bin_dir

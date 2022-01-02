@@ -1149,33 +1149,6 @@ async function scheduleTools() {
   }));
 
   queue.scheduleTask(merge(base, {
-    symbol: "coverity",
-    name: "coverity",
-    image: FUZZ_IMAGE,
-    tags: ['code-review'],
-    env: {
-      USE_64: "1",
-      CC: "clang",
-      CCC: "clang++",
-      NSS_AUTOMATION: "1"
-    },
-    features: ["taskclusterProxy"],
-    scopes: ["secrets:get:project/relman/coverity-nss"],
-    artifacts: {
-      "public/code-review/coverity.json": {
-        expires: 24 * 7,
-        type: "file",
-        path: "/home/worker/nss/coverity/coverity.json"
-      }
-    },
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_coverity.sh"
-    ]
-  }));
-
-  queue.scheduleTask(merge(base, {
     symbol: "hacl",
     name: "hacl",
     image: LINUX_BUILDS_IMAGE,

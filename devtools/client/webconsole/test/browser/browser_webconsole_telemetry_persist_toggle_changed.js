@@ -9,7 +9,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const TEST_URI = `data:text/html,<meta charset=utf8><script>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
   console.log("test message");
 </script>`;
 

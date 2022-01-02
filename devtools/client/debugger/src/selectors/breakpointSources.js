@@ -2,18 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { sortBy, uniq } from "lodash";
 import { createSelector } from "reselect";
-import {
-  getSources,
-  getBreakpointsList,
-  getSelectedSource,
-  resourceAsSourceBase,
-} from "../selectors";
+import { getBreakpointsList, getSelectedSource } from "../selectors";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
-import { makeShallowQuery } from "../utils/resource";
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
+import { getSourceFromId } from "../reducers/sources";
 
 function getBreakpointsForSource(source, selectedSource, breakpoints) {
   return sortSelectedBreakpoints(breakpoints, selectedSource)
@@ -27,28 +21,26 @@ function getBreakpointsForSource(source, selectedSource, breakpoints) {
     );
 }
 
-export const findBreakpointSources = state => {
-  const breakpoints = getBreakpointsList(state);
-  const sources = getSources(state);
+const getSourcesForBreakpoints = state => {
   const selectedSource = getSelectedSource(state);
-  return queryBreakpointSources(sources, { breakpoints, selectedSource });
-};
+  const breakpointSourceIds = getBreakpointsList(state).map(
+    breakpoint => getSelectedLocation(breakpoint, selectedSource).sourceId
+  );
 
-const queryBreakpointSources = makeShallowQuery({
-  filter: (_, { breakpoints, selectedSource }) =>
-    uniq(
-      breakpoints.map(bp => getSelectedLocation(bp, selectedSource).sourceId)
-    ),
-  map: resourceAsSourceBase,
-  reduce: sources => {
-    const filtered = sources.filter(source => source && !source.isBlackBoxed);
-    return sortBy(filtered, source => getFilename(source));
-  },
-});
+  return [...new Set(breakpointSourceIds)]
+    .map(sourceId => {
+      const source = getSourceFromId(state, sourceId);
+      const filename = getFilename(source);
+      return { source, filename };
+    })
+    .filter(({ source }) => source && !source.isBlackBoxed)
+    .sort((a, b) => a.filename - b.filename)
+    .map(({ source }) => source);
+};
 
 export const getBreakpointSources = createSelector(
   getBreakpointsList,
-  findBreakpointSources,
+  getSourcesForBreakpoints,
   getSelectedSource,
   (breakpoints, sources, selectedSource) => {
     return sources
@@ -60,6 +52,6 @@ export const getBreakpointSources = createSelector(
           breakpoints
         ),
       }))
-      .filter(({ breakpoints: bpSources }) => bpSources.length > 0);
+      .filter(({ breakpoints: bps }) => bps.length > 0);
   }
 );

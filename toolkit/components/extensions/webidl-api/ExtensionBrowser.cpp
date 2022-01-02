@@ -97,6 +97,52 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
 #endif
 }
 
+void CreateAndDispatchInitWorkerContextRunnable() {
+  MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
+  // DO NOT pass this WorkerPrivate raw pointer to anything else but the
+  // RequestInitWorkerRunnable (which extends dom::WorkerMainThreadRunnable).
+  dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  MOZ_ASSERT(workerPrivate->ExtensionAPIAllowed());
+  MOZ_ASSERT(workerPrivate->IsServiceWorker());
+  workerPrivate->AssertIsOnWorkerThread();
+
+  auto* workerScope = workerPrivate->GlobalScope();
+  if (NS_WARN_IF(!workerScope)) {
+    return;
+  }
+
+  Maybe<dom::ClientInfo> clientInfo = workerScope->GetClientInfo();
+  if (NS_WARN_IF(clientInfo.isNothing())) {
+    return;
+  }
+
+  RefPtr<RequestInitWorkerRunnable> runnable =
+      new RequestInitWorkerRunnable(std::move(workerPrivate), clientInfo);
+  IgnoredErrorResult rv;
+  runnable->Dispatch(dom::WorkerStatus::Canceling, rv);
+  if (rv.Failed()) {
+    NS_WARNING("Failed to dispatch extensions::RequestInitWorkerRunnable");
+  }
+}
+
+already_AddRefed<Runnable> CreateWorkerLoadedRunnable(
+    const uint64_t aServiceWorkerDescriptorId,
+    const nsCOMPtr<nsIURI>& aWorkerBaseURI) {
+  RefPtr<NotifyWorkerLoadedRunnable> runnable = new NotifyWorkerLoadedRunnable(
+      aServiceWorkerDescriptorId, aWorkerBaseURI);
+  return runnable.forget();
+}
+
+already_AddRefed<Runnable> CreateWorkerDestroyedRunnable(
+    const uint64_t aServiceWorkerDescriptorId,
+    const nsCOMPtr<nsIURI>& aWorkerBaseURI) {
+  RefPtr<NotifyWorkerDestroyedRunnable> runnable =
+      new NotifyWorkerDestroyedRunnable(aServiceWorkerDescriptorId,
+                                        aWorkerBaseURI);
+  return runnable.forget();
+}
+
 void ExtensionBrowser::SetLastError(JS::Handle<JS::Value> aLastError) {
   mLastError.set(aLastError);
   mCheckedLastError = false;

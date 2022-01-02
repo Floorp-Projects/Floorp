@@ -31,8 +31,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamGenericReader)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ReadableStreamDefaultReader,
-                                   ReadableStreamGenericReader, mReadRequests)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ReadableStreamDefaultReader,
+                                                ReadableStreamGenericReader,
+                                                mReadRequests)
 NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultReader,
                          ReadableStreamGenericReader)
 NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultReader,
@@ -41,11 +42,6 @@ NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultReader,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(ReadableStreamGenericReader)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultReader,
-                                               ReadableStreamGenericReader)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ReadableStreamDefaultReader::ReadableStreamDefaultReader(nsISupports* aGlobal)
     : ReadableStreamGenericReader(do_QueryInterface(aGlobal)),

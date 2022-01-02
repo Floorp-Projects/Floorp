@@ -273,7 +273,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       .add(true);
 
     // cancelling picker(if it is already selected) on opening eye-dropper
-    toolbox.nodePicker.cancel();
+    toolbox.nodePicker.stop({ canceled: true });
 
     // disable simulating touch events if RDM is active
     toolbox.tellRDMAboutPickerState(true, PICKER_TYPES.EYEDROPPER);

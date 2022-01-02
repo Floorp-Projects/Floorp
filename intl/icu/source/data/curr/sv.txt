@@ -33,7 +33,7 @@ sv{
         }
         ANG{
             "ANG",
-            "Antillergulden",
+            "antillergulden",
         }
         AOA{
             "AOA",
@@ -1346,8 +1346,8 @@ sv{
             other{"armeniska dram"}
         }
         ANG{
-            one{"Antillergulden"}
-            other{"Antillergulden"}
+            one{"antillergulden"}
+            other{"antillergulden"}
         }
         AOA{
             one{"angolansk kwanza"}

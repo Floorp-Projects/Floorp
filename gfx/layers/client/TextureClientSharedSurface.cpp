@@ -43,7 +43,6 @@ void SharedSurfaceTextureData::Deallocate(LayersIPCChannel*) {}
 void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;
@@ -84,7 +83,7 @@ bool SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   }
 
   aOutDescriptor = layers::SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(readerFd.release()), buffer->mId, buffer->mSize,
+      ipc::FileDescriptor(std::move(readerFd)), buffer->mId, buffer->mSize,
       buffer->mFormat);
   return true;
 #else

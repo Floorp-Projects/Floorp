@@ -21,6 +21,7 @@ const {
 } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
@@ -250,6 +251,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * Get a window to use for the browser console.
    *
+   * (note that is is also used for browser toolbox and webextension
+   *  i.e. all targets flagged with isRootActor=true)
+   *
    * @private
    * @return nsIDOMWindow
    *         The window to use, or null if no window could be found.
@@ -258,7 +262,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     // Check if our last used chrome window is still live.
     let window = this._lastChromeWindow && this._lastChromeWindow.get();
     // If not, look for a new one.
-    if (!window || window.closed) {
+    // In case of WebExtension reload of the background page, the last
+    // chrome window might be a dead wrapper, from which we can't check for window.closed.
+    if (!window || Cu.isDeadWrapper(window) || window.closed) {
       window = this.parentActor.window;
       if (!window) {
         // Try to find the Browser Console window to use instead.
@@ -604,6 +610,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   startListeners: async function(listeners) {
     const startedListeners = [];
     const global = !this.parentActor.isRootActor ? this.global : null;
+    const isTargetActorContentProcess =
+      this.parentActor.targetType === Targets.TYPES.PROCESS;
 
     for (const event of listeners) {
       switch (event) {
@@ -762,7 +770,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           break;
         case "DocumentEvents":
           // Workers don't support this message type
-          if (isWorker) {
+          if (isWorker || isTargetActorContentProcess) {
             break;
           }
           if (!this.documentEventsListener) {

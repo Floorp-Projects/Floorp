@@ -71,18 +71,6 @@ static already_AddRefed<TextureClient> CreateYCbCrTextureClientWithBackend(
         gfx::ColorRange::LIMITED, TextureFlags::DEALLOCATE_CLIENT);
   }
 
-#ifdef XP_WIN
-  RefPtr<ID3D11Device> device =
-      mozilla::gfx::DeviceManagerDx::Get()->GetImageDevice();
-
-  if (device && aLayersBackend == LayersBackend::LAYERS_D3D11) {
-    DXGIYCbCrTextureAllocationHelper helper(clientData, TextureFlags::DEFAULT,
-                                            device);
-    RefPtr<TextureClient> texture = helper.Allocate(nullptr);
-    return texture.forget();
-  }
-#endif
-
   if (data) {
     return MakeAndAddRef<TextureClient>(data, TextureFlags::DEALLOCATE_CLIENT,
                                         nullptr);
@@ -108,15 +96,6 @@ static already_AddRefed<TextureClient> CreateTextureClientWithBackend(
   if (!gfx::Factory::AllowedSurfaceSize(size)) {
     return nullptr;
   }
-
-#ifdef XP_WIN
-  if (aLayersBackend == LayersBackend::LAYERS_D3D11 &&
-      (moz2DBackend == BackendType::DIRECT2D ||
-       moz2DBackend == BackendType::DIRECT2D1_1)) {
-    // Create D3D11TextureData.
-    data = D3D11TextureData::Create(size, format, allocFlags);
-  }
-#endif
 
   if (!data && aLayersBackend == LayersBackend::LAYERS_BASIC) {
     // Create BufferTextureData.

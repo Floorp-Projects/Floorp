@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait" reftest-resolution="2.0" reftest-async-scroll><head>
+<meta name="viewport" content="width=device-width">
+</head>
+<!-- Doing scrollTo(1,1) is to activate the left/up arrows in the scrollbars
+     for non-overlay scrollbar environments -->
+<body onload="subframe.scrollTo(1,1); document.documentElement.classList.remove('reftest-wait')">
+<div id="subframe" style="width: 200px; height: 200px; overflow: scroll;"
+     reftest-displayport-x="0" reftest-displayport-y="0"
+     reftest-displayport-w="1600" reftest-displayport-h="2000"
+     reftest-async-scroll-x="224" reftest-async-scroll-y="4999">
+  <div style="width: 4500px; height: 10000px; background: white;"></div>
+</div>
+</body>
+</html>

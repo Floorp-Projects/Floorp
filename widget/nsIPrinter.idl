@@ -45,6 +45,15 @@ interface nsIPrinter : nsISupports
   readonly attribute Promise printerInfo;
 
   /**
+   * Returns a Promise that resolves to a new settings object that contains all
+   * of the settings from aSettingsToCopyFrom that are valid for this printer.
+   * Any settings that are not valid for the printer are set to default/fallback
+   * values.
+   */
+  [implicit_jscontext]
+  Promise copyFromWithValidation(in nsIPrintSettings aSettingsToCopyFrom);
+
+  /**
    * Returns a Promise that resolves to true or false to indicate whether this
    * printer supports duplex printing.
    */

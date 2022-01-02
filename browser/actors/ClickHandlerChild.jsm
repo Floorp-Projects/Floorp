@@ -32,7 +32,6 @@ ChromeUtils.defineModuleGetter(
 class ClickHandlerChild extends JSWindowActorChild {
   handleEvent(event) {
     if (
-      !event.isTrusted ||
       event.defaultPrevented ||
       event.button == 2 ||
       (event.type == "click" && event.button == 1)
@@ -63,6 +62,11 @@ class ClickHandlerChild extends JSWindowActorChild {
       if (ownerDoc.documentURI.startsWith("about:blocked")) {
         return;
       }
+    }
+
+    // For untrusted events, require a valid transient user gesture activation.
+    if (!event.isTrusted && !ownerDoc.hasValidTransientUserGestureActivation) {
+      return;
     }
 
     let [href, node, principal] = BrowserUtils.hrefAndLinkNodeForClickEvent(
@@ -111,6 +115,26 @@ class ClickHandlerChild extends JSWindowActorChild {
         );
       } catch (e) {
         return;
+      }
+
+      if (
+        !event.isTrusted &&
+        BrowserUtils.whereToOpenLink(event) != "current"
+      ) {
+        // If we'll open the link, we want to consume the user gesture
+        // activation to ensure that we don't allow multiple links to open
+        // from one user gesture.
+        // Avoid doing so for links opened in the current tab, which get
+        // handled later, by gecko, as otherwise its popup blocker will stop
+        // the link from opening.
+        // We will do the same check (whereToOpenLink) again in the parent and
+        // avoid handling the click for such links... but we still need the
+        // click information in the parent because otherwise places link
+        // tracking breaks. (bug 1742894 tracks improving this.)
+        ownerDoc.consumeTransientUserGestureActivation();
+        // We don't care about the return value because we already checked that
+        // hasValidTransientUserGestureActivation was true earlier in this
+        // function.
       }
 
       json.href = href;

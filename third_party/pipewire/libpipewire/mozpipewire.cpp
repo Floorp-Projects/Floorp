@@ -85,6 +85,9 @@ static struct pw_thread_loop* (*pw_thread_loop_new_fn)(const char *name,
                                                 const struct spa_dict *props);
 static int (*pw_thread_loop_start_fn)(struct pw_thread_loop *loop);
 static void (*pw_thread_loop_stop_fn)(struct pw_thread_loop *loop);
+static void (*pw_thread_loop_lock_fn)(struct pw_thread_loop *loop);
+static void (*pw_thread_loop_unlock_fn)(struct pw_thread_loop *loop);
+static struct pw_properties* (*pw_properties_new_string_fn)(const char *str);
 
 bool IsPwLibraryLoaded() {
   static bool isLoaded =
@@ -105,7 +108,10 @@ bool IsPwLibraryLoaded() {
           IS_FUNC_LOADED(pw_thread_loop_get_loop_fn) &&
           IS_FUNC_LOADED(pw_thread_loop_new_fn) &&
           IS_FUNC_LOADED(pw_thread_loop_start_fn) &&
-          IS_FUNC_LOADED(pw_thread_loop_stop_fn));
+          IS_FUNC_LOADED(pw_thread_loop_stop_fn) &&
+          IS_FUNC_LOADED(pw_thread_loop_lock_fn) &&
+          IS_FUNC_LOADED(pw_thread_loop_unlock_fn) &&
+          IS_FUNC_LOADED(pw_properties_new_string_fn));
 
   return isLoaded;
 }
@@ -140,6 +146,9 @@ bool LoadPWLibrary() {
     GET_FUNC(pw_thread_loop_new, pwLib);
     GET_FUNC(pw_thread_loop_start, pwLib);
     GET_FUNC(pw_thread_loop_stop, pwLib);
+    GET_FUNC(pw_thread_loop_lock, pwLib);
+    GET_FUNC(pw_thread_loop_unlock, pwLib);
+    GET_FUNC(pw_properties_new_string, pwLib);
   }
 
   return IsPwLibraryLoaded();
@@ -328,3 +337,32 @@ pw_thread_loop_stop(struct pw_thread_loop *loop)
   }
   return pw_thread_loop_stop_fn(loop);
 }
+
+void
+pw_thread_loop_lock(struct pw_thread_loop *loop)
+{
+  if (!LoadPWLibrary()) {
+    return;
+  }
+  return pw_thread_loop_lock_fn(loop);
+}
+
+void
+pw_thread_loop_unlock(struct pw_thread_loop *loop)
+{
+  if (!LoadPWLibrary()) {
+    return;
+  }
+  return pw_thread_loop_unlock_fn(loop);
+}
+
+
+struct pw_properties *
+pw_properties_new_string(const char *str)
+{
+  if (!LoadPWLibrary()) {
+    return nullptr;
+  }
+  return pw_properties_new_string_fn(str);
+}
+

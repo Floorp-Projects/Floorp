@@ -447,16 +447,20 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
       // Zlib is initialized, overwrite the prefix with the inflated data.
 
       MOZ_DIAGNOSTIC_ASSERT(aCount > 0);
-      MOZ_DIAGNOSTIC_ASSERT(self->mZStream.avail_out > 0);
       self->mZStream.avail_in = aCount;
       self->mZStream.next_in = (uint8_t*)aFromSegment;
 
       int ret = inflate(&self->mZStream, Z_NO_FLUSH);
 
+      MOZ_DIAGNOSTIC_ASSERT(ret == Z_OK || ret == Z_STREAM_END,
+                            "corrupt optimized wasm cache file: data");
+      MOZ_DIAGNOSTIC_ASSERT(self->mZStream.avail_in == 0,
+                            "corrupt optimized wasm cache file: input");
+      MOZ_DIAGNOSTIC_ASSERT_IF(ret == Z_STREAM_END,
+                               self->mZStream.avail_out == 0);
       // Gracefully handle corruption in release.
       bool ok =
           (ret == Z_OK || ret == Z_STREAM_END) && self->mZStream.avail_in == 0;
-      MOZ_DIAGNOSTIC_ASSERT(ok, "corrupt optimized wasm cache file");
       if (!ok) {
         return NS_ERROR_UNEXPECTED;
       }
@@ -537,9 +541,11 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
 
     if (rv == NS_BASE_STREAM_CLOSED) {
       if (mOptimizedEncoding) {
-        // Gracefully handle corruption in release.
+        // Gracefully handle corruption of compressed data stream in release.
+        // From on investigations in bug 1738987, the incomplete data cases
+        // mostly happen during shutdown. Some corruptions in the cache entry
+        // can still happen and will be handled in the WriteSegment above.
         bool ok = mZStreamInitialized && mZStream.avail_out == 0;
-        MOZ_DIAGNOSTIC_ASSERT(ok, "corrupt optimized wasm cache file");
         if (!ok) {
           mConsumer->streamError(size_t(NS_ERROR_UNEXPECTED));
           return NS_OK;
@@ -730,7 +736,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
       break;
   }
 
-  RefPtr<InternalResponse> ir = response->GetInternalResponse();
+  SafeRefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
   }

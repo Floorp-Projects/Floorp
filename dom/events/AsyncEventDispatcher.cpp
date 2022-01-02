@@ -39,7 +39,7 @@ AsyncEventDispatcher::Run() {
   if (mCanceled) {
     return NS_OK;
   }
-  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+  nsINode* node = nsINode::FromEventTargetOrNull(mTarget);
   if (mCheckStillInDoc) {
     MOZ_ASSERT(node);
     if (!node->IsInComposedDoc()) {
@@ -85,8 +85,8 @@ nsresult AsyncEventDispatcher::PostDOMEvent() {
 
     // Sometimes GetOwnerGlobal returns null because it uses
     // GetScriptHandlingObject rather than GetScopeObject.
-    if (nsCOMPtr<nsINode> node = do_QueryInterface(mTarget)) {
-      nsCOMPtr<Document> doc = node->OwnerDoc();
+    if (nsINode* node = nsINode::FromEventTargetOrNull(mTarget)) {
+      RefPtr<Document> doc = node->OwnerDoc();
       return doc->Dispatch(TaskCategory::Other,
                            ensureDeletionWhenFailing.forget());
     }
@@ -100,11 +100,8 @@ void AsyncEventDispatcher::RunDOMEventWhenSafe() {
 }
 
 void AsyncEventDispatcher::RequireNodeInDocument() {
-#ifdef DEBUG
-  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-  MOZ_ASSERT(node);
-#endif
-
+  MOZ_ASSERT(mTarget);
+  MOZ_ASSERT(mTarget->IsNode());
   mCheckStillInDoc = true;
 }
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function IteratorIdentity() {
+ function IteratorIdentity() {
   return this;
 }
 
@@ -36,6 +36,40 @@ function IteratorClose(iteratorRecord, value) {
   }
   // Step 5b & 9.
   return value;
+}
+
+/**
+ * ES2022 draft rev c5f683e61d5dce703650f1c90d2309c46f8c157a
+ *
+ * GetIterator ( obj [ , hint [ , method ] ] )
+ * https://tc39.es/ecma262/#sec-getiterator
+ *
+ * Optimized for single argument
+ */
+function GetIteratorSync(obj) {
+  // Steps 1 & 2 skipped as we know we want the sync iterator method
+  var method = GetMethod(obj, GetBuiltinSymbol("iterator"))
+
+  // Step 3. Let iterator be ? Call(method, obj).
+  var iterator = callContentFunction(method, obj);
+
+  // Step 4. If Type(iterator) is not Object, throw a TypeError exception.
+  if (!IsObject(iterator)) {
+    ThrowTypeError(JSMSG_NOT_ITERABLE, obj === null ? "null" : typeof obj);
+  }
+
+  // Step 5. Let nextMethod be ? GetV(iterator, "next").
+  var nextMethod = iterator.next;
+
+  // Step 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+  var iteratorRecord = {
+    iterator,
+    nextMethod,
+    done: false
+  };
+
+  // Step 7. Return iteratorRecord.
+  return iteratorRecord;
 }
 
 /* Iterator Helpers proposal 1.1.1 */

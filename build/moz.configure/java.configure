@@ -14,16 +14,26 @@ option(
 )
 
 
-@depends("--with-java-bin-path")
-@imports(_from="mozboot.util", _import="locate_java_bin_path")
-@imports(_from="mozboot.util", _import="JavaLocationFailedException")
-def java_search_paths(path):
+@depends("--with-java-bin-path", host, toolchains_base_dir)
+@imports(_from="mozboot.android", _import="JavaLocationFailedException")
+@imports(_from="mozboot.android", _import="locate_java_bin_path")
+@imports(_from="os", _import="environ")
+@imports(_from="os.path", _import="dirname")
+def java_search_paths(path, host, toolchains_base_dir):
     if path:
         # Look for javac and jar in the specified path.
         return path
 
     try:
-        return [locate_java_bin_path()]
+        path = locate_java_bin_path(host.kernel, toolchains_base_dir)
+
+        java_home = environ.get("JAVA_HOME")
+        if java_home and java_home != dirname(path):
+            log.info(
+                "Ignoring JAVA_HOME value. Use --with-java-bin-path "
+                "to override the default Java location."
+            )
+        return [path]
     except JavaLocationFailedException as e:
         die(str(e))
 
@@ -42,8 +52,8 @@ def check_java_tool(tool):
     def require_tool(result):
         if result is None:
             die(
-                "The program %s was not found.  Set $JAVA_HOME to your Java "
-                "SDK directory or use '--with-java-bin-path={java-bin-dir}'" % tool
+                "The program %s was not found. Use '--with-java-bin-path={java-bin-dir}'"
+                % tool
             )
         return result
 

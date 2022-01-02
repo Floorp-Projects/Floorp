@@ -21,6 +21,7 @@
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 
@@ -705,9 +706,7 @@ JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
 
   MOZ_ASSERT(obj);
   MOZ_ASSERT(IsInsideNursery(obj));
-  mozilla::DebugOnly<JSObject*> prior(obj);
-  MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(&prior));
-  MOZ_ASSERT(obj == prior);
+  MOZ_ASSERT(!IsForwarded(obj));
 
   const JSClass* jsClass = JS::GetClass(obj);
   jsClass->doFinalize(cx->defaultFreeOp(), obj);

@@ -189,7 +189,7 @@ bool Module::finishTier2(const LinkData& linkData2,
     auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
     auto stubs2 = borrowedTier2->lazyStubs().lock();
 
-    MOZ_ASSERT(stubs2->empty());
+    MOZ_ASSERT(stubs2->entryStubsEmpty());
 
     Uint32Vector funcExportIndices;
     for (size_t i = 0; i < metadataTier1.funcExports.length(); i++) {
@@ -197,7 +197,7 @@ bool Module::finishTier2(const LinkData& linkData2,
       if (fe.hasEagerStubs()) {
         continue;
       }
-      if (!stubs1->hasStub(fe.funcIndex())) {
+      if (!stubs1->hasEntryStub(fe.funcIndex())) {
         continue;
       }
       if (!funcExportIndices.emplaceBack(i)) {
@@ -604,7 +604,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         return false;
       }
 
-      if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
+      if (!instance.initElems(cx, seg->tableIndex, *seg, offset, 0, count)) {
         return false;  // OOM
       }
     }

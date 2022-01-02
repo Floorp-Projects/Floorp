@@ -9,7 +9,7 @@ namespace mozilla::intl {
 
 struct VisualRun {
   Span<const char16_t> string;
-  Bidi::Direction direction;
+  BidiDirection direction;
 };
 
 /**
@@ -19,7 +19,7 @@ struct VisualRun {
 class MOZ_STACK_CLASS VisualRunIter {
  public:
   VisualRunIter(Bidi& aBidi, Span<const char16_t> aParagraph,
-                Bidi::EmbeddingLevel aLevel)
+                BidiEmbeddingLevel aLevel)
       : mBidi(aBidi), mParagraph(aParagraph) {
     // Crash in case of errors by calling unwrap. If this were a real API, this
     // would be a TryCreate call.
@@ -35,7 +35,7 @@ class MOZ_STACK_CLASS VisualRunIter {
     int32_t stringIndex = -1;
     int32_t stringLength = -1;
 
-    Bidi::Direction direction =
+    BidiDirection direction =
         mBidi.GetVisualRun(mRunIndex, &stringIndex, &stringLength);
 
     Span<const char16_t> string(mParagraph.Elements() + stringIndex,
@@ -53,7 +53,7 @@ class MOZ_STACK_CLASS VisualRunIter {
 
 struct LogicalRun {
   Span<const char16_t> string;
-  Bidi::EmbeddingLevel embeddingLevel;
+  BidiEmbeddingLevel embeddingLevel;
 };
 
 /**
@@ -63,7 +63,7 @@ struct LogicalRun {
 class MOZ_STACK_CLASS LogicalRunIter {
  public:
   LogicalRunIter(Bidi& aBidi, Span<const char16_t> aParagraph,
-                 Bidi::EmbeddingLevel aLevel)
+                 BidiEmbeddingLevel aLevel)
       : mBidi(aBidi), mParagraph(aParagraph) {
     // Crash in case of errors by calling unwrap. If this were a real API, this
     // would be a TryCreate call.
@@ -78,7 +78,7 @@ class MOZ_STACK_CLASS LogicalRunIter {
 
     int32_t logicalLimit;
 
-    Bidi::EmbeddingLevel embeddingLevel;
+    BidiEmbeddingLevel embeddingLevel;
     mBidi.GetLogicalRun(mRunIndex, &logicalLimit, &embeddingLevel);
 
     Span<const char16_t> string(mParagraph.Elements() + mRunIndex,
@@ -98,7 +98,7 @@ TEST(IntlBidi, SimpleLTR)
 {
   Bidi bidi{};
   LogicalRunIter logicalRunIter(bidi, MakeStringSpan(u"this is a paragraph"),
-                                Bidi::EmbeddingLevel::DefaultLTR());
+                                BidiEmbeddingLevel::DefaultLTR());
   ASSERT_EQ(bidi.GetParagraphEmbeddingLevel(), 0);
   ASSERT_EQ(bidi.GetParagraphDirection(), Bidi::ParagraphDirection::LTR);
 
@@ -107,7 +107,7 @@ TEST(IntlBidi, SimpleLTR)
     ASSERT_TRUE(logicalRun.isSome());
     ASSERT_EQ(logicalRun->string, MakeStringSpan(u"this is a paragraph"));
     ASSERT_EQ(logicalRun->embeddingLevel, 0);
-    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), Bidi::Direction::LTR);
+    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), BidiDirection::LTR);
   }
 
   {
@@ -120,7 +120,7 @@ TEST(IntlBidi, SimpleRTL)
 {
   Bidi bidi{};
   LogicalRunIter logicalRunIter(bidi, MakeStringSpan(u"فايرفوكس رائع"),
-                                Bidi::EmbeddingLevel::DefaultLTR());
+                                BidiEmbeddingLevel::DefaultLTR());
   ASSERT_EQ(bidi.GetParagraphEmbeddingLevel(), 1);
   ASSERT_EQ(bidi.GetParagraphDirection(), Bidi::ParagraphDirection::RTL);
 
@@ -128,7 +128,7 @@ TEST(IntlBidi, SimpleRTL)
     auto logicalRun = logicalRunIter.Next();
     ASSERT_TRUE(logicalRun.isSome());
     ASSERT_EQ(logicalRun->string, MakeStringSpan(u"فايرفوكس رائع"));
-    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), Bidi::Direction::RTL);
+    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), BidiDirection::RTL);
     ASSERT_EQ(logicalRun->embeddingLevel, 1);
   }
 
@@ -143,7 +143,7 @@ TEST(IntlBidi, MultiLevel)
   Bidi bidi{};
   LogicalRunIter logicalRunIter(
       bidi, MakeStringSpan(u"Firefox is awesome: رائع Firefox"),
-      Bidi::EmbeddingLevel::DefaultLTR());
+      BidiEmbeddingLevel::DefaultLTR());
   ASSERT_EQ(bidi.GetParagraphEmbeddingLevel(), 0);
   ASSERT_EQ(bidi.GetParagraphDirection(), Bidi::ParagraphDirection::Mixed);
 
@@ -180,7 +180,7 @@ TEST(IntlBidi, RtlOverride)
   // levels can be computed.
   LogicalRunIter logicalRunIter(
       bidi, MakeStringSpan(u"ltr\u202b___رائع___\u202a___ltr__"),
-      Bidi::EmbeddingLevel::DefaultLTR());
+      BidiEmbeddingLevel::DefaultLTR());
   ASSERT_EQ(bidi.GetParagraphEmbeddingLevel(), 0);
   ASSERT_EQ(bidi.GetParagraphDirection(), Bidi::ParagraphDirection::Mixed);
 
@@ -189,21 +189,21 @@ TEST(IntlBidi, RtlOverride)
     ASSERT_TRUE(logicalRun.isSome());
     ASSERT_EQ(logicalRun->string, MakeStringSpan(u"ltr"));
     ASSERT_EQ(logicalRun->embeddingLevel, 0);
-    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), Bidi::Direction::LTR);
+    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), BidiDirection::LTR);
   }
   {
     auto logicalRun = logicalRunIter.Next();
     ASSERT_TRUE(logicalRun.isSome());
     ASSERT_EQ(logicalRun->string, MakeStringSpan(u"\u202b___رائع___"));
     ASSERT_EQ(logicalRun->embeddingLevel, 1);
-    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), Bidi::Direction::RTL);
+    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), BidiDirection::RTL);
   }
   {
     auto logicalRun = logicalRunIter.Next();
     ASSERT_TRUE(logicalRun.isSome());
     ASSERT_EQ(logicalRun->string, MakeStringSpan(u"\u202a___ltr__"));
     ASSERT_EQ(logicalRun->embeddingLevel, 2);
-    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), Bidi::Direction::LTR);
+    ASSERT_EQ(logicalRun->embeddingLevel.Direction(), BidiDirection::LTR);
   }
   {
     auto logicalRun = logicalRunIter.Next();
@@ -219,24 +219,24 @@ TEST(IntlBidi, VisualRuns)
       bidi,
       MakeStringSpan(
           u"first visual run التشغيل البصري الثاني third visual run"),
-      Bidi::EmbeddingLevel::DefaultLTR());
+      BidiEmbeddingLevel::DefaultLTR());
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u"first visual run "));
-    ASSERT_EQ(run->direction, Bidi::Direction::LTR);
+    ASSERT_EQ(run->direction, BidiDirection::LTR);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u"التشغيل البصري الثاني"));
-    ASSERT_EQ(run->direction, Bidi::Direction::RTL);
+    ASSERT_EQ(run->direction, BidiDirection::RTL);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u" third visual run"));
-    ASSERT_EQ(run->direction, Bidi::Direction::LTR);
+    ASSERT_EQ(run->direction, BidiDirection::LTR);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();
@@ -250,24 +250,24 @@ TEST(IntlBidi, VisualRunsWithEmbeds)
   Bidi bidi{};
   VisualRunIter visualRunIter(
       bidi, MakeStringSpan(u"ltr\u202b___رائع___\u202a___ltr___"),
-      Bidi::EmbeddingLevel::DefaultLTR());
+      BidiEmbeddingLevel::DefaultLTR());
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u"ltr"));
-    ASSERT_EQ(run->direction, Bidi::Direction::LTR);
+    ASSERT_EQ(run->direction, BidiDirection::LTR);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u"\u202a___ltr___"));
-    ASSERT_EQ(run->direction, Bidi::Direction::LTR);
+    ASSERT_EQ(run->direction, BidiDirection::LTR);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();
     ASSERT_TRUE(run.isSome());
     ASSERT_EQ(run->string, MakeStringSpan(u"\u202b___رائع___"));
-    ASSERT_EQ(run->direction, Bidi::Direction::RTL);
+    ASSERT_EQ(run->direction, BidiDirection::RTL);
   }
   {
     Maybe<VisualRun> run = visualRunIter.Next();

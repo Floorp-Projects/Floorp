@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/IonIC.h"
 #include "jit/JitFrames.h"
 #include "jit/JitZone.h"
@@ -20,6 +21,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 #include "util/Memory.h"
+#include "vm/StaticStrings.h"
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -386,14 +388,13 @@ bool IonCacheIRCompiler::init() {
     }
     case CacheKind::OptimizeSpreadCall: {
       auto* ic = ic_->asOptimizeSpreadCallIC();
-      Register output = ic->output();
+      ValueOperand output = ic->output();
 
       available.add(output);
       available.add(ic->temp());
 
       liveRegs_.emplace(ic->liveRegs());
-      outputUnchecked_.emplace(
-          TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+      outputUnchecked_.emplace(output);
 
       MOZ_ASSERT(numInputs == 1);
       allocator.initInputLocation(0, ic->value());

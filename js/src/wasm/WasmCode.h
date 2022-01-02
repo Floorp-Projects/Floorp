@@ -72,6 +72,26 @@ class MacroAssembler;
 
 namespace wasm {
 
+struct IndirectStubTarget {
+  uint32_t functionIdx;
+  void* checkedCallEntryAddress;
+  TlsData* tls;
+
+  bool operator==(const IndirectStubTarget& other) const {
+    bool result = functionIdx == other.functionIdx && tls == other.tls;
+    // Code pointers must be equal if function index and tls are equal.  Note
+    // it's possible for code pointers to be equal even if index and tls do not
+    // match, as the code pointer and function index are per-module but the tls
+    // is per-instance.
+    MOZ_ASSERT_IF(result,
+                  (checkedCallEntryAddress == other.checkedCallEntryAddress));
+    return result;
+  }
+};
+
+using VectorOfIndirectStubTarget =
+    Vector<IndirectStubTarget, 8, SystemAllocPolicy>;
+
 struct MetadataTier;
 struct Metadata;
 
@@ -489,7 +509,7 @@ struct MetadataTier {
 using UniqueMetadataTier = UniquePtr<MetadataTier>;
 
 // LazyStubSegment is a code segment lazily generated for function entry stubs
-// (both interpreter and jit ones).
+// (both interpreter and jit ones) and for indirect stubs.
 //
 // Because a stub is usually small (a few KiB) and an executable code segment
 // isn't (64KiB), a given stub segment can contain entry stubs of many
@@ -516,13 +536,21 @@ class LazyStubSegment : public CodeSegment {
   }
 
   bool hasSpace(size_t bytes) const;
-  bool addStubs(size_t codeLength, const Uint32Vector& funcExportIndices,
-                const FuncExportVector& funcExports,
-                const CodeRangeVector& codeRanges, uint8_t** codePtr,
-                size_t* indexFirstInsertedCodeRange);
+  [[nodiscard]] bool addStubs(size_t codeLength,
+                              const Uint32Vector& funcExportIndices,
+                              const FuncExportVector& funcExports,
+                              const CodeRangeVector& codeRanges,
+                              uint8_t** codePtr,
+                              size_t* indexFirstInsertedCodeRange);
+
+  [[nodiscard]] bool addIndirectStubs(size_t codeLength,
+                                      const VectorOfIndirectStubTarget& targets,
+                                      const CodeRangeVector& codeRanges,
+                                      uint8_t** codePtr,
+                                      size_t* indexFirstInsertedCodeRange);
 
   const CodeRangeVector& codeRanges() const { return codeRanges_; }
-  const CodeRange* lookupRange(const void* pc) const;
+  [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
@@ -545,8 +573,31 @@ struct LazyFuncExport {
 
 using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 
+// IndirectStub provides a mapping between function indices and
+// indirect stubs code ranges.
+
+// The function index is the index of the function *within a specific module*,
+// not necessarily in the module that owns the stub.  That module's and
+// function's instance is provided by the tls field.
+
+struct IndirectStub {
+  size_t funcIndex;
+  size_t segmentIndex;
+  size_t codeRangeIndex;
+  void* tls;
+  IndirectStub(size_t funcIndex, size_t segmentIndex, size_t codeRangeIndex,
+               TlsData* tls)
+      : funcIndex(funcIndex),
+        segmentIndex(segmentIndex),
+        codeRangeIndex(codeRangeIndex),
+        tls(tls) {}
+};
+
+using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
+
 // LazyStubTier contains all the necessary information for lazy function entry
-// stubs that are generated at runtime. None of its data is ever serialized.
+// stubs and indirect stubs that are generated at runtime.
+// None of its data are ever serialized.
 //
 // It must be protected by a lock, because the main thread can both read and
 // write lazy stubs at any time while a background thread can regenerate lazy
@@ -555,32 +606,53 @@ using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 class LazyStubTier {
   LazyStubSegmentVector stubSegments_;
   LazyFuncExportVector exports_;
+  // The indirectStubVector_ is totally ordered by IndirectStubComparator (in
+  // WasmCode.cpp): the primary index is the funcIndex, the secondary index the
+  // pointer value of the tls.  The vector is binary-searched by that predicate
+  // when an entry is needed.
+  //
+  // Creating an indirect stub is not an idempotent operation!  There must be NO
+  // duplicate entries in the table, which is another way of saying that an
+  // entry that is in the table must always be found by a lookup.
+  IndirectStubVector indirectStubVector_;
   size_t lastStubSegmentIndex_;
 
-  bool createMany(const Uint32Vector& funcExportIndices,
-                  const CodeTier& codeTier, bool flushAllThreadsIcaches,
-                  size_t* stubSegmentIndex);
+  [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
+                                          const CodeTier& codeTier,
+                                          bool flushAllThreadsIcaches,
+                                          size_t* stubSegmentIndex);
 
  public:
   LazyStubTier() : lastStubSegmentIndex_(0) {}
 
-  bool empty() const { return stubSegments_.empty(); }
-  bool hasStub(uint32_t funcIndex) const;
-
-  // Returns a pointer to the raw interpreter entry of a given function which
-  // stubs have been lazily generated.
-  void* lookupInterpEntry(uint32_t funcIndex) const;
-
   // Creates one lazy stub for the exported function, for which the jit entry
   // will be set to the lazily-generated one.
-  bool createOne(uint32_t funcExportIndex, const CodeTier& codeTier);
+  [[nodiscard]] bool createOneEntryStub(uint32_t funcExportIndex,
+                                        const CodeTier& codeTier);
+
+  bool entryStubsEmpty() const { return stubSegments_.empty(); }
+  bool hasEntryStub(uint32_t funcIndex) const;
+
+  // Returns a pointer to the raw interpreter entry of a given function for
+  // which stubs have been lazily generated.
+  [[nodiscard]] void* lookupInterpEntry(uint32_t funcIndex) const;
+
+  // Creates many indirect stubs.
+  [[nodiscard]] bool createManyIndirectStubs(
+      const VectorOfIndirectStubTarget& targets, const CodeTier& codeTier);
+
+  // Returns a pointer to the indirect stub of a given function.
+  [[nodiscard]] void* lookupIndirectStub(uint32_t funcIndex, void* tls) const;
+
+  [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
 
   // Create one lazy stub for all the functions in funcExportIndices, putting
   // them in a single stub. Jit entries won't be used until
   // setJitEntries() is actually called, after the Code owner has committed
   // tier2.
-  bool createTier2(const Uint32Vector& funcExportIndices,
-                   const CodeTier& codeTier, Maybe<size_t>* stubSegmentIndex);
+  [[nodiscard]] bool createTier2(const Uint32Vector& funcExportIndices,
+                                 const CodeTier& codeTier,
+                                 Maybe<size_t>* stubSegmentIndex);
   void setJitEntries(const Maybe<size_t>& stubSegmentIndex, const Code& code);
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
@@ -819,6 +891,7 @@ class Code : public ShareableBase<Code> {
 
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
+  const CodeRange* lookupIndirectStubRange(void* pc) const;
   const StackMap* lookupStackMap(uint8_t* nextPC) const;
 #ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;

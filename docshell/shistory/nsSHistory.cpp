@@ -972,6 +972,10 @@ static void LogEntry(nsISHEntry* aEntry, int32_t aIndex, int32_t aTotal,
   MOZ_LOG(gSHLog, LogLevel::Debug,
           (" %s%s  Name = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
            NS_LossyConvertUTF16toASCII(name).get()));
+  MOZ_LOG(
+      gSHLog, LogLevel::Debug,
+      (" %s%s  Is in BFCache = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
+       aEntry->GetIsInBFCache() ? "true" : "false"));
 
   nsCOMPtr<nsISHEntry> prevChild;
   for (int32_t i = 0; i < childCount; ++i) {
@@ -1264,12 +1268,12 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       shistory->UpdateIndex();
     }
     loadingBC->HistoryCommitIndexAndLength();
-    Unused << loadingBC->SetIsInBFCache(false);
+
     // ResetSHEntryHasUserInteractionCache(); ?
     // browser.navigation.requireUserInteraction is still
     // disabled everywhere.
 
-    frameLoaderOwner->ReplaceFrameLoader(aFrameLoader);
+    frameLoaderOwner->RestoreFrameLoaderFromBFCache(aFrameLoader);
 
     // The old page can't be stored in the bfcache,
     // destroy the nsFrameLoader.
@@ -1280,6 +1284,13 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       aBrowsingContext->SetActiveSessionHistoryEntry(currentSHEntry);
       currentFrameLoader->Destroy();
     }
+
+    Unused << loadingBC->SetIsInBFCache(false);
+
+    // We need to call this after we've restored the page from BFCache (see
+    // SetIsInBFCache(false) above), so that the page is not frozen anymore and
+    // the right focus events are fired.
+    frameLoaderOwner->UpdateFocusAndMouseEnterStateAfterFrameLoaderChange();
 
     return;
   }
@@ -2219,6 +2230,11 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(newURI);
 
   loadState->SetHasValidUserGestureActivation(aUserActivation);
+
+  // At the time we initiate a history entry load we already know if https-first
+  // was able to upgrade the request from http to https. There is no point in
+  // re-retrying to upgrade.
+  loadState->SetIsExemptFromHTTPSOnlyMode(true);
 
   /* Set the loadType in the SHEntry too to  what was passed on.
    * This will be passed on to child subframes later in nsDocShell,

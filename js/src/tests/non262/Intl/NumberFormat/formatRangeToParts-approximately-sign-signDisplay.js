@@ -13,9 +13,9 @@ const numbers = [
 
 const options = {signDisplay: "always"};
 
-// List of known approximately sign in CLDR 39.
+// List of known approximately sign in CLDR 40.
 const approximatelySigns = [
-  "~", "≈", "ca.", "約",
+  "~", "∼", "≈", "≃", "ca.", "約", "dáàṣì", "dáàshì",
 ];
 
 // Iterate over all locales and ensure we find exactly one approximately sign.

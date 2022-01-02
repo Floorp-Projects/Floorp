@@ -213,6 +213,13 @@ int main(int argc, char* argv[])
     options[OPT_DESTDIR].value=u_getDataDirectory();
     argc=u_parseArgs(argc, argv, UPRV_LENGTHOF(options), options);
 
+    if(options[OPT_VERSION].doesOccur) {
+        printf("makeconv version %u.%u, ICU tool to read .ucm codepage mapping files and write .cnv files\n",
+               dataInfo.formatVersion[0], dataInfo.formatVersion[1]);
+        printf("%s\n", U_COPYRIGHT_STRING);
+        exit(0);
+    }
+
     /* error handling, printing usage message */
     if(argc<0) {
         fprintf(stderr,
@@ -242,13 +249,6 @@ int main(int argc, char* argv[])
             "\t                    allocation when loaded.\n"
             "\t      --ignore-siso-check         Use SI/SO other than 0xf/0xe.\n");
         return argc<0 ? U_ILLEGAL_ARGUMENT_ERROR : U_ZERO_ERROR;
-    }
-
-    if(options[OPT_VERSION].doesOccur) {
-        printf("makeconv version %u.%u, ICU tool to read .ucm codepage mapping files and write .cnv files\n",
-               dataInfo.formatVersion[0], dataInfo.formatVersion[1]);
-        printf("%s\n", U_COPYRIGHT_STRING);
-        exit(0);
     }
 
     /* get the options values */

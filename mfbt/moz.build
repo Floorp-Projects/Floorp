@@ -51,6 +51,7 @@ EXPORTS.mozilla = [
     "FStream.h",
     "FunctionRef.h",
     "FunctionTypeTraits.h",
+    "Fuzzing.h",
     "HashFunctions.h",
     "HashTable.h",
     "HelperMacros.h",

@@ -180,15 +180,15 @@ function run_test() {
     },
     {
       input: "this is a smiley :)",
-      results: ["moz-smiley-s1"],
+      results: ["😄"],
     },
     {
       input: "this is a smiley :-)",
-      results: ["moz-smiley-s1"],
+      results: ["😄"],
     },
     {
       input: "this is a smiley :-(",
-      results: ["moz-smiley-s2"],
+      results: ["🙁"],
     },
   ];
 

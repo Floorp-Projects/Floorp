@@ -4,6 +4,8 @@
 
 include protocol PQuota;
 
+include "mozilla/dom/quota/SerializationHelpers.h";
+
 using mozilla::dom::quota::FullOriginMetadata
   from "mozilla/dom/quota/CommonMetadata.h";
 

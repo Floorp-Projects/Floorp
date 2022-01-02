@@ -72,14 +72,7 @@ SuggestAutoComplete.prototype = {
     }
 
     // Notify the FE of our new results
-    this.onResultsReady(
-      results.term,
-      finalResults,
-      // We supply the comments field so that autocomplete does not kick in the
-      // unescaping of the results for display which it uses for urls.
-      [...finalResults],
-      results.formHistoryResult
-    );
+    this.onResultsReady(results.term, finalResults, results.formHistoryResult);
   },
 
   /**
@@ -89,26 +82,26 @@ SuggestAutoComplete.prototype = {
    *   The user's query string.
    * @param {array} results
    *   An array of results to the search.
-   * @param {array} comments
-   *   An array of metadata corresponding to the results.
    * @param {object} formHistoryResult
    *   Any previous form history result.
    * @private
    */
-  onResultsReady(searchString, results, comments, formHistoryResult) {
+  onResultsReady(searchString, results, formHistoryResult) {
     if (this._listener) {
-      // Create a copy of the results array to use as labels, since
-      // FormAutoCompleteResult doesn't like being passed the same array
-      // for both.
-      let labels = results.slice();
       let result = new FormAutoCompleteResult(
         searchString,
         Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
         0,
         "",
-        results,
-        labels,
-        comments,
+        results.map(result => ({
+          value: result,
+          label: result,
+          // We supply the comments field so that autocomplete does not kick
+          // in the unescaping of the results for display which it uses for
+          // urls.
+          comment: result,
+          removable: true,
+        })),
         formHistoryResult
       );
 

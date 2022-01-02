@@ -5,7 +5,7 @@ In the Fission world, the preferred method of communication between between thin
 
 At the time of this writing, Fission offers the following JSActors:
 
-- `JSProcessActor`, to communicate between the a child process and its parent;
+- `JSProcessActor`, to communicate between a child process and its parent;
 - `JSWindowActor`, to communicate between a frame and its parent.
 
 JSProcessActor
@@ -14,7 +14,7 @@ JSProcessActor
 What are JSProcessActors?
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A JSProcess pair (see below) is the preferred method of communication between a child process and a parent process.
+A JSProcess pair (see below) is the preferred method of communication between a child process and its parent process.
 
 In the Fission world, JSProcessActors are the replacement for e10s-era *process scripts*.
 
@@ -59,8 +59,8 @@ However, the framescripts had no way to establish further process separation dow
 How are they structured?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A review of the current Message Manager mechanism
-`````````````````````````````````````````````````
+A review of the pre-Fission Message Manager mechanism
+`````````````````````````````````````````````````````
 
 .. note::
    There are actually several types of Message Managers: Frame Message Managers, Window Message Managers, Group Message Managers and Process Message Managers. For the purposes of this documentation, it's simplest to refer to all of these mechanisms altogether as the "Message Manager mechanism". Most of the examples in this document will be operating on the assumption that the Message Manager is a Frame Message Manager, which is the most commonly used one.
@@ -99,7 +99,7 @@ Other notable differences between JSWindowActor's and Message Manager / framescr
        <iframe src="https://www.a.com" />
        <iframe src="https://www.b.com" />
 
-   A ``JSWindowActorParent / ``JSWindowActorChild`` pair instantiated for either of the ``iframe``'s would only be sending messages to and from that ``iframe``.
+   A ``JSWindowActorParent`` / ``JSWindowActorChild`` pair instantiated for either of the ``iframe``'s would only be sending messages to and from that ``iframe``.
 
 #. There's only one pair per actor type, per frame.
 

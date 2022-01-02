@@ -166,6 +166,11 @@ function getContextChildManagerGetter(
         viewType: this.viewType,
         url: this.uri.spec,
         incognito: this.incognito,
+        // Additional data a BaseContext subclass may optionally send
+        // as part of the CreateProxyContext request sent to the main process
+        // (e.g. WorkerContexChild implements this method to send the service
+        // worker descriptor id along with the details send by default here).
+        ...this.getCreateProxyContextData?.(),
       }
     );
 

@@ -8,6 +8,7 @@
 set(JPEGXL_INTERNAL_SOURCES_GBENCH
   extras/tone_mapping_gbench.cc
   jxl/dec_external_image_gbench.cc
+  jxl/dec_reconstruct_gbench.cc
   jxl/enc_external_image_gbench.cc
   jxl/gauss_blur_gbench.cc
   jxl/splines_gbench.cc
@@ -31,7 +32,7 @@ if(benchmark_FOUND)
 
   # Compiles all the benchmark files into a single binary. Individual benchmarks
   # can be run with --benchmark_filter.
-  add_executable(jxl_gbench "${JPEGXL_INTERNAL_SOURCES_GBENCH}")
+  add_executable(jxl_gbench "${JPEGXL_INTERNAL_SOURCES_GBENCH}" gbench_main.cc)
 
   target_compile_definitions(jxl_gbench PRIVATE
     -DTEST_DATA_PATH="${PROJECT_SOURCE_DIR}/third_party/testdata")
@@ -39,7 +40,6 @@ if(benchmark_FOUND)
     jxl_extras-static
     jxl-static
     benchmark::benchmark
-    benchmark::benchmark_main
   )
 endif() # benchmark_FOUND
 

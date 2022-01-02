@@ -95,9 +95,17 @@ class MOZ_STACK_CLASS ModuleBuilder {
                          frontend::ParseNode* node = nullptr);
 
   bool maybeAppendRequestedModule(frontend::TaggedParserAtomIndex specifier,
-                                  frontend::ParseNode* node);
+                                  frontend::ParseNode* node,
+                                  frontend::ListNode* assertionList);
 
   void markUsedByStencil(frontend::TaggedParserAtomIndex name);
+
+  [[nodiscard]] bool processAssertions(frontend::StencilModuleEntry& entry,
+                                       frontend::ListNode* assertionList);
+
+  [[nodiscard]] bool isAssertionSupported(
+      JS::ImportAssertion supportedAssertion,
+      frontend::TaggedParserAtomIndex key);
 };
 
 template <typename T>

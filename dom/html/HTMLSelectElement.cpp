@@ -159,7 +159,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
 NS_IMPL_ELEMENT_CLONE(HTMLSelectElement)
 
 void HTMLSelectElement::SetCustomValidity(const nsAString& aError) {
-  nsIConstraintValidation::SetCustomValidity(aError);
+  ConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
@@ -1507,8 +1507,8 @@ nsresult HTMLSelectElement::GetValidationMessage(nsAString& aValidationMessage,
       return rv;
     }
     default: {
-      return nsIConstraintValidation::GetValidationMessage(aValidationMessage,
-                                                           aType);
+      return ConstraintValidation::GetValidationMessage(aValidationMessage,
+                                                        aType);
     }
   }
 }
@@ -1539,7 +1539,8 @@ void HTMLSelectElement::VerifyOptionsArray() {
 #endif
 
 void HTMLSelectElement::UpdateBarredFromConstraintValidation() {
-  SetBarredFromConstraintValidation(IsDisabled());
+  SetBarredFromConstraintValidation(
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
 }
 
 void HTMLSelectElement::FieldSetDisabledChanged(bool aNotify) {

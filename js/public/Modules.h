@@ -13,9 +13,11 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "js/AllocPolicy.h"     // js::SystemAllocPolicy
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{Mutable,}Handle
 #include "js/Value.h"           // JS::Value
+#include "js/Vector.h"          // js::Vector
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -32,6 +34,28 @@ union Utf8Unit;
 }
 
 namespace JS {
+
+enum class ImportAssertion { Type };
+
+using ImportAssertionVector =
+    js::Vector<ImportAssertion, 1, js::SystemAllocPolicy>;
+
+using SupportedAssertionsHook = bool (*)(JSContext*,
+                                         ImportAssertionVector& values);
+
+/**
+ * Get the HostGetSupportedImportAssertions hook for the runtime.
+ */
+extern JS_PUBLIC_API SupportedAssertionsHook
+GetSupportedAssertionsHook(JSRuntime* rt);
+
+/**
+ * Set the HostGetSupportedImportAssertions hook for the runtime to the given
+ * function.
+ * https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
+ */
+extern JS_PUBLIC_API void SetSupportedAssertionsHook(
+    JSRuntime* rt, SupportedAssertionsHook func);
 
 using ModuleResolveHook = JSObject* (*)(JSContext*, Handle<Value>,
                                         Handle<JSObject*>);

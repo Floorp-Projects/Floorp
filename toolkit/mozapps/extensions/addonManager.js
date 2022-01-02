@@ -45,8 +45,6 @@ const MSG_INSTALL_CLEANUP = "WebAPICleanup";
 const MSG_ADDON_EVENT_REQ = "WebAPIAddonEventRequest";
 const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 
-const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
@@ -57,7 +55,6 @@ function amManager() {
     "resource://gre/modules/AddonManager.jsm"
   ));
 
-  Services.mm.loadFrameScript(CHILD_SCRIPT, true, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
   Services.mm.addMessageListener(MSG_PROMISE_REQUEST, this);
   Services.mm.addMessageListener(MSG_INSTALL_CLEANUP, this);

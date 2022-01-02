@@ -14,7 +14,7 @@ Bidi::Bidi() { mBidi = ubidi_open(); }
 Bidi::~Bidi() { ubidi_close(mBidi.GetMut()); }
 
 ICUResult Bidi::SetParagraph(Span<const char16_t> aParagraph,
-                             Bidi::EmbeddingLevel aLevel) {
+                             BidiEmbeddingLevel aLevel) {
   // Do not allow any reordering of the runs, as this can change the
   // performance characteristics of working with runs. In the default mode,
   // the levels can be iterated over directly, rather than relying on computing
@@ -54,23 +54,23 @@ Bidi::ParagraphDirection Bidi::GetParagraphDirection() const {
 }
 
 /* static */
-void Bidi::ReorderVisual(const EmbeddingLevel* aLevels, int32_t aLength,
+void Bidi::ReorderVisual(const BidiEmbeddingLevel* aLevels, int32_t aLength,
                          int32_t* aIndexMap) {
   ubidi_reorderVisual(reinterpret_cast<const uint8_t*>(aLevels), aLength,
                       aIndexMap);
 }
 
-static Bidi::Direction ToBidiDirection(UBiDiDirection aDirection) {
+static BidiDirection ToBidiDirection(UBiDiDirection aDirection) {
   switch (aDirection) {
     case UBIDI_LTR:
-      return Bidi::Direction::LTR;
+      return BidiDirection::LTR;
     case UBIDI_RTL:
-      return Bidi::Direction::RTL;
+      return BidiDirection::RTL;
     case UBIDI_MIXED:
     case UBIDI_NEUTRAL:
       MOZ_ASSERT_UNREACHABLE("Unexpected UBiDiDirection value.");
   }
-  return Bidi::Direction::LTR;
+  return BidiDirection::LTR;
 }
 
 Result<int32_t, ICUError> Bidi::CountRuns() {
@@ -81,7 +81,7 @@ Result<int32_t, ICUError> Bidi::CountRuns() {
   }
 
   mLength = ubidi_getProcessedLength(mBidi.GetConst());
-  mLevels = mLength > 0 ? reinterpret_cast<const Bidi::EmbeddingLevel*>(
+  mLevels = mLength > 0 ? reinterpret_cast<const BidiEmbeddingLevel*>(
                               ubidi_getLevels(mBidi.GetMut(), &status))
                         : nullptr;
   if (U_FAILURE(status)) {
@@ -92,10 +92,10 @@ Result<int32_t, ICUError> Bidi::CountRuns() {
 }
 
 void Bidi::GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimitOut,
-                         Bidi::EmbeddingLevel* aLevelOut) {
+                         BidiEmbeddingLevel* aLevelOut) {
   MOZ_ASSERT(mLevels, "CountRuns hasn't been run?");
   MOZ_RELEASE_ASSERT(aLogicalStart < mLength, "Out of bound");
-  EmbeddingLevel level = mLevels[aLogicalStart];
+  BidiEmbeddingLevel level = mLevels[aLogicalStart];
   int32_t limit;
   for (limit = aLogicalStart + 1; limit < mLength; limit++) {
     if (mLevels[limit] != level) {
@@ -106,56 +106,12 @@ void Bidi::GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimitOut,
   *aLevelOut = level;
 }
 
-bool Bidi::EmbeddingLevel::IsDefaultLTR() const {
-  return mValue == UBIDI_DEFAULT_LTR;
-};
-
-bool Bidi::EmbeddingLevel::IsDefaultRTL() const {
-  return mValue == UBIDI_DEFAULT_RTL;
-};
-
-bool Bidi::EmbeddingLevel::IsRTL() const {
-  // If the least significant bit is 1, then the embedding level
-  // is right-to-left.
-  // If the least significant bit is 0, then the embedding level
-  // is left-to-right.
-  return (mValue & 0x1) == 1;
-};
-
-bool Bidi::EmbeddingLevel::IsLTR() const { return !IsRTL(); };
-
-bool Bidi::EmbeddingLevel::IsSameDirection(EmbeddingLevel aOther) const {
-  return (((mValue ^ aOther) & 1) == 0);
+BidiEmbeddingLevel Bidi::GetParagraphEmbeddingLevel() const {
+  return BidiEmbeddingLevel(ubidi_getParaLevel(mBidi.GetConst()));
 }
 
-Bidi::EmbeddingLevel Bidi::EmbeddingLevel::LTR() {
-  return Bidi::EmbeddingLevel(0);
-};
-
-Bidi::EmbeddingLevel Bidi::EmbeddingLevel::RTL() {
-  return Bidi::EmbeddingLevel(1);
-};
-
-Bidi::EmbeddingLevel Bidi::EmbeddingLevel::DefaultLTR() {
-  return Bidi::EmbeddingLevel(UBIDI_DEFAULT_LTR);
-};
-
-Bidi::EmbeddingLevel Bidi::EmbeddingLevel::DefaultRTL() {
-  return Bidi::EmbeddingLevel(UBIDI_DEFAULT_RTL);
-};
-
-Bidi::Direction Bidi::EmbeddingLevel::Direction() {
-  return IsRTL() ? Direction::RTL : Direction::LTR;
-};
-
-uint8_t Bidi::EmbeddingLevel::Value() const { return mValue; }
-
-Bidi::EmbeddingLevel Bidi::GetParagraphEmbeddingLevel() const {
-  return Bidi::EmbeddingLevel(ubidi_getParaLevel(mBidi.GetConst()));
-}
-
-Bidi::Direction Bidi::GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
-                                   int32_t* aLength) {
+BidiDirection Bidi::GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
+                                 int32_t* aLength) {
   return ToBidiDirection(
       ubidi_getVisualRun(mBidi.GetMut(), aRunIndex, aLogicalStart, aLength));
 }

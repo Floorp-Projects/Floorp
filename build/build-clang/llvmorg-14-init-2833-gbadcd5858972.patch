@@ -1,0 +1,101 @@
+From badcd585897253e94b7b2d4e6f9f430a2020d642 Mon Sep 17 00:00:00 2001
+From: Teresa Johnson <tejohnson@google.com>
+Date: Mon, 30 Aug 2021 20:07:01 -0700
+Subject: [PATCH] [DIArgList] Re-unique after changing operands to fix
+ non-determinism
+
+We have a large compile showing occasional non-deterministic behavior
+that is due to DIArgList not being properly uniqued in some cases. I
+tracked this down to handleChangedOperands, for which there is a custom
+implementation for DIArgList, that does not take care of re-uniquing
+after updating the DIArgList Args, unlike the default version of
+handleChangedOperands for MDNode.
+
+Since the Args in the DIArgList form the key for the store, this seems
+to be occasionally breaking the lookup in that DenseSet. Specifically,
+when invoking DIArgList::get() from replaceVariableLocationOp, very
+occasionally it returns a new DIArgList object, when one already exists
+having the same exact Args pointers. This in turn causes a subsequent
+call to Instruction::isIdenticalToWhenDefined on those two otherwise
+identical DIArgList objects during a later pass to return false, leading
+to different IR in those rare cases.
+
+I modified DIArgList::handleChangedOperands to perform similar
+re-uniquing as the MDNode version used by other metadata node types.
+This also necessitated a change to the context destructor, since in some
+cases we end up with DIArgList as distinct nodes: DIArgList is the only
+metadata node type to have a custom dropAllReferences, so we need to
+invoke that version on DIArgList in the DistinctMDNodes store to clean
+it up properly.
+
+Differential Revision: https://reviews.llvm.org/D108968
+---
+ llvm/include/llvm/IR/Metadata.h   |  1 +
+ llvm/lib/IR/DebugInfoMetadata.cpp | 10 ++++++++++
+ llvm/lib/IR/LLVMContextImpl.cpp   |  9 ++++++++-
+ 3 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/llvm/include/llvm/IR/Metadata.h b/llvm/include/llvm/IR/Metadata.h
+index c5840564454e..17a9c3a77f4e 100644
+--- a/llvm/include/llvm/IR/Metadata.h
++++ b/llvm/include/llvm/IR/Metadata.h
+@@ -897,6 +897,7 @@ struct TempMDNodeDeleter {
+ class MDNode : public Metadata {
+   friend class ReplaceableMetadataImpl;
+   friend class LLVMContextImpl;
++  friend class DIArgList;
+ 
+   unsigned NumOperands;
+   unsigned NumUnresolved;
+diff --git a/llvm/lib/IR/DebugInfoMetadata.cpp b/llvm/lib/IR/DebugInfoMetadata.cpp
+index 48e83f4258ec..204f02a326a2 100644
+--- a/llvm/lib/IR/DebugInfoMetadata.cpp
++++ b/llvm/lib/IR/DebugInfoMetadata.cpp
+@@ -1642,6 +1642,12 @@ void DIArgList::handleChangedOperand(void *Ref, Metadata *New) {
+   assert((!New || isa<ValueAsMetadata>(New)) &&
+          "DIArgList must be passed a ValueAsMetadata");
+   untrack();
++  bool Uniq = isUniqued();
++  if (Uniq) {
++    // We need to update the uniqueness once the Args are updated since they
++    // form the key to the DIArgLists store.
++    eraseFromStore();
++  }
+   ValueAsMetadata *NewVM = cast_or_null<ValueAsMetadata>(New);
+   for (ValueAsMetadata *&VM : Args) {
+     if (&VM == OldVMPtr) {
+@@ -1651,6 +1657,10 @@ void DIArgList::handleChangedOperand(void *Ref, Metadata *New) {
+         VM = ValueAsMetadata::get(UndefValue::get(VM->getValue()->getType()));
+     }
+   }
++  if (Uniq) {
++    if (uniquify() != this)
++      storeDistinctInContext();
++  }
+   track();
+ }
+ void DIArgList::track() {
+diff --git a/llvm/lib/IR/LLVMContextImpl.cpp b/llvm/lib/IR/LLVMContextImpl.cpp
+index 99819602c545..85ac63eaa1aa 100644
+--- a/llvm/lib/IR/LLVMContextImpl.cpp
++++ b/llvm/lib/IR/LLVMContextImpl.cpp
+@@ -55,8 +55,15 @@ LLVMContextImpl::~LLVMContextImpl() {
+ 
+   // Drop references for MDNodes.  Do this before Values get deleted to avoid
+   // unnecessary RAUW when nodes are still unresolved.
+-  for (auto *I : DistinctMDNodes)
++  for (auto *I : DistinctMDNodes) {
++    // We may have DIArgList that were uniqued, and as it has a custom
++    // implementation of dropAllReferences, it needs to be explicitly invoked.
++    if (auto *AL = dyn_cast<DIArgList>(I)) {
++      AL->dropAllReferences();
++      continue;
++    }
+     I->dropAllReferences();
++  }
+ #define HANDLE_MDNODE_LEAF_UNIQUABLE(CLASS)                                    \
+   for (auto *I : CLASS##s)                                                     \
+     I->dropAllReferences();
+-- 
+2.33.0
+

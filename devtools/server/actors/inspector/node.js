@@ -13,7 +13,7 @@ const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
 loader.lazyRequireGetter(
   this,
-  ["getCssPath", "getXPath", "findCssSelector", "findAllCssSelectors"],
+  ["getCssPath", "getXPath", "findCssSelector"],
   "devtools/shared/inspector/css-logic",
   true
 );
@@ -150,6 +150,15 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       this.slotchangeListener = null;
     }
 
+    if (this._waitForFrameLoadAbortController) {
+      this._waitForFrameLoadAbortController.abort();
+      this._waitForFrameLoadAbortController = null;
+    }
+    if (this._waitForFrameLoadIntervalId) {
+      clearInterval(this._waitForFrameLoadIntervalId);
+      this._waitForFrameLoadIntervalId = null;
+    }
+
     this._eventCollector.destroy();
     this._eventCollector = null;
     this.rawNode = null;
@@ -220,8 +229,8 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       // Declare at least one child (the #document element) so
       // that they can be expanded.
       form.numChildren = 1;
-      form.browsingContextID = this.rawNode.browsingContext.id;
     }
+    form.browsingContextID = this.rawNode.browsingContext?.id;
 
     return form;
   },
@@ -231,6 +240,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * API.
    */
   watchDocument: function(doc, callback) {
+    if (!doc.defaultView) {
+      return;
+    }
+
     const node = this.rawNode;
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
@@ -497,20 +510,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   getUniqueSelector: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
-      return [];
-    }
-    return findCssSelector(this.rawNode);
-  },
-
-  /**
-   * Get the full array of selectors from the topmost document, going through
-   * iframes.
-   */
-  getAllSelectors: function() {
-    if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
-    return findAllCssSelectors(this.rawNode);
+    return findCssSelector(this.rawNode);
   },
 
   /**
@@ -669,14 +671,68 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * If the current node is an iframe, wait for the content window to be loaded.
    */
   async waitForFrameLoad() {
-    if (Cu.isDeadWrapper(this.rawNode)) {
-      return;
+    if (this.useChildTargetToFetchChildren) {
+      // If the document is handled by a dedicated target, we'll wait for a DOCUMENT_EVENT
+      // on the created target.
+      throw new Error(
+        "iframe content document has its own target, use that one instead"
+      );
     }
 
-    const { contentDocument, contentWindow } = this.rawNode;
-    if (contentDocument && contentDocument.readyState === "loading") {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      throw new Error("Node is dead");
+    }
+
+    const { contentDocument } = this.rawNode;
+    if (!contentDocument) {
+      throw new Error("Can't access contentDocument");
+    }
+
+    if (contentDocument.readyState === "uninitialized") {
+      // If the readyState is "uninitialized", the document is probably an about:blank
+      // transient document. In such case, we want to wait until the "final" document
+      // is inserted.
+
+      const { chromeEventHandler } = this.rawNode.ownerGlobal.docShell;
+      const browsingContextID = this.rawNode.browsingContext.id;
+      await new Promise((resolve, reject) => {
+        this._waitForFrameLoadAbortController = new AbortController();
+
+        chromeEventHandler.addEventListener(
+          "DOMDocElementInserted",
+          e => {
+            const { browsingContext } = e.target.defaultView;
+            // Check that the document we're notified about is the iframe one.
+            if (browsingContext.id == browsingContextID) {
+              resolve();
+              this._waitForFrameLoadAbortController.abort();
+            }
+          },
+          { signal: this._waitForFrameLoadAbortController.signal }
+        );
+
+        // It might happen that the "final" document will be a remote one, living in a
+        // different process, which means we won't get the DOMDocElementInserted event
+        // here, and will wait forever. To prevent this Promise to hang forever, we use
+        // a setInterval to check if the final document can be reached, so we can reject
+        // if it's not.
+        // This is definitely not a perfect solution, but I wasn't able to find something
+        // better for this feature. I think it's _fine_ as this method will be removed
+        // when EFT is  enabled everywhere in release.
+        this._waitForFrameLoadIntervalId = setInterval(() => {
+          if (Cu.isDeadWrapper(this.rawNode) || !this.rawNode.contentDocument) {
+            reject("Can't access the iframe content document");
+            clearInterval(this._waitForFrameLoadIntervalId);
+            this._waitForFrameLoadIntervalId = null;
+            this._waitForFrameLoadAbortController.abort();
+          }
+        }, 50);
+      });
+    }
+
+    if (this.rawNode.contentDocument.readyState === "loading") {
       await new Promise(resolve => {
-        DOMHelpers.onceDOMReady(contentWindow, resolve);
+        DOMHelpers.onceDOMReady(this.rawNode.contentWindow, resolve);
       });
     }
   },

@@ -238,6 +238,17 @@ sr{
             }
         }
         minimalPairs{
+            case{
+                accusative{"Видим {0}"}
+                genitive{"Од {0} до ..."}
+                instrumental{"... са {0} ..."}
+                nominative{"{0} је"}
+            }
+            gender{
+                feminine{"Ова {0}"}
+                inanimate{"Овај {0}"}
+                neuter{"Ово {0}"}
+            }
             ordinal{
                 other{"Скрените у {0}. десно."}
             }
@@ -316,6 +327,16 @@ sr{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"hh:mm B"}
@@ -332,6 +353,7 @@ sr{
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
+                GyMd{"d.M.y. GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -462,31 +484,37 @@ sr{
         }
         gregorian{
             AmPmMarkers{
-                "пре подне",
-                "по подне",
-            }
-            AmPmMarkersAbbr{
-                "пре подне",
-                "по подне",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "a",
-                "p",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, dd. MMMM y.",
-                "dd. MMMM y.",
-                "dd.MM.y.",
+                "EEEE, d. MMMM y.",
+                "d. MMMM y.",
+                "d. M. y.",
                 "d.M.yy.",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMdd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -507,6 +535,7 @@ sr{
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
+                GyMd{"d.MM.y. GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -660,13 +689,13 @@ sr{
                 stand-alone{
                     abbreviated{
                         afternoon1{"поподне"}
-                        am{"пре подне"}
+                        am{"AM"}
                         evening1{"вече"}
                         midnight{"поноћ"}
                         morning1{"јутро"}
                         night1{"ноћ"}
                         noon{"подне"}
-                        pm{"по подне"}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"поподне"}
@@ -680,13 +709,13 @@ sr{
                     }
                     wide{
                         afternoon1{"поподне"}
-                        am{"пре подне"}
+                        am{"AM"}
                         evening1{"вече"}
                         midnight{"поноћ"}
                         morning1{"јутро"}
                         night1{"ноћ"}
                         noon{"подне"}
-                        pm{"по подне"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -896,10 +925,10 @@ sr{
             quarters{
                 format{
                     abbreviated{
-                        "К1",
-                        "К2",
-                        "К3",
-                        "К4",
+                        "1. кв.",
+                        "2. кв.",
+                        "3. кв.",
+                        "4. кв.",
                     }
                     narrow{
                         "1.",
@@ -916,10 +945,10 @@ sr{
                 }
                 stand-alone{
                     abbreviated{
-                        "К1",
-                        "К2",
-                        "К3",
-                        "К4",
+                        "1. кв.",
+                        "2. кв.",
+                        "3. кв.",
+                        "4. кв.",
                     }
                     narrow{
                         "1.",
@@ -1023,6 +1052,16 @@ sr{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GyyMd",
             }
             eras{
                 abbreviated{
@@ -1466,7 +1505,7 @@ sr{
             dn{"дан у год."}
         }
         dayperiod{
-            dn{"пре подне/по подне"}
+            dn{"AM/PM"}
         }
         dayperiod-narrow{
             dn{"пре подне/по подне"}
@@ -1714,12 +1753,6 @@ sr{
             }
         }
         month-narrow{
-            dn{"м."}
-            relative{
-                "-1"{"прошлог м."}
-                "0"{"овог м."}
-                "1"{"следећег м."}
-            }
             relativeTime{
                 future{
                     few{"за {0} м."}
@@ -1889,7 +1922,7 @@ sr{
             }
         }
         second-narrow{
-            dn{"с."}
+            dn{"с"}
             relativeTime{
                 future{
                     few{"за {0} с."}
@@ -2168,7 +2201,6 @@ sr{
             }
         }
         week-narrow{
-            dn{"н."}
             relative{
                 "-1"{"прошле н."}
                 "0"{"ове н."}

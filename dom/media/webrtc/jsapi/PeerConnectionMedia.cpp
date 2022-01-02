@@ -7,6 +7,7 @@
 #include "transport/nr_socket_proxy_config.h"
 #include "transportbridge/MediaPipelineFilter.h"
 #include "transportbridge/MediaPipeline.h"
+#include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "RTCDtlsTransport.h"
@@ -29,6 +30,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 #include "MediaManager.h"
+#include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
@@ -299,12 +301,6 @@ void PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
 }
 
 nsresult PeerConnectionMedia::UpdateMediaPipelines() {
-  // The GMP code is all the way on the other side of webrtc.org, and it is not
-  // feasible to plumb error information all the way back. So, we set up a
-  // handle to the PC (for the duration of this call) in a global variable.
-  // This allows the GMP code to report errors to the PC.
-  WebrtcGmpPCHandleSetter setter(mParentHandle);
-
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     transceiver->ResetSync();
   }
@@ -587,7 +583,7 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly,
                                        aObfuscateHostAddresses, mStunAddrs);
 }
 
-void PeerConnectionMedia::SelfDestruct() {
+void PeerConnectionMedia::Shutdown() {
   ASSERT_ON_THREAD(mMainThread);
 
   CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
@@ -595,7 +591,7 @@ void PeerConnectionMedia::SelfDestruct() {
   mDestroyed = true;
 
   if (mStunAddrsRequest) {
-    for (auto& hostname : mRegisteredMDNSHostnames) {
+    for (const auto& hostname : mRegisteredMDNSHostnames) {
       mStunAddrsRequest->SendUnregisterMDNSHostname(
           nsCString(hostname.c_str()));
     }
@@ -614,48 +610,55 @@ void PeerConnectionMedia::SelfDestruct() {
 
   mQueuedIceCtxOperations.clear();
 
-  // Shutdown the transport (async)
-  RUN_ON_THREAD(
-      mSTSThread,
-      WrapRunnable(this, &PeerConnectionMedia::ShutdownMediaTransport_s),
-      NS_DISPATCH_NORMAL);
+  // Clear any resources held by libwebrtc through our Call instance.
+  auto promise =
+      mCall ? InvokeAsync(mCall->mCallThread, __func__,
+                          [call = mCall] {
+                            call->Destroy();
+                            return GenericPromise::CreateAndResolve(
+                                true, "PCMedia->WebRtcCallWrapper::Destroy");
+                          })
+            : GenericPromise::CreateAndResolve(true, __func__);
+
+  // Shutdown the transport (async).
+  auto self = nsMainThreadPtrHandle<PeerConnectionMedia>(
+      new nsMainThreadPtrHolder<PeerConnectionMedia>(
+          "PeerConnectionMedia::Shutdown::self", this, false));
+  promise
+      ->Then(mSTSThread, __func__,
+             [self] {
+               CSFLogDebug(LOGTAG, "PeerConnectionMedia::disconnect_all");
+               self->disconnect_all();
+               return GenericPromise::CreateAndResolve(
+                   true, "PeerConnectionMedia::disconnect_all");
+             })
+      ->Then(
+          mMainThread, __func__,
+          [this, self = RefPtr<PeerConnectionMedia>(this)] {
+            CSFLogDebug(LOGTAG, "PCMedia->mTransportHandler::RemoveTransports");
+            mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
+            mTransportHandler = nullptr;
+
+            mMainThread = nullptr;
+          });
+
   mParent = nullptr;
+  mCall = nullptr;
 
   CSFLogDebug(LOGTAG, "%s: Media shut down", __FUNCTION__);
 }
 
-void PeerConnectionMedia::SelfDestruct_m() {
-  CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
-
-  ASSERT_ON_THREAD(mMainThread);
-
-  mTransportHandler->RemoveTransportsExcept(std::set<std::string>());
-  mTransportHandler = nullptr;
-
-  mMainThread = nullptr;
-
-  // Final self-destruct.
-  this->Release();
-}
-
-void PeerConnectionMedia::ShutdownMediaTransport_s() {
-  ASSERT_ON_THREAD(mSTSThread);
-
-  CSFLogDebug(LOGTAG, "%s: ", __FUNCTION__);
-
-  disconnect_all();
-
-  // we're holding a ref to 'this' that's released by SelfDestruct_m
-  mMainThread->Dispatch(
-      WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),
-      NS_DISPATCH_NORMAL);
-}
-
 nsresult PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
+    SharedWebrtcState* aSharedWebrtcState,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
-    mCall = WebRtcCallWrapper::Create(mParent->GetTimestampMaker());
+    mCall = WebrtcCallWrapper::Create(
+        mParent->GetTimestampMaker(),
+        media::ShutdownBlockingTicket::Create(
+            u"WebrtcCallWrapper shutdown blocker"_ns,
+            NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
+        aSharedWebrtcState);
   }
 
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
@@ -864,7 +867,7 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionMedia::GetProxyConfig()
   }
 
   nsCString alpn = "webrtc,c-webrtc"_ns;
-  auto browserChild = BrowserChild::GetFrom(GetWindow());
+  auto* browserChild = BrowserChild::GetFrom(GetWindow());
   if (!browserChild) {
     // Android doesn't have browser child apparently...
     return nullptr;

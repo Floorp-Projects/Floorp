@@ -39,6 +39,7 @@ function confirmCookieName(name) {
 }
 
 function finishTest() {
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   SimpleTest.finish();
 }
 
@@ -72,8 +73,10 @@ function createXHR(url) {
  * 3. Child process only set xhr1 to cookies hash table.
  * 4. Child process only can get the xhr1 cookie from cookies hash table.
  */
-Promise.resolve()
-  .then(_ => createXHR('set_cookie_xhr.sjs?xhr1'))
+SpecialPowers.pushPrefEnv({
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  set: [["network.cookie.sameSite.laxByDefault", false]],
+}).then(_ => createXHR('set_cookie_xhr.sjs?xhr1'))
   .then(_ => createXHR('set_cookie_xhr.sjs?xhr2'));
 
 </script>

@@ -55,7 +55,7 @@ pub unsafe extern "C" fn gluesmith(
 
     let mut u = Unstructured::new(buf);
 
-    let module = match Module::new(SpiderMonkeyConfig{}, &mut u) {
+    let module = match Module::new(SpiderMonkeyConfig {}, &mut u) {
         Ok(m) => m,
         Err(_e) => return 0,
     };

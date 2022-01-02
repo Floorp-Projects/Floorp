@@ -316,7 +316,7 @@ async function test_submit_telemetry(tc) {
         }
 
         info("Submitting form");
-        let formSubmittedPromise = listenForTestNotification("FormSubmit");
+        let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
         await SpecialPowers.spawn(browser, [], async function() {
           let doc = this.content.document;
           doc.getElementById("form-basic").submit();

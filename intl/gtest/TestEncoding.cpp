@@ -28,19 +28,19 @@ ENCODING_TEST(ForBOM) {
   nsAutoCString data("\xEF\xBB\xBF\x61");
   const Encoding* encoding;
   size_t bomLength;
-  Tie(encoding, bomLength) = Encoding::ForBOM(data);
+  std::tie(encoding, bomLength) = Encoding::ForBOM(data);
   ASSERT_EQ(encoding, UTF_8_ENCODING);
   ASSERT_EQ(bomLength, 3U);
   data.AssignLiteral("\xFF\xFE");
-  Tie(encoding, bomLength) = Encoding::ForBOM(data);
+  std::tie(encoding, bomLength) = Encoding::ForBOM(data);
   ASSERT_EQ(encoding, UTF_16LE_ENCODING);
   ASSERT_EQ(bomLength, 2U);
   data.AssignLiteral("\xFE\xFF");
-  Tie(encoding, bomLength) = Encoding::ForBOM(data);
+  std::tie(encoding, bomLength) = Encoding::ForBOM(data);
   ASSERT_EQ(encoding, UTF_16BE_ENCODING);
   ASSERT_EQ(bomLength, 2U);
   data.AssignLiteral("\xEF\xBB");
-  Tie(encoding, bomLength) = Encoding::ForBOM(data);
+  std::tie(encoding, bomLength) = Encoding::ForBOM(data);
   ASSERT_EQ(encoding, nullptr);
   ASSERT_EQ(bomLength, 0U);
 }

@@ -20,6 +20,7 @@ using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/Scrollab
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
+using mozilla::layers::APZHandledResult from "mozilla/layers/APZInputBridge.h";
 using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
 using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
 
@@ -51,6 +52,8 @@ parent:
 
   async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
 
+  async AddInputBlockCallback(uint64_t aInputBlockId);
+
   async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
 
   async UpdateZoomConstraints(ScrollableLayerGuid aGuid, ZoomConstraints? aConstraints);
@@ -81,6 +84,9 @@ child:
                            Modifiers aModifiers);
 
   async CancelAutoscroll(ViewID aScrollId);
+
+  async CallInputBlockCallback(uint64_t aInputBlockId,
+                               APZHandledResult aHandledResult);
 };
 
 } // namespace gfx

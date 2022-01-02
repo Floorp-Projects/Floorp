@@ -267,7 +267,7 @@ class StorageUI {
   }
 
   async init() {
-    // This is a distionarry of arrays, keyed by storage key
+    // This is a distionary of arrays, keyed by storage key
     // - Keys are storage keys, available on each storage resource, via ${resource.resourceKey}
     //   and are typically "Cache", "cookies", "indexedDB", "localStorage", ...
     // - Values are arrays of storage fronts. This isn't the deprecated global storage front (target.getFront(storage), only used by legacy listener),
@@ -276,11 +276,11 @@ class StorageUI {
 
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
-    await this._commands.targetCommand.watchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    await this._commands.targetCommand.watchTargets({
+      types: [this._commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
+    });
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
 

@@ -11,7 +11,9 @@ class nsWrapperCache;
 
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 
+// DOMTimeStamp is deprecated, use EpochTimeStamp instead.
 typedef unsigned long long DOMTimeStamp;
+typedef unsigned long long EpochTimeStamp;
 typedef double DOMHighResTimeStamp;
 typedef unsigned long long nsViewID;
 

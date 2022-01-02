@@ -12,6 +12,7 @@
 
 #include "hwy/base.h"
 #include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/printf_macros.h"
 
 namespace jxl {
 

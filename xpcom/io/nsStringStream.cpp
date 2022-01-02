@@ -432,6 +432,15 @@ void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
   *aSizeUsed = 0;
 
   if (Length() >= aMaxSize) {
+    // If the input stream is non-owning (i.e. it was initialized with
+    // `ShareData`), request mutable access to `mData`, forcing our string to
+    // take ownership so that it doesn't go away while async copying.
+    if (!mArray && !(mData.GetDataFlags() & (nsCString::DataFlags::REFCOUNTED |
+                                             nsCString::DataFlags::OWNED |
+                                             nsCString::DataFlags::LITERAL))) {
+      mData.BeginWriting();
+    }
+
     InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
                                                   aManager);
     return;

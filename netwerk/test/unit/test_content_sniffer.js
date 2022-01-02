@@ -140,9 +140,7 @@ function run_test_iteration(index) {
   if (sniffing_enabled && index == 2) {
     // Register our sniffer only here
     // This also makes sure that dynamic registration is working
-    var catMan = Cc["@mozilla.org/categorymanager;1"].getService(
-      Ci.nsICategoryManager
-    );
+    var catMan = Services.catMan;
     catMan.nsICategoryManager.addCategoryEntry(
       categoryName,
       "unit test",

@@ -79,7 +79,6 @@ DEFINES['SK_OUTLINE_EMBOLDEN_DIVISOR'] = 48
 CXXFLAGS += [
     '-Wno-deprecated-declarations',
     '-Wno-overloaded-virtual',
-    '-Wno-shadow',
     '-Wno-sign-compare',
     '-Wno-unreachable-code',
     '-Wno-unused-function',

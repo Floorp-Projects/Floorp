@@ -1947,6 +1947,9 @@ sr{
             lg{"Јекатеринбург време"}
             ls{"Јекатеринбург, стандардно време"}
         }
+        "meta:Yukon"{
+            ls{"Јукон"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

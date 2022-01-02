@@ -16,6 +16,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 /**
@@ -235,7 +236,7 @@ public class WebRequestError extends Exception {
 
   @Override
   public int hashCode() {
-    return (category << 16) + code;
+    return Arrays.hashCode(new Object[] {category, code});
   }
 
   @WrapForJNI

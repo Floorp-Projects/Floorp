@@ -30,8 +30,10 @@ yo_BJ{
         BA{"Bɔ̀síníà àti Ɛtisɛgófínà"}
         BE{"Bégíɔ́mù"}
         BJ{"Bɛ̀nɛ̀"}
+        BL{"Ìlú Bátílɛ́mì"}
         BN{"Búrúnɛ́lì"}
         BO{"Bɔ̀lífíyà"}
+        BQ{"Káríbíánì ti Nɛ́dálándì"}
         BW{"Bɔ̀tìsúwánà"}
         BZ{"Bèlísɛ̀"}
         CH{"switishilandi"}
@@ -72,12 +74,15 @@ yo_BJ{
         PS{"Agbègbè ara Palɛsítínì"}
         PT{"Pɔ́túgà"}
         QO{"Agbègbè Òshɔ́ɔ́níà"}
+        RS{"Sɛ́bíà"}
         RU{"Rɔshia"}
         SC{"Sheshɛlɛsi"}
         SH{"Hɛlena"}
+        SJ{"Sífábáàdì àti Jánì Máyɛ̀nì"}
         SN{"Sɛnɛga"}
         ST{"Sao tomi ati piriishipi"}
         SV{"Ɛɛsáfádò"}
+        SX{"Síntì Mátɛ́ɛ̀nì"}
         SZ{"Sashiland"}
         TC{"Tɔɔki ati Etikun Kakɔsi"}
         TD{"Shààdì"}

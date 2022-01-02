@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,<p>Web Console test for splitting";
+  "data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console test for splitting";
 
 add_task(async function() {
   info(

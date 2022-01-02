@@ -8,6 +8,8 @@
 
 #include <utility>
 
+#include "mozilla/dom/FetchTypes.h"
+#include "mozilla/dom/ServiceWorkerOpPromise.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
@@ -32,15 +34,15 @@ namespace dom {
 namespace {
 
 nsresult GetIPCSynthesizeResponseArgs(
-    IPCSynthesizeResponseArgs* aIPCArgs, SynthesizeResponseArgs&& aArgs,
-    UniquePtr<AutoIPCStream>& aAutoBodyStream,
+    ChildToParentSynthesizeResponseArgs* aIPCArgs,
+    SynthesizeResponseArgs&& aArgs, UniquePtr<AutoIPCStream>& aAutoBodyStream,
     UniquePtr<AutoIPCStream>& aAutoAlternativeBodyStream) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
-  RefPtr<InternalResponse> internalResponse;
+  SafeRefPtr<InternalResponse> internalResponse;
   FetchEventRespondWithClosure closure;
   FetchEventTimeStamps timeStamps;
-  Tie(internalResponse, closure, timeStamps) = aArgs;
+  Tie(internalResponse, closure, timeStamps) = std::move(aArgs);
 
   aIPCArgs->closure() = std::move(closure);
   aIPCArgs->timeStamps() = std::move(timeStamps);
@@ -51,19 +53,34 @@ nsresult GetIPCSynthesizeResponseArgs(
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  internalResponse->ToIPC(&aIPCArgs->internalResponse(), bgChild,
-                          aAutoBodyStream, aAutoAlternativeBodyStream);
+  internalResponse->ToChildToParentInternalResponse(
+      &aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
+      aAutoAlternativeBodyStream);
   return NS_OK;
 }
 
 }  // anonymous namespace
 
 void FetchEventOpProxyChild::Initialize(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
   MOZ_ASSERT(!mOp);
 
-  mInternalRequest = MakeSafeRefPtr<InternalRequest>(aArgs.internalRequest());
+  mInternalRequest =
+      MakeSafeRefPtr<InternalRequest>(aArgs.common().internalRequest());
+
+  if (aArgs.common().preloadNavigation()) {
+    // We use synchronous task dispatch here to make sure that if the preload
+    // response arrived before we dispatch the fetch event, then the JS preload
+    // response promise will get resolved immediately.
+    mPreloadResponsePromise =
+        MakeRefPtr<FetchEventPreloadResponsePromise::Private>(__func__);
+    mPreloadResponsePromise->UseSynchronousTaskDispatch(__func__);
+    if (aArgs.preloadResponse().isSome()) {
+      mPreloadResponsePromise->Resolve(
+          InternalResponse::FromIPC(aArgs.preloadResponse().ref()), __func__);
+    }
+  }
 
   RemoteWorkerChild* manager = static_cast<RemoteWorkerChild*>(Manager());
   MOZ_ASSERT(manager);
@@ -110,7 +127,7 @@ void FetchEventOpProxyChild::Initialize(
                auto& result = aResult.ResolveValue();
 
                if (result.is<SynthesizeResponseArgs>()) {
-                 IPCSynthesizeResponseArgs ipcArgs;
+                 ChildToParentSynthesizeResponseArgs ipcArgs;
                  UniquePtr<AutoIPCStream> autoBodyStream =
                      MakeUnique<AutoIPCStream>();
                  UniquePtr<AutoIPCStream> autoAlternativeBodyStream =
@@ -152,6 +169,23 @@ SafeRefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
   MOZ_ASSERT(mInternalRequest);
 
   return std::move(mInternalRequest);
+}
+
+RefPtr<FetchEventPreloadResponsePromise>
+FetchEventOpProxyChild::GetPreloadResponsePromise() {
+  return mPreloadResponsePromise;
+}
+
+mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
+    ParentToChildInternalResponse&& aResponse) {
+  // Receiving this message implies that navigation preload is enabled, so
+  // Initialize() should have created this promise.
+  MOZ_ASSERT(mPreloadResponsePromise);
+
+  mPreloadResponsePromise->Resolve(InternalResponse::FromIPC(aResponse),
+                                   __func__);
+
+  return IPC_OK();
 }
 
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {

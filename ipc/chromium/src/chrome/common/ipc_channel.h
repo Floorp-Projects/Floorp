@@ -163,9 +163,24 @@ class Channel {
   // Close the client side of the socketpair.
   void CloseClientFileDescriptor();
 
+#  if defined(OS_MACOSX)
+  // Configure the mach task_t for the peer task.
+  void SetOtherMachTask(task_t task);
+
+  // Tell this pipe to accept mach ports. Exactly one side of the IPC connection
+  // must be set as `MODE_SERVER` and that side will be responsible for
+  // transferring the rights between processes.
+  void StartAcceptingMachPorts(Mode mode);
+#  endif
+
 #elif defined(OS_WIN)
   // Return the server pipe handle.
   void* GetServerPipeHandle() const;
+
+  // Tell this pipe to accept handles. Exactly one side of the IPC connection
+  // must be set as `MODE_SERVER`, and that side will be responsible for calling
+  // `DuplicateHandle` to transfer the handle between processes.
+  void StartAcceptingHandles(Mode mode);
 #endif  // defined(OS_POSIX)
 
   // On Windows: Generates a channel ID that, if passed to the client

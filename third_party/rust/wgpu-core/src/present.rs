@@ -1,12 +1,12 @@
 /*! Presentation.
 
-    ## Lifecycle
+## Lifecycle
 
-    Whenever a submission detects the use of any surface texture, it adds it to the device
-    tracker for the duration of the submission (temporarily, while recording).
-    It's added with `UNINITIALIZED` state and transitioned into `empty()` state.
-    When this texture is presented, we remove it from the device tracker as well as
-    extract it from the hub.
+Whenever a submission detects the use of any surface texture, it adds it to the device
+tracker for the duration of the submission (temporarily, while recording).
+It's added with `UNINITIALIZED` state and transitioned into `empty()` state.
+When this texture is presented, we remove it from the device tracker as well as
+extract it from the hub.
 !*/
 
 #[cfg(feature = "trace")]
@@ -16,6 +16,7 @@ use crate::{
     device::DeviceError,
     hub::{Global, GlobalIdentityHandlerFactory, HalApi, Input, Token},
     id::{DeviceId, SurfaceId, TextureId, Valid},
+    init_tracker::TextureInitTracker,
     resource,
     track::TextureSelector,
     LifeGuard, Stored,
@@ -32,6 +33,7 @@ pub const DESIRED_NUM_FRAMES: u32 = 3;
 pub(crate) struct Presentation {
     pub(crate) device_id: Stored<DeviceId>,
     pub(crate) config: wgt::SurfaceConfiguration,
+    #[allow(unused)]
     pub(crate) num_frames: u32,
     pub(crate) acquired_texture: Option<Stored<TextureId>>,
 }
@@ -150,6 +152,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         flags: wgt::TextureFormatFeatureFlags::empty(),
                         filterable: false,
                     },
+                    initialization_status: TextureInitTracker::new(1, 1),
                     full_range: TextureSelector {
                         layers: 0..1,
                         levels: 0..1,
@@ -275,5 +278,65 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 }
             },
         }
+    }
+
+    pub fn surface_texture_discard<A: HalApi>(
+        &self,
+        surface_id: SurfaceId,
+    ) -> Result<(), SurfaceError> {
+        profiling::scope!("discard", "SwapChain");
+
+        let hub = A::hub(self);
+        let mut token = Token::root();
+
+        let (mut surface_guard, mut token) = self.surfaces.write(&mut token);
+        let surface = surface_guard
+            .get_mut(surface_id)
+            .map_err(|_| SurfaceError::Invalid)?;
+        let (mut device_guard, mut token) = hub.devices.write(&mut token);
+
+        let present = match surface.presentation {
+            Some(ref mut present) => present,
+            None => return Err(SurfaceError::NotConfigured),
+        };
+
+        let device = &mut device_guard[present.device_id.value];
+
+        #[cfg(feature = "trace")]
+        if let Some(ref trace) = device.trace {
+            trace.lock().add(Action::DiscardSurfaceTexture(surface_id));
+        }
+
+        {
+            let texture_id = present
+                .acquired_texture
+                .take()
+                .ok_or(SurfaceError::AlreadyAcquired)?;
+
+            // The texture ID got added to the device tracker by `submit()`,
+            // and now we are moving it away.
+            device.trackers.lock().textures.remove(texture_id.value);
+
+            let (texture, _) = hub.textures.unregister(texture_id.value.0, &mut token);
+            if let Some(texture) = texture {
+                let suf = A::get_surface_mut(surface);
+                match texture.inner {
+                    resource::TextureInner::Surface {
+                        raw,
+                        parent_id,
+                        has_work: _,
+                    } => {
+                        if surface_id == parent_id.0 {
+                            unsafe { suf.raw.discard_texture(raw) };
+                        } else {
+                            log::warn!("Surface texture is outdated");
+                        }
+                    }
+                    resource::TextureInner::Native { .. } => unreachable!(),
+                }
+            }
+        }
+
+        Ok(())
     }
 }

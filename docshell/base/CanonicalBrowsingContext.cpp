@@ -7,6 +7,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -304,6 +305,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetHistoryID(GetHistoryID());
   txn.SetExplicitActive(GetExplicitActive());
   txn.SetHasRestoreData(GetHasRestoreData());
+  txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {
@@ -795,7 +797,6 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             RemoveDynEntriesFromActiveSessionHistoryEntry();
           }
         }
-        mActiveEntry = newActiveEntry;
 
         if (LOAD_TYPE_HAS_FLAGS(aLoadType,
                                 nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
@@ -806,8 +807,16 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           // should append instead.
           addEntry = index < 0;
           if (!addEntry) {
-            shistory->ReplaceEntry(index, mActiveEntry);
+            shistory->ReplaceEntry(index, newActiveEntry);
           }
+          mActiveEntry = newActiveEntry;
+        } else if (LOAD_TYPE_HAS_FLAGS(
+                       aLoadType, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) &&
+                   !ShouldAddEntryForRefresh(newActiveEntry)) {
+          addEntry = false;
+          mActiveEntry->ReplaceWith(*newActiveEntry);
+        } else {
+          mActiveEntry = newActiveEntry;
         }
 
         if (loadFromSessionHistory) {
@@ -839,7 +848,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         } else if (addEntry) {
           if (mActiveEntry) {
             if (LOAD_TYPE_HAS_FLAGS(
-                    aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
+                    aLoadType, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY) ||
+                (LOAD_TYPE_HAS_FLAGS(aLoadType,
+                                     nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) &&
+                 !ShouldAddEntryForRefresh(newActiveEntry))) {
               // FIXME We need to make sure that when we create the info we
               //       make a copy of the shared state.
               mActiveEntry->ReplaceWith(*newActiveEntry);
@@ -2142,6 +2154,8 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
 
   GetChildSessionHistory()->SetIndexAndLength(index, length, aChangeID);
 
+  shistory->EvictOutOfRangeContentViewers(index);
+
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendHistoryCommitIndexAndLength(this, index, length,
                                                        aChangeID);
@@ -2458,7 +2472,7 @@ void CanonicalBrowsingContext::ShowSubframeCrashedUI(
 }
 
 static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
-                                     uint16_t aBFCacheCombo, bool aIsSubDoc) {
+                                     uint32_t aBFCacheCombo, bool aIsSubDoc) {
   if (aIsSubDoc) {
     nsAutoCString uri("[no uri]");
     nsCOMPtr<nsIURI> currentURI =
@@ -2503,6 +2517,9 @@ static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
   if (aBFCacheCombo & BFCacheStatus::BEFOREUNLOAD_LISTENER) {
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * beforeunload listener"));
   }
+  if (aBFCacheCombo & BFCacheStatus::ACTIVE_LOCK) {
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * has active Web Locks"));
+  }
 }
 
 bool CanonicalBrowsingContext::AllowedInBFCache(
@@ -2517,6 +2534,12 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   }
 
   if (IsInProcess()) {
+    return false;
+  }
+
+  nsAutoCString remoteType;
+  GetCurrentRemoteType(remoteType, IgnoredErrorResult());
+  if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
     return false;
   }
 

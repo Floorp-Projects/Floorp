@@ -362,8 +362,8 @@ typedef [EnforceRange] unsigned long GPUTextureUsageFlags;
 interface GPUTextureUsage {
     const GPUTextureUsageFlags COPY_SRC          = 0x01;
     const GPUTextureUsageFlags COPY_DST          = 0x02;
-    const GPUTextureUsageFlags SAMPLED           = 0x04;
-    const GPUTextureUsageFlags STORAGE           = 0x08;
+    const GPUTextureUsageFlags TEXTURE_BINDING   = 0x04;
+    const GPUTextureUsageFlags STORAGE_BINDING   = 0x08;
     const GPUTextureUsageFlags RENDER_ATTACHMENT = 0x10;
 };
 

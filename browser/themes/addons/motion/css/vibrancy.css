@@ -1,0 +1,22 @@
+/* (MACOS ONLY!) Enable window vibrancy behind tabs */
+
+#navigator-toolbox:not(:-moz-window-inactive) {
+  background-color: #0001 !important;
+}
+
+#main-window[lwthemetextcolor="bright"] #navigator-toolbox:not(:-moz-window-inactive) {
+  background-color: #1114 !important;
+}
+
+#main-window {
+  appearance: -moz-mac-vibrant-titlebar-light !important;
+}
+
+#main-window[lwthemetextcolor="bright"] {
+  appearance: -moz-mac-vibrant-titlebar-dark !important;
+}
+
+:-moz-any(#main-window, #navigator-toolbox):-moz-any([inFullscreen="true"], :-moz-window-inactive) {
+  appearance: none !important;
+  background-color: var(--lwt-accent-color) !important;
+}

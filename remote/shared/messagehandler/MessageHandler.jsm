@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["MessageHandler"];
+const EXPORTED_SYMBOLS = ["CONTEXT_DESCRIPTOR_TYPES", "MessageHandler"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -19,6 +19,34 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+
+/**
+ * A ContextDescriptor object provides information to decide if a broadcast or
+ * a session data item should be applied to a specific MessageHandler context.
+ *
+ * TODO: At the moment we only support one value: { type: "all", id: "all" },
+ * but the format of the ContextDescriptor object is designed to fit more
+ * complex values.
+ * As soon as we start supporting broadcasts targeting only a part of the
+ * context tree, we will add additional context types. This work will begin with
+ * Bug 1725111, where we will support filtering on a single navigable. It will
+ * be later expanded to filter on a worker, a webextension, a process etc...
+ *
+ * @typedef {Object} ContextDescriptor
+ * @property {String} type
+ *     The type of context, one of CONTEXT_DESCRIPTOR_TYPES
+ * @property {String=} id
+ *     Unique id of a given context for the provided type.
+ *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
+ *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
+ *     browserId.
+ */
+
+// Enum of ContextDescriptor types.
+const CONTEXT_DESCRIPTOR_TYPES = {
+  ALL: "all",
+  TOP_BROWSING_CONTEXT: "top-browsing-context",
+};
 
 /**
  * MessageHandler instances are dedicated to handle both Commands and Events
@@ -133,9 +161,14 @@ class MessageHandler extends EventEmitter {
    * @typedef {Object} CommandDestination
    * @property {String} type
    *     One of MessageHandler.type.
-   * @property {String} id
+   * @property {String=} id
    *     Unique context identifier. The format depends on the type.
    *     For WINDOW_GLOBAL destinations, this is a browsing context id.
+   *     Optional, should only be provided if `contextDescriptor` is missing.
+   * @property {ContextDescriptor=} contextDescriptor
+   *     Descriptor used to match several contexts, which will all receive the
+   *     command.
+   *     Optional, should only be provided if `id` is missing.
    */
 
   /**
@@ -179,6 +212,17 @@ class MessageHandler extends EventEmitter {
   toString() {
     return `[object ${this.constructor.name} ${this.name}]`;
   }
+
+  /**
+   * Apply the initial session data items provided to this MessageHandler on
+   * startup. Implementation is specific to each MessageHandler class.
+   *
+   * By default the implementation is a no-op.
+   *
+   * @param {Array<SessionDataItem>} sessionDataItems
+   *     Initial session data items for this MessageHandler.
+   */
+  async applyInitialSessionDataItems(sessionDataItems) {}
 
   /**
    * Returns the module path corresponding to this MessageHandler class.

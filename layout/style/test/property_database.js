@@ -13454,6 +13454,30 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-gutter.enabled")) {
+  gCSSProperties["scrollbar-gutter"] = {
+    domProp: "scrollbarGutter",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["stable", "stable both-edges", "both-edges stable"],
+    invalid_values: [
+      "auto stable",
+      "auto both-edges",
+      "both-edges",
+      "stable mirror",
+      // The following values are from scrollbar-gutter extension in CSS
+      // Overflow 4 https://drafts.csswg.org/css-overflow-4/#sbg-ext.
+      "always",
+      "always both-edges",
+      "always force",
+      "always both-edges force",
+      "stable both-edges force",
+      "match-parent",
+    ],
+  };
+}
+
 // Copy aliased properties' fields from their alias targets. Keep this logic
 // at the bottom of this file to ensure all the aliased properties are
 // processed.

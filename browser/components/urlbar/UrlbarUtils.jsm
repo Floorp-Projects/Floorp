@@ -1350,6 +1350,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       url: {
         type: "string",
       },
+      urlTimestampIndex: {
+        type: "number",
+      },
     },
   },
   [UrlbarUtils.RESULT_TYPE.KEYWORD]: {

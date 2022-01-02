@@ -69,7 +69,7 @@ RemoteWorkerControllerParent::~RemoteWorkerControllerParent() {
 }
 
 PFetchEventOpParent* RemoteWorkerControllerParent::AllocPFetchEventOpParent(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToParentServiceWorkerFetchEventOpArgs& aArgs) {
   AssertIsOnBackgroundThread();
 
   RefPtr<FetchEventOpParent> actor = new FetchEventOpParent();
@@ -77,7 +77,8 @@ PFetchEventOpParent* RemoteWorkerControllerParent::AllocPFetchEventOpParent(
 }
 
 IPCResult RemoteWorkerControllerParent::RecvPFetchEventOpConstructor(
-    PFetchEventOpParent* aActor, const ServiceWorkerFetchEventOpArgs& aArgs) {
+    PFetchEventOpParent* aActor,
+    const ParentToParentServiceWorkerFetchEventOpArgs& aArgs) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 

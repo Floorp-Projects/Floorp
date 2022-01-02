@@ -27,7 +27,7 @@ TEST(IntlPluralRules, CategoriesEnCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 2);
+  ASSERT_EQ(categories.size(), 2u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
@@ -45,7 +45,7 @@ TEST(IntlPluralRules, CategoriesEnOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 4);
+  ASSERT_EQ(categories.size(), 4u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -64,7 +64,7 @@ TEST(IntlPluralRules, CategoriesCyCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 6);
+  ASSERT_EQ(categories.size(), 6u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -86,7 +86,7 @@ TEST(IntlPluralRules, CategoriesCyOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 6);
+  ASSERT_EQ(categories.size(), 6u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -107,7 +107,7 @@ TEST(IntlPluralRules, CategoriesBrCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 5);
+  ASSERT_EQ(categories.size(), 5u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -128,7 +128,7 @@ TEST(IntlPluralRules, CategoriesBrOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 1);
+  ASSERT_EQ(categories.size(), 1u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
@@ -144,7 +144,7 @@ TEST(IntlPluralRules, CategoriesHsbCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 4);
+  ASSERT_EQ(categories.size(), 4u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -164,7 +164,7 @@ TEST(IntlPluralRules, CategoriesHsbOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 1);
+  ASSERT_EQ(categories.size(), 1u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
@@ -592,7 +592,6 @@ TEST(IntlPluralRules, MaxSignificantDigitsTwo)
 //   other: other other
 TEST(IntlPluralRules, SelectRangeEn)
 {
-#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
   for (auto type : {PluralRules::Type::Cardinal, PluralRules::Type::Ordinal}) {
     PluralRulesOptions options;
     options.mPluralType = type;
@@ -607,7 +606,6 @@ TEST(IntlPluralRules, SelectRangeEn)
     TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
     TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
   }
-#endif
 }
 
 // fr Cardinal Plural Rules
@@ -629,7 +627,6 @@ TEST(IntlPluralRules, SelectRangeEn)
 //   other: other other
 TEST(IntlPluralRules, SelectRangeFrCardinal)
 {
-#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Cardinal;
   auto prResult = PluralRules::TryCreate("fr", options);
@@ -643,7 +640,6 @@ TEST(IntlPluralRules, SelectRangeFrCardinal)
   TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
   TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
   TEST_SELECT(pr->SelectRange(1, 1000000), PluralRules::Keyword::Other);
-#endif
 }
 
 // fr Ordinal Plural Rules
@@ -656,7 +652,6 @@ TEST(IntlPluralRules, SelectRangeFrCardinal)
 //   other: other other
 TEST(IntlPluralRules, SelectRangeFrOrdinal)
 {
-#ifdef INTL_PLURAL_RULES_HAS_SELECT_RANGE
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
   auto prResult = PluralRules::TryCreate("fr", options);
@@ -670,7 +665,6 @@ TEST(IntlPluralRules, SelectRangeFrOrdinal)
   TEST_SELECT(pr->SelectRange(1, 2), PluralRules::Keyword::Other);
   TEST_SELECT(pr->SelectRange(1, 10), PluralRules::Keyword::Other);
   TEST_SELECT(pr->SelectRange(1, 1000000), PluralRules::Keyword::Other);
-#endif
 }
 
 }  // namespace intl

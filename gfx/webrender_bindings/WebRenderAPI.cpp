@@ -307,13 +307,6 @@ void TransactionBuilder::SetDocumentView(
   wr_transaction_set_document_view(mTxn, &wrDocRect);
 }
 
-void TransactionBuilder::UpdateScrollPosition(
-    const wr::WrPipelineId& aPipelineId,
-    const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    const wr::LayoutPoint& aScrollPosition) {
-  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
-}
-
 TransactionWrapper::TransactionWrapper(Transaction* aTxn) : mTxn(aTxn) {}
 
 void TransactionWrapper::AppendDynamicProperties(
@@ -572,6 +565,10 @@ void WebRenderAPI::SetBatchingLookback(uint32_t aCount) {
 
 void WebRenderAPI::SetBool(wr::BoolParameter aKey, bool aValue) {
   wr_api_set_bool(mDocHandle, aKey, aValue);
+}
+
+void WebRenderAPI::SetInt(wr::IntParameter aKey, int32_t aValue) {
+  wr_api_set_int(mDocHandle, aKey, aValue);
 }
 
 void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {

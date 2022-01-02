@@ -1582,6 +1582,22 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("Delegate should only run once", count, equalTo(1))
     }
 
+    @Test(expected = RejectedPromiseException::class)
+    fun waitForJS_whileNavigating() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // Trigger navigation and try again
+        mainSession.loadTestPath(HELLO2_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // Navigate away and trigger a waitForJS that never completes, this will
+        // fail because the page navigates away (disconnecting the port) before
+        // the page can respond.
+        mainSession.goBack()
+        mainSession.waitForJS("new Promise(resolve => {})")
+    }
+
     private interface TestDelegate {
         fun onDelegate(foo: String, bar: String): Int
     }

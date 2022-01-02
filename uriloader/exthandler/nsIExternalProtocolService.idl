@@ -101,6 +101,11 @@ interface nsIExternalProtocolService : nsISupports
    * @param aTriggeringPrincipal
    *        The principal triggering this load.
    *
+   * @param aRedirectPrincipal
+   *        The last post-redirect principal triggering this load.
+   *        Used for display and permission purposes. If null, we'll
+   *        use the triggering principal.
+   *
    * @param aBrowsingContext
    *        The context to parent the dialog against, and, if a web handler
    *        is chosen, it is loaded in this window as well.  This parameter
@@ -118,6 +123,7 @@ interface nsIExternalProtocolService : nsISupports
    */
   void loadURI(in nsIURI aURI,
                [optional] in nsIPrincipal aTriggeringPrincipal,
+               [optional] in nsIPrincipal aRedirectPrincipal,
                [optional] in BrowsingContext aBrowsingContext,
                [optional] in bool aWasTriggeredExternally);
 

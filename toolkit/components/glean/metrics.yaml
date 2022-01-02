@@ -6,10 +6,9 @@
 # automatically converted to platform-specific code at build time using the
 # `glean_parser` PyPI package.
 
-# This file is presently for Internal FOG Use Only.
-# You should not add metrics here until probably about January of 2021.
-# If you're looking for the metrics.yaml for Geckoveiw Streaming Telemetry,
-# you can find that one in toolkit/components/telemetry/geckoview/streaming.
+# This file is for Internal FOG Use Only.
+# Please don't add anything here unless you have the permission of a
+# Telemetry Module Peer.
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
@@ -92,6 +91,24 @@ fog.ipc:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
+  flush_failures:
+    type: counter
+    description: |
+      The number of times we failed to flush all non-parent-process data,
+      throwing even partial results into the trash.
+      If this number is high, we might consider writing custom `MozPromise`-
+      handling code instead of using `MozPromise::All`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729026
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729026
     data_sensitivity:
       - technical
     notification_emails:

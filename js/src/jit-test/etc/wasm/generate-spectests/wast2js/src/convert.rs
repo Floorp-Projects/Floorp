@@ -218,10 +218,7 @@ fn convert_directive(
                 escape_template_string(message)
             )?;
         }
-        AssertException {
-            span: _,
-            exec,
-        } => {
+        AssertException { span: _, exec } => {
             writeln!(
                 out,
                 "assert_exception(() => {});",

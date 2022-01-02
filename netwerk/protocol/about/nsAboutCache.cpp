@@ -84,9 +84,11 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
       "<head>\n"
       "  <title>Network Cache Storage Information</title>\n"
       "  <meta charset=\"utf-8\">\n"
+      "  <meta name=\"color-scheme\" content=\"light dark\">\n"
       "  <meta http-equiv=\"Content-Security-Policy\" content=\"default-src "
       "chrome:; object-src 'none'\"/>\n"
-      "  <link rel=\"stylesheet\" href=\"chrome://global/skin/about.css\"/>\n"
+      "  <link rel=\"stylesheet\" "
+      "href=\"chrome://global/skin/in-content/info-pages.css\"/>\n"
       "  <link rel=\"stylesheet\" "
       "href=\"chrome://global/skin/aboutCache.css\"/>\n"
       "</head>\n"
@@ -295,10 +297,10 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount,
     if (aEntryCount != 0) {  // Add the "List Cache Entries" link
       mBuffer.AppendLiteral(
           "  <tr>\n"
-          "    <th><a href=\"about:cache?storage=");
+          "    <td colspan=\"2\"><a href=\"about:cache?storage=");
       nsAppendEscapedHTML(mStorageName, mBuffer);
       mBuffer.AppendLiteral(
-          "\">List Cache Entries</a></th>\n"
+          "\">List Cache Entries</a></td>\n"
           "  </tr>\n");
     }
   }

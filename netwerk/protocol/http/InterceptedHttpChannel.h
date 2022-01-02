@@ -271,6 +271,11 @@ class InterceptedHttpChannel final
   NS_IMETHOD
   ResumeAt(uint64_t startPos, const nsACString& entityID) override;
 
+  NS_IMETHOD
+  SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) override {
+    return NS_OK;
+  }
+
   void DoNotifyListenerCleanup() override;
 
   void DoAsyncAbort(nsresult aStatus) override;

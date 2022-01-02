@@ -45,6 +45,7 @@ add_task(async function() {
   const { autocompletePopup } = view.classListPreviewer;
   let onPopupOpened = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("a", {}, view.styleWindow);
+  await waitForClassApplied("a");
   await onPopupOpened;
   await checkAutocompleteItems(
     autocompletePopup,
@@ -55,17 +56,14 @@ add_task(async function() {
   info(
     "Test that typing more letters filters the autocomplete popup and uses the cache mechanism"
   );
-  const onCacheHit = inspector.inspectorFront.pageStyle.once(
-    "getAttributesInOwnerDocument-cache-hit"
-  );
   EventUtils.sendString("uto-b", view.styleWindow);
+  await waitForClassApplied("auto-b");
 
   await checkAutocompleteItems(
     autocompletePopup,
     allClasses.filter(cls => cls.startsWith("auto-b")),
     "The autocomplete popup was filtered with the content of the input"
   );
-  await onCacheHit;
   ok(true, "The results were retrieved from the cache mechanism");
 
   info("Test that autocomplete shows up-to-date results");
@@ -76,10 +74,12 @@ add_task(async function() {
     content.document.body.classList.add("auto-body-added-by-script");
   });
   await onNewMutation;
+  await waitForClassApplied("auto-body-added-by-script");
 
   // input is now auto-body
   onPopupOpened = autocompletePopup.once("popup-opened");
   EventUtils.sendString("ody", view.styleWindow);
+  await waitForClassApplied("auto-body");
   await onPopupOpened;
   await checkAutocompleteItems(
     autocompletePopup,
@@ -96,6 +96,7 @@ add_task(async function() {
   // input is now auto-bodyy
   let onPopupClosed = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("y", {}, view.styleWindow);
+  await waitForClassApplied("auto-bodyy");
   await onPopupClosed;
   ok(true, "The popup was closed as expected");
   await checkAutocompleteItems(autocompletePopup, [], "The popup was cleared");
@@ -108,6 +109,7 @@ add_task(async function() {
 
   onPopupOpened = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("a", {}, view.styleWindow);
+  await waitForClassApplied("a");
   await onPopupOpened;
 
   await checkAutocompleteItems(
@@ -147,6 +149,7 @@ add_task(async function() {
 
   onPopupClosed = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_ArrowRight", {}, view.styleWindow);
+  await waitForClassApplied("auto-body-added-by-script");
   await onPopupClosed;
   is(
     textInput.value,
@@ -157,6 +160,7 @@ add_task(async function() {
   // Backspace to show the list again
   onPopupOpened = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("KEY_Backspace", {}, view.styleWindow);
+  await waitForClassApplied("auto-body-added-by-scrip");
   await onPopupOpened;
   is(
     textInput.value,
@@ -172,6 +176,7 @@ add_task(async function() {
   // Enter to accept
   onPopupClosed = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Enter", {}, view.styleWindow);
+  await waitForClassRemoved("auto-body-added-by-scrip");
   await onPopupClosed;
   is(
     textInput.value,
@@ -182,6 +187,7 @@ add_task(async function() {
   // Backspace to show again
   onPopupOpened = autocompletePopup.once("popup-opened");
   EventUtils.synthesizeKey("KEY_Backspace", {}, view.styleWindow);
+  await waitForClassApplied("auto-body-added-by-scrip");
   await onPopupOpened;
   is(
     textInput.value,
@@ -203,6 +209,7 @@ add_task(async function() {
     "auto-body-added-by-script",
     "Tab puts the selected item in the input and closes the popup"
   );
+  await waitForClassRemoved("auto-body-added-by-scrip");
 });
 
 async function checkAutocompleteItems(
@@ -223,4 +230,26 @@ function getAutocompleteItems(autocompletePopup) {
   return Array.from(autocompletePopup._panel.querySelectorAll("li")).map(
     el => el.textContent
   );
+}
+
+async function waitForClassApplied(cls) {
+  info("Wait for class to be applied: " + cls);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [cls], async _cls => {
+    return ContentTaskUtils.waitForCondition(() =>
+      content.document.body.classList.contains(_cls)
+    );
+  });
+  // Wait for debounced functions to be executed
+  await wait(200);
+}
+
+async function waitForClassRemoved(cls) {
+  info("Wait for class to be removed: " + cls);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [cls], async _cls => {
+    return ContentTaskUtils.waitForCondition(
+      () => !content.document.body.classList.contains(_cls)
+    );
+  });
+  // Wait for debounced functions to be executed
+  await wait(200);
 }

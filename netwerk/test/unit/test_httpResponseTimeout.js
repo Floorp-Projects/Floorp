@@ -16,9 +16,7 @@ const kShortLivedKeepalivePref =
 const kLongLivedKeepalivePref =
   "network.http.tcp_keepalive.long_lived_connections";
 
-const prefService = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+const prefService = Services.prefs;
 
 var server = new HttpServer();
 

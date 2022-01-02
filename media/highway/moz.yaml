@@ -35,7 +35,7 @@ origin:
   license-file: LICENSE
 
 vendoring:
-  url: https://github.com/google/highway.git
+  url: https://github.com/google/highway
   source-hosting: github
   vendor-directory: third_party/highway
 

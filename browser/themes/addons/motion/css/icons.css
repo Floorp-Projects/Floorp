@@ -1,0 +1,551 @@
+.subviewbutton>.toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#PanelUI-menu-button {
+  list-style-image: url(chrome://browser/skin/motion/menu.svg) !important;
+}
+
+#reload-button,
+#context-reload {
+  list-style-image: url(chrome://browser/skin/motion/refresh.svg) !important;
+}
+
+#stop-reload-button[animate]>#reload-button>.toolbarbutton-animatable-box>.toolbarbutton-animatable-image {
+  background-image: url(chrome://browser/skin/motion/reload-to-stop.svg) !important;
+  width: 468px !important;
+}
+
+#stop-button,
+#context-stop {
+  list-style-image: url(chrome://browser/skin/motion/stop.svg) !important;
+}
+
+#stop-reload-button[animate]>#reload-button[displaystop]+#stop-button>.toolbarbutton-animatable-box>.toolbarbutton-animatable-image {
+  background-image: url(chrome://browser/skin/motion/stop-to-reload.svg) !important;
+  width: 468px !important;
+}
+
+#home-button {
+  list-style-image: url(chrome://browser/skin/motion/home.svg) !important;
+}
+
+#star-button,
+#context-bookmarkpage,
+#pageAction-panel-bookmark,
+#panelMenuBookmarkThisPage {
+  list-style-image: url(chrome://browser/skin/motion/star.svg) !important;
+}
+
+#star-button[starred],
+#tracking-protection-icon-box[active] {
+  fill: var(--toolbarbutton-icon-fill-attention) !important;
+}
+
+#star-button[starred],
+#context-bookmarkpage[starred],
+#panelMenuBookmarkThisPage {
+  list-style-image: url(chrome://browser/skin/motion/star.svg#fill) !important;
+}
+
+#bookmarks-menu-button,
+#appMenu-library-bookmarks-button,
+#panelMenu_toggleBookmarksMenu,
+#appMenu-bookmarks-button {
+  list-style-image: url(chrome://browser/skin/motion/star.svg#list) !important;
+}
+
+#library-button,
+#appMenu-library-button {
+  list-style-image: url(chrome://browser/skin/motion/library.svg) !important;
+}
+
+#preferences-button,
+#appMenu-preferences-button,
+.identity-popup-preferences-button,
+#urlbar-anon-search-settings-compact .button-icon,
+#PanelUI-fxa-menu-sync-prefs-button,
+#PanelUI-fxa-menu-account-devices-button {
+  list-style-image: url(chrome://browser/skin/motion/settings.svg) !important;
+}
+
+#appMenu-new-window-button,
+#new-window-button {
+  list-style-image: url(chrome://browser/skin/motion/new-window.svg) !important;
+}
+
+#appMenu-private-window-button,
+#privatebrowsing-button {
+  list-style-image: url(chrome://browser/skin/motion/new-private-window.svg) !important;
+}
+
+#appMenu-fullscreen-button,
+#fullscreen-button,
+#appMenu-fullscreen-button2 {
+  list-style-image: url(chrome://browser/skin/motion/fullscreen-enter.svg) !important;
+}
+
+#appMenu-fullscreen-button[checked],
+#fullscreen-button[checked],
+#appMenu-fullscreen-button2[checked] {
+  list-style-image: url(chrome://browser/skin/motion/fullscreen-exit.svg) !important;
+}
+
+#appMenu-zoomEnlarge-button,
+#appMenu-zoomEnlarge-button2,
+#zoom-in-button {
+  list-style-image: url(chrome://browser/skin/motion/zoom-in.svg) !important;
+}
+
+#appMenu-zoomReduce-button,
+#appMenu-zoomReduce-button2,
+#zoom-out-button {
+  list-style-image: url(chrome://browser/skin/motion/zoom-out.svg) !important;
+}
+
+#appMenu-library-downloads-button,
+#downloads-button {
+  list-style-image: url(chrome://browser/skin/motion/download.svg#arrow-with-bar) !important;
+}
+
+
+#downloads-indicator-icon {
+  background-image: url(chrome://browser/skin/motion/download.svg#arrow) !important;
+}
+
+#downloads-button[progress] #downloads-indicator-icon {
+  background-image: url(chrome://browser/skin/motion/download.svg#arrow-progress) !important;
+}
+
+#downloads-indicator-progress-outer {
+  background-image: url(chrome://browser/skin/motion/download.svg#default-bar) !important;
+}
+
+#downloads-indicator-progress-inner,
+#downloads-button[progress]>.toolbarbutton-badge-stack>#downloads-indicator-anchor>#downloads-indicator-progress-outer {
+  background-image: url(chrome://browser/skin/motion/download.svg#progress-bar-fg) !important;
+}
+
+#downloads-button[progress]>.toolbarbutton-badge-stack>#downloads-indicator-anchor>#downloads-indicator-progress-outer {
+  background-image: url(chrome://browser/skin/motion/download.svg#progress-bar-bg) !important;
+}
+
+#PanelUI-fxa-menu-remotetabs-button,
+#appMenuRecentlyClosedTabs,
+#appMenu-library-remotetabs-button,
+#sync-button {
+  list-style-image: url(chrome://browser/skin/motion/synced-tabs.svg) !important;
+}
+
+#appMenu-library-pocket-button,
+#pocket-button,
+#pageAction-panel-pocket {
+  list-style-image: url(chrome://browser/skin/motion/save-pocket.svg) !important;
+}
+
+#PanelUI-remotetabs-view-sidebar,
+#sidebar-button {
+  list-style-image: url(chrome://browser/skin/motion/sidebar.svg) !important;
+}
+
+#sidebar-button[positionend] {
+  transform: scaleX(-1) !important;
+}
+
+#sidebar-button[checked] {
+  list-style-image: url(chrome://browser/skin/motion/sidebar.svg#fill) !important;
+}
+
+#nav-bar-overflow-button,
+#alltabs-button {
+  list-style-image: url(chrome://browser/skin/motion/overflow.svg) !important;
+}
+
+#PlacesChevron {
+  list-style-image: url(chrome://browser/skin/motion/menu-right.svg) !important;
+}
+
+#scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton),
+#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton) {
+  list-style-image: url(chrome://browser/skin/motion/menu-left.svg) !important;
+}
+
+#appMenu-customize-button,
+#overflowMenu-customize-button {
+  list-style-image: url(chrome://browser/skin/motion/brush.svg) !important;
+}
+
+#appMenu-print-button,
+#print-button {
+  list-style-image: url(chrome://browser/skin/motion/print.svg) !important;
+}
+
+#appMenu-save-file-button,
+#save-page-button {
+  list-style-image: url(chrome://browser/skin/motion/savefile.svg) !important;
+}
+
+#appMenu-open-file-button,
+#open-file-button {
+  list-style-image: url(chrome://browser/skin/motion/openfile.svg) !important;
+}
+
+#history-panelmenu,
+#appMenu-library-history-button {
+  list-style-image: url(chrome://browser/skin/motion/history.svg) !important;
+}
+
+#appMenu-logins-button,
+richlistitem[originaltype="loginWithOrigin"] .ac-site-icon,
+richlistitem[originaltype="loginsFooter"] .ac-site-icon,
+#PanelUI-fxa-menu-logins-button {
+  list-style-image: url(chrome://browser/skin/motion/key.svg) !important;
+}
+
+.subviewbutton[type="highlight-history"]::after {
+  content: url(chrome://browser/skin/motion/history.svg) !important;
+}
+
+#add-ons-button,
+#appMenu-addons-button {
+  list-style-image: url(chrome://browser/skin/motion/addons.svg) !important;
+}
+
+#email-link-button,
+#pageAction-panel-emailLink,
+#pageAction-urlbar-emailLink {
+  list-style-image: url(chrome://browser/skin/motion/email.svg) !important;
+}
+
+#pageAction-panel-copyURL,
+#pageAction-urlbar-copyURL {
+  list-style-image: url(chrome://browser/skin/motion/hyperlink.svg) !important;
+}
+
+#reader-mode-button {
+  list-style-image: url(chrome://browser/skin/motion/readerMode.svg) !important;
+}
+
+#pageAction-panel-webcompat-reporter_mozilla_org {
+  list-style-image: url(chrome://browser/skin/motion/bug.svg) !important;
+}
+
+#pageAction-panel-webcompat-reporter_mozilla_org>.toolbarbutton-icon {
+  list-style-image: inherit !important;
+}
+
+#screenshots_mozilla_org-menuitem-_create-screenshot .menu-iconic-left {
+  background-image: url(chrome://browser/skin/motion/screenshot.svg) !important;
+  background-position: 4px center !important;
+  background-repeat: no-repeat !important;
+}
+
+#screenshots_mozilla_org-menuitem-_create-screenshot .menu-iconic-icon {
+  visibility: hidden !important;
+}
+
+#pageAction-panel-screenshots_mozilla_org .toolbarbutton-icon,
+#pageAction-urlbar-screenshots_mozilla_org {
+  list-style-image: url(chrome://browser/skin/motion/screenshot.svg) !important;
+}
+
+#tabs-newtab-button,
+#new-tab-button {
+  list-style-image: url(chrome://browser/skin/motion/new-tab.svg) !important;
+}
+
+#panic-button {
+  list-style-image: url(chrome://browser/skin/motion/forget.svg) !important;
+}
+
+#developer-button {
+  list-style-image: url(chrome://browser/skin/motion/developer.svg) !important;
+}
+
+:root:not([fxastatus=signedin]) #fxa-avatar-image,
+:root[fxastatus=signedin]:is(:not([style*="--avatar-image-url"]), [style*="https://profile.accounts.firefox.com/v1/avatar/"]) :-moz-any(#fxa-avatar-image, #fxa-menu-avatar, #appMenu-fxa-label) {
+  list-style-image: url(chrome://browser/skin/motion/profile.svg) !important;
+}
+
+:-moz-any(:root[privatebrowsingmode], :root[privatebrowsingmode][fxastatus=signedin]:not([style*="--avatar-image-url"])) #fxa-avatar-image {
+  list-style-image: url(chrome://browser/skin/motion/incognito.svg) !important;
+}
+
+#tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/motion/tracking-protection.svg) !important;
+}
+
+#appMenu-protection-report-icon {
+  list-style-image: url(chrome://browser/skin/motion/protections.svg) !important;
+}
+
+#pageActionButton {
+  list-style-image: url(chrome://browser/skin/motion/menu.svg) !important;
+}
+
+#urlbar[pageproxystate="invalid"] #identity-icon,
+.searchbar-search-icon,
+#PopupAutoCompleteRichResult .ac-type-icon[type="keyword"],
+#PopupAutoCompleteRichResult .ac-site-icon[type="searchengine"],
+#panelMenu_searchBookmarks {
+  list-style-image: url(chrome://browser/skin/motion/search.svg) !important;
+}
+
+#appMenu-find-button,
+#find-button {
+  list-style-image: url(chrome://browser/skin/motion/search-file.svg) !important;
+}
+
+#appMenu-whatsnew-button {
+  list-style-image: url(chrome://browser/skin/motion/whatsnew.svg) !important;
+}
+
+#appMenu-developer-button {
+  list-style-image: url(chrome://browser/skin/motion/webdeveloper.svg) !important;
+}
+
+#appMenu-more-button {
+  list-style-image: url(chrome://browser/skin/motion/menu.svg) !important;
+}
+
+#appMenu-cut-button,
+#cut-button {
+  list-style-image: url(chrome://browser/skin/motion/cut.svg) !important;
+}
+
+#appMenu-copy-button,
+#copy-button {
+  list-style-image: url(chrome://browser/skin/motion/copy.svg) !important;
+}
+
+#appMenu-paste-button,
+#paste-button {
+  list-style-image: url(chrome://browser/skin/motion/paste.svg) !important;
+}
+
+#appMenu-fxa-label,
+#PanelUI-fxa-menu-syncnow-button,
+#appMenu-fxa-icon,
+#PanelUI-remotetabs-syncnow {
+  list-style-image: url(chrome://browser/skin/motion/sync.svg) !important;
+}
+
+.tab-icon-image,
+.bookmark-item {
+  list-style-image: url(chrome://browser/skin/motion/globe.svg) !important;
+}
+
+.tab-icon-image[src="chrome://global/skin/icons/settings.svg"] {
+  background-image: url(chrome://browser/skin/motion/settings.svg) !important;
+  padding-left: 16px !important;
+}
+
+.tab-icon-image:-moz-any([src="chrome://branding/content/icon32.png"], [src="chrome://browser/skin/motion/privatebrowsing/favicon.svg"]):not([busy]) {
+  background-image: url(chrome://browser/skin/motion/new-tab-image.svg#dots) !important;
+  padding-left: 16px !important;
+}
+
+.tab-icon-image[src="chrome://mozapps/skin/extensions/extension.svg"] {
+  background-image: url(chrome://browser/skin/motion/addons.svg) !important;
+  padding-left: 16px !important;
+}
+
+.tab-icon-image[src="chrome://browser/skin/motion/customize.svg"] {
+  background-image: url(chrome://browser/skin/motion/brush.svg) !important;
+  padding-left: 16px !important;
+}
+
+.tab-icon-pending[pinned],
+.tab-icon-image:not([src], [pinned], [crashed], [pictureinpicture])[selected],
+.tab-icon-image:not([src], [pinned], [crashed], [sharing], [pictureinpicture]),
+.tab-icon-image[busy],
+.tab-throbber:not([busy]),
+.tab-icon-sound:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
+.tab-icon-sound[pinned],
+.tab-sharing-icon-overlay,
+.tab-icon-sound {
+  list-style-image: url(chrome://browser/skin/motion/audio.svg) !important;
+}
+
+.tab-icon-sound[muted] {
+  list-style-image: url(chrome://browser/skin/motion/audio-muted.svg) !important;
+}
+
+.tab-icon-sound[pictureinpicture] {
+  list-style-image: url(chrome://browser/skin/motion/picture-in-picture.svg) !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.tab-icon-overlay[soundplaying] {
+  list-style-image: url(chrome://browser/skin/motion/audio.svg#overlayStroke) !important;
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity !important;
+  fill: var(--toolbar-color) !important;
+  stroke: var(--toolbar-bgcolor) !important;
+}
+
+.tab-icon-overlay[muted] {
+  list-style-image: url(chrome://browser/skin/motion/audio-muted.svg#overlayStroke) !important;
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity !important;
+  fill: var(--toolbar-color) !important;
+  stroke: var(--toolbar-bgcolor) !important;
+}
+
+#pageAction-panel-pinTab,
+#pageAction-urlbar-pinTab {
+  list-style-image: url(chrome://browser/skin/motion/pin.svg) !important;
+}
+
+#pageAction-urlbar-shareURL,
+#pageAction-panel-shareURL {
+  list-style-image: url(chrome://browser/skin/motion/share.svg) !important;
+}
+
+.tab-icon-overlay[activemedia-blocked],
+.tab-icon-sound[activemedia-blocked] {
+  list-style-image: url(chrome://browser/skin/motion/media-blocked.svg) !important;
+}
+
+.downloadIconShow .button-icon {
+  list-style-image: url(chrome://browser/skin/motion/folder.svg) !important;
+}
+
+/*
+:root[lwthemetextcolor="bright"] .bookmark-item[container]
+{
+  list-style-image: url(chrome://browser/skin/motion/folder-bookmarks.svg#darkmode) !important;
+}
+*/
+
+.bookmark-item[container] {
+  list-style-image: url(chrome://browser/skin/motion/folder-bookmarks.svg#lightmode) !important;
+}
+
+#PanelUI-menu-button[badge-status|="update"] {
+  list-style-image: url(chrome://browser/skin/motion/menu-update.svg) !important;
+}
+
+
+.urlbarView-favicon[src*="history.svg"],
+.urlbarView-favicon[src*="search-glass.svg"] {
+  padding-left: 16px !important;
+  box-sizing: border-box !important;
+  width: 0 !important;
+}
+
+.urlbarView-favicon[src*="history.svg"] {
+  background-image: url(chrome://browser/skin/motion/history.svg) !important;
+}
+
+.urlbarView-favicon[src*="search-glass.svg"] {
+  background-image: url(chrome://browser/skin/motion/search.svg) !important;
+}
+
+/* Proton Icons */
+@media (-moz-proton) {
+  /* Download Animation */
+  #downloads-indicator-icon,
+  #downloads-indicator-progress-outer {
+    background-image: none !important;
+  }
+
+  #downloads-indicator-progress-inner {
+    background: conic-gradient(var(--toolbarbutton-icon-fill-attention) var(--download-progress-pcent), transparent var(--download-progress-pcent)) !important;
+  }
+  
+  #downloads-indicator-start-image {
+    list-style-image: url(chrome://browser/skin/motion/notification-start-animation.svg) !important;
+  }
+
+  #downloads-indicator-finish-image {
+    list-style-image: url(chrome://browser/skin/motion/notification-finish-animation.svg) !important;
+  }
+
+  #downloads-indicator-anchor {
+    list-style-image: url(chrome://browser/skin/motion/download.svg#arrow-with-bar) !important;
+  }
+
+  #downloads-button[animate][notification="start"] > .toolbarbutton-badge-stack > #downloads-indicator-start-box > #downloads-indicator-start-image {
+    animation-duration: calc(var(--anim-steps) * 30ms) !important;
+  }
+
+  #downloads-button[animate][notification="finish"] > .toolbarbutton-badge-stack > #downloads-indicator-finish-box > #downloads-indicator-finish-image {
+    animation-duration: calc(var(--anim-steps) * 30ms) !important;
+  }
+
+  /* Profile Icon in Arrowpanel */
+  #appMenu-fxa-label2::before {
+    content: "";
+    display: block;
+    height: 20px;
+    width: 2px;
+    margin: 2px;
+    margin-inline-end: 10px; 
+  }
+
+  :root[fxastatus="signedin"] #appMenu-fxa-label2::before {
+    background-image: var(--avatar-image-url) !important;
+    background-size: cover;
+    border-radius: 99px;
+  }
+
+  :root:not([fxastatus="signedin"]) #appMenu-fxa-label2::before, :root[fxastatus="signedin"]:is(:not([style*="--avatar-image-url"]), [style*="https://profile.accounts.firefox.com/v1/avatar/"]) #appMenu-fxa-label2::before {
+    background-image: url(chrome://browser/skin/motion/profile.svg) !important;
+  }
+
+  #appMenu-new-tab-button2 {
+    list-style-image: url(chrome://browser/skin/motion/new-tab-image.svg#dots) !important;
+  }
+
+  #appMenu-new-window-button2 {
+    list-style-image: url(chrome://browser/skin/motion/new-window.svg) !important;
+  }
+
+  #appMenu-new-private-window-button2 {
+    list-style-image: url(chrome://browser/skin/motion/new-private-window.svg) !important;
+  }
+
+  #appMenu-history-button {
+    list-style-image: url(chrome://browser/skin/motion/history.svg) !important;
+  }
+
+  #appMenu-downloads-button {
+    list-style-image: url(chrome://browser/skin/motion/download.svg#arrow-with-bar) !important;
+  }
+
+  #appMenu-passwords-button {
+    list-style-image: url(chrome://browser/skin/motion/key.svg) !important;
+  }
+
+  #appMenu-extensions-themes-button {
+    list-style-image: url(chrome://browser/skin/motion/addons.svg) !important;
+  }
+
+  #appMenu-print-button2 {
+    list-style-image: url(chrome://browser/skin/motion/print.svg) !important;
+  }
+
+  #appMenu-save-file-button2 {
+    list-style-image: url(chrome://browser/skin/motion/savefile.svg) !important;
+  }
+  
+  #appMenu-find-button2 {
+    list-style-image: url(chrome://browser/skin/motion/search-file.svg) !important;
+  }
+
+  #appMenu-settings-button {
+    list-style-image: url(chrome://browser/skin/motion/settings.svg) !important;
+  }
+
+  #appMenu-more-button2 {
+    list-style-image: url(chrome://browser/skin/motion/menu.svg) !important;
+  }
+
+  #appmenu-moreTools-button {
+    list-style-image: url(chrome://browser/skin/motion/brush.svg) !important;
+  }
+  
+}

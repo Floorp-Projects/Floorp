@@ -232,17 +232,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         if self.is_android:
             dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
         if self.is_emulator:
-            fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
-            if fetches_dir:
-                dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
-                dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
-            else:
-                dirs["abs_sdk_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-sdk-linux"
-                )
-                dirs["abs_avds_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-device"
-                )
+            work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
+            dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
+            dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
+            dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
             if self.config["enable_webrender"]:
                 # AndroidMixin uses this when launching the emulator. We only want
                 # GLES3 if we're running WebRender
@@ -298,6 +291,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         mozinfo.find_and_update_from_json(dirs["abs_test_install_dir"])
 
+        # Default to fission disabled
+        fission_enabled = "fission.autostart=true" in c["extra_prefs"]
+
         raw_log_file, error_summary_file = self.get_indexed_logs(
             dirs["abs_blob_upload_dir"], "wpt"
         )
@@ -329,10 +325,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             self.is_android
             or mozinfo.info["tsan"]
             or "wdspec" in test_types
-            or "fission.autostart=true" in c["extra_prefs"]
-            or
+            or fission_enabled
             # Bug 1392106 - skia error 0x80070005: Access is denied.
-            is_windows_7
+            or is_windows_7
             and mozinfo.info["debug"]
         ):
             processes = 1
@@ -357,6 +352,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         if c["extra_prefs"]:
             cmd.extend(["--setpref={}".format(p) for p in c["extra_prefs"]])
+
+        if not fission_enabled and "fission.autostart=false" not in c["extra_prefs"]:
+            cmd.append("--setpref=fission.autostart=false")
 
         if not c["e10s"]:
             cmd.append("--disable-e10s")
@@ -512,7 +510,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
     def install(self):
         if self.is_android:
-            self.install_apk(self.installer_path)
+            self.install_android_app(self.installer_path)
         else:
             super(WebPlatformTest, self).install()
 

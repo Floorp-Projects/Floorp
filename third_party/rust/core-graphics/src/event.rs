@@ -1,12 +1,13 @@
 #![allow(non_upper_case_globals)]
-
-use core_foundation::base::{CFRelease, CFRetain, CFTypeID};
-use geometry::CGPoint;
+use core_foundation::{
+    base::{CFRelease, CFRetain, CFTypeID, TCFType},
+    mach_port::{CFMachPort, CFMachPortRef},
+};
 use event_source::CGEventSource;
-
-use libc;
-
 use foreign_types::ForeignType;
+use geometry::CGPoint;
+use libc::c_void;
+use std::mem::ManuallyDrop;
 
 pub type CGEventField = u32;
 pub type CGKeyCode = u16;
@@ -384,6 +385,137 @@ pub enum CGEventTapLocation {
     AnnotatedSession,
 }
 
+// The next three enums are taken from:
+// [Ref](https://github.com/phracker/MacOSX-SDKs/blob/ef9fe35d5691b6dd383c8c46d867a499817a01b6/MacOSX10.15.sdk/System/Library/Frameworks/CoreGraphics.framework/Versions/A/Headers/CGEventTypes.h)
+/* Constants that specify where a new event tap is inserted into the list of
+active event taps. */
+#[repr(u32)]
+#[derive(Clone, Copy, Debug)]
+pub enum CGEventTapPlacement {
+    HeadInsertEventTap = 0,
+    TailAppendEventTap,
+}
+
+/* Constants that specify whether a new event tap is an active filter or a
+passive listener. */
+#[repr(u32)]
+#[derive(Clone, Copy, Debug)]
+pub enum CGEventTapOptions {
+    Default = 0x00000000,
+    ListenOnly = 0x00000001,
+}
+
+pub type CGEventMask = u64;
+/* Generate an event mask for a single type of event. */
+macro_rules! CGEventMaskBit {
+    ($eventType:expr) => {
+        1 << $eventType as CGEventMask
+    };
+}
+
+pub type CGEventTapProxy = *const c_void;
+pub type CGEventTapCallBackFn<'tap_life> =
+    Box<dyn Fn(CGEventTapProxy, CGEventType, &CGEvent) -> Option<CGEvent> + 'tap_life>;
+type CGEventTapCallBackInternal = unsafe extern "C" fn(
+    proxy: CGEventTapProxy,
+    etype: CGEventType,
+    event: ::sys::CGEventRef,
+    user_info: *const c_void,
+) -> ::sys::CGEventRef;
+
+#[no_mangle]
+unsafe extern "C" fn cg_event_tap_callback_internal(
+    _proxy: CGEventTapProxy,
+    _etype: CGEventType,
+    _event: ::sys::CGEventRef,
+    _user_info: *const c_void,
+) -> ::sys::CGEventRef {
+    let callback = _user_info as *mut CGEventTapCallBackFn;
+    let event = CGEvent::from_ptr(_event);
+    let new_event = (*callback)(_proxy, _etype, &event);
+    let event = match new_event {
+        Some(new_event) => new_event,
+        None => event,
+    };
+    ManuallyDrop::new(event).as_ptr()
+}
+
+
+/// ```no_run
+///extern crate core_foundation;
+///use core_foundation::runloop::{kCFRunLoopCommonModes, CFRunLoop};
+///use core_graphics::event::{CGEventTap, CGEventTapLocation, CGEventTapPlacement, CGEventTapOptions, CGEventType};
+///let current = CFRunLoop::get_current();
+///match CGEventTap::new(
+///     CGEventTapLocation::HID,
+///     CGEventTapPlacement::HeadInsertEventTap,
+///     CGEventTapOptions::Default,
+///     vec![CGEventType::MouseMoved],
+///     |_a, _b, d| {
+///         println!("{:?}", d.location());
+///         None
+///     },
+/// ) {
+///     Ok(tap) => unsafe {
+///         let loop_source = tap
+///             .mach_port
+///             .create_runloop_source(0)
+///             .expect("Somethings is bad ");
+///         current.add_source(&loop_source, kCFRunLoopCommonModes);
+///         tap.enable();
+///         CFRunLoop::run_current();
+///     },
+///     Err(_) => (assert!(false)),
+/// }
+/// ```
+pub struct CGEventTap<'tap_life> {
+    pub mach_port: CFMachPort,
+    pub callback_ref:
+        Box<dyn Fn(CGEventTapProxy, CGEventType, &CGEvent) -> Option<CGEvent> + 'tap_life>,
+}
+
+impl<'tap_life> CGEventTap<'tap_life> {
+    pub fn new<F: Fn(CGEventTapProxy, CGEventType, &CGEvent) -> Option<CGEvent> + 'tap_life>(
+        tap: CGEventTapLocation,
+        place: CGEventTapPlacement,
+        options: CGEventTapOptions,
+        events_of_interest: std::vec::Vec<CGEventType>,
+        callback: F,
+    ) -> Result<CGEventTap<'tap_life>, ()> {
+        let event_mask: CGEventMask = events_of_interest
+            .iter()
+            .fold(CGEventType::Null as CGEventMask, |mask, &etype| {
+                mask | CGEventMaskBit!(etype)
+            });
+        let cb = Box::new(Box::new(callback) as CGEventTapCallBackFn);
+        let cbr = Box::into_raw(cb);
+        unsafe {
+            let event_tap_ref = CGEventTapCreate(
+                tap,
+                place,
+                options,
+                event_mask,
+                cg_event_tap_callback_internal,
+                cbr as *const c_void,
+            );
+
+            if !event_tap_ref.is_null() {
+                Ok(Self {
+                    mach_port: (CFMachPort::wrap_under_create_rule(event_tap_ref)),
+                    callback_ref: Box::from_raw(cbr),
+                })
+            } else {
+                Box::from_raw(cbr);
+                Err(())
+            }
+        }
+    }
+
+    pub fn enable(&self) {
+        unsafe { CGEventTapEnable(self.mach_port.as_concrete_TypeRef(), true) }
+    }
+}
+
 foreign_type! {
     #[doc(hidden)]
     type CType = ::sys::CGEvent;
@@ -666,4 +798,17 @@ extern {
     /// fixed point number or integer, the value parameter is scaled as needed
     /// and converted to the appropriate type.
     fn CGEventSetDoubleValueField(event: ::sys::CGEventRef, field: CGEventField, value: f64);
+
+    // ::sys::CGEventTapRef is actually an CFMachPortRef
+    fn CGEventTapCreate(
+        tap: CGEventTapLocation,
+        place: CGEventTapPlacement,
+        options: CGEventTapOptions,
+        eventsOfInterest: CGEventMask,
+        callback: CGEventTapCallBackInternal,
+        userInfo: *const c_void,
+    ) -> CFMachPortRef;
+
+    fn CGEventTapEnable(tap: CFMachPortRef, enable: bool);
+
 }

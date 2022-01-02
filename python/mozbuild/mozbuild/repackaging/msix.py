@@ -24,7 +24,7 @@ import urllib
 
 from six.moves import shlex_quote
 
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.util import ensureParentDir
 from mozfile import which
 from mozpack.copier import FileCopier
@@ -610,7 +610,7 @@ def repackage_msix(
 
     locales = ["en-US"] + list(sorted(locales))
     resource_language_list = "\n".join(
-        f'    <Resource Language="{locale}" />' for locale in sorted(locales)
+        f'    <Resource Language="{locale}" />' for locale in locales
     )
 
     defines = {
@@ -700,13 +700,7 @@ def repackage_msix(
     return output
 
 
-def sign_msix(output, force=False, log=None, verbose=False):
-    """Sign an MSIX with a locally generated self-signed certificate."""
-
-    # TODO: sign on non-Windows hosts.
-    if sys.platform != "win32":
-        raise Exception("sign msix only works on Windows")
-
+def _sign_msix_win(output, force, log, verbose):
     powershell_exe = find_sdk_tool("powershell.exe", log=log)
     if not powershell_exe:
         raise ValueError("powershell is required; " "set POWERSHELL or PATH")
@@ -922,3 +916,223 @@ powershell -c 'Get-AppPackage -name Mozilla.MozillaFirefox(Beta,...)'
             )
 
     return 0
+
+
+def _sign_msix_posix(output, force, log, verbose):
+    makeappx = find_sdk_tool("makeappx", log=log)
+
+    if not makeappx:
+        raise ValueError("makeappx is required; " "set MAKEAPPX or PATH")
+
+    openssl = find_sdk_tool("openssl", log=log)
+
+    if not openssl:
+        raise ValueError("openssl is required; " "set OPENSSL or PATH")
+
+    if "sign" not in subprocess.run(makeappx, capture_output=True).stdout.decode(
+        "utf-8"
+    ):
+        raise ValueError(
+            "makeappx must support 'sign' operation. ",
+            "You probably need to build Mozilla's version of it: ",
+            "https://github.com/mozilla/msix-packaging/tree/johnmcpms/signing",
+        )
+
+    def run_openssl(args, check=True, capture_output=True):
+        full_args = [openssl, *args]
+        joined = " ".join(shlex_quote(arg) for arg in full_args)
+        log(
+            logging.INFO,
+            "msix",
+            {"args": args},
+            f"Invoking: {joined}",
+        )
+        return subprocess.run(
+            full_args,
+            check=check,
+            capture_output=capture_output,
+            universal_newlines=True,
+        )
+
+    # These are baked into enough places under `browser/` that we need not
+    # extract constants.
+    cn = "Mozilla Corporation"
+    ou = "MSIX Packaging"
+    friendly_name = "Mozilla Corporation MSIX Packaging Test Certificate"
+    # Password is needed when generating the cert, but
+    # "makeappx" explicitly does _not_ support passing it
+    # so it ends up getting removed when we create the pfx
+    password = "temp"
+
+    cache_dir = mozpath.join(get_state_dir(), "cache", "mach-msix")
+    ca_crt_path = mozpath.join(cache_dir, "MozillaMSIXCA.cer")
+    ca_key_path = mozpath.join(cache_dir, "MozillaMSIXCA.key")
+    csr_path = mozpath.join(cache_dir, "MozillaMSIX.csr")
+    crt_path = mozpath.join(cache_dir, "MozillaMSIX.cer")
+    key_path = mozpath.join(cache_dir, "MozillaMSIX.key")
+    pfx_path = mozpath.join(
+        cache_dir,
+        "{}.pfx".format(friendly_name).replace(" ", "_").lower(),
+    )
+    pfx_path = mozpath.abspath(pfx_path)
+    ensureParentDir(pfx_path)
+
+    if force or not os.path.isfile(pfx_path):
+        log(
+            logging.INFO,
+            "msix",
+            {"pfx_path": pfx_path},
+            "Creating new self signed certificate at: {}".format(pfx_path),
+        )
+
+        # Ultimately, we only end up using the CA certificate
+        # and the pfx (aka pkcs12) bundle containing the signing key
+        # and certificate. The other things we create along the way
+        # are not used for subsequent signing for testing.
+        # To get those, we have to do a few things:
+        # 1) Create a new CA key and certificate
+        # 2) Create a new signing key
+        # 3) Create a CSR with that signing key
+        # 4) Create the certificate with the CA key+cert from the CSR
+        # 5) Convert the signing key and certificate to a pfx bundle
+        args = [
+            "req",
+            "-x509",
+            "-days",
+            "7200",
+            "-sha256",
+            "-newkey",
+            "rsa:4096",
+            "-keyout",
+            ca_key_path,
+            "-out",
+            ca_crt_path,
+            "-outform",
+            "PEM",
+            "-subj",
+            f"/OU={ou} CA/CN={cn} CA",
+            "-passout",
+            f"pass:{password}",
+        ]
+        run_openssl(args)
+        args = [
+            "genrsa",
+            "-des3",
+            "-out",
+            key_path,
+            "-passout",
+            f"pass:{password}",
+        ]
+        run_openssl(args)
+        args = [
+            "req",
+            "-new",
+            "-key",
+            key_path,
+            "-out",
+            csr_path,
+            "-subj",
+            # We actually want these in the opposite order, to match what's
+            # included in the AppxManifest. Openssl ends up reversing these
+            # for some reason, so we put them in backwards here.
+            f"/OU={ou}/CN={cn}",
+            "-passin",
+            f"pass:{password}",
+        ]
+        run_openssl(args)
+        args = [
+            "x509",
+            "-req",
+            "-sha256",
+            "-days",
+            "7200",
+            "-in",
+            csr_path,
+            "-CA",
+            ca_crt_path,
+            "-CAcreateserial",
+            "-CAkey",
+            ca_key_path,
+            "-out",
+            crt_path,
+            "-outform",
+            "PEM",
+            "-passin",
+            f"pass:{password}",
+        ]
+        run_openssl(args)
+        args = [
+            "pkcs12",
+            "-export",
+            "-inkey",
+            key_path,
+            "-in",
+            crt_path,
+            "-name",
+            friendly_name,
+            "-passin",
+            f"pass:{password}",
+            # All three of these options (-keypbe, -certpbe, and -passout)
+            # are necessary to create a pfx bundle that won't even prompt
+            # for a password. If we miss one, we will still get a password
+            # prompt for the blank password.
+            "-keypbe",
+            "NONE",
+            "-certpbe",
+            "NONE",
+            "-passout",
+            "pass:",
+            "-out",
+            pfx_path,
+        ]
+        run_openssl(args)
+
+    args = [makeappx, "sign", "-p", output, "-c", pfx_path]
+    if not verbose:
+        subprocess.check_call(
+            args,
+            universal_newlines=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    else:
+        # Suppress output unless we fail.
+        try:
+            subprocess.check_output(args, universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            sys.stderr.write(e.output)
+            raise
+
+    if verbose:
+        log(
+            logging.INFO,
+            "msix",
+            {
+                "ca_crt_path": ca_crt_path,
+                "ca_crt": mozpath.basename(ca_crt_path),
+                "output_path": output,
+                "output": mozpath.basename(output),
+            },
+            r"""\
+# Usage
+First, transfer the root certificate ({ca_crt_path}) and signed MSIX
+({output_path}) to a Windows machine.
+To trust this certificate ({ca_crt_path}), run the following in an elevated shell:
+powershell -c 'Import-Certificate -FilePath "{ca_crt}" -Cert Cert:\LocalMachine\Root\'
+To verify this MSIX signature exists and is trusted:
+powershell -c 'Get-AuthenticodeSignature -FilePath "{output}" | Format-List *'
+To install this MSIX:
+powershell -c 'Add-AppPackage -path "{output}"'
+To see details after installing:
+powershell -c 'Get-AppPackage -name Mozilla.MozillaFirefox(Beta,...)'
+                """.strip(),
+        )
+
+
+def sign_msix(output, force=False, log=None, verbose=False):
+    """Sign an MSIX with a locally generated self-signed certificate."""
+
+    if sys.platform.startswith("win"):
+        return _sign_msix_win(output, force, log, verbose)
+    else:
+        return _sign_msix_posix(output, force, log, verbose)

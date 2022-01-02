@@ -52,9 +52,7 @@ function ensure_unique(aFile) {
 function check_access(aContractId, aDeferOpen, aTrickDeferredOpen) {
   const LEAF_NAME = "filestreams-test-file.tmp";
   const TRICKY_LEAF_NAME = "BetYouDidNotExpectThat.tmp";
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
 
   // Writing
@@ -132,9 +130,7 @@ function sync_operations(aDeferOpen) {
   const TEST_DATA = "this is a test string";
   const LEAF_NAME = "filestreams-test-file.tmp";
 
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
@@ -216,9 +212,7 @@ function do_test_zero_size_buffered(disableBuffering) {
   const LEAF_NAME = "filestreams-test-file.tmp";
   const BUFFERSIZE = 4096;
 
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(LEAF_NAME);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 

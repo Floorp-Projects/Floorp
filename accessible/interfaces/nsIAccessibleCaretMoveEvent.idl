@@ -20,4 +20,9 @@ interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
    * Return true if there is no selection.
    */
   readonly attribute bool isSelectionCollapsed;
+
+  /**
+   * Return true if the caret is at the end of a line.
+   */
+  readonly attribute bool isAtEndOfLine;
 };

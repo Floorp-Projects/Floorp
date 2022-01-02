@@ -51,11 +51,10 @@
 #endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/TestingUtility.h"  // js::ParseCompileOptions
-#ifdef DEBUG
-#  include "frontend/TokenStream.h"
-#endif
-#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse
+#include "builtin/TestingUtility.h"        // js::ParseCompileOptions
+#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
+// frontend::CompileGlobalScriptToExtensibleStencil,
+// frontend::DelazifyCanonicalScriptedFunction
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
@@ -87,7 +86,6 @@
 #include "js/HashTable.h"
 #include "js/Interrupt.h"
 #include "js/LocaleSensitive.h"
-#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperties, JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetElement, JS_SetProperty
 #include "js/PropertySpec.h"
@@ -205,10 +203,9 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool offThreadParseGlobal = js::UseOffThreadParseGlobal();
-  if (!JS_SetProperty(
-          cx, info, "offThreadParseGlobal",
-          offThreadParseGlobal ? TrueHandleValue : FalseHandleValue)) {
+  bool importAssertions = cx->options().importAssertions();
+  if (!JS_SetProperty(cx, info, "importAssertions",
+                      importAssertions ? TrueHandleValue : FalseHandleValue)) {
     return false;
   }
 
@@ -216,6 +213,14 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   bool changeArrayByCopy = cx->options().changeArrayByCopy();
   if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",
                       changeArrayByCopy ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+#endif
+
+#ifdef ENABLE_NEW_SET_METHODS
+  bool newSetMethods = cx->realm()->creationOptions().getNewSetMethodsEnabled();
+  if (!JS_SetProperty(cx, info, "enableNewSetMethods",
+                      newSetMethods ? TrueHandleValue : FalseHandleValue)) {
     return false;
   }
 #endif
@@ -537,6 +542,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   value = BooleanValue(false);
 #endif
   if (!JS_SetProperty(cx, info, "change-array-by-copy", value)) {
+    return false;
+  }
+
+#ifdef ENABLE_NEW_SET_METHODS
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "new-set-methods", value)) {
     return false;
   }
 
@@ -924,7 +938,7 @@ static bool WasmThreadsEnabled(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setBoolean(wasm::NAME##Available(cx));                       \
     return true;                                                             \
   }
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE);
 #undef WASM_FEATURE
 
 static bool WasmSimdWormholeEnabled(JSContext* cx, unsigned argc, Value* vp) {
@@ -1127,8 +1141,14 @@ static bool WasmGlobalFromArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   // Create the global object
   RootedObject proto(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
+  if (!proto) {
+    return false;
+  }
   RootedWasmGlobalObject result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
+  if (!result) {
+    return false;
+  }
 
   args.rval().setObject(*result.get());
   return true;
@@ -2607,7 +2627,7 @@ class HasChildTracer final : public JS::CallbackTracer {
   RootedValue child_;
   bool found_;
 
-  void onChild(const JS::GCCellPtr& thing) override {
+  void onChild(JS::GCCellPtr thing) override {
     if (thing.asCell() == child_.toGCThing()) {
       found_ = true;
     }
@@ -2846,6 +2866,77 @@ static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
   JS::SetFilenameValidationCallback(testCb);
 
   args.rval().setUndefined();
+  return true;
+}
+
+static JSAtom* GetPropertiesAddedName(JSContext* cx) {
+  const char* propName = "_propertiesAdded";
+  return Atomize(cx, propName, strlen(propName));
+}
+
+static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto addPropHook = [](JSContext* cx, HandleObject obj, HandleId id,
+                        HandleValue v) -> bool {
+    RootedAtom propName(cx, GetPropertiesAddedName(cx));
+    if (!propName) {
+      return false;
+    }
+    // Don't do anything if we're adding the _propertiesAdded property.
+    RootedId propId(cx, AtomToId(propName));
+    if (id == propId) {
+      return true;
+    }
+    // Increment _propertiesAdded.
+    RootedValue val(cx);
+    if (!JS_GetPropertyById(cx, obj, propId, &val)) {
+      return false;
+    }
+    if (!val.isInt32() || val.toInt32() == INT32_MAX) {
+      return true;
+    }
+    val.setInt32(val.toInt32() + 1);
+    return JS_DefinePropertyById(cx, obj, propId, val, 0);
+  };
+
+  static const JSClassOps classOps = {
+      addPropHook,  // addProperty
+      nullptr,      // delProperty
+      nullptr,      // enumerate
+      nullptr,      // newEnumerate
+      nullptr,      // resolve
+      nullptr,      // mayResolve
+      nullptr,      // finalize
+      nullptr,      // call
+      nullptr,      // hasInstance
+      nullptr,      // construct
+      nullptr,      // trace
+  };
+  static const JSClass cls = {
+      "ObjectWithAddPropHook",
+      0,
+      &classOps,
+  };
+
+  RootedObject obj(cx, JS_NewObject(cx, &cls));
+  if (!obj) {
+    return false;
+  }
+
+  // Initialize _propertiesAdded to 0.
+  RootedAtom propName(cx, GetPropertiesAddedName(cx));
+  if (!propName) {
+    return false;
+  }
+  RootedId propId(cx, AtomToId(propName));
+  RootedValue val(cx, Int32Value(0));
+  if (!JS_DefinePropertyById(cx, obj, propId, val, 0)) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
   return true;
 }
 
@@ -6035,6 +6126,115 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   return true;
 }
 
+static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
+                                           Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "CompileAndDelazifyAllToStencil", 1)) {
+    return false;
+  }
+
+  RootedString src(cx, ToString<CanGC>(cx, args[0]));
+  if (!src) {
+    return false;
+  }
+
+  /* Linearize the string to obtain a char16_t* range. */
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, src)) {
+    return false;
+  }
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
+                   JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "compileAllToStencil: The 2nd argument must be an object");
+      return false;
+    }
+
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+  if (options.forceFullParse()) {
+    JS_ReportErrorASCII(
+        cx,
+        "compileAndDelazifyAll: forceFullParse inhibit the delazify-all part.");
+    return false;
+  }
+
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  using namespace frontend;
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+
+  UniquePtr<ExtensibleCompilationStencil> topLevelStencil =
+      CompileGlobalScriptToExtensibleStencil(cx, input.get(), srcBuf,
+                                             scopeKind);
+  if (!topLevelStencil) {
+    return false;
+  }
+
+  // Iterate over all inner functions and compile them to stencil as well.
+  uint32_t nScripts = topLevelStencil->scriptData.length();
+  CompilationStencilMerger merger;
+  if (!merger.setInitial(cx, std::move(topLevelStencil))) {
+    return false;
+  }
+
+  // Start at 1, as the script 0 is the top-level.
+  for (uint32_t index = 1; index < nScripts; index++) {
+    UniquePtr<CompilationStencil> innerStencil;
+    {
+      BorrowingCompilationStencil borrow(merger.getResult());
+      ScriptIndex scriptIndex{index};
+      ScriptStencilRef scriptRef{borrow, scriptIndex};
+      if (scriptRef.scriptData().isGhost()) {
+        // Skip artifact introduced when parsing arrow functions.
+        continue;
+      }
+      if (scriptRef.scriptData().hasSharedData()) {
+        // Skip eagerly compiled inner functions.
+        continue;
+      }
+
+      innerStencil = DelazifyCanonicalScriptedFunction(cx, borrow, scriptIndex);
+      if (!innerStencil) {
+        return false;
+      }
+    }
+
+    if (!merger.addDelazification(cx, *innerStencil.get())) {
+      return false;
+    }
+  }
+
+  UniquePtr<CompilationStencil> result =
+      cx->make_unique<CompilationStencil>(merger.takeResult());
+  if (!result) {
+    return false;
+  }
+
+  Rooted<js::StencilObject*> stencilObj(
+      cx, js::StencilObject::create(cx, do_AddRef(result.release())));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
+}
+
 static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6883,7 +7083,7 @@ static bool SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#if defined(FUZZING) && defined(__AFL_COMPILER)
+#ifdef AFLFUZZ
 static bool AflLoop(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -7722,6 +7922,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Set the filename validation callback to a callback that accepts only\n"
 "  filenames starting with 'safe' or (only in system realms) 'system'."),
 
+    JS_FN_HELP("newObjectWithAddPropertyHook", NewObjectWithAddPropertyHook, 0, 0,
+"newObjectWithAddPropertyHook()",
+"  Returns a new object with an addProperty JSClass hook. This hook\n"
+"  increments the value of the _propertiesAdded data property on the object\n"
+"  when a new property is added."),
+
     JS_FN_HELP("newString", NewString, 2, 0,
 "newString(str[, options])",
 "  Copies str's chars and returns a new string. Valid options:\n"
@@ -8035,7 +8241,7 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasm" #NAME "Enabled", Wasm##NAME##Enabled, 0, 0, \
 "wasm" #NAME "Enabled()", \
 "  Returns a boolean indicating whether the WebAssembly " #NAME " proposal is enabled."),
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
     JS_FN_HELP("wasmThreadsEnabled", WasmThreadsEnabled, 0, 0,
@@ -8453,7 +8659,7 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "  Set this compartment's RNG state.\n"),
 #endif
 
-#if defined(FUZZING) && defined(__AFL_COMPILER)
+#ifdef AFLFUZZ
     JS_FN_HELP("aflloop", AflLoop, 1, 0,
 "aflloop(max_cnt)",
 "  Call the __AFL_LOOP() runtime function (see AFL docs)\n"),
@@ -8579,6 +8785,12 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "  Parses the given string argument as js script, produces the stencil"
 "  for it, XDR-encodes the stencil, and returns an object that contains the"
 "  XDR buffer."),
+
+    JS_FN_HELP("compileAndDelazifyAllToStencil",
+               CompileAndDelazifyAllToStencil, 1, 0,
+"compileAndDelazifyAllToStencil(string)",
+"  Parses the given string argument as js script, returns the stencil"
+"  for the top-level and all delazified inner functions."),
 
     JS_FN_HELP("evalStencilXDR", EvalStencilXDR, 1, 0,
 "evalStencilXDR(stencilXDR, [options])",

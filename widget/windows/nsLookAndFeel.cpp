@@ -127,36 +127,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
 
   int idx;
   switch (aID) {
-    case ColorID::WindowBackground:
-      idx = COLOR_WINDOW;
-      break;
-    case ColorID::WindowForeground:
-      idx = COLOR_WINDOWTEXT;
-      break;
-    case ColorID::WidgetBackground:
-      idx = COLOR_BTNFACE;
-      break;
-    case ColorID::WidgetForeground:
-      idx = COLOR_BTNTEXT;
-      break;
-    case ColorID::WidgetSelectBackground:
-      idx = COLOR_HIGHLIGHT;
-      break;
-    case ColorID::WidgetSelectForeground:
-      idx = COLOR_HIGHLIGHTTEXT;
-      break;
-    case ColorID::Widget3DHighlight:
-      idx = COLOR_BTNHIGHLIGHT;
-      break;
-    case ColorID::Widget3DShadow:
-      idx = COLOR_BTNSHADOW;
-      break;
-    case ColorID::TextBackground:
-      idx = COLOR_WINDOW;
-      break;
-    case ColorID::TextForeground:
-      idx = COLOR_WINDOWTEXT;
-      break;
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:
       aColor = NS_TRANSPARENT;
@@ -354,7 +324,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_HOTLIGHT;
       break;
     default:
-      NS_WARNING("Unknown color for nsLookAndFeel");
       idx = COLOR_WINDOW;
       res = NS_ERROR_FAILURE;
       break;

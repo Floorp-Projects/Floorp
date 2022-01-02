@@ -8,7 +8,6 @@
 #define frontend_ElemOpEmitter_h
 
 #include "mozilla/Attributes.h"
-#include "frontend/Token.h"
 
 namespace js {
 namespace frontend {

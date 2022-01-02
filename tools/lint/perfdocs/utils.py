@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
+import difflib
 import filecmp
 import os
 import yaml
@@ -65,6 +66,13 @@ def are_dirs_equal(dir_1, dir_2):
 
     dirs_cmp = filecmp.dircmp(dir_1, dir_2)
     if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:
+        logger.log("Some files are missing or are funny.")
+        for file in dirs_cmp.left_only:
+            logger.log(f"Missing in existing docs: {file}")
+        for file in dirs_cmp.right_only:
+            logger.log(f"Missing in new docs: {file}")
+        for file in dirs_cmp.funny_files:
+            logger.log(f"The following file is funny: {file}")
         return False
 
     _, mismatch, errors = filecmp.cmpfiles(
@@ -72,6 +80,18 @@ def are_dirs_equal(dir_1, dir_2):
     )
 
     if mismatch or errors:
+        logger.log(f"Found mismatches: {mismatch}")
+        for entry in mismatch:
+            logger.log(f"Mismatch found on {entry}")
+            with open(os.path.join(dir_1, entry)) as f:
+                newlines = f.readlines()
+            with open(os.path.join(dir_2, entry)) as f:
+                baselines = f.readlines()
+            for line in difflib.unified_diff(
+                baselines, newlines, fromfile="base", tofile="new"
+            ):
+                logger.log(line)
+            logger.log(f"Completed diff on {entry}")
         return False
 
     for common_dir in dirs_cmp.common_dirs:

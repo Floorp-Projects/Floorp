@@ -15,88 +15,177 @@
     }
   },
   "properties": {
-    "type": {
+    "id": {
       "type": "string",
-      "description": "Should the message be global (persisted across tabs) or local (disappear when switching to a different tab).",
-      "enum": ["global", "tab"]
+      "description": "Message identifier"
     },
-    "text": {
-      "description": "The text show in the notification box.",
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "Message shown in the location bar notification."
-        },
-        {
-          "type": "object",
-          "properties": {
-            "string_id": {
-              "type": "string",
-              "description": "Id of localized string for the location bar notification."
-            }
-          },
-          "required": ["string_id"]
-        }
-      ]
-    },
-    "priority": {
-      "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
-      "type": "number",
-      "minumum": 0,
-      "exclusiveMaximum": 10
-    },
-    "buttons": {
+    "groups": {
+      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "description": "The text label of the button.",
-            "oneOf": [
-              {
-                "type": "string",
-                "description": "Message content for the button."
+        "type": "string",
+        "description": "Preference name"
+      }
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Should the message be global (persisted across tabs) or local (disappear when switching to a different tab).",
+          "enum": ["global", "tab"]
+        },
+        "text": {
+          "description": "The text show in the notification box.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Message shown in the location bar notification."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Id of localized string for the location bar notification."
+                }
               },
-              {
-                "type": "object",
-                "properties": {
-                  "string_id": {
-                    "type": "string",
-                    "description": "Id of localized string for the button."
-                  }
-                },
-                "required": ["string_id"]
-              }
-            ]
-          },
-          "primary": {
-            "type": "boolean",
-            "description": "Is this the primary button?"
-          },
-          "accessKey": {
-            "type": "string",
-            "description": "Keyboard shortcut letter."
-          },
-          "action": {
+              "required": ["string_id"]
+            }
+          ]
+        },
+        "priority": {
+          "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
+          "type": "number",
+          "minumum": 0,
+          "exclusiveMaximum": 10
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string",
-                "description": "Action dispatched by the button."
+              "label": {
+                "description": "The text label of the button.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "Message content for the button."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "string_id": {
+                        "type": "string",
+                        "description": "Id of localized string for the button."
+                      }
+                    },
+                    "required": ["string_id"]
+                  }
+                ]
               },
-              "data": {
-                "type": "object"
+              "primary": {
+                "type": "boolean",
+                "description": "Is this the primary button?"
+              },
+              "accessKey": {
+                "type": "string",
+                "description": "Keyboard shortcut letter."
+              },
+              "action": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Action dispatched by the button."
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                },
+                "required": ["type"],
+                "additionalProperties": false
               }
             },
-            "required": ["type"],
+            "required": ["label", "action", "accessKey"],
             "additionalProperties": false
           }
+        }
+      },
+      "additionalProperties": false,
+      "required": ["text", "buttons"]
+    },
+    "frequency": {
+      "type": "object",
+      "description": "An object containing frequency cap information for a message.",
+      "properties": {
+        "lifetime": {
+          "type": "integer",
+          "description": "The maximum lifetime impressions for a message.",
+          "minimum": 1,
+          "maximum": 100
         },
-        "required": ["label", "action", "accessKey"],
-        "additionalProperties": false
+        "custom": {
+          "type": "array",
+          "description": "An array of custom frequency cap definitions.",
+          "items": {
+            "description": "A frequency cap definition containing time and max impression information",
+            "type": "object",
+            "properties": {
+              "period": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                  },
+                  {
+                    "type": "string",
+                    "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                    "enum": ["daily"]
+                  }
+                ]
+              },
+              "cap": {
+                "type": "integer",
+                "description": "The maximum impressions for the message within the defined period.",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            "required": ["period", "cap"]
+          }
+        }
       }
+    },
+    "priority": {
+      "type": "integer"
+    },
+    "targeting": {
+      "type": "string",
+      "description": "A JEXL expression representing targeting information"
+    },
+    "template": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "object",
+      "description": "An action to trigger potentially showing the message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A string identifying the trigger action"
+        },
+        "params": {
+          "type": "array",
+          "description": "An optional array of string parameters for the trigger action",
+          "items": {
+            "anyOf": [{ "type": "integer" }, { "type": "string" }]
+          }
+        }
+      },
+      "required": ["id"]
     }
   },
-  "additionalProperties": false,
-  "required": ["text", "buttons"]
+  "additionalProperties": true,
+  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
 }

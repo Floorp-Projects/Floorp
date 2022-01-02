@@ -39,7 +39,7 @@ extern LazyLogModule gFuzzingLog;
 
 typedef int (*FuzzingTestFuncRaw)(const uint8_t*, size_t);
 
-#ifdef __AFL_COMPILER
+#ifdef AFLFUZZ
 
 static int afl_interface_raw(const char* testFile,
                              FuzzingTestFuncRaw testFunc) {
@@ -93,7 +93,7 @@ static int afl_interface_raw(const char* testFile,
     }
 #else
 #  define MOZ_AFL_INTERFACE_RAW(initFunc, testFunc, moduleName) /* Nothing */
-#endif  // __AFL_COMPILER
+#endif                                                          // AFLFUZZ
 
 #ifdef LIBFUZZER
 #  define MOZ_LIBFUZZER_INTERFACE_RAW(initFunc, testFunc, moduleName)          \

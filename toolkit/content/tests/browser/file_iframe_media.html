@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<video id="video" src="gizmo.mp4" loop></video>
+<script type="text/javascript">
+
+window.onmessage = async event => {
+  const video = document.getElementById("video");
+  const w = window.opener || window.parent;
+  if (event.data == "play") {
+    await video.play();
+    w.postMessage("played", "*");
+  }
+}
+
+</script>

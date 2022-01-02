@@ -70,6 +70,17 @@ fn test_array() {
 }
 
 #[test]
+fn test_slice() {
+    assert_eq!(to_string(&[0, 1, 2, 3, 4, 5][..]).unwrap(), "[0,1,2,3,4,5]");
+    assert_eq!(to_string(&[0, 1, 2, 3, 4, 5][1..4]).unwrap(), "[1,2,3]");
+}
+
+#[test]
+fn test_vec() {
+    assert_eq!(to_string(&vec![0, 1, 2, 3, 4, 5]).unwrap(), "[0,1,2,3,4,5]");
+}
+
+#[test]
 fn test_map() {
     use std::collections::HashMap;
 

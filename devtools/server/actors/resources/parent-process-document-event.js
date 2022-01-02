@@ -9,6 +9,11 @@ const {
 } = require("devtools/server/actors/resources/index");
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
+const Services = require("Services");
+const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
+  "devtools.every-frame-target.enabled",
+  false
+);
 const {
   getAllRemoteBrowsingContexts,
 } = require("devtools/server/actors/watcher/target-helpers/utils.js");
@@ -48,12 +53,8 @@ class ParentProcessDocumentEventWatcher {
     // resource for the related WindowGlobal.
     this._onceWillNavigate = new Map();
 
-    // Get all the BrowsingContext to be watched by this toolbox
-    const allBrowsingContexts = this.watcherActor.browserElement
-      ? [this.watcherActor.browserElement.browsingContext]
-      : getAllRemoteBrowsingContexts();
     // Filter browsing contexts to only have the top BrowsingContext of each tree of BrowsingContexts…
-    const topLevelBrowsingContexts = allBrowsingContexts.filter(
+    const topLevelBrowsingContexts = this.getAllBrowsingContexts().filter(
       browsingContext => browsingContext.top == browsingContext
     );
 
@@ -76,6 +77,28 @@ class ParentProcessDocumentEventWatcher {
         Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
       );
     });
+  }
+
+  getAllBrowsingContexts() {
+    if (this.watcherActor.context.type == "browser-element") {
+      const browsingContext = this.watcherActor.browserElement.browsingContext;
+      return browsingContext.getAllBrowsingContextsInSubtree();
+    }
+
+    if (this.watcherActor.context.type == "all") {
+      return getAllRemoteBrowsingContexts();
+    }
+
+    if (this.watcherActor.context.type == "webextension") {
+      return getAllRemoteBrowsingContexts().filter(
+        bc =>
+          bc.currentWindowGlobal.documentPrincipal.addonId ==
+          this.watcherActor.context.addonId
+      );
+    }
+    throw new Error(
+      "Unsupported context type=" + this.watcherActor.context.type
+    );
   }
 
   /**
@@ -108,9 +131,11 @@ class ParentProcessDocumentEventWatcher {
     const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if (isDocument && isStart) {
       const { browsingContext } = progress;
-
-      // Ignore navigation for same-process iframes
-      if (!browsingContext.currentWindowGlobal.isProcessRoot) {
+      // Ignore navigation for same-process iframes when EFT is disabled
+      if (
+        !browsingContext.currentWindowGlobal.isProcessRoot &&
+        !isEveryFrameTargetEnabled
+      ) {
         return;
       }
       // Ignore if we are still on the initial document,

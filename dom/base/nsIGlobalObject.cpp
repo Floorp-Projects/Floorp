@@ -43,7 +43,7 @@ nsIGlobalObject::nsIGlobalObject()
 
 bool nsIGlobalObject::IsScriptForbidden(JSObject* aCallback,
                                         bool aIsJSImplementedWebIDL) const {
-  if (mIsScriptForbidden) {
+  if (mIsScriptForbidden || mIsDying) {
     return true;
   }
 
@@ -347,4 +347,8 @@ void nsIGlobalObject::RemoveReportRecords() {
   for (auto& observer : mReportingObservers) {
     observer->ForgetReports();
   }
+}
+
+bool nsIGlobalObject::ShouldResistFingerprinting() const {
+  return nsContentUtils::ShouldResistFingerprinting();
 }

@@ -38,6 +38,12 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
     this._registry.on("message-handler-registry-event", this._onRegistryEvent);
   }
 
+  handleEvent({ type }) {
+    if (type == "DOMWindowCreated") {
+      this._registry.createAllMessageHandlers();
+    }
+  }
+
   async receiveMessage(message) {
     if (message.name === "MessageHandlerFrameParent:sendCommand") {
       const { sessionId, command } = message.data;

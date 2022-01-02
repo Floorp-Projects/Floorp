@@ -3,21 +3,28 @@ use super::conv;
 use ash::{extensions::khr, vk};
 use parking_lot::Mutex;
 
-use std::{ffi::CStr, mem, ptr, sync::Arc};
+use std::{ffi::CStr, sync::Arc};
 
 //TODO: const fn?
 fn indexing_features() -> wgt::Features {
-    wgt::Features::BUFFER_BINDING_ARRAY | wgt::Features::TEXTURE_BINDING_ARRAY
+    wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
+        | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
+        | wgt::Features::UNSIZED_BINDING_ARRAY
 }
 
 /// Aggregate of the `vk::PhysicalDevice*Features` structs used by `gfx`.
 #[derive(Debug, Default)]
 pub struct PhysicalDeviceFeatures {
     core: vk::PhysicalDeviceFeatures,
-    vulkan_1_2: Option<vk::PhysicalDeviceVulkan12Features>,
-    descriptor_indexing: Option<vk::PhysicalDeviceDescriptorIndexingFeaturesEXT>,
+    vulkan_1_1: Option<vk::PhysicalDeviceVulkan11Features>,
+    pub(super) vulkan_1_2: Option<vk::PhysicalDeviceVulkan12Features>,
+    pub(super) descriptor_indexing: Option<vk::PhysicalDeviceDescriptorIndexingFeaturesEXT>,
     imageless_framebuffer: Option<vk::PhysicalDeviceImagelessFramebufferFeaturesKHR>,
     timeline_semaphore: Option<vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR>,
+    image_robustness: Option<vk::PhysicalDeviceImageRobustnessFeaturesEXT>,
+    robustness2: Option<vk::PhysicalDeviceRobustness2FeaturesEXT>,
+    depth_clip_enable: Option<vk::PhysicalDeviceDepthClipEnableFeaturesEXT>,
+    multiview: Option<vk::PhysicalDeviceMultiviewFeaturesKHR>,
 }
 
 // This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -40,6 +47,18 @@ impl PhysicalDeviceFeatures {
         if let Some(ref mut feature) = self.imageless_framebuffer {
             info = info.push_next(feature);
         }
+        if let Some(ref mut feature) = self.timeline_semaphore {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.image_robustness {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.robustness2 {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.depth_clip_enable {
+            info = info.push_next(feature);
+        }
         info
     }
 
@@ -52,7 +71,29 @@ impl PhysicalDeviceFeatures {
         requested_features: wgt::Features,
         downlevel_flags: wgt::DownlevelFlags,
         private_caps: &super::PrivateCapabilities,
+        uab_types: super::UpdateAfterBindTypes,
     ) -> Self {
+        let needs_sampled_image_non_uniform = requested_features.contains(
+            wgt::Features::TEXTURE_BINDING_ARRAY
+                | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
+        );
+        let needs_storage_buffer_non_uniform = requested_features.contains(
+            wgt::Features::BUFFER_BINDING_ARRAY
+                | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
+                | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
+        );
+        let needs_uniform_buffer_non_uniform = requested_features.contains(
+            wgt::Features::TEXTURE_BINDING_ARRAY
+                | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
+        );
+        let needs_storage_image_non_uniform = requested_features.contains(
+            wgt::Features::TEXTURE_BINDING_ARRAY
+                | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
+                | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
+        );
+        let needs_partially_bound =
+            requested_features.intersects(wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY);
+
         Self {
             // vk::PhysicalDeviceFeatures is a struct composed of Bool32's while
             // Features is a bitfield so we need to map everything manually
@@ -63,11 +104,13 @@ impl PhysicalDeviceFeatures {
                 .image_cube_array(
                     downlevel_flags.contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
                 )
+                .draw_indirect_first_instance(
+                    requested_features.contains(wgt::Features::INDIRECT_FIRST_INSTANCE),
+                )
                 //.dual_src_blend(requested_features.contains(wgt::Features::DUAL_SRC_BLENDING))
                 .multi_draw_indirect(
                     requested_features.contains(wgt::Features::MULTI_DRAW_INDIRECT),
                 )
-                .depth_clamp(requested_features.contains(wgt::Features::DEPTH_CLAMPING))
                 .fill_mode_non_solid(requested_features.intersects(
                     wgt::Features::POLYGON_MODE_LINE | wgt::Features::POLYGON_MODE_POINT,
                 ))
@@ -121,6 +164,15 @@ impl PhysicalDeviceFeatures {
                 //.shader_resource_residency(requested_features.contains(wgt::Features::SHADER_RESOURCE_RESIDENCY))
                 .geometry_shader(requested_features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX))
                 .build(),
+            vulkan_1_1: if api_version >= vk::API_VERSION_1_1 {
+                Some(
+                    vk::PhysicalDeviceVulkan11Features::builder()
+                        .multiview(requested_features.contains(wgt::Features::MULTIVIEW))
+                        .build(),
+                )
+            } else {
+                None
+            },
             vulkan_1_2: if api_version >= vk::API_VERSION_1_2 {
                 Some(
                     vk::PhysicalDeviceVulkan12Features::builder()
@@ -130,32 +182,30 @@ impl PhysicalDeviceFeatures {
                         )
                         .descriptor_indexing(requested_features.intersects(indexing_features()))
                         .shader_sampled_image_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::TEXTURE_BINDING_ARRAY
-                                    | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_sampled_image_non_uniform,
                         )
                         .shader_storage_image_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::TEXTURE_BINDING_ARRAY
-                                    | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
-                                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_storage_image_non_uniform,
                         )
-                        //.shader_storage_buffer_array_non_uniform_indexing(
                         .shader_uniform_buffer_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::BUFFER_BINDING_ARRAY
-                                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_uniform_buffer_non_uniform,
                         )
                         .shader_storage_buffer_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::BUFFER_BINDING_ARRAY
-                                    | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
-                                    | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_storage_buffer_non_uniform,
                         )
+                        .descriptor_binding_sampled_image_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::SAMPLED_TEXTURE),
+                        )
+                        .descriptor_binding_storage_image_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::STORAGE_TEXTURE),
+                        )
+                        .descriptor_binding_uniform_buffer_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::UNIFORM_BUFFER),
+                        )
+                        .descriptor_binding_storage_buffer_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::STORAGE_BUFFER),
+                        )
+                        .descriptor_binding_partially_bound(needs_partially_bound)
                         .runtime_descriptor_array(
                             requested_features.contains(wgt::Features::UNSIZED_BINDING_ARRAY),
                         )
@@ -173,32 +223,30 @@ impl PhysicalDeviceFeatures {
                 Some(
                     vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder()
                         .shader_sampled_image_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::TEXTURE_BINDING_ARRAY
-                                    | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_sampled_image_non_uniform,
                         )
                         .shader_storage_image_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::TEXTURE_BINDING_ARRAY
-                                    | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
-                                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_storage_image_non_uniform,
                         )
-                        //.shader_storage_buffer_array_non_uniform_indexing(
                         .shader_uniform_buffer_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::BUFFER_BINDING_ARRAY
-                                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_uniform_buffer_non_uniform,
                         )
                         .shader_storage_buffer_array_non_uniform_indexing(
-                            requested_features.contains(
-                                wgt::Features::BUFFER_BINDING_ARRAY
-                                    | wgt::Features::STORAGE_RESOURCE_BINDING_ARRAY
-                                    | wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-                            ),
+                            needs_storage_buffer_non_uniform,
                         )
+                        .descriptor_binding_sampled_image_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::SAMPLED_TEXTURE),
+                        )
+                        .descriptor_binding_storage_image_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::STORAGE_TEXTURE),
+                        )
+                        .descriptor_binding_uniform_buffer_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::UNIFORM_BUFFER),
+                        )
+                        .descriptor_binding_storage_buffer_update_after_bind(
+                            uab_types.contains(super::UpdateAfterBindTypes::STORAGE_BUFFER),
+                        )
+                        .descriptor_binding_partially_bound(needs_partially_bound)
                         .runtime_descriptor_array(
                             requested_features.contains(wgt::Features::UNSIZED_BINDING_ARRAY),
                         )
@@ -228,10 +276,53 @@ impl PhysicalDeviceFeatures {
             } else {
                 None
             },
+            image_robustness: if enabled_extensions.contains(&vk::ExtImageRobustnessFn::name()) {
+                Some(
+                    vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder()
+                        .robust_image_access(private_caps.robust_image_access)
+                        .build(),
+                )
+            } else {
+                None
+            },
+            robustness2: if enabled_extensions.contains(&vk::ExtRobustness2Fn::name()) {
+                // Note: enabling `robust_buffer_access2` isn't requires, strictly speaking
+                // since we can enable `robust_buffer_access` all the time. But it improves
+                // program portability, so we opt into it anyway.
+                Some(
+                    vk::PhysicalDeviceRobustness2FeaturesEXT::builder()
+                        .robust_buffer_access2(private_caps.robust_buffer_access)
+                        .robust_image_access2(private_caps.robust_image_access)
+                        .build(),
+                )
+            } else {
+                None
+            },
+            depth_clip_enable: if enabled_extensions.contains(&vk::ExtDepthClipEnableFn::name()) {
+                Some(
+                    vk::PhysicalDeviceDepthClipEnableFeaturesEXT::builder()
+                        .depth_clip_enable(
+                            requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL),
+                        )
+                        .build(),
+                )
+            } else {
+                None
+            },
+            multiview: if enabled_extensions.contains(&vk::KhrMultiviewFn::name()) {
+                Some(
+                    vk::PhysicalDeviceMultiviewFeatures::builder()
+                        .multiview(requested_features.contains(wgt::Features::MULTIVIEW))
+                        .build(),
+                )
+            } else {
+                None
+            },
         }
     }
 
     fn to_wgpu(&self, caps: &PhysicalDeviceCapabilities) -> (wgt::Features, wgt::DownlevelFlags) {
+        use crate::auxil::db;
         use wgt::{DownlevelFlags as Df, Features as F};
         let mut features = F::empty()
             | F::SPIRV_SHADER_PASSTHROUGH
@@ -251,9 +342,12 @@ impl PhysicalDeviceFeatures {
             self.core.fragment_stores_and_atomics != 0,
         );
 
+        features.set(
+            F::INDIRECT_FIRST_INSTANCE,
+            self.core.draw_indirect_first_instance != 0,
+        );
         //if self.core.dual_src_blend != 0
         features.set(F::MULTI_DRAW_INDIRECT, self.core.multi_draw_indirect != 0);
-        features.set(F::DEPTH_CLAMPING, self.core.depth_clamp != 0);
         features.set(F::POLYGON_MODE_LINE, self.core.fill_mode_non_solid != 0);
         features.set(F::POLYGON_MODE_POINT, self.core.fill_mode_non_solid != 0);
         //if self.core.depth_bounds != 0 {
@@ -321,6 +415,12 @@ impl PhysicalDeviceFeatures {
             caps.supports_extension(vk::ExtConservativeRasterizationFn::name()),
         );
 
+        let intel_windows = caps.properties.vendor_id == db::intel::VENDOR && cfg!(windows);
+
+        if let Some(ref vulkan_1_1) = self.vulkan_1_1 {
+            features.set(F::MULTIVIEW, vulkan_1_1.multiview != 0);
+        }
+
         if let Some(ref vulkan_1_2) = self.vulkan_1_2 {
             const STORAGE: F = F::STORAGE_RESOURCE_BINDING_ARRAY;
             if Self::all_features_supported(
@@ -355,6 +455,9 @@ impl PhysicalDeviceFeatures {
             }
             if vulkan_1_2.runtime_descriptor_array != 0 {
                 features |= F::UNSIZED_BINDING_ARRAY;
+            }
+            if vulkan_1_2.descriptor_binding_partially_bound != 0 && !intel_windows {
+                features |= F::PARTIALLY_BOUND_BINDING_ARRAY;
             }
             //if vulkan_1_2.sampler_mirror_clamp_to_edge != 0 {
             //if vulkan_1_2.sampler_filter_minmax != 0 {
@@ -395,9 +498,20 @@ impl PhysicalDeviceFeatures {
             ) {
                 features.insert(F::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING);
             }
+            if descriptor_indexing.descriptor_binding_partially_bound != 0 && !intel_windows {
+                features |= F::PARTIALLY_BOUND_BINDING_ARRAY;
+            }
             if descriptor_indexing.runtime_descriptor_array != 0 {
                 features |= F::UNSIZED_BINDING_ARRAY;
             }
+        }
+
+        if let Some(ref feature) = self.depth_clip_enable {
+            features.set(F::DEPTH_CLIP_CONTROL, feature.depth_clip_enable != 0);
+        }
+
+        if let Some(ref multiview) = self.multiview {
+            features.set(F::MULTIVIEW, multiview.multiview != 0);
         }
 
         (features, dl_flags)
@@ -414,10 +528,17 @@ impl PhysicalDeviceFeatures {
 }
 
 /// Information gathered about a physical device capabilities.
+#[derive(Default)]
 pub struct PhysicalDeviceCapabilities {
     supported_extensions: Vec<vk::ExtensionProperties>,
     properties: vk::PhysicalDeviceProperties,
+    vulkan_1_2: Option<vk::PhysicalDeviceVulkan12Properties>,
+    descriptor_indexing: Option<vk::PhysicalDeviceDescriptorIndexingPropertiesEXT>,
 }
+
+// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
+unsafe impl Send for PhysicalDeviceCapabilities {}
+unsafe impl Sync for PhysicalDeviceCapabilities {}
 
 impl PhysicalDeviceCapabilities {
     fn supports_extension(&self, extension: &CStr) -> bool {
@@ -435,6 +556,14 @@ impl PhysicalDeviceCapabilities {
         if self.properties.api_version < vk::API_VERSION_1_1 {
             extensions.push(vk::KhrMaintenance1Fn::name());
             extensions.push(vk::KhrMaintenance2Fn::name());
+
+            // `VK_KHR_storage_buffer_storage_class` required for Naga on Vulkan 1.0 devices
+            extensions.push(vk::KhrStorageBufferStorageClassFn::name());
+
+            // Below Vulkan 1.1 we can get multiview from an extension
+            if requested_features.contains(wgt::Features::MULTIVIEW) {
+                extensions.push(vk::KhrMultiviewFn::name());
+            }
 
             // `VK_AMD_negative_viewport_height` is obsoleted by `VK_KHR_maintenance1` and must not be enabled alongside `VK_KHR_maintenance1` or a 1.1+ device.
             if !self.supports_extension(vk::KhrMaintenance1Fn::name()) {
@@ -471,11 +600,75 @@ impl PhysicalDeviceCapabilities {
             extensions.push(vk::ExtConservativeRasterizationFn::name());
         }
 
+        if requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
+            extensions.push(vk::ExtDepthClipEnableFn::name());
+        }
+
         extensions
     }
 
-    fn to_wgpu_limits(&self) -> wgt::Limits {
+    fn to_wgpu_limits(&self, features: &PhysicalDeviceFeatures) -> wgt::Limits {
         let limits = &self.properties.limits;
+
+        let uab_types = super::UpdateAfterBindTypes::from_features(features);
+
+        let max_sampled_textures =
+            if uab_types.contains(super::UpdateAfterBindTypes::SAMPLED_TEXTURE) {
+                if let Some(di) = self.descriptor_indexing {
+                    di.max_per_stage_descriptor_update_after_bind_sampled_images
+                } else if let Some(vk_1_2) = self.vulkan_1_2 {
+                    vk_1_2.max_per_stage_descriptor_update_after_bind_sampled_images
+                } else {
+                    limits.max_per_stage_descriptor_sampled_images
+                }
+            } else {
+                limits.max_per_stage_descriptor_sampled_images
+            };
+
+        let max_storage_textures =
+            if uab_types.contains(super::UpdateAfterBindTypes::STORAGE_TEXTURE) {
+                if let Some(di) = self.descriptor_indexing {
+                    di.max_per_stage_descriptor_update_after_bind_storage_images
+                } else if let Some(vk_1_2) = self.vulkan_1_2 {
+                    vk_1_2.max_per_stage_descriptor_update_after_bind_storage_images
+                } else {
+                    limits.max_per_stage_descriptor_storage_images
+                }
+            } else {
+                limits.max_per_stage_descriptor_storage_images
+            };
+
+        let max_uniform_buffers = if uab_types.contains(super::UpdateAfterBindTypes::UNIFORM_BUFFER)
+        {
+            if let Some(di) = self.descriptor_indexing {
+                di.max_per_stage_descriptor_update_after_bind_uniform_buffers
+            } else if let Some(vk_1_2) = self.vulkan_1_2 {
+                vk_1_2.max_per_stage_descriptor_update_after_bind_uniform_buffers
+            } else {
+                limits.max_per_stage_descriptor_uniform_buffers
+            }
+        } else {
+            limits.max_per_stage_descriptor_uniform_buffers
+        };
+
+        let max_storage_buffers = if uab_types.contains(super::UpdateAfterBindTypes::STORAGE_BUFFER)
+        {
+            if let Some(di) = self.descriptor_indexing {
+                di.max_per_stage_descriptor_update_after_bind_storage_buffers
+            } else if let Some(vk_1_2) = self.vulkan_1_2 {
+                vk_1_2.max_per_stage_descriptor_update_after_bind_storage_buffers
+            } else {
+                limits.max_per_stage_descriptor_storage_buffers
+            }
+        } else {
+            limits.max_per_stage_descriptor_storage_buffers
+        };
+
+        let max_compute_workgroup_sizes = limits.max_compute_work_group_size;
+        let max_compute_workgroups_per_dimension = limits.max_compute_work_group_count[0]
+            .min(limits.max_compute_work_group_count[1])
+            .min(limits.max_compute_work_group_count[2]);
+
         wgt::Limits {
             max_texture_dimension_1d: limits.max_image_dimension1_d,
             max_texture_dimension_2d: limits.max_image_dimension2_d,
@@ -488,11 +681,11 @@ impl PhysicalDeviceCapabilities {
                 .max_descriptor_set_uniform_buffers_dynamic,
             max_dynamic_storage_buffers_per_pipeline_layout: limits
                 .max_descriptor_set_storage_buffers_dynamic,
-            max_sampled_textures_per_shader_stage: limits.max_per_stage_descriptor_sampled_images,
+            max_sampled_textures_per_shader_stage: max_sampled_textures,
             max_samplers_per_shader_stage: limits.max_per_stage_descriptor_samplers,
-            max_storage_buffers_per_shader_stage: limits.max_per_stage_descriptor_storage_buffers,
-            max_storage_textures_per_shader_stage: limits.max_per_stage_descriptor_storage_images,
-            max_uniform_buffers_per_shader_stage: limits.max_per_stage_descriptor_uniform_buffers,
+            max_storage_buffers_per_shader_stage: max_storage_buffers,
+            max_storage_textures_per_shader_stage: max_storage_textures,
+            max_uniform_buffers_per_shader_stage: max_uniform_buffers,
             max_uniform_buffer_binding_size: limits.max_uniform_buffer_range,
             max_storage_buffer_binding_size: limits.max_storage_buffer_range,
             max_vertex_buffers: limits
@@ -503,6 +696,10 @@ impl PhysicalDeviceCapabilities {
             max_push_constant_size: limits.max_push_constants_size,
             min_uniform_buffer_offset_alignment: limits.min_uniform_buffer_offset_alignment as u32,
             min_storage_buffer_offset_alignment: limits.min_storage_buffer_offset_alignment as u32,
+            max_compute_workgroup_size_x: max_compute_workgroup_sizes[0],
+            max_compute_workgroup_size_y: max_compute_workgroup_sizes[1],
+            max_compute_workgroup_size_z: max_compute_workgroup_sizes[2],
+            max_compute_workgroups_per_dimension,
         }
     }
 
@@ -523,77 +720,121 @@ impl super::InstanceShared {
         &self,
         phd: vk::PhysicalDevice,
     ) -> (PhysicalDeviceCapabilities, PhysicalDeviceFeatures) {
-        let capabilities = unsafe {
-            PhysicalDeviceCapabilities {
-                supported_extensions: self.raw.enumerate_device_extension_properties(phd).unwrap(),
-                properties: self.raw.get_physical_device_properties(phd),
-            }
+        let capabilities = {
+            let mut capabilities = PhysicalDeviceCapabilities::default();
+            capabilities.supported_extensions =
+                unsafe { self.raw.enumerate_device_extension_properties(phd).unwrap() };
+            capabilities.properties = if let Some(ref get_device_properties) =
+                self.get_physical_device_properties
+            {
+                // Get this now to avoid borrowing conflicts later
+                let supports_descriptor_indexing =
+                    capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name());
+                // Always add Vk1.2 structure. Will be skipped if unknown.
+                //Note: we can't check if conditional on Vulkan version here, because
+                // we only have the `VkInstance` version but not `VkPhysicalDevice` one.
+                let vk12_next = capabilities
+                    .vulkan_1_2
+                    .insert(vk::PhysicalDeviceVulkan12Properties::builder().build());
+
+                let core = vk::PhysicalDeviceProperties::builder().build();
+                let mut builder = vk::PhysicalDeviceProperties2::builder()
+                    .properties(core)
+                    .push_next(vk12_next);
+
+                if supports_descriptor_indexing {
+                    let next = capabilities.descriptor_indexing.insert(
+                        vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::builder().build(),
+                    );
+                    builder = builder.push_next(next);
+                }
+
+                let mut properites2 = builder.build();
+                unsafe {
+                    get_device_properties.get_physical_device_properties2(phd, &mut properites2);
+                }
+                // clean up Vk1.2 stuff if not supported
+                if capabilities.properties.api_version < vk::API_VERSION_1_2 {
+                    capabilities.vulkan_1_2 = None;
+                }
+                properites2.properties
+            } else {
+                unsafe { self.raw.get_physical_device_properties(phd) }
+            };
+
+            capabilities
         };
 
         let mut features = PhysicalDeviceFeatures::default();
         features.core = if let Some(ref get_device_properties) = self.get_physical_device_properties
         {
             let core = vk::PhysicalDeviceFeatures::builder().build();
-            let mut features2 = vk::PhysicalDeviceFeatures2KHR::builder()
-                .features(core)
-                .build();
+            let mut builder = vk::PhysicalDeviceFeatures2KHR::builder().features(core);
+
+            if capabilities.properties.api_version >= vk::API_VERSION_1_1 {
+                let next = features
+                    .vulkan_1_1
+                    .insert(vk::PhysicalDeviceVulkan11Features::builder().build());
+                builder = builder.push_next(next);
+            }
 
             if capabilities.properties.api_version >= vk::API_VERSION_1_2 {
-                features.vulkan_1_2 = Some(vk::PhysicalDeviceVulkan12Features::builder().build());
-
-                let mut_ref = features.vulkan_1_2.as_mut().unwrap();
-                mut_ref.p_next = mem::replace(&mut features2.p_next, mut_ref as *mut _ as *mut _);
+                let next = features
+                    .vulkan_1_2
+                    .insert(vk::PhysicalDeviceVulkan12Features::builder().build());
+                builder = builder.push_next(next);
             }
 
             if capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name()) {
-                features.descriptor_indexing =
-                    Some(vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder().build());
-
-                let mut_ref = features.descriptor_indexing.as_mut().unwrap();
-                mut_ref.p_next = mem::replace(&mut features2.p_next, mut_ref as *mut _ as *mut _);
+                let next = features
+                    .descriptor_indexing
+                    .insert(vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder().build());
+                builder = builder.push_next(next);
             }
 
             // `VK_KHR_imageless_framebuffer` is promoted to 1.2, but has no changes, so we can keep using the extension unconditionally.
             if capabilities.supports_extension(vk::KhrImagelessFramebufferFn::name()) {
-                features.imageless_framebuffer =
-                    Some(vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder().build());
-
-                let mut_ref = features.imageless_framebuffer.as_mut().unwrap();
-                mut_ref.p_next = mem::replace(&mut features2.p_next, mut_ref as *mut _ as *mut _);
+                let next = features
+                    .imageless_framebuffer
+                    .insert(vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder().build());
+                builder = builder.push_next(next);
             }
 
             // `VK_KHR_timeline_semaphore` is promoted to 1.2, but has no changes, so we can keep using the extension unconditionally.
             if capabilities.supports_extension(vk::KhrTimelineSemaphoreFn::name()) {
-                features.timeline_semaphore =
-                    Some(vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder().build());
-
-                let mut_ref = features.timeline_semaphore.as_mut().unwrap();
-                mut_ref.p_next = mem::replace(&mut features2.p_next, mut_ref as *mut _ as *mut _);
+                let next = features
+                    .timeline_semaphore
+                    .insert(vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder().build());
+                builder = builder.push_next(next);
             }
 
+            if capabilities.supports_extension(vk::ExtImageRobustnessFn::name()) {
+                let next = features
+                    .image_robustness
+                    .insert(vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder().build());
+                builder = builder.push_next(next);
+            }
+            if capabilities.supports_extension(vk::ExtRobustness2Fn::name()) {
+                let next = features
+                    .robustness2
+                    .insert(vk::PhysicalDeviceRobustness2FeaturesEXT::builder().build());
+                builder = builder.push_next(next);
+            }
+            if capabilities.supports_extension(vk::ExtDepthClipEnableFn::name()) {
+                let next = features
+                    .depth_clip_enable
+                    .insert(vk::PhysicalDeviceDepthClipEnableFeaturesEXT::builder().build());
+                builder = builder.push_next(next);
+            }
+
+            let mut features2 = builder.build();
             unsafe {
-                get_device_properties.get_physical_device_features2_khr(phd, &mut features2);
+                get_device_properties.get_physical_device_features2(phd, &mut features2);
             }
             features2.features
         } else {
             unsafe { self.raw.get_physical_device_features(phd) }
         };
-
-        /// # Safety
-        /// `T` must be a struct bigger than `vk::BaseOutStructure`.
-        unsafe fn null_p_next<T>(features: &mut Option<T>) {
-            if let Some(ref mut features) = *features {
-                // This is technically invalid since `vk::BaseOutStructure` and `T` will probably never have the same size.
-                (*(features as *mut T as *mut vk::BaseOutStructure)).p_next = ptr::null_mut();
-            }
-        }
-
-        unsafe {
-            null_p_next(&mut features.vulkan_1_2);
-            null_p_next(&mut features.descriptor_indexing);
-            null_p_next(&mut features.imageless_framebuffer);
-            null_p_next(&mut features.timeline_semaphore);
-        }
 
         (capabilities, features)
     }
@@ -604,6 +845,8 @@ impl super::Instance {
         &self,
         phd: vk::PhysicalDevice,
     ) -> Option<crate::ExposedAdapter<super::Api>> {
+        use crate::auxil::db;
+
         let (phd_capabilities, phd_features) = self.shared.inspect(phd);
 
         let info = wgt::AdapterInfo {
@@ -629,7 +872,6 @@ impl super::Instance {
         let (available_features, downlevel_flags) = phd_features.to_wgpu(&phd_capabilities);
         let mut workarounds = super::Workarounds::empty();
         {
-            use crate::auxil::db;
             // see https://github.com/gfx-rs/gfx/issues/1930
             let _is_windows_intel_dual_src_bug = cfg!(windows)
                 && phd_capabilities.properties.vendor_id == db::intel::VENDOR
@@ -641,9 +883,18 @@ impl super::Instance {
             workarounds |= super::Workarounds::SEPARATE_ENTRY_POINTS;
         };
 
+        if phd_capabilities.properties.api_version == vk::API_VERSION_1_0
+            && !phd_capabilities.supports_extension(vk::KhrStorageBufferStorageClassFn::name())
+        {
+            log::warn!(
+                "SPIR-V storage buffer class is not supported, hiding adapter: {}",
+                info.name
+            );
+            return None;
+        }
         if phd_features.core.sample_rate_shading == 0 {
-            log::error!(
-                "sample_rate_shading feature is not supported, hiding the adapter: {}",
+            log::warn!(
+                "sample_rate_shading feature is not supported, hiding adapter: {}",
                 info.name
             );
             return None;
@@ -652,8 +903,8 @@ impl super::Instance {
             && !phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name())
             && phd_capabilities.properties.api_version < vk::API_VERSION_1_2
         {
-            log::error!(
-                "viewport Y-flip is not supported, hiding the adapter: {}",
+            log::warn!(
+                "viewport Y-flip is not supported, hiding adapter: {}",
                 info.name
             );
             return None;
@@ -675,13 +926,19 @@ impl super::Instance {
                 || phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name()),
             imageless_framebuffers: match phd_features.vulkan_1_2 {
                 Some(features) => features.imageless_framebuffer == vk::TRUE,
-                None => phd_capabilities.supports_extension(vk::KhrImagelessFramebufferFn::name()),
+                None => match phd_features.imageless_framebuffer {
+                    Some(ref ext) => ext.imageless_framebuffer != 0,
+                    None => false,
+                },
             },
             image_view_usage: phd_capabilities.properties.api_version >= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance2Fn::name()),
             timeline_semaphores: match phd_features.vulkan_1_2 {
                 Some(features) => features.timeline_semaphore == vk::TRUE,
-                None => phd_capabilities.supports_extension(vk::KhrTimelineSemaphoreFn::name()),
+                None => match phd_features.timeline_semaphore {
+                    Some(ref ext) => ext.timeline_semaphore != 0,
+                    None => false,
+                },
             },
             texture_d24: unsafe {
                 self.shared
@@ -701,10 +958,17 @@ impl super::Instance {
             can_present: true,
             //TODO: make configurable
             robust_buffer_access: phd_features.core.robust_buffer_access != 0,
+            robust_image_access: match phd_features.robustness2 {
+                Some(ref f) => f.robust_image_access2 != 0,
+                None => match phd_features.image_robustness {
+                    Some(ref f) => f.robust_image_access != 0,
+                    None => false,
+                },
+            },
         };
 
         let capabilities = crate::Capabilities {
-            limits: phd_capabilities.to_wgpu_limits(),
+            limits: phd_capabilities.to_wgpu_limits(&phd_features),
             alignments: phd_capabilities.to_hal_alignments(),
             downlevel: wgt::DownlevelCapabilities {
                 flags: downlevel_flags,
@@ -761,6 +1025,7 @@ impl super::Adapter {
         &self,
         enabled_extensions: &[&'static CStr],
         features: wgt::Features,
+        uab_types: super::UpdateAfterBindTypes,
     ) -> PhysicalDeviceFeatures {
         PhysicalDeviceFeatures::from_extensions_and_requested_features(
             self.phd_capabilities.properties.api_version,
@@ -768,6 +1033,7 @@ impl super::Adapter {
             features,
             self.downlevel_flags,
             &self.private_caps,
+            uab_types,
         )
     }
 
@@ -776,18 +1042,23 @@ impl super::Adapter {
     /// - `raw_device` must be created from this adapter.
     /// - `raw_device` must be created using `family_index`, `enabled_extensions` and `physical_device_features()`
     /// - `enabled_extensions` must be a superset of `required_device_extensions()`.
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn device_from_raw(
         &self,
         raw_device: ash::Device,
         handle_is_owned: bool,
         enabled_extensions: &[&'static CStr],
+        features: wgt::Features,
+        uab_types: super::UpdateAfterBindTypes,
         family_index: u32,
         queue_index: u32,
     ) -> Result<crate::OpenDevice<super::Api>, crate::DeviceError> {
-        let mem_properties = self
-            .instance
-            .raw
-            .get_physical_device_memory_properties(self.raw);
+        let mem_properties = {
+            profiling::scope!("vkGetPhysicalDeviceMemoryProperties");
+            self.instance
+                .raw
+                .get_physical_device_memory_properties(self.raw)
+        };
         let memory_types =
             &mem_properties.memory_types[..mem_properties.memory_type_count as usize];
         let valid_ash_memory_types = memory_types.iter().enumerate().fold(0, |u, (i, mem)| {
@@ -824,7 +1095,8 @@ impl super::Adapter {
 
         let naga_options = {
             use naga::back::spv;
-            let capabilities = [
+
+            let mut capabilities = vec![
                 spv::Capability::Shader,
                 spv::Capability::Matrix,
                 spv::Capability::Sampled1D,
@@ -838,6 +1110,11 @@ impl super::Adapter {
                 spv::Capability::StorageImageExtendedFormats,
                 //TODO: fill out the rest
             ];
+
+            if features.contains(wgt::Features::MULTIVIEW) {
+                capabilities.push(spv::Capability::MultiView);
+            }
+
             let mut flags = spv::WriterFlags::empty();
             flags.set(
                 spv::WriterFlags::DEBUG,
@@ -847,24 +1124,38 @@ impl super::Adapter {
                 spv::WriterFlags::LABEL_VARYINGS,
                 self.phd_capabilities.properties.vendor_id != crate::auxil::db::qualcomm::VENDOR,
             );
+            flags.set(
+                spv::WriterFlags::FORCE_POINT_SIZE,
+                //Note: we could technically disable this when we are compiling separate entry points,
+                // and we know exactly that the primitive topology is not `PointList`.
+                // But this requires cloning the `spv::Options` struct, which has heap allocations.
+                true, // could check `super::Workarounds::SEPARATE_ENTRY_POINTS`
+            );
             spv::Options {
                 lang_version: (1, 0),
                 flags,
                 capabilities: Some(capabilities.iter().cloned().collect()),
-                bounds_check_policies: naga::back::BoundsCheckPolicies {
-                    index: naga::back::BoundsCheckPolicy::Restrict,
-                    image: naga::back::BoundsCheckPolicy::Restrict,
+                bounds_check_policies: naga::proc::BoundsCheckPolicies {
+                    index: naga::proc::BoundsCheckPolicy::Restrict,
                     buffer: if self.private_caps.robust_buffer_access {
-                        naga::back::BoundsCheckPolicy::Unchecked
+                        naga::proc::BoundsCheckPolicy::Unchecked
                     } else {
-                        naga::back::BoundsCheckPolicy::Restrict
+                        naga::proc::BoundsCheckPolicy::Restrict
+                    },
+                    image: if self.private_caps.robust_image_access {
+                        naga::proc::BoundsCheckPolicy::Unchecked
+                    } else {
+                        naga::proc::BoundsCheckPolicy::Restrict
                     },
                 },
             }
         };
 
         log::info!("Private capabilities: {:?}", self.private_caps);
-        let raw_queue = raw_device.get_device_queue(family_index, queue_index);
+        let raw_queue = {
+            profiling::scope!("vkGetDeviceQueue");
+            raw_device.get_device_queue(family_index, queue_index)
+        };
 
         let shared = Arc::new(super::DeviceShared {
             raw: raw_device,
@@ -875,22 +1166,27 @@ impl super::Adapter {
                 timeline_semaphore: timeline_semaphore_fn,
             },
             vendor_id: self.phd_capabilities.properties.vendor_id,
+            timestamp_period: self.phd_capabilities.properties.limits.timestamp_period,
+            uab_types,
             downlevel_flags: self.downlevel_flags,
             private_caps: self.private_caps.clone(),
             workarounds: self.workarounds,
-            timestamp_period: self.phd_capabilities.properties.limits.timestamp_period,
             render_passes: Mutex::new(Default::default()),
             framebuffers: Mutex::new(Default::default()),
         });
+        let mut relay_semaphores = [vk::Semaphore::null(); 2];
+        for sem in relay_semaphores.iter_mut() {
+            *sem = shared
+                .raw
+                .create_semaphore(&vk::SemaphoreCreateInfo::builder(), None)?;
+        }
         let queue = super::Queue {
             raw: raw_queue,
             swapchain_fn,
             device: Arc::clone(&shared),
             family_index,
-            relay_semaphore: shared
-                .raw
-                .create_semaphore(&vk::SemaphoreCreateInfo::builder(), None)?,
-            relay_active: false,
+            relay_semaphores,
+            relay_index: None,
         };
 
         let mem_allocator = {
@@ -920,7 +1216,15 @@ impl super::Adapter {
             };
             gpu_alloc::GpuAllocator::new(config, properties)
         };
-        let desc_allocator = gpu_descriptor::DescriptorAllocator::new(0);
+        let desc_allocator = gpu_descriptor::DescriptorAllocator::new(
+            if let Some(vk_12) = self.phd_capabilities.vulkan_1_2 {
+                vk_12.max_update_after_bind_descriptors_in_all_pools
+            } else if let Some(di) = self.phd_capabilities.descriptor_indexing {
+                di.max_update_after_bind_descriptors_in_all_pools
+            } else {
+                0
+            },
+        );
 
         let device = super::Device {
             shared,
@@ -940,9 +1244,14 @@ impl crate::Adapter<super::Api> for super::Adapter {
     unsafe fn open(
         &self,
         features: wgt::Features,
+        limits: &wgt::Limits,
     ) -> Result<crate::OpenDevice<super::Api>, crate::DeviceError> {
+        let phd_limits = &self.phd_capabilities.properties.limits;
+        let uab_types = super::UpdateAfterBindTypes::from_limits(limits, phd_limits);
+
         let enabled_extensions = self.required_device_extensions(features);
-        let mut enabled_phd_features = self.physical_device_features(&enabled_extensions, features);
+        let mut enabled_phd_features =
+            self.physical_device_features(&enabled_extensions, features, uab_types);
 
         let family_index = 0; //TODO
         let family_info = vk::DeviceQueueCreateInfo::builder()
@@ -965,12 +1274,17 @@ impl crate::Adapter<super::Api> for super::Adapter {
         let info = enabled_phd_features
             .add_to_device_create_builder(pre_info)
             .build();
-        let raw_device = self.instance.raw.create_device(self.raw, &info, None)?;
+        let raw_device = {
+            profiling::scope!("vkCreateDevice");
+            self.instance.raw.create_device(self.raw, &info, None)?
+        };
 
         self.device_from_raw(
             raw_device,
             true,
             &enabled_extensions,
+            features,
+            uab_types,
             family_info.queue_family_index,
             0,
         )
@@ -1045,27 +1359,33 @@ impl crate::Adapter<super::Api> for super::Adapter {
         }
 
         let queue_family_index = 0; //TODO
-        match surface.functor.get_physical_device_surface_support(
-            self.raw,
-            queue_family_index,
-            surface.raw,
-        ) {
-            Ok(true) => (),
-            Ok(false) => return None,
-            Err(e) => {
-                log::error!("get_physical_device_surface_support: {}", e);
-                return None;
+        {
+            profiling::scope!("vkGetPhysicalDeviceSurfaceSupportKHR");
+            match surface.functor.get_physical_device_surface_support(
+                self.raw,
+                queue_family_index,
+                surface.raw,
+            ) {
+                Ok(true) => (),
+                Ok(false) => return None,
+                Err(e) => {
+                    log::error!("get_physical_device_surface_support: {}", e);
+                    return None;
+                }
             }
         }
 
-        let caps = match surface
-            .functor
-            .get_physical_device_surface_capabilities(self.raw, surface.raw)
-        {
-            Ok(caps) => caps,
-            Err(e) => {
-                log::error!("get_physical_device_surface_capabilities: {}", e);
-                return None;
+        let caps = {
+            profiling::scope!("vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
+            match surface
+                .functor
+                .get_physical_device_surface_capabilities(self.raw, surface.raw)
+            {
+                Ok(caps) => caps,
+                Err(e) => {
+                    log::error!("get_physical_device_surface_capabilities: {}", e);
+                    return None;
+                }
             }
         };
 
@@ -1100,25 +1420,31 @@ impl crate::Adapter<super::Api> for super::Adapter {
             depth_or_array_layers: caps.max_image_array_layers,
         };
 
-        let raw_present_modes = match surface
-            .functor
-            .get_physical_device_surface_present_modes(self.raw, surface.raw)
-        {
-            Ok(present_modes) => present_modes,
-            Err(e) => {
-                log::error!("get_physical_device_surface_present_modes: {}", e);
-                Vec::new()
+        let raw_present_modes = {
+            profiling::scope!("vkGetPhysicalDeviceSurfacePresentModesKHR");
+            match surface
+                .functor
+                .get_physical_device_surface_present_modes(self.raw, surface.raw)
+            {
+                Ok(present_modes) => present_modes,
+                Err(e) => {
+                    log::error!("get_physical_device_surface_present_modes: {}", e);
+                    Vec::new()
+                }
             }
         };
 
-        let raw_surface_formats = match surface
-            .functor
-            .get_physical_device_surface_formats(self.raw, surface.raw)
-        {
-            Ok(formats) => formats,
-            Err(e) => {
-                log::error!("get_physical_device_surface_formats: {}", e);
-                Vec::new()
+        let raw_surface_formats = {
+            profiling::scope!("vkGetPhysicalDeviceSurfaceFormatsKHR");
+            match surface
+                .functor
+                .get_physical_device_surface_formats(self.raw, surface.raw)
+            {
+                Ok(formats) => formats,
+                Err(e) => {
+                    log::error!("get_physical_device_surface_formats: {}", e);
+                    Vec::new()
+                }
             }
         };
 

@@ -11,7 +11,7 @@ function getUrlLinkFile() {
   return null;
 }
 
-const ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+const ios = Services.io;
 
 function NotificationCallbacks(origURI, newURI) {
   this._origURI = origURI;

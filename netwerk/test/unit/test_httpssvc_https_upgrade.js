@@ -250,9 +250,7 @@ add_task(async function testHttpRequestBlocked() {
 
   let dnsRequestObserver = {
     register() {
-      this.obs = Cc["@mozilla.org/observer-service;1"].getService(
-        Ci.nsIObserverService
-      );
+      this.obs = Services.obs;
       this.obs.addObserver(this, "dns-resolution-request");
     },
     unregister() {

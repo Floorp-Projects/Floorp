@@ -31,9 +31,9 @@ interface imgIRequest : nsIRequest
   readonly attribute imgIContainer image;
 
   /**
-   * Producer ID for image containers created by this image.
+   * Provider ID for image providers created by this image.
    */
-  [infallible] readonly attribute unsigned long producerId;
+  [infallible] readonly attribute unsigned long providerId;
 
   /**
    * Bits set in the return value from imageStatus

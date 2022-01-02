@@ -269,6 +269,39 @@ public class GeckoResultTest {
     waitUntilDone();
   }
 
+  @Test
+  @UiThreadTest
+  public void testFinallyException() {
+    final GeckoResult<Integer> subject = new GeckoResult<>();
+    final Throwable boom = new Exception("boom");
+
+    subject
+        .map(
+            value -> {
+              assertThat("This should not be called", true, equalTo(false));
+              return null;
+            },
+            error -> {
+              assertThat("Error matches", error, equalTo(boom));
+              return error;
+            })
+        .finally_(() -> done());
+
+    subject.completeExceptionally(boom);
+    waitUntilDone();
+  }
+
+  @Test
+  @UiThreadTest
+  public void testFinallySuccessful() {
+    final GeckoResult<Integer> subject = new GeckoResult<>();
+
+    subject.accept(value -> assertThat("Value matches", value, equalTo(42))).finally_(() -> done());
+
+    subject.complete(42);
+    waitUntilDone();
+  }
+
   @UiThreadTest
   @Test
   public void resultMapChaining() {

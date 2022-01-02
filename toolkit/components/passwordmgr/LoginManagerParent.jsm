@@ -295,13 +295,11 @@ class LoginManagerParent extends JSWindowActorParent {
       }
 
       case "PasswordManager:onFormSubmit": {
-        let browser = this.getRootBrowser();
-        let submitPromise = this.onFormSubmit(browser, context.origin, data);
-        if (gListenerForTests) {
-          submitPromise.then(() => {
-            gListenerForTests("FormSubmit", { origin: context.origin, data });
-          });
-        }
+        Services.obs.notifyObservers(
+          null,
+          "passwordmgr-form-submission-detected",
+          context.origin
+        );
         break;
       }
 
@@ -321,6 +319,20 @@ class LoginManagerParent extends JSWindowActorParent {
         if (gListenerForTests) {
           log("calling gListenerForTests");
           gListenerForTests("PasswordIgnoreEdit", {});
+        }
+        break;
+      }
+
+      case "PasswordManager:ShowDoorhanger": {
+        let browser = this.getRootBrowser();
+        let submitPromise = this.showDoorhanger(browser, context.origin, data);
+        if (gListenerForTests) {
+          submitPromise.then(() => {
+            gListenerForTests("ShowDoorhanger", {
+              origin: context.origin,
+              data,
+            });
+          });
         }
         break;
       }
@@ -826,7 +838,7 @@ class LoginManagerParent extends JSWindowActorParent {
     return prompterSvc;
   }
 
-  async onFormSubmit(
+  async showDoorhanger(
     browser,
     formOrigin,
     {
@@ -865,7 +877,7 @@ class LoginManagerParent extends JSWindowActorParent {
     let browsingContext = BrowsingContext.get(browsingContextId);
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
-    log("onFormSubmit, got framePrincipalOrigin: ", framePrincipalOrigin);
+    log("showDoorhanger, got framePrincipalOrigin: ", framePrincipalOrigin);
 
     let formLogin = new LoginInfo(
       formOrigin,

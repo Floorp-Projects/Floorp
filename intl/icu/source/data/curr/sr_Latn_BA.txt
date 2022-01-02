@@ -15,6 +15,10 @@ sr_Latn_BA{
             "KPW",
             "Sjevernokorejski von",
         }
+        NIO{
+            "NIO",
+            "Nikaragvanska zlatna kordoba",
+        }
     }
     CurrencyPlurals{
         BAM{
@@ -31,6 +35,11 @@ sr_Latn_BA{
             few{"sjevernokorejska vona"}
             one{"sjevernokorejski von"}
             other{"sjevernokorejskih vona"}
+        }
+        NIO{
+            few{"nikaragvanske zlatne kordobe"}
+            one{"nikaragvanska zlatna kordoba"}
+            other{"nikaragvanskih zlatnih kordoba"}
         }
     }
 }

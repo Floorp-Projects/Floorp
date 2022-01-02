@@ -98,7 +98,7 @@ browser {
   border-radius: 0px;
 }
 
-#controls:hover .control-item {
+body:not(:fullscreen) #controls:hover .control-item {
   opacity: 0.8;
 }
 

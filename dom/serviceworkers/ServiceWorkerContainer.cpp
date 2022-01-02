@@ -24,7 +24,9 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -610,13 +612,20 @@ void ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
     return;
   }
 
-  nsCOMPtr<Document> doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = StoragePrincipalHelper::GetPrincipal(
+      window,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
+      getter_AddRefs(principal));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
     return;
   }
 
-  aRv = swm->GetScopeForUrl(doc->NodePrincipal(), aUrl, aScope);
+  aRv = swm->GetScopeForUrl(principal, aUrl, aScope);
 }
 
 nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
@@ -643,7 +652,10 @@ nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
   // the registration it increases the chance they can bypass the storage
   // block via postMessage(), etc.
   auto storageAllowed = StorageAllowedForWindow(window);
-  if (NS_WARN_IF(storageAllowed != StorageAccess::eAllow)) {
+  if (NS_WARN_IF(storageAllowed != StorageAccess::eAllow &&
+                 (!StaticPrefs::privacy_partition_serviceWorkers() ||
+                  !StoragePartitioningEnabled(storageAllowed,
+                                              doc->CookieJarSettings())))) {
     if (aStorageFailureCB) {
       aStorageFailureCB(doc);
     }

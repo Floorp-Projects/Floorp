@@ -2,6 +2,9 @@
 
 #include "wasm-rt.h"
 
+// Pull the helper header from the main repo for dynamic_check and scope_exit
+#include "rlbox_helpers.hpp"
+
 #include <cstdint>
 #include <iostream>
 #include <limits>
@@ -46,11 +49,6 @@
 #endif
 
 namespace rlbox {
-
-namespace detail {
-  // relying on the dynamic check settings (exception vs abort) in the rlbox lib
-  inline void dynamic_check(bool check, const char* const msg);
-}
 
 namespace wasm2c_detail {
 
@@ -303,7 +301,9 @@ __attribute__((weak))
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
     {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
       RLBOX_ACQUIRE_SHARED_GUARD(lock, thread_data.sandbox->callback_mutex);
+#endif
       func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
     }
     // Callbacks are invoked through function pointers, cannot use std::forward
@@ -325,7 +325,9 @@ __attribute__((weak))
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
     {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
       RLBOX_ACQUIRE_SHARED_GUARD(lock, thread_data.sandbox->callback_mutex);
+#endif
       func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
     }
     // Callbacks are invoked through function pointers, cannot use std::forward
@@ -414,6 +416,35 @@ __attribute__((weak))
     }
     return power;
   }
+
+public:
+
+#define WASM_PAGE_SIZE 65536
+#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+#define WASM_MAX_HEAP (static_cast<uint64_t>(1) << 32)
+  static uint64_t rlbox_wasm2c_get_adjusted_heap_size(uint64_t heap_size)
+  {
+    if (heap_size == 0){
+      return 0;
+    }
+
+    if(heap_size <= WASM_PAGE_SIZE) {
+      return WASM_PAGE_SIZE;
+    } else if (heap_size >= WASM_MAX_HEAP) {
+      return WASM_MAX_HEAP;
+    }
+
+    return next_power_of_two(static_cast<uint32_t>(heap_size));
+  }
+
+  static uint64_t rlbox_wasm2c_get_heap_page_count(uint64_t heap_size)
+  {
+    const uint64_t pages = heap_size / WASM_PAGE_SIZE;
+    return pages;
+  }
+#undef WASM_MAX_HEAP
+#undef WASM_HEAP_MAX_ALLOWED_PAGES
+#undef WASM_PAGE_SIZE
 
 protected:
 
@@ -522,23 +553,9 @@ protected:
       sandbox_info.wasm_rt_sys_init();
     });
 
-#define WASM_PAGE_SIZE 65536
-#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
-#define WASM_MAX_HEAP (static_cast<uint64_t>(1) << 32)
-    if (override_max_heap_size != 0){
-      if(override_max_heap_size < WASM_PAGE_SIZE) {
-        override_max_heap_size = WASM_PAGE_SIZE;
-      } else if (override_max_heap_size > WASM_MAX_HEAP) {
-        override_max_heap_size = WASM_MAX_HEAP;
-      } else {
-        override_max_heap_size = next_power_of_two(override_max_heap_size);
-      }
-    }
-    const uint64_t override_max_wasm_pages = override_max_heap_size / WASM_PAGE_SIZE;
+    override_max_heap_size = rlbox_wasm2c_get_adjusted_heap_size(override_max_heap_size);
+    const uint64_t override_max_wasm_pages = rlbox_wasm2c_get_heap_page_count(override_max_heap_size);
     FALLIBLE_DYNAMIC_CHECK(infallible, override_max_wasm_pages <= 65536, "Wasm allows a max heap size of 4GB");
-#undef WASM_MAX_HEAP
-#undef WASM_HEAP_MAX_ALLOWED_PAGES
-#undef WASM_PAGE_SIZE
 
     sandbox = sandbox_info.create_wasm2c_sandbox(static_cast<uint32_t>(override_max_wasm_pages));
     FALLIBLE_DYNAMIC_CHECK(infallible, sandbox != nullptr, "Sandbox could not be created");
@@ -730,7 +747,11 @@ protected:
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
     auto& thread_data = *get_rlbox_wasm2c_sandbox_thread_data();
 #endif
+    auto old_sandbox = thread_data.sandbox;
     thread_data.sandbox = this;
+    auto on_exit = detail::make_scope_exit([&] {
+      thread_data.sandbox = old_sandbox;
+    });
 
     // WASM functions are mangled in the following manner
     // 1. All primitive types are left as is and follow an LP32 machine model

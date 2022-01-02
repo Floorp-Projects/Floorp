@@ -59,22 +59,42 @@ struct ServerWrapper {
     callback_thread: core::CoreThread,
 }
 
-fn run() -> Result<ServerWrapper> {
+fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
+    if let Some(func) = callback {
+        let thr = std::thread::current();
+        let name = CString::new(thr.name().unwrap()).unwrap();
+        func(name.as_ptr());
+    }
+}
+
+fn unregister_thread(callback: Option<extern "C" fn()>) {
+    if let Some(func) = callback {
+        func();
+    }
+}
+
+fn init_threads(
+    thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
+    thread_destroy_callback: Option<extern "C" fn()>,
+) -> Result<ServerWrapper> {
     trace!("Starting up cubeb audio server event loop thread...");
 
     let callback_thread = core::spawn_thread(
         "AudioIPC Callback RPC",
-        || {
+        move || {
             match promote_current_thread_to_real_time(0, 48000) {
                 Ok(_) => {}
                 Err(_) => {
                     debug!("Failed to promote audio callback thread to real-time.");
                 }
             }
+            register_thread(thread_create_callback);
             trace!("Starting up cubeb audio callback event loop thread...");
             Ok(())
         },
-        || {},
+        move || {
+            unregister_thread(thread_destroy_callback);
+        },
     )
     .map_err(|e| {
         debug!(
@@ -87,10 +107,13 @@ fn run() -> Result<ServerWrapper> {
     let core_thread = core::spawn_thread(
         "AudioIPC Server RPC",
         move || {
+            register_thread(thread_create_callback);
             audioipc::server_platform_init();
             Ok(())
         },
-        || {},
+        move || {
+            unregister_thread(thread_destroy_callback);
+        },
     )
     .map_err(|e| {
         debug!("Failed to cubeb audio core event loop thread: {:?}", e);
@@ -103,12 +126,22 @@ fn run() -> Result<ServerWrapper> {
     })
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioIpcServerInitParams {
+    // Fields only need to be public for ipctest.
+    pub thread_create_callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
+    pub thread_destroy_callback: Option<extern "C" fn()>,
+}
+
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn audioipc_server_start(
     context_name: *const std::os::raw::c_char,
     backend_name: *const std::os::raw::c_char,
+    init_params: *const AudioIpcServerInitParams,
 ) -> *mut c_void {
+    assert!(!init_params.is_null());
     let mut params = G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
     if !context_name.is_null() {
         params.context_name = CStr::from_ptr(context_name).to_owned();
@@ -117,7 +150,10 @@ pub unsafe extern "C" fn audioipc_server_start(
         let backend_string = CStr::from_ptr(backend_name).to_owned();
         params.backend_name = Some(backend_string);
     }
-    match run() {
+    match init_threads(
+        (*init_params).thread_create_callback,
+        (*init_params).thread_destroy_callback,
+    ) {
         Ok(server) => Box::into_raw(Box::new(server)) as *mut _,
         Err(_) => ptr::null_mut() as *mut _,
     }

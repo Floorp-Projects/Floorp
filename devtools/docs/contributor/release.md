@@ -130,3 +130,18 @@ Follow the [upgrade documentation](https://searchfox.org/mozilla-central/source/
 ### pretty-fast
 
 **TODO**
+
+## Check xpcshell debugging
+
+Check that xpcshell tests can be debugged using the `--jsdebugger` option.
+
+1. Run Firefox from `mozilla-central` using `./mach run`
+1. Open an `about:debugging` tab
+1. If you don't have a `localhost:6000` item on the left sidebar, click on `Setup`
+1. In setup, add a new `localhost:6000` item under `Network Location`
+1. From your `mozilla-central` folder, run an xpcshell test with the `--jsdebugger` option (e.g. `./mach test devtools/server/tests/xpcshell/test_front_destroy.js --jsdebugger`)
+1. In the terminal, you should see the following message: `Waiting for the debugger to connect on port 6000`
+1. Go back to the `about:debugging` tab, click on the `Connect` button next to `localhost:6000`, and click again on the `localhost:6000` item.
+1. In the new screen, under the `Processes` section, there should be a `Multiprocess Toolbox` item with an `Inspect` button next to it. Click on the button.
+1. This should open an `about:devtools-toolbox` tab, showing the test file, paused at the first breakable line.
+1. Make sure you can add breakpoints in the test and that you can step/resume

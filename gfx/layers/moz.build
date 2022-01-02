@@ -42,7 +42,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
             "d3d11/DeviceAttachmentsD3D11.h",
             "d3d11/DiagnosticsD3D11.h",
             "d3d11/HelpersD3D11.h",
-            "d3d11/ReadbackManagerD3D11.h",
             "d3d11/ShaderDefinitionsD3D11.h",
             "d3d11/TextureD3D11.h",
         ]
@@ -53,7 +52,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         SOURCES += [
             "d3d11/CompositorD3D11.cpp",
             "d3d11/DeviceAttachmentsD3D11.cpp",
-            "d3d11/ReadbackManagerD3D11.cpp",
         ]
 
 EXPORTS.gfxipc += [
@@ -249,7 +247,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS.mozilla.layers += [
         "NativeLayerCA.h",
         "SurfacePoolCA.h",
-        "TextureSync.h",
     ]
     EXPORTS += [
         "MacIOSurfaceHelpers.h",
@@ -258,7 +255,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
         "NativeLayerCA.mm",
         "SurfacePoolCA.mm",
-        "TextureSync.cpp",
     ]
     SOURCES += [
         "MacIOSurfaceHelpers.cpp",
@@ -395,7 +391,6 @@ UNIFIED_SOURCES += [
     "MemoryPressureObserver.cpp",
     "opengl/CompositingRenderTargetOGL.cpp",
     "opengl/CompositorOGL.cpp",
-    "opengl/GLBlitTextureImageHelper.cpp",
     "opengl/OGLShaderProgram.cpp",
     "opengl/TextureClientOGL.cpp",
     "opengl/TextureHostOGL.cpp",
@@ -507,9 +502,8 @@ CXXFLAGS += ["-Werror=switch"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-    # Suppress warnings in third-party code.
+# Suppress warnings in third-party code.
+if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += ["-Wno-maybe-uninitialized"]
 
 UNIFIED_SOURCES += []

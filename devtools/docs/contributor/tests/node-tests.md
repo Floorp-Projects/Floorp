@@ -26,7 +26,7 @@ The definition also contains the list of files that will trigger the node test j
 
 ### Prerequisite: yarn
 
-You will need yarn to be installed in order to run both the debugger and the DevTools tests. See https://yarnpkg.com/docs/install/.
+You will need yarn to be installed in order to run both the debugger and the DevTools tests. See [https://yarnpkg.com/getting-started](https://yarnpkg.com/getting-started).
 
 ### Debugger
 

@@ -96,7 +96,8 @@ parent:
   async ShowEvent(ShowEventData data, bool aFromuser);
   async HideEvent(uint64_t aRootID, bool aFromUser);
   async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
-  async CaretMoveEvent(uint64_t aID, int32_t aOffset, bool aIsSelectionCollapsed);
+  async CaretMoveEvent(uint64_t aID, int32_t aOffset,
+                       bool aIsSelectionCollapsed, bool aIsAtEndOfLine);
   async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
                         bool aIsInsert, bool aFromUser);
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
@@ -243,7 +244,6 @@ child:
 
   [Nested=inside_sync] sync LinkCount(uint64_t aID) returns(uint32_t aCount);
   [Nested=inside_sync] sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
-  [Nested=inside_sync] sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
   [Nested=inside_sync] sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
 
   [Nested=inside_sync] sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);

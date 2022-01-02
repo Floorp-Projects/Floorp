@@ -1257,7 +1257,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
 static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
                                               HandleNativeObject obj,
                                               HandleId id, HandleValue v) {
-  MOZ_ASSERT(!JSID_IS_INT(id));
+  MOZ_ASSERT(!id.isInt());
 
   uint32_t slot;
   if (!NativeObject::addProperty(cx, obj, id,
@@ -1265,6 +1265,23 @@ static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
     return false;
   }
 
+  obj->initSlot(slot, v);
+
+  return CallAddPropertyHook(cx, obj, id, v);
+}
+
+bool js::AddSlotAndCallAddPropHook(JSContext* cx, HandleNativeObject obj,
+                                   HandleValue v, HandleShape newShape) {
+  MOZ_ASSERT(obj->getClass()->getAddProperty());
+  MOZ_ASSERT(newShape->lastProperty().isDataProperty());
+
+  RootedId id(cx, newShape->lastProperty().key());
+  MOZ_ASSERT(!id.isInt());
+
+  uint32_t slot = newShape->lastProperty().slot();
+  if (!obj->setShapeAndUpdateSlotsForNewSlot(cx, newShape, slot)) {
+    return false;
+  }
   obj->initSlot(slot, v);
 
   return CallAddPropertyHook(cx, obj, id, v);

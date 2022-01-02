@@ -65,6 +65,7 @@
 #include "nsXPCOMPrivate.h"
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
+#include "XPCPrefableContextOptions.h"
 #include "XPCSelfHostedShmem.h"
 
 #if defined(XP_MACOSX)
@@ -232,6 +233,23 @@ T GetWorkerPref(const nsACString& aPref,
   return result;
 }
 
+// Optimized version for bool that receives already-concatenated pref names.
+//
+// Used by xpc::SetPrefableContextOptions.
+bool GetWorkerBoolPref(const char* jsPref, const char* workerPref) {
+  using PrefHelper = PrefTraits<bool>;
+
+  if (PrefHelper::Exists(workerPref)) {
+    return PrefHelper::Get(workerPref);
+  }
+
+  if (PrefHelper::Exists(jsPref)) {
+    return PrefHelper::Get(jsPref);
+  }
+
+  return PrefHelper::kDefaultValue;
+}
+
 void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   AssertIsOnMainThread();
 
@@ -261,50 +279,8 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   }
 #endif
 
-  // Context options.
   JS::ContextOptions contextOptions;
-  contextOptions
-      .setAsmJS(GetWorkerPref<bool>("asmjs"_ns))
-#ifdef FUZZING
-      .setFuzzing(GetWorkerPref<bool>("fuzzing.enabled"_ns))
-#endif
-      .setWasm(GetWorkerPref<bool>("wasm"_ns))
-      .setWasmForTrustedPrinciples(
-          GetWorkerPref<bool>("wasm_trustedprincipals"_ns))
-      .setWasmBaseline(GetWorkerPref<bool>("wasm_baselinejit"_ns))
-#ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(GetWorkerPref<bool>("wasm_optimizingjit"_ns))
-#else
-      .setWasmIon(GetWorkerPref<bool>("wasm_optimizingjit"_ns))
-#endif
-      .setWasmBaseline(GetWorkerPref<bool>("wasm_baselinejit"_ns))
-      .setWasmVerbose(GetWorkerPref<bool>("wasm_verbose"_ns))
-#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
-                     SHELL, PREF)                                              \
-  .setWasm##NAME(GetWorkerPref<bool>("wasm_" PREF ""_ns))
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
-#undef WASM_FEATURE
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-#  ifdef EARLY_BETA_OR_EARLIER
-      .setWasmSimdWormhole(GetWorkerPref<bool>("wasm_simd_wormhole"_ns))
-#  else
-      .setWasmSimdWormhole(false)
-#  endif
-#endif
-      .setThrowOnAsmJSValidationFailure(
-          GetWorkerPref<bool>("throw_on_asmjs_validation_failure"_ns))
-      .setSourcePragmas(GetWorkerPref<bool>("source_pragmas"_ns))
-      .setAsyncStack(GetWorkerPref<bool>("asyncstack"_ns))
-      .setAsyncStackCaptureDebuggeeOnly(
-          GetWorkerPref<bool>("asyncstack_capture_debuggee_only"_ns))
-      .setPrivateClassFields(
-          GetWorkerPref<bool>("experimental.private_fields"_ns))
-      .setClassStaticBlocks(
-          GetWorkerPref<bool>("experimental.class_static_blocks"_ns))
-      .setPrivateClassMethods(
-          GetWorkerPref<bool>("experimental.private_methods"_ns))
-      .setErgnomicBrandChecks(
-          GetWorkerPref<bool>("experimental.ergonomic_brand_checks"_ns));
+  xpc::SetPrefableContextOptions(contextOptions, GetWorkerBoolPref);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

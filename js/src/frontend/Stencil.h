@@ -32,7 +32,6 @@
 #include "js/Utility.h"                   // UniqueTwoByteChars
 #include "js/Vector.h"                    // js::Vector
 #include "util/Text.h"                    // DuplicateString
-#include "vm/BigIntType.h"                // ParseBigIntLiteral
 #include "vm/FunctionFlags.h"             // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"     // GeneratorKind, FunctionAsyncKind
 #include "vm/Scope.h"  // Scope, BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
@@ -205,15 +204,9 @@ class BigIntStencil {
   [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
                           const mozilla::Span<const char16_t> buf);
 
-  BigInt* createBigInt(JSContext* cx) const {
-    mozilla::Range<const char16_t> source(source_.data(), source_.size());
-    return js::ParseBigIntLiteral(cx, source);
-  }
+  BigInt* createBigInt(JSContext* cx) const;
 
-  bool isZero() const {
-    mozilla::Range<const char16_t> source(source_.data(), source_.size());
-    return js::BigIntLiteralIsZero(source);
-  }
+  bool isZero() const;
 
   mozilla::Span<const char16_t> source() const { return source_; }
 
@@ -230,6 +223,8 @@ class BigIntStencil {
 
 class ScopeStencil {
   friend class StencilXDR;
+  friend class InputScope;
+  friend class AbstractBindingIter<frontend::TaggedParserAtomIndex>;
   friend struct CompilationStencil;
   friend struct CompilationStencilMerger;
 
@@ -463,6 +458,16 @@ using FunctionDeclaration = GCThingIndex;
 using FunctionDeclarationVector =
     Vector<FunctionDeclaration, 0, js::SystemAllocPolicy>;
 
+class StencilModuleAssertion {
+ public:
+  TaggedParserAtomIndex key;
+  TaggedParserAtomIndex value;
+
+  StencilModuleAssertion() = default;
+  StencilModuleAssertion(TaggedParserAtomIndex key, TaggedParserAtomIndex value)
+      : key(key), value(value) {}
+};
+
 // Common type for ImportEntry / ExportEntry / ModuleRequest within frontend. We
 // use a shared stencil class type to simplify serialization.
 //
@@ -488,6 +493,8 @@ class StencilModuleEntry {
   TaggedParserAtomIndex importName;
   TaggedParserAtomIndex exportName;
 
+  Vector<StencilModuleAssertion, 0, js::SystemAllocPolicy> assertions;
+
   // Location used for error messages. If this is for a module request entry
   // then it is the module specifier string, otherwise the import/export spec
   // that failed. Exports may not fill these fields if an error cannot be
@@ -502,6 +509,51 @@ class StencilModuleEntry {
  public:
   // For XDR only.
   StencilModuleEntry() = default;
+
+  StencilModuleEntry(const StencilModuleEntry& other)
+      : specifier(other.specifier),
+        localName(other.localName),
+        importName(other.importName),
+        exportName(other.exportName),
+        assertions(other.assertions.allocPolicy()),
+        lineno(other.lineno),
+        column(other.column) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!assertions.appendAll(other.assertions)) {
+      oomUnsafe.crash("StencilModuleEntry::StencilModuleEntry");
+    }
+  }
+
+  StencilModuleEntry(StencilModuleEntry&& other) noexcept
+      : specifier(other.specifier),
+        localName(other.localName),
+        importName(other.importName),
+        exportName(other.exportName),
+        assertions(std::move(other.assertions)),
+        lineno(other.lineno),
+        column(other.column) {}
+
+  StencilModuleEntry& operator=(StencilModuleEntry& other) {
+    specifier = other.specifier;
+    localName = other.localName;
+    importName = other.importName;
+    exportName = other.exportName;
+    lineno = other.lineno;
+    column = other.column;
+    assertions = std::move(other.assertions);
+    return *this;
+  }
+
+  StencilModuleEntry& operator=(StencilModuleEntry&& other) noexcept {
+    specifier = other.specifier;
+    localName = other.localName;
+    importName = other.importName;
+    exportName = other.exportName;
+    lineno = other.lineno;
+    column = other.column;
+    assertions = std::move(other.assertions);
+    return *this;
+  }
 
   static StencilModuleEntry moduleRequest(TaggedParserAtomIndex specifier,
                                           uint32_t lineno, uint32_t column) {

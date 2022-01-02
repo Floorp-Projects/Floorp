@@ -10,13 +10,10 @@ table {
   table-layout: fixed;
   width: 100%;
   margin-bottom: 1em;
-  padding: 0.5em 0;
-  border-radius: 10px;
 }
 
 #disk,
-#memory,
-#offline {
+#memory {
   background-color: rgba(0, 0, 0, .1);
 }
 

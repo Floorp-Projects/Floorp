@@ -55,6 +55,9 @@ add_task(async function() {
   let sidebarRect = await getRectForSidebarItem(bm.guid);
   let sidebarShot1 = TestUtils.screenshotArea(sidebarRect, window);
 
+  info("Toolbar: " + toolbarShot1);
+  info("Sidebar: " + sidebarShot1);
+
   let iconURI = await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI,
@@ -74,7 +77,6 @@ add_task(async function() {
     // debugging purposes.
     let toolbarShot2 = TestUtils.screenshotArea(toolbarElt, window);
     if (toolbarShot1 != toolbarShot2) {
-      info("Before toolbar: " + toolbarShot1);
       info("After toolbar: " + toolbarShot2);
     }
     return toolbarShot1 != toolbarShot2;
@@ -83,7 +85,6 @@ add_task(async function() {
   await TestUtils.waitForCondition(() => {
     let sidebarShot2 = TestUtils.screenshotArea(sidebarRect, window);
     if (sidebarShot1 != sidebarShot2) {
-      info("Before sidebar: " + sidebarShot1);
       info("After sidebar: " + sidebarShot2);
     }
     return sidebarShot1 != sidebarShot2;

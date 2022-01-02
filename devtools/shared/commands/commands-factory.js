@@ -7,7 +7,7 @@
 const { createCommandsDictionary } = require("devtools/shared/commands/index");
 const ChromeUtils = require("ChromeUtils");
 const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 loader.lazyRequireGetter(
   this,
@@ -79,9 +79,17 @@ exports.CommandsFactory = {
    *  2) beyond this test, this isn't used to connect to remote tab just yet.
    * Bug 1700909 should start using this from toolbox-init/descriptor-from-url
    * and will finaly be used to connect to remote tabs.
+
+   * @param {Object} options
+   * @param {Number} options.outerWindowID: Mandatory attribute, to identify which tab we should
+   *        create commands for.
+   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
+   *        a new one will be created.
    */
-  async forRemoteTabInTest({ outerWindowID }) {
-    const client = await createLocalClient();
+  async forRemoteTabInTest({ outerWindowID, client }) {
+    if (!client) {
+      client = await createLocalClient();
+    }
 
     const descriptor = await client.mainRoot.getTab({ outerWindowID });
     const commands = await createCommandsDictionary(descriptor);
@@ -158,8 +166,8 @@ exports.CommandsFactory = {
     // Hack something in order to help TargetMixinFront to distinguish the BrowserConsole
     descriptor.createdForBrowserConsole = true;
 
-    const target = await descriptor.getTarget();
-    await target.attach();
+    // Force fetching the first top level target right away.
+    await descriptor.getTarget();
 
     const commands = await createCommandsDictionary(descriptor);
     return commands;

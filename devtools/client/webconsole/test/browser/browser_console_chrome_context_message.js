@@ -15,7 +15,7 @@ add_task(async function() {
 
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
   await openNewTabAndConsole(
-    `data:text/html,<script>console.log("hello from content")</script>`
+    `data:text/html,<!DOCTYPE html><script>console.log("hello from content")</script>`
   );
 
   const expectedMessages = [

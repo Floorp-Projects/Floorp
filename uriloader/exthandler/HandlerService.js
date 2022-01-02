@@ -25,6 +25,16 @@ ChromeUtils.defineModuleGetter(
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
+
+/* global DownloadIntegration */
+Integration.downloads.defineModuleGetter(
+  this,
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -80,6 +90,11 @@ HandlerService.prototype = {
       this._migrateProtocolHandlersIfNeeded();
 
       Services.obs.notifyObservers(null, "handlersvc-store-initialized");
+
+      // Bug 1736924: run migration for browser.download.improvements_to_download_panel if applicable.
+      // Since we need DownloadsViewInternally to verify mimetypes, we run this after
+      // DownloadsViewInternally is registered via the 'handlersvc-store-initialized' notification.
+      this._migrateDownloadsImprovementsIfNeeded();
     }
   },
 
@@ -90,6 +105,7 @@ HandlerService.prototype = {
           defaultHandlersVersion: {},
           mimeTypes: {},
           schemes: {},
+          isDownloadsImprovementsAlreadyMigrated: false,
         };
   },
 
@@ -393,13 +409,61 @@ HandlerService.prototype = {
     }
   },
 
+  /**
+   * Update already existing handlers for non-internal mimetypes to have prefs set from alwaysAsk
+   * to saveToDisk. However, if reading an internal mimetype and set to alwaysAsk, update to use handleInternally.
+   * This migration is needed since browser.download.improvements_to_download_panel does not
+   * override user preferences if preferredAction = alwaysAsk. By doing so, we can ensure that file prompt
+   * behaviours remain consistent for most files.
+   *
+   * See Bug 1736924 for more information.
+   */
+  _migrateDownloadsImprovementsIfNeeded() {
+    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // Otherwise, we risk overwriting preferences for existing profiles!
+    if (
+      Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      ) &&
+      !Services.policies.getActivePolicies()?.Handlers &&
+      !this._store.data.isDownloadsImprovementsAlreadyMigrated
+    ) {
+      for (let [type, mimeInfo] of Object.entries(this._store.data.mimeTypes)) {
+        let isViewableInternally = DownloadIntegration.shouldViewDownloadInternally(
+          type
+        );
+        let isAskOnly = mimeInfo && mimeInfo.ask;
+
+        if (isAskOnly) {
+          if (isViewableInternally) {
+            mimeInfo.action = Ci.nsIHandlerInfo.handleInternally;
+          } else {
+            mimeInfo.action = Ci.nsIHandlerInfo.saveToDisk;
+          }
+
+          // Sets alwaysAskBeforeHandling to false. Needed to ensure that:
+          // preferredAction appears as expected in preferences table; and
+          // downloads behaviour is updated to never show UCT window.
+          mimeInfo.ask = false;
+        }
+      }
+
+      this._store.data.isDownloadsImprovementsAlreadyMigrated = true;
+      this._store.saveSoon();
+    }
+  },
+
   // nsIHandlerService
   enumerate() {
     let handlers = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
     );
-    for (let type of Object.keys(this._store.data.mimeTypes)) {
-      let handler = gMIMEService.getFromTypeAndExtension(type, null);
+    for (let [type, typeInfo] of Object.entries(this._store.data.mimeTypes)) {
+      let primaryExtension = typeInfo.extensions?.[0] ?? null;
+      let handler = gMIMEService.getFromTypeAndExtension(
+        type,
+        primaryExtension
+      );
       handlers.appendElement(handler);
     }
     for (let type of Object.keys(this._store.data.schemes)) {

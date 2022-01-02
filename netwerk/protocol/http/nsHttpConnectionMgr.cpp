@@ -297,6 +297,8 @@ nsHttpConnectionMgr::Observe(nsISupports* subject, const char* topic,
 nsresult nsHttpConnectionMgr::AddTransaction(HttpTransactionShell* trans,
                                              int32_t priority) {
   LOG(("nsHttpConnectionMgr::AddTransaction [trans=%p %d]\n", trans, priority));
+  // Make sure a transaction is not in a pending queue.
+  CheckTransInPendingQueue(trans->AsHttpTransaction());
   return PostEvent(&nsHttpConnectionMgr::OnMsgNewTransaction, priority,
                    trans->AsHttpTransaction());
 }
@@ -326,6 +328,9 @@ nsresult nsHttpConnectionMgr::AddTransactionWithStickyConn(
       ("nsHttpConnectionMgr::AddTransactionWithStickyConn "
        "[trans=%p %d transWithStickyConn=%p]\n",
        trans, priority, transWithStickyConn));
+  // Make sure a transaction is not in a pending queue.
+  CheckTransInPendingQueue(trans->AsHttpTransaction());
+
   RefPtr<NewTransactionData> data =
       new NewTransactionData(trans->AsHttpTransaction(), priority,
                              transWithStickyConn->AsHttpTransaction());
@@ -392,6 +397,16 @@ nsresult nsHttpConnectionMgr::DoShiftReloadConnectionCleanupWithConnInfo(
   RefPtr<nsHttpConnectionInfo> ci = aCI->Clone();
   return PostEvent(&nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup, 0,
                    ci);
+}
+
+nsresult nsHttpConnectionMgr::DoSingleConnectionCleanup(
+    nsHttpConnectionInfo* aCI) {
+  if (!aCI) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsHttpConnectionInfo> ci = aCI->Clone();
+  return PostEvent(&nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup, 0, ci);
 }
 
 class SpeculativeConnectArgs : public ARefBase {
@@ -1622,6 +1637,9 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
     return NS_OK;
   }
 
+  // Make sure a transaction is not in a pending queue.
+  CheckTransInPendingQueue(trans);
+
   trans->SetPendingTime();
 
   RefPtr<Http2PushedStreamWrapper> pushedStreamWrapper =
@@ -1629,10 +1647,10 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   if (pushedStreamWrapper) {
     Http2PushedStream* pushedStream = pushedStreamWrapper->GetStream();
     if (pushedStream) {
+      RefPtr<Http2Session> session = pushedStream->Session();
       LOG(("  ProcessNewTransaction %p tied to h2 session push %p\n", trans,
-           pushedStream->Session()));
-      return pushedStream->Session()->AddStream(trans, trans->Priority(), false,
-                                                false, nullptr)
+           session.get()));
+      return session->AddStream(trans, trans->Priority(), false, false, nullptr)
                  ? NS_OK
                  : NS_ERROR_UNEXPECTED;
     }
@@ -2252,6 +2270,25 @@ void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
   }
 
   if (ci) ResetIPFamilyPreference(ci);
+}
+
+void nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup(int32_t,
+                                                         ARefBase* param) {
+  LOG(("nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup\n"));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  nsHttpConnectionInfo* ci = static_cast<nsHttpConnectionInfo*>(param);
+
+  if (!ci) {
+    return;
+  }
+
+  ConnectionEntry* entry = mCT.GetWeak(ci->HashKey());
+  if (entry) {
+    entry->ClosePersistentConnections();
+  }
+
+  ResetIPFamilyPreference(ci);
 }
 
 void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
@@ -3419,9 +3456,6 @@ void nsHttpConnectionMgr::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
   }
 
   ent->DontReuseHttp3Conn();
-  // Need to cancel the transactions in the pending queue. Otherwise, they'll
-  // stay in the queue forever.
-  ent->CancelAllTransactions(NS_ERROR_NET_RESET);
 }
 
 void nsHttpConnectionMgr::MoveToWildCardConnEntry(
@@ -3468,14 +3502,19 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   ent->MoveConnection(proxyConn, wcEnt);
 }
 
-bool nsHttpConnectionMgr::RemoveTransFromConnEntry(nsHttpTransaction* aTrans) {
+bool nsHttpConnectionMgr::RemoveTransFromConnEntry(nsHttpTransaction* aTrans,
+                                                   const nsACString& aHashKey) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   LOG(("nsHttpConnectionMgr::RemoveTransFromConnEntry: trans=%p ci=%s", aTrans,
-       aTrans->ConnectionInfo()->HashKey().get()));
+       PromiseFlatCString(aHashKey).get()));
+
+  if (aHashKey.IsEmpty()) {
+    return false;
+  }
 
   // Step 1: Get the transaction's connection entry.
-  ConnectionEntry* entry = mCT.GetWeak(aTrans->ConnectionInfo()->HashKey());
+  ConnectionEntry* entry = mCT.GetWeak(aHashKey);
   if (!entry) {
     return false;
   }
@@ -3541,6 +3580,25 @@ void nsHttpConnectionMgr::DecrementNumIdleConns() {
   MOZ_ASSERT(mNumIdleConns);
   mNumIdleConns--;
   ConditionallyStopPruneDeadConnectionsTimer();
+}
+
+void nsHttpConnectionMgr::CheckTransInPendingQueue(nsHttpTransaction* aTrans) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // We only do this check on socket thread. When this function is called on
+  // main thread, the transaction is newly created, so we can skip this check.
+  if (!OnSocketThread()) {
+    return;
+  }
+
+  nsAutoCString hashKey;
+  aTrans->GetHashKeyOfConnectionEntry(hashKey);
+  if (hashKey.IsEmpty()) {
+    return;
+  }
+
+  bool foundInPendingQ = RemoveTransFromConnEntry(aTrans, hashKey);
+  MOZ_DIAGNOSTIC_ASSERT(!foundInPendingQ);
+#endif
 }
 
 }  // namespace net

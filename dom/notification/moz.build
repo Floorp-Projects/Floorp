@@ -38,10 +38,6 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.ini"]
 
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["MOZ_NEW_NOTIFICATION_STORE"]:
     EXTRA_JS_MODULES += [
         "new/NotificationDB.jsm",

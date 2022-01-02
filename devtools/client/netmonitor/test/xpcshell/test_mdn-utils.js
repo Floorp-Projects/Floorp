@@ -7,7 +7,7 @@
 
 function run_test() {
   const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const MDN_URL = "https://developer.mozilla.org/docs/";
   const GTM_PARAMS_NM =

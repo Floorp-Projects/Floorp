@@ -11,6 +11,8 @@
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/Telemetry.h"
 
+using namespace mozilla;
+using namespace mozilla::intl;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentL10n)
@@ -74,7 +76,25 @@ class L10nReadyHandler final : public PromiseNativeHandler {
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialTranslationCompleted(false);
-    mPromise->MaybeRejectWithUndefined();
+
+    nsTArray<nsCString> errors{
+        "[dom/l10n] Could not complete initial document translation."_ns,
+    };
+    IgnoredErrorResult rv;
+    MaybeReportErrorsToGecko(errors, rv, mDocumentL10n->GetParentObject());
+
+    /**
+     * We resolve the mReady here even if we encountered failures, because
+     * there is nothing actionable for the user pending on `mReady` to do here
+     * and we don't want to incentivized consumers of this API to plan the
+     * same pending operation for resolve and reject scenario.
+     *
+     * Additionally, without it, the stderr received "uncaught promise
+     * rejection" warning, which is noisy and not-actionable.
+     *
+     * So instead, we just resolve and report errors.
+     */
+    mPromise->MaybeResolveWithUndefined();
   }
 
  private:
@@ -97,6 +117,13 @@ void DocumentL10n::TriggerInitialTranslation() {
   if (mState >= DocumentL10nState::InitialTranslationTriggered) {
     return;
   }
+  if (!mReady) {
+    // If we don't have `mReady` it means that we are in shutdown mode.
+    // See bug 1687118 for details.
+    InitialTranslationCompleted(false);
+    return;
+  }
+
   mInitialTranslationStart = mozilla::TimeStamp::Now();
 
   AutoAllowLegacyScriptExecution exemption;

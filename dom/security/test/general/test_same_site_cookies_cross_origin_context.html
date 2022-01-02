@@ -55,6 +55,7 @@ function receiveMessage(event) {
   // lets see if we ran all the tests
   if (curTest == tests.length) {
     window.removeEventListener("message", receiveMessage);
+    SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
     SimpleTest.finish();
     return;
   }
@@ -80,7 +81,12 @@ function setCookieAndInitTest() {
 }
 
 // fire up the test
-setCookieAndInitTest();
+SpecialPowers.pushPrefEnv({
+  "set": [
+    // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+    ["network.cookie.sameSite.laxByDefault", false],
+  ]
+}, setCookieAndInitTest);
 
 </script>
 </body>

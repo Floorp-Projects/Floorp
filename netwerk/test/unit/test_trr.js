@@ -26,7 +26,7 @@ async function waitForConfirmation(expectedResponseIP, confirmationShouldFail) {
       // because of the increased delay between the emulator and host.
       await new Promise(resolve => do_timeout(100 * (100 / count), resolve));
     }
-    let [, inRecord] = await new TRRDNSListener(
+    let { inRecord } = await new TRRDNSListener(
       `ip${count}.example.org`,
       undefined,
       false
@@ -341,7 +341,7 @@ add_task(async function test_async_resolve_with_trr_server() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "bar_with_trr6.example.com",
     undefined,
     false,
@@ -406,13 +406,13 @@ add_task(async function test_async_resolve_with_trr_server() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-  [, , inStatus] = await new TRRDNSListener(
+  ({ inStatus } = await new TRRDNSListener(
     "only_once.example.com",
     undefined,
     false,
     undefined,
     `https://target.example.com:666/404`
-  );
+  ));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -760,6 +760,8 @@ add_task(async function test_dohrollout_mode() {
 
 add_task(test_ipv6_trr_fallback);
 
+add_task(test_ipv4_trr_fallback);
+
 add_task(test_no_retry_without_doh);
 
 // This test checks that normally when the TRR mode goes from ON -> OFF
@@ -891,3 +893,5 @@ add_task(async function test_padding() {
     "1.1.0.160"
   );
 });
+
+add_task(test_connection_reuse_and_cycling);

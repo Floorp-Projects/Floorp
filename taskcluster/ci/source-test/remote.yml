@@ -17,6 +17,7 @@ job-defaults:
             - linux64-node
     treeherder:
         kind: test
+        tier: 1
     worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: ubuntu1804-test}
@@ -38,7 +39,6 @@ puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
     treeherder:
         symbol: remote(pup)
-        tier: 1
     run:  # Bug 1651542: Use screenshot feature to warm-up the font cache before the actual test
         using: run-task
         command: >
@@ -50,7 +50,6 @@ puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol (Fission)
     treeherder:
         symbol: remote(pup-fis)
-        tier: 2
     run:  # Bug 1651542: Use screenshot feature to warm-up the font cache before the actual test
         using: run-task
         command: >

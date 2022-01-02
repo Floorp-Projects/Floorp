@@ -49,6 +49,9 @@
   --primary-button-hover-background-color: var(--blue-70);
   --primary-button-active-background-color: var(--blue-80);
 
+  --popup-header-background-color: var(--grey-20);
+  --popup-header-color: var(--grey-90);
+
   /* Colors from Photon */
   --success-background: #30e60b;
   --warning-background: #fffbd6; /* from the Web Console */
@@ -68,7 +71,6 @@
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a60: rgba(12, 12, 13, 0.6);
-  --grey-90-a80: rgba(12, 12, 13, 0.8);
   --red-70: #a4000f; /* for ui, no special semantic */
   --white-100: #fff; /* for ui, no special semantic */
   --yellow-60: #d7b600; /* for ui, no special semantic */
@@ -107,8 +109,8 @@
   --micro-font-size: 11px;
   --monospace-font-family: monospace;
 
-  --card-separator-color: var(--grey-20);
   --card-shadow-blur-radius: var(--base-unit);
+
 
   /*
    * Variables particular to about:debugging
@@ -154,6 +156,9 @@
 
     --icon-ok-color: var(--white-100);
     --icon-info-color: var(--white-100);
+
+    --popup-header-background-color: var(--grey-50);
+    --popup-header-color: var(--white-100);
 
     /*
      * From common.inc.css
@@ -411,7 +416,7 @@ Form controls
   background: transparent;
   border: none;
   border-radius: calc(var(--base-unit) / 2);
-  fill: var(--grey-90-a80);
+  fill: var(--button-color);
   height: calc(var(--base-unit) * 6);
   padding: calc(var(--base-unit));
   width: calc(var(--base-unit) * 6);
@@ -420,11 +425,11 @@ Form controls
 }
 
 .ghost-button:hover {
-  background-color: var(--grey-30);
+  background: var(--button-hover-background-color);
 }
 
 .ghost-button:active {
-  background-color: var(--grey-40);
+  background: var(--button-active-background-color);
 }
 
 /* Standard inputs */

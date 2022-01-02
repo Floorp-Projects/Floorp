@@ -524,6 +524,58 @@ class MediaEventProducerExc : public MediaEventSourceExc<Es...> {
   }
 };
 
+/**
+ * A class that facilitates forwarding MediaEvents from multiple sources of the
+ * same type into a single source.
+ *
+ * Lifetimes are convenient. A forwarded source is disconnected either by
+ * the source itself going away, or the forwarder being destroyed.
+ *
+ * Not threadsafe. The caller is responsible for calling Forward() in a
+ * threadsafe manner.
+ */
+template <typename... Es>
+class MediaEventForwarder : public MediaEventSource<Es...> {
+ public:
+  template <typename T>
+  using ArgType = typename detail::EventTypeTraits<T>::ArgType;
+
+  explicit MediaEventForwarder(nsCOMPtr<nsISerialEventTarget> aEventTarget)
+      : mEventTarget(std::move(aEventTarget)) {}
+
+  MediaEventForwarder(MediaEventForwarder&& aOther)
+      : mEventTarget(aOther.mEventTarget),
+        mListeners(std::move(aOther.mListeners)) {}
+
+  ~MediaEventForwarder() { MOZ_ASSERT(mListeners.IsEmpty()); }
+
+  MediaEventForwarder& operator=(MediaEventForwarder&& aOther) {
+    MOZ_RELEASE_ASSERT(mEventTarget == aOther.mEventTarget);
+    MOZ_ASSERT(mListeners.IsEmpty());
+    mListeners = std::move(aOther.mListeners);
+  }
+
+  void Forward(MediaEventSource<Es...>& aSource) {
+    // Forwarding a rawptr `this` here is fine, since DisconnectAll disconnect
+    // all mListeners synchronously and prevents this handler from running.
+    mListeners.AppendElement(
+        aSource.Connect(mEventTarget, [this](ArgType<Es>&&... aEvents) {
+          this->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
+        }));
+  }
+
+  void DisconnectAll() {
+    for (auto& l : mListeners) {
+      l.Disconnect();
+    }
+    mListeners.Clear();
+  }
+
+ private:
+  const nsCOMPtr<nsISerialEventTarget> mEventTarget;
+  nsTArray<MediaEventListener> mListeners;
+};
+
 }  // namespace mozilla
 
 #endif  // MediaEventSource_h_

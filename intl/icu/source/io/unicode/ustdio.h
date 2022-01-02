@@ -102,7 +102,7 @@
  * <p>This API provides an stdio-like API wrapper around ICU's other
  * formatting and parsing APIs. It is meant to ease the transition of adding
  * Unicode support to a preexisting applications using stdio. The following
- * is a small list of noticable differences between stdio and ICU I/O's
+ * is a small list of noticeable differences between stdio and ICU I/O's
  * ustdio implementation.</p>
  *
  * <ul>
@@ -237,7 +237,7 @@ typedef enum {
  * and parse output. If this parameter is NULL, the default locale will 
  * be used.
  * @param codepage The codepage in which data will be written to and
- * read from the file. If this paramter is NULL the system default codepage
+ * read from the file. If this parameter is NULL the system default codepage
  * will be used.
  * @return A new UFILE, or NULL if an error occurred.
  * @stable ICU 3.0
@@ -260,7 +260,7 @@ u_fopen(const char    *filename,
  * and parse output. If this parameter is NULL, the default locale will
  * be used.
  * @param codepage The codepage in which data will be written to and
- * read from the file. If this paramter is NULL the system default codepage
+ * read from the file. If this parameter is NULL the system default codepage
  * will be used.
  * @return A new UFILE, or NULL if an error occurred.
  * @stable ICU 54
@@ -281,7 +281,7 @@ u_fopen_u(const UChar    *filename,
  * and parse output. If this parameter is NULL, the default locale will 
  * be used.
  * @param codepage The codepage in which data will be written to and
- * read from the file. If this paramter is NULL, data will be written and
+ * read from the file. If this parameter is NULL, data will be written and
  * read using the default codepage for <TT>locale</TT>, unless <TT>locale</TT>
  * is NULL, in which case the system default codepage will be used.
  * @return A new UFILE, or NULL if an error occurred.
@@ -301,7 +301,7 @@ u_finit(FILE        *f,
  * and parse output. If this parameter is NULL, the default locale will
  * be used.
  * @param codepage The codepage in which data will be written to and
- * read from the file. If this paramter is NULL, data will be written and
+ * read from the file. If this parameter is NULL, data will be written and
  * read using the default codepage for <TT>locale</TT>, unless <TT>locale</TT>
  * is NULL, in which case the system default codepage will be used.
  * @return A new UFILE, or NULL if an error occurred. If an error occurs
@@ -725,7 +725,7 @@ u_fgetcx(UFILE  *f);
  * Unget a UChar from a UFILE.
  * If this function is not the first to operate on <TT>f</TT> after a call
  * to <TT>u_fgetc</TT>, the results are undefined.
- * If this function is passed a character that was not recieved from the
+ * If this function is passed a character that was not received from the
  * previous <TT>u_fgetc</TT> or <TT>u_fgetcx</TT> call, the results are undefined.
  * @param c The UChar to put back on the stream.
  * @param f The UFILE to receive <TT>c</TT>.

@@ -84,21 +84,6 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   LocalAccessible* LinkAt(uint32_t aIndex) { return EmbeddedChildAt(aIndex); }
 
-  /**
-   * Return index for the given link accessible.
-   */
-  int32_t LinkIndexOf(LocalAccessible* aLink) {
-    return GetIndexOfEmbeddedChild(aLink);
-  }
-
-  /**
-   * Return link accessible at the given text offset.
-   */
-  int32_t LinkIndexAtOffset(uint32_t aOffset) {
-    LocalAccessible* child = GetChildAtOffset(aOffset);
-    return child ? LinkIndexOf(child) : -1;
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // HyperTextAccessible: DOM point to text offset conversions.
 
@@ -113,9 +98,9 @@ class HyperTextAccessible : public AccessibleWrap,
    *                       if -1 just look directly for the node
    *                       if >=0 and aNode is text, this represents a char
    * offset if >=0 and aNode is not text, this represents a child node offset
-   * @param aIsEndOffset  [in] if true, then then this offset is not inclusive.
-   * The character indicated by the offset returned is at [offset - 1]. This
-   * means if the passed-in offset is really in a descendant, then the offset
+   * @param aIsEndOffset  [in] if true, then this offset is not inclusive. The
+   * character indicated by the offset returned is at [offset - 1]. This means
+   * if the passed-in offset is really in a descendant, then the offset
    * returned will come just after the relevant embedded object characer. If
    * false, then the offset is inclusive. The character indicated by the offset
    * returned is at [offset]. If the passed-in offset in inside a descendant,
@@ -177,18 +162,11 @@ class HyperTextAccessible : public AccessibleWrap,
                        int32_t* aStartOffset, int32_t* aEndOffset,
                        nsAString& aText);
 
-  /**
-   * Return text attributes for the given text range.
-   */
-  already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
-                                                 int32_t aOffset,
-                                                 int32_t* aStartOffset,
-                                                 int32_t* aEndOffset);
+  virtual already_AddRefed<AccAttributes> TextAttributes(
+      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+      int32_t* aEndOffset) override;
 
-  /**
-   * Return text attributes applied to the accessible.
-   */
-  already_AddRefed<AccAttributes> DefaultTextAttributes();
+  virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
   // HyperTextAccessibleBase provides an overload which takes an Accessible.
   using HyperTextAccessibleBase::GetChildOffset;
@@ -245,6 +223,11 @@ class HyperTextAccessible : public AccessibleWrap,
    * @return      the caret rect
    */
   mozilla::LayoutDeviceIntRect GetCaretRect(nsIWidget** aWidget);
+
+  /**
+   * Return true if caret is at end of line.
+   */
+  bool IsCaretAtEndOfLine() const;
 
   /**
    * Return selected regions count within the accessible.
@@ -355,11 +338,6 @@ class HyperTextAccessible : public AccessibleWrap,
    * Adjust an offset the caret stays at to get a text by line boundary.
    */
   uint32_t AdjustCaretOffset(uint32_t aOffset) const;
-
-  /**
-   * Return true if caret is at end of line.
-   */
-  bool IsCaretAtEndOfLine() const;
 
   /**
    * Return true if the given offset points to terminal empty line if any.

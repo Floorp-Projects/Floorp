@@ -7,16 +7,33 @@
 #ifndef jit_IonCacheIRCompiler_h
 #define jit_IonCacheIRCompiler_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+
+#include <stdint.h>
+
+#include "jstypes.h"
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIROpsGenerated.h"
+#include "jit/CacheIRReader.h"
+#include "jit/Registers.h"
+#include "jit/RegisterSets.h"
+#include "js/Vector.h"
+
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 namespace jit {
 
+class CacheIRWriter;
+class CodeOffset;
 class IonIC;
 class IonICStub;
+class IonScript;
+class JitCode;
+class MacroAssembler;
 
 // IonCacheIRCompiler compiles CacheIR to IonIC native code.
 class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {

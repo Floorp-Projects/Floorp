@@ -265,7 +265,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                         const nsRect* aRange = nullptr,
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                            nsIScrollbarMediator::DISABLE_SNAP) = 0;
+                            nsIScrollbarMediator::DISABLE_SNAP,
+                        mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                            mozilla::ScrollTriggeredByScript::No) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in integer CSS pixels.
@@ -282,16 +284,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * range and / or moving in any direction; GetScrollPositionCSSPixels will be
    * exactly aScrollPosition at the end of the scroll animation unless the
    * SMOOTH_MSD animation is interrupted.
-   *
-   * FIXME: Drop |aSnap| argument once after we finished the migration to the
-   * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
    */
-  virtual void ScrollToCSSPixels(
-      const CSSIntPoint& aScrollPosition,
-      ScrollMode aMode = ScrollMode::Instant,
-      nsIScrollbarMediator::ScrollSnapMode aSnap =
-          nsIScrollbarMediator::DEFAULT,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) = 0;
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                 ScrollMode aMode = ScrollMode::Instant) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
@@ -300,9 +295,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * aScrollPosition as possible while scrolling by an integer
    * number of layer pixels (so the operation is fast and looks clean).
    */
-  virtual void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) = 0;
+  virtual void ScrollToCSSPixelsForApz(
+      const mozilla::CSSPoint& aScrollPosition) = 0;
 
   /**
    * Returns the scroll position in integer CSS pixels, rounded to the nearest
@@ -326,15 +320,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
                             nsIScrollbarMediator::DISABLE_SNAP) = 0;
 
-  /**
-   * FIXME: Drop |aSnap| argument once after we finished the migration to the
-   * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
-   */
-  virtual void ScrollByCSSPixels(
-      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-      nsIScrollbarMediator::ScrollSnapMode aSnap =
-          nsIScrollbarMediator::DEFAULT) = 0;
+  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                 ScrollMode aMode = ScrollMode::Instant) = 0;
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
@@ -471,7 +458,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void ResetScrollInfoIfNeeded(
       const mozilla::ScrollGeneration& aGeneration,
-      bool aApzAnimationInProgress) = 0;
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.

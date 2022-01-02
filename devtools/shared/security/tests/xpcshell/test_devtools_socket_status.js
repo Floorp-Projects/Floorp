@@ -4,7 +4,7 @@
 "use strict";
 
 const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const { DevToolsSocketStatus } = ChromeUtils.import(
   "resource://devtools/shared/security/DevToolsSocketStatus.jsm"

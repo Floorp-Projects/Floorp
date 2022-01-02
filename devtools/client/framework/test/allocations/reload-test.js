@@ -47,7 +47,7 @@ function createPanelReloadTest(recordName, toolId) {
     const tab = await addTab(TEST_URL);
 
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const { gDevTools } = require("devtools/client/framework/devtools");
     const toolbox = await gDevTools.showToolboxForTab(tab, {

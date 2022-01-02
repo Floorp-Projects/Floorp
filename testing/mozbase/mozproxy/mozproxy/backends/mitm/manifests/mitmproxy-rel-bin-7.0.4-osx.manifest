@@ -1,0 +1,10 @@
+[
+    {
+        "filename": "mitmproxy-7.0.4-osx.tar.gz",
+        "size": 42334827,
+        "algorithm": "sha512",
+        "digest": "d9302399b9c6ac65bea0913aa0830d46c3b09e7c1ddc4bbfd375387b58f5fefaa72550656ae936137ad4ed841a327e889a0f4ee72e548427665615097d20d467",
+        "visibility": "public",
+        "unpack": true
+    }
+]

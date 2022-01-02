@@ -36,9 +36,9 @@ SharedMemoryBasic::~SharedMemoryBasic() {
   CloseHandle();
 }
 
-bool SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights) {
+bool SharedMemoryBasic::SetHandle(Handle aHandle, OpenRights aRights) {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
-  mShmFd = aHandle.fd;
+  mShmFd = aHandle.release();
   mOpenRights = aRights;
   return true;
 }
@@ -97,19 +97,16 @@ void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
   return memory != (void*)-1 ? memory : NULL;
 }
 
-bool SharedMemoryBasic::ShareToProcess(base::ProcessId /*unused*/,
-                                       Handle* aNewHandle) {
+auto SharedMemoryBasic::CloneHandle() -> Handle {
   MOZ_ASSERT(mShmFd >= 0, "Should have been Create()d by now");
 
   int shmfdDup = dup(mShmFd);
   if (-1 == shmfdDup) {
-    LogError("ShmemAndroid::ShareToProcess()");
-    return false;
+    LogError("ShmemAndroid::CloneHandle()");
+    return nullptr;
   }
 
-  aNewHandle->fd = shmfdDup;
-  aNewHandle->auto_close = true;
-  return true;
+  return mozilla::UniqueFileHandle(shmfdDup);
 }
 
 void SharedMemoryBasic::Unmap() {

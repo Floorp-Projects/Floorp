@@ -6,6 +6,7 @@
 use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollClamping, ScrollLocation};
 use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
+use crate::internal_types::PipelineInstanceId;
 use crate::spatial_tree::{CoordinateSystem, SpatialNodeIndex, TransformUpdateState};
 use crate::spatial_tree::{CoordinateSystemId};
 use euclid::{Vector2D, SideOffsets2D};
@@ -42,6 +43,8 @@ pub struct SpatialNodeUid {
     pub kind: SpatialNodeUidKind,
     /// Pipeline id to namespace key kinds
     pub pipeline_id: PipelineId,
+    /// Instance of this pipeline id
+    pub instance_id: PipelineInstanceId,
 }
 
 impl SpatialNodeUid {
@@ -49,36 +52,43 @@ impl SpatialNodeUid {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::Root,
             pipeline_id: PipelineId::dummy(),
+            instance_id: PipelineInstanceId::new(0),
         }
     }
 
     pub fn root_scroll_frame(
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) -> Self {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::InternalScrollFrame,
             pipeline_id,
+            instance_id,
         }
     }
 
     pub fn root_reference_frame(
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) -> Self {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::InternalReferenceFrame,
             pipeline_id,
+            instance_id,
         }
     }
 
     pub fn external(
         key: SpatialTreeItemKey,
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) -> Self {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::External {
                 key,
             },
             pipeline_id,
+            instance_id,
         }
     }
 }
@@ -941,6 +951,7 @@ fn test_cst_perspective_relative_scroll() {
     let pipeline_id = PipelineId::dummy();
     let ext_scroll_id = ExternalScrollId(1, pipeline_id);
     let transform = LayoutTransform::rotation(0.0, 0.0, 1.0, Angle::degrees(45.0));
+    let pid = PipelineInstanceId::new(0);
 
     let root = cst.add_reference_frame(
         cst.root_reference_frame_index(),
@@ -952,7 +963,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0), PipelineId::dummy()),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0), PipelineId::dummy(), pid),
     );
 
     let scroll_frame_1 = cst.add_scroll_frame(
@@ -963,7 +974,7 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy()),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy(), pid),
     );
 
     let scroll_frame_2 = cst.add_scroll_frame(
@@ -974,7 +985,7 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy()),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy(), pid),
     );
 
     let ref_frame = cst.add_reference_frame(
@@ -986,7 +997,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4), PipelineId::dummy()),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4), PipelineId::dummy(), pid),
     );
 
     let mut st = SpatialTree::new();

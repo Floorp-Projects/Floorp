@@ -41,16 +41,12 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   size_t GetNativeSizesLength() const override;
   virtual size_t SizeOfSourceWithComputedFallback(
       SizeOfState& aState) const override;
-  virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
-                                     MallocSizeOf aMallocSizeOf) const override;
 
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aResult,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aResult,
                                        bool aLastPart) override;
 
   virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override;
@@ -82,16 +78,6 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
 
  private:
   friend class SourceSurfaceBlobImage;
-
-  Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
-  GetFrameInternal(const gfx::IntSize& aSize,
-                   const Maybe<SVGImageContext>& aSVGContext,
-                   const Maybe<ImageIntRegion>& aRegion, uint32_t aWhichFrame,
-                   uint32_t aFlags) override;
-
-  Tuple<ImgDrawResult, gfx::IntSize> GetImageContainerSize(
-      WindowRenderer* aRenderer, const gfx::IntSize& aSize,
-      uint32_t aFlags) override;
 
   /**
    * Attempt to find a matching cached surface in the SurfaceCache. Returns the

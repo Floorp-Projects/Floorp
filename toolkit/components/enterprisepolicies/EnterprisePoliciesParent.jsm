@@ -249,6 +249,7 @@ EnterprisePoliciesManager.prototype = {
     Services.ppmm.sharedData.delete("EnterprisePolicies:DisallowedFeatures");
 
     this._status = Ci.nsIEnterprisePolicies.UNINITIALIZED;
+    this._parsedPolicies = undefined;
     for (let timing of Object.keys(this._callbacks)) {
       this._callbacks[timing] = [];
     }

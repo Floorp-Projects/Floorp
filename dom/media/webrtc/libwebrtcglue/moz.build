@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 
+# Allow outputing trace points from the libwebrtc glue code
+DEFINES["TRACING"] = True
+
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/dom/media/gmp",  # for GMPLog.h,
@@ -12,26 +15,24 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/media/libyuv/libyuv/include",
     "/media/webrtc",
+    "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [
     "AudioConduit.cpp",
     "GmpVideoCodec.cpp",
+    "MediaConduitInterface.cpp",
     "MediaDataCodec.cpp",
-    "RtpSourceObserver.cpp",
+    "SystemTime.cpp",
     "VideoConduit.cpp",
     "VideoStreamFactory.cpp",
+    "WebrtcCallWrapper.cpp",
     "WebrtcGmpVideoCodec.cpp",
     "WebrtcMediaDataDecoderCodec.cpp",
     "WebrtcMediaDataEncoderCodec.cpp",
+    "WebrtcVideoCodecFactory.cpp",
 ]
-
-if CONFIG["OS_TARGET"] == "Android":
-    UNIFIED_SOURCES += [
-        "MediaCodecVideoCodec.cpp",
-        "WebrtcMediaCodecVP8VideoCodec.cpp",
-    ]
 
 FINAL_LIBRARY = "xul"

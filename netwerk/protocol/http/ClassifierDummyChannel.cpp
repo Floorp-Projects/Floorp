@@ -782,5 +782,10 @@ ClassifierDummyChannel::GetHasHTTPSRR(bool*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ClassifierDummyChannel::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

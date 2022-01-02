@@ -37,3 +37,7 @@ let restartButton = document.getElementById("restart");
 restartButton.onclick = function() {
   AboutRestartRequired.restart();
 };
+
+// Dispatch this event so tests can detect that we finished loading the page.
+let event = new CustomEvent("AboutRestartRequiredLoad", { bubbles: true });
+document.dispatchEvent(event);

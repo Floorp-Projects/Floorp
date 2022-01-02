@@ -35,45 +35,6 @@ TASKCLUSTER = "TASK_ID" in os.environ.keys()
 RUNNING_TESTS = "RUNNING_TESTS" in os.environ.keys()
 HERE = Path(__file__).parent
 SRC_ROOT = Path(HERE, "..", "..", "..").resolve()
-SEARCH_PATHS = [
-    "python/mach",
-    "python/mozboot",
-    "python/mozbuild",
-    "python/mozperftest",
-    "python/mozterm",
-    "python/mozversioncontrol",
-    "testing/condprofile",
-    "testing/mozbase/mozdevice",
-    "testing/mozbase/mozfile",
-    "testing/mozbase/mozinfo",
-    "testing/mozbase/mozlog",
-    "testing/mozbase/mozprocess",
-    "testing/mozbase/mozprofile",
-    "testing/mozbase/mozproxy",
-    "third_party/python/attrs",
-    "third_party/python/blessings",
-    "third_party/python/certifi",
-    "third_party/python/chardet",
-    "third_party/python/distro",
-    "third_party/python/dlmanager",
-    "third_party/python/esprima",
-    "third_party/python/idna",
-    "third_party/python/importlib_metadata",
-    "third_party/python/jsmin",
-    "third_party/python/jsonschema",
-    "third_party/python/pyrsistent",
-    "third_party/python/PyYAML/lib3",
-    "third_party/python/redo",
-    "third_party/python/requests",
-    "third_party/python/six",
-    "third_party/python/typing_extensions",
-    "third_party/python/urllib3",
-    "third_party/python/zipp",
-]
-
-
-if TASKCLUSTER:
-    SEARCH_PATHS.append("xpcshell")
 
 
 # XXX need to make that for all systems flavors
@@ -81,16 +42,45 @@ if "SHELL" not in os.environ:
     os.environ["SHELL"] = "/bin/bash"
 
 
-def _setup_path():
+def _activate_mach_virtualenv():
     """Adds all available dependencies in the path.
 
     This is done so the runner can be used with no prior
     install in all execution environments.
     """
-    for path in SEARCH_PATHS:
-        path = Path(SRC_ROOT, path).resolve()
-        if path.exists():
-            sys.path.insert(0, str(path))
+
+    # We need the "mach" module to access the logic to parse virtualenv
+    # requirements. Since that depends on "packaging" (and, transitively,
+    # "pyparsing"), we add those to the path too.
+    sys.path[0:0] = [
+        os.path.join(SRC_ROOT, module)
+        for module in (
+            os.path.join("python", "mach"),
+            os.path.join("third_party", "python", "packaging"),
+            os.path.join("third_party", "python", "pyparsing"),
+        )
+    ]
+
+    from mach.site import (
+        resolve_requirements,
+        MachSiteManager,
+        ExternalPythonSite,
+        SitePackagesSource,
+    )
+
+    mach_site = MachSiteManager(
+        str(SRC_ROOT),
+        None,
+        resolve_requirements(str(SRC_ROOT), "mach"),
+        ExternalPythonSite(sys.executable),
+        SitePackagesSource.NONE,
+    )
+    mach_site.activate()
+
+    if TASKCLUSTER:
+        # In CI, the directory structure is different: xpcshell code is in
+        # "$topsrcdir/xpcshell/" rather than "$topsrcdir/testing/xpcshell".
+        sys.path.append("xpcshell")
 
 
 def run_tests(mach_cmd, kwargs, client_args):
@@ -100,7 +90,6 @@ def run_tests(mach_cmd, kwargs, client_args):
     `PERFTEST_OPTIONS` environment variable that contains all options passed by
     the user via a ./mach perftest --push-to-try call.
     """
-    _setup_path()
     on_try = kwargs.pop("on_try", False)
 
     # trying to get the arguments from the task params
@@ -177,13 +166,13 @@ def run_tests(mach_cmd, kwargs, client_args):
 
 def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell"""
-    _setup_path()
+    _activate_mach_virtualenv()
 
     from mozbuild.mozconfig import MozconfigLoader
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozperftest import PerftestArgumentParser
-    from mozboot.util import get_state_dir
     from mach.logging import LoggingManager
+    from mach.util import get_state_dir
 
     mozconfig = SRC_ROOT / "browser" / "config" / "mozconfig"
     if mozconfig.exists():

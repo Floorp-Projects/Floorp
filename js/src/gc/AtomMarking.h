@@ -70,9 +70,6 @@ class AtomMarkingRuntime {
   void markId(JSContext* cx, jsid id);
   void markAtomValue(JSContext* cx, const Value& value);
 
-  // Mark all atoms in |source| as being reachable within |target|.
-  void adoptMarkedAtoms(Zone* target, Zone* source);
-
 #ifdef DEBUG
   // Return whether |thing/id| is in the atom marking bitmap for |zone|.
   template <typename T>

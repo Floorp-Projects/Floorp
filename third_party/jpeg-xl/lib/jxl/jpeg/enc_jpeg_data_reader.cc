@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/jpeg/enc_jpeg_huffman_decode.h"

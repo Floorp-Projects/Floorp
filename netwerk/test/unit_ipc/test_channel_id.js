@@ -1,5 +1,4 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Test that when doing HTTP requests, the nsIHttpChannel is detected in

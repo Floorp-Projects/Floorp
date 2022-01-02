@@ -22,7 +22,7 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
                           public mozilla::BasePrincipal {
  public:
   static already_AddRefed<ExpandedPrincipal> Create(
-      nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
+      const nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
       const mozilla::OriginAttributes& aAttrs);
 
   static PrincipalKind Kind() { return eExpandedPrincipal; }

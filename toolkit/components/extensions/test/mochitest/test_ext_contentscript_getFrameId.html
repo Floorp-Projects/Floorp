@@ -1,0 +1,189 @@
+<!doctype html>
+<head>
+  <title>Test content script runtime.getFrameId</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(async function test_runtime_getFrameId_invalid() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      let proxy = new Proxy(window, {});
+      let proto = Object.create(window);
+
+      class FakeFrame extends HTMLIFrameElement {
+        constructor() {
+          super();
+          console.log("FakeFrame ctor");  // eslint-disable-line
+        }
+      }
+      customElements.define('fake-frame', FakeFrame, { extends: 'iframe' });
+      let custom = document.createElement("fake-frame");
+
+      let invalid = [null, 13, "blah", document.body, proxy, proto, custom];
+
+      for (let value of invalid) {
+        browser.test.assertThrows(
+          () => browser.runtime.getFrameId(value),
+          /Invalid argument/,
+          "Correct exception thrown."
+        );
+      }
+
+      let detached = document.createElement("iframe");
+      let id = browser.runtime.getFrameId(detached);
+      browser.test.assertEq(id, -1, "Detached iframe has no frameId.");
+
+      browser.test.sendMessage("done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_contentscript_runtime_getFrameId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation", "tabs"],
+      host_permissions: ["http://example.org/"],
+    },
+
+    files: {
+      "cs.js"() {
+        browser.test.log(`Content script loaded on: ${location.href}`);
+        let parents = {};
+
+        // Recursivelly walk descendant frames and get parent frameIds.
+        function visit(win) {
+          let frameId = browser.runtime.getFrameId(win);
+          let parentId = browser.runtime.getFrameId(win.parent);
+          parents[frameId] = (win.parent != win) ? parentId : -1;
+
+          try {
+            let frameEl = browser.runtime.getFrameId(win.frameElement);
+            browser.test.assertEq(frameId, frameEl, "frameElement id correct");
+          } catch (e) {
+            // Can't access a cross-origin .frameElement.
+          }
+
+          for (let i = 0; i < win.frames.length; i++) {
+            visit(win.frames[i]);
+          }
+        }
+        visit(window);
+
+        // Add the <embed> frame if it exists.
+        let embed = document.querySelector("embed");
+        if (embed) {
+          let id = browser.runtime.getFrameId(embed);
+          parents[id] = 0;
+        }
+
+        // Add the <object> frame if it exists.
+        let object = document.querySelector("object");
+        if (object) {
+          let id = browser.runtime.getFrameId(object);
+          parents[id] = 0;
+        }
+
+        browser.test.log(`Parents tree: ${JSON.stringify(parents)}`);
+        return parents;
+      },
+
+      async "closedPopup.js"() {
+        let popup = window.open("http://example.org/?popup");
+        popup.close();
+        for (let i = 0; i < 100; i++) {
+          await new Promise(r => setTimeout(r, 50));
+          try {
+            popup.blur();
+          } catch(e) {
+            if (e.message === "can't access dead object") {
+              browser.test.assertThrows(
+                () => browser.runtime.getFrameId(popup),
+                /An exception was thrown/,
+                "Passing a dead object throws."
+              );
+              browser.test.sendMessage("done");
+              return;
+            }
+          }
+        }
+        browser.test.fail("Timed out while waiting for popup to close.");
+      },
+      "closedPopup.html": `
+        <!doctype html>
+        <meta charset="utf-8">
+        <script src="closedPopup.js"><\/script>
+      `,
+    },
+
+    async background() {
+      let base = "http://example.org/tests/toolkit/components/extensions/test/mochitest";
+      let files = {
+        "file_contains_iframe.html": 2,
+        "file_WebNavigation_page1.html": 2,
+        "file_with_xorigin_frame.html": 2,
+        // Contains all of the above.
+        "file_with_subframes_and_embed.html": 9,
+      };
+
+      for (let [file, count] of Object.entries(files)) {
+        let tab;
+        let completed = new Promise(resolve => {
+          browser.webNavigation.onCompleted.addListener(function cb(details) {
+            browser.test.log(`onCompleted: ${JSON.stringify(details)}`);
+
+            if (details.tabId === tab?.id && details.frameId === 0) {
+              browser.webNavigation.onCompleted.removeListener(cb);
+              resolve();
+            }
+          });
+        });
+
+        browser.test.log(`Load a test page: ${file}`);
+        tab = await browser.tabs.create({ url: `${base}/${file}` });
+        await completed;
+
+        let [parents] = await browser.tabs.executeScript(tab.id, {
+          file: "cs.js"
+        });
+
+        let all = await browser.webNavigation.getAllFrames({ tabId: tab.id });
+        browser.test.log(`getAllFrames: ${JSON.stringify(all)}`);
+
+        browser.test.assertEq(all.length, count, "All frames accounted for.");
+
+        browser.test.assertEq(
+          Object.keys(parents).length,
+          count,
+          "All frames accounted for from content script."
+        );
+
+        for (let frame of all) {
+          browser.test.assertEq(
+            frame.parentFrameId,
+            parents[frame.frameId],
+            "Correct frame ancestor info."
+          );
+        }
+
+        await browser.tabs.remove(tab.id);
+      }
+
+      browser.tabs.create({ url: browser.runtime.getURL("closedPopup.html" )});
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+</script>

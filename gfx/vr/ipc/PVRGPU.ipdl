@@ -8,6 +8,7 @@ namespace gfx {
 
 // The parent process is the VR process.
 // The child process is the GPU process.
+[NeedsOtherPid]
 async protocol PVRGPU
 {
 parent:

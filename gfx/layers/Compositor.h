@@ -39,8 +39,6 @@
  *
  * # Main interfaces and abstractions
  *
- *  - Layer, ShadowableLayer and LayerComposite
- *    (see Layers.h and ipc/ShadowLayers.h)
  *  - CompositableClient and CompositableHost
  *    (client/CompositableClient.h composite/CompositableHost.h)
  *  - TextureClient and TextureHost
@@ -71,7 +69,6 @@
  * are also platform-independent. Examples of compositable classes are:
  *  - ImageClient
  *  - CanvasClient
- *  - ContentHost
  *  - etc.
  * Texture classes (TextureClient and TextureHost) are thin abstractions over
  * platform-dependent texture memory. They are maniplulated by compositables
@@ -133,7 +130,6 @@ class CompositorBridgeParent;
 class NativeLayer;
 class CompositorOGL;
 class CompositorD3D11;
-class BasicCompositor;
 class TextureReadLock;
 struct GPUStats;
 class AsyncReadbackBuffer;
@@ -293,13 +289,11 @@ class Compositor : public TextureSourceProvider {
    */
   virtual void EndFrame();
 
-  virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
+  virtual void CancelFrame(bool aNeedFlush = true) {}
 
 #ifdef MOZ_DUMP_PAINTING
   virtual const char* Name() const = 0;
 #endif  // MOZ_DUMP_PAINTING
-
-  virtual LayersBackend GetBackendType() const = 0;
 
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
 
@@ -308,9 +302,6 @@ class Compositor : public TextureSourceProvider {
   TimeStamp GetLastCompositionEndTime() const override {
     return mLastCompositionEndTime;
   }
-
-  void UnlockAfterComposition(TextureHost* aTexture) override;
-  bool NotifyNotUsedAfterComposition(TextureHost* aTextureHost) override;
 
   /**
    * Notify the compositor that composition is being paused. This allows the

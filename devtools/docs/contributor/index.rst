@@ -1,3 +1,6 @@
+.. toctree::
+   :name: devtools-contributor-doc
+
 =================================
 Firefox DevTools Contributor Docs
 =================================
@@ -30,6 +33,15 @@ Contributing
    Filing good bugs <contributing/filing-good-bugs.md>
    Investigating performance issues <contributing/performance.md>
    Writing efficient React code <contributing/react-performance-tips.md>
+
+
+Recurring tasks
+===============
+.. toctree::
+   :maxdepth: 1
+
+   Release tasks<release.md>
+   Performance sheriffing<performance-sheriffing.md>
 
 
 Automated tests

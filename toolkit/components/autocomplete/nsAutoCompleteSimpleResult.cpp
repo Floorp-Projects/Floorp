@@ -236,6 +236,12 @@ nsAutoCompleteSimpleResult::GetListener(
 }
 
 NS_IMETHODIMP
+nsAutoCompleteSimpleResult::IsRemovableAt(int32_t aRowIndex, bool* _retval) {
+  *_retval = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex) {
   CHECK_MATCH_INDEX(aRowIndex, false);
 

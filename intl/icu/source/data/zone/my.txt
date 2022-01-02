@@ -1891,6 +1891,9 @@ my{
             lg{"ရယ်ခါးတီရင်ဘားခ် အချိန်"}
             ls{"ရယ်ခါးတီရင်ဘားခ် စံတော်ချိန်"}
         }
+        "meta:Yukon"{
+            ls{"ယူကွန်း အချိန်"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

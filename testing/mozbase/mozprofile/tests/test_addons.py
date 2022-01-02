@@ -259,7 +259,7 @@ def test_install_invalid_addons(tmpdir, am):
 
 @pytest.mark.xfail(reason="feature not implemented as part of AddonManger")
 def test_install_error(am):
-    """ Check install raises an error with an invalid addon"""
+    """Check install raises an error with an invalid addon"""
     temp_addon = generate_addon("test-addon-invalid-version@mozilla.org")
     # This should raise an error here
     with pytest.raises(Exception):

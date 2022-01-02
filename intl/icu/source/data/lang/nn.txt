@@ -4,6 +4,12 @@
 nn{
     %%Parent{"no"}
     Keys{
+        colAlternate{"ignorer sortering etter symbol"}
+        colCaseFirst{"organisering av store og små bokstavar"}
+        colCaseLevel{"sortering av store og små bokstavar"}
+        colNormalization{"normalisert sortering"}
+        colNumeric{"numerisk sortering"}
+        colStrength{"sorteringsstyrke"}
         collation{"sorteringsrekkjefølgje"}
         lb{"lineskiftstil"}
         numbers{"tal"}
@@ -40,9 +46,8 @@ nn{
         goh{"gammalhøgtysk"}
         grc{"gammalgresk"}
         gv{"manx"}
+        gwi{"gwichin"}
         hsb{"høgsorbisk"}
-        kab{"kabyle"}
-        kea{"kabuverdianu"}
         kl{"grønlandsk (kalaallisut)"}
         krc{"karachay-balkar"}
         kum{"kumyk"}
@@ -153,6 +158,10 @@ nn{
             gb2312han{"forenkla kinesisk sortering"}
             pinyin{"pinyin-sortering"}
             standard{"standard sorteringsrekkjefølgje"}
+        }
+        d0{
+            fwidth{"full breidd"}
+            hwidth{"halv breidd"}
         }
         hc{
             h11{"12-timesystem (0–11)"}

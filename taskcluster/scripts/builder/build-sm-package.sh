@@ -26,8 +26,6 @@ status=0
 (
     # Build the freshly extracted, packaged SpiderMonkey.
     cd ./mozjs-*
-
-    ./mach create-mach-environment
     AUTOMATION=1 $PYTHON3 js/src/devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 ) || status=$?
 

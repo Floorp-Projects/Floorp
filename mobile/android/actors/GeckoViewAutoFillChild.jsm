@@ -72,7 +72,7 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
         }
         break;
       }
-      case "PasswordManager:onFormSubmit": {
+      case "PasswordManager:ShowDoorhanger": {
         const { form: formLike } = aEvent.detail;
         this._autofill.commitAutofill(formLike);
         break;

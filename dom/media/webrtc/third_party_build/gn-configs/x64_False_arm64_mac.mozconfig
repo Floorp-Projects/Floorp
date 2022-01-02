@@ -1,0 +1,4 @@
+ac_add_options --target=aarch64
+
+mk_add_options MOZ_OBJDIR=obj-x64_False_arm64_mac
+

@@ -83,7 +83,6 @@ JxlDecoderStatus JxlBoxContentDecoder::Process(const uint8_t* next_in,
     size_t can_read = avail_in;
     if (!box_until_eof_) can_read = std::min<size_t>(can_read, remaining_);
     size_t to_write = std::min<size_t>(can_read, *avail_out);
-
     memcpy(*next_out, next_in, to_write);
 
     *next_out += to_write;

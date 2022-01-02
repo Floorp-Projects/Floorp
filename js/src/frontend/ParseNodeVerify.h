@@ -7,12 +7,15 @@
 #ifndef frontend_ParseNodeVerify_h
 #define frontend_ParseNodeVerify_h
 
-#include "ds/LifoAlloc.h"                 // LifoAlloc
-#include "frontend/ParseNode.h"           // ParseNode
 #include "frontend/SyntaxParseHandler.h"  // SyntaxParseHandler::Node
 
 namespace js {
+
+class LifoAlloc;
+
 namespace frontend {
+
+class ParseNode;
 
 // In most builds, examine the given ParseNode and crash if it's not
 // well-formed. (In late beta and shipping builds of Firefox, this does

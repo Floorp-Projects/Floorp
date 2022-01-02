@@ -1,5 +1,6 @@
+====
 AWSY
-#####
+====
 
 Are We Slim Yet project (commonly known as AWSY) tracks memory usage across builds.
 
@@ -8,6 +9,8 @@ On treeherder, the AWSY builds are listed in subgroups of `SY`.
 AWSY tests consist of three types: TP5*, TP6, and Base Memory Usage.
 
 *\*TP5 tests are out of date and no longer maintained. These tests are scheduled to be removed:* https://bugzilla.mozilla.org/show_bug.cgi?id=1712406
+
+{documentation}
 
 Running AWSY Locally
 *********************

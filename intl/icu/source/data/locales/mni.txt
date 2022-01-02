@@ -42,6 +42,16 @@ mni{
                 "{1} {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             intervalFormats{
                 fallback{"{0} - {1}"}
             }
@@ -70,10 +80,21 @@ mni{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             availableFormats{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"GGGGG dd-MM-y"}
                 MEd{"d/M, E"}
                 MMMEd{"MMM d, E"}
                 MMMMd{"MMMM d"}
@@ -102,9 +123,9 @@ mni{
                     narrow{
                         "নোং",
                         "নিং",
-                        "লৈ",
+                        "লৈবা",
                         "য়ুম",
-                        "শগ",
+                        "শগো",
                         "ইরা",
                         "থাং",
                     }
@@ -331,9 +352,14 @@ mni{
         }
         year{
             dn{"চহী"}
+            relative{
+                "-1"{"হাকুম/ মমাংগী চহি"}
+                "0"{"কুমশি"}
+                "1"{"মথং চহি"}
+            }
         }
         zone{
-            dn{"জোন"}
+            dn{"টাইম জোন"}
         }
     }
     listPattern{

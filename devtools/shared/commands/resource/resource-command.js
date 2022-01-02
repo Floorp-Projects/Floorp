@@ -325,11 +325,11 @@ class ResourceCommand {
       // If this is the very first listener registered, of all kind of resource types:
       // * we want to start observing targets via TargetCommand
       // * _onTargetAvailable will be called for each already existing targets and the next one to come
-      this._watchTargetsPromise = this.targetCommand.watchTargets(
-        this.targetCommand.ALL_TYPES,
-        this._onTargetAvailable,
-        this._onTargetDestroyed
-      );
+      this._watchTargetsPromise = this.targetCommand.watchTargets({
+        types: this.targetCommand.ALL_TYPES,
+        onAvailable: this._onTargetAvailable,
+        onDestroyed: this._onTargetDestroyed,
+      });
     }
     return this._watchTargetsPromise;
   }
@@ -345,11 +345,11 @@ class ResourceCommand {
     this._offTargetFrontListeners.clear();
 
     this._watchTargetsPromise = null;
-    this.targetCommand.unwatchTargets(
-      this.targetCommand.ALL_TYPES,
-      this._onTargetAvailable,
-      this._onTargetDestroyed
-    );
+    this.targetCommand.unwatchTargets({
+      types: this.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
+    });
   }
 
   /**
@@ -392,12 +392,6 @@ class ResourceCommand {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
-    // We put the resourceCommand on the targetFront so it can be retrieved in the
-    // inspector and style-rule fronts. This might be removed in the future if/when we
-    // turn the resourceCommand into a Command.
-    // ⚠️ This shouldn't be used anywhere else ⚠️
-    targetFront.resourceCommand = this;
-
     const resources = [];
     if (isTargetSwitching) {
       // WatcherActor currently only watches additional frame targets and
@@ -528,8 +522,6 @@ class ResourceCommand {
    * See _onTargetAvailable for arguments, they are the same.
    */
   _onTargetDestroyed({ targetFront }) {
-    delete targetFront.resourceCommand;
-
     // Clear the map of legacy listeners for this target.
     this._existingLegacyListeners.set(targetFront, []);
     this._offTargetFrontListeners.delete(targetFront);
@@ -861,11 +853,11 @@ class ResourceCommand {
    * @return {Boolean} True, if the server supports this type.
    */
   hasResourceCommandSupport(resourceType) {
-    // If the targetCommand top level target is a parent process, we're in the browser console or browser toolbox.
-    // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
+    // If we're in the browser console or browser toolbox and the browser
+    // toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.targetCommand.descriptorFront.isParentProcessDescriptor &&
+      this.targetCommand.descriptorFront.isBrowserProcessDescriptor &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;

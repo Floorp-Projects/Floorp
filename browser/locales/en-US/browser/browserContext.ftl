@@ -449,3 +449,8 @@ main-context-menu-eme-learn-more =
 main-context-menu-open-link-in-container-tab =
     .label = Open Link in New { $containerName } Tab
     .accesskey = T
+
+# FIXME(emilio): Every single letter has a conflicting accesskey, UX needed.
+main-context-menu-toggle-show-password =
+    .label = Show Password
+    .accesskey = d

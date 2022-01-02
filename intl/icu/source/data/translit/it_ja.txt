@@ -255,7 +255,7 @@ z → ツ;
 #
 # Latin hyphen should be transliterated to U+30A0 (KATAKANA-HIRAGANA
 # DOUBLE HYPHEN), ideally. But since the character isn't supported by
-# many fonts or softwares, we use U+FF1D (FULLWIDTH EQUALS SIGN),
+# many fonts or software, we use U+FF1D (FULLWIDTH EQUALS SIGN),
 # which is widely used as "double hyphen".
 #
 \- → ＝;

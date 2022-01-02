@@ -184,14 +184,13 @@ impl SendData {
         if self.stream_id.is_none() {
             if let Ok(stream_id) = c.stream_create(StreamType::UniDi) {
                 qdebug!([c], "made stream {} for sending", stream_id);
-                self.stream_id = Some(StreamId::new(stream_id));
+                self.stream_id = Some(stream_id);
             }
         }
     }
 
     fn send(&mut self, c: &mut Connection, stream_id: StreamId) -> GoalStatus {
         const DATA: &[u8] = &[0; 4096];
-        let stream_id = stream_id.as_u64();
         let mut status = GoalStatus::Waiting;
         loop {
             let end = min(self.remaining, DATA.len());
@@ -266,7 +265,7 @@ impl ReceiveData {
         let mut status = GoalStatus::Waiting;
         loop {
             let end = min(self.remaining, buf.len());
-            let (recvd, _) = c.stream_recv(stream_id.as_u64(), &mut buf[..end]).unwrap();
+            let (recvd, _) = c.stream_recv(stream_id, &mut buf[..end]).unwrap();
             qtrace!("received {} remaining {}", recvd, self.remaining);
             if recvd == 0 {
                 return status;
@@ -288,7 +287,7 @@ impl ConnectionGoal for ReceiveData {
         _now: Instant,
     ) -> GoalStatus {
         if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
-            self.recv(c, StreamId::new(*stream_id))
+            self.recv(c, *stream_id)
         } else {
             GoalStatus::Waiting
         }

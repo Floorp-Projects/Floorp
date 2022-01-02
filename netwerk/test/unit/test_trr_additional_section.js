@@ -21,8 +21,6 @@ function makeChan(url) {
   return chan;
 }
 
-let processId;
-
 function channelOpenPromise(chan) {
   return new Promise(resolve => {
     function finish(req, buffer) {
@@ -239,7 +237,7 @@ add_task(async function test_parse_additional_section() {
     ],
   });
 
-  let [, inRecord] = await new TRRDNSListener("multiple.foo", {
+  let { inRecord } = await new TRRDNSListener("multiple.foo", {
     expectedAnswer: "9.9.9.9",
   });
   let IPs = [];
@@ -251,9 +249,9 @@ add_task(async function test_parse_additional_section() {
   equal(IPs.length, 1);
   equal(IPs[0], "9.9.9.9");
   IPs = [];
-  [, inRecord] = await new TRRDNSListener("yuiop.foo", {
+  ({ inRecord } = await new TRRDNSListener("yuiop.foo", {
     expectedSuccess: false,
-  });
+  }));
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   inRecord.rewind();
   while (inRecord.hasMore()) {

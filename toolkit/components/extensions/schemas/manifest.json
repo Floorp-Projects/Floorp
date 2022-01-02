@@ -16,31 +16,14 @@
           },
 
           "applications": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              }
-            }
+            "$ref": "BrowserSpecificSettings",
+            "description": "The applications property is deprecated, please use 'browser_specific_settings'",
+            "optional": true
           },
 
           "browser_specific_settings": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              },
-              "edge": {
-                "type": "object",
-                "additionalProperties": { "type": "any" },
-                "optional": true
-              }
-            },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "$ref": "BrowserSpecificSettings",
+            "optional": true
           },
 
           "name": {
@@ -78,6 +61,34 @@
             "format": "url",
             "optional": true,
             "preprocess": "localize"
+          },
+
+          "install_origins": {
+            "type": "array",
+            "optional": true,
+            "items": {
+              "type": "string",
+              "format": "origin"
+            }
+          },
+
+          "developer": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "url": {
+                "type": "string",
+                "format": "url",
+                "optional": true,
+                "preprocess": "localize",
+                "onError": "warn"
+              }
+            }
           }
         }
       },
@@ -282,23 +293,6 @@
                 }
               }
             ]
-          },
-
-          "developer": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "name": {
-                "type": "string",
-                "optional": true,
-                "preprocess": "localize"
-              },
-              "url": {
-                "type": "string",
-                "optional": true,
-                "preprocess": "localize"
-              }
-            }
           },
 
           "hidden": {
@@ -554,6 +548,17 @@
             "optional": true
           }
         }
+      },
+      {
+        "id": "BrowserSpecificSettings",
+        "type": "object",
+        "properties": {
+          "gecko": {
+            "$ref": "FirefoxSpecificProperties",
+            "optional": true
+          }
+        },
+        "additionalProperties": { "type": "any" }
       },
       {
         "id": "MatchPattern",

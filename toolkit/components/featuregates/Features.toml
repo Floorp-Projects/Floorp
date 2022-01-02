@@ -81,8 +81,8 @@ description = "experimental-features-cookie-samesite-lax-by-default2-description
 restart-required = false
 preference = "network.cookie.sameSite.laxByDefault"
 type = "boolean"
-bug-numbers = [1618610]
-default-value = {default = false, nightly = true}
+bug-numbers = [1618610, 1617609]
+default-value = true
 is-public = true
 
 [cookie-samesite-none-requires-secure]
@@ -91,9 +91,9 @@ description = "experimental-features-cookie-samesite-none-requires-secure2-descr
 restart-required = false
 preference = "network.cookie.sameSite.noneRequiresSecure"
 type = "boolean"
-bug-numbers = [1618610]
+bug-numbers = [1618610, 1617609]
 is-public = true
-default-value = {default = false, nightly = true}
+default-value = true
 
 [abouthome-startup-cache]
 title = "experimental-features-abouthome-startup-cache"
@@ -111,9 +111,9 @@ description = "experimental-features-cookie-samesite-schemeful-description"
 restart-required = false
 preference = "network.cookie.sameSite.schemeful"
 type = "boolean"
-bug-numbers = [1651119]
+bug-numbers = [1651119, 1617609]
 is-public = true
-default-value = {default = false, nightly = true}
+default-value = true
 
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"

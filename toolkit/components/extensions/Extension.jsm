@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -172,6 +171,10 @@ const PRIVILEGED_PERMS = new Set([
   "normandyAddonStudy",
   "networkStatus",
 ]);
+
+if (AppConstants.platform == "android") {
+  PRIVILEGED_PERMS.add("nativeMessaging");
+}
 
 const INSTALL_AND_UPDATE_STARTUP_REASONS = new Set([
   "ADDON_INSTALL",
@@ -1009,18 +1012,20 @@ class ExtensionData {
 
     manifest = normalized.value;
 
-    let id;
-    try {
-      if (manifest.applications.gecko.id) {
-        id = manifest.applications.gecko.id;
+    // browser_specific_settings is documented, but most internal code is written
+    // using applications.  Use browser_specific_settings if it is in the manifest.  If
+    // both are set, we probably should make it an error, but we don't know if addons
+    // in the wild have done that, so let the chips fall where they may.
+    if (manifest.browser_specific_settings?.gecko) {
+      if (manifest.applications) {
+        this.manifestWarning(
+          `"applications" property ignored and overridden by "browser_specific_settings"`
+        );
       }
-    } catch (e) {
-      // Errors are handled by the type checks above.
+      manifest.applications = manifest.browser_specific_settings;
     }
 
-    if (!this.id) {
-      this.id = id;
-    }
+    this.id ??= manifest.applications?.gecko?.id;
 
     let apiNames = new Set();
     let dependencies = new Set();
@@ -1033,7 +1038,7 @@ class ExtensionData {
     let result = {
       apiNames,
       dependencies,
-      id,
+      id: this.id,
       manifest,
       modules: null,
       originPermissions,
@@ -1057,7 +1062,7 @@ class ExtensionData {
             "extensions.geckoProfiler.acceptedExtensionIds",
             ""
           );
-          if (!acceptedExtensions.split(",").includes(id)) {
+          if (!acceptedExtensions.split(",").includes(this.id)) {
             this.manifestError(
               "Only specific extensions are allowed to access the geckoProfiler."
             );
@@ -2551,25 +2556,6 @@ class Extension extends ExtensionData {
       ) {
         Services.perms.removeFromPrincipal(principal, "geo");
       }
-    }
-  }
-
-  static async migratePrivateBrowsing(addonData) {
-    if (addonData.incognito !== "not_allowed") {
-      ExtensionPermissions.add(addonData.id, {
-        permissions: [PRIVATE_ALLOWED_PERMISSION],
-        origins: [],
-      });
-      await StartupCache.clearAddonData(addonData.id);
-
-      // Record a telemetry event for the extension automatically allowed on private browsing as
-      // part of the Firefox upgrade.
-      AMTelemetry.recordActionEvent({
-        extra: { addonId: addonData.id },
-        object: "appUpgrade",
-        action: "privateBrowsingAllowed",
-        value: "on",
-      });
     }
   }
 

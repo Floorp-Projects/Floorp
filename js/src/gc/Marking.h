@@ -49,38 +49,38 @@ class TenuredCell;
 // separate implementations.
 
 template <typename T>
-bool IsMarkedInternal(JSRuntime* rt, T** thing);
+bool IsMarkedInternal(JSRuntime* rt, T* thing);
 
 template <typename T>
-bool IsAboutToBeFinalizedInternal(T* thingp);
+bool IsAboutToBeFinalizedInternal(T* thing);
 template <typename T>
-bool IsAboutToBeFinalizedInternal(T** thingp);
-
-// Report whether a GC thing has been marked with any color. Things which are in
-// zones that are not currently being collected or are owned by another runtime
-// are always reported as being marked.
-template <typename T>
-inline bool IsMarkedUnbarriered(JSRuntime* rt, T* thingp) {
-  return IsMarkedInternal(rt, ConvertToBase(thingp));
-}
+bool IsAboutToBeFinalizedInternal(const T& thing);
 
 // Report whether a GC thing has been marked with any color. Things which are in
 // zones that are not currently being collected or are owned by another runtime
 // are always reported as being marked.
 template <typename T>
-inline bool IsMarked(JSRuntime* rt, BarrieredBase<T>* thingp) {
-  return IsMarkedInternal(rt, ConvertToBase(thingp->unbarrieredAddress()));
+inline bool IsMarked(JSRuntime* rt, const BarrieredBase<T>& thing) {
+  return IsMarkedInternal(rt, *ConvertToBase(thing.unbarrieredAddress()));
+}
+template <typename T>
+inline bool IsMarkedUnbarriered(JSRuntime* rt, T thing) {
+  return IsMarkedInternal(rt, *ConvertToBase(&thing));
 }
 
+// Report whether a GC thing is dead and will be finalized in the current sweep
+// group. This is mainly used in read barriers for incremental sweeping.
+//
+// This no longer updates pointers moved by the GC (tracing should be used for
+// this instead).
 template <typename T>
-inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
-  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
-}
-
-template <typename T>
-inline bool IsAboutToBeFinalized(const BarrieredBase<T>* thingp) {
+inline bool IsAboutToBeFinalized(const BarrieredBase<T>& thing) {
   return IsAboutToBeFinalizedInternal(
-      ConvertToBase(thingp->unbarrieredAddress()));
+      *ConvertToBase(thing.unbarrieredAddress()));
+}
+template <typename T>
+inline bool IsAboutToBeFinalizedUnbarriered(T thing) {
+  return IsAboutToBeFinalizedInternal(*ConvertToBase(&thing));
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);

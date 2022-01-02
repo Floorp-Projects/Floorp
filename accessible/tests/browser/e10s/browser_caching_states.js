@@ -127,8 +127,24 @@ const extraStateTests = [
 async function runStateTests(browser, accDoc, id, tests) {
   let acc = findAccessibleChildByID(accDoc, id);
   for (let { desc, attrs, expected } of tests) {
+    const [expState, expExtState, absState, absExtState] = expected;
     info(desc);
-    let onUpdate = waitForEvent(EVENT_STATE_CHANGE, id);
+    let onUpdate = waitForEvent(EVENT_STATE_CHANGE, evt => {
+      if (getAccessibleDOMNodeID(evt.accessible) != id) {
+        return false;
+      }
+      // Events can be fired for states other than the ones we're interested
+      // in. If this happens, the states we're expecting might not be exposed
+      // yet.
+      const scEvt = evt.QueryInterface(nsIAccessibleStateChangeEvent);
+      if (scEvt.isExtraState) {
+        if (scEvt.state & expExtState || scEvt.state & absExtState) {
+          return true;
+        }
+        return false;
+      }
+      return scEvt.state & expState || scEvt.state & absState;
+    });
     for (let { attr, value } of attrs) {
       await invokeSetAttribute(browser, id, attr, value);
     }
@@ -151,4 +167,47 @@ addAccessibleTask(
     await runStateTests(browser, accDoc, "text", extraStateTests);
   },
   { iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test caching of the focused state.
+ */
+addAccessibleTask(
+  `
+  <button id="b1">b1</button>
+  <button id="b2">b2</button>
+  `,
+  async function(browser, docAcc) {
+    const b1 = findAccessibleChildByID(docAcc, "b1");
+    const b2 = findAccessibleChildByID(docAcc, "b2");
+
+    let focused = waitForEvent(EVENT_FOCUS, b1);
+    await invokeFocus(browser, "b1");
+    await focused;
+    testStates(docAcc, 0, 0, STATE_FOCUSED);
+    testStates(b1, STATE_FOCUSED);
+    testStates(b2, 0, 0, STATE_FOCUSED);
+
+    focused = waitForEvent(EVENT_FOCUS, b2);
+    await invokeFocus(browser, "b2");
+    await focused;
+    testStates(b2, STATE_FOCUSED);
+    testStates(b1, 0, 0, STATE_FOCUSED);
+  },
+  { iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test that the document initially gets the focused state.
+ * We can't do this in the test above because that test runs in iframes as well
+ * as a top level document.
+ */
+addAccessibleTask(
+  `
+  <button id="b1">b1</button>
+  <button id="b2">b2</button>
+  `,
+  async function(browser, docAcc) {
+    testStates(docAcc, STATE_FOCUSED);
+  }
 );

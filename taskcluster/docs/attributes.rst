@@ -45,7 +45,6 @@ Project names are the repositories.  They can be:
 * `mozilla-central`
 * `mozilla-beta`
 * `mozilla-release`
-* `mozilla-esr78`
 * `mozilla-esr91`
 * ... A partial list can be found in taskcluster/gecko_taskgraph/util/attributes.py
 
@@ -145,7 +144,7 @@ unittest_variant
 
 The configuration variant the test suite is running with. If set, this usually
 means the tests are running with a special pref enabled. These are defined in
-``taskgraph.transforms.tests.TEST_VARIANTS``.
+``taskgraph.transforms.test.TEST_VARIANTS``.
 
 talos_try_name
 ==============
@@ -254,6 +253,11 @@ toolchain-alias
 ===============
 An alias that can be used instead of the real toolchain job name in fetch
 stanzas for jobs.
+
+toolchain-env
+=============
+Extra environment variables that will be set on the worker when fetching this
+toolchain.
 
 always_target
 =============

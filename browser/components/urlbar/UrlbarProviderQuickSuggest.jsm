@@ -26,7 +26,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["AbortController", "fetch"]);
 
+const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
+const TIMESTAMP_LENGTH = 10;
+const TIMESTAMP_REGEXP = /^\d{10}$/;
+
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
+const MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS = "client_variants";
+const MERINO_ENDPOINT_PARAM_PROVIDERS = "providers";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -109,7 +115,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
       (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-        UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
+        UrlbarPrefs.get("suggest.quicksuggest.sponsored") ||
+        UrlbarPrefs.get("quicksuggest.dataCollection.enabled"))
     );
   }
 
@@ -161,10 +168,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
+    this._replaceSuggestionTemplates(suggestion);
+
     let payload = {
       qsSuggestion: [suggestion.full_keyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       title: suggestion.title,
       url: suggestion.url,
+      urlTimestampIndex: suggestion.urlTimestampIndex,
       icon: suggestion.icon,
       sponsoredImpressionUrl: suggestion.impression_url,
       sponsoredClickUrl: suggestion.click_url,
@@ -386,6 +396,66 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
+   * Returns whether a given URL and quick suggest's URL are equivalent. URLs
+   * are equivalent if they are identical except for substrings that replaced
+   * templates in the original suggestion URL.
+   *
+   * For example, a suggestion URL from the backing suggestions source might
+   * include a timestamp template "%YYYYMMDDHH%" like this:
+   *
+   *   http://example.com/foo?bar=%YYYYMMDDHH%
+   *
+   * When a quick suggest result is created from this suggestion URL, it's
+   * created with a URL that is a copy of the suggestion URL but with the
+   * template replaced with a real timestamp value, like this:
+   *
+   *   http://example.com/foo?bar=2021111610
+   *
+   * All URLs created from this single suggestion URL are considered equivalent
+   * regardless of their real timestamp values.
+   *
+   * @param {string} url
+   * @param {UrlbarResult} result
+   * @returns {boolean}
+   *   Whether `url` is equivalent to `result.payload.url`.
+   */
+  isURLEquivalentToResultURL(url, result) {
+    // If the URLs aren't the same length, they can't be equivalent.
+    let resultURL = result.payload.url;
+    if (resultURL.length != url.length) {
+      return false;
+    }
+
+    // If the result URL doesn't have a timestamp, then do a straight string
+    // comparison.
+    let { urlTimestampIndex } = result.payload;
+    if (typeof urlTimestampIndex != "number" || urlTimestampIndex < 0) {
+      return resultURL == url;
+    }
+
+    // Compare the first parts of the strings before the timestamps.
+    if (
+      resultURL.substring(0, urlTimestampIndex) !=
+      url.substring(0, urlTimestampIndex)
+    ) {
+      return false;
+    }
+
+    // Compare the second parts of the strings after the timestamps.
+    let remainderIndex = urlTimestampIndex + TIMESTAMP_LENGTH;
+    if (resultURL.substring(remainderIndex) != url.substring(remainderIndex)) {
+      return false;
+    }
+
+    // Test the timestamp against the regexp.
+    let maybeTimestamp = url.substring(
+      urlTimestampIndex,
+      urlTimestampIndex + TIMESTAMP_LENGTH
+    );
+    return TIMESTAMP_REGEXP.test(maybeTimestamp);
+  }
+
+  /**
    * Fetches a remote settings suggestion.
    *
    * @param {UrlbarQueryContext} queryContext
@@ -430,15 +500,40 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async _fetchMerinoSuggestions(queryContext, searchString) {
     let instance = this.queryInstance;
 
-    // Get the URL.
+    // Get the endpoint URL. It's empty by default when running tests so they
+    // don't hit the network.
+    let endpointString = UrlbarPrefs.get("merino.endpointURL");
+    if (!endpointString) {
+      return null;
+    }
     let url;
     try {
-      url = new URL(UrlbarPrefs.get("merino.endpointURL"));
+      url = new URL(endpointString);
     } catch (error) {
       this.logger.error("Could not make Merino endpoint URL: " + error);
       return null;
     }
     url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
+
+    let clientVariants = UrlbarPrefs.get("merino.clientVariants");
+    if (clientVariants) {
+      url.searchParams.set(
+        MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS,
+        clientVariants
+      );
+    }
+
+    let providers = UrlbarPrefs.get("merino.providers");
+    if (providers) {
+      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, providers);
+    } else if (
+      !UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") &&
+      !UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+    ) {
+      // Data collection is enabled but suggestions are not. Set the `providers`
+      // param to an empty string to tell Merino not to fetch any suggestions.
+      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, "");
+    }
 
     let responseHistogram = Services.telemetry.getHistogramById(
       TELEMETRY_MERINO_RESPONSE
@@ -557,6 +652,48 @@ class ProviderQuickSuggest extends UrlbarProvider {
       (!suggestion.is_sponsored &&
         UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
     );
+  }
+
+  /**
+   * Some suggestion properties like `url` and `click_url` include template
+   * substrings that must be replaced with real values. This method replaces
+   * templates with appropriate values in place.
+   *
+   * @param {object} suggestion
+   *   A suggestion object fetched from remote settings or Merino.
+   */
+  _replaceSuggestionTemplates(suggestion) {
+    let now = new Date();
+    let timestampParts = [
+      now.getFullYear(),
+      now.getMonth() + 1,
+      now.getDate(),
+      now.getHours(),
+    ];
+    let timestamp = timestampParts
+      .map(n => n.toString().padStart(2, "0"))
+      .join("");
+    for (let key of ["url", "click_url"]) {
+      let value = suggestion[key];
+      if (!value) {
+        continue;
+      }
+
+      let timestampIndex = value.indexOf(TIMESTAMP_TEMPLATE);
+      if (timestampIndex >= 0) {
+        if (key == "url") {
+          suggestion.urlTimestampIndex = timestampIndex;
+        }
+        // We could use replace() here but we need the timestamp index for
+        // `suggestion.urlTimestampIndex`, and since we already have that, avoid
+        // another O(n) substring search and manually replace the template with
+        // the timestamp.
+        suggestion[key] =
+          value.substring(0, timestampIndex) +
+          timestamp +
+          value.substring(timestampIndex + TIMESTAMP_TEMPLATE.length);
+      }
+    }
   }
 
   /**

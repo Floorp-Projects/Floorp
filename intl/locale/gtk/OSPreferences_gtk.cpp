@@ -5,9 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <locale.h>
+#include "mozilla/intl/Locale.h"
 #include "OSPreferences.h"
-
-#include "unicode/uloc.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIGSettingsService.h"
@@ -19,7 +18,7 @@ OSPreferences::OSPreferences() = default;
 bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
-  nsAutoCString defaultLang(uloc_getDefault());
+  nsAutoCString defaultLang(Locale::GetDefaultLocale());
 
   if (CanonicalizeLanguageTag(defaultLang)) {
     aLocaleList.AppendElement(defaultLang);

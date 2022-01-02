@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
         constructor() {
           super();
           const template = document.getElementById("template");
-          const shadowRoot = this.attachShadow({mode: "open"})
+          this.attachShadow({mode: "open"})
             .appendChild(template.content.cloneNode(true));
         }
       });

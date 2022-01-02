@@ -16,7 +16,7 @@ void gobble(void *) { }
 
 void misuseGlobalClass(int len) {
   Global notValid; // expected-error {{variable of type 'Global' only valid as global}} expected-note {{value incorrectly allocated in an automatic variable}}
-  Global alsoNotValid[2]; // expected-error {{variable of type 'Global [2]' only valid as global}} expected-note {{'Global [2]' is a global type because it is an array of global type 'Global'}} expected-note {{value incorrectly allocated in an automatic variable}}
+  Global alsoNotValid[2]; // expected-error-re {{variable of type 'Global{{ ?}}[2]' only valid as global}} expected-note-re {{'Global{{ ?}}[2]' is a global type because it is an array of global type 'Global'}} expected-note {{value incorrectly allocated in an automatic variable}}
   static Global valid;
   static Global alsoValid[2];
 

@@ -378,3 +378,11 @@ function wakeLockObserved(powerManager, observeTopic, checkFn) {
     powerManager.addWakeLockListener(wakeLockListener.prototype);
   });
 }
+
+function getTestWebBasedURL(fileName, { crossOrigin = false } = {}) {
+  const origin = crossOrigin ? "http://example.org" : "http://example.com";
+  return (
+    getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) +
+    fileName
+  );
+}

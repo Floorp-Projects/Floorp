@@ -7,4 +7,22 @@ su{
         hms{"h.mm.ss"}
         ms{"m.ss"}
     }
+    unitsNarrow{
+        consumption{
+            mile-per-gallon-imperial{
+                other{"{0}m/gUK"}
+            }
+        }
+        volume{
+            dessert-spoon-imperial{
+                other{"{0}dsp-Imp"}
+            }
+            fluid-ounce-imperial{
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                other{"{0}galIm"}
+            }
+        }
+    }
 }

@@ -38,16 +38,12 @@
         });
       }
 
-      function executeTest() {
-        return new Promise(resolve => {
-          const url = "html_har_import-test-page.html";
-          const data = "{'first': 'John', 'last': 'Doe'}";
-          post(url, data).then(() => {
-            get("sjs_cookies-test-server.sjs").then(() => {
-              get("sjs_cache-test-server.sjs").then(resolve);
-            });
-          });
-        });
+      async function executeTest() {
+        const url = "html_har_import-test-page.html";
+        const data = "{'first': 'John', 'last': 'Doe'}";
+        await post(url, data);
+        await get("sjs_cookies-test-server.sjs");
+        await get("sjs_cache-test-server.sjs");
       }
   </script>
   </body>

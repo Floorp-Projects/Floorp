@@ -244,7 +244,7 @@ TEST(IntlDateTimeFormat, Components_es_ES)
 
   TestBuffer<char16_t> buffer;
   ASSERT_TRUE(FormatComponents(buffer, components, MakeStringSpan("es-ES")));
-  ASSERT_TRUE(buffer.verboseMatches(u"23/9/2002 20:07:30"));
+  ASSERT_TRUE(buffer.verboseMatches(u"23/9/2002, 20:07:30"));
 }
 
 TEST(IntlDateTimeFormat, ComponentsAll)

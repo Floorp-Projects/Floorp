@@ -72,6 +72,55 @@ class Session extends Module {
       })
     );
   }
+
+  /**
+   * Disable certain events either globally, or for a list of browsing contexts.
+   *
+   * @params {Object=} params
+   * @params {Array<String>} events
+   *     List of events to unsubscribe from.
+   * @params {Array<String>=} contexts
+   *     Optional list of top-level browsing context ids
+   *     to unsubscribe the events from.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>events</var> or <var>contexts</var> are not valid types.
+   */
+  async unsubscribe(params = {}) {
+    const { events, contexts = [] } = params;
+
+    // Check input types until we run schema validation.
+    assert.array(events, "events: array value expected");
+    events.forEach(name => {
+      assert.string(name, `${name}: string value expected`);
+    });
+
+    assert.array(contexts, "contexts: array value expected");
+    contexts.forEach(context => {
+      assert.string(context, `${context}: string value expected`);
+    });
+
+    // For now just unsubscribe the events from all available top-level
+    // browsing contexts.
+    const allEvents = events
+      .map(event => Array.from(obtainEvents(event)))
+      .flat();
+    await Promise.allSettled(
+      allEvents.map(event => {
+        const [moduleName] = event.split(".");
+        return this.messageHandler.handleCommand({
+          moduleName,
+          commandName: "_unsubscribeEvent",
+          params: {
+            event,
+          },
+          destination: {
+            type: RootMessageHandler.type,
+          },
+        });
+      })
+    );
+  }
 }
 
 /**

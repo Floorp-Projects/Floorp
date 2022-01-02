@@ -765,6 +765,7 @@ if __name__ == "__main__":
         (compiler_rt_source_dir, compiler_rt_source_link),
         (libcxx_source_dir, llvm_source_dir + "/projects/libcxx"),
         (libcxxabi_source_dir, llvm_source_dir + "/projects/libcxxabi"),
+        (source_dir + "/cmake", llvm_source_dir + "/projects/cmake"),
     ]
     for l in symlinks:
         # On Windows, we have to re-copy the whole directory every time.

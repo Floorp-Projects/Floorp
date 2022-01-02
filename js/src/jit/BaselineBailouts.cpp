@@ -1343,17 +1343,13 @@ void* BaselineStackBuilder::getStubReturnAddress() {
   return code.bailoutReturnAddr(BailoutReturnKind::Call);
 }
 
-static inline jsbytecode* GetNextNonLoopHeadPc(jsbytecode* pc,
-                                               jsbytecode** skippedLoopHead) {
+static inline jsbytecode* GetNextNonLoopHeadPc(jsbytecode* pc) {
   JSOp op = JSOp(*pc);
   switch (op) {
     case JSOp::Goto:
       return pc + GET_JUMP_OFFSET(pc);
 
     case JSOp::LoopHead:
-      *skippedLoopHead = pc;
-      return GetNextPc(pc);
-
     case JSOp::Nop:
       return GetNextPc(pc);
 
@@ -1371,15 +1367,22 @@ jsbytecode* BaselineStackBuilder::getResumePC() {
   // If we are resuming at a LoopHead op, resume at the next op to avoid
   // a bailout -> enter Ion -> bailout loop with --ion-eager.
   //
-  // The algorithm below is the "tortoise and the hare" algorithm. See bug
-  // 994444 for more explanation.
-  jsbytecode* skippedLoopHead = nullptr;
+  // Cycles can cause the loop below to not terminate. Empty loops are one
+  // such example:
+  //
+  //   L: loophead
+  //      goto L
+  //
+  // We do cycle detection below with the "tortoise and the hare" algorithm.
   jsbytecode* slowerPc = pc_;
   jsbytecode* fasterPc = pc_;
   while (true) {
-    slowerPc = GetNextNonLoopHeadPc(slowerPc, &skippedLoopHead);
-    fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
-    fasterPc = GetNextNonLoopHeadPc(fasterPc, &skippedLoopHead);
+    // Advance fasterPc twice as fast as slowerPc.
+    slowerPc = GetNextNonLoopHeadPc(slowerPc);
+    fasterPc = GetNextNonLoopHeadPc(fasterPc);
+    fasterPc = GetNextNonLoopHeadPc(fasterPc);
+
+    // Break on cycles or at the end of goto sequences.
     if (fasterPc == slowerPc) {
       break;
     }

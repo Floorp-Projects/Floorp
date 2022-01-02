@@ -8,6 +8,7 @@
 #define frontend_TypedIndex_h
 
 #include <cstdint>
+#include <stddef.h>
 
 namespace js {
 namespace frontend {

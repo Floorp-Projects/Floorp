@@ -36,10 +36,9 @@ function getTargetActorsCount(tab) {
     );
 
     // Retrieve the target actor instances
-    const targets = TargetActorRegistry.getTargetActors(
+    return TargetActorRegistry.getTargetActorsCountForBrowserElement(
       content.browsingContext.browserId
     );
-    return targets.length;
   });
 }
 

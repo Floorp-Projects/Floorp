@@ -45,7 +45,7 @@ this.rpc = function(method, ...params) {
   });
 }.bind(this);
 
-loadSubScript("resource://devtools/shared/worker/loader.js");
+loadSubScript("resource://devtools/shared/loader/worker-loader.js");
 
 const { WorkerTargetActor } = worker.require(
   "devtools/server/actors/targets/worker"

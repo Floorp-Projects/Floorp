@@ -54,7 +54,7 @@ add_task(async function intermittent_dns_mode3() {
       },
     ],
   });
-  let [, , inStatus] = await new TRRDNSListener("example.com", {
+  let { inStatus } = await new TRRDNSListener("example.com", {
     expectedSuccess: false,
   });
   equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);

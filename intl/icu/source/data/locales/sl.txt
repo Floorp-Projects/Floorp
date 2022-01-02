@@ -276,6 +276,19 @@ sl{
             }
         }
         minimalPairs{
+            case{
+                accusative{"čez {0}"}
+                dative{"kljub {0}"}
+                genitive{"brez {0}"}
+                instrumental{"s/z {0}"}
+                locative{"po {0}"}
+                nominative{"{0} je"}
+            }
+            gender{
+                feminine{"Ona {0}"}
+                masculine{"On {0}"}
+                neuter{"Ono {0}"}
+            }
             ordinal{
                 other{"V {0}. križišču zavijte desno."}
             }
@@ -319,6 +332,16 @@ sl{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMdd",
+                "GyMMMd",
+                "GGGGGyyMMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -336,6 +359,7 @@ sl{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d. M. y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -521,15 +545,25 @@ sl{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, dd. MMMM y",
-                "dd. MMMM y",
+                "EEEE, d. MMMM y",
+                "d. MMMM y",
                 "d. MMM y",
                 "d. MM. yy",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMMd",
+                "yyMMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -551,6 +585,7 @@ sl{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d. M. y GGGGG"}
                 H{"HH'h'"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

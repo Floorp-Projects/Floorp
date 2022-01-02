@@ -33,7 +33,7 @@ void ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget) {
     return;
   }
 
-  mTarget = do_QueryInterface(aTarget);
+  mTarget = dom::Element::FromEventTargetOrNull(aTarget);
   AEM_LOG("Setting target element to %p\n", mTarget.get());
   TriggerElementActivation();
 }

@@ -6,7 +6,9 @@
 
 const EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const Editor = require("devtools/client/shared/sourceeditor/editor");
 const {
   shortSource,
@@ -334,6 +336,9 @@ StyleSheetEditor.prototype = {
    * @param {Number} column
    */
   setCursor(line, column) {
+    line = line || 0;
+    column = column || 0;
+
     const position = this.translateCursorPosition(line, column);
     this.sourceEditor.setCursor({ line: position.line, ch: position.column });
   },

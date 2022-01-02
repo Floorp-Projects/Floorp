@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+  <script>
+"use strict";
+
+createHTML({
+  title: "Test enumerateDevices() after fake getUserMedia()",
+  bug: "1743524"
+});
+
+runTest(async () => {
+  await pushPrefs(
+    ["media.setsinkid.enabled", true],
+    // This test uses real devices because fake devices are not grouped with
+    // audiooutput devices.
+    ["media.navigator.streams.fake", false],
+    // Non empty media.audio_loopback_dev would disable fake:true for streams
+    // returned from getUserMedia().
+    ["media.audio_loopback_dev", ""]);
+  const devices = navigator.mediaDevices;
+  {
+    // `fake:true` means that getUserMedia() resolves without any permission
+    // check, and so this should not be sufficient to expose real device info.
+    const stream = await devices.getUserMedia({ audio: true, fake: true });
+    // permission.disabled exposes labels - bug 1528042
+    const list = await withPrefs(
+      [["media.navigator.permission.disabled", false]],
+      async () => devices.enumerateDevices());
+    stream.getTracks()[0].stop();
+    const labeledDevices = list.filter(({label}) => label != "");
+    is(labeledDevices.length, 0, "number of labeled devices after fake gUM");
+    const outputDevices = list.filter(({kind}) => kind == "audiooutput");
+    is(outputDevices.length, 0, "number of output devices after fake gUM");
+  }
+  {
+    // Check without `fake:true` to verify assumptions about existing devices.
+    const streamPromise = devices.getUserMedia({ audio: true });
+    if (navigator.userAgent.includes("Mac OS X")) {
+      let rejection = "resolved";
+      try {
+        await streamPromise;
+      } catch (e) {
+        rejection = e.name;
+      }
+      todo_isnot(rejection, "NotFoundError",
+                 "Expecting no real audioinput device on Mac.");
+      return;
+    }
+    const stream = await streamPromise;
+    {
+      const list = await devices.enumerateDevices();
+      // input labels disappear when the track is stopped - bug 1528042
+      const unlabeledAudioDevices =
+            list.filter(({ kind, label }) => {
+              return kind != "videoinput" && label == ""
+            });
+      is(unlabeledAudioDevices.length, 0,
+         "number of unlabeled audio devices after real gUM");
+    }
+    stream.getTracks()[0].stop();
+    const list = await devices.enumerateDevices();
+    const outputDevices = list.filter(({ kind, label }) => {
+      return kind == "audiooutput" && label != "";
+    });
+    isnot(outputDevices.length, 0, "number of output devices after real gUM");
+  }
+});
+  </script>
+</body>
+</html>

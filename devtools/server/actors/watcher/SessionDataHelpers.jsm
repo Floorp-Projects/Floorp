@@ -39,7 +39,7 @@ if (typeof module == "object") {
   });
   XPCOMUtils.defineLazyGetter(this, "validateEventBreakpoint", () => {
     const { loader } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     return loader.require("devtools/server/actors/utils/event-breakpoints")
       .validateEventBreakpoint;

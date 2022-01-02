@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" content="width=device-width, height=device-height">
+        <title>Context Menu Test Blob</title>
+    </head>
+    <body>
+        <div id="image_container">
+        </div>
+    </body>
+    <script>
+        window.addEventListener("DOMContentLoaded", function(e) {
+            const svg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="50" stroke="orange" fill="transparent" stroke-width="5"/>
+                         </svg>`;
+            const image = document.createElement('img');
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            image.src = URL.createObjectURL(blob);
+            image.alt = "An orange circle."
+            document.getElementById("image_container").appendChild(image);
+        });
+    </script>
+</html>

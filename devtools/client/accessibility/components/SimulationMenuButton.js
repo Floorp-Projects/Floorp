@@ -106,7 +106,7 @@ class SimulationMenuButton extends Component {
         checked: !currSimulation,
         onClick: this.disableSimulation,
       }),
-      hr(),
+      hr({ key: "hr-1" }),
       // Simulation options
       ...Object.keys(SIMULATION_TYPE).map(simType =>
         MenuItem({
@@ -116,7 +116,7 @@ class SimulationMenuButton extends Component {
           onClick: this.toggleSimulation.bind(this, simType),
         })
       ),
-      hr(),
+      hr({ key: "hr-2" }),
       // Documentation link
       MenuItem({
         className: "link",

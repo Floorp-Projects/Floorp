@@ -14,7 +14,6 @@ add_task(async function() {
 
   const descriptorFront = await client.mainRoot.getMainProcess();
   const front = await descriptorFront.getTarget();
-  await front.attach();
   const threadFront = await front.attachThread();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
@@ -45,7 +44,7 @@ add_task(async function() {
 
 function initDevToolsClient() {
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const customLoader = new DevToolsLoader({
     invisibleToDebugger: true,

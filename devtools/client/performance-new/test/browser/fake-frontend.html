@@ -24,12 +24,62 @@
 
       document.title = initialTitle;
 
-      // The following gets called by the frame script, and provides an API to
-      // receive the profile.
-      window.connectToGeckoProfiler = async (geckoProfiler) => {
+      // A function which requests the profile from the browser using the GET_PROFILE
+      // WebChannel message.
+      function getProfile() {
+        return new Promise((resolve, reject) => {
+          const requestId = 0;
+
+          function listener(event) {
+            window.removeEventListener(
+              "WebChannelMessageToContent",
+              listener,
+              true
+            );
+
+            const { id, message } = event.detail;
+
+            if (id !== "profiler.firefox.com" ||
+              !message ||
+              typeof message !== "object"
+            ) {
+              console.error(message);
+              reject(new Error("A malformed WebChannel event was received."));
+              return;
+            }
+
+            if (!message.type) {
+              console.error(message);
+              reject(new Error("The WebChannel event indicates an error."));
+              return;
+            }
+
+            if (message.requestId === requestId) {
+              if (message.type === "SUCCESS_RESPONSE") {
+                resolve(message.response);
+              } else {
+                reject(new Error(message.error));
+              }
+            }
+          }
+
+          window.addEventListener("WebChannelMessageToContent", listener, true);
+
+          window.dispatchEvent(
+            new CustomEvent("WebChannelMessageToChrome", {
+              detail: JSON.stringify({
+                id: "profiler.firefox.com",
+                message: { type: "GET_PROFILE", requestId },
+              }),
+            })
+          );
+        })
+      }
+
+      async function runTest() {
         try {
           // Get the profile.
-          const profile = await geckoProfiler.getProfile();
+          const profile = await getProfile();
 
           // Check that the profile is somewhat reasonable. It should be a gzipped
           // profile, so we can only lightly check some properties about it, and check
@@ -69,6 +119,8 @@
           dump(`${error}\n`);
         }
       }
+
+      runTest();
     </script>
   </body>
 </html>

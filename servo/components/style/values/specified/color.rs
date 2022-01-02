@@ -5,8 +5,6 @@
 //! Specified color values.
 
 use super::AllowQuirks;
-#[cfg(feature = "gecko")]
-use crate::gecko_bindings::structs::nscolor;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
 use crate::values::generics::color::{GenericCaretColor, GenericColorOrAuto};
@@ -215,30 +213,12 @@ pub enum Color {
 #[derive(Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, ToCss, ToShmem)]
 #[repr(u8)]
 pub enum SystemColor {
-    #[css(skip)]
-    WindowBackground,
-    #[css(skip)]
-    WindowForeground,
-    #[css(skip)]
-    WidgetBackground,
-    #[css(skip)]
-    WidgetForeground,
-    #[css(skip)]
-    WidgetSelectBackground,
-    #[css(skip)]
-    WidgetSelectForeground,
-    #[css(skip)]
-    Widget3DHighlight,
-    #[css(skip)]
-    Widget3DShadow,
-    #[css(skip)]
-    TextBackground,
-    #[css(skip)]
-    TextForeground,
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    TextSelectBackgroundDisabled,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    TextSelectBackgroundAttention,
+    TextSelectDisabledBackground,
+    #[css(skip)]
+    TextSelectAttentionBackground,
+    #[css(skip)]
+    TextSelectAttentionForeground,
     #[css(skip)]
     TextHighlightBackground,
     #[css(skip)]
@@ -411,6 +391,10 @@ pub enum SystemColor {
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozAccentColorForeground,
 
+    /// The background-color for :autofill-ed inputs.
+    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    MozAutofillBackground,
+
     /// Media rebar text.
     MozWinMediatext,
     /// Communications rebar text.
@@ -453,19 +437,17 @@ pub enum SystemColor {
 impl SystemColor {
     #[inline]
     fn compute(&self, cx: &Context) -> ComputedColor {
+        use crate::gecko::values::convert_nscolor_to_rgba;
         use crate::gecko_bindings::bindings;
 
         // TODO: We should avoid cloning here most likely, though it's
         // cheap-ish.
-        let style_color_scheme =
-            cx.style().get_inherited_ui().clone_color_scheme();
-        let color = unsafe {
-            bindings::Gecko_ComputeSystemColor(*self, cx.device().document(), &style_color_scheme)
-        };
+        let style_color_scheme = cx.style().get_inherited_ui().clone_color_scheme();
+        let color = cx.device().system_nscolor(*self, &style_color_scheme);
         if color == bindings::NS_SAME_AS_FOREGROUND_COLOR {
             return ComputedColor::currentcolor();
         }
-        convert_nscolor_to_computedcolor(color)
+        ComputedColor::rgba(convert_nscolor_to_rgba(color))
     }
 }
 
@@ -732,12 +714,6 @@ impl Color {
     }
 }
 
-#[cfg(feature = "gecko")]
-fn convert_nscolor_to_computedcolor(color: nscolor) -> ComputedColor {
-    use crate::gecko::values::convert_nscolor_to_rgba;
-    ComputedColor::rgba(convert_nscolor_to_rgba(color))
-}
-
 impl Color {
     /// Converts this Color into a ComputedColor.
     ///
@@ -932,7 +908,10 @@ impl ColorScheme {
 }
 
 impl Parse for ColorScheme {
-    fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
+    fn parse<'i, 't>(
+        _: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
         let mut idents = vec![];
         let mut bits = ColorSchemeFlags::empty();
 

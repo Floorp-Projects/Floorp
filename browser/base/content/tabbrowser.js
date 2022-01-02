@@ -1618,6 +1618,7 @@
 
       aTab.setAttribute("label", aLabel);
       aTab.setAttribute("labeldirection", isRTL ? "rtl" : "ltr");
+      aTab.toggleAttribute("labelendaligned", isRTL != (document.dir == "rtl"));
 
       // Dispatch TabAttrModified event unless we're setting the label
       // before the TabOpen event was dispatched.
@@ -3377,8 +3378,14 @@
     /**
      * In a multi-select context, all unpinned and unselected tabs are removed.
      * Otherwise all unpinned tabs except aTab are removed.
+     *
+     * @param   aTab
+     *          The tab we will skip removing
+     * @param   aParams
+     *          An optional set of parameters that will be passed to the
+     *          removeTabs function.
      */
-    removeAllTabsBut(aTab) {
+    removeAllTabsBut(aTab, aParams) {
       let tabsToRemove = [];
       if (aTab && aTab.multiselected) {
         tabsToRemove = this.visibleTabs.filter(
@@ -3399,7 +3406,7 @@
         return;
       }
 
-      this.removeTabs(tabsToRemove);
+      this.removeTabs(tabsToRemove, aParams);
     },
 
     removeMultiSelectedTabs() {
@@ -3416,9 +3423,194 @@
       this.removeTabs(selectedTabs);
     },
 
+    /**
+     * @typedef {object} _startRemoveTabsReturnValue
+     * @property {Promise} beforeUnloadComplete
+     *   A promise that is resolved once all the beforeunload handlers have been
+     *   called.
+     * @property {object[]} tabsWithBeforeUnloadPrompt
+     *   An array of tabs with unload prompts that need to be handled.
+     * @property {object} [lastToClose]
+     *   The last tab to be closed, if appropriate.
+     */
+
+    /**
+     * Starts to remove tabs from the UI: checking for beforeunload handlers,
+     * closing tabs where possible and triggering running of the unload handlers.
+     *
+     * @param {object[]} tabs
+     *   The set of tabs to remove.
+     * @param {object} options
+     * @param {boolean} options.animate
+     *   Whether or not to animate closing.
+     * @param {boolean} options.suppressWarnAboutClosingWindow
+     *   This will supress the warning about closing a window with the last tab.
+     * @param {boolean} options.skipPermitUnload
+     *   Skips the before unload checks for the tabs. Only set this to true when
+     *   using it in tandem with `runBeforeUnloadForTabs`.
+     * @param {boolean} options.skipRemoves
+     *   Skips actually removing the tabs. The beforeunload handlers still run.
+     * @returns {_startRemoveTabsReturnValue}
+     */
+    _startRemoveTabs(
+      tabs,
+      { animate, suppressWarnAboutClosingWindow, skipPermitUnload, skipRemoves }
+    ) {
+      // Note: if you change any of the unload algorithm, consider also
+      // changing `runBeforeUnloadForTabs` above.
+      let tabsWithBeforeUnloadPrompt = [];
+      let tabsWithoutBeforeUnload = [];
+      let beforeUnloadPromises = [];
+      let lastToClose;
+
+      for (let tab of tabs) {
+        if (!skipRemoves) {
+          tab._closedInGroup = true;
+        }
+        if (!skipRemoves && tab.selected) {
+          lastToClose = tab;
+          let toBlurTo = this._findTabToBlurTo(lastToClose, tabs);
+          if (toBlurTo) {
+            this._getSwitcher().warmupTab(toBlurTo);
+          }
+        } else if (!skipPermitUnload && this._hasBeforeUnload(tab)) {
+          TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", tab);
+          // We need to block while calling permitUnload() because it
+          // processes the event queue and may lead to another removeTab()
+          // call before permitUnload() returns.
+          tab._pendingPermitUnload = true;
+          beforeUnloadPromises.push(
+            // To save time, we first run the beforeunload event listeners in all
+            // content processes in parallel. Tabs that would have shown a prompt
+            // will be handled again later.
+            tab.linkedBrowser.asyncPermitUnload("dontUnload").then(
+              ({ permitUnload }) => {
+                tab._pendingPermitUnload = false;
+                TelemetryStopwatch.finish(
+                  "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
+                  tab
+                );
+                if (tab.closing) {
+                  // The tab was closed by the user while we were in permitUnload, don't
+                  // attempt to close it a second time.
+                } else if (permitUnload) {
+                  if (!skipRemoves) {
+                    // OK to close without prompting, do it immediately.
+                    this.removeTab(tab, {
+                      animate,
+                      prewarmed: true,
+                      skipPermitUnload: true,
+                    });
+                  }
+                } else {
+                  // We will need to prompt, queue it so it happens sequentially.
+                  tabsWithBeforeUnloadPrompt.push(tab);
+                }
+              },
+              err => {
+                console.error("error while calling asyncPermitUnload", err);
+                tab._pendingPermitUnload = false;
+                TelemetryStopwatch.finish(
+                  "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
+                  tab
+                );
+              }
+            )
+          );
+        } else {
+          tabsWithoutBeforeUnload.push(tab);
+        }
+      }
+
+      // Now that all the beforeunload IPCs have been sent to content processes,
+      // we can queue unload messages for all the tabs without beforeunload listeners.
+      // Doing this first would cause content process main threads to be busy and delay
+      // beforeunload responses, which would be user-visible.
+      if (!skipRemoves) {
+        for (let tab of tabsWithoutBeforeUnload) {
+          this.removeTab(tab, {
+            animate,
+            prewarmed: true,
+            skipPermitUnload,
+          });
+        }
+      }
+
+      return {
+        beforeUnloadComplete: Promise.all(beforeUnloadPromises),
+        tabsWithBeforeUnloadPrompt,
+        lastToClose,
+      };
+    },
+
+    /**
+     * Runs the before unload handler for the provided tabs, waiting for them
+     * to complete.
+     *
+     * This can be used in tandem with removeTabs to allow any before unload
+     * prompts to happen before any tab closures. This should only be used
+     * in the case where any prompts need to happen before other items before
+     * the actual tabs are closed.
+     *
+     * When using this function alongside removeTabs, specify the `skipUnload`
+     * option to removeTabs.
+     *
+     * @param {object[]} tabs
+     *   An array of tabs to remove.
+     * @returns {Promise<boolean>}
+     *   Returns true if the unload has been blocked by the user. False if tabs
+     *   may be subsequently closed.
+     */
+    async runBeforeUnloadForTabs(tabs) {
+      try {
+        let {
+          beforeUnloadComplete,
+          tabsWithBeforeUnloadPrompt,
+        } = this._startRemoveTabs(tabs, {
+          animate: false,
+          suppressWarnAboutClosingWindow: false,
+          skipPermitUnload: false,
+          skipRemoves: true,
+        });
+
+        await beforeUnloadComplete;
+
+        // Now run again sequentially the beforeunload listeners that will result in a prompt.
+        for (let tab of tabsWithBeforeUnloadPrompt) {
+          tab._pendingPermitUnload = true;
+          let { permitUnload } = this.getBrowserForTab(tab).permitUnload();
+          tab._pendingPermitUnload = false;
+          if (!permitUnload) {
+            return true;
+          }
+        }
+      } catch (e) {
+        Cu.reportError(e);
+      }
+      return false;
+    },
+
+    /**
+     * Removes multiple tabs from the tab browser.
+     *
+     * @param {object[]} tabs
+     *   The set of tabs to remove.
+     * @param {object} [options]
+     * @param {boolean} [options.animate]
+     *   Whether or not to animate closing, defaults to true.
+     * @param {boolean} [options.suppressWarnAboutClosingWindow]
+     *   This will supress the warning about closing a window with the last tab.
+     * @param {boolean} [options.skipPermitUnload]
+     *   Skips the before unload checks for the tabs. Only set this to true when
+     *   using it in tandem with `runBeforeUnloadForTabs`.
+     */
     removeTabs(
       tabs,
-      { animate = true, suppressWarnAboutClosingWindow = false } = {}
+      {
+        animate = true,
+        suppressWarnAboutClosingWindow = false,
+        skipPermitUnload = false,
+      } = {}
     ) {
       // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
       // can be considered equivalent to closing the window.
@@ -3439,80 +3631,23 @@
 
       // Guarantee that _clearMultiSelectionLocked lock gets released.
       try {
-        let tabsWithBeforeUnloadPrompt = [];
-        let tabsWithoutBeforeUnload = [];
-        let beforeUnloadPromises = [];
-        let lastToClose;
-        let aParams = { animate, prewarmed: true };
-
-        for (let tab of tabs) {
-          tab._closedInGroup = true;
-          if (tab.selected) {
-            lastToClose = tab;
-            let toBlurTo = this._findTabToBlurTo(lastToClose, tabs);
-            if (toBlurTo) {
-              this._getSwitcher().warmupTab(toBlurTo);
-            }
-          } else if (this._hasBeforeUnload(tab)) {
-            TelemetryStopwatch.start("FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS", tab);
-            // We need to block while calling permitUnload() because it
-            // processes the event queue and may lead to another removeTab()
-            // call before permitUnload() returns.
-            tab._pendingPermitUnload = true;
-            beforeUnloadPromises.push(
-              // To save time, we first run the beforeunload event listeners in all
-              // content processes in parallel. Tabs that would have shown a prompt
-              // will be handled again later.
-              tab.linkedBrowser.asyncPermitUnload("dontUnload").then(
-                ({ permitUnload }) => {
-                  tab._pendingPermitUnload = false;
-                  TelemetryStopwatch.finish(
-                    "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
-                    tab
-                  );
-                  if (tab.closing) {
-                    // The tab was closed by the user while we were in permitUnload, don't
-                    // attempt to close it a second time.
-                  } else if (permitUnload) {
-                    // OK to close without prompting, do it immediately.
-                    this.removeTab(tab, {
-                      animate,
-                      prewarmed: true,
-                      skipPermitUnload: true,
-                    });
-                  } else {
-                    // We will need to prompt, queue it so it happens sequentially.
-                    tabsWithBeforeUnloadPrompt.push(tab);
-                  }
-                },
-                err => {
-                  console.log("error while calling asyncPermitUnload", err);
-                  tab._pendingPermitUnload = false;
-                  TelemetryStopwatch.finish(
-                    "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS",
-                    tab
-                  );
-                }
-              )
-            );
-          } else {
-            tabsWithoutBeforeUnload.push(tab);
-          }
-        }
-        // Now that all the beforeunload IPCs have been sent to content processes,
-        // we can queue unload messages for all the tabs without beforeunload listeners.
-        // Doing this first would cause content process main threads to be busy and delay
-        // beforeunload responses, which would be user-visible.
-        for (let tab of tabsWithoutBeforeUnload) {
-          this.removeTab(tab, aParams);
-        }
+        let {
+          beforeUnloadComplete,
+          tabsWithBeforeUnloadPrompt,
+          lastToClose,
+        } = this._startRemoveTabs(tabs, {
+          animate,
+          suppressWarnAboutClosingWindow,
+          skipPermitUnload,
+          skipRemoves: false,
+        });
 
         // Wait for all the beforeunload events to have been processed by content processes.
         // The permitUnload() promise will, alas, not call its resolution
         // callbacks after the browser window the promise lives in has closed,
         // so we have to check for that case explicitly.
         let done = false;
-        Promise.all(beforeUnloadPromises).then(() => {
+        beforeUnloadComplete.then(() => {
           done = true;
         });
         Services.tm.spinEventLoopUntilOrQuit(
@@ -3522,6 +3657,12 @@
         if (!done) {
           return;
         }
+
+        let aParams = {
+          animate,
+          prewarmed: true,
+          skipPermitUnload,
+        };
 
         // Now run again sequentially the beforeunload listeners that will result in a prompt.
         for (let tab of tabsWithBeforeUnloadPrompt) {
@@ -6013,12 +6154,12 @@
 
           browser.droppedLinkHandler = oldDroppedLinkHandler;
 
-          // This shouldn't really be necessary (it should always set the same
-          // value as activeness is correctly preserved across remoteness changes).
-          // However, this has the side effect of sending MozLayerTreeReady /
-          // MozLayerTreeCleared events for remote frames, which the tab switcher
-          // depends on.
-          browser.docShellIsActive = this.shouldActivateDocShell(browser);
+          // This shouldn't really be necessary, however, this has the side effect
+          // of sending MozLayerTreeReady / MozLayerTreeCleared events for remote
+          // frames, which the tab switcher depends on.
+          //
+          // eslint-disable-next-line no-self-assign
+          browser.docShellIsActive = browser.docShellIsActive;
 
           // Create a new tab progress listener for the new browser we just
           // injected, since tab progress listeners have logic for handling the

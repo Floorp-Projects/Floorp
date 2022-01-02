@@ -26,6 +26,7 @@
 #  endif
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/WinDllServices.h"
+#  include "WinUtils.h"
 #endif
 
 #include "nsAppRunner.h"
@@ -42,6 +43,8 @@
 
 #include "mozilla/Omnijar.h"
 #if defined(XP_MACOSX)
+#  include <mach/mach.h>
+#  include <servers/bootstrap.h>
 #  include "nsVersionComparator.h"
 #  include "chrome/common/mach_ipc_mac.h"
 #  include "gfxPlatformMac.h"
@@ -422,76 +425,28 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   int allArgc = aArgc;
 #  endif /* MOZ_SANDBOX */
 
+  // Acquire the mach bootstrap port name from our command line, and send our
+  // task_t to the parent process.
   const char* const mach_port_name = aArgv[--aArgc];
 
   const int kTimeoutMs = 1000;
 
-  MachSendMessage child_message(0);
-  if (!child_message.AddDescriptor(MachMsgPortDescriptor(mach_task_self()))) {
-    NS_WARNING("child AddDescriptor(mach_task_self()) failed.");
+  UniqueMachSendRight task_sender;
+  kern_return_t kr = bootstrap_look_up(bootstrap_port, mach_port_name,
+                                       getter_Transfers(task_sender));
+  if (kr != KERN_SUCCESS) {
+    NS_WARNING(nsPrintfCString("child bootstrap_look_up failed: %s",
+                               mach_error_string(kr))
+                   .get());
     return NS_ERROR_FAILURE;
   }
 
-  ReceivePort child_recv_port;
-  mach_port_t raw_child_recv_port = child_recv_port.GetPort();
-  if (!child_message.AddDescriptor(
-          MachMsgPortDescriptor(raw_child_recv_port))) {
-    NS_WARNING("Adding descriptor to message failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  ReceivePort* ports_out_receiver = new ReceivePort();
-  if (!child_message.AddDescriptor(
-          MachMsgPortDescriptor(ports_out_receiver->GetPort()))) {
-    NS_WARNING("Adding descriptor to message failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  ReceivePort* ports_in_receiver = new ReceivePort();
-  if (!child_message.AddDescriptor(
-          MachMsgPortDescriptor(ports_in_receiver->GetPort()))) {
-    NS_WARNING("Adding descriptor to message failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  MachPortSender child_sender(mach_port_name);
-  kern_return_t err = child_sender.SendMessage(child_message, kTimeoutMs);
-  if (err != KERN_SUCCESS) {
-    NS_WARNING("child SendMessage() failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  MachReceiveMessage parent_message;
-  err = child_recv_port.WaitForMessage(&parent_message, kTimeoutMs);
-  if (err != KERN_SUCCESS) {
-    NS_WARNING("child WaitForMessage() failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (parent_message.GetTranslatedPort(0) == MACH_PORT_NULL) {
-    NS_WARNING("child GetTranslatedPort(0) failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  err = task_set_bootstrap_port(mach_task_self(),
-                                parent_message.GetTranslatedPort(0));
-
-  if (parent_message.GetTranslatedPort(1) == MACH_PORT_NULL) {
-    NS_WARNING("child GetTranslatedPort(1) failed");
-    return NS_ERROR_FAILURE;
-  }
-  MachPortSender* ports_out_sender =
-      new MachPortSender(parent_message.GetTranslatedPort(1));
-
-  if (parent_message.GetTranslatedPort(2) == MACH_PORT_NULL) {
-    NS_WARNING("child GetTranslatedPort(2) failed");
-    return NS_ERROR_FAILURE;
-  }
-  MachPortSender* ports_in_sender =
-      new MachPortSender(parent_message.GetTranslatedPort(2));
-
-  if (err != KERN_SUCCESS) {
-    NS_WARNING("child task_set_bootstrap_port() failed");
+  kr = MachSendPortSendRight(task_sender.get(), mach_task_self(),
+                             Some(kTimeoutMs));
+  if (kr != KERN_SUCCESS) {
+    NS_WARNING(nsPrintfCString("child MachSendPortSendRight failed: %s",
+                               mach_error_string(kr))
+                   .get());
     return NS_ERROR_FAILURE;
   }
 
@@ -585,18 +540,14 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
   MOZ_ASSERT(!*end, "invalid parent PID");
 
-#ifdef XP_MACOSX
-  mozilla::ipc::SharedMemoryBasic::SetupMachMemory(
-      parentPID, ports_in_receiver, ports_in_sender, ports_out_sender,
-      ports_out_receiver, true);
-#endif
-
 #if defined(XP_WIN)
-  // On Win7+, register the application user model id passed in by
-  // parent. This insures windows created by the container properly
-  // group with the parent app on the Win7 taskbar.
+  // On Win7+, when not running as an MSIX package, register the application
+  // user model id passed in by parent. This ensures windows created by the
+  // container properly group with the parent app on the Win7 taskbar.
+  // MSIX packages explicitly do not support setting the appid from within
+  // the app, as it is set in the package manifest instead.
   const char* const appModelUserId = aArgv[--aArgc];
-  if (appModelUserId) {
+  if (appModelUserId && !mozilla::widget::WinUtils::HasPackageIdentity()) {
     // '-' implies no support
     if (*appModelUserId != '-') {
       nsString appId;
@@ -752,11 +703,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       // scope and being deleted
       process->CleanUp();
       mozilla::Omnijar::CleanUp();
-
-#if defined(XP_MACOSX)
-      // Everybody should be done using shared memory by now.
-      mozilla::ipc::SharedMemoryBasic::Shutdown();
-#endif
     }
   }
 

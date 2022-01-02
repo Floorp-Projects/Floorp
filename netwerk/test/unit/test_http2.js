@@ -702,7 +702,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserv = null;
 var httpserv2 = null;
-var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 var altsvcClientListener = {
   onStartRequest: function test_onStartR(request) {
@@ -1393,7 +1392,7 @@ function run_test() {
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  prefs = Services.prefs;
   speculativeLimit = prefs.getIntPref(
     "network.http.speculative-parallel-limit"
   );

@@ -12,8 +12,6 @@
 #include "frontend/SharedContext.h"
 #include "frontend/TDZCheckCache.h"
 #include "vm/Opcodes.h"
-#include "vm/Scope.h"
-#include "vm/StringType.h"
 
 using namespace js;
 using namespace js::frontend;

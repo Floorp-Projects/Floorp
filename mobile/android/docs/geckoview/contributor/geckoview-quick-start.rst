@@ -216,10 +216,10 @@ do this using Mozilla’s ``try`` server. To submit a GeckoView patch to
 
 .. code:: bash
 
-   ./mach try fuzzy -q "android"
+   ./mach try auto
 
-This will run all of the Android test suite. If your patch passes on
-``try`` you can be (fairly) confident that it will land successfully
+This will automatically select tests to run from our suite. If your patch
+passes on ``try`` you can be (fairly) confident that it will land successfully
 after review.
 
 Tagging a reviewer

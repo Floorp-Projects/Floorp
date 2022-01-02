@@ -15,13 +15,6 @@ const special_type = "application/x-our-special-type";
   do_test_finished,
 ].forEach(f => add_test(f));
 
-function getFile(key) {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
-    Ci.nsIProperties
-  );
-  return dirSvc.get(key, Ci.nsIFile);
-}
-
 function new_file_input_stream(file, buffered) {
   var stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
@@ -39,12 +32,13 @@ function new_file_input_stream(file, buffered) {
 }
 
 function new_file_channel(file) {
-  var ssm = Services.scriptSecurityManager;
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  let uri = ios.newFileURI(file);
+  let uri = Services.io.newFileURI(file);
   return NetUtil.newChannel({
     uri,
-    loadingPrincipal: ssm.createContentPrincipal(uri, {}),
+    loadingPrincipal: Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {}
+    ),
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
@@ -275,10 +269,9 @@ function test_load_shelllink() {
   Assert.equal(chan.URI.pathQueryRef, chan.originalURI.pathQueryRef);
 
   // The original URI path should be the same as the lnk file path
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   Assert.equal(
     chan.originalURI.pathQueryRef,
-    ios.newFileURI(file).pathQueryRef
+    Services.io.newFileURI(file).pathQueryRef
   );
   run_next_test();
 }

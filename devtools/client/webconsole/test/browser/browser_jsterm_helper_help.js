@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,Test <code>help()</code> jsterm helper";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html>Test <code>help()</code> jsterm helper";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 add_task(async function() {

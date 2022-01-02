@@ -2,10 +2,7 @@
 
 function run_test() {
   function makeURI(aURLSpec, aCharset) {
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(
-      Ci.nsIIOService
-    );
-    return ios.newURI(aURLSpec, aCharset);
+    return Services.io.newURI(aURLSpec, aCharset);
   }
 
   var httpURI = makeURI("http://foo.com");

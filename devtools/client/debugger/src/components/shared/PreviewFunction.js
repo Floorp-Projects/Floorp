@@ -5,8 +5,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 
-import { times, zip, flatten } from "lodash";
-
 import { formatDisplayName } from "../../utils/pause/frames";
 
 import "./PreviewFunction.css";
@@ -22,19 +20,26 @@ export default class PreviewFunction extends Component {
 
   renderParams(func) {
     const { parameterNames = [] } = func;
-    const params = parameterNames.filter(Boolean).map(param => (
-      <span className="param" key={param}>
-        {param}
-      </span>
-    ));
 
-    const commas = times(params.length - 1).map((_, i) => (
-      <span className="delimiter" key={i}>
-        {", "}
-      </span>
-    ));
-
-    return flatten(zip(params, commas));
+    return parameterNames
+      .filter(Boolean)
+      .map((param, i, arr) => {
+        const elements = [
+          <span className="param" key={param}>
+            {param}
+          </span>,
+        ];
+        // if this isn't the last param, add a comma
+        if (i !== arr.length - 1) {
+          elements.push(
+            <span className="delimiter" key={i}>
+              {", "}
+            </span>
+          );
+        }
+        return elements;
+      })
+      .flat();
   }
 
   jumpToDefinitionButton(func) {

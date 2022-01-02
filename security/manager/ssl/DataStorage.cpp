@@ -170,7 +170,7 @@ nsresult DataStorage::Init() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  mBackgroundTaskQueue = new TaskQueue(target.forget());
+  mBackgroundTaskQueue = new TaskQueue(target.forget(), "PSM DataStorage");
 
   // For test purposes, we can set the write timer to be very fast.
   uint32_t timerDelayMS = Preferences::GetInt("test.datastorage.write_timer_ms",

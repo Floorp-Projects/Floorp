@@ -7,7 +7,8 @@
 "use strict";
 
 add_task(async function() {
-  const TEST_URI = "data:text/html;charset=utf8,Web Console CSP violation test";
+  const TEST_URI =
+    "data:text/html;charset=utf8,<!DOCTYPE html>Web Console CSP violation test";
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
   {

@@ -85,17 +85,11 @@ already_AddRefed<nsIURI> NullPrincipal::CreateURI(
     iMutator = new mozilla::net::nsSimpleURI::Mutator();
   }
 
-  nsAutoCStringN<NSID_LENGTH> uuid;
-  if (aNullPrincipalID) {
-    // FIXME: When D119267 lands, clean this up on top of those changes.
-    aNullPrincipalID->ToProvidedString(*reinterpret_cast<char(*)[NSID_LENGTH]>(
-        uuid.GetMutableData(NSID_LENGTH - 1).data()));
-  } else {
-    GkRustUtils::GenerateUUID(uuid);
-  }
+  nsID uuid = aNullPrincipalID ? *aNullPrincipalID : nsID::GenerateUUID();
 
   NS_MutateURI mutator(iMutator);
-  mutator.SetSpec(NS_NULLPRINCIPAL_SCHEME ":"_ns + uuid);
+  mutator.SetSpec(NS_NULLPRINCIPAL_SCHEME ":"_ns +
+                  nsDependentCString(nsIDToCString(uuid).get()));
 
   // If there's a precursor URI, encode it in the null principal URI's query.
   if (aPrecursor) {

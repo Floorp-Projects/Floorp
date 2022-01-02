@@ -1877,6 +1877,9 @@ pcm{
             lg{"Yẹketẹrínbug Taim"}
             ls{"Yẹketẹrínbug Fíksd Taim"}
         }
+        "meta:Yukon"{
+            ls{"Yukón Taim"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

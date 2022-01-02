@@ -13,14 +13,12 @@ var gAppManagerDialog = {
 
   async init() {
     this.handlerInfo = window.arguments[0];
-    Services.scriptloader.loadSubScript(
-      "chrome://browser/content/preferences/main.js",
-      window
-    );
 
     document.addEventListener("dialogaccept", function() {
       gAppManagerDialog.onOK();
     });
+
+    let gMainPane = window.parent.gMainPane;
 
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {

@@ -18,6 +18,11 @@ if not CONFIG["JS_STANDALONE"]:
         "ipc",
     ]
 
+    if CONFIG["FUZZING_SNAPSHOT"]:
+        DIRS += [
+            "nyx",
+        ]
+
     if CONFIG["LIBFUZZER"]:
         DIRS += [
             "rust",

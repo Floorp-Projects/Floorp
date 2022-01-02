@@ -6,6 +6,7 @@
 #ifndef _HyperTextAccessibleBase_H_
 #define _HyperTextAccessibleBase_H_
 
+#include "AccAttributes.h"
 #include "nsIAccessibleText.h"
 
 namespace mozilla::a11y {
@@ -77,7 +78,7 @@ class HyperTextAccessibleBase {
   /**
    * Get caret offset, if no caret then -1.
    */
-  virtual int32_t CaretOffset() const = 0;
+  virtual int32_t CaretOffset() const;
 
   /**
    * Transform magic offset into text offset.
@@ -124,6 +125,32 @@ class HyperTextAccessibleBase {
    */
   Accessible* LinkAt(uint32_t aIndex);
 
+  /**
+   * Return index for the given link accessible.
+   */
+  int32_t LinkIndexOf(Accessible* aLink);
+
+  /**
+   * Return link accessible at the given text offset.
+   */
+  virtual int32_t LinkIndexAtOffset(uint32_t aOffset) {
+    Accessible* child = GetChildAtOffset(aOffset);
+    return child ? LinkIndexOf(child) : -1;
+  }
+
+  /**
+   * Return text attributes for the given text range.
+   */
+  virtual already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
+                                                         int32_t aOffset,
+                                                         int32_t* aStartOffset,
+                                                         int32_t* aEndOffset);
+
+  /**
+   * Return text attributes applied to the accessible.
+   */
+  virtual already_AddRefed<AccAttributes> DefaultTextAttributes() = 0;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {
@@ -134,10 +161,15 @@ class HyperTextAccessibleBase {
 
  private:
   /**
-   * Transform the given a11y point into the offset relative this hypertext.
+   * Transform the given a11y point into an offset relative to this hypertext.
+   * Returns {success, offset}, where success is true if successful.
+   * If unsuccessful, the returned offset will be CharacterCount() if
+   * aIsEndOffset is true, 0 otherwise. This means most callers can ignore the
+   * success return value.
    */
-  uint32_t TransformOffset(Accessible* aDescendant, uint32_t aOffset,
-                           bool aIsEndOffset) const;
+  std::pair<bool, int32_t> TransformOffset(Accessible* aDescendant,
+                                           int32_t aOffset,
+                                           bool aIsEndOffset) const;
 };
 
 }  // namespace mozilla::a11y

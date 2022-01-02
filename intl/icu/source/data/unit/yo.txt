@@ -214,6 +214,11 @@ yo{
                 other{"{0} ọd"}
             }
         }
+        light{
+            lumen{
+                other{"{0} Lúmẹ́nì"}
+            }
+        }
     }
     unitsShort{
         compound{
@@ -333,7 +338,7 @@ yo{
             }
             lumen{
                 dnam{"àmì lumẹ́ẹ̀nì"}
-                other{"{0} àmi lumẹ́ẹ̀nì"}
+                other{"{0} Lúmẹ́nì"}
             }
         }
         mass{

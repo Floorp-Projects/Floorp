@@ -48,7 +48,10 @@ jv{
         da{"Dansk"}
         dav{"Taita"}
         de{"Jérman"}
+        de_AT{"Jérman Ostenrik"}
+        de_CH{"Jérman Switserlan"}
         dje{"Zarma"}
+        doi{"Dogri"}
         dsb{"Sorbia Non Standar"}
         dua{"Duala"}
         dyo{"Jola-Fonyi"}
@@ -57,6 +60,10 @@ jv{
         ee{"Ewe"}
         el{"Yunani"}
         en{"Inggris"}
+        en_AU{"Inggris Ostrali"}
+        en_CA{"Inggris Kanada"}
+        en_GB{"Inggris Karajan Manunggal"}
+        en_US{"Inggris Amérika Sarékat"}
         eo{"Esperanto"}
         es{"Spanyol"}
         es_419{"Spanyol (Amerika Latin)"}
@@ -71,6 +78,8 @@ jv{
         fil{"Tagalog"}
         fo{"Faroe"}
         fr{"Prancis"}
+        fr_CA{"Prancis Kanada"}
+        fr_CH{"Prancis Switserlan"}
         fur{"Friulian"}
         fy{"Frisia Sisih Kulon"}
         ga{"Irlandia"}
@@ -164,6 +173,7 @@ jv{
         nmg{"Kwasio"}
         nn{"Nynorsk Norwegia"}
         nnh{"Ngiemboon"}
+        no{"Norwegia"}
         nus{"Nuer"}
         ny{"Nyanja"}
         nyn{"Nyankole"}
@@ -176,7 +186,10 @@ jv{
         prg{"Prusia"}
         ps{"Pashto"}
         pt{"Portugis"}
+        pt_BR{"Portugis Brasil"}
+        pt_PT{"Portugis Portugal"}
         qu{"Quechua"}
+        rhg{"Rohingya"}
         rm{"Roman"}
         rn{"Rundi"}
         ro{"Rumania"}

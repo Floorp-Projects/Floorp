@@ -7,10 +7,10 @@
 "use strict";
 
 const ErrorDocs = require("devtools/server/actors/errordocs");
-const TEST_URI = "data:text/html;charset=utf8,errordoc tests";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>errordoc tests";
 
 function makeURIData(script) {
-  return `data:text/html;charset=utf8,<script>${script}</script>`;
+  return `data:text/html;charset=utf8,<!DOCTYPE html><script>${script}</script>`;
 }
 
 const TestData = [

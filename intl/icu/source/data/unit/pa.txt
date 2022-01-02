@@ -10,7 +10,14 @@ pa{
     units{
         acceleration{
             g-force{
+                case{
+                    oblique{
+                        one{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
+                        other{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
+                    }
+                }
                 dnam{"ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
+                gender{"masculine"}
                 one{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
                 other{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
             }
@@ -22,27 +29,62 @@ pa{
         }
         angle{
             arc-minute{
+                case{
+                    oblique{
+                        one{"{0} ਚਾਪ-ਮਿੰਟ"}
+                        other{"{0} ਚਾਪ-ਮਿੰਟ"}
+                    }
+                }
                 dnam{"ਚਾਪ-ਮਿੰਟ"}
+                gender{"masculine"}
                 one{"{0} ਚਾਪ-ਮਿੰਟ"}
                 other{"{0} ਚਾਪ-ਮਿੰਟ"}
             }
             arc-second{
+                case{
+                    oblique{
+                        one{"{0} ਚਾਪ-ਸਕਿੰਟ"}
+                        other{"{0} ਚਾਪ-ਸਕਿੰਟ"}
+                    }
+                }
                 dnam{"ਚਾਪ-ਸਕਿੰਟ"}
+                gender{"masculine"}
                 one{"{0} ਚਾਪ-ਸਕਿੰਟ"}
                 other{"{0} ਚਾਪ-ਸਕਿੰਟ"}
             }
             degree{
+                case{
+                    oblique{
+                        one{"{0} ਡਿਗਰੀ"}
+                        other{"{0} ਡਿਗਰੀ"}
+                    }
+                }
                 dnam{"ਡਿਗਰੀ"}
+                gender{"feminine"}
                 one{"{0} ਡਿਗਰੀ"}
                 other{"{0} ਡਿਗਰੀ"}
             }
             radian{
+                case{
+                    oblique{
+                        one{"{0} ਰੇਡੀਅਨ"}
+                        other{"{0} ਰੇਡੀਅਨ"}
+                    }
+                }
                 dnam{"ਰੇਡੀਅਨ"}
+                gender{"masculine"}
                 one{"{0} ਰੇਡੀਅਨ"}
                 other{"{0} ਰੇਡੀਅਨ"}
             }
             revolution{
+                case{
+                    oblique{
+                        one{"{0} ਪਰਿਕਰਮਾ"}
+                        other{"{0} ਪਰਿਕਰਮਾ"}
+                    }
+                }
                 dnam{"ਪਰਿਕਰਮਾ"}
+                gender{"feminine"}
                 one{"{0} ਪਰਿਕਰਮਾ"}
                 other{"{0} ਪਰਿਕਰਮਾ"}
             }
@@ -59,7 +101,14 @@ pa{
                 other{"{0} ਦੁਨਮ"}
             }
             hectare{
+                case{
+                    oblique{
+                        one{"{0} ਹੈਕਟੇਅਰ"}
+                        other{"{0} ਹੈਕਟੇਅਰ"}
+                    }
+                }
                 dnam{"ਹੈਕਟੇਅਰ"}
+                gender{"masculine"}
                 one{"{0} ਹੈਕਟੇਅਰ"}
                 other{"{0} ਹੈਕਟੇਅਰ"}
             }
@@ -138,11 +187,21 @@ pa{
                 one{
                     _{
                         _{"ਵਰਗ{0}"}
+                        oblique{"ਵਰਗ{0}"}
+                    }
+                    feminine{
+                        _{"ਵਰਗ{0}"}
+                        oblique{"ਵਰਗ{0}"}
                     }
                 }
                 other{
                     _{
                         _{"ਵਰਗ{0}"}
+                        oblique{"ਵਰਗ{0}"}
+                    }
+                    feminine{
+                        _{"ਵਰਗ{0}"}
+                        oblique{"ਵਰਗ{0}"}
                     }
                 }
             }
@@ -150,18 +209,40 @@ pa{
                 one{
                     _{
                         _{"ਘਣ{0}"}
+                        oblique{"ਘਣ{0}"}
+                    }
+                    feminine{
+                        _{"ਘਣ{0}"}
+                        oblique{"ਘਣ{0}"}
                     }
                 }
                 other{
                     _{
                         _{"ਘਣ{0}"}
+                        oblique{"ਘਣ{0}"}
+                    }
+                    feminine{
+                        _{"ਘਣ{0}"}
+                        oblique{"ਘਣ{0}"}
                     }
                 }
             }
         }
         concentr{
+            item{
+                dnam{"ਆਈਟਮਾਂ"}
+                one{"{0} ਆਈਟਮ"}
+                other{"{0} ਆਈਟਮਾਂ"}
+            }
             karat{
+                case{
+                    oblique{
+                        one{"{0} ਕੇਰਟ"}
+                        other{"{0} ਕੇਰਟ"}
+                    }
+                }
                 dnam{"ਕੇਰਟ"}
+                gender{"masculine"}
                 one{"{0} ਕੇਰਟ"}
                 other{"{0} ਕੇਰਟ"}
             }
@@ -176,27 +257,62 @@ pa{
                 other{"{0} ਮਿਲੀਮੋਲ ਪ੍ਰਤੀ ਲਿਟਰ"}
             }
             mole{
+                case{
+                    oblique{
+                        one{"{0} ਮੋਲ"}
+                        other{"{0} ਮੋਲ"}
+                    }
+                }
                 dnam{"ਮੋਲ"}
+                gender{"masculine"}
                 one{"{0} ਮੋਲ"}
                 other{"{0} ਮੋਲ"}
             }
             percent{
+                case{
+                    oblique{
+                        one{"{0} ਪ੍ਰਤੀਸ਼ਤ"}
+                        other{"{0} ਪ੍ਰਤੀਸ਼ਤ"}
+                    }
+                }
                 dnam{"ਪ੍ਰਤੀਸ਼ਤ"}
+                gender{"masculine"}
                 one{"{0} ਪ੍ਰਤੀਸ਼ਤ"}
                 other{"{0} ਪ੍ਰਤੀਸ਼ਤ"}
             }
             permille{
+                case{
+                    oblique{
+                        one{"{0} ਪਰਮਾਈਲ"}
+                        other{"{0} ਪਰਮਾਈਲ"}
+                    }
+                }
                 dnam{"ਪਰਮਾਈਲ"}
+                gender{"masculine"}
                 one{"{0} ਪਰਮਾਈਲ"}
                 other{"{0} ਪਰਮਾਈਲ"}
             }
             permillion{
+                case{
+                    oblique{
+                        one{"{0} ਹਿੱਸਾ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+                        other{"{0} ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+                    }
+                }
                 dnam{"ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+                gender{"masculine"}
                 one{"{0} ਹਿੱਸਾ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
                 other{"{0} ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
             }
             permyriad{
+                case{
+                    oblique{
+                        one{"{0} ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
+                        other{"{0} ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
+                    }
+                }
                 dnam{"ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
+                gender{"masculine"}
                 one{"{0} ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
                 other{"{0} ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
             }
@@ -232,12 +348,26 @@ pa{
         }
         digital{
             bit{
+                case{
+                    oblique{
+                        one{"{0} ਬਿਟ"}
+                        other{"{0} ਬਿਟ"}
+                    }
+                }
                 dnam{"ਬਿਟ"}
+                gender{"feminine"}
                 one{"{0} ਬਿਟ"}
                 other{"{0} ਬਿਟ"}
             }
             byte{
+                case{
+                    oblique{
+                        one{"{0} ਬਾਇਟ"}
+                        other{"{0} ਬਾਇਟ"}
+                    }
+                }
                 dnam{"ਬਾਇਟ"}
+                gender{"feminine"}
                 one{"{0} ਬਾਇਟ"}
                 other{"{0} ਬਾਇਟ"}
             }
@@ -289,23 +419,51 @@ pa{
         }
         duration{
             century{
+                case{
+                    oblique{
+                        one{"{0} ਸਦੀ"}
+                        other{"{0} ਸਦੀਆਂ"}
+                    }
+                }
                 dnam{"ਸਦੀਆਂ"}
+                gender{"feminine"}
                 one{"{0} ਸਦੀ"}
                 other{"{0} ਸਦੀਆਂ"}
             }
             day{
+                case{
+                    oblique{
+                        one{"{0} ਦਿਨ"}
+                        other{"{0} ਦਿਨ"}
+                    }
+                }
                 dnam{"ਦਿਨ"}
+                gender{"masculine"}
                 one{"{0} ਦਿਨ"}
                 other{"{0} ਦਿਨ"}
                 per{"{0} ਪ੍ਰਤੀ ਦਿਨ"}
             }
             decade{
+                case{
+                    oblique{
+                        one{"{0} ਦਹਾਕੇ"}
+                        other{"{0} ਦਹਾਕਿਆਂ"}
+                    }
+                }
                 dnam{"ਦਹਾਕੇ"}
+                gender{"masculine"}
                 one{"{0} ਦਹਾਕਾ"}
                 other{"{0} ਦਹਾਕੇ"}
             }
             hour{
+                case{
+                    oblique{
+                        one{"{0} ਘੰਟੇ"}
+                        other{"{0} ਘੰਟਿਆਂ"}
+                    }
+                }
                 dnam{"ਘੰਟੇ"}
+                gender{"masculine"}
                 one{"{0} ਘੰਟਾ"}
                 other{"{0} ਘੰਟੇ"}
                 per{"{0} ਪ੍ਰਤੀ ਘੰਟਾ"}
@@ -321,13 +479,27 @@ pa{
                 other{"{0} ਮਿਲੀਸਕਿੰਟ"}
             }
             minute{
+                case{
+                    oblique{
+                        one{"{0} ਮਿੰਟ"}
+                        other{"{0} ਮਿੰਟਾਂ"}
+                    }
+                }
                 dnam{"ਮਿੰਟ"}
+                gender{"masculine"}
                 one{"{0} ਮਿੰਟ"}
                 other{"{0} ਮਿੰਟ"}
                 per{"{0} ਪ੍ਰਤੀ ਮਿੰਟ"}
             }
             month{
+                case{
+                    oblique{
+                        one{"{0} ਮਹੀਨੇ"}
+                        other{"{0} ਮਹੀਨਿਆਂ"}
+                    }
+                }
                 dnam{"ਮਹੀਨੇ"}
+                gender{"masculine"}
                 one{"{0} ਮਹੀਨਾ"}
                 other{"{0} ਮਹੀਨੇ"}
                 per{"{0} ਪ੍ਰਤੀ ਮਹੀਨਾ"}
@@ -338,19 +510,40 @@ pa{
                 other{"{0} ਨੈਨੋਸਕਿੰਟ"}
             }
             second{
+                case{
+                    oblique{
+                        one{"{0} ਸਕਿੰਟ"}
+                        other{"{0} ਸਕਿੰਟਾਂ"}
+                    }
+                }
                 dnam{"ਸਕਿੰਟ"}
+                gender{"masculine"}
                 one{"{0} ਸਕਿੰਟ"}
                 other{"{0} ਸਕਿੰਟ"}
                 per{"{0} ਪ੍ਰਤੀ ਸਕਿੰਟ"}
             }
             week{
+                case{
+                    oblique{
+                        one{"{0} ਹਫ਼ਤੇ"}
+                        other{"{0} ਹਫ਼ਤਿਆਂ"}
+                    }
+                }
                 dnam{"ਹਫ਼ਤੇ"}
+                gender{"masculine"}
                 one{"{0} ਹਫ਼ਤਾ"}
                 other{"{0} ਹਫ਼ਤੇ"}
                 per{"{0} ਪ੍ਰਤੀ ਹਫ਼ਤਾ"}
             }
             year{
+                case{
+                    oblique{
+                        one{"{0} ਸਾਲ"}
+                        other{"{0} ਸਾਲਾਂ"}
+                    }
+                }
                 dnam{"ਸਾਲ"}
+                gender{"masculine"}
                 one{"{0} ਸਾਲ"}
                 other{"{0} ਸਾਲ"}
                 per{"{0} ਪ੍ਰਤੀ ਸਾਲ"}
@@ -358,7 +551,14 @@ pa{
         }
         electric{
             ampere{
+                case{
+                    oblique{
+                        one{"{0} ਐਮਪੀਅਰ"}
+                        other{"{0} ਐਮਪੀਅਰ"}
+                    }
+                }
                 dnam{"ਐਮਪੀਅਰ"}
+                gender{"masculine"}
                 one{"{0} ਐਮਪੀਅਰ"}
                 other{"{0} ਐਮਪੀਅਰ"}
             }
@@ -368,12 +568,26 @@ pa{
                 other{"{0} ਮਿਲੀਐਮਪੀਅਰ"}
             }
             ohm{
+                case{
+                    oblique{
+                        one{"{0} ਓਹਮ"}
+                        other{"{0} ਓਹਮ"}
+                    }
+                }
                 dnam{"ਓਹਮ"}
+                gender{"masculine"}
                 one{"{0} ਓਹਮ"}
                 other{"{0} ਓਹਮ"}
             }
             volt{
+                case{
+                    oblique{
+                        one{"{0} ਵੋਲਟ"}
+                        other{"{0} ਵੋਲਟ"}
+                    }
+                }
                 dnam{"ਵੋਲਟ"}
+                gender{"masculine"}
                 one{"{0} ਵੋਲਟ"}
                 other{"{0} ਵੋਲਟ"}
             }
@@ -385,7 +599,14 @@ pa{
                 other{"{0} ਬਰਤਾਨਵੀ ਤਾਪ ਇਕਾਈ"}
             }
             calorie{
+                case{
+                    oblique{
+                        one{"{0} ਕੈਲੋਰੀ"}
+                        other{"{0} ਕੈਲੋਰੀਆਂ"}
+                    }
+                }
                 dnam{"ਕੈਲੋਰੀਆਂ"}
+                gender{"feminine"}
                 one{"{0} ਕੈਲੋਰੀ"}
                 other{"{0} ਕੈਲੋਰੀਆਂ"}
             }
@@ -400,7 +621,14 @@ pa{
                 other{"{0} ਕੈਲੋਰੀਆਂ"}
             }
             joule{
+                case{
+                    oblique{
+                        one{"{0} ਜੂਲ"}
+                        other{"{0} ਜੂਲ"}
+                    }
+                }
                 dnam{"ਜੂਲ"}
+                gender{"masculine"}
                 one{"{0} ਜੂਲ"}
                 other{"{0} ਜੂਲ"}
             }
@@ -424,8 +652,20 @@ pa{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ਕਿੱਲੋਵਾਟ-ਘੰਟਾ ਪ੍ਰਤੀ 100 ਕਿੱਲੋਮੀਟਰ"}
+                one{"{0} ਕਿੱਲੋਵਾਟ-ਘੰਟਾ ਪ੍ਰਤੀ 100 ਕਿੱਲੋਮੀਟਰ"}
+                other{"{0} ਕਿੱਲੋਵਾਟ-ਘੰਟਾ ਪ੍ਰਤੀ 100 ਕਿੱਲੋਮੀਟਰ"}
+            }
             newton{
+                case{
+                    oblique{
+                        one{"{0} ਨਿਊਟਨ"}
+                        other{"{0} ਨਿਊਟਨ"}
+                    }
+                }
                 dnam{"ਨਿਊਟਨ"}
+                gender{"masculine"}
                 one{"{0} ਨਿਊਟਨ"}
                 other{"{0} ਨਿਊਟਨ"}
             }
@@ -442,7 +682,14 @@ pa{
                 other{"{0} ਗੀਗਾਹਰਟਜ਼"}
             }
             hertz{
+                case{
+                    oblique{
+                        one{"{0} ਹਰਟਜ਼"}
+                        other{"{0} ਹਰਟਜ਼"}
+                    }
+                }
                 dnam{"ਹਰਟਜ਼"}
+                gender{"masculine"}
                 one{"{0} ਹਰਟਜ਼"}
                 other{"{0} ਹਰਟਜ਼"}
             }
@@ -474,7 +721,14 @@ pa{
                 other{"{0} ਡਾਟ ਪ੍ਰਤੀ ਇੰਚ"}
             }
             em{
+                case{
+                    oblique{
+                        one{"{0} ਟਾਈਪੋਗ੍ਰਾਫ਼ਿਕ ਐਮ"}
+                        other{"{0} ਟਾਈਪੋਗ੍ਰਾਫ਼ਿਕ ਐਮ"}
+                    }
+                }
                 dnam{"ਟਾਈਪੋਗ੍ਰਾਫ਼ਿਕ ਐਮ"}
+                gender{"masculine"}
                 one{"{0} ਟਾਈਪੋਗ੍ਰਾਫ਼ਿਕ ਐਮ"}
                 other{"{0} ਟਾਈਪੋਗ੍ਰਾਫ਼ਿਕ ਐਮ"}
             }
@@ -484,7 +738,14 @@ pa{
                 other{"{0} ਮੈਗਾਪਿਕਸਲ"}
             }
             pixel{
+                case{
+                    oblique{
+                        one{"{0} ਪਿਕਸਲ"}
+                        other{"{0} ਪਿਕਸਲ"}
+                    }
+                }
                 dnam{"ਪਿਕਸਲ"}
+                gender{"masculine"}
                 one{"{0} ਪਿਕਸਲ"}
                 other{"{0} ਪਿਕਸਲ"}
             }
@@ -555,7 +816,14 @@ pa{
                 other{"{0} ਪ੍ਰਕਾਸ਼ ਸਾਲ"}
             }
             meter{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਟਰ"}
+                        other{"{0} ਮੀਟਰਾਂ"}
+                    }
+                }
                 dnam{"ਮੀਟਰ"}
+                gender{"masculine"}
                 one{"{0} ਮੀਟਰ"}
                 other{"{0} ਮੀਟਰ"}
                 per{"{0} ਪ੍ਰਤੀ ਮੀਟਰ"}
@@ -571,7 +839,14 @@ pa{
                 other{"{0} ਮੀਲ"}
             }
             mile-scandinavian{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਲ-ਸਕੈਂਡਿਨੇਵਿਆਈ"}
+                        other{"{0} ਮੀਲ-ਸਕੈਂਡਿਨੇਵਿਆਈ"}
+                    }
+                }
                 dnam{"ਮੀਲ-ਸਕੈਂਡਿਨੇਵਿਆਈ"}
+                gender{"masculine"}
                 one{"{0} ਮੀਲ-ਸਕੈਂਡਿਨੇਵਿਆਈ"}
                 other{"{0} ਮੀਲ-ਸਕੈਂਡਿਨੇਵਿਆਈ"}
             }
@@ -618,17 +893,38 @@ pa{
         }
         light{
             candela{
+                case{
+                    oblique{
+                        one{"{0} ਕੈਂਡੇਲਾ"}
+                        other{"{0} ਕੈਂਡੇਲਾ"}
+                    }
+                }
                 dnam{"ਕੈਂਡੇਲਾ"}
+                gender{"masculine"}
                 one{"{0} ਕੈਂਡੇਲਾ"}
                 other{"{0} ਕੈਂਡੇਲਾ"}
             }
             lumen{
+                case{
+                    oblique{
+                        one{"{0} ਲੁਮੇਨ"}
+                        other{"{0} ਲੁਮੇਨ"}
+                    }
+                }
                 dnam{"ਲੁਮੇਨ"}
+                gender{"masculine"}
                 one{"{0} ਲੁਮੇਨ"}
                 other{"{0} ਲੁਮੇਨ"}
             }
             lux{
+                case{
+                    oblique{
+                        one{"{0} ਲਕਸ"}
+                        other{"{0} ਲਕਸ"}
+                    }
+                }
                 dnam{"ਲਕਸ"}
+                gender{"masculine"}
                 one{"{0} ਲਕਸ"}
                 other{"{0} ਲਕਸ"}
             }
@@ -640,7 +936,14 @@ pa{
         }
         mass{
             carat{
+                case{
+                    oblique{
+                        one{"{0} ਕੈਰਟ"}
+                        other{"{0} ਕੈਰਟ"}
+                    }
+                }
                 dnam{"ਕੈਰਟ"}
+                gender{"masculine"}
                 one{"{0} ਕੈਰਟ"}
                 other{"{0} ਕੈਰਟ"}
             }
@@ -660,19 +963,40 @@ pa{
                 other{"{0} ਗ੍ਰੇਨ"}
             }
             gram{
+                case{
+                    oblique{
+                        one{"{0} ਗ੍ਰਾਮ"}
+                        other{"{0} ਗ੍ਰਾਮ"}
+                    }
+                }
                 dnam{"ਗ੍ਰਾਮ"}
+                gender{"masculine"}
                 one{"{0} ਗ੍ਰਾਮ"}
                 other{"{0} ਗ੍ਰਾਮ"}
                 per{"{0} ਪ੍ਰਤੀ ਗ੍ਰਾਮ"}
             }
             kilogram{
+                case{
+                    oblique{
+                        one{"{0} ਕਿਲੋਗ੍ਰਾਮ"}
+                        other{"{0} ਕਿਲੋਗ੍ਰਾਮ"}
+                    }
+                }
                 dnam{"ਕਿਲੋਗ੍ਰਾਮ"}
+                gender{"masculine"}
                 one{"{0} ਕਿਲੋਗ੍ਰਾਮ"}
                 other{"{0} ਕਿਲੋਗ੍ਰਾਮ"}
                 per{"{0} ਪ੍ਰਤੀ ਕਿਲੋਗ੍ਰਾਮ"}
             }
             metric-ton{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਟਰਿਕ ਟਨ"}
+                        other{"{0} ਮੀਟਰਿਕ ਟਨ"}
+                    }
+                }
                 dnam{"ਮੀਟਰਿਕ ਟਨ"}
+                gender{"masculine"}
                 one{"{0} ਮੀਟਰਿਕ ਟਨ"}
                 other{"{0} ਮੀਟਰਿਕ ਟਨ"}
             }
@@ -746,19 +1070,40 @@ pa{
                 other{"{0} ਮਿਲੀਵਾਟ"}
             }
             watt{
+                case{
+                    oblique{
+                        one{"{0} ਵਾਟ"}
+                        other{"{0} ਵਾਟ"}
+                    }
+                }
                 dnam{"ਵਾਟ"}
+                gender{"feminine"}
                 one{"{0} ਵਾਟ"}
                 other{"{0} ਵਾਟ"}
             }
         }
         pressure{
             atmosphere{
+                case{
+                    oblique{
+                        one{"{0} ਵਾਯੂਮੰਡਲ"}
+                        other{"{0} ਵਾਯੂਮੰਡਲ"}
+                    }
+                }
                 dnam{"ਵਾਯੂਮੰਡਲ"}
+                gender{"masculine"}
                 one{"{0} ਵਾਯੂਮੰਡਲ"}
                 other{"{0} ਵਾਯੂਮੰਡਲ"}
             }
             bar{
+                case{
+                    oblique{
+                        one{"{0} ਬਾਰ"}
+                        other{"{0} ਬਾਰ"}
+                    }
+                }
                 dnam{"ਬਾਰ"}
+                gender{"masculine"}
                 one{"{0} ਬਾਰ"}
                 other{"{0} ਬਾਰ"}
             }
@@ -793,7 +1138,14 @@ pa{
                 other{"{0} ਮਿਲੀਮੀਟਰ ਪਾਰਾ"}
             }
             pascal{
+                case{
+                    oblique{
+                        one{"{0} ਪੈਸਕਲ"}
+                        other{"{0} ਪੈਸਕਲ"}
+                    }
+                }
                 dnam{"ਪੈਸਕਲ"}
+                gender{"masculine"}
                 one{"{0} ਪੈਸਕਲ"}
                 other{"{0} ਪੈਸਕਲ"}
             }
@@ -827,22 +1179,43 @@ pa{
         }
         temperature{
             celsius{
-                dnam{"ਦਰਜੇ ਸੈਲਸੀਅਸ"}
-                one{"{0} ਦਰਜਾ ਸੈਲਸੀਅਸ"}
-                other{"{0} ਦਰਜੇ ਸੈਲਸੀਅਸ"}
+                case{
+                    oblique{
+                        one{"{0} ਡਿਗਰੀ ਸੈਲਸੀਅਸ"}
+                        other{"{0} ਡਿਗਰੀ ਸੈਲਸੀਅਸ"}
+                    }
+                }
+                dnam{"ਡਿਗਰੀ ਸੈਲਸੀਅਸ"}
+                gender{"masculine"}
+                one{"{0} ਡਿਗਰੀ ਸੈਲਸੀਅਸ"}
+                other{"{0} ਡਿਗਰੀ ਸੈਲਸੀਅਸ"}
             }
             fahrenheit{
-                dnam{"ਦਰਜੇ ਫਾਰੇਨਹਾਈਟ"}
-                one{"{0} ਦਰਜਾ ਫਾਰੇਨਹਾਈਟ"}
-                other{"{0} ਦਰਜੇ ਫਾਰੇਨਹਾਈਟ"}
+                dnam{"ਡਿਗਰੀ ਫਾਰੇਨਹਾਈਟ"}
+                one{"{0} ਡਿਗਰੀ ਫਾਰੇਨਹਾਈਟ"}
+                other{"{0} ਡਿਗਰੀ ਫਾਰੇਨਹਾਈਟ"}
             }
             generic{
+                case{
+                    oblique{
+                        one{"{0} ਡਿਗਰੀ"}
+                        other{"{0} ਡਿਗਰੀ"}
+                    }
+                }
                 dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
+                gender{"feminine"}
+                one{"{0} ਡਿਗਰੀ"}
+                other{"{0} ਡਿਗਰੀ"}
             }
             kelvin{
+                case{
+                    oblique{
+                        one{"{0} ਕੈਲਵਿਨ"}
+                        other{"{0} ਕੈਲਵਿਨ"}
+                    }
+                }
                 dnam{"ਕੈਲਵਿਨ"}
+                gender{"masculine"}
                 one{"{0} ਕੈਲਵਿਨ"}
                 other{"{0} ਕੈਲਵਿਨ"}
             }
@@ -923,7 +1296,14 @@ pa{
                 other{"{0} ਕੱਪ"}
             }
             cup-metric{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਟਰਿਕ ਕੱਪ"}
+                        other{"{0} ਮੀਟਰਿਕ ਕੱਪ"}
+                    }
+                }
                 dnam{"ਮੀਟਰਿਕ ਕੱਪ"}
+                gender{"masculine"}
                 one{"{0} ਮੀਟਰਿਕ ਕੱਪ"}
                 other{"{0} ਮੀਟਰਿਕ ਕੱਪ"}
             }
@@ -985,7 +1365,14 @@ pa{
                 other{"{0} ਚੱਕਾ"}
             }
             liter{
+                case{
+                    oblique{
+                        one{"{0} ਲਿਟਰ"}
+                        other{"{0} ਲਿਟਰ"}
+                    }
+                }
                 dnam{"ਲਿਟਰ"}
+                gender{"masculine"}
                 one{"{0} ਲਿਟਰ"}
                 other{"{0} ਲਿਟਰ"}
                 per{"{0} ਪ੍ਰਤੀ ਲਿਟਰ"}
@@ -1011,7 +1398,14 @@ pa{
                 other{"{0} ਪਿੰਟ"}
             }
             pint-metric{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਟਰਿਕ ਪਿੰਟ"}
+                        other{"{0} ਮੀਟਰਿਕ ਪਿੰਟ"}
+                    }
+                }
                 dnam{"ਮੀਟਰਿਕ ਪਿੰਟ"}
+                gender{"masculine"}
                 one{"{0} ਮੀਟਰਿਕ ਪਿੰਟ"}
                 other{"{0} ਮੀਟਰਿਕ ਪਿੰਟ"}
             }
@@ -1058,6 +1452,7 @@ pa{
                 other{"{0}″"}
             }
             degree{
+                dnam{"ਡਿ."}
                 one{"{0}°"}
                 other{"{0}°"}
             }
@@ -1159,14 +1554,26 @@ pa{
             }
         }
         concentr{
+            item{
+                dnam{"ਆਈਟਮ"}
+                one{"{0}ਆਈਟਮ"}
+                other{"{0}ਆਈਟਮ"}
+            }
             karat{
                 one{"{0} ਕੇਰਟ"}
                 other{"{0} ਕੇਰਟ"}
+            }
+            milligram-ofglucose-per-deciliter{
+                one{"{0}mg/dL"}
+                other{"{0}mg/dL"}
             }
             percent{
                 dnam{"ਪ੍ਰਤੀਸ਼ਤ"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permyriad{
+                dnam{"‱"}
             }
         }
         consumption{
@@ -1180,6 +1587,10 @@ pa{
             mile-per-gallon{
                 one{"{0} ਮੀ.ਪ੍ਰ.ਗੈ."}
                 other{"{0} ਮੀ.ਪ੍ਰ.ਗੈ."}
+            }
+            mile-per-gallon-imperial{
+                one{"{0}m/gUK"}
+                other{"{0}m/gUK"}
             }
         }
         coordinate{
@@ -1328,6 +1739,16 @@ pa{
                 one{"{0} ਕਿ.ਵਾ.ਘੰ."}
                 other{"{0} ਕਿ.ਵਾ.ਘੰ."}
             }
+            therm-us{
+                dnam{"ਯੂ.ਐਸ. ਥੈਰਮ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+                one{"{0}ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+                other{"{0}ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+            }
         }
         frequency{
             gigahertz{
@@ -1345,6 +1766,16 @@ pa{
             megahertz{
                 one{"{0}MHz"}
                 other{"{0}MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                one{"{0} dpi"}
+                other{"{0} dpi"}
             }
         }
         length{
@@ -1410,6 +1841,10 @@ pa{
                 one{"{0} ਮੀਲ"}
                 other{"{0} ਮੀਲ"}
             }
+            mile-scandinavian{
+                one{"{0}smi"}
+                other{"{0}smi"}
+            }
             millimeter{
                 dnam{"ਮਿ.ਮੀ."}
                 one{"{0} ਮਿ.ਮੀ."}
@@ -1433,6 +1868,9 @@ pa{
                 dnam{"ਪਿ.ਮੀ."}
                 one{"{0} ਪਿ.ਮੀ."}
                 other{"{0} ਪਿ.ਮੀ."}
+            }
+            solar-radius{
+                dnam{"R☉"}
             }
             yard{
                 dnam{"ਗਜ਼"}
@@ -1523,7 +1961,7 @@ pa{
                 other{"{0}\u0022 ਪਾਰਾ"}
             }
             millibar{
-                dnam{"ਮਿਲੀਬਾਰ"}
+                dnam{"ਮਿ.ਬਾਰ"}
                 one{"{0} ਮਿ.ਬਾ."}
                 other{"{0} ਮਿ.ਬਾ."}
             }
@@ -1562,6 +2000,7 @@ pa{
                 other{"{0}°C"}
             }
             fahrenheit{
+                dnam{"°F"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
@@ -1576,10 +2015,17 @@ pa{
                 other{"{0}°K"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"N⋅m"}
+                one{"{0}N⋅m"}
+                other{"{0}N⋅m"}
+            }
+        }
         volume{
             acre-foot{
-                one{"{0}ਏਕੜ ਫੁੱਟ"}
-                other{"{0}ਏਕੜ ਫੁੱਟ"}
+                one{"{0} ਏ.ਫੁ."}
+                other{"{0} ਏ.ਫੁ."}
             }
             bushel{
                 dnam{"ਬੁਸ਼ਲ"}
@@ -1626,13 +2072,29 @@ pa{
                 one{"{0} ਡੈ.ਲਿ."}
                 other{"{0} ਡੈ.ਲਿ."}
             }
+            dessert-spoon{
+                one{"{0} ਡੈ.ਸ."}
+                other{"{0} ਡੈ.ਸ."}
+            }
+            dessert-spoon-imperial{
+                one{"{0} ਇ.ਡੈ.ਸ."}
+                other{"{0} ਇ.ਡੈ.ਸ."}
+            }
             fluid-ounce{
                 one{"{0} ਤ. ਔਂਸ"}
                 other{"{0} ਤ. ਔਂਸ"}
             }
+            fluid-ounce-imperial{
+                one{"{0} ਫ.ਔ.ਇ."}
+                other{"{0} ਫ.ਔ.ਇ."}
+            }
             gallon{
                 one{"{0}ਗੈਲਨ"}
                 other{"{0}ਗੈਲਨ"}
+            }
+            gallon-imperial{
+                one{"{0} ਗੈ.ਇ."}
+                other{"{0} ਗੈ.ਇ."}
             }
             hectoliter{
                 one{"{0} ਹੈ.ਲਿ."}
@@ -1658,6 +2120,14 @@ pa{
             quart{
                 one{"{0}ਕੁਆਟ"}
                 other{"{0}ਕੁਆਟ"}
+            }
+            quart-imperial{
+                one{"{0} ਇ.ਚੁ.ਗੈ."}
+                other{"{0} ਇ.ਚੁ.ਗੈ."}
+            }
+            tablespoon{
+                one{"{0} ਟੇ. ਸ."}
+                other{"{0} ਟੇ. ਸ."}
             }
         }
     }
@@ -1714,8 +2184,8 @@ pa{
             }
             hectare{
                 dnam{"ਹੈਕਟੇਅਰ"}
-                one{"{0} ਹੈਕਟੇਅਰ"}
-                other{"{0} ਹੈਕਟੇਅਰ"}
+                one{"{0} ਹੈਕਟ."}
+                other{"{0} ਹੈਕਟ."}
             }
             square-centimeter{
                 dnam{"ਸੈਮੀ²"}
@@ -1815,6 +2285,11 @@ pa{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ਆਈਟਮ"}
+                one{"{0} ਆਈਟਮ"}
+                other{"{0} ਆਈਟਮ"}
+            }
             karat{
                 dnam{"ਕੇਰਟ"}
                 one{"{0} ਕੇਰਟ"}
@@ -2075,6 +2550,11 @@ pa{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+                one{"{0} ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+                other{"{0} ਕਿ.ਵ.ਘੰ./100ਕਿ.ਮੀ."}
+            }
             newton{
                 dnam{"ਨਿਊਟਨ"}
                 one{"{0} ਨਿ"}
@@ -2114,7 +2594,7 @@ pa{
             }
             dot-per-centimeter{
                 dnam{"dpcm"}
-                one{"{0} ppcm"}
+                one{"{0} dpcm"}
                 other{"{0} dpcm"}
             }
             dot-per-inch{
@@ -2458,12 +2938,12 @@ pa{
         }
         temperature{
             celsius{
-                dnam{"ਦਰਜਾ ਸੈਲਸੀਅਸ"}
+                dnam{"ਡਿ. ਸੈਲਸੀਅਸ"}
                 one{"{0}°C"}
                 other{"{0}°C"}
             }
             fahrenheit{
-                dnam{"ਦਰਜਾ ਫਾਰੇਨਹਾਈਟ"}
+                dnam{"ਡਿ. ਫਾ."}
                 one{"{0}°F"}
                 other{"{0}°F"}
             }

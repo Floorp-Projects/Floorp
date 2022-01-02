@@ -13,7 +13,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 
 class ProcTestOutput(proctest.ProcTest):
-    """ Class to test operations related to output handling """
+    """Class to test operations related to output handling"""
 
     def test_process_output_twice(self):
         """

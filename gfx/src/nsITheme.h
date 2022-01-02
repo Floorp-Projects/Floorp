@@ -237,7 +237,7 @@ class nsITheme : public nsISupports {
   /**
    * Does the nsITheme implementation draw its own focus ring for this widget?
    */
-  virtual bool ThemeDrawsFocusForWidget(StyleAppearance aWidgetType) = 0;
+  virtual bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) = 0;
 
   /**
    * Whether we want an inner focus ring for buttons and such.
@@ -246,8 +246,9 @@ class nsITheme : public nsISupports {
    * is special, because it wants it even though focus also alters the border
    * color and such.
    */
-  virtual bool ThemeWantsButtonInnerFocusRing(StyleAppearance aAppearance) {
-    return !ThemeDrawsFocusForWidget(aAppearance);
+  virtual bool ThemeWantsButtonInnerFocusRing(nsIFrame* aFrame,
+                                              StyleAppearance aAppearance) {
+    return !ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
 
   /**
@@ -255,7 +256,7 @@ class nsITheme : public nsISupports {
    */
   virtual bool ThemeNeedsComboboxDropmarker() = 0;
 
-  virtual bool ThemeSupportsScrollbarButtons() { return true; }
+  virtual bool ThemeSupportsScrollbarButtons() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
@@ -264,7 +265,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
 //
 // Do not use directly, use nsPresContext::Theme instead.
 extern already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly();
-extern already_AddRefed<nsITheme> do_GetAndroidNonNativeThemeDoNotUseDirectly();
 extern already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly();
+extern already_AddRefed<nsITheme> do_GetRDMThemeDoNotUseDirectly();
 
 #endif

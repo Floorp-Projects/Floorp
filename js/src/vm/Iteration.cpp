@@ -31,7 +31,6 @@
 #include "js/Proxy.h"
 #include "util/DifferentialTesting.h"
 #include "util/Poison.h"
-#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

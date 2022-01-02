@@ -21,7 +21,7 @@ class MOZ_RAII AutoProfileRunnable {
  public:
   explicit AutoProfileRunnable(Runnable* aRunnable)
       : mStartTime(TimeStamp::Now()) {
-    if (!profiler_thread_is_being_profiled()) {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
       return;
     }
 
@@ -29,7 +29,7 @@ class MOZ_RAII AutoProfileRunnable {
   }
   explicit AutoProfileRunnable(nsIRunnable* aRunnable)
       : mStartTime(TimeStamp::Now()) {
-    if (!profiler_thread_is_being_profiled()) {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
       return;
     }
 
@@ -42,7 +42,7 @@ class MOZ_RAII AutoProfileRunnable {
       : mStartTime(TimeStamp::Now()), mName(aName) {}
 
   ~AutoProfileRunnable() {
-    if (!profiler_thread_is_being_profiled()) {
+    if (!profiler_thread_is_being_profiled_for_markers()) {
       return;
     }
 

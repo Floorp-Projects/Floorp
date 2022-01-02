@@ -13,29 +13,26 @@ InputListAutoComplete.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIInputListAutoComplete"]),
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {
-    let [values, labels] = this.getListSuggestions(aField);
-    let searchResult = values.length
+    let items = this.getListSuggestions(aField);
+    let searchResult = items.length
       ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
       : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    let defaultIndex = values.length ? 0 : -1;
+    let defaultIndex = items.length ? 0 : -1;
 
     return new FormAutoCompleteResult(
       aUntrimmedSearchString,
       searchResult,
       defaultIndex,
       "",
-      values,
-      labels,
-      [],
+      items,
       null
     );
   },
 
   getListSuggestions(aField) {
-    let values = [];
-    let labels = [];
+    let items = [];
     if (!aField || !aField.list) {
-      return [values, labels];
+      return items;
     }
 
     let filter = !aField.hasAttribute("mozNoFilter");
@@ -56,11 +53,15 @@ InputListAutoComplete.prototype = {
         continue;
       }
 
-      labels.push(label);
-      values.push(item.value);
+      items.push({
+        label,
+        value: item.value,
+        comment: "",
+        removable: false,
+      });
     }
 
-    return [values, labels];
+    return items;
   },
 };
 

@@ -1,0 +1,17 @@
+<html>
+<head>
+<style>
+:root { color-adjust: exact }
+html { background: green; }
+</style>
+</head>
+<body>
+<!-- just need some content with large height, use text because bg colors don't print by default -->
+<script>
+for (let i = 0; i < 1000; i++) {
+	document.body.appendChild(document.createTextNode("content"));
+	document.body.appendChild(document.createElement("br"));
+}
+</script>
+</body>
+</html>

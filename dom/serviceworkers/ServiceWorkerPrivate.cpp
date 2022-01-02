@@ -49,9 +49,11 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Services.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Unused.h"
 #include "nsIReferrerInfo.h"
 
@@ -1671,21 +1673,48 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   info.mPrincipal = mInfo->Principal();
   info.mLoadingPrincipal = info.mPrincipal;
-  // PartitionedPrincipal for ServiceWorkers is equal to mPrincipal because, at
-  // the moment, ServiceWorkers are not exposed in partitioned contexts.
-  info.mPartitionedPrincipal = info.mPrincipal;
+
   info.mCookieJarSettings =
       mozilla::net::CookieJarSettings::Create(info.mPrincipal);
 
   MOZ_ASSERT(info.mCookieJarSettings);
 
-  net::CookieJarSettings::Cast(info.mCookieJarSettings)
-      ->SetPartitionKey(info.mResolvedScriptURI);
+  // We can get the partitionKey from the principal of the ServiceWorker because
+  // it's a foreign partitioned principal. In other words, the principal will
+  // have the partitionKey if it's in a third-party context. Otherwise, we can
+  // set the partitionKey via the script URI because it's in the first-party
+  // context.
+  if (!info.mPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    net::CookieJarSettings::Cast(info.mCookieJarSettings)
+        ->SetPartitionKey(info.mPrincipal->OriginAttributesRef().mPartitionKey);
+  } else {
+    net::CookieJarSettings::Cast(info.mCookieJarSettings)
+        ->SetPartitionKey(info.mResolvedScriptURI);
+  }
+
+  if (StaticPrefs::privacy_partition_serviceWorkers()) {
+    nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+    StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
+        info.mPrincipal, info.mCookieJarSettings,
+        getter_AddRefs(partitionedPrincipal));
+
+    info.mPartitionedPrincipal = partitionedPrincipal;
+  } else {
+    // The partitioned principal will be the same as the mPrincipal if
+    // partitioned service worker is disabled.
+    info.mPartitionedPrincipal = info.mPrincipal;
+  }
 
   info.mStorageAccess =
       StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieJarSettings);
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
+
+  // We don't have a good way to know if a service worker is regsitered under a
+  // third-party context. The only information we can rely on is if the service
+  // worker is running under a partitioned principal.
+  info.mIsThirdPartyContextToTopWindow =
+      !mInfo->Principal()->OriginAttributesRef().mPartitionKey.IsEmpty();
 
   // Verify that we don't have any CSP on pristine client.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED

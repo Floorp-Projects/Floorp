@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "gpu-alloc"
-version = "0.5.0"
+version = "0.5.2"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 description = "Implementation agnostic memory allocator for Vulkan like APIs"
 homepage = "https://github.com/zakarumych/gpu-alloc"
@@ -37,7 +36,7 @@ optional = true
 default-features = false
 
 [dependencies.tracing]
-version = "0.1"
+version = "0.1.27"
 features = ["attributes"]
 optional = true
 default-features = false

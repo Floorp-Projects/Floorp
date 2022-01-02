@@ -607,9 +607,7 @@ class LoginManagerPrompter {
           // visible icon as the anchor.
           const anchor = browser.ownerDocument.getElementById("identity-icon");
           log.debug("Showing the ConfirmationHint");
-          anchor.ownerGlobal.ConfirmationHint.show(anchor, "loginRemoved", {
-            hideArrow: true,
-          });
+          anchor.ownerGlobal.ConfirmationHint.show(anchor, "loginRemoved");
         },
       });
     }

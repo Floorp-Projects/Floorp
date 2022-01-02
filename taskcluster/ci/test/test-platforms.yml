@@ -203,7 +203,10 @@ windows10-64-shippable-qr/opt:
 windows10-64-2004-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
+        - desktop-screenshot-capture
+        - ccov-code-coverage-tests
         - windows10-64-2004-ccov-tests
+        - windows10-2004-tests
 
 windows10-64-2004-qr/debug:
     build-platform: win64/debug

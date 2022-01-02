@@ -7,21 +7,27 @@
 #ifndef nsNativeThemeWin_h
 #define nsNativeThemeWin_h
 
-#include "nsITheme.h"
-#include "nsCOMPtr.h"
+#include <windows.h>
+
+#include "gfxTypes.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAtom.h"
+#include "nsCOMPtr.h"
+#include "nsITheme.h"
+#include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
+#include "nsSize.h"
 #include "nsStyleConsts.h"
 #include "nsUXThemeConstants.h"
 #include "nsUXThemeData.h"
-#include "nsNativeBasicThemeWin.h"
-#include "gfxTypes.h"
-#include <windows.h>
-#include "mozilla/Maybe.h"
-#include "mozilla/TimeStamp.h"
-#include "nsSize.h"
+#include "ScrollbarDrawingWin.h"
 
-class nsNativeThemeWin : public nsNativeBasicThemeWin {
+namespace mozilla::widget {
+
+class nsNativeThemeWin : public nsNativeBasicTheme {
+ protected:
+  using ScrollbarDrawingWin = mozilla::widget::ScrollbarDrawingWin;
   virtual ~nsNativeThemeWin();
 
  public:
@@ -84,9 +90,11 @@ class nsNativeThemeWin : public nsNativeBasicThemeWin {
 
   bool WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
 
-  bool ThemeWantsButtonInnerFocusRing(StyleAppearance) override { return true; }
+  bool ThemeWantsButtonInnerFocusRing(nsIFrame*, StyleAppearance) override {
+    return true;
+  }
 
   bool ThemeNeedsComboboxDropmarker() override;
 
@@ -99,7 +107,8 @@ class nsNativeThemeWin : public nsNativeBasicThemeWin {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  nsNativeThemeWin();
+  explicit nsNativeThemeWin(
+      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingWin);
 
  protected:
   mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
@@ -180,5 +189,7 @@ class nsNativeThemeWin : public nsNativeBasicThemeWin {
   bool mGutterSizeCacheValid;
   SIZE mGutterSizeCache;
 };
+
+}  // namespace mozilla::widget
 
 #endif

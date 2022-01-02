@@ -964,6 +964,7 @@ impl Renderer {
             options.resource_override_path.clone(),
             options.use_optimized_shaders,
             options.upload_method.clone(),
+            options.batched_upload_threshold,
             options.cached_programs.take(),
             options.allow_texture_storage_support,
             options.allow_texture_swizzling,
@@ -1788,7 +1789,8 @@ impl Renderer {
             DebugFlags::GPU_CACHE_DBG |
             DebugFlags::PICTURE_CACHING_DBG |
             DebugFlags::PRIMITIVE_DBG |
-            DebugFlags::ZOOM_DBG
+            DebugFlags::ZOOM_DBG |
+            DebugFlags::WINDOW_VISIBILITY_DBG
         );
 
         // Update the debug overlay surface, if we are running in native compositor mode.
@@ -2038,6 +2040,7 @@ impl Renderer {
                 self.draw_gpu_cache_debug(device_size);
                 self.draw_zoom_debug(device_size);
                 self.draw_epoch_debug();
+                self.draw_window_visibility_debug();
                 draw_target
             })
         });
@@ -4403,6 +4406,7 @@ impl Renderer {
 
             if can_use_partial_present {
                 let mut combined_dirty_rect = DeviceRect::zero();
+                let fb_rect = DeviceRect::from_size(draw_target_dimensions.to_f32());
 
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
@@ -4414,7 +4418,14 @@ impl Renderer {
                         &tile.local_dirty_rect,
                         tile.transform_index,
                     );
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+
+                    // In pathological cases where a tile is extremely zoomed, it
+                    // may end up with device coords outside the range of an i32,
+                    // so clamp it to the frame buffer rect here, before it gets
+                    // casted to an i32 rect below.
+                    if let Some(dirty_rect) = dirty_rect.intersection(&fb_rect) {
+                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    }
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
@@ -5238,6 +5249,39 @@ impl Renderer {
         );
     }
 
+    fn draw_window_visibility_debug(&mut self) {
+        if !self.debug_flags.contains(DebugFlags::WINDOW_VISIBILITY_DBG) {
+            return;
+        }
+
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        let x: f32 = 30.0;
+        let y: f32 = 40.0;
+
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+            let visibility = compositor.get_window_visibility();
+            let color = if visibility.is_fully_occluded {
+                ColorU::new(255, 0, 0, 255)
+
+            } else {
+                ColorU::new(0, 0, 255, 255)
+            };
+
+            debug_renderer.add_text(
+                x, y,
+                &format!("{:?}", visibility),
+                color,
+                None,
+            );
+        }
+
+
+    }
+
     fn draw_gpu_cache_debug(&mut self, device_size: DeviceIntSize) {
         if !self.debug_flags.contains(DebugFlags::GPU_CACHE_DBG) {
             return;
@@ -5514,6 +5558,7 @@ pub struct RendererOptions {
     pub upload_method: UploadMethod,
     /// The default size in bytes for PBOs used to upload texture data.
     pub upload_pbo_default_size: usize,
+    pub batched_upload_threshold: i32,
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
@@ -5608,6 +5653,7 @@ impl Default for RendererOptions {
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT),
             upload_pbo_default_size: 512 * 512 * 4,
+            batched_upload_threshold: 512 * 512,
             workers: None,
             enable_multithreading: true,
             blob_image_handler: None,

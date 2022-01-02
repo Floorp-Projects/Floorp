@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/FetchStreamUtils.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
@@ -26,20 +27,6 @@ namespace {
 // XXX This will be tweaked to something more meaningful in Bug 1383656.
 const uint32_t kMaxRandomNumber = 102400;
 
-nsCOMPtr<nsIInputStream> TakeStreamFromStorage(
-    const BodyStreamVariant& aVariant, int64_t aBodySize) {
-  MOZ_ASSERT(aVariant.type() == BodyStreamVariant::TParentToParentStream);
-  const auto& uuid = aVariant.get_ParentToParentStream().uuid();
-
-  auto storageOrErr = RemoteLazyInputStreamStorage::Get();
-  MOZ_ASSERT(storageOrErr.isOk());
-  auto storage = storageOrErr.unwrap();
-  auto stream = storage->ForgetStream(uuid);
-  MOZ_ASSERT(stream);
-
-  return stream;
-}
-
 }  // namespace
 
 InternalResponse::InternalResponse(uint16_t aStatus,
@@ -55,42 +42,55 @@ InternalResponse::InternalResponse(uint16_t aStatus,
       mCredentialsMode(aCredentialsMode),
       mCloned(false) {}
 
-/* static */ RefPtr<InternalResponse> InternalResponse::FromIPC(
-    const IPCInternalResponse& aIPCResponse) {
-  if (aIPCResponse.type() == ResponseType::Error) {
-    return InternalResponse::NetworkError(aIPCResponse.errorCode());
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
+    const ParentToParentInternalResponse& aIPCResponse) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  return FromIPCTemplate(aIPCResponse);
+}
+
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
+    const ParentToChildInternalResponse& aIPCResponse) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  return FromIPCTemplate(aIPCResponse);
+}
+
+template <typename T>
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPCTemplate(
+    const T& aIPCResponse) {
+  if (aIPCResponse.metadata().type() == ResponseType::Error) {
+    return InternalResponse::NetworkError(aIPCResponse.metadata().errorCode());
   }
 
-  RefPtr<InternalResponse> response =
-      new InternalResponse(aIPCResponse.status(), aIPCResponse.statusText());
+  SafeRefPtr<InternalResponse> response = MakeSafeRefPtr<InternalResponse>(
+      aIPCResponse.metadata().status(), aIPCResponse.metadata().statusText());
 
-  response->SetURLList(aIPCResponse.urlList());
+  response->SetURLList(aIPCResponse.metadata().urlList());
   response->mHeaders =
-      new InternalHeaders(aIPCResponse.headers(), aIPCResponse.headersGuard());
+      new InternalHeaders(aIPCResponse.metadata().headers(),
+                          aIPCResponse.metadata().headersGuard());
 
   if (aIPCResponse.body()) {
     auto bodySize = aIPCResponse.bodySize();
-    nsCOMPtr<nsIInputStream> body =
-        TakeStreamFromStorage(*aIPCResponse.body(), bodySize);
-    response->SetBody(body, bodySize);
+    auto body = ToInputStream(*aIPCResponse.body());
+    response->SetBody(body.get(), bodySize);
   }
 
-  response->SetAlternativeDataType(aIPCResponse.alternativeDataType());
+  response->SetAlternativeDataType(
+      aIPCResponse.metadata().alternativeDataType());
 
   if (aIPCResponse.alternativeBody()) {
-    nsCOMPtr<nsIInputStream> alternativeBody = TakeStreamFromStorage(
-        *aIPCResponse.alternativeBody(), UNKNOWN_BODY_SIZE);
-    response->SetAlternativeBody(alternativeBody);
+    auto alternativeBody = ToInputStream(*aIPCResponse.alternativeBody());
+    response->SetAlternativeBody(alternativeBody.get());
   }
 
-  response->InitChannelInfo(aIPCResponse.channelInfo());
+  response->InitChannelInfo(aIPCResponse.metadata().channelInfo());
 
-  if (aIPCResponse.principalInfo()) {
+  if (aIPCResponse.metadata().principalInfo()) {
     response->SetPrincipalInfo(MakeUnique<mozilla::ipc::PrincipalInfo>(
-        aIPCResponse.principalInfo().ref()));
+        aIPCResponse.metadata().principalInfo().ref()));
   }
 
-  switch (aIPCResponse.type()) {
+  switch (aIPCResponse.metadata().type()) {
     case ResponseType::Basic:
       response = response->BasicResponse();
       break;
@@ -116,10 +116,7 @@ InternalResponse::InternalResponse(uint16_t aStatus,
 
 InternalResponse::~InternalResponse() = default;
 
-void InternalResponse::ToIPC(
-    IPCInternalResponse* aIPCResponse, mozilla::ipc::PBackgroundChild* aManager,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
+InternalResponseMetadata InternalResponse::GetMetadata() {
   nsTArray<HeadersEntry> headers;
   HeadersGuardEnum headersGuard;
   UnfilteredHeaders()->ToIPC(headers, headersGuard);
@@ -129,12 +126,19 @@ void InternalResponse::ToIPC(
 
   // Note: all the arguments are copied rather than moved, which would be more
   // efficient, because there's no move-friendly constructor generated.
-  *aIPCResponse =
-      IPCInternalResponse(mType, GetUnfilteredURLList(), GetUnfilteredStatus(),
-                          GetUnfilteredStatusText(), headersGuard, headers,
-                          Nothing(), static_cast<uint64_t>(UNKNOWN_BODY_SIZE),
-                          mErrorCode, GetAlternativeDataType(), Nothing(),
-                          mChannelInfo.AsIPCChannelInfo(), principalInfo);
+  return InternalResponseMetadata(
+      mType, GetUnfilteredURLList(), GetUnfilteredStatus(),
+      GetUnfilteredStatusText(), headersGuard, headers, mErrorCode,
+      GetAlternativeDataType(), mChannelInfo.AsIPCChannelInfo(), principalInfo);
+}
+
+void InternalResponse::ToChildToParentInternalResponse(
+    ChildToParentInternalResponse* aIPCResponse,
+    mozilla::ipc::PBackgroundChild* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
+  *aIPCResponse = ChildToParentInternalResponse(GetMetadata(), Nothing(),
+                                                UNKNOWN_BODY_SIZE, Nothing());
 
   nsCOMPtr<nsIInputStream> body;
   int64_t bodySize;
@@ -144,8 +148,8 @@ void InternalResponse::ToIPC(
     aIPCResponse->body().emplace(ChildToParentStream());
     aIPCResponse->bodySize() = bodySize;
 
-    aAutoBodyStream.reset(new mozilla::ipc::AutoIPCStream(
-        aIPCResponse->body()->get_ChildToParentStream().stream()));
+    aAutoBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->body()->stream()));
     DebugOnly<bool> ok = aAutoBodyStream->Serialize(body, aManager);
     MOZ_ASSERT(ok);
   }
@@ -155,16 +159,38 @@ void InternalResponse::ToIPC(
     aIPCResponse->alternativeBody().emplace(ChildToParentStream());
 
     aAutoAlternativeBodyStream.reset(new mozilla::ipc::AutoIPCStream(
-        aIPCResponse->alternativeBody()->get_ChildToParentStream().stream()));
+        aIPCResponse->alternativeBody()->stream()));
     DebugOnly<bool> ok =
         aAutoAlternativeBodyStream->Serialize(alternativeBody, aManager);
     MOZ_ASSERT(ok);
   }
 }
 
-already_AddRefed<InternalResponse> InternalResponse::Clone(
-    CloneType aCloneType) {
-  RefPtr<InternalResponse> clone = CreateIncompleteCopy();
+ParentToParentInternalResponse
+InternalResponse::ToParentToParentInternalResponse() {
+  ParentToParentInternalResponse result(GetMetadata(), Nothing(),
+                                        UNKNOWN_BODY_SIZE, Nothing());
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    result.body() = Some(ToParentToParentStream(WrapNotNull(body), bodySize));
+    result.bodySize() = bodySize;
+  }
+
+  nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
+  if (alternativeBody) {
+    result.alternativeBody() = Some(ToParentToParentStream(
+        WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE));
+  }
+
+  return result;
+}
+
+SafeRefPtr<InternalResponse> InternalResponse::Clone(CloneType aCloneType) {
+  SafeRefPtr<InternalResponse> clone = CreateIncompleteCopy();
   clone->mCloned = (mCloned = true);
 
   clone->mHeaders = new InternalHeaders(*mHeaders);
@@ -178,11 +204,11 @@ already_AddRefed<InternalResponse> InternalResponse::Clone(
   if (mWrappedResponse) {
     clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
     MOZ_ASSERT(!mBody);
-    return clone.forget();
+    return clone;
   }
 
   if (!mBody || aCloneType == eDontCloneInputStream) {
-    return clone.forget();
+    return clone;
   }
 
   nsCOMPtr<nsIInputStream> clonedBody;
@@ -199,27 +225,27 @@ already_AddRefed<InternalResponse> InternalResponse::Clone(
     mBody.swap(replacementBody);
   }
 
-  return clone.forget();
+  return clone;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::BasicResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::BasicResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't BasicResponse a already wrapped response");
-  RefPtr<InternalResponse> basic = CreateIncompleteCopy();
+  SafeRefPtr<InternalResponse> basic = CreateIncompleteCopy();
   basic->mType = ResponseType::Basic;
   basic->mHeaders = InternalHeaders::BasicHeaders(Headers());
-  basic->mWrappedResponse = this;
-  return basic.forget();
+  basic->mWrappedResponse = SafeRefPtrFromThis();
+  return basic;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::CORSResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::CORSResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't CORSResponse a already wrapped response");
-  RefPtr<InternalResponse> cors = CreateIncompleteCopy();
+  SafeRefPtr<InternalResponse> cors = CreateIncompleteCopy();
   cors->mType = ResponseType::Cors;
   cors->mHeaders = InternalHeaders::CORSHeaders(Headers(), mCredentialsMode);
-  cors->mWrappedResponse = this;
-  return cors.forget();
+  cors->mWrappedResponse = SafeRefPtrFromThis();
+  return cors;
 }
 
 uint32_t InternalResponse::GetPaddingInfo() {
@@ -315,41 +341,43 @@ LoadTainting InternalResponse::GetTainting() const {
   }
 }
 
-already_AddRefed<InternalResponse> InternalResponse::Unfiltered() {
-  RefPtr<InternalResponse> ref = mWrappedResponse;
+SafeRefPtr<InternalResponse> InternalResponse::Unfiltered() {
+  SafeRefPtr<InternalResponse> ref = mWrappedResponse.clonePtr();
   if (!ref) {
-    ref = this;
+    ref = SafeRefPtrFromThis();
   }
-  return ref.forget();
+  return ref;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::OpaqueResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::OpaqueResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't OpaqueResponse a already wrapped response");
-  RefPtr<InternalResponse> response = new InternalResponse(0, ""_ns);
+  SafeRefPtr<InternalResponse> response =
+      MakeSafeRefPtr<InternalResponse>(0, ""_ns);
   response->mType = ResponseType::Opaque;
   response->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     response->mPrincipalInfo =
         MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
   }
-  response->mWrappedResponse = this;
-  return response.forget();
+  response->mWrappedResponse = SafeRefPtrFromThis();
+  return response;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't OpaqueRedirectResponse a already wrapped response");
   MOZ_ASSERT(!mURLList.IsEmpty(),
              "URLList should not be emtpy for internalResponse");
-  RefPtr<InternalResponse> response = OpaqueResponse();
+  SafeRefPtr<InternalResponse> response = OpaqueResponse();
   response->mType = ResponseType::Opaqueredirect;
   response->mURLList = mURLList.Clone();
-  return response.forget();
+  return response;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
-  RefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
+SafeRefPtr<InternalResponse> InternalResponse::CreateIncompleteCopy() {
+  SafeRefPtr<InternalResponse> copy =
+      MakeSafeRefPtr<InternalResponse>(mStatus, mStatusText);
   copy->mType = mType;
   copy->mURLList = mURLList.Clone();
   copy->mChannelInfo = mChannelInfo;
@@ -357,7 +385,26 @@ already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
     copy->mPrincipalInfo =
         MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
   }
-  return copy.forget();
+  return copy;
+}
+
+ParentToChildInternalResponse ToParentToChild(
+    const ParentToParentInternalResponse& aResponse,
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent) {
+  ParentToChildInternalResponse result(aResponse.metadata(), Nothing(),
+                                       aResponse.bodySize(), Nothing());
+
+  if (aResponse.body().isSome()) {
+    result.body() = Some(ToParentToChildStream(
+        aResponse.body().ref(), aResponse.bodySize(), aBackgroundParent));
+  }
+  if (aResponse.alternativeBody().isSome()) {
+    result.alternativeBody() = Some(ToParentToChildStream(
+        aResponse.alternativeBody().ref(), InternalResponse::UNKNOWN_BODY_SIZE,
+        aBackgroundParent));
+  }
+
+  return result;
 }
 
 }  // namespace mozilla::dom

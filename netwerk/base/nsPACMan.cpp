@@ -896,6 +896,13 @@ nsPACMan::OnStreamComplete(nsIStreamLoader* loader, nsISupports* context,
       }
     }
 
+    nsCOMPtr<nsIProtocolProxyService> pps =
+        do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
+    MOZ_ASSERT(pps);
+    if (pps) {
+      pps->NotifyProxyConfigChangedInternal();
+    }
+
     // We succeeded in loading the pac file using a bunch of interfaces that are
     // main thread only.  Unfortunately, we have to initialize the instance of
     // the PAC evaluator (NS_PROXYAUTOCONFIG_CONTRACTID) on the PAC thread,

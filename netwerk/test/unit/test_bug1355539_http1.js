@@ -147,10 +147,7 @@ HttpResponseListener.prototype = {
 
 function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  maxConnections = prefs.getIntPref(
+  maxConnections = Services.prefs.getIntPref(
     "network.http.max-persistent-connections-per-server"
   );
 

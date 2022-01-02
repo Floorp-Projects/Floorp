@@ -160,6 +160,11 @@ sq{
             }
         }
         concentr{
+            item{
+                dnam{"njësi"}
+                one{"{0} njësi"}
+                other{"{0} njësi"}
+            }
             karat{
                 dnam{"karatë"}
                 one{"{0} karat"}
@@ -426,6 +431,11 @@ sq{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilovat-orë në 100 kilometra"}
+                one{"{0} kilovat-orë në 100 kilometra"}
+                other{"{0} kilovat-orë në 100 kilometra"}
+            }
             newton{
                 dnam{"njuton"}
                 one{"{0} njuton"}
@@ -1030,6 +1040,16 @@ sq{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"njësi"}
+                one{"{0} njësi"}
+                other{"{0} njësi"}
+            }
+            mole{
+                dnam{"molë"}
+                one{"{0} mol"}
+                other{"{0} molë"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1044,8 +1064,8 @@ sq{
             }
             mile-per-gallon{
                 dnam{"mpg"}
-                one{"{0}mpg"}
-                other{"{0}mpg"}
+                one{"{0} mpg"}
+                other{"{0} mpg"}
             }
         }
         coordinate{
@@ -1055,11 +1075,45 @@ sq{
             south{"{0} J"}
             west{"{0} P"}
         }
+        digital{
+            gigabit{
+                dnam{"Gb"}
+            }
+            gigabyte{
+                dnam{"GB"}
+            }
+            kilobit{
+                dnam{"kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+            }
+            megabit{
+                dnam{"Mb"}
+            }
+            megabyte{
+                dnam{"MB"}
+            }
+            petabyte{
+                dnam{"PB"}
+            }
+            terabit{
+                dnam{"Tb"}
+            }
+            terabyte{
+                dnam{"TB"}
+            }
+        }
         duration{
             day{
                 dnam{"ditë"}
                 one{"{0} ditë"}
                 other{"{0} ditë"}
+            }
+            decade{
+                dnam{"dek."}
+                one{"{0} dek."}
+                other{"{0} dek."}
             }
             hour{
                 dnam{"orë"}
@@ -1097,10 +1151,18 @@ sq{
                 other{"{0} vjet"}
             }
         }
-        energy{
-            foodcalorie{
-                one{"{0} Kal."}
-                other{"{0} Kal."}
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"pika"}
+                one{"{0} pikë"}
+                other{"{0} pika"}
             }
         }
         length{
@@ -1110,21 +1172,17 @@ sq{
                 other{"{0} cm"}
             }
             foot{
+                dnam{"ft"}
                 one{"{0} ft"}
                 other{"{0} ft"}
             }
             inch{
-                one{"{0} inç"}
-                other{"{0} inç"}
+                dnam{"in"}
             }
             kilometer{
                 dnam{"km"}
                 one{"{0} km"}
                 other{"{0} km"}
-            }
-            light-year{
-                one{"{0} v. dr."}
-                other{"{0} v. dr."}
             }
             meter{
                 dnam{"m"}
@@ -1144,12 +1202,13 @@ sq{
                 one{"{0} pm"}
                 other{"{0} pm"}
             }
-            yard{
-                one{"{0} jd"}
-                other{"{0} jd"}
-            }
         }
         mass{
+            grain{
+                dnam{"gr"}
+                one{"{0} gr"}
+                other{"{0} gr"}
+            }
             gram{
                 dnam{"g"}
                 one{"{0} g"}
@@ -1159,10 +1218,6 @@ sq{
                 dnam{"kg"}
                 one{"{0} kg"}
                 other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} ons"}
-                other{"{0} onsë"}
             }
             pound{
                 one{"{0} lb"}
@@ -1243,6 +1298,11 @@ sq{
             }
         }
         volume{
+            bushel{
+                dnam{"shinikë"}
+                one{"{0} shinik"}
+                other{"{0} shinikë"}
+            }
             cubic-kilometer{
                 one{"{0} km³"}
                 other{"{0} km³"}
@@ -1251,10 +1311,33 @@ sq{
                 one{"{0} mi³"}
                 other{"{0} mi³"}
             }
+            dram{
+                dnam{"fl.dr."}
+                one{"{0} fl.dr."}
+                other{"{0} fl.dr."}
+            }
+            drop{
+                dnam{"dr"}
+                one{"{0} dr"}
+                other{"{0} dr"}
+            }
+            gallon{
+                dnam{"gal"}
+            }
+            jigger{
+                dnam{"teke"}
+                one{"{0} teke"}
+                other{"{0} teke"}
+            }
             liter{
                 dnam{"L"}
                 one{"{0} L"}
                 other{"{0} L"}
+            }
+            pinch{
+                dnam{"piska"}
+                one{"{0} pisk"}
+                other{"{0} piska"}
             }
         }
     }
@@ -1359,6 +1442,11 @@ sq{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"njësi"}
+                one{"{0} njësi"}
+                other{"{0} njësi"}
+            }
             karat{
                 dnam{"kt"}
                 one{"{0} kt"}
@@ -1602,6 +1690,13 @@ sq{
                 dnam{"UStu"}
                 one{"UStu"}
                 other{"{0} UStu"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
             }
         }
         frequency{

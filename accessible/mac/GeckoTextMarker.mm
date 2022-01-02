@@ -180,10 +180,7 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     // We compare its start offset in mContainer with mOffset.
     Accessible* child = parents2.ElementAt(pos2 - 1);
     MOZ_ASSERT(child->Parent() == mContainer);
-    bool unused;
-    uint32_t startOffset = child->IsRemote()
-                               ? child->AsRemote()->StartOffset(&unused)
-                               : child->AsLocal()->StartOffset();
+    uint32_t startOffset = child->StartOffset();
     return static_cast<uint32_t>(mOffset) <= startOffset;
   }
 

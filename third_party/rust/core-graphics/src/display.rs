@@ -608,6 +608,10 @@ impl CGDisplayMode {
             0
         }
     }
+
+    pub fn mode_id(&self) -> i32 {
+        unsafe { CGDisplayModeGetIODisplayModeID(self.as_ptr()) }
+    }
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -686,6 +690,7 @@ extern "C" {
     pub fn CGDisplayModeGetRefreshRate(mode: ::sys::CGDisplayModeRef) -> libc::c_double;
     pub fn CGDisplayModeGetIOFlags(mode: ::sys::CGDisplayModeRef) -> u32;
     pub fn CGDisplayModeCopyPixelEncoding(mode: ::sys::CGDisplayModeRef) -> CFStringRef;
+    pub fn CGDisplayModeGetIODisplayModeID(mode: ::sys::CGDisplayModeRef) -> i32;
 
     pub fn CGDisplayCopyAllDisplayModes(
         display: CGDirectDisplayID,

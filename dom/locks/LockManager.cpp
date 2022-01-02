@@ -35,7 +35,6 @@ JSObject* LockManager::WrapObject(JSContext* aCx,
 LockManager::LockManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
   Maybe<ClientInfo> clientInfo = aGlobal->GetClientInfo();
   if (!clientInfo) {
-    // TODO: https://github.com/WICG/web-locks/issues/78
     return;
   }
 
@@ -113,6 +112,16 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
                                                const LockOptions& aOptions,
                                                LockGrantedCallback& aCallback,
                                                ErrorResult& aRv) {
+  if (!mOwner->GetClientInfo()) {
+    // We do have nsPIDOMWindowInner::IsFullyActive for this kind of check,
+    // but this should be sufficient here as unloaded iframe is the only
+    // non-fully-active case that Web Locks should worry about (since it does
+    // not enter bfcache).
+    aRv.ThrowInvalidStateError(
+        "The document of the lock manager is not fully active");
+    return nullptr;
+  }
+
   if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
     // Step 4: If origin is an opaque origin, then return a promise rejected
     // with a "SecurityError" DOMException.
@@ -121,15 +130,14 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
     aRv.ThrowSecurityError("request() is not allowed in this context");
     return nullptr;
   }
-  if (!ValidateRequestArguments(aName, aOptions, aRv)) {
+
+  if (!mActor) {
+    aRv.ThrowNotSupportedError(
+        "Web Locks API is not enabled for this kind of document");
     return nullptr;
   }
 
-  if (!mActor) {
-    // TODO: https://github.com/WICG/web-locks/issues/78
-    aRv.ThrowInvalidStateError(
-        "The document of the lock manager is not fully active or web locks "
-        "aren't enabled for the document.");
+  if (!ValidateRequestArguments(aName, aOptions, aRv)) {
     return nullptr;
   }
 
@@ -143,16 +151,20 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
 };
 
 already_AddRefed<Promise> LockManager::Query(ErrorResult& aRv) {
+  if (!mOwner->GetClientInfo()) {
+    aRv.ThrowInvalidStateError(
+        "The document of the lock manager is not fully active");
+    return nullptr;
+  }
+
   if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
     aRv.ThrowSecurityError("query() is not allowed in this context");
     return nullptr;
   }
 
   if (!mActor) {
-    // TODO: https://github.com/WICG/web-locks/issues/78
-    aRv.ThrowInvalidStateError(
-        "The document of the lock manager is not fully active or web locks "
-        "aren't enabled for the document.");
+    aRv.ThrowNotSupportedError(
+        "Web Locks API is not enabled for this kind of document");
     return nullptr;
   }
 

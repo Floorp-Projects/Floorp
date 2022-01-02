@@ -443,7 +443,10 @@ class AsyncPanZoomController {
   /**
    * Returns whether this APZC is currently autoscrolling.
    */
-  bool IsAutoscroll() const { return mState == AUTOSCROLL; }
+  bool IsAutoscroll() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return mState == AUTOSCROLL;
+  }
 
   /**
    * Returns the identifier of the touch in the last touch event processed by
@@ -1448,7 +1451,6 @@ class AsyncPanZoomController {
   friend class SmoothMsdScrollAnimation;
   friend class GenericScrollAnimation;
   friend class WheelScrollAnimation;
-  friend class KeyboardScrollAnimation;
   friend class ZoomAnimation;
 
   friend class GenericOverscrollEffect;
@@ -1484,7 +1486,8 @@ class AsyncPanZoomController {
 
   // Start a smooth-scrolling animation to the given destination, with MSD
   // physics that is suited for scroll-snapping.
-  void SmoothMsdScrollTo(const CSSPoint& aDestination);
+  void SmoothMsdScrollTo(const CSSPoint& aDestination,
+                         ScrollTriggeredByScript aTriggeredByScript);
 
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;

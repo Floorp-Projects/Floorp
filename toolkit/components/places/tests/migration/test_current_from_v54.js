@@ -37,3 +37,8 @@ add_task(async function scrolling_fields_in_database() {
     `SELECT scrolling_time,scrolling_distance FROM moz_places_metadata`
   );
 });
+
+add_task(async function site_name_field_in_database() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(`SELECT site_name FROM moz_places`);
+});

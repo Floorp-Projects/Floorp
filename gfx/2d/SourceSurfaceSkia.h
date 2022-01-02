@@ -10,8 +10,10 @@
 #include "2D.h"
 #include <vector>
 #include "mozilla/Mutex.h"
-#include "skia/include/core/SkCanvas.h"
-#include "skia/include/core/SkImage.h"
+#include "skia/include/core/SkRefCnt.h"
+
+class SkImage;
+class SkSurface;
 
 namespace mozilla {
 
@@ -31,14 +33,7 @@ class SourceSurfaceSkia : public DataSourceSurface {
   IntSize GetSize() const override;
   SurfaceFormat GetFormat() const override;
 
-  // This is only ever called by the DT destructor, which can only ever happen
-  // from one place at a time. Therefore it doesn't need to hold the ChangeMutex
-  // as mSurface is never read to directly and is just there to keep the object
-  // alive, which itself is refcounted in a thread-safe manner.
-  void GiveSurface(sk_sp<SkSurface>& aSurface) {
-    mSurface = aSurface;
-    mDrawTarget = nullptr;
-  }
+  void GiveSurface(SkSurface* aSurface);
 
   sk_sp<SkImage> GetImage(Maybe<MutexAutoLock>* aLock);
 

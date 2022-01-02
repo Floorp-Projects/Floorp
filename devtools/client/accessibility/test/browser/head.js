@@ -258,20 +258,23 @@ function checkLevel(row, expected) {
  */
 async function checkTreeState(doc, expected) {
   info("Checking tree state.");
-  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(
-    () =>
-      [...doc.querySelectorAll(".treeRow")].every((row, i) => {
-        const { role, name, badges, selected, level } = expected[i];
-        return (
-          row.querySelector(".treeLabelCell").textContent === role &&
-          row.querySelector(".treeValueCell").textContent === name &&
-          compareBadges(row.querySelector(".badges"), badges) &&
-          checkSelected(row, selected) &&
-          checkLevel(row, level)
-        );
-      }),
-    "Wait for the right tree update."
-  );
+  const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() => {
+    const rows = [...doc.querySelectorAll(".treeRow")];
+    if (rows.length !== expected.length) {
+      return false;
+    }
+
+    return rows.every((row, i) => {
+      const { role, name, badges, selected, level } = expected[i];
+      return (
+        row.querySelector(".treeLabelCell").textContent === role &&
+        row.querySelector(".treeValueCell").textContent === name &&
+        compareBadges(row.querySelector(".badges"), badges) &&
+        checkSelected(row, selected) &&
+        checkLevel(row, level)
+      );
+    });
+  }, "Wait for the right tree update.");
 
   ok(hasExpectedStructure, "Tree structure is correct.");
 }

@@ -61,6 +61,15 @@ DomPanel.prototype = {
 
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
+    // onTargetAvailable is mandatory when calling watchTargets
+    this._onTargetAvailable = () => {};
+    this._onTargetSelected = this._onTargetSelected.bind(this);
+    await this._commands.targetCommand.watchTargets({
+      types: [this._commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+    });
+
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     await this._commands.resourceCommand.watchResources(
       [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
@@ -92,6 +101,11 @@ DomPanel.prototype = {
     }
     this._destroyed = true;
 
+    this._commands.targetCommand.unwatchTargets({
+      types: [this._commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+    });
     this._commands.resourceCommand.unwatchResources(
       [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
@@ -123,13 +137,20 @@ DomPanel.prototype = {
   },
 
   /**
-   * Make sure the panel is refreshed when navigation occurs.
+   * Make sure the panel is refreshed, either when navigation occurs or when a frame is
+   * selected in the iframe picker.
    * The panel is refreshed immediately if it's currently selected or lazily when the user
    * actually selects it.
    */
-  onTabNavigated: function() {
+  forceRefresh: function() {
     this.shouldRefresh = true;
+    // This will end up calling scriptCommand execute method to retrieve the `window` grip
+    // on targetCommand.selectedTargetFront.
     this.refresh();
+  },
+
+  _onTargetSelected: function({ targetFront }) {
+    this.forceRefresh();
   },
 
   onResourceAvailable: function(resources) {
@@ -141,7 +162,7 @@ DomPanel.prototype = {
         resource.name === "dom-complete" &&
         resource.targetFront.isTopLevel
       ) {
-        this.onTabNavigated();
+        this.forceRefresh();
       }
     }
   },

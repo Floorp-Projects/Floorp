@@ -11,7 +11,6 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -34,7 +33,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::hal;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -1054,82 +1052,6 @@ uint32_t PuppetWidget::GetMaxTouchPoints() const {
 void PuppetWidget::StartAsyncScrollbarDrag(
     const AsyncDragMetrics& aDragMetrics) {
   mBrowserChild->StartScrollbarDrag(aDragMetrics);
-}
-
-PuppetScreen::PuppetScreen(void* nativeScreen) {}
-
-PuppetScreen::~PuppetScreen() = default;
-
-static ScreenConfiguration ScreenConfig() {
-  ScreenConfiguration config;
-  hal::GetCurrentScreenConfiguration(&config);
-  return config;
-}
-
-nsIntSize PuppetWidget::GetScreenDimensions() {
-  nsIntRect r = ScreenConfig().rect();
-  return nsIntSize(r.Width(), r.Height());
-}
-
-NS_IMETHODIMP
-PuppetScreen::GetRect(int32_t* outLeft, int32_t* outTop, int32_t* outWidth,
-                      int32_t* outHeight) {
-  nsIntRect r = ScreenConfig().rect();
-  r.GetRect(outLeft, outTop, outWidth, outHeight);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PuppetScreen::GetAvailRect(int32_t* outLeft, int32_t* outTop, int32_t* outWidth,
-                           int32_t* outHeight) {
-  return GetRect(outLeft, outTop, outWidth, outHeight);
-}
-
-NS_IMETHODIMP
-PuppetScreen::GetPixelDepth(int32_t* aPixelDepth) {
-  *aPixelDepth = ScreenConfig().pixelDepth();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PuppetScreen::GetColorDepth(int32_t* aColorDepth) {
-  *aColorDepth = ScreenConfig().colorDepth();
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(PuppetScreenManager, nsIScreenManager)
-
-PuppetScreenManager::PuppetScreenManager() {
-  mOneScreen = new PuppetScreen(nullptr);
-}
-
-PuppetScreenManager::~PuppetScreenManager() = default;
-
-NS_IMETHODIMP
-PuppetScreenManager::GetPrimaryScreen(nsIScreen** outScreen) {
-  NS_IF_ADDREF(*outScreen = mOneScreen.get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PuppetScreenManager::GetTotalScreenPixels(int64_t* aTotalScreenPixels) {
-  MOZ_ASSERT(aTotalScreenPixels);
-  if (mOneScreen) {
-    int32_t x, y, width, height;
-    x = y = width = height = 0;
-    mOneScreen->GetRect(&x, &y, &width, &height);
-    *aTotalScreenPixels = width * height;
-  } else {
-    *aTotalScreenPixels = 0;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PuppetScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop,
-                                   int32_t inWidth, int32_t inHeight,
-                                   nsIScreen** outScreen) {
-  return GetPrimaryScreen(outScreen);
 }
 
 ScreenIntMargin PuppetWidget::GetSafeAreaInsets() const {

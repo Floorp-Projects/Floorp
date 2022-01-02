@@ -122,14 +122,11 @@ class CodeCoverageMixin(SingleTestMixin):
             return False
 
     def _setup_cpp_js_coverage_tools(self):
-        if mozinfo.os == "linux" or mozinfo.os == "mac":
-            self.prefix = "/builds/worker/checkouts/gecko"
-        elif mozinfo.os == "win":
-            # obj folder is z:/build/workspace/obj-build
-            # same strip count as prefix
-            self.prefix = "z:/build/build/src/"
-        else:
-            raise Exception("Unexpected OS: {}".format(mozinfo.os))
+        fetches_dir = os.environ["MOZ_FETCHES_DIR"]
+        with open(os.path.join(fetches_dir, "target.mozinfo.json"), "r") as f:
+            build_mozinfo = json.load(f)
+
+        self.prefix = build_mozinfo["topsrcdir"]
 
         strip_count = len(list(filter(None, self.prefix.split("/"))))
         os.environ["GCOV_PREFIX_STRIP"] = str(strip_count)

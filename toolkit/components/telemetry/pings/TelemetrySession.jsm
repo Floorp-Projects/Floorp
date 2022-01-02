@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.jsm",
 });
 
+Cu.importGlobalProperties(["Glean"]);
+
 const Utils = TelemetryUtils;
 
 const myScope = this;
@@ -1121,6 +1123,7 @@ var Impl = {
     if (needsUpdate) {
       this._sessionActiveTicks++;
       Services.telemetry.scalarAdd("browser.engagement.active_ticks", 1);
+      Glean.browserEngagement.activeTicks.add(1);
     }
   },
 

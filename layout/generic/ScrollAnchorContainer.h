@@ -167,6 +167,9 @@ class ScrollAnchorContainer final {
   // layout.css.scroll-anchoring.min-adjustment-threshold.
   bool mDisabled : 1;
 
+  // True if when we selected the current scroll anchor, there were unlaid out
+  // children that could be better anchor nodes after layout.
+  bool mAnchorMightBeSubOptimal : 1;
   // True if we should recalculate our anchor node at the next chance
   bool mAnchorNodeIsDirty : 1;
   // True if we are applying a scroll anchor adjustment

@@ -41,9 +41,10 @@ def setup_argument_parser():
     return cli.MozlintParser()
 
 
-def get_global_excludes(topsrcdir):
+def get_global_excludes(**lintargs):
     # exclude misc paths
     excludes = GLOBAL_EXCLUDES[:]
+    topsrcdir = lintargs["root"]
 
     # exclude top level paths that look like objdirs
     excludes.extend(
@@ -53,6 +54,11 @@ def get_global_excludes(topsrcdir):
             if name.startswith("obj") and os.path.isdir(name)
         ]
     )
+
+    if lintargs.get("include_thirdparty"):
+        # For some linters, we want to include the thirdparty code too.
+        # Example: trojan-source linter should run also on third party code.
+        return excludes
 
     for path in EXCLUSION_FILES + EXCLUSION_FILES_OPTIONAL:
         with open(os.path.join(topsrcdir, path), "r") as fh:
@@ -82,7 +88,7 @@ def lint(command_context, *runargs, **lintargs):
         pass
 
     lintargs.setdefault("root", command_context.topsrcdir)
-    lintargs["exclude"] = get_global_excludes(lintargs["root"])
+    lintargs["exclude"] = get_global_excludes(**lintargs)
     lintargs["config_paths"].insert(0, here)
     lintargs["virtualenv_bin_path"] = command_context.virtualenv_manager.bin_path
     lintargs["virtualenv_manager"] = command_context.virtualenv_manager

@@ -8,6 +8,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
 #include "nsAccUtils.h"
@@ -18,7 +19,6 @@
 #  include "Compatibility.h"
 #  include "mozilla/mscom/PassthruProxy.h"
 #  include "mozilla/mscom/Ptr.h"
-#  include "mozilla/StaticPrefs_accessibility.h"
 #  include "nsWinUtils.h"
 #  include "RootAccessible.h"
 #else
@@ -240,6 +240,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
     return IPC_OK();
   }
 
+  if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    mFocus = aID;
+  }
   ProxyEvent(proxy, aEventType);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -269,6 +272,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
     return IPC_OK();
   }
 
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    target->UpdateStateCache(aState, aEnabled);
+  }
   ProxyStateChangeEvent(target, aState, aEnabled);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -294,7 +300,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
 #if defined(XP_WIN)
     const LayoutDeviceIntRect& aCaretRect,
 #endif  // defined (XP_WIN)
-    const int32_t& aOffset, const bool& aIsSelectionCollapsed) {
+    const int32_t& aOffset, const bool& aIsSelectionCollapsed,
+    const bool& aIsAtEndOfLine) {
   if (mShutdown) {
     return IPC_OK();
   }
@@ -304,6 +311,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
     NS_ERROR("unknown caret move event target!");
     return IPC_OK();
   }
+
+  mCaretId = aID;
+  mCaretOffset = aOffset;
+  mIsCaretAtEndOfLine = aIsAtEndOfLine;
 
 #if defined(XP_WIN)
   ProxyCaretMoveEvent(proxy, aCaretRect);
@@ -320,8 +331,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
   nsINode* node = nullptr;
   bool fromUser = true;  // XXX fix me
   uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED;
-  RefPtr<xpcAccCaretMoveEvent> event = new xpcAccCaretMoveEvent(
-      type, xpcAcc, doc, node, fromUser, aOffset, aIsSelectionCollapsed);
+  RefPtr<xpcAccCaretMoveEvent> event =
+      new xpcAccCaretMoveEvent(type, xpcAcc, doc, node, fromUser, aOffset,
+                               aIsSelectionCollapsed, aIsAtEndOfLine);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
@@ -955,6 +967,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
     return IPC_OK();
   }
 
+  mFocus = aID;
   ProxyFocusEvent(proxy, aCaretRect);
 
   if (!nsCoreUtils::AccEventObserversExist()) {

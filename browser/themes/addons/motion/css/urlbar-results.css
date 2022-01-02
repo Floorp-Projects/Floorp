@@ -1,0 +1,499 @@
+.ac-type-icon {
+  order: 9 !important;
+  margin-inline-start: 16px !important;
+  margin-inline-end: 0 !important;
+}
+
+.ac-site-icon {
+  margin-inline-end: 16px !important;
+}
+
+.ac-separator {
+  display: none !important;
+}
+
+.ac-title,
+.ac-url {
+  flex: 1 !important;
+}
+
+.search-panel-one-offs {
+  border-radius: 0 0 8px 8px !important;
+  margin-bottom: 18px !important;
+}
+
+.search-one-offs {
+  display: block !important;
+}
+
+#urlbarView-results {
+  padding: 0 !important;
+}
+
+.urlbarView-row {
+  padding: 0 16px !important;
+  height: 32px !important;
+  border-radius: 0 !important;
+}
+
+.urlbarView-row-inner {
+  height: 100% !important;
+  align-items: center !important;
+}
+
+.urlbarView-favicon {
+  margin-inline-end: 16px !important;
+}
+
+.urlbarView-title-separator {
+  flex: 1 !important;
+}
+
+.urlbarView-title-separator::before {
+  display: none !important;
+}
+
+.urlbarView-type-icon {
+  order: 1 !important;
+  margin-inline-start: 16px !important;
+  margin-inline-end: 0 !important;
+}
+
+/* .search-one-offs
+{
+	padding: 4px !important;
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+.search-panel-one-offs
+{
+	display: flex !important;
+	flex-direction: row !important;
+	padding: 0 !important;
+}
+
+.searchbar-engine-one-off-item
+{
+	height: 32px !important;
+	border-radius: 16px !important;
+	padding: 0 8px !important;
+	margin: 4px !important;
+	background-image: none !important;
+	color: inherit !important;
+	border: 0 !important;
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	align-content: center !important;
+}
+
+.searchbar-engine-one-off-item > .button-box
+{
+	width: 16px !important;
+	max-height: 16px !important;
+	transform: translateY(50%) !important;
+}
+
+.searchbar-engine-one-off-item::after
+{
+	margin-inline-start: 8px !important;
+	content: attr(tooltiptext) !important;
+	line-height: 16px !important;
+	transform: translateY(calc(50% - 1px)) !important;
+}
+
+
+.searchbar-engine-one-off-item.dummy
+{
+	display: none !important;
+} */
+
+/* 70+ */
+
+#urlbar-container {
+  max-height: 37px !important;
+}
+
+#urlbar,
+#searchbar {
+  font-size: 14px !important;
+  border-radius: 99px !important;
+  background-color: var(--toolbar-field-background-color) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 2px !important;
+  background-clip: padding-box !important;
+  min-height: 28px !important;
+  transition: background-color .1s var(--ease-basic) !important;
+  -moz-box-align: center !important;
+
+  display: block !important;
+  margin: 0 !important;
+}
+
+#urlbar:not(:-moz-lwtheme),
+#searchbar:not(:-moz-lwtheme) {
+  color: inherit !important;
+}
+
+#urlbar:hover,
+#searchbar:hover {
+  background-color: var(--toolbar-field-hover-background-color) !important;
+}
+
+#urlbar[focused],
+#urlbar[open],
+#searchbar[focused],
+#searchbar[open] {
+  background-color: var(--toolbar-field-focus-background-color) !important;
+}
+
+#urlbar[focused],
+#searchbar[focused] {
+  border: 2px solid var(--toolbar-field-focus-border-color) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#urlbar[open],
+#searchbar[open] {
+  border: 0 !important;
+  padding: 0 !important;
+  border-radius: 8px 8px 0 0 !important;
+  min-height: 37px !important;
+  margin: 0 -5px -1px !important;
+  box-shadow:
+    0 5px 5px -3px rgba(0, 0, 0, .2),
+    0 8px 10px 1px rgba(0, 0, 0, .14),
+    0 3px 14px 2px rgba(0, 0, 0, .12) !important;
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+#urlbar-input-container {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.urlbar-input-box {
+  flex: 1 !important;
+}
+
+#urlbar-input {
+  width: 100% !important;
+}
+
+#urlbar[open] #urlbar-input-container {
+  height: 37px !important;
+}
+
+#urlbar[open] #identity-box {
+  margin-inline-start: 8px !important;
+  margin-inline-end: 8px !important;
+}
+
+.urlbarView {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  position: relative !important;
+  box-shadow: none !important;
+  background: 0 !important;
+  border: 0 !important;
+  background: white !important;
+}
+
+#urlbar[open] .urlbarView {
+  display: block !important;
+  width: 100% !important;
+}
+
+#urlbar-results {
+  padding: 0 !important;
+}
+
+#urlbar-container,
+#searchbar-container {
+  overflow: visible !important;
+  padding: 0 5px !important;
+}
+
+.searchbar-textbox {
+  color: inherit !important;
+  font-size: inherit !important;
+  min-height: auto !important;
+}
+
+#urlbar[pageproxystate=valid]>#identity-box:not(.no-hover)>#identity-icon {
+  fill-opacity: 1 !important;
+}
+
+#identity-icon-labels {
+  transform: translateY(-3px) !important;
+  color: inherit !important;
+  opacity: 1 !important;
+  padding: 0 !important;
+  margin-inline-start: 8px !important;
+  display: none !important;
+}
+
+#identity-box,
+#urlbar-display-box {
+  position: relative !important;
+}
+
+/* separator */
+#urlbar[pageproxystate=valid]:not([open]) #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden)::after,
+#urlbar-display-box::after {
+  content: "" !important;
+  display: -moz-box !important;
+  position: absolute !important;
+  top: 4px !important;
+  bottom: 4px !important;
+  right: 0 !important;
+  background: #9d9e9f !important;
+  width: 1px !important;
+  transition: opacity .2s var(--ease-basic) !important;
+}
+
+#urlbar[pageproxystate=valid]:not([open]) #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden),
+#urlbar-display-box {
+  margin-inline-end: 8px !important;
+}
+
+#urlbar[pageproxystate=valid]:not([open]) #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden) #identity-icon-labels {
+  display: -moz-box !important;
+}
+
+
+#urlbar[pageproxystate=valid] #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden):hover:not(.no-hover)::after,
+#urlbar[pageproxystate=valid] #identity-box:-moz-any(.notSecureText, .verifiedIdentity, .chromeUI, .extensionPage, .certUserOverridden)[open]::after {
+  opacity: 0 !important;
+}
+
+#identity-box.extensionPage>#identity-icon {
+  list-style-image: none !important;
+  margin-inline-end: -16px !important;
+}
+
+/* no longer used as a connection icon */
+#connection-icon {
+  display: none !important;
+}
+
+#identity-box:-moz-any(.mixedActiveBlocked,
+  .mixedDisplayContentLoadedActiveBlocked,
+  .mixedActiveContent)>#connection-icon {
+  display: -moz-box !important;
+}
+
+#identity-box:-moz-any(.certUserOverridden, .unknownIdentity) {
+  color: #c94031 !important;
+}
+
+.urlbar-input {
+  padding: 0 !important;
+}
+
+.searchbar-textbox {
+  border: 0 !important;
+  background: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+#page-action-buttons>#pageActionSeparator,
+.urlbar-history-dropmarker {
+  display: none !important;
+}
+
+#pageActionSeparator {
+  height: 24px !important;
+}
+
+.urlbar-icon-wrapper {
+  background: 0 !important;
+}
+
+.urlbar-icon,
+#identity-box,
+#tracking-protection-icon-container {
+  min-width: 32px !important;
+  height: 24px !important;
+  padding: 4px 8px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 99px !important;
+  fill-opacity: 1 !important;
+  transition: background-color .2s var(--ease-basic) !important;
+  background: 0 !important;
+  background-color: transparent !important;
+}
+
+#identity-box #notification-popup-box {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#page-action-buttons {
+  height: 24px !important;
+}
+
+#urlbar[open] #page-action-buttons {
+  display: none !important;
+}
+
+.urlbar-icon:hover:not([disabled]),
+#identity-box:hover:not(.no-hover),
+#tracking-protection-icon-container:hover {
+  background-color: var(--toolbarbutton-hover-background) !important;
+}
+
+.urlbar-icon:hover:active:not([disabled]),
+.urlbar-icon[open],
+#identity-box:hover:active:not(.no-hover),
+#identity-box[open]:not(.no-hover),
+#tracking-protection-icon-container[open] {
+  background-color: var(--toolbarbutton-active-background) !important;
+  transition-duration: 0 !important;
+}
+
+#star-button-box {
+  -moz-box-ordinal-group: 99 !important;
+}
+
+#pageActionButton {
+  -moz-box-ordinal-group: 98 !important;
+}
+
+#contextual-feature-recommendation {
+  -moz-box-ordinal-group: 97 !important;
+  width: auto !important;
+}
+
+.urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine) {
+  transition:
+    background-color .2s var(--ease-basic),
+    margin .15s var(--ease-in),
+    opacity .15s var(--ease-basic),
+    visibility 0s .2s !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  margin-inline-start: -32px !important;
+}
+
+#urlbar:hover .urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine),
+.urlbar-page-action:-moz-any(#reader-mode-button,
+  #pageActionButton,
+  #pocket-button-box,
+  #pageAction-urlbar-screenshots_mozilla_org,
+  #pageAction-urlbar-sendToDevice,
+  #pageAction-urlbar-emailLink,
+  #pageAction-urlbar-copyURL,
+  #pageAction-urlbar-shareURL,
+  #pageAction-urlbar-addSearchEngine):-moz-any(:hover, [open], [readeractive]) {
+  transition:
+    background-color .2s var(--ease-basic),
+    margin .3s var(--ease-out),
+    opacity .3s var(--ease-basic) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  margin-inline-start: 0 !important;
+}
+
+.urlbar-display {
+  color: inherit !important;
+  margin: 0 !important;
+}
+
+#pocket-button-box[animate]>#pocket-animatable-box {
+  margin-inline-start: 6px !important;
+}
+
+#star-button-animatable-box {
+  display: none !important;
+}
+
+#cfr-label-container {
+  background: 0 !important;
+}
+
+#cfr-label {
+  display: none !important;
+}
+
+#cfr-button {
+  fill: currentColor !important;
+}
+
+#urlbar[open] .urlbar-go-button,
+#searchbar[open] .search-go-button {
+  height: 32px !important;
+}
+
+/* icons 1x */
+#urlbar {
+  --info-icon: url(chrome://browser/skin/motion/info-1x.svg);
+  --lock-icon: url(chrome://browser/skin/motion/connection-1x.svg);
+  --warning-icon: url(chrome://browser/skin/motion/connection-warning-1x.svg);
+}
+
+/* icons 2x */
+@media (min--moz-device-pixel-ratio: 2) {
+  #urlbar {
+    --info-icon: url(chrome://browser/skin/motion/info-2x.svg);
+    --lock-icon: url(chrome://browser/skin/motion/connection-2x.svg);
+    --warning-icon: url(chrome://browser/skin/motion/connection-warning-2x.svg);
+  }
+}
+
+/* info (not secure) */
+#identity-box[pageproxystate="valid"]:-moz-any(.notSecure, .insecureLoginForms, .mixedActiveContent)>#identity-icon {
+  list-style-image: var(--info-icon) !important;
+}
+
+#identity-box[pageproxystate="valid"]:-moz-any(.certUserOverridden,
+  .weakCipher,
+  .unknownIdentity)>#identity-icon {
+  list-style-image: var(--warning-icon) !important;
+}
+
+/* lock (secure) */
+#identity-box[pageproxystate="valid"]:-moz-any(.verifiedDomain, .verifiedIdentity, .mixedActiveBlocked)>#identity-icon {
+  list-style-image: var(--lock-icon) !important;
+}
+
+/* high DPI adjustments */
+@media (min--moz-device-pixel-ratio: 2) {
+  #identity-icon-labels {
+    padding-inline-end: .5px !important;
+  }
+
+  #urlbar[pageproxystate=valid]>#identity-box:-moz-any(.unknownIdentity, .notSecure)>#identity-icon {
+    transform: translate(.5px, .5px) !important;
+  }
+
+  #identity-icon-labels,
+  .urlbar-input,
+  .searchbar-textbox {
+    transform: translateY(-.5px) !important;
+  }
+}

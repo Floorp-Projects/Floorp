@@ -11,6 +11,7 @@
 
 #include "ServiceWorkerOp.h"
 #include "ServiceWorkerOpPromise.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/PFetchEventOpProxyChild.h"
@@ -19,23 +20,29 @@ namespace mozilla {
 namespace dom {
 
 class InternalRequest;
-class ServiceWorkerFetchEventOpArgs;
+class InternalResponse;
+class ParentToChildServiceWorkerFetchEventOpArgs;
 
 class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   friend class PFetchEventOpProxyChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyChild, override);
 
   FetchEventOpProxyChild() = default;
 
-  void Initialize(const ServiceWorkerFetchEventOpArgs& aArgs);
+  void Initialize(const ParentToChildServiceWorkerFetchEventOpArgs& aArgs);
 
   // Must only be called once and on a worker thread.
   SafeRefPtr<InternalRequest> ExtractInternalRequest();
 
+  RefPtr<FetchEventPreloadResponsePromise> GetPreloadResponsePromise();
+
  private:
   ~FetchEventOpProxyChild() = default;
+
+  mozilla::ipc::IPCResult RecvPreloadResponse(
+      ParentToChildInternalResponse&& aResponse);
 
   void ActorDestroy(ActorDestroyReason) override;
 
@@ -46,6 +53,8 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
 
   // Initialized on RemoteWorkerService::Thread, read on a worker thread.
   SafeRefPtr<InternalRequest> mInternalRequest;
+
+  RefPtr<FetchEventPreloadResponsePromise::Private> mPreloadResponsePromise;
 };
 
 }  // namespace dom

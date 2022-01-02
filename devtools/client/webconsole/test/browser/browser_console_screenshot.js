@@ -10,7 +10,7 @@ const COLOR_DIV_2 = "rgb(0, 200, 0)";
 const COLOR_DIV_3 = "rgb(0, 0, 150)";
 const COLOR_DIV_4 = "rgb(100, 0, 100)";
 
-const TEST_URI = `data:text/html,<meta charset=utf8>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
     <style>
       body {
         margin: 0;

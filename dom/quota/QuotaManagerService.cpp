@@ -32,6 +32,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/dom/quota/PQuota.h"
 #include "mozilla/dom/quota/PersistenceType.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/fallible.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/ipc/BackgroundChild.h"

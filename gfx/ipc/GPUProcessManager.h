@@ -192,6 +192,13 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Returns the process host
   GPUProcessHost* Process() { return mProcess; }
 
+  /*
+   * ** Test-only Method **
+   *
+   * Trigger GPU-process test metric instrumentation.
+   */
+  void TestTriggerMetrics();
+
  private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
@@ -229,8 +236,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   // Returns true if WebRender was enabled and is now disabled.
   bool DisableWebRenderConfig(wr::WebRenderError aError, const nsCString& aMsg);
-
-  void NotifyDisablingWebRender();
 
   void FallbackToSoftware(const char* aMessage);
 

@@ -2177,6 +2177,20 @@ class UrlbarInput {
       selectedVal = BrowserUIUtils.trimURLProtocol + selectedVal;
     }
 
+    // If selection starts from the beginning and part or all of the URL
+    // is selected, we check for decoded characters and encode them.
+    // Unless decodeURLsOnCopy is set. Do not encode data: URIs.
+    if (!UrlbarPrefs.get("decodeURLsOnCopy") && !uri.schemeIs("data")) {
+      try {
+        new URL(selectedVal);
+        // Use encodeURI instead of URL.href because we don't want
+        // trailing slash.
+        selectedVal = encodeURI(selectedVal);
+      } catch (ex) {
+        // URL is invalid. Return original selected value.
+      }
+    }
+
     return selectedVal;
   }
 

@@ -38,9 +38,9 @@ this.runtime = class extends ExtensionAPI {
               return () => {};
             }
             let listener = () => fire.sync();
-            extension.on("background-page-started", listener);
+            extension.on("background-script-started", listener);
             return () => {
-              extension.off("background-page-started", listener);
+              extension.off("background-script-started", listener);
             };
           },
         }).api(),
@@ -70,9 +70,9 @@ this.runtime = class extends ExtensionAPI {
                   break;
               }
             };
-            extension.on("background-page-started", listener);
+            extension.on("background-script-started", listener);
             return () => {
-              extension.off("background-page-started", listener);
+              extension.off("background-script-started", listener);
             };
           },
         }).api(),

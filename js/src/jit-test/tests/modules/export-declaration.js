@@ -7,12 +7,22 @@ program = (elts) => Pattern({
     type: "Program",
     body: elts
 })
-exportDeclaration = (declaration, specifiers, source, isDefault) => Pattern({
+exportDeclaration = (declaration, specifiers, moduleRequest, isDefault) => Pattern({
     type: "ExportDeclaration",
     declaration: declaration,
     specifiers: specifiers,
-    source: source,
+    moduleRequest: moduleRequest,
     isDefault: isDefault
+});
+moduleRequest = (specifier, assertions) => Pattern({
+    type: "ModuleRequest",
+    source: specifier,
+    assertions: assertions
+});
+importAssertion = (key, value) => Pattern({
+    type: "ImportAssertion",
+    key: key,
+    value : value
 });
 exportSpecifier = (id, name) => Pattern({
     type: "ExportSpecifier",
@@ -222,7 +232,10 @@ program([
                 ident("a")
             )
         ],
-        lit("b"),
+        moduleRequest(
+            lit("b"),
+            [],
+        ),
         false
     )
 ]).assert(parseAsModule("export { a } from 'b'"));
@@ -233,7 +246,10 @@ program([
         [
             exportBatchSpecifier()
         ],
-        lit("a"),
+        moduleRequest(
+            lit("a"),
+            [],
+        ),
         false
     )
 ]).assert(parseAsModule("export * from 'a'"));
@@ -370,6 +386,71 @@ program([
     )
 ]).assert(parseAsModule("export default 1234"));
 
+if (getRealmConfiguration()['importAssertions']) {
+    program([
+        exportDeclaration(
+            null,
+            [
+                exportSpecifier(
+                    ident("a"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('type'), lit('js')),
+                ]
+            ),
+            false
+        )
+    ]).assert(parseAsModule("export { a } from 'b'  assert { type: 'js' } "));
+
+    program([
+        exportDeclaration(
+            null,
+            [
+                exportSpecifier(
+                    ident("a"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('foo'), lit('bar')),
+                ],
+            ),
+            false
+        )
+    ]).assert(parseAsModule("export { a } from 'b'  assert { foo: 'bar', } "));
+
+    program([
+        exportDeclaration(
+            null,
+            [
+                exportSpecifier(
+                    ident("a"),
+                    ident("a")
+                )
+            ],
+            moduleRequest(
+                lit("b"),
+                [
+                    importAssertion(ident('type'), lit('js')),
+                    importAssertion(ident('foo'), lit('bar')),
+                    importAssertion(ident('test'), lit('123')),
+                ]
+            ),
+            false
+        )
+    ]).assert(parseAsModule("export { a } from 'b'  assert { type: 'js', foo: 'bar', 'test': '123' } "));
+
+    assertThrowsInstanceOf(function () {
+        parseAsModule("export { a } from 'b'  assert { type: type }");
+    }, SyntaxError);
+}
+
 assertThrowsInstanceOf(function () {
    parseAsModule("export default 1234 5678");
 }, SyntaxError);
@@ -412,7 +493,10 @@ program([
                 ident("true")
             ),
         ],
-        lit("b"),
+        moduleRequest(
+            lit("b"),
+            [],
+        ),
         false
     )
 ]).assert(parseAsModule("export { true } from 'b'"));
@@ -426,7 +510,10 @@ program([
                 ident("name")
             ),
         ],
-        lit("b"),
+        moduleRequest(
+            lit("b"),
+            [],
+        ),
         false
     )
 ]).assert(parseAsModule("export { true as name } from 'b'"));

@@ -13,7 +13,7 @@
 let tracker;
 {
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const loader = new DevToolsLoader({
     invisibleToDebugger: true,
@@ -87,7 +87,7 @@ async function startRecordingAllocations({
       [DEBUG_ALLOCATIONS],
       async debug_allocations => {
         const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/Loader.jsm"
+          "resource://devtools/shared/loader/Loader.jsm"
         );
         const loader = new DevToolsLoader({
           invisibleToDebugger: true,
@@ -141,7 +141,7 @@ async function stopRecordingAllocations(
       [DEBUG_ALLOCATIONS],
       debug_allocations => {
         const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/Loader.jsm"
+          "resource://devtools/shared/loader/Loader.jsm"
         );
         const { tracker } = DevToolsLoader;
         ok(
@@ -163,7 +163,7 @@ async function stopRecordingAllocations(
       const objectNodeIds = TrackedObjects.getAllNodeIds();
       if (objectNodeIds.length > 0) {
         const { DevToolsLoader } = ChromeUtils.import(
-          "resource://devtools/shared/Loader.jsm"
+          "resource://devtools/shared/loader/Loader.jsm"
         );
         const { tracker } = DevToolsLoader;
         // Record the heap snapshot from the content process,

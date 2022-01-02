@@ -49,11 +49,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        # It would be nice to handle alternative JDKs.  See
-        # https://wiki.archlinux.org/index.php/Java.
-        "jdk8-openjdk",
-        # For downloading the Android SDK and NDK.
-        "wget",
         # See comment about 32 bit binaries and multilib below.
         "multilib/lib32-ncurses",
         "multilib/lib32-readline",
@@ -102,7 +97,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             raise e
 
         # 2. Android pieces.
-        self.ensure_java(mozconfig_builder)
         super().install_mobile_android_packages(
             mozconfig_builder, artifact_mode=artifact_mode
         )

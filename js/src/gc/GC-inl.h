@@ -37,15 +37,17 @@ class ArenaListIter {
     MOZ_ASSERT(!done());
     arena = arena->next;
   }
+
+  operator Arena*() const { return get(); }
+  Arena* operator->() const { return get(); }
 };
 
-class ArenaIter : public ChainedIterator<ArenaListIter, 4> {
+class ArenaIter : public ChainedIterator<ArenaListIter, 3> {
  public:
   ArenaIter(JS::Zone* zone, AllocKind kind)
       : ChainedIterator(zone->arenas.getFirstArena(kind),
-                        zone->arenas.getFirstArenaToSweep(kind),
-                        zone->arenas.getFirstSweptArena(kind),
-                        zone->arenas.getFirstNewArenaInMarkPhase(kind)) {}
+                        zone->arenas.getFirstCollectingArena(kind),
+                        zone->arenas.getFirstSweptArena(kind)) {}
 };
 
 class ArenaCellIter {
@@ -327,7 +329,7 @@ class ZoneCellIter : protected ZoneAllCellIter<T> {
   void skipDying() {
     while (!ZoneAllCellIter<T>::done()) {
       T* current = ZoneAllCellIter<T>::get();
-      if (!IsAboutToBeFinalizedUnbarriered(&current)) {
+      if (!IsAboutToBeFinalizedUnbarriered(current)) {
         return;
       }
       ZoneAllCellIter<T>::next();

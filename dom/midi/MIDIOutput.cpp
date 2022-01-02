@@ -29,7 +29,7 @@ MIDIOutput* MIDIOutput::Create(nsPIDOMWindowInner* aWindow,
                                const bool aSysexEnabled) {
   MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
              MIDIPortType::Output);
-  auto port = new MIDIOutput(aWindow, aMIDIAccessParent);
+  auto* port = new MIDIOutput(aWindow, aMIDIAccessParent);
   if (NS_WARN_IF(!port->Initialize(aPortInfo, aSysexEnabled))) {
     return nullptr;
   }

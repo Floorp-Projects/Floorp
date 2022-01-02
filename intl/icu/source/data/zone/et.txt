@@ -1940,6 +1940,9 @@ et{
             lg{"Jekaterinburgi aeg"}
             ls{"Jekaterinburgi standardaeg"}
         }
+        "meta:Yukon"{
+            ls{"Yukoni aeg"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}

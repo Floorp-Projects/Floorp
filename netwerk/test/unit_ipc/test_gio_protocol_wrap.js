@@ -4,10 +4,10 @@
 //
 
 function run_test() {
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
+  Services.prefs.setCharPref(
+    "network.gio.supported-protocols",
+    "localtest:,recent:"
   );
-  prefs.setCharPref("network.gio.supported-protocols", "localtest:,recent:");
 
   do_await_remote_message("gio-allow-test-protocols").then(port => {
     do_send_remote_message("gio-allow-test-protocols-done");
@@ -17,8 +17,5 @@ function run_test() {
 }
 
 registerCleanupFunction(() => {
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  prefs.clearUserPref("network.gio.supported-protocols");
+  Services.prefs.clearUserPref("network.gio.supported-protocols");
 });

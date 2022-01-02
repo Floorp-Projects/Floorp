@@ -24,7 +24,7 @@
 #include "js/HeapAPI.h"               // for IsInsideNursery
 #include "js/RootingAPI.h"            // for Rooted, MutableHandle
 #include "vm/Compartment.h"           // for Compartment
-#include "vm/JSAtom.h"                // for Atomize, PinAtom
+#include "vm/JSAtom.h"                // for Atomize
 #include "vm/JSContext.h"             // for JSContext
 #include "vm/JSFunction.h"            // for JSFunction
 #include "vm/JSObject.h"              // for JSObject, RequireObject,
@@ -187,7 +187,7 @@ bool DebuggerEnvironment::CallData::typeGetter() {
       break;
   }
 
-  JSAtom* str = Atomize(cx, s, strlen(s), PinAtom);
+  JSAtom* str = Atomize(cx, s, strlen(s));
   if (!str) {
     return false;
   }
@@ -204,7 +204,7 @@ bool DebuggerEnvironment::CallData::scopeKindGetter() {
   Maybe<ScopeKind> kind = environment->scopeKind();
   if (kind.isSome()) {
     const char* s = ScopeKindString(*kind);
-    JSAtom* str = Atomize(cx, s, strlen(s), PinAtom);
+    JSAtom* str = Atomize(cx, s, strlen(s));
     if (!str) {
       return false;
     }

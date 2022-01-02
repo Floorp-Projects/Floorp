@@ -14,6 +14,7 @@ var EXPORTED_SYMBOLS = ["ActorManagerParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Fission-compatible JSProcess implementations.
@@ -187,21 +188,6 @@ let JSWINDOWACTORS = {
     },
 
     allFrames: true,
-  },
-
-  ContentMeta: {
-    parent: {
-      moduleURI: "resource://gre/actors/ContentMetaParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
-      events: {
-        DOMMetaAdded: {},
-      },
-    },
-
-    messageManagerGroups: ["browsers"],
   },
 
   Controllers: {
@@ -503,6 +489,27 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 };
+
+/**
+ * Note that turning on page data collection for snapshots currently disables
+ * collection of generic page info for normal history entries. See bug 1740234.
+ */
+if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
+  JSWINDOWACTORS.ContentMeta = {
+    parent: {
+      moduleURI: "resource://gre/actors/ContentMetaParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
+      events: {
+        DOMMetaAdded: {},
+      },
+    },
+
+    messageManagerGroups: ["browsers"],
+  };
+}
 
 var ActorManagerParent = {
   _addActors(actors, kind) {

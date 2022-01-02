@@ -144,8 +144,8 @@ Observable.prototype = {
     }
     this.isObserving = false;
 
-    if (this.targetActor.attached && this.targetActor.docShell) {
-      // It's only worth stopping if the targetActor is still attached
+    if (!this.targetActor.isDestroyed() && this.targetActor.docShell) {
+      // It's only worth stopping if the targetActor is still active
       this._stopListeners(this.targetActor.windows);
     }
   },

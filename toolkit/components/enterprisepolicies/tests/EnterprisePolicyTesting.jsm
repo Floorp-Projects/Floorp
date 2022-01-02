@@ -55,8 +55,7 @@ var EnterprisePolicyTesting = {
 
     if (customSchema) {
       let schemaModule = ChromeUtils.import(
-        "resource:///modules/policies/schema.jsm",
-        null
+        "resource:///modules/policies/schema.jsm"
       );
       schemaModule.schema = customSchema;
     }
@@ -108,22 +107,20 @@ var PoliciesPrefTracker = {
   _originalValues: new Map(),
 
   start() {
-    let PoliciesBackstage = ChromeUtils.import(
-      "resource:///modules/policies/Policies.jsm",
-      null
+    let { PoliciesUtils } = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm"
     );
-    this._originalFunc = PoliciesBackstage.setDefaultPref;
-    PoliciesBackstage.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
+    this._originalFunc = PoliciesUtils.setDefaultPref;
+    PoliciesUtils.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
   },
 
   stop() {
     this.restoreDefaultValues();
 
-    let PoliciesBackstage = ChromeUtils.import(
-      "resource:///modules/policies/Policies.jsm",
-      null
+    let { PoliciesUtils } = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm"
     );
-    PoliciesBackstage.setDefaultPref = this._originalFunc;
+    PoliciesUtils.setDefaultPref = this._originalFunc;
     this._originalFunc = null;
   },
 

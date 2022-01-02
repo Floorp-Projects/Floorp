@@ -76,11 +76,11 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = evaluate.fromJSON(
-        serializedData,
-        null,
-        this.document.defaultView
-      );
+      const data = evaluate.fromJSON({
+        obj: serializedData,
+        seenEls: null,
+        win: this.document.defaultView,
+      });
 
       switch (name) {
         case "MarionetteCommandsParent:clearElement":
@@ -127,6 +127,9 @@ class MarionetteCommandsChild extends JSWindowActorChild {
           break;
         case "MarionetteCommandsParent:getScreenshotRect":
           result = await this.getScreenshotRect(data);
+          break;
+        case "MarionetteCommandsParent:getShadowRoot":
+          result = await this.getShadowRoot(data);
           break;
         case "MarionetteCommandsParent:isElementDisplayed":
           result = await this.isElementDisplayed(data);
@@ -394,6 +397,15 @@ class MarionetteCommandsChild extends JSWindowActorChild {
     }
 
     return rect;
+  }
+
+  /**
+   * Return the shadowRoot attached to an element
+   */
+  async getShadowRoot(options = {}) {
+    const { elem } = options;
+
+    return element.getShadowRoot(elem);
   }
 
   /**

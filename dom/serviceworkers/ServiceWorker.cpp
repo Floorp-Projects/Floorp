@@ -166,7 +166,10 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   auto storageAllowed = StorageAllowedForWindow(window);
-  if (storageAllowed != StorageAccess::eAllow) {
+  if (storageAllowed != StorageAccess::eAllow &&
+      (!StaticPrefs::privacy_partition_serviceWorkers() ||
+       !StoragePartitioningEnabled(
+           storageAllowed, window->GetExtantDoc()->CookieJarSettings()))) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mDescriptor.Scope(), "ServiceWorkerPostMessageStorageError",
         nsTArray<nsString>{NS_ConvertUTF8toUTF16(mDescriptor.Scope())});

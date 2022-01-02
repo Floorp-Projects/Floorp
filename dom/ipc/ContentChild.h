@@ -113,9 +113,9 @@ class ContentChild final : public PContentChild,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ProvideWindowCommon(
       BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
-      uint32_t aChromeFlags, bool aCalledFromJS, bool aWidthSpecified,
-      nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
-      bool aForceNoOpener, bool aForceNoReferrer,
+      uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
+      const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
+      bool aForceNoReferrer, bool aIsPopupRequested,
       nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
       BrowsingContext** aReturn);
 
@@ -126,7 +126,7 @@ class ContentChild final : public PContentChild,
   void InitXPCOM(XPCOMInitData&& aXPCOMInit,
                  const mozilla::dom::ipc::StructuredCloneData& aInitialData);
 
-  void InitSharedUASheets(const Maybe<base::SharedMemoryHandle>& aHandle,
+  void InitSharedUASheets(Maybe<base::SharedMemoryHandle>&& aHandle,
                           uintptr_t aAddress);
 
   void InitGraphicsDeviceData(const ContentDeviceData& aData);
@@ -358,7 +358,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvRebuildFontList(const bool& aFullRebuild);
   mozilla::ipc::IPCResult RecvFontListShmBlockAdded(
       const uint32_t& aGeneration, const uint32_t& aIndex,
-      const base::SharedMemoryHandle& aHandle);
+      base::SharedMemoryHandle&& aHandle);
 
   mozilla::ipc::IPCResult RecvUpdateAppLocales(
       nsTArray<nsCString>&& aAppLocales);
@@ -542,7 +542,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
       XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
       FullLookAndFeel&& aLookAndFeelData, SystemFontList&& aFontList,
-      const Maybe<base::SharedMemoryHandle>& aSharedUASheetHandle,
+      Maybe<base::SharedMemoryHandle>&& aSharedUASheetHandle,
       const uintptr_t& aSharedUASheetAddress,
       nsTArray<base::SharedMemoryHandle>&& aSharedFontListBlocks);
 
@@ -553,7 +553,7 @@ class ContentChild final : public PContentChild,
       const nsCString& aPermissionKey, nsTArray<IPC::Permission>&& aPerms);
 
   mozilla::ipc::IPCResult RecvShareCodeCoverageMutex(
-      const CrossProcessMutexHandle& aHandle);
+      CrossProcessMutexHandle aHandle);
 
   mozilla::ipc::IPCResult RecvFlushCodeCoverageCounters(
       FlushCodeCoverageCountersResolver&& aResolver);

@@ -35,6 +35,16 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual uint32_t CharacterCount() const override;
 
+  virtual already_AddRefed<AccAttributes> TextAttributes(
+      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+      int32_t* aEndOffset) override;
+
+  virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
+
+  virtual uint32_t StartOffset() override;
+
+  virtual int32_t LinkIndexAtOffset(uint32_t aOffset) override;
+
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {

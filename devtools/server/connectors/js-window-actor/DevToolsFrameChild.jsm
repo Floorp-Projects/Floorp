@@ -10,7 +10,9 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const Loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const Loader = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -37,7 +39,7 @@ const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
  */
 function shouldNotifyWindowGlobal(
   windowGlobal,
-  watchedBrowserId,
+  context,
   { acceptTopLevelTarget = false }
 ) {
   const browsingContext = windowGlobal.browsingContext;
@@ -69,7 +71,10 @@ function shouldNotifyWindowGlobal(
 
   // If we are focusing only on a sub-tree of Browsing Element,
   // Ignore the out of the sub tree elements.
-  if (watchedBrowserId && browsingContext.browserId != watchedBrowserId) {
+  if (
+    context.type == "browser-element" &&
+    browsingContext.browserId != context.browserId
+  ) {
     return false;
   }
 
@@ -82,7 +87,11 @@ function shouldNotifyWindowGlobal(
   //
   // `acceptTopLevelTarget` is set both when server side target switching is enabled
   // or when navigating to and from pages in the bfcache
-  if (!acceptTopLevelTarget && watchedBrowserId && !browsingContext.parent) {
+  if (
+    !acceptTopLevelTarget &&
+    context.type == "browser-element" &&
+    !browsingContext.parent
+  ) {
     return false;
   }
 
@@ -149,12 +158,15 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * instantiate a new dedicated target actor for each of the watchers.
    *
    * @param Object options
-   * @param String options.isBFCache
+   * @param Boolean options.isBFCache
    *        True, if the request to instantiate a new target comes from a bfcache navigation.
    *        i.e. when we receive a pageshow event with persisted=true.
    *        This will be true regardless of bfcacheInParent being enabled or disabled.
+   * @param Boolean options.ignoreIfExisting
+   *        By default to false. If true is passed, we avoid instantiating a target actor
+   *        if one already exists for this windowGlobal.
    */
-  instantiate({ isBFCache = false } = {}) {
+  instantiate({ isBFCache = false, ignoreIfExisting = false } = {}) {
     const { sharedData } = Services.cpmm;
     const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
     if (!sessionDataByWatcherActor) {
@@ -167,7 +179,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
       const {
         connectionPrefix,
-        browserId,
+        context,
         isServerTargetSwitchingEnabled,
       } = sessionData;
       // Always create new targets when server targets are enabled as we create targets for all the WindowGlobal's,
@@ -180,7 +192,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         (isBFCache && this.isBfcacheInParentEnabled);
       if (
         sessionData.targets.includes("frame") &&
-        shouldNotifyWindowGlobal(this.manager, browserId, {
+        shouldNotifyWindowGlobal(this.manager, context, {
           acceptTopLevelTarget,
         })
       ) {
@@ -196,9 +208,15 @@ class DevToolsFrameChild extends JSWindowActorChild {
         // - in such case we weren't seeing the issue of Bug 1721398 (the old target can't access the new document)
         const existingTarget = this._findTargetActor({
           watcherActorID,
-          browserId,
+          context,
           browsingContextId: this.manager.browsingContext.id,
         });
+
+        // See comment in handleEvent(DOMDocElementInserted) to know why we try to
+        // create targets if none already exists
+        if (existingTarget && ignoreIfExisting) {
+          continue;
+        }
 
         // Bail if there is already an existing WindowGlobalTargetActor which wasn't
         // created from a JSWIndowActor.
@@ -301,13 +319,28 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const browsingContext = this.manager.browsingContext;
     const isTopLevelTarget =
       !browsingContext.parent &&
-      browsingContext.browserId == sessionData.browserId;
+      browsingContext.browserId == sessionData.context.browserId;
 
     const { connection, targetActor } = this._createConnectionAndActor(
       forwardingPrefix,
       isTopLevelTarget
     );
-    targetActor.createdFromJsWindowActor = true;
+    const form = targetActor.form();
+    // Ensure unregistering and destroying the related DevToolsServerConnection+Transport
+    // on both content and parent process JSWindowActors.
+    targetActor.once("destroyed", () => {
+      // This will destroy the content process one
+      this._destroyTargetActor(watcherActorID);
+      // And this will destroy the parent process one
+      this.sendAsyncMessage("DevToolsFrameChild:destroy", {
+        actors: [
+          {
+            watcherActorID,
+            form,
+          },
+        ],
+      });
+    });
     this._connections.set(watcherActorID, {
       connection,
       actor: targetActor,
@@ -456,10 +489,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // When debugging only a given tab, all messages but "packet" one pass `browserId`
     // and are expected to match shouldNotifyWindowGlobal result.
     if (
-      message.data.browserId &&
-      message.name != "DevToolsFrameParent:packet"
+      message.name != "DevToolsFrameParent:packet" &&
+      message.data.context.type == "browser-element"
     ) {
-      const { browserId } = message.data;
+      const { browserId } = message.data.context;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
       if (
@@ -492,19 +525,19 @@ class DevToolsFrameChild extends JSWindowActorChild {
         return this._destroyTargetActor(watcherActorID);
       }
       case "DevToolsFrameParent:addSessionDataEntry": {
-        const { watcherActorID, browserId, type, entries } = message.data;
+        const { watcherActorID, context, type, entries } = message.data;
         return this._addSessionDataEntry(
           watcherActorID,
-          browserId,
+          context,
           type,
           entries
         );
       }
       case "DevToolsFrameParent:removeSessionDataEntry": {
-        const { watcherActorID, browserId, type, entries } = message.data;
+        const { watcherActorID, context, type, entries } = message.data;
         return this._removeSessionDataEntry(
           watcherActorID,
-          browserId,
+          context,
           type,
           entries
         );
@@ -527,68 +560,76 @@ class DevToolsFrameChild extends JSWindowActorChild {
    *
    * @param {Object} options
    * @param {Object} options.watcherActorID
-   * @param {Object} options.browserId
+   * @param {Object} options.context
    * @param {Object} options.browsingContextId: Optional browsing context id to narrow the
    *                 search to a specific browsing context.
    *
    * @returns {WindowGlobalTargetActor|null}
    */
-  _findTargetActor({ watcherActorID, browserId, browsingContextId }) {
+  _findTargetActor({ watcherActorID, context, browsingContextId }) {
     // First let's check if a target was created for this watcher actor in this specific
     // DevToolsFrameChild instance.
     const connectionInfo = this._connections.get(watcherActorID);
-    let targetActor = connectionInfo ? connectionInfo.actor : null;
+    const targetActor = connectionInfo ? connectionInfo.actor : null;
+    if (targetActor) {
+      return targetActor;
+    }
 
     // If we couldn't find such target, we want to see if a target was created for this
     // (watcherActorId,browserId, {browsingContextId}) in another DevToolsFrameChild instance.
     // This might be the case if we're navigating to a new page with server side target
     // enabled and we want to retrieve the target of the page we're navigating from.
-    if (!targetActor && this.manager.browsingContext.browserId == browserId) {
+    const isMatchingBrowserElement =
+      this.manager.browsingContext.browserId == context.browserId;
+    const isMatchingWebExtension =
+      this.document.nodePrincipal.addonId == context.addonId;
+    if (
+      (context.type == "browser-element" && isMatchingBrowserElement) ||
+      (context.type == "webextension" && isMatchingWebExtension)
+    ) {
       // Ensure retrieving the one target actor related to this connection.
       // This allows to distinguish actors created for various toolboxes.
       // For ex, regular toolbox versus browser console versus browser toolbox
       const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
       const targetActors = TargetActorRegistry.getTargetActors(
-        browserId,
+        context,
         connectionPrefix
       );
 
       if (!browsingContextId) {
-        targetActor = targetActors[0] || null;
-      } else {
-        targetActor = targetActors.find(
-          actor => actor.browsingContextID === browsingContextId
-        );
+        return targetActors[0] || null;
       }
+      return targetActors.find(
+        actor => actor.browsingContextID === browsingContextId
+      );
     }
-
-    return targetActor;
+    return null;
   }
 
-  _addSessionDataEntry(watcherActorID, browserId, type, entries) {
+  _addSessionDataEntry(watcherActorID, context, type, entries) {
     // /!\ We may have an issue here as there could be multiple targets for a given
     // (watcherActorID,browserId) pair.
     // This should be clarified as part of Bug 1725623.
     const targetActor = this._findTargetActor({
       watcherActorID,
-      browserId,
+      context,
     });
 
     if (!targetActor) {
       throw new Error(
-        `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${browserId}`
+        `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${context.browserId}`
       );
     }
     return targetActor.addSessionDataEntry(type, entries);
   }
 
-  _removeSessionDataEntry(watcherActorID, browserId, type, entries) {
+  _removeSessionDataEntry(watcherActorID, context, type, entries) {
     // /!\ We may have an issue here as there could be multiple targets for a given
     // (watcherActorID,browserId) pair.
     // This should be clarified as part of Bug 1725623.
     const targetActor = this._findTargetActor({
       watcherActorID,
-      browserId,
+      context,
     });
     // By the time we are calling this, the target may already have been destroyed.
     if (targetActor) {
@@ -607,6 +648,20 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // as a DOM event to be listened to and so is fired by JS Window Actor code platform code.
     if (type == "DOMWindowCreated") {
       this.instantiate();
+      return;
+    }
+    // We might have ignored the DOMWindowCreated event because it was the initial about:blank document.
+    // But when loading same-process iframes, we reuse the WindowGlobal of the about:bank document
+    // to load the actual URL loaded in the iframe. This means we won't have a new DOMWindowCreated
+    // for the actual document. There is a DOMDocElementInserted fired just after, that we can catch
+    // to create a target for same-process iframes.
+    // This means that we still do not create any target for the initial documents.
+    // It is complex to instantiate targets for initial documents because:
+    // - it would mean spawning two targets for the same WindowGlobal and sharing the same innerWindowId
+    // - or have WindowGlobalTargets to handle more than one document (it would mean reusing will-navigate/window-ready events
+    // both on client and server)
+    if (type == "DOMDocElementInserted") {
+      this.instantiate({ ignoreIfExisting: true });
       return;
     }
 
@@ -656,14 +711,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // It may not be the case if one Watcher isn't having server target switching enabled.
       let allActorsAreDestroyed = true;
       for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-        const { browserId, isServerTargetSwitchingEnabled } = sessionData;
+        const { context, isServerTargetSwitchingEnabled } = sessionData;
 
         // /!\ We may have an issue here as there could be multiple targets for a given
         // (watcherActorID,browserId) pair.
         // This should be clarified as part of Bug 1725623.
         const existingTarget = this._findTargetActor({
           watcherActorID,
-          browserId,
+          context,
         });
 
         if (!existingTarget) {
@@ -722,6 +777,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
         "devtools/server/devtools-server"
       );
       DevToolsServer.off("connectionchange", this._onConnectionChange);
+
+      // The connections closed just before may emit "connectionchange"
+      // only on following events loops. So that we may avoid destroying the DevToolsServer
+      // when all connections are closed.
+      // So, force checking for the number of connections right away.
+      // browser_debugger_server.js used to track this edgecase.
+      this._onConnectionChange();
     }
     if (this.useCustomLoader) {
       this.loader.destroy();

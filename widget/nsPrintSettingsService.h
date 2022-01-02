@@ -46,11 +46,9 @@ class nsPrintSettingsService : public nsIPrintSettingsService {
   void ReadJustification(const char* aPrefId, int16_t& aJust,
                          int16_t aInitValue);
   void WriteJustification(const char* aPrefId, int16_t aJust);
-  void ReadInchesToTwipsPref(const char* aPrefId, int32_t& aTwips,
-                             const char* aMarginPref);
+  bool ReadInchesToTwipsPref(const char* aPrefId, int32_t& aTwips);
   void WriteInchesFromTwipsPref(const char* aPrefId, int32_t aTwips);
-  void ReadInchesIntToTwipsPref(const char* aPrefId, int32_t& aTwips,
-                                const char* aMarginPref);
+  bool ReadInchesIntToTwipsPref(const char* aPrefId, int32_t& aTwips);
   void WriteInchesIntFromTwipsPref(const char* aPrefId, int32_t aTwips);
 
   nsresult ReadPrefDouble(const char* aPrefId, double& aVal);

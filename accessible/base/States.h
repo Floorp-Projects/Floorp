@@ -291,6 +291,14 @@ const uint64_t CURRENT = ((uint64_t)0x1) << 48;
 const uint64_t LAST_ENTRY = CURRENT;
 
 }  // namespace states
+
+/**
+ * States that must be calculated by RemoteAccessible and are thus not cached.
+ */
+const uint64_t kRemoteCalculatedStates = states::FOCUSED | states::INVISIBLE |
+                                         states::OFFSCREEN | states::ENABLED |
+                                         states::SENSITIVE | states::COLLAPSED;
+
 }  // namespace a11y
 }  // namespace mozilla
 

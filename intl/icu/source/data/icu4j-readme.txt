@@ -30,7 +30,7 @@ In the following,
 
    For more instructions on downloading and building ICU4C,
    see the ICU4C readme at:
-        https://htmlpreview.github.io/?https://github.com/unicode-org/icu/blob/master/icu4c/readme.html#HowToBuild
+        https://htmlpreview.github.io/?https://github.com/unicode-org/icu/blob/main/icu4c/readme.html#HowToBuild
         (Windows: build as 'x86, Release' otherwise you will have to set 'CFG' differently below.)
 
     *NOTE* You should do a full rebuild after any data changes.

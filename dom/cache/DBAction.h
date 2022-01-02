@@ -19,7 +19,7 @@ namespace dom {
 namespace cache {
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
-    const QuotaInfo& aQuotaInfo, nsIFile& aDBFile);
+    const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile& aDBFile);
 
 class DBAction : public Action {
  protected:
@@ -35,16 +35,18 @@ class DBAction : public Action {
   // Just as the resolver must be ref'd until resolve, you may also
   // ref the DB connection.  The connection can only be referenced from the
   // target thread and must be released upon resolve.
-  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
-                                 const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
-                                 mozIStorageConnection* aConn) = 0;
+  virtual void RunWithDBOnTarget(
+      SafeRefPtr<Resolver> aResolver,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
+      mozIStorageConnection* aConn) = 0;
 
  private:
-  void RunOnTarget(SafeRefPtr<Resolver> aResolver, const QuotaInfo& aQuotaInfo,
+  void RunOnTarget(SafeRefPtr<Resolver> aResolver,
+                   const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
                    Data* aOptionalData) override;
 
   Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenConnection(
-      const QuotaInfo& aQuotaInfo, nsIFile& aDBDir);
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile& aDBDir);
 
   const Mode mMode;
 };
@@ -56,14 +58,15 @@ class SyncDBAction : public DBAction {
   // Action objects are deleted through their base pointer
   virtual ~SyncDBAction();
 
-  virtual nsresult RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo,
-                                         nsIFile* aDBDir,
-                                         mozIStorageConnection* aConn) = 0;
+  virtual nsresult RunSyncWithDBOnTarget(
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
+      mozIStorageConnection* aConn) = 0;
 
  private:
-  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
-                                 const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
-                                 mozIStorageConnection* aConn) override;
+  virtual void RunWithDBOnTarget(
+      SafeRefPtr<Resolver> aResolver,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
+      mozIStorageConnection* aConn) override;
 };
 
 }  // namespace cache

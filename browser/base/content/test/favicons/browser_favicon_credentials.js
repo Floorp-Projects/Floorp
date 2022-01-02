@@ -15,6 +15,12 @@ const EXAMPLE_COM_ROOT = ROOT_DIR.replace(
 
 const FAVICON_URL = EXAMPLE_COM_ROOT + "credentials.png";
 
+// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
+});
+
 function run_test(url, shouldHaveCookies, description) {
   add_task(async () => {
     await BrowserTestUtils.withNewTab(

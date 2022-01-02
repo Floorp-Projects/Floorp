@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Test that the netmonitor " +
+  "data:text/html;charset=utf8,<!DOCTYPE html>Test that the netmonitor " +
   "displays requests that have been recorded in the " +
   "web console, even if the netmonitor hadn't opened yet.";
 

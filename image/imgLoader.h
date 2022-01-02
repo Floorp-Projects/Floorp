@@ -188,11 +188,11 @@ class imgLoader final : public imgILoader,
   virtual ~imgLoader();
 
  public:
-  typedef mozilla::image::ImageCacheKey ImageCacheKey;
-  typedef nsRefPtrHashtable<nsGenericHashKey<ImageCacheKey>, imgCacheEntry>
-      imgCacheTable;
-  typedef nsTHashSet<imgRequest*> imgSet;
-  typedef mozilla::Mutex Mutex;
+  using ImageCacheKey = mozilla::image::ImageCacheKey;
+  using imgCacheTable =
+      nsRefPtrHashtable<nsGenericHashKey<ImageCacheKey>, imgCacheEntry>;
+  using imgSet = nsTHashSet<imgRequest*>;
+  using Mutex = mozilla::Mutex;
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGILOADER
@@ -348,8 +348,6 @@ class imgLoader final : public imgILoader,
 
  private:  // methods
   static already_AddRefed<imgLoader> CreateImageLoader();
-
-  bool PreferLoadFromCache(nsIURI* aURI) const;
 
   bool ValidateEntry(
       imgCacheEntry* aEntry, nsIURI* aURI, nsIURI* aInitialDocumentURI,

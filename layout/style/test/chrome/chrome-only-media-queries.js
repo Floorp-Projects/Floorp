@@ -25,7 +25,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-maximize-button",
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
-  "-moz-proton",
   "-moz-proton-places-tooltip",
 ];
 

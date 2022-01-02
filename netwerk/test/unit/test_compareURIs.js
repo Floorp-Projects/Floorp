@@ -38,10 +38,6 @@ function run_test() {
     ["view-source:http://mozilla.org/", "http://mozilla.org/", true],
   ];
 
-  var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
-
   tests.forEach(function(aTest) {
     do_info("Comparing " + aTest[0] + " to " + aTest[1]);
 
@@ -50,7 +46,12 @@ function run_test() {
 
     var equal;
     try {
-      secman.checkSameOriginURI(uri1, uri2, false, false);
+      Services.scriptSecurityManager.checkSameOriginURI(
+        uri1,
+        uri2,
+        false,
+        false
+      );
       equal = true;
     } catch (e) {
       equal = false;

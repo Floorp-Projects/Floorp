@@ -102,6 +102,9 @@
 #include "mozilla/net/SFVService.h"
 #include <limits>
 #include "nsIXPConnect.h"
+#include "nsParserConstants.h"
+#include "nsCRT.h"
+#include "nsServiceManagerUtils.h"
 
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
 #  include "nsNewMailnewsURI.h"
@@ -340,13 +343,21 @@ void AssertLoadingPrincipalAndClientInfoMatch(
       return;
     }
     // Fall back to a slower origin equality test to support null principals.
-    nsAutoCString loadingOrigin;
-    MOZ_ALWAYS_SUCCEEDS(aLoadingPrincipal->GetOrigin(loadingOrigin));
+    nsAutoCString loadingOriginNoSuffix;
+    MOZ_ALWAYS_SUCCEEDS(
+        aLoadingPrincipal->GetOriginNoSuffix(loadingOriginNoSuffix));
 
-    nsAutoCString clientOrigin;
-    MOZ_ALWAYS_SUCCEEDS(clientPrincipal->GetOrigin(clientOrigin));
+    nsAutoCString clientOriginNoSuffix;
+    MOZ_ALWAYS_SUCCEEDS(
+        clientPrincipal->GetOriginNoSuffix(clientOriginNoSuffix));
 
-    MOZ_DIAGNOSTIC_ASSERT(loadingOrigin == clientOrigin);
+    // The client principal will have the partitionKey set if it's in a third
+    // party context, but the loading principal won't. So, we ignore he
+    // partitionKey when doing the verification here.
+    MOZ_DIAGNOSTIC_ASSERT(loadingOriginNoSuffix == clientOriginNoSuffix);
+    MOZ_DIAGNOSTIC_ASSERT(
+        aLoadingPrincipal->OriginAttributesRef().EqualsIgnoringPartitionKey(
+            clientPrincipal->OriginAttributesRef()));
   }
 #endif
 }
@@ -1536,7 +1547,7 @@ class BufferWriter final : public nsIInputStreamCallback {
         return NS_ERROR_FAILURE;
       }
 
-      mTaskQueue = new TaskQueue(target.forget());
+      mTaskQueue = new TaskQueue(target.forget(), "nsNetUtil:BufferWriter");
     }
 
     return NS_OK;
@@ -3407,4 +3418,320 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
   } else {
     printf_stderr("Missing chrome or resource URL: %s\n", spec.get());
   }
+}
+
+// Decode a parameter value using the encoding defined in RFC 5987 (in place)
+//
+//   charset  "'" [ language ] "'" value-chars
+//
+// returns true when decoding happened successfully (otherwise leaves
+// passed value alone)
+static bool Decode5987Format(nsAString& aEncoded) {
+  nsresult rv;
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
+      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return false;
+
+  nsAutoCString asciiValue;
+
+  const char16_t* encstart = aEncoded.BeginReading();
+  const char16_t* encend = aEncoded.EndReading();
+
+  // create a plain ASCII string, aborting if we can't do that
+  // converted form is always shorter than input
+  while (encstart != encend) {
+    if (*encstart > 0 && *encstart < 128) {
+      asciiValue.Append((char)*encstart);
+    } else {
+      return false;
+    }
+    encstart++;
+  }
+
+  nsAutoString decoded;
+  nsAutoCString language;
+
+  rv = mimehdrpar->DecodeRFC5987Param(asciiValue, language, decoded);
+  if (NS_FAILED(rv)) return false;
+
+  aEncoded = decoded;
+  return true;
+}
+
+LinkHeader::LinkHeader() { mCrossOrigin.SetIsVoid(true); }
+
+void LinkHeader::Reset() {
+  mHref.Truncate();
+  mRel.Truncate();
+  mTitle.Truncate();
+  mIntegrity.Truncate();
+  mSrcset.Truncate();
+  mSizes.Truncate();
+  mType.Truncate();
+  mMedia.Truncate();
+  mAnchor.Truncate();
+  mCrossOrigin.Truncate();
+  mReferrerPolicy.Truncate();
+  mAs.Truncate();
+  mCrossOrigin.SetIsVoid(true);
+}
+
+bool LinkHeader::operator==(const LinkHeader& rhs) const {
+  return mHref == rhs.mHref && mRel == rhs.mRel && mTitle == rhs.mTitle &&
+         mIntegrity == rhs.mIntegrity && mSrcset == rhs.mSrcset &&
+         mSizes == rhs.mSizes && mType == rhs.mType && mMedia == rhs.mMedia &&
+         mAnchor == rhs.mAnchor && mCrossOrigin == rhs.mCrossOrigin &&
+         mReferrerPolicy == rhs.mReferrerPolicy && mAs == rhs.mAs;
+}
+
+nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
+  nsTArray<LinkHeader> linkHeaders;
+
+  // keep track where we are within the header field
+  bool seenParameters = false;
+
+  // parse link content and add to array
+  LinkHeader header;
+  nsAutoString titleStar;
+
+  // copy to work buffer
+  nsAutoString stringList(aLinkData);
+
+  // put an extra null at the end
+  stringList.Append(kNullCh);
+
+  char16_t* start = stringList.BeginWriting();
+
+  while (*start != kNullCh) {
+    // parse link content and call process style link
+
+    // skip leading space
+    while ((*start != kNullCh) && nsCRT::IsAsciiSpace(*start)) {
+      ++start;
+    }
+
+    char16_t* end = start;
+    char16_t* last = end - 1;
+
+    bool wasQuotedString = false;
+
+    // look for semicolon or comma
+    while (*end != kNullCh && *end != kSemicolon && *end != kComma) {
+      char16_t ch = *end;
+
+      if (ch == kQuote || ch == kLessThan) {
+        // quoted string
+
+        char16_t quote = ch;
+        if (quote == kLessThan) {
+          quote = kGreaterThan;
+        }
+
+        wasQuotedString = (ch == kQuote);
+
+        char16_t* closeQuote = (end + 1);
+
+        // seek closing quote
+        while (*closeQuote != kNullCh && quote != *closeQuote) {
+          // in quoted-string, "\" is an escape character
+          if (wasQuotedString && *closeQuote == kBackSlash &&
+              *(closeQuote + 1) != kNullCh) {
+            ++closeQuote;
+          }
+
+          ++closeQuote;
+        }
+
+        if (quote == *closeQuote) {
+          // found closer
+
+          // skip to close quote
+          end = closeQuote;
+
+          last = end - 1;
+
+          ch = *(end + 1);
+
+          if (ch != kNullCh && ch != kSemicolon && ch != kComma) {
+            // end string here
+            *(++end) = kNullCh;
+
+            ch = *(end + 1);
+
+            // keep going until semi or comma
+            while (ch != kNullCh && ch != kSemicolon && ch != kComma) {
+              ++end;
+
+              ch = *(end + 1);
+            }
+          }
+        }
+      }
+
+      ++end;
+      ++last;
+    }
+
+    char16_t endCh = *end;
+
+    // end string here
+    *end = kNullCh;
+
+    if (start < end) {
+      if ((*start == kLessThan) && (*last == kGreaterThan)) {
+        *last = kNullCh;
+
+        // first instance of <...> wins
+        // also, do not allow hrefs after the first param was seen
+        if (header.mHref.IsEmpty() && !seenParameters) {
+          header.mHref = (start + 1);
+          header.mHref.StripWhitespace();
+        }
+      } else {
+        char16_t* equals = start;
+        seenParameters = true;
+
+        while ((*equals != kNullCh) && (*equals != kEqual)) {
+          equals++;
+        }
+
+        const bool hadEquals = *equals != kNullCh;
+        *equals = kNullCh;
+        nsAutoString attr(start);
+        attr.StripWhitespace();
+
+        char16_t* value = hadEquals ? ++equals : equals;
+        while (nsCRT::IsAsciiSpace(*value)) {
+          value++;
+        }
+
+        if ((*value == kQuote) && (*value == *last)) {
+          *last = kNullCh;
+          value++;
+        }
+
+        if (wasQuotedString) {
+          // unescape in-place
+          char16_t* unescaped = value;
+          char16_t* src = value;
+
+          while (*src != kNullCh) {
+            if (*src == kBackSlash && *(src + 1) != kNullCh) {
+              src++;
+            }
+            *unescaped++ = *src++;
+          }
+
+          *unescaped = kNullCh;
+        }
+
+        if (attr.LowerCaseEqualsLiteral("rel")) {
+          if (header.mRel.IsEmpty()) {
+            header.mRel = value;
+            header.mRel.CompressWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("title")) {
+          if (header.mTitle.IsEmpty()) {
+            header.mTitle = value;
+            header.mTitle.CompressWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("title*")) {
+          if (titleStar.IsEmpty() && !wasQuotedString) {
+            // RFC 5987 encoding; uses token format only, so skip if we get
+            // here with a quoted-string
+            nsAutoString tmp;
+            tmp = value;
+            if (Decode5987Format(tmp)) {
+              titleStar = tmp;
+              titleStar.CompressWhitespace();
+            } else {
+              // header value did not parse, throw it away
+              titleStar.Truncate();
+            }
+          }
+        } else if (attr.LowerCaseEqualsLiteral("type")) {
+          if (header.mType.IsEmpty()) {
+            header.mType = value;
+            header.mType.StripWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("media")) {
+          if (header.mMedia.IsEmpty()) {
+            header.mMedia = value;
+
+            // The HTML5 spec is formulated in terms of the CSS3 spec,
+            // which specifies that media queries are case insensitive.
+            nsContentUtils::ASCIIToLower(header.mMedia);
+          }
+        } else if (attr.LowerCaseEqualsLiteral("anchor")) {
+          if (header.mAnchor.IsEmpty()) {
+            header.mAnchor = value;
+            header.mAnchor.StripWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("crossorigin")) {
+          if (header.mCrossOrigin.IsVoid()) {
+            header.mCrossOrigin.SetIsVoid(false);
+            header.mCrossOrigin = value;
+            header.mCrossOrigin.StripWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("as")) {
+          if (header.mAs.IsEmpty()) {
+            header.mAs = value;
+            header.mAs.CompressWhitespace();
+          }
+        } else if (attr.LowerCaseEqualsLiteral("referrerpolicy")) {
+          // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#referrer-policy-attribute
+          // Specs says referrer policy attribute is an enumerated attribute,
+          // case insensitive and includes the empty string
+          // We will parse the value with AttributeReferrerPolicyFromString
+          // later, which will handle parsing it as an enumerated attribute.
+          if (header.mReferrerPolicy.IsEmpty()) {
+            header.mReferrerPolicy = value;
+          }
+        } else if (attr.LowerCaseEqualsLiteral("integrity")) {
+          if (header.mIntegrity.IsEmpty()) {
+            header.mIntegrity = value;
+          }
+        } else if (attr.LowerCaseEqualsLiteral("imagesrcset")) {
+          if (header.mSrcset.IsEmpty()) {
+            header.mSrcset = value;
+          }
+        } else if (attr.LowerCaseEqualsLiteral("imagesizes")) {
+          if (header.mSizes.IsEmpty()) {
+            header.mSizes = value;
+          }
+        }
+      }
+    }
+
+    if (endCh == kComma) {
+      // hit a comma, process what we've got so far
+
+      header.mHref.Trim(" \t\n\r\f");  // trim HTML5 whitespace
+      if (!header.mHref.IsEmpty() && !header.mRel.IsEmpty()) {
+        if (!titleStar.IsEmpty()) {
+          // prefer RFC 5987 variant over non-I18zed version
+          header.mTitle = titleStar;
+        }
+        linkHeaders.AppendElement(header);
+      }
+
+      titleStar.Truncate();
+      header.Reset();
+
+      seenParameters = false;
+    }
+
+    start = ++end;
+  }
+
+  header.mHref.Trim(" \t\n\r\f");  // trim HTML5 whitespace
+  if (!header.mHref.IsEmpty() && !header.mRel.IsEmpty()) {
+    if (!titleStar.IsEmpty()) {
+      // prefer RFC 5987 variant over non-I18zed version
+      header.mTitle = titleStar;
+    }
+    linkHeaders.AppendElement(header);
+  }
+
+  return linkHeaders;
 }

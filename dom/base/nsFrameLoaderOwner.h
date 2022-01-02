@@ -80,7 +80,9 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void SubframeCrashed();
 
-  void ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader);
+  void RestoreFrameLoaderFromBFCache(nsFrameLoader* aNewFrameLoader);
+
+  void UpdateFocusAndMouseEnterStateAfterFrameLoaderChange();
 
   void AttachFrameLoader(nsFrameLoader* aFrameLoader);
   void DetachFrameLoader(nsFrameLoader* aFrameLoader);
@@ -111,6 +113,9 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void ChangeFrameLoaderCommon(mozilla::dom::Element* aOwner,
                                bool aRetainPaint);
+
+  void UpdateFocusAndMouseEnterStateAfterFrameLoaderChange(
+      mozilla::dom::Element* aOwner);
 
  protected:
   virtual ~nsFrameLoaderOwner() = default;

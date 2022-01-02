@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
+#include "nsEnumeratorUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -62,7 +63,11 @@ nsresult nsWindowMediator::Init() {
 
 NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIAppWindow* inWindow) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  NS_ENSURE_STATE(mReady);
+
+  if (!mReady) {
+    NS_ERROR("Mediator is not initialized or about to die.");
+    return NS_ERROR_FAILURE;
+  }
 
   if (GetInfoFor(inWindow)) {
     NS_ERROR("multiple window registration");
@@ -89,6 +94,7 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIAppWindow* inWindow) {
 NS_IMETHODIMP
 nsWindowMediator::UnregisterWindow(nsIAppWindow* inWindow) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mReady);
   NS_ENSURE_STATE(mReady);
   nsWindowInfo* info = GetInfoFor(inWindow);
   if (info) return UnregisterWindow(info);
@@ -158,8 +164,12 @@ nsWindowMediator::GetEnumerator(const char16_t* inType,
                                 nsISimpleEnumerator** outEnumerator) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(outEnumerator);
-  NS_ENSURE_STATE(mReady);
-
+  if (!mReady) {
+    // If we get here with mReady false, we most likely did observe
+    // xpcom-shutdown. We will return an empty enumerator such that
+    // we make happy Javascripts calling late without throwing.
+    return NS_NewEmptyEnumerator(outEnumerator);
+  }
   RefPtr<nsAppShellWindowEnumerator> enumerator =
       new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
   enumerator.forget(outEnumerator);
@@ -171,8 +181,12 @@ nsWindowMediator::GetAppWindowEnumerator(const char16_t* inType,
                                          nsISimpleEnumerator** outEnumerator) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(outEnumerator);
-  NS_ENSURE_STATE(mReady);
-
+  if (!mReady) {
+    // If we get here with mReady false, we most likely did observe
+    // xpcom-shutdown. We will return an empty enumerator such that
+    // we make happy Javascripts calling late without throwing.
+    return NS_NewEmptyEnumerator(outEnumerator);
+  }
   RefPtr<nsAppShellWindowEnumerator> enumerator =
       new nsASAppWindowEarlyToLateEnumerator(inType, *this);
   enumerator.forget(outEnumerator);
@@ -185,8 +199,12 @@ nsWindowMediator::GetZOrderAppWindowEnumerator(const char16_t* aWindowType,
                                                nsISimpleEnumerator** _retval) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(_retval);
-  NS_ENSURE_STATE(mReady);
-
+  if (!mReady) {
+    // If we get here with mReady false, we most likely did observe
+    // xpcom-shutdown. We will return an empty enumerator such that
+    // we make happy Javascripts calling late without throwing.
+    return NS_NewEmptyEnumerator(_retval);
+  }
   RefPtr<nsAppShellWindowEnumerator> enumerator;
   if (aFrontToBack)
     enumerator = new nsASAppWindowFrontToBackEnumerator(aWindowType, *this);
@@ -349,6 +367,7 @@ nsWindowMediator::GetCurrentInnerWindowWithId(uint64_t aWindowID,
 NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTimeStamp(nsIAppWindow* inWindow) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mReady);
   NS_ENSURE_STATE(mReady);
   nsWindowInfo* info = GetInfoFor(inWindow);
   if (info) {
@@ -372,6 +391,7 @@ nsWindowMediator::CalculateZPosition(nsIAppWindow* inWindow,
                                      nsIWidget** outBelow, bool* outAltered) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(outBelow);
+  MOZ_ASSERT(mReady);
   NS_ENSURE_STATE(mReady);
 
   *outBelow = nullptr;
@@ -504,6 +524,7 @@ nsWindowMediator::SetZPosition(nsIAppWindow* inWindow, uint32_t inPosition,
   if (mSortingZOrder)  // don't fight SortZOrder()
     return NS_OK;
 
+  MOZ_ASSERT(mReady);
   NS_ENSURE_STATE(mReady);
 
   /* Locate inWindow and unlink it from the z-order list.
@@ -556,6 +577,7 @@ nsWindowMediator::GetZLevel(nsIAppWindow* aWindow, uint32_t* _retval) {
 NS_IMETHODIMP
 nsWindowMediator::SetZLevel(nsIAppWindow* aWindow, uint32_t aZLevel) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mReady);
   NS_ENSURE_STATE(mReady);
 
   nsWindowInfo* info = GetInfoFor(aWindow);

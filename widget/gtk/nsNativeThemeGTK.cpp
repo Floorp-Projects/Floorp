@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNativeThemeGTK.h"
-#include "HeadlessThemeGTK.h"
 #include "nsStyleConsts.h"
 #include "gtkdrawing.h"
 #include "ScreenHelperGTK.h"
@@ -44,6 +43,7 @@
 #include "nsWindow.h"
 #include "nsLayoutUtils.h"
 #include "nsNativeBasicTheme.h"
+#include "ScrollbarDrawingGTK.h"
 
 #ifdef MOZ_X11
 #  ifdef CAIRO_HAS_XLIB_SURFACE
@@ -57,7 +57,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
-using mozilla::dom::HTMLInputElement;
+using ScrollbarDrawingGTK = mozilla::widget::ScrollbarDrawingGTK;
 
 static int gLastGdkError;
 
@@ -96,7 +96,9 @@ static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
   return GetMonitorScaleFactor(aFrame->PresContext());
 }
 
-nsNativeThemeGTK::nsNativeThemeGTK() {
+nsNativeThemeGTK::nsNativeThemeGTK(
+    mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingGTK)
+    : nsNativeBasicTheme(std::move(aScrollbarDrawingGTK)) {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;
@@ -202,61 +204,24 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
   if (aWidgetFlags) {
     *aWidgetFlags = 0;
   }
+
+  EventStates eventState = GetContentState(aFrame, aAppearance);
   if (aState) {
     memset(aState, 0, sizeof(GtkWidgetState));
 
     // For XUL checkboxes and radio buttons, the state of the parent
     // determines our state.
-    nsIFrame* stateFrame = aFrame;
-    if (aFrame && ((aWidgetFlags && (aAppearance == StyleAppearance::Checkbox ||
-                                     aAppearance == StyleAppearance::Radio)) ||
-                   aAppearance == StyleAppearance::CheckboxLabel ||
-                   aAppearance == StyleAppearance::RadioLabel)) {
-      nsAtom* atom = nullptr;
-      if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
-        if (aAppearance == StyleAppearance::CheckboxLabel ||
-            aAppearance == StyleAppearance::RadioLabel) {
-          // Adjust stateFrame so GetContentState finds the correct state.
-          stateFrame = aFrame = aFrame->GetParent()->GetParent();
-        } else {
-          // GetContentState knows to look one frame up for radio/checkbox
-          // widgets, so don't adjust stateFrame here.
-          aFrame = aFrame->GetParent();
-        }
-        if (aWidgetFlags) {
-          if (!atom) {
-            atom = (aAppearance == StyleAppearance::Checkbox ||
-                    aAppearance == StyleAppearance::CheckboxLabel)
-                       ? nsGkAtoms::checked
-                       : nsGkAtoms::selected;
-          }
-          *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
-        }
-      } else {
-        if (aWidgetFlags) {
-          *aWidgetFlags = 0;
-          HTMLInputElement* inputElt =
-              HTMLInputElement::FromNode(aFrame->GetContent());
-          if (inputElt && inputElt->Checked())
-            *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
-
-          if (GetIndeterminate(aFrame))
-            *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
-        }
+    if (aWidgetFlags) {
+      if (eventState.HasState(NS_EVENT_STATE_CHECKED)) {
+        *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
       }
-    } else if (aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
-               aAppearance == StyleAppearance::Treeheadersortarrow ||
-               aAppearance == StyleAppearance::ButtonArrowPrevious ||
-               aAppearance == StyleAppearance::ButtonArrowNext ||
-               aAppearance == StyleAppearance::ButtonArrowUp ||
-               aAppearance == StyleAppearance::ButtonArrowDown) {
-      // The state of an arrow comes from its parent.
-      stateFrame = aFrame = aFrame->GetParent();
+      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+        *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
+      }
     }
 
-    EventStates eventState = GetContentState(stateFrame, aAppearance);
-
-    aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
+    aState->disabled =
+        eventState.HasState(NS_EVENT_STATE_DISABLED) || IsReadOnly(aFrame);
     aState->active = eventState.HasState(NS_EVENT_STATE_ACTIVE);
     aState->focused = eventState.HasState(NS_EVENT_STATE_FOCUS);
     aState->inHover = eventState.HasState(NS_EVENT_STATE_HOVER);
@@ -295,15 +260,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       // For these widget types, some element (either a child or parent)
       // actually has element focus, so we check the focused attribute
       // to see whether to draw in the focused state.
-      if (aAppearance == StyleAppearance::NumberInput ||
-          aAppearance == StyleAppearance::Textfield ||
-          aAppearance == StyleAppearance::Textarea ||
-          aAppearance == StyleAppearance::SpinnerTextfield ||
-          aAppearance == StyleAppearance::RadioContainer ||
-          aAppearance == StyleAppearance::RadioLabel) {
-        aState->focused = IsFocused(aFrame);
-      } else if (aAppearance == StyleAppearance::Radio ||
-                 aAppearance == StyleAppearance::Checkbox) {
+      aState->focused = eventState.HasState(NS_EVENT_STATE_FOCUSRING);
+      if (aAppearance == StyleAppearance::Radio ||
+          aAppearance == StyleAppearance::Checkbox) {
         // In XUL, checkboxes and radios shouldn't have focus rings, their
         // labels do
         aState->focused = FALSE;
@@ -638,7 +597,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       nsIFrame* stateFrame = aFrame->GetParent();
       EventStates eventStates = GetContentState(stateFrame, aAppearance);
 
-      aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
+      aGtkWidgetType = eventStates.HasState(NS_EVENT_STATE_INDETERMINATE)
                            ? IsVerticalProgress(stateFrame)
                                  ? MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE
                                  : MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
@@ -806,8 +765,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  bool useHiDPIWidgets =
-      (aScaleFactor != 1) && (sCairoSurfaceSetDeviceScalePtr != nullptr);
+  const bool useHiDPIWidgets =
+      aScaleFactor != 1 && sCairoSurfaceSetDeviceScalePtr;
 
   Point drawOffsetScaled;
   Point drawOffsetOriginal;
@@ -1049,7 +1008,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicThemeGTK::DrawWidgetBackground(
+    return nsNativeBasicTheme::DrawWidgetBackground(
         aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
   }
 
@@ -1104,8 +1063,9 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                         int32_t(dirtyRect.Width()),
                         int32_t(dirtyRect.Height()));
   if (widgetRect.IsEmpty() ||
-      !drawingRect.IntersectRect(overflowRect, drawingRect))
+      !drawingRect.IntersectRect(overflowRect, drawingRect)) {
     return NS_OK;
+  }
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aAppearance),
                "Trying to render an unsafe widget!");
@@ -1178,7 +1138,7 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicThemeGTK::CreateWebRenderCommandsForWidget(
+    return nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
   }
   return false;
@@ -1326,7 +1286,6 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                         StyleAppearance aAppearance,
                                         LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
-    case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Tooltip:
     case StyleAppearance::MozWindowButtonBox:
@@ -1389,8 +1348,8 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicThemeGTK::GetWidgetOverflow(aContext, aFrame,
-                                                    aAppearance, aOverflowRect);
+    return nsNativeBasicTheme::GetWidgetOverflow(aContext, aFrame, aAppearance,
+                                                 aOverflowRect);
   }
 
   nsIntMargin extraSize;
@@ -1418,8 +1377,8 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
     return NonNative::Always;
   }
   // We can't draw light widgets if the current GTK theme is dark or vice versa.
-  if (nsNativeBasicThemeGTK::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
-                                                 aAppearance) &&
+  if (nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
+                                              aAppearance) &&
       LookAndFeel::ColorSchemeForFrame(aFrame) !=
           LookAndFeel::ColorSchemeForChrome()) {
     return NonNative::BecauseColorMismatch;
@@ -1434,7 +1393,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicThemeGTK::GetMinimumWidgetSize(
+    return nsNativeBasicTheme::GetMinimumWidgetSize(
         aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
   }
 
@@ -1683,7 +1642,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   *aShouldRepaint = false;
 
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicThemeGTK::WidgetStateChanged(
+    return nsNativeBasicTheme::WidgetStateChanged(
         aFrame, aAppearance, aAttribute, aShouldRepaint, aOldValue);
   }
 
@@ -1794,8 +1753,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicThemeGTK::ThemeSupportsWidget(aPresContext, aFrame,
-                                                      aAppearance);
+    return nsNativeBasicTheme::ThemeSupportsWidget(aPresContext, aFrame,
+                                                   aAppearance);
   }
 
   if (IsWidgetScrollbarPart(aAppearance)) {
@@ -1816,7 +1775,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
       [[fallthrough]];
 
     case StyleAppearance::Button:
-    case StyleAppearance::ButtonFocus:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Toolbox:  // N/A
@@ -1926,7 +1884,11 @@ nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   return true;
 }
 
-bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
+bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
+                                                StyleAppearance aAppearance) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
+    return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
+  }
   switch (aAppearance) {
     case StyleAppearance::Button:
     case StyleAppearance::Menulist:
@@ -1946,7 +1908,7 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicThemeGTK::GetWidgetTransparency(aFrame, aAppearance);
+    return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
   }
 
   switch (aAppearance) {
@@ -1973,8 +1935,8 @@ auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
                                          StyleScrollbarWidth aWidth,
                                          Overlay aOverlay) -> ScrollbarSizes {
   if (StaticPrefs::widget_non_native_theme_enabled()) {
-    return nsNativeBasicThemeGTK::GetScrollbarSizes(aPresContext, aWidth,
-                                                    aOverlay);
+    return nsNativeBasicTheme::GetScrollbarSizes(aPresContext, aWidth,
+                                                 aOverlay);
   }
 
   CSSIntCoord vertical;
@@ -1994,21 +1956,15 @@ auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
   return {int32_t(vertical) * scale, int32_t(horizontal) * scale};
 }
 
-bool nsNativeThemeGTK::ThemeSupportsScrollbarButtons() {
-  if (StaticPrefs::widget_non_native_theme_enabled()) {
-    return nsNativeBasicThemeGTK::ThemeSupportsScrollbarButtons();
-  }
-  return true;
-}
-
 already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
+    auto scrollbars = MakeUnique<ScrollbarDrawingGTK>();
     if (gfxPlatform::IsHeadless()) {
-      inst = new HeadlessThemeGTK();
+      inst = new nsNativeBasicTheme(std::move(scrollbars));
     } else {
-      inst = new nsNativeThemeGTK();
+      inst = new nsNativeThemeGTK(std::move(scrollbars));
     }
     ClearOnShutdown(&inst);
   }

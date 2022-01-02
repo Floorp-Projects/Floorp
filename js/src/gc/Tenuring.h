@@ -22,23 +22,18 @@ class StringRelocationOverlay;
 }  // namespace gc
 
 class TenuringTracer final : public GenericTracer {
-  friend class Nursery;
   Nursery& nursery_;
 
   // Amount of data moved to the tenured generation during collection.
-  size_t tenuredSize;
+  size_t tenuredSize = 0;
   // Number of cells moved to the tenured generation.
-  size_t tenuredCells;
+  size_t tenuredCells = 0;
 
   // These lists are threaded through the Nursery using the space from
   // already moved things. The lists are used to fix up the moved things and
   // to find things held live by intra-Nursery pointers.
-  gc::RelocationOverlay* objHead;
-  gc::RelocationOverlay** objTail;
-  gc::StringRelocationOverlay* stringHead;
-  gc::StringRelocationOverlay** stringTail;
-
-  TenuringTracer(JSRuntime* rt, Nursery* nursery);
+  gc::RelocationOverlay* objHead = nullptr;
+  gc::StringRelocationOverlay* stringHead = nullptr;
 
   JSObject* onObjectEdge(JSObject* obj) override;
   JSString* onStringEdge(JSString* str) override;
@@ -54,7 +49,21 @@ class TenuringTracer final : public GenericTracer {
   js::Scope* onScopeEdge(Scope* scope) override;
 
  public:
+  TenuringTracer(JSRuntime* rt, Nursery* nursery);
+
   Nursery& nursery() { return nursery_; }
+
+  // Move all objects and everything they can reach to the tenured heap. Called
+  // after all roots have been traced.
+  void collectToObjectFixedPoint();
+
+  // Move all strings and all strings they can reach to the tenured heap, and
+  // additionally do any fixups for when strings are pointing into memory that
+  // was deduplicated. Called after collectToObjectFixedPoint().
+  void collectToStringFixedPoint();
+
+  size_t getTenuredSize() const;
+  size_t getTenuredCells() const;
 
   void traverse(JS::Value* thingp);
 
@@ -66,6 +75,15 @@ class TenuringTracer final : public GenericTracer {
   void traceBigInt(JS::BigInt* src);
 
  private:
+  // The dependent string chars needs to be relocated if the base which it's
+  // using chars from has been deduplicated.
+  template <typename CharT>
+  void relocateDependentStringChars(JSDependentString* tenuredDependentStr,
+                                    JSLinearString* baseOrRelocOverlay,
+                                    size_t* offset,
+                                    bool* rootBaseNotYetForwarded,
+                                    JSLinearString** rootBase);
+
   inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
   inline void insertIntoStringFixupList(gc::StringRelocationOverlay* entry);
 

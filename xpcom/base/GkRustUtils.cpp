@@ -5,15 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gk_rust_utils_ffi_generated.h"
-#include "nsString.h"
 #include "GkRustUtils.h"
 
 using namespace mozilla;
-
-/* static */
-void GkRustUtils::GenerateUUID(nsACString& aResult) {
-  GkRustUtils_GenerateUUID(&aResult);
-};
 
 /* static */
 bool GkRustUtils::ParseSemVer(const nsACString& aVersion, uint64_t& aOutMajor,

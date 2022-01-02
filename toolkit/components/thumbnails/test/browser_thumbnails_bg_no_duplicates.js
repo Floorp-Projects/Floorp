@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function thumbnails_bg_no_duplicates() {
-  let url = "http://example.com/1";
+  let url = "https://example.com/1";
   ok(!thumbnailExists(url), "Thumbnail file should not already exist.");
 
   let firstCapture = bgCapture(url, {

@@ -65,42 +65,6 @@ IPCResult IPCResult::Fail(NotNull<IProtocol*> actor, const char* where,
   return IPCResult(false);
 }
 
-#if defined(XP_WIN)
-bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
-                     HANDLE* aTargetHandle, DWORD aDesiredAccess,
-                     DWORD aOptions) {
-  // If our process is the target just duplicate the handle.
-  if (aTargetProcessId == base::GetCurrentProcId()) {
-    return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
-                               ::GetCurrentProcess(), aTargetHandle,
-                               aDesiredAccess, false, aOptions);
-  }
-
-#  if defined(MOZ_SANDBOX)
-  // Try the broker next (will fail if not sandboxed).
-  if (SandboxTarget::Instance()->BrokerDuplicateHandle(
-          aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess,
-          aOptions)) {
-    return true;
-  }
-#  endif
-
-  // Finally, see if we already have access to the process.
-  ScopedProcessHandle targetProcess(
-      OpenProcess(PROCESS_DUP_HANDLE, FALSE, aTargetProcessId));
-  if (!targetProcess) {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::IPCTransportFailureReason,
-        "Failed to open target process."_ns);
-    return false;
-  }
-
-  return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
-                             targetProcess, aTargetHandle, aDesiredAccess,
-                             FALSE, aOptions);
-}
-#endif
-
 void AnnotateSystemError() {
   int64_t error = 0;
 #if defined(XP_WIN)
@@ -308,11 +272,13 @@ IProtocol::~IProtocol() {
   // Gecko, simply emit a warning and clear the weak backreference from our
   // LifecycleProxy back to us.
   if (mLifecycleProxy) {
-    // FIXME: It would be nice to have this print out the name of the
-    // misbehaving actor, to help people notice it's their fault!
     NS_WARNING(
-        "Actor destructor called before IPC lifecycle complete!\n"
-        "References to this actor may unexpectedly dangle!");
+        nsPrintfCString("Actor destructor for '%s%s' called before IPC "
+                        "lifecycle complete!\n"
+                        "References to this actor may unexpectedly dangle!",
+                        GetProtocolName(),
+                        GetSide() == ChildSide ? "Child" : "Parent")
+            .get());
 
     mLifecycleProxy->mActor = nullptr;
 
@@ -388,8 +354,6 @@ already_AddRefed<nsISerialEventTarget> IProtocol::GetActorEventTarget(
     IProtocol* aActor) {
   return mToplevel->GetActorEventTarget(aActor);
 }
-
-ProcessId IProtocol::OtherPid() const { return mToplevel->OtherPid(); }
 
 void IProtocol::SetId(int32_t aId) {
   MOZ_ASSERT(mId == aId || mLinkStatus == LinkStatus::Inactive);
@@ -528,7 +492,7 @@ bool IProtocol::ChannelSend(IPC::Message* aMsg) {
     return true;
   }
 
-  NS_WARNING("IPC message discarded: actor cannot send");
+  WarnMessageDiscarded(msg.get());
   return false;
 }
 
@@ -538,7 +502,7 @@ bool IProtocol::ChannelSend(IPC::Message* aMsg, IPC::Message* aReply) {
     return GetIPCChannel()->Send(std::move(msg), aReply);
   }
 
-  NS_WARNING("IPC message discarded: actor cannot send");
+  WarnMessageDiscarded(msg.get());
   return false;
 }
 
@@ -548,9 +512,17 @@ bool IProtocol::ChannelCall(IPC::Message* aMsg, IPC::Message* aReply) {
     return GetIPCChannel()->Call(std::move(msg), aReply);
   }
 
-  NS_WARNING("IPC message discarded: actor cannot send");
+  WarnMessageDiscarded(msg.get());
   return false;
 }
+
+#ifdef DEBUG
+void IProtocol::WarnMessageDiscarded(IPC::Message* aMsg) {
+  NS_WARNING(nsPrintfCString("IPC message '%s' discarded: actor cannot send",
+                             aMsg->name())
+                 .get());
+}
+#endif
 
 void IProtocol::ActorConnected() {
   if (mLinkStatus != LinkStatus::Inactive) {
@@ -626,17 +598,11 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
     : IProtocol(aProtoId, aSide),
-      mOtherPid(mozilla::ipc::kInvalidProcessId),
+      mOtherPid(base::kInvalidProcessId),
       mLastLocalId(0),
       mEventTargetMutex("ProtocolEventTargetMutex"),
       mChannel(aName, this) {
   mToplevel = this;
-}
-
-base::ProcessId IToplevelProtocol::OtherPid() const {
-  base::ProcessId pid = OtherPidMaybeInvalid();
-  MOZ_RELEASE_ASSERT(pid != kInvalidProcessId);
-  return pid;
 }
 
 void IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid) {
@@ -743,18 +709,8 @@ Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
   int32_t id = NextId();
   Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), id);
 
-  base::ProcessId pid =
-#ifdef ANDROID
-      // We use OtherPidMaybeInvalid() because on Android this method is
-      // actually called on an unconnected protocol, but Android's shared memory
-      // implementation doesn't actually use the PID.
-      OtherPidMaybeInvalid();
-#else
-      OtherPid();
-#endif
-
   UniquePtr<Message> descriptor =
-      shmem.ShareTo(Shmem::PrivateIPDLCaller(), pid, MSG_ROUTING_CONTROL);
+      shmem.MkCreatedMessage(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
   if (!descriptor) {
     return nullptr;
   }
@@ -788,7 +744,7 @@ bool IToplevelProtocol::DestroySharedMemory(Shmem& shmem) {
   }
 
   UniquePtr<Message> descriptor =
-      shmem.UnshareFrom(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
+      shmem.MkDestroyedMessage(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
 
   MOZ_ASSERT(mShmemMap.Contains(aId),
              "Attempting to remove an ID not in the shmem map");
@@ -930,21 +886,23 @@ IPDLResolverInner::IPDLResolverInner(UniquePtr<IPC::Message> aReply,
 void IPDLResolverInner::ResolveOrReject(
     bool aResolve, FunctionRef<void(IPC::Message*, IProtocol*)> aWrite) {
   MOZ_ASSERT(mWeakProxy);
-  IProtocol* actor = mWeakProxy->Get();
-  if (!actor) {
-    NS_WARNING("Not resolving response because actor is dead.");
-    return;
-  }
+  MOZ_ASSERT(mWeakProxy->ActorEventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mReply);
 
   UniquePtr<IPC::Message> reply = std::move(mReply);
+
+  IProtocol* actor = mWeakProxy->Get();
+  if (!actor) {
+    NS_WARNING(nsPrintfCString("Not resolving response '%s': actor is dead",
+                               reply->name())
+                   .get());
+    return;
+  }
 
   WriteIPDLParam(reply.get(), actor, aResolve);
   aWrite(reply.get(), actor);
 
-  bool sendok = actor->ChannelSend(reply.release());
-  if (!sendok) {
-    NS_WARNING("Error sending reject reply");
-  }
+  actor->ChannelSend(reply.release());
 }
 
 void IPDLResolverInner::Destroy() {
@@ -960,7 +918,11 @@ void IPDLResolverInner::Destroy() {
 
 IPDLResolverInner::~IPDLResolverInner() {
   if (mReply) {
-    NS_WARNING("IPDL resolver dropped without being called!");
+    NS_WARNING(
+        nsPrintfCString(
+            "Rejecting reply '%s': resolver dropped without being called",
+            mReply->name())
+            .get());
     ResolveOrReject(false, [](IPC::Message* aMessage, IProtocol* aActor) {
       ResponseRejectReason reason = ResponseRejectReason::ResolverDestroyed;
       WriteIPDLParam(aMessage, aActor, reason);

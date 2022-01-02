@@ -5,7 +5,6 @@ const PROFILE_DIR = do_get_profile().path;
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
@@ -917,7 +916,11 @@ add_task(
       });
     } catch (ex) {
       print("Caught expected exception: " + ex);
-      Assert.ok(ex.result, "The ex.result value should be forwarded.");
+      Assert.greater(
+        ex.result,
+        0x80000000,
+        "The ex.result value should be forwarded."
+      );
     }
 
     // We did not get to the end of our in-transaction block.
@@ -950,7 +953,11 @@ add_task(async function test_programmatic_binding_implicit_transaction() {
     secondSucceeded = true;
   } catch (ex) {
     print("Caught expected exception: " + ex);
-    Assert.ok(ex.result, "The ex.result value should be forwarded.");
+    Assert.greater(
+      ex.result,
+      0x80000000,
+      "The ex.result value should be forwarded."
+    );
   }
 
   Assert.ok(!secondSucceeded);

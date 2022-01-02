@@ -29,6 +29,27 @@ Visualize the stack
     # Git
     $ git log
 
+
+Merge two patches
+-----------------
+
+It can happen that, instead of updating a patch, a new revision is
+created on Phabricator. For this, merge the patches locally:
+
+.. code-block:: shell
+
+    # Mercurial
+    # Mark the patch to be merged with "roll" (key: "r")
+    # or "fold" (key: "f")
+    $ hg histedit
+
+    # Git
+    # Replace "pick" by "squash" or "fixup"
+    $ git rebase -i
+
+Then, push to Phabricator and abandon the old change.
+
+
 Reorder the stack
 -----------------
 

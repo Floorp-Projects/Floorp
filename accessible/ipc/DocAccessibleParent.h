@@ -41,7 +41,11 @@ class DocAccessibleParent : public RemoteAccessible,
 #endif  // defined(XP_WIN)
         mTopLevel(false),
         mTopLevelInContentProcess(false),
-        mShutdown(false) {
+        mShutdown(false),
+        mFocus(0),
+        mCaretId(0),
+        mCaretOffset(-1),
+        mIsCaretAtEndOfLine(false) {
     sMaxDocID++;
     mActorID = sMaxDocID;
     MOZ_ASSERT(!LiveDocs().Get(mActorID));
@@ -102,7 +106,8 @@ class DocAccessibleParent : public RemoteAccessible,
 #if defined(XP_WIN)
       const LayoutDeviceIntRect& aCaretRect,
 #endif
-      const int32_t& aOffset, const bool& aIsSelectionCollapsed) final;
+      const int32_t& aOffset, const bool& aIsSelectionCollapsed,
+      const bool& aIsAtEndOfLine) final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(
       const uint64_t& aID, const nsString& aStr, const int32_t& aStart,
@@ -280,6 +285,32 @@ class DocAccessibleParent : public RemoteAccessible,
     return RemoteAccessible::IndexInParent();
   }
 
+  /**
+   * Get the focused Accessible in this document, if any.
+   */
+  RemoteAccessible* GetFocusedAcc() const {
+    return const_cast<DocAccessibleParent*>(this)->GetAccessible(mFocus);
+  }
+
+  /**
+   * Get the HyperText Accessible containing the caret and the offset of the
+   * caret within. If there is no caret in this document, returns
+   * {nullptr, -1}.
+   */
+  std::pair<RemoteAccessible*, int32_t> GetCaret() const {
+    if (mCaretOffset == -1) {
+      return {nullptr, -1};
+    }
+    RemoteAccessible* acc =
+        const_cast<DocAccessibleParent*>(this)->GetAccessible(mCaretId);
+    if (!acc) {
+      return {nullptr, -1};
+    }
+    return {acc, mCaretOffset};
+  }
+
+  bool IsCaretAtEndOfLine() const { return mIsCaretAtEndOfLine; }
+
  private:
   ~DocAccessibleParent() {
     LiveDocs().Remove(mActorID);
@@ -342,6 +373,11 @@ class DocAccessibleParent : public RemoteAccessible,
   bool mShutdown;
 
   nsTHashSet<RefPtr<dom::BrowserBridgeParent>> mPendingOOPChildDocs;
+
+  uint64_t mFocus;
+  uint64_t mCaretId;
+  int32_t mCaretOffset;
+  bool mIsCaretAtEndOfLine;
 
   static uint64_t sMaxDocID;
   static nsTHashMap<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {

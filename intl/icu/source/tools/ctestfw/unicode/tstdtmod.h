@@ -92,10 +92,10 @@ public:
   RBTestDataModule(const char* name, TestLog& log, UErrorCode& status);
 
 public:
-  virtual UBool getInfo(const DataMap *& info, UErrorCode &status) const;
+  virtual UBool getInfo(const DataMap *& info, UErrorCode &status) const override;
 
-  virtual TestData* createTestData(int32_t index, UErrorCode &status) const;
-  virtual TestData* createTestData(const char* name, UErrorCode &status) const;
+  virtual TestData* createTestData(int32_t index, UErrorCode &status) const override;
+  virtual TestData* createTestData(const char* name, UErrorCode &status) const override;
 
 private:
   UResourceBundle *getTestBundle(const char* bundleName, UErrorCode &status);

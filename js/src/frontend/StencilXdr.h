@@ -16,9 +16,19 @@
 #include "vm/SharedStencil.h"  // SharedImmutableScriptData
 #include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
 
+namespace JS {
+
+class DecodeOptions;
+
+}  // namespace JS
+
 namespace js {
 
 class LifoAlloc;
+class ScriptSource;
+
+class XDRStencilDecoder;
+class XDRStencilEncoder;
 
 namespace frontend {
 
@@ -46,7 +56,38 @@ struct CanCopyDataToDisk {
 // so that the statically declared XDR methods within have access to the
 // relevant struct internals.
 class StencilXDR {
+ private:
+  template <XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceUnretrievableUncompressed(
+      XDRState<mode>* xdr, ScriptSource* ss, uint8_t sourceCharSize,
+      uint32_t uncompressedLength);
+
+  template <typename Unit,
+            template <typename U, SourceRetrievable CanRetrieve> class Data,
+            XDRMode mode>
+  static void codeSourceRetrievable(ScriptSource* ss);
+
+  template <typename Unit, XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceUncompressedData(
+      XDRState<mode>* const xdr, ScriptSource* const ss);
+
+  template <typename Unit, XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceCompressedData(
+      XDRState<mode>* const xdr, ScriptSource* const ss);
+
+  template <typename Unit, XDRMode mode>
+  static void codeSourceRetrievableData(ScriptSource* ss);
+
+  template <XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceData(XDRState<mode>* const xdr,
+                                                ScriptSource* const ss);
+
  public:
+  template <XDRMode mode>
+  static XDRResult codeSource(XDRState<mode>* xdr,
+                              const JS::DecodeOptions* maybeOptions,
+                              RefPtr<ScriptSource>& source);
+
   template <XDRMode mode>
   static XDRResult codeBigInt(XDRState<mode>* xdr, LifoAlloc& alloc,
                               BigIntStencil& stencil);
@@ -77,6 +118,14 @@ class StencilXDR {
                                       ParserAtomSpan& parserAtomData);
 
   template <XDRMode mode>
+  static XDRResult codeModuleEntry(XDRState<mode>* xdr,
+                                   StencilModuleEntry& stencil);
+
+  template <XDRMode mode>
+  static XDRResult codeModuleEntryVector(
+      XDRState<mode>* xdr, StencilModuleMetadata::EntryVector& vector);
+
+  template <XDRMode mode>
   static XDRResult codeModuleMetadata(XDRState<mode>* xdr,
                                       StencilModuleMetadata& stencil);
 
@@ -92,6 +141,66 @@ class StencilXDR {
 };
 
 } /* namespace frontend */
+
+/*
+ * The structure of the Stencil XDR buffer is:
+ *
+ * 1. Header
+ *   a. Version
+ *   b. ScriptSource
+ *   d. Alignment padding
+ * 2. Stencil
+ *   a. CompilationStencil
+ */
+
+/*
+ * The stencil decoder accepts `range` as input.
+ *
+ * The decoded stencils are outputted to the default-initialized
+ * `stencil` parameter of `codeStencil` method.
+ *
+ * The decoded stencils borrow the input `buffer`/`range`, and the consumer
+ * has to keep the buffer alive while the decoded stencils are alive.
+ */
+class XDRStencilDecoder : public XDRState<XDR_DECODE> {
+  using Base = XDRState<XDR_DECODE>;
+
+ public:
+  XDRStencilDecoder(JSContext* cx, const JS::TranscodeRange& range)
+      : Base(cx, range) {
+    MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
+  }
+
+  XDRResult codeStencil(const JS::DecodeOptions& options,
+                        frontend::CompilationStencil& stencil);
+
+  const JS::DecodeOptions& options() {
+    MOZ_ASSERT(options_);
+    return *options_;
+  }
+
+ private:
+  const JS::DecodeOptions* options_ = nullptr;
+};
+
+class XDRStencilEncoder : public XDRState<XDR_ENCODE> {
+  using Base = XDRState<XDR_ENCODE>;
+
+ public:
+  XDRStencilEncoder(JSContext* cx, JS::TranscodeBuffer& buffer)
+      : Base(cx, buffer, buffer.length()) {
+    // NOTE: If buffer is empty, buffer.begin() doesn't point valid buffer.
+    MOZ_ASSERT_IF(!buffer.empty(),
+                  JS::IsTranscodingBytecodeAligned(buffer.begin()));
+    MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
+  }
+
+  XDRResult codeStencil(const RefPtr<ScriptSource>& source,
+                        const frontend::CompilationStencil& stencil);
+
+  XDRResult codeStencil(const frontend::CompilationStencil& stencil);
+};
+
 } /* namespace js */
 
 #endif /* frontend_StencilXdr_h */

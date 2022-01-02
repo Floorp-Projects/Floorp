@@ -127,11 +127,6 @@ class TransactionBuilder final {
 
   void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
-  void UpdateScrollPosition(
-      const wr::WrPipelineId& aPipelineId,
-      const layers::ScrollableLayerGuid::ViewID& aScrollId,
-      const wr::LayoutPoint& aScrollPosition);
-
   bool IsEmpty() const;
 
   bool IsResourceUpdatesEmpty() const;
@@ -267,6 +262,7 @@ class WebRenderAPI final {
   void EnableNativeCompositor(bool aEnable);
   void SetBatchingLookback(uint32_t aCount);
   void SetBool(wr::BoolParameter, bool value);
+  void SetInt(wr::IntParameter, int32_t value);
 
   void SetClearColor(const gfx::DeviceColor& aColor);
   void SetProfilerUI(const nsCString& aUIString);

@@ -45,7 +45,7 @@ pub mod resource;
 mod track;
 mod validation;
 
-pub use hal::api;
+pub use hal::{api, MAX_BIND_GROUPS, MAX_COLOR_TARGETS, MAX_VERTEX_BUFFERS};
 
 use atomic::{AtomicUsize, Ordering};
 
@@ -211,7 +211,10 @@ macro_rules! gfx_select {
             wgt::Backend::Dx12 => $global.$method::<$crate::api::Dx12>( $($param),* ),
             //#[cfg(all(not(target_arch = "wasm32"), windows))]
             //wgt::Backend::Dx11 => $global.$method::<$crate::api::Dx11>( $($param),* ),
-            #[cfg(all(not(target_arch = "wasm32"), unix, not(any(target_os = "ios", target_os = "macos"))))]
+            #[cfg(any(
+                all(unix, not(target_os = "macos"), not(target_os = "ios")),
+                target_arch = "wasm32"
+            ))]
             wgt::Backend::Gl => $global.$method::<$crate::api::Gles>( $($param),+ ),
             other => panic!("Unexpected backend {:?}", other),
 
@@ -224,3 +227,50 @@ type FastHashMap<K, V> =
     std::collections::HashMap<K, V, std::hash::BuildHasherDefault<fxhash::FxHasher>>;
 /// Fast hash set used internally.
 type FastHashSet<K> = std::collections::HashSet<K, std::hash::BuildHasherDefault<fxhash::FxHasher>>;
+
+#[inline]
+pub(crate) fn get_lowest_common_denom(a: u32, b: u32) -> u32 {
+    let gcd = if a >= b {
+        get_greatest_common_divisor(a, b)
+    } else {
+        get_greatest_common_divisor(b, a)
+    };
+    a * b / gcd
+}
+
+#[inline]
+pub(crate) fn get_greatest_common_divisor(mut a: u32, mut b: u32) -> u32 {
+    assert!(a >= b);
+    loop {
+        let c = a % b;
+        if c == 0 {
+            return b;
+        } else {
+            a = b;
+            b = c;
+        }
+    }
+}
+
+#[inline]
+pub(crate) fn align_to(value: u32, alignment: u32) -> u32 {
+    match value % alignment {
+        0 => value,
+        other => value - other + alignment,
+    }
+}
+
+#[test]
+fn test_lcd() {
+    assert_eq!(get_lowest_common_denom(2, 2), 2);
+    assert_eq!(get_lowest_common_denom(2, 3), 6);
+    assert_eq!(get_lowest_common_denom(6, 4), 12);
+}
+
+#[test]
+fn test_gcd() {
+    assert_eq!(get_greatest_common_divisor(5, 1), 1);
+    assert_eq!(get_greatest_common_divisor(4, 2), 2);
+    assert_eq!(get_greatest_common_divisor(6, 4), 2);
+    assert_eq!(get_greatest_common_divisor(7, 7), 7);
+}

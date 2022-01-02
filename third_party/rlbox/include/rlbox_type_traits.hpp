@@ -29,20 +29,21 @@ using valid_param_t = std::conditional_t<std::is_void_v<T>, void*, T>;
 
 namespace func_first_arg_detail {
   template<typename Ret, typename Arg, typename... Rest>
-  Arg func_first_arg_t_helper(Ret(*) (Arg, Rest...));
+  Arg func_first_arg_t_helper(Ret (*)(Arg, Rest...));
 
   template<typename Ret, typename F, typename Arg, typename... Rest>
-  Arg func_first_arg_t_helper(Ret(F::*) (Arg, Rest...));
+  Arg func_first_arg_t_helper(Ret (F::*)(Arg, Rest...));
 
   template<typename Ret, typename F, typename Arg, typename... Rest>
-  Arg func_first_arg_t_helper(Ret(F::*) (Arg, Rest...) const);
+  Arg func_first_arg_t_helper(Ret (F::*)(Arg, Rest...) const);
 
-  template <typename F>
+  template<typename F>
   decltype(func_first_arg_t_helper(&F::operator())) first_argument_helper(F);
 }
 
-template <typename T>
-using func_first_arg_t = decltype(func_first_arg_detail::first_argument_helper(std::declval<T>()));
+template<typename T>
+using func_first_arg_t =
+  decltype(func_first_arg_detail::first_argument_helper(std::declval<T>()));
 
 namespace func_arg_nums_v_detail {
   template<typename T_Ret, typename... T_Args>

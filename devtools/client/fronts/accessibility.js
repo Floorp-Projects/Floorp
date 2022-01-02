@@ -47,10 +47,8 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
       return false;
     }
-    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
-    // we still need to check for `remoteFrame` when connecting to older server.
-    // When 94 is in release, we can check useChildTargetToFetchChildren only
-    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
+
+    return this._form.useChildTargetToFetchChildren;
   }
 
   get role() {
@@ -373,8 +371,12 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
    *                   types of the accessibility issues to audit for
    *                 - {Function} onProgress
    *                   callback function for a progress audit-event
+   *                 - {Boolean} retrieveAncestries (defaults to true)
+   *                   Set to false to _not_ retrieve ancestries of audited accessible objects.
+   *                   This is used when a specific document is selected in the iframe picker
+   *                   and we want to treat it as the root of the accessibility panel tree.
    */
-  async audit({ types, onProgress }) {
+  async audit({ types, onProgress, retrieveAncestries = true }) {
     const onAudit = new Promise(resolve => {
       const auditEventHandler = ({ type, ancestries, progress }) => {
         switch (type) {
@@ -399,11 +401,12 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
     });
 
     const audit = await onAudit;
-    // If audit resulted in an error or there's nothing to report, we are done
-    // (no need to check for ancestry across the remote frame hierarchy). See
-    // also https://bugzilla.mozilla.org/show_bug.cgi?id=1641551 why the rest of
+    // If audit resulted in an error, if there's nothing to report or if the callsite
+    // explicitly asked to not retrieve ancestries, we are done.
+    // (no need to check for ancestry across the remote frame hierarchy).
+    // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1641551 why the rest of
     // the code path is only supported when content toolbox fission is enabled.
-    if (audit.error || audit.ancestries.length === 0) {
+    if (audit.error || audit.ancestries.length === 0 || !retrieveAncestries) {
       return audit;
     }
 

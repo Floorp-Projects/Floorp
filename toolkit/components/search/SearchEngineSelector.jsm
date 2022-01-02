@@ -140,7 +140,10 @@ class SearchEngineSelector {
     let result = [];
     let failed = false;
     try {
-      result = await this._remoteConfig.get({ order: "id" });
+      result = await this._remoteConfig.get({
+        order: "id",
+        loadDumpIfNewer: true,
+      });
     } catch (ex) {
       logConsole.error(ex);
       failed = true;
@@ -217,12 +220,25 @@ class SearchEngineSelector {
           }
         }
 
+        let shouldInclude = () => {
+          let included =
+            "included" in section &&
+            this._isInSection(lcRegion, lcLocale, section.included);
+          let excluded =
+            "excluded" in section &&
+            this._isInSection(lcRegion, lcLocale, section.excluded);
+          return included && !excluded;
+        };
+
         const distroExcluded =
           (distroID &&
             sectionIncludes(section, "excludedDistributions", distroID)) ||
           isDistroExcluded(section, "distributions", distroID);
 
         if (distroID && !distroExcluded && section.override) {
+          if ("included" in section || "excluded" in section) {
+            return shouldInclude();
+          }
           return true;
         }
 
@@ -235,13 +251,7 @@ class SearchEngineSelector {
         ) {
           return false;
         }
-        let included =
-          "included" in section &&
-          this._isInSection(lcRegion, lcLocale, section.included);
-        let excluded =
-          "excluded" in section &&
-          this._isInSection(lcRegion, lcLocale, section.excluded);
-        return included && !excluded;
+        return shouldInclude();
       });
 
       let baseConfig = this._copyObject({}, config);

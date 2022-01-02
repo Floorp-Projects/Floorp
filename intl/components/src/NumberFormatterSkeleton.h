@@ -29,14 +29,12 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    */
   UNumberFormatter* toFormatter(std::string_view locale);
 
-#ifndef U_HIDE_DRAFT_API
   /**
    * Return a new UNumberRangeFormatter based on this skeleton.
    */
   UNumberRangeFormatter* toRangeFormatter(
       std::string_view locale, NumberRangeFormatOptions::RangeCollapse collapse,
       NumberRangeFormatOptions::RangeIdentityFallback identity);
-#endif
 
  private:
   static constexpr size_t DefaultVectorSize = 128;

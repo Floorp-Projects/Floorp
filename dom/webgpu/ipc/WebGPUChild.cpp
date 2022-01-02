@@ -830,15 +830,18 @@ ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(
   } else {
     auto* target = targetIter->second;
     MOZ_ASSERT(target);
-    JsWarning(target->GetOwnerGlobal(), aMessage);
+    // We don't want to spam the errors to the console indefinitely
+    if (target->CheckNewWarning(aMessage)) {
+      JsWarning(target->GetOwnerGlobal(), aMessage);
 
-    dom::GPUUncapturedErrorEventInit init;
-    init.mError.SetAsGPUValidationError() =
-        new ValidationError(target, aMessage);
-    RefPtr<mozilla::dom::GPUUncapturedErrorEvent> event =
-        dom::GPUUncapturedErrorEvent::Constructor(target, u"uncapturederror"_ns,
-                                                  init);
-    target->DispatchEvent(*event);
+      dom::GPUUncapturedErrorEventInit init;
+      init.mError.SetAsGPUValidationError() =
+          new ValidationError(target, aMessage);
+      RefPtr<mozilla::dom::GPUUncapturedErrorEvent> event =
+          dom::GPUUncapturedErrorEvent::Constructor(
+              target, u"uncapturederror"_ns, init);
+      target->DispatchEvent(*event);
+    }
   }
   return IPC_OK();
 }

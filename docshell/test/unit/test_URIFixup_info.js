@@ -509,6 +509,14 @@ var testcases = [
     keywordLookup: true,
   },
   {
+    input: ".com",
+    keywordLookup: true,
+    affectedByDNSForSingleWordHosts: true,
+    fixedURI: "http://.com/",
+    alternateURI: "https://www.com/",
+    protocolChange: true,
+  },
+  {
     input: "' ?.com",
     keywordLookup: true,
   },

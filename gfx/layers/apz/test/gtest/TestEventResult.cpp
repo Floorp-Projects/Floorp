@@ -77,9 +77,6 @@ class APZEventResultTester : public APZCTreeManagerTester {
 
   void OverscrollDirectionsWithEventHandlerTest(
       PreventDefaultFlag aPreventDefaultFlag) {
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-    regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*root, regions);
     UpdateHitTestingTree();
 
     APZHandledPlace expectedPlace =
@@ -166,9 +163,6 @@ class APZEventResultTester : public APZCTreeManagerTester {
 
   void ScrollableDirectionsWithEventHandlerTest(
       PreventDefaultFlag aPreventDefaultFlag) {
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-    regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*root, regions);
     UpdateHitTestingTree();
 
     APZHandledPlace expectedPlace =
@@ -371,10 +365,6 @@ TEST_F(APZEventResultTesterMock, HandledByRootApzcFlag) {
     metrics.SetIsRootContent(true);
   });
   // away from the scrolling container layer.
-  EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-  // bottom half is dispatch-to-content
-  regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 50, 100, 50));
-  APZTestAccess::SetEventRegions(*root, regions);
   registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
 

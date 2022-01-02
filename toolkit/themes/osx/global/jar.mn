@@ -28,7 +28,6 @@ toolkit.jar:
   skin/classic/global/tooltip.css
 * skin/classic/global/tree.css
   skin/classic/global/wizard.css
-  skin/classic/global/arrow/panelarrow-horizontal.svg                (arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg                  (arrow/panelarrow-vertical.svg)
   skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)

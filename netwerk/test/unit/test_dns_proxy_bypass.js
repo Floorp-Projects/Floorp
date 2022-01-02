@@ -4,21 +4,30 @@
 
 "use strict";
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
+var prefs = Services.prefs;
 
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+function setup() {
+  prefs.setBoolPref("network.dns.notifyResolution", true);
+  prefs.setCharPref("network.proxy.socks", "127.0.0.1");
+  prefs.setIntPref("network.proxy.socks_port", 9000);
+  prefs.setIntPref("network.proxy.type", 1);
+  prefs.setBoolPref("network.proxy.socks_remote_dns", true);
+}
+
+setup();
+registerCleanupFunction(async () => {
+  prefs.clearUserPref("network.proxy.socks");
+  prefs.clearUserPref("network.proxy.socks_port");
+  prefs.clearUserPref("network.proxy.type");
+  prefs.clearUserPref("network.proxy.socks_remote_dns");
+  prefs.clearUserPref("network.dns.notifyResolution");
+});
 
 var url = "ws://dnsleak.example.com";
 
 var dnsRequestObserver = {
   register() {
-    this.obs = Cc["@mozilla.org/observer-service;1"].getService(
-      Ci.nsIObserverService
-    );
+    this.obs = Services.obs;
     this.obs.addObserver(this, "dns-resolution-request");
   },
 
@@ -35,35 +44,29 @@ var dnsRequestObserver = {
   },
 };
 
-var listener = {
+function WSListener(closure) {
+  this._closure = closure;
+}
+WSListener.prototype = {
   onAcknowledge(aContext, aSize) {},
   onBinaryMessageAvailable(aContext, aMsg) {},
   onMessageAvailable(aContext, aMsg) {},
   onServerClose(aContext, aCode, aReason) {},
   onStart(aContext) {},
   onStop(aContext, aStatusCode) {
-    prefs.clearUserPref("network.proxy.socks");
-    prefs.clearUserPref("network.proxy.socks_port");
-    prefs.clearUserPref("network.proxy.type");
-    prefs.clearUserPref("network.proxy.socks_remote_dns");
-    prefs.clearUserPref("network.dns.notifyResolution");
     dnsRequestObserver.unregister();
-    do_test_finished();
+    this._closure();
   },
 };
 
-function run_test() {
+add_task(async function test_dns_websocket_channel() {
   dnsRequestObserver.register();
-  prefs.setBoolPref("network.dns.notifyResolution", true);
-  prefs.setCharPref("network.proxy.socks", "127.0.0.1");
-  prefs.setIntPref("network.proxy.socks_port", 9000);
-  prefs.setIntPref("network.proxy.type", 1);
-  prefs.setBoolPref("network.proxy.socks_remote_dns", true);
+
   var chan = Cc["@mozilla.org/network/protocol;1?name=ws"].createInstance(
     Ci.nsIWebSocketChannel
   );
 
-  var uri = ioService.newURI(url);
+  var uri = Services.io.newURI(url);
   chan.initLoadInfo(
     null, // aLoadingNode
     Services.scriptSecurityManager.createContentPrincipal(uri, {}),
@@ -72,6 +75,21 @@ function run_test() {
     Ci.nsIContentPolicy.TYPE_WEBSOCKET
   );
 
-  chan.asyncOpen(uri, url, {}, 0, listener, null);
-  do_test_pending();
-}
+  await new Promise(resolve =>
+    chan.asyncOpen(uri, url, {}, 0, new WSListener(resolve), null)
+  );
+});
+
+add_task(async function test_dns_resolve_proxy() {
+  dnsRequestObserver.register();
+
+  let { error } = await new TRRDNSListener("dnsleak.example.com", {
+    expectEarlyFail: true,
+  });
+  Assert.equal(
+    error.result,
+    Cr.NS_ERROR_UNKNOWN_PROXY_HOST,
+    "error is NS_ERROR_UNKNOWN_PROXY_HOST"
+  );
+  dnsRequestObserver.unregister();
+});

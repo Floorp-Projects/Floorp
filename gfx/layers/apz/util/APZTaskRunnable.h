@@ -31,10 +31,11 @@ class APZTaskRunnable final : public Runnable {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_DECL_NSIRUNNABLE
 
-  // Queue a RepaintRequest.
-  // If there's already a RepaintRequest having the same scroll id, the old
-  // one will be discarded.
-  void QueueRequest(const RepaintRequest& aRequest);
+      // Queue a RepaintRequest.
+      // If there's already a RepaintRequest having the same scroll id, the old
+      // one will be discarded.
+      void
+      QueueRequest(const RepaintRequest& aRequest);
   void QueueFlushCompleteNotification();
   void Revoke() {
     mController = nullptr;

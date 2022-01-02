@@ -311,7 +311,7 @@ class Rule {
       selector = await this.inherited.getUniqueSelector();
     } else {
       // This is an inline style from the current node.
-      selector = this.inspector.selectionCssSelector;
+      selector = await this.inspector.selection.nodeFront.getUniqueSelector();
     }
 
     return selector;

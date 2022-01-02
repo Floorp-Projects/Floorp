@@ -134,8 +134,8 @@ void AbstractGeneratorObject::trace(JSTracer* trc) {
 }
 
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
-                                      AbstractFramePtr frame, jsbytecode* pc,
-                                      unsigned nvalues) {
+                                      AbstractFramePtr frame,
+                                      const jsbytecode* pc, unsigned nvalues) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
              JSOp(*pc) == JSOp::Await);
 

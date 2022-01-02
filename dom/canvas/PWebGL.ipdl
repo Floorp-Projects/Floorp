@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PCompositorBridge;
+include protocol PCanvasManager;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
@@ -35,7 +35,7 @@ namespace dom {
  */
 [RefCounted] sync protocol PWebGL
 {
-  manager PCompositorBridge;
+  manager PCanvasManager;
 
 parent:
   sync Initialize(InitContextDesc desc)

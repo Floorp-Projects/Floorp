@@ -23,7 +23,7 @@ if (DEBUG_ALLOCATIONS) {
   // as it instantiates custom Debugger API instances and has to be running in a distinct
   // compartments from DevTools and system scopes (JSMs, XPCOM,...)
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const loader = new DevToolsLoader({
     invisibleToDebugger: true,
@@ -44,7 +44,7 @@ if (DEBUG_ALLOCATIONS) {
 }
 
 const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 
 const { gDevTools } = require("devtools/client/framework/devtools");
@@ -148,7 +148,7 @@ function highlighterTestActorBootstrap() {
     "chrome://mochitests/content/browser/devtools/client/shared/test/highlighter-test-actor.js";
 
   const { require: _require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   _require(HIGHLIGHTER_TEST_ACTOR_URL);
 
@@ -598,15 +598,15 @@ async function _watchForToolboxReload(
   { isErrorPage, waitForLoad } = {}
 ) {
   const tab = gBrowser.getTabForBrowser(browser);
+
   const toolbox = await gDevTools.getToolboxForTab(tab);
+
   if (!toolbox) {
     // No toolbox to wait for
     return function() {};
   }
-  const currentToolId = toolbox.currentToolId;
-  const panel = toolbox.getCurrentPanel();
 
-  const waitForCurrentPanelReload = watchForPanelReload(currentToolId, panel);
+  const waitForCurrentPanelReload = watchForCurrentPanelReload(toolbox);
   const waitForToolboxCommandsReload = await watchForCommandsReload(
     toolbox.commands,
     { isErrorPage, waitForLoad }
@@ -671,7 +671,60 @@ async function _watchForResponsiveReload(
   };
 }
 
-function watchForPanelReload(toolId, panel) {
+/**
+ * Watch for the current panel selected in the provided toolbox to be reloaded.
+ * Some panels implement custom events that should be expected for every reload.
+ *
+ * Note about returning a method instead of a promise:
+ * In general this pattern is useful so that we can check if a target switch
+ * occurred or not, and decide which events to listen for. So far no panel is
+ * behaving differently whether there was a target switch or not. But to remain
+ * consistent with other watch* methods we still return a function here.
+ *
+ * @param {Toolbox}
+ *        The Toolbox instance which is going to experience a reload
+ * @return {function} An async method to be called and awaited after the reload
+ *         started. Will return `null` for panels which don't implement any
+ *         specific reload event.
+ */
+function watchForCurrentPanelReload(toolbox) {
+  return _watchForPanelReload(toolbox, toolbox.currentToolId);
+}
+
+/**
+ * Watch for all the panels loaded in the provided toolbox to be reloaded.
+ * Some panels implement custom events that should be expected for every reload.
+ *
+ * Note about returning a method instead of a promise:
+ * See comment for watchForCurrentPanelReload
+ *
+ * @param {Toolbox}
+ *        The Toolbox instance which is going to experience a reload
+ * @return {function} An async method to be called and awaited after the reload
+ *         started.
+ */
+function watchForLoadedPanelsReload(toolbox) {
+  const waitForPanels = [];
+  for (const [id] of toolbox.getToolPanels()) {
+    // Store a watcher method for each panel already loaded.
+    waitForPanels.push(_watchForPanelReload(toolbox, id));
+  }
+
+  return function() {
+    return Promise.all(
+      waitForPanels.map(async watchPanel => {
+        // Wait for all panels to be reloaded.
+        if (watchPanel) {
+          await watchPanel();
+        }
+      })
+    );
+  };
+}
+
+function _watchForPanelReload(toolbox, toolId) {
+  const panel = toolbox.getPanel(toolId);
+
   if (toolId == "inspector") {
     const markuploaded = panel.once("markuploaded");
     const onNewRoot = panel.once("new-root");
@@ -822,7 +875,6 @@ async function createAndAttachTargetForTab(tab) {
   await commands.targetCommand.startListening();
 
   const target = commands.targetCommand.targetFront;
-  await target.attach();
   return target;
 }
 
@@ -1400,7 +1452,7 @@ async function registerActorInContentProcess(url, options) {
     args => {
       // eslint-disable-next-line no-shadow
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const {
         ActorRegistry,

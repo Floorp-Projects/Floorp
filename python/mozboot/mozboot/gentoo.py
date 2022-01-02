@@ -40,14 +40,6 @@ class GentooBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        self.run_as_root(["emerge", "--noreplace", "--quiet", "dev-java/openjdk-bin"])
-
-        self.ensure_java(mozconfig_builder)
-        super().install_mobile_android_packages(
-            mozconfig_builder, artifact_mode=artifact_mode
-        )
-
     def _update_package_manager(self):
         self.run_as_root(["emerge", "--sync"])
 

@@ -7,6 +7,7 @@
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
+const { createCommandsDictionary } = require("devtools/shared/commands/index");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
@@ -23,6 +24,13 @@ add_task(async () => {
   await client.connect();
 
   const tabDescriptors = await client.mainRoot.listTabs();
+  await Promise.all(
+    tabDescriptors.map(async descriptor => {
+      const commands = await createCommandsDictionary(descriptor);
+      // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
+      await commands.targetCommand.startListening();
+    })
+  );
   const tabs = await Promise.all(tabDescriptors.map(d => d.getTarget()));
   const targetFront1 = tabs.find(a => a.url === TAB_URL_1);
   const targetFront2 = tabs.find(a => a.url === TAB_URL_2);
@@ -86,7 +94,6 @@ async function checkGetTabFailures(client) {
 
 async function checkSelectedTargetActor(targetFront2) {
   // Send a naive request to the second target actor to check if it works
-  await targetFront2.attach();
   const consoleFront = await targetFront2.getFront("console");
   const response = await consoleFront.startListeners([]);
   ok(
@@ -97,7 +104,6 @@ async function checkSelectedTargetActor(targetFront2) {
 
 async function checkFirstTargetActor(targetFront1) {
   // then send a request to the first target actor to check if it still works
-  await targetFront1.attach();
   const consoleFront = await targetFront1.getFront("console");
   const response = await consoleFront.startListeners([]);
   ok(

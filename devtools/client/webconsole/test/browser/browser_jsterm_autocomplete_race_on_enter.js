@@ -6,7 +6,7 @@
 // Test that pressing Enter quickly after a letter that makes the input exactly match the
 // item in the autocomplete popup does not insert unwanted character. See Bug 1595068.
 
-const TEST_URI = `data:text/html;charset=utf-8,<script>
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><script>
   var uvwxyz = "zyxwvu";
 </script>Autocomplete race on Enter`;
 

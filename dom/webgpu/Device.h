@@ -7,6 +7,7 @@
 #define GPU_DEVICE_H_
 
 #include "ObjectModel.h"
+#include "nsTHashSet.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
@@ -93,6 +94,7 @@ class Device final : public DOMEventTargetHelper {
       const dom::GPUCanvasConfiguration& aDesc,
       wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
       gfx::IntSize* aDefaultSize);
+  bool CheckNewWarning(const nsACString& aMessage);
 
  private:
   ~Device();
@@ -102,6 +104,7 @@ class Device final : public DOMEventTargetHelper {
   bool mValid = true;
   nsString mLabel;
   RefPtr<Queue> mQueue;
+  nsTHashSet<nsCString> mKnownWarnings;
 
  public:
   void GetLabel(nsAString& aValue) const;

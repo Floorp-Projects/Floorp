@@ -50,8 +50,7 @@ class AudioMixer {
   /* Get the data from the mixer. This is supposed to be called when all the
    * tracks have been mixed in. The caller should not hold onto the data. */
   void FinishMixing() {
-    MOZ_ASSERT(mChannels && mFrames && mSampleRate,
-               "Mix not called for this cycle?");
+    MOZ_ASSERT(mChannels && mSampleRate, "Mix not called for this cycle?");
     for (MixerCallback* cb = mCallbacks.getFirst(); cb != nullptr;
          cb = cb->getNext()) {
       MixerCallbackReceiver* receiver = cb->mReceiver;

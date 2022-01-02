@@ -61,6 +61,11 @@ from "Attach to Process". For more information, see `Attach to Running
 Processes with the Visual Studio
 Debugger <http://msdn.microsoft.com/en-us/library/vstudio/3s68z0b3.aspx>`__.
 
+**Starting an MSIX installed Firefox with the debugger**. In Visual
+Studio, select Debug -> Other Debug Targets -> Debug Installed App Package.
+In the dialog, select the installed Firefox package you wish to debug
+and click "Start".
+
 Debugging Release and Nightly Builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

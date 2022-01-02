@@ -6,7 +6,7 @@
 "use strict";
 
 const CSS_URI = "data:text/bogus,foo";
-const TEST_URI = `data:text/html,<!doctype html><link rel="stylesheet" href="${CSS_URI}">`;
+const TEST_URI = `data:text/html,<!DOCTYPE html><link rel="stylesheet" href="${CSS_URI}">`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
+  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
@@ -547,11 +548,16 @@ function waitForLoadEvent(eventName, browsingContextFn) {
   let onPageLoad;
   return new Promise(resolve => {
     onPageLoad = (_, data) => {
-      logger.trace(`Received event ${data.type} for ${data.documentURI}`);
-      if (
-        data.browsingContext === browsingContextFn() &&
-        data.type === eventName
-      ) {
+      // Ignore load events from other browsing contexts
+      if (data.browsingContext !== browsingContextFn()) {
+        return;
+      }
+
+      logger.trace(
+        truncate`[${data.browsingContext.id}] Received event ${data.type} for ${data.documentURI}`
+      );
+
+      if (data.type === eventName) {
         EventDispatcher.off("page-load", onPageLoad);
         resolve(data);
       }

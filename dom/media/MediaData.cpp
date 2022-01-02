@@ -346,8 +346,8 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     }
   }
 #elif XP_MACOSX
-  if (aAllocator && aAllocator->GetCompositorBackendType() ==
-                        layers::LayersBackend::LAYERS_WR) {
+  if (aAllocator && aAllocator->GetWebRenderCompositorType() !=
+                        layers::WebRenderCompositor::SOFTWARE) {
     RefPtr<layers::MacIOSurfaceImage> ioImage =
         new layers::MacIOSurfaceImage(nullptr);
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);

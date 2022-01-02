@@ -801,7 +801,7 @@ class ScriptMixin(PlatformMixin):
             self.exception(level=FATAL)
 
     def load_json_url(self, url, error_level=None, *args, **kwargs):
-        """ Returns a json object from a url (it retries). """
+        """Returns a json object from a url (it retries)."""
         contents = self._retry_download(
             url=url, error_level=error_level, *args, **kwargs
         )

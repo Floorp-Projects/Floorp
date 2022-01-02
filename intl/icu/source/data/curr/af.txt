@@ -185,7 +185,7 @@ af{
         }
         EUR{
             "€",
-            "euro",
+            "Euro",
         }
         FJD{
             "FJD",
@@ -665,7 +665,7 @@ af{
         }
         XXX{
             "¤",
-            "onbekende geldeenheid",
+            "Onbekende geldeenheid",
         }
         YER{
             "YER",

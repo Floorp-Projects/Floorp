@@ -68,6 +68,12 @@ bool WindowContext::IsCurrent() const {
   return mBrowsingContext->mCurrentWindowContext == this;
 }
 
+bool WindowContext::HasActivePeerConnections() {
+  MOZ_ASSERT(TopWindowContext() == this,
+             "HasActivePeerConnections is set only in the top window context");
+  return Canonical()->HasActivePeerConnections();
+}
+
 bool WindowContext::IsInBFCache() {
   if (mozilla::SessionHistoryInParent()) {
     return mBrowsingContext->IsInBFCache();
@@ -278,6 +284,11 @@ bool WindowContext::CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
 
 void WindowContext::DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue) {
   RecomputeCanExecuteScripts();
+}
+
+bool WindowContext::CanSet(FieldIndex<IDX_HasActivePeerConnections>, bool,
+                           ContentParent*) {
+  return XRE_IsParentProcess() && IsTop();
 }
 
 void WindowContext::RecomputeCanExecuteScripts(bool aApplyChanges) {

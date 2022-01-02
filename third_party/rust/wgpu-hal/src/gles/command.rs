@@ -119,29 +119,29 @@ impl super::CommandEncoder {
 
     fn rebind_sampler_states(&mut self, dirty_textures: u32, dirty_samplers: u32) {
         for (texture_index, slot) in self.state.texture_slots.iter().enumerate() {
-            if let Some(sampler_index) = slot.sampler_index {
-                if dirty_textures & (1 << texture_index) != 0
-                    || dirty_samplers & (1 << sampler_index) != 0
-                {
-                    if let Some(sampler) = self.state.samplers[sampler_index as usize] {
-                        self.cmd_buffer
-                            .commands
-                            .push(C::BindSampler(texture_index as u32, sampler));
-                    }
-                }
+            if dirty_textures & (1 << texture_index) != 0
+                || slot
+                    .sampler_index
+                    .map_or(false, |si| dirty_samplers & (1 << si) != 0)
+            {
+                let sampler = slot
+                    .sampler_index
+                    .and_then(|si| self.state.samplers[si as usize]);
+                self.cmd_buffer
+                    .commands
+                    .push(C::BindSampler(texture_index as u32, sampler));
             }
         }
     }
 
     fn prepare_draw(&mut self, first_instance: u32) {
         if first_instance != 0 {
-            self.state.dirty_vbuf_mask = self.state.instance_vbuf_mask;
+            self.state.dirty_vbuf_mask |= self.state.instance_vbuf_mask;
         }
         if self.state.dirty_vbuf_mask != 0 {
             self.rebind_vertex_data(first_instance);
-            if first_instance == 0 {
-                self.state.dirty_vbuf_mask = 0;
-            }
+            let vertex_rate_mask = self.state.dirty_vbuf_mask & !self.state.instance_vbuf_mask;
+            self.state.dirty_vbuf_mask ^= vertex_rate_mask;
         }
     }
 
@@ -204,7 +204,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
             }
             self.cmd_buffer
                 .commands
-                .push(C::BufferBarrier(bar.buffer.raw, bar.usage.end));
+                .push(C::BufferBarrier(bar.buffer.raw.unwrap(), bar.usage.end));
         }
     }
 
@@ -239,22 +239,9 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
 
     unsafe fn clear_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange) {
         self.cmd_buffer.commands.push(C::ClearBuffer {
-            dst: buffer.raw,
+            dst: buffer.clone(),
             dst_target: buffer.target,
             range,
-        });
-    }
-
-    unsafe fn clear_texture(
-        &mut self,
-        texture: &super::Texture,
-        subresource_range: &wgt::ImageSubresourceRange,
-    ) {
-        let (dst, dst_target) = texture.inner.as_native();
-        self.cmd_buffer.commands.push(C::ClearTexture {
-            dst,
-            dst_target,
-            subresource_range: subresource_range.clone(),
         });
     }
 
@@ -266,14 +253,17 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
     ) where
         T: Iterator<Item = crate::BufferCopy>,
     {
-        //TODO: preserve `src.target` and `dst.target`
-        // at least for the buffers that require it.
+        let (src_target, dst_target) = if src.target == dst.target {
+            (glow::COPY_READ_BUFFER, glow::COPY_WRITE_BUFFER)
+        } else {
+            (src.target, dst.target)
+        };
         for copy in regions {
             self.cmd_buffer.commands.push(C::CopyBufferToBuffer {
-                src: src.raw,
-                src_target: glow::COPY_READ_BUFFER,
-                dst: dst.raw,
-                dst_target: glow::COPY_WRITE_BUFFER,
+                src: src.clone(),
+                src_target,
+                dst: dst.clone(),
+                dst_target,
                 copy,
             })
         }
@@ -311,10 +301,11 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         T: Iterator<Item = crate::BufferTextureCopy>,
     {
         let (dst_raw, dst_target) = dst.inner.as_native();
+
         for mut copy in regions {
             copy.clamp_size_to_virtual(&dst.copy_size);
             self.cmd_buffer.commands.push(C::CopyBufferToTexture {
-                src: src.raw,
+                src: src.clone(),
                 src_target: src.target,
                 dst: dst_raw,
                 dst_target,
@@ -340,7 +331,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 src: src_raw,
                 src_target,
                 src_format: src.format,
-                dst: dst.raw,
+                dst: dst.clone(),
                 dst_target: dst.target,
                 copy,
             })
@@ -377,7 +368,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         let query_range = start as u32..self.cmd_buffer.queries.len() as u32;
         self.cmd_buffer.commands.push(C::CopyQueryResults {
             query_range,
-            dst: buffer.raw,
+            dst: buffer.clone(),
             dst_target: buffer.target,
             dst_offset: offset,
         });
@@ -615,12 +606,6 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
     unsafe fn set_render_pipeline(&mut self, pipeline: &super::RenderPipeline) {
         self.state.topology = conv::map_primitive_topology(pipeline.primitive.topology);
 
-        for index in self.state.vertex_attributes.len()..pipeline.vertex_attributes.len() {
-            self.cmd_buffer
-                .commands
-                .push(C::UnsetVertexAttribute(index as u32));
-        }
-
         if self
             .private_caps
             .contains(super::PrivateCapabilities::VERTEX_BUFFER_LAYOUT)
@@ -635,6 +620,13 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 });
             }
         } else {
+            for index in 0..self.state.vertex_attributes.len() {
+                self.cmd_buffer
+                    .commands
+                    .push(C::UnsetVertexAttribute(index as u32));
+            }
+            self.state.vertex_attributes.clear();
+
             self.state.dirty_vbuf_mask = 0;
             // copy vertex attributes
             for vat in pipeline.vertex_attributes.iter() {
@@ -750,7 +742,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         self.state.index_format = format;
         self.cmd_buffer
             .commands
-            .push(C::SetIndexBuffer(binding.buffer.raw));
+            .push(C::SetIndexBuffer(binding.buffer.raw.unwrap()));
     }
     unsafe fn set_vertex_buffer<'a>(
         &mut self,
@@ -760,7 +752,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         self.state.dirty_vbuf_mask |= 1 << index;
         let (_, ref mut vb) = self.state.vertex_buffers[index as usize];
         *vb = Some(super::BufferBinding {
-            raw: binding.buffer.raw,
+            raw: binding.buffer.raw.unwrap(),
             offset: binding.offset,
         });
     }
@@ -842,7 +834,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 offset + draw * mem::size_of::<wgt::DrawIndirectArgs>() as wgt::BufferAddress;
             self.cmd_buffer.commands.push(C::DrawIndirect {
                 topology: self.state.topology,
-                indirect_buf: buffer.raw,
+                indirect_buf: buffer.raw.unwrap(),
                 indirect_offset,
             });
         }
@@ -864,7 +856,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
             self.cmd_buffer.commands.push(C::DrawIndexedIndirect {
                 topology: self.state.topology,
                 index_type,
-                indirect_buf: buffer.raw,
+                indirect_buf: buffer.raw.unwrap(),
                 indirect_offset,
             });
         }
@@ -915,7 +907,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
     }
     unsafe fn dispatch_indirect(&mut self, buffer: &super::Buffer, offset: wgt::BufferAddress) {
         self.cmd_buffer.commands.push(C::DispatchIndirect {
-            indirect_buf: buffer.raw,
+            indirect_buf: buffer.raw.unwrap(),
             indirect_offset: offset,
         });
     }

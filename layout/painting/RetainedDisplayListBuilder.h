@@ -248,6 +248,7 @@ struct RetainedDisplayListBuilder {
                     const bool aStopAtStackingContext, nsRect* aOutDirty,
                     nsIFrame** aOutModifiedAGR);
 
+  nsIFrame* RootReferenceFrame() { return mBuilder.RootReferenceFrame(); }
   friend class MergeState;
 
   nsDisplayListBuilder mBuilder;

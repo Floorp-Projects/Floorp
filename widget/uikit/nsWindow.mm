@@ -239,8 +239,7 @@ class nsAutoRetainUIKitObject {
 - (BOOL)isUsingMainThreadOpenGL {
   if (!mGeckoChild || ![self window]) return NO;
 
-  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() ==
-         mozilla::layers::LayersBackend::LAYERS_OPENGL;
+  return NO;
 }
 
 - (void)drawUsingOpenGL {
@@ -347,15 +346,6 @@ class nsAutoRetainUIKitObject {
 
   // nsAutoRetainCocoaObject kungFuDeathGrip(self);
   bool painted = false;
-  if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(mGeckoChild, targetContext,
-                                                          BufferMode::BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region);
-  } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-    // We only need this so that we actually get DidPaintWindow fired
-    painted = mGeckoChild->PaintWindow(region);
-  }
-
   targetContext = nullptr;
   targetSurface = nullptr;
 
@@ -572,7 +562,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
   if (!mNativeView || !mVisible) return;
 
-  MOZ_RELEASE_ASSERT(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
+  MOZ_RELEASE_ASSERT(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_WR,
                      "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   [mNativeView setNeedsLayout];

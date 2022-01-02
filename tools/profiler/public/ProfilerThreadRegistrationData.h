@@ -50,6 +50,55 @@ class ProfiledThreadData;
 class PSAutoLock;
 struct JSContext;
 
+// Enum listing which profiling features are active for a single thread.
+enum class ThreadProfilingFeatures : uint32_t {
+  // The thread is not being profiled at all (either the profiler is not
+  // running, or this thread is not examined during profiling.)
+  NotProfiled = 0u,
+
+  // Single features, binary exclusive. May be `Combine()`d.
+  CPUUtilization = 1u << 0,
+  Sampling = 1u << 1,
+  Markers = 1u << 2,
+
+  // All possible features. Usually used as a mask to see if any feature is
+  // active at a given time.
+  Any = CPUUtilization | Sampling | Markers
+};
+
+// Binary OR of one of more ThreadProfilingFeatures, to mix all arguments.
+template <typename... Ts>
+[[nodiscard]] constexpr ThreadProfilingFeatures Combine(
+    ThreadProfilingFeatures a1, Ts... as) {
+  static_assert((true && ... &&
+                 std::is_same_v<std::remove_cv_t<std::remove_reference_t<Ts>>,
+                                ThreadProfilingFeatures>));
+  return static_cast<ThreadProfilingFeatures>(
+      (static_cast<std::underlying_type_t<ThreadProfilingFeatures>>(a1) | ... |
+       static_cast<std::underlying_type_t<ThreadProfilingFeatures>>(as)));
+}
+
+// Binary AND of one of more ThreadProfilingFeatures, to find features common to
+// all arguments.
+template <typename... Ts>
+[[nodiscard]] constexpr ThreadProfilingFeatures Intersect(
+    ThreadProfilingFeatures a1, Ts... as) {
+  static_assert((true && ... &&
+                 std::is_same_v<std::remove_cv_t<std::remove_reference_t<Ts>>,
+                                ThreadProfilingFeatures>));
+  return static_cast<ThreadProfilingFeatures>(
+      (static_cast<std::underlying_type_t<ThreadProfilingFeatures>>(a1) & ... &
+       static_cast<std::underlying_type_t<ThreadProfilingFeatures>>(as)));
+}
+
+// Are there features in common between the two given sets?
+// Mostly useful to test if any of a set of features is present in another set.
+template <typename... Ts>
+[[nodiscard]] constexpr bool DoFeaturesIntersect(ThreadProfilingFeatures a1,
+                                                 ThreadProfilingFeatures a2) {
+  return Intersect(a1, a2) != ThreadProfilingFeatures::NotProfiled;
+}
+
 namespace mozilla::profiler {
 
 // All data members related to thread profiling are stored here.
@@ -59,7 +108,7 @@ namespace mozilla::profiler {
 class ThreadRegistrationData {
  public:
   // No public accessors here. See derived classes for accessors, and
-  // Get.../With... functions for who can uses these accessors.
+  // Get.../With... functions for who can use these accessors.
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     // Not including data that is not fully owned here.
@@ -81,7 +130,8 @@ class ThreadRegistrationData {
 #ifdef DEBUG
   // Destructor only used to check invariants.
   ~ThreadRegistrationData() {
-    MOZ_ASSERT(mIsBeingProfiled == !!mProfiledThreadData);
+    MOZ_ASSERT((mProfilingFeatures != ThreadProfilingFeatures::NotProfiled) ==
+               !!mProfiledThreadData);
     MOZ_ASSERT(!mProfiledThreadData,
                "mProfiledThreadData pointer should have been reset before "
                "~ThreadRegistrationData");
@@ -182,11 +232,6 @@ class ThreadRegistrationData {
   // They need to be atomic, because LockData() does not prevent reads from
   // the owning thread.
 
-  // Is this thread being profiled? (e.g., should markers be recorded?)
-  // Written from profiler, read from thread.
-  // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together.)
-  Atomic<bool, MemoryOrdering::Relaxed> mIsBeingProfiled{false};
-
   // mSleep tracks whether the thread is sleeping, and if so, whether it has
   // been previously observed. This is used for an optimization: in some
   // cases, when a thread is asleep, we duplicate the previous sample, which
@@ -226,10 +271,16 @@ class ThreadRegistrationData {
   // Read&written from thread and suspended thread.
   Atomic<int> mSleep{AWAKE};
 
+  // Is this thread currently being profiled, and with which features?
+  // Written from profiler, read from any thread.
+  // Invariant: `!!mProfilingFeatures == !!mProfiledThreadData` (set together.)
+  Atomic<ThreadProfilingFeatures, MemoryOrdering::Relaxed> mProfilingFeatures{
+      ThreadProfilingFeatures::NotProfiled};
+
   // If the profiler is active and this thread is selected for profiling, this
   // points at the relevant ProfiledThreadData.
   // Fully controlled by the profiler.
-  // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together.)
+  // Invariant: `!!mProfilingFeatures == !!mProfiledThreadData` (set together).
   ProfiledThreadData* mProfiledThreadData = nullptr;
 };
 
@@ -261,17 +312,19 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
 
   // Similar to `profiler_is_active()`, this atomic flag may become out-of-date.
   // It should only be used as an indication to know whether this thread is
-  // probably being profiled, to avoid doing expensive operations otherwise.
-  // Edge cases:
-  // - This thread could get `false`, but the profiler has just started, so some
-  //   very early data may be missing. No real impact on profiling.
-  // - This thread could get `true`, but the profiled has just stopped, so some
-  //   some work will be done and then discarded when finally attempting to
-  //   write to the buffer. No impact on profiling.
-  // - This thread could see `true`, but the profiler will quickly stop and
-  //   restart, so this thread will write information relevant to the previous
-  //   profiling session. Very rare, and little impact on profiling.
-  [[nodiscard]] bool IsBeingProfiled() const { return mIsBeingProfiled; }
+  // probably being profiled (with some specific features), to avoid doing
+  // expensive operations otherwise. Edge cases:
+  // - This thread could get `NotProfiled`, but the profiler has just started,
+  //   so some very early data may be missing. No real impact on profiling.
+  // - This thread could see profiled features, but the profiled has just
+  //   stopped, so some some work will be done and then discarded when finally
+  //   attempting to write to the buffer. No impact on profiling.
+  // - This thread could see profiled features, but the profiler will quickly
+  //   stop and restart, so this thread will write information relevant to the
+  //   previous profiling session. Very rare, and little impact on profiling.
+  [[nodiscard]] ThreadProfilingFeatures ProfilingFeatures() const {
+    return mProfilingFeatures;
+  }
 
   // Call this whenever the current thread sleeps. Calling it twice in a row
   // without an intervening setAwake() call is an error.
@@ -326,15 +379,6 @@ class ThreadRegistrationUnlockedRWForLockedProfiler
   // Only add functions that take a `const PSAutoLock&` proof-of-lock.
   // (Because there is no other lock.)
 
-  // This is like IsBeingProfiled, but guaranteed to be stable while the lock is
-  // held (unless modified under the same lock, of course), and is a bit faster
-  // by not doing an atomic read.
-  [[nodiscard]] bool IsBeingProfiled(const PSAutoLock&) const {
-    // Invariant: `mIsBeingProfiled == !!mProfiledThreadData` (set together),
-    // but mProfiledThreadData is not atomic and therefore faster to read.
-    return mProfiledThreadData;
-  }
-
   [[nodiscard]] const ProfiledThreadData* GetProfiledThreadData(
       const PSAutoLock&) const {
     return mProfiledThreadData;
@@ -375,9 +419,10 @@ class ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
 class ThreadRegistrationLockedRWFromAnyThread
     : public ThreadRegistrationUnlockedReaderAndAtomicRWOnThread {
  public:
-  void SetIsBeingProfiledWithProfiledThreadData(
-      ProfiledThreadData* aProfiledThreadData, const PSAutoLock&);
-  void ClearIsBeingProfiledAndProfiledThreadData(const PSAutoLock&);
+  void SetProfilingFeaturesAndData(ThreadProfilingFeatures aProfilingFeatures,
+                                   ProfiledThreadData* aProfiledThreadData,
+                                   const PSAutoLock&);
+  void ClearProfilingFeaturesAndData(const PSAutoLock&);
 
   // Not null when JSContext is not null AND this thread is being profiled.
   // Points at the start of JsFrameBuffer.

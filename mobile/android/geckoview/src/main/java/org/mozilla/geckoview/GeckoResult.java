@@ -351,11 +351,7 @@ public class GeckoResult<T> {
 
   @Override
   public synchronized int hashCode() {
-    int result = 17;
-    result = 31 * result + (mComplete ? 1 : 0);
-    result = 31 * result + (mValue != null ? mValue.hashCode() : 0);
-    result = 31 * result + (mError != null ? mError.hashCode() : 0);
-    return result;
+    return Arrays.hashCode(new Object[] {mComplete, mValue, mError});
   }
 
   // This can go away once we can rely on java.util.Objects.equals() (API 19)
@@ -494,6 +490,32 @@ public class GeckoResult<T> {
               return null;
             };
 
+    return then(valueListener, exceptionListener);
+  }
+
+  /**
+   * Adds listeners to be called when the {@link GeckoResult} is completed regardless of success
+   * status. Listeners will be invoked on the {@link Looper} returned from {@link #getLooper()}. If
+   * null, this method will throw {@link IllegalThreadStateException}.
+   *
+   * <p>If the result is already complete when this method is called, listeners will be invoked in a
+   * future {@link Looper} iteration.
+   *
+   * @param finallyRunnable An instance of {@link Runnable}, called when the {@link GeckoResult} is
+   *     completed with a value or a {@link Throwable}.
+   * @return A new {@link GeckoResult} that the listeners will complete.
+   */
+  public @NonNull GeckoResult<Void> finally_(@NonNull final Runnable finallyRunnable) {
+    final OnValueListener<T, Void> valueListener =
+        value -> {
+          finallyRunnable.run();
+          return null;
+        };
+    final OnExceptionListener<Void> exceptionListener =
+        value -> {
+          finallyRunnable.run();
+          return null;
+        };
     return then(valueListener, exceptionListener);
   }
 

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A hit testing test for the scenario in bug 1119497</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #scrollbox {
+      width: 200px;
+      height: 200px;
+      overflow: auto;
+    }
+    #scrolled {
+      width: 400px;
+      height: 400px;
+    }
+    #cover {
+      width: 300px;
+      height: 300px;
+      position: fixed;
+      left: 0px;
+      top: 0px;
+    }
+  </style>
+</head>
+<body>
+  <div id="scrollbox">
+    <div id="scrolled"></div>
+  </div>
+  <div id="cover"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Check that hit-testing on an element that's not scrolled by
+  // anything ("cover") hits the root scroller.
+  checkHitResult(hitTest({x: 50, y: 50}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

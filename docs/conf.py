@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 import sys
+import warnings
 
 from recommonmark.transform import AutoStructify
 
@@ -114,7 +115,7 @@ autosectionlabel_maxdepth = 1
 
 
 def install_sphinx_panels(app, pagename, templatename, context, doctree):
-    if "raptor" in pagename:
+    if "perfdocs" in pagename:
         app.add_js_file("sphinx_panels.js")
         app.add_css_file("sphinx_panels.css")
 
@@ -130,6 +131,15 @@ def setup(app):
         },
         True,
     )
+
+    # Silent a warning
+    # https://github.com/readthedocs/recommonmark/issues/177
+    warnings.filterwarnings(
+        action="ignore",
+        category=UserWarning,
+        message=r".*Container node skipped.*",
+    )
+
     app.add_css_file("custom_theme.css")
     app.add_transform(AutoStructify)
     app.connect("html-page-context", install_sphinx_panels)

@@ -40,3 +40,4 @@ include = ["Status"]
 "ImageRotation" = "Mp4parseIrot"
 "ImageMirror" = "Mp4parseImir"
 "Indice" = "Mp4parseIndice"
+"NclxColourInformation" = "Mp4parseNclxColourInformation"

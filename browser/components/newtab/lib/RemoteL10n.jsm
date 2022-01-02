@@ -7,7 +7,6 @@
  * The downloaded Fluent file is located in this sub-directory of the local
  * profile directory.
  */
-const RS_DOWNLOADED_FILE_SUBDIR = "settings/main/ms-language-packs";
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
@@ -16,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -187,9 +185,11 @@ class _RemoteL10n {
     let useRemoteL10n = Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true);
     if (useRemoteL10n && !L10nRegistry.getInstance().hasSource("cfr")) {
       const appLocale = Services.locale.appLocaleAsBCP47;
-      const l10nFluentDir = OS.Path.join(
-        OS.Constants.Path.localProfileDir,
-        RS_DOWNLOADED_FILE_SUBDIR
+      const l10nFluentDir = PathUtils.join(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+        "settings",
+        "main",
+        "ms-language-packs"
       );
       let cfrIndexedFileSource = new L10nFileSource(
         "cfr",

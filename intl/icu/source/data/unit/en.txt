@@ -37,7 +37,7 @@ en{
                 other{"{0} radians"}
             }
             revolution{
-                dnam{"revolution"}
+                dnam{"revolutions"}
                 one{"{0} revolution"}
                 other{"{0} revolutions"}
             }
@@ -156,6 +156,11 @@ en{
             times{"{0}-{1}"}
         }
         concentr{
+            item{
+                dnam{"items"}
+                one{"{0} item"}
+                other{"{0} items"}
+            }
             karat{
                 dnam{"karats"}
                 one{"{0} karat"}
@@ -422,6 +427,11 @@ en{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt-hours per 100 kilometers"}
+                one{"{0} kilowatt-hour per 100 kilometers"}
+                other{"{0} kilowatt-hours per 100 kilometers"}
+            }
             newton{
                 dnam{"newtons"}
                 one{"{0} newton"}
@@ -457,9 +467,9 @@ en{
         }
         graphics{
             dot{
-                dnam{"dot"}
+                dnam{"dots"}
                 one{"{0} dot"}
-                other{"{0} dot"}
+                other{"{0} dots"}
             }
             dot-per-centimeter{
                 dnam{"dots per centimeter"}
@@ -472,7 +482,7 @@ en{
                 other{"{0} dots per inch"}
             }
             em{
-                dnam{"typographic em"}
+                dnam{"typographic ems"}
                 one{"{0} em"}
                 other{"{0} ems"}
             }
@@ -569,7 +579,7 @@ en{
                 other{"{0} miles"}
             }
             mile-scandinavian{
-                dnam{"mile-scandinavian"}
+                dnam{"miles-scandinavian"}
                 one{"{0} mile-scandinavian"}
                 other{"{0} miles-scandinavian"}
             }
@@ -653,9 +663,9 @@ en{
                 other{"{0} Earth masses"}
             }
             grain{
-                dnam{"grain"}
+                dnam{"grains"}
                 one{"{0} grain"}
-                other{"{0} grain"}
+                other{"{0} grains"}
             }
             gram{
                 dnam{"grams"}
@@ -847,7 +857,7 @@ en{
                 other{"{0} newton-meters"}
             }
             pound-force-foot{
-                dnam{"pound-feet"}
+                dnam{"pound-force-feet"}
                 one{"{0} pound-force-foot"}
                 other{"{0} pound-force-feet"}
             }
@@ -926,24 +936,24 @@ en{
                 other{"{0} deciliters"}
             }
             dessert-spoon{
-                dnam{"dessert spoon"}
+                dnam{"dessert spoons"}
                 one{"{0} dessert spoon"}
-                other{"{0} dessert spoon"}
+                other{"{0} dessert spoons"}
             }
             dessert-spoon-imperial{
-                dnam{"Imp. dessert spoon"}
+                dnam{"Imp. dessert spoons"}
                 one{"{0} Imp. dessert spoon"}
-                other{"{0} Imp. dessert spoon"}
+                other{"{0} Imp. dessert spoons"}
             }
             dram{
-                dnam{"dram"}
+                dnam{"drams"}
                 one{"{0} dram"}
-                other{"{0} dram"}
+                other{"{0} drams"}
             }
             drop{
-                dnam{"drop"}
+                dnam{"drops"}
                 one{"{0} drop"}
-                other{"{0} drop"}
+                other{"{0} drops"}
             }
             fluid-ounce{
                 dnam{"fluid ounces"}
@@ -973,9 +983,9 @@ en{
                 other{"{0} hectoliters"}
             }
             jigger{
-                dnam{"jigger"}
+                dnam{"jiggers"}
                 one{"{0} jigger"}
-                other{"{0} jigger"}
+                other{"{0} jiggers"}
             }
             liter{
                 dnam{"liters"}
@@ -994,9 +1004,9 @@ en{
                 other{"{0} milliliters"}
             }
             pinch{
-                dnam{"pinch"}
+                dnam{"pinches"}
                 one{"{0} pinch"}
-                other{"{0} pinch"}
+                other{"{0} pinches"}
             }
             pint{
                 dnam{"pints"}
@@ -1014,9 +1024,9 @@ en{
                 other{"{0} quarts"}
             }
             quart-imperial{
-                dnam{"Imp. quart"}
+                dnam{"Imp. quarts"}
                 one{"{0} Imp. quart"}
-                other{"{0} Imp. quart"}
+                other{"{0} Imp. quarts"}
             }
             tablespoon{
                 dnam{"tablespoons"}
@@ -1126,6 +1136,11 @@ en{
             }
         }
         concentr{
+            item{
+                dnam{"item"}
+                one{"{0}item"}
+                other{"{0}items"}
+            }
             karat{
                 dnam{"karat"}
                 one{"{0}kt"}
@@ -1384,6 +1399,11 @@ en{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                one{"{0}kWh/100km"}
+                other{"{0}kWh/100km"}
+            }
             newton{
                 dnam{"N"}
                 one{"{0}N"}
@@ -2084,6 +2104,11 @@ en{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"item"}
+                one{"{0} item"}
+                other{"{0} items"}
+            }
             karat{
                 dnam{"karats"}
                 one{"{0} kt"}
@@ -2350,6 +2375,11 @@ en{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"newton"}
                 one{"{0} N"}

@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 // We create a very big page here in order to make the :screenshot command fail on
 // purpose.
-const TEST_URI = `data:text/html;charset=utf8,
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>
    <style>
      body { margin:0; }
      .big { width:20000px; height:20000px; }

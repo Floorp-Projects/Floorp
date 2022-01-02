@@ -685,7 +685,6 @@ with Files("tests/uievents/**"):
 
 with Files("tests/upgrade-insecure-requests/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
-
 with Files("tests/url/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
@@ -720,6 +719,9 @@ with Files("tests/webgl/**"):
     BUG_COMPONENT = ("Core", "Canvas: WebGL")
 
 with Files("tests/webmessaging/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/web-locks/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/web-nfc/**"):
@@ -770,5 +772,3 @@ with Files("tests/worklets/**"):
 
 with Files("tests/x-frame-options/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
-
-SPHINX_TREES["/web-platform"] = "tests/docs"

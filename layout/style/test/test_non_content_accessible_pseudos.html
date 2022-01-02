@@ -31,14 +31,15 @@ const NON_CONTENT_ACCESIBLE_PSEUDOS = [
   ":-moz-dir-attr-rtl",
   ":-moz-dir-attr-like-auto",
   ":-moz-autofill-preview",
+  ":-moz-lwtheme",
+  ":-moz-lwtheme-brighttext",
+  ":-moz-lwtheme-darkttext",
+  ":-moz-locale-dir(rtl)",
+  ":-moz-locale-dir(ltr)",
 
   "::-moz-tree-row",
   "::-moz-tree-row(foo)",
 ];
-
-if (!SpecialPowers.getBoolPref("layout.css.autofill.enabled")) {
-  NON_CONTENT_ACCESIBLE_PSEUDOS.push(":autofill", ":-webkit-autofill");
-}
 
 test(function() {
   sheet.textContent = `div { color: initial }`;

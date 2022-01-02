@@ -277,7 +277,7 @@ es{
         krc{"karachay-balkar"}
         krl{"carelio"}
         kru{"kurukh"}
-        ks{"cachemiro"}
+        ks{"cachemir"}
         ksb{"shambala"}
         ksf{"bafia"}
         ksh{"kölsch"}
@@ -334,7 +334,7 @@ es{
         mic{"micmac"}
         min{"minangkabau"}
         mk{"macedonio"}
-        ml{"malayalam"}
+        ml{"malayálam"}
         mn{"mongol"}
         mnc{"manchú"}
         mni{"manipuri"}
@@ -414,6 +414,7 @@ es{
         raj{"rajasthani"}
         rap{"rapanui"}
         rar{"rarotongano"}
+        rhg{"rohinyá"}
         rm{"romanche"}
         rn{"kirundi"}
         ro{"rumano"}
@@ -607,9 +608,9 @@ es{
         Glag{"glagolítico"}
         Goth{"gótico"}
         Grek{"griego"}
-        Gujr{"gujarati"}
+        Gujr{"guyaratí"}
         Guru{"gurmuji"}
-        Hanb{"hanb"}
+        Hanb{"han con bopomofo"}
         Hang{"hangul"}
         Hani{"han"}
         Hano{"hanunoo"}
@@ -832,7 +833,7 @@ es{
             knda{"dígitos en canarés"}
             laoo{"dígitos en lao"}
             latn{"dígitos occidentales"}
-            mlym{"dígitos en malayalam"}
+            mlym{"dígitos en malayálam"}
             mong{"dígitos en mongol"}
             mymr{"dígitos en birmano"}
             native{"Dígitos nativos"}

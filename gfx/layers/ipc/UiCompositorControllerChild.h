@@ -14,6 +14,10 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/RefPtr.h"
 #include "nsThread.h"
+#ifdef MOZ_WIDGET_ANDROID
+#  include "SurfaceTexture.h"
+#  include "mozilla/java/CompositorSurfaceManagerWrappers.h"
+#endif
 
 class nsBaseWidget;
 
@@ -50,6 +54,26 @@ class UiCompositorControllerChild final
   void SetBaseWidget(nsBaseWidget* aWidget);
   bool DeallocPixelBuffer(Shmem& aMem);
 
+#ifdef MOZ_WIDGET_ANDROID
+  // Set mCompositorSurfaceManager. Must be called straight after initialization
+  // for GPU process controllers. Do not call for in-process controllers. This
+  // is separate from CreateForGPUProcess to avoid cluttering its declaration
+  // with JNI types.
+  void SetCompositorSurfaceManager(
+      java::CompositorSurfaceManager::Param aCompositorSurfaceManager);
+
+  // Send a Surface to the GPU process that a given widget ID should be
+  // composited in to. If not using a GPU process this function does nothing, as
+  // the InProcessCompositorWidget can read the Surface directly from the
+  // widget.
+  //
+  // Note that this function does not actually use the PUiCompositorController
+  // IPDL protocol, and instead uses Android's binder IPC mechanism via
+  // mCompositorSurfaceManager. It can be called from any thread.
+  void OnCompositorSurfaceChanged(int32_t aWidgetId,
+                                  java::sdk::Surface::Param aSurface);
+#endif
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ActorDealloc() override;
@@ -79,6 +103,15 @@ class UiCompositorControllerChild final
   RefPtr<nsBaseWidget> mWidget;
   // Should only be set when compositor is in process.
   RefPtr<UiCompositorControllerParent> mParent;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // Android interface to send Surfaces to the GPU process. This uses Android
+  // binder rather than IPDL because Surfaces cannot be sent via IPDL. It lives
+  // here regardless because it is a conceptually logical location, even if the
+  // underlying IPC mechanism is different.
+  // This will be null if there is no GPU process.
+  mozilla::java::CompositorSurfaceManager::GlobalRef mCompositorSurfaceManager;
+#endif
 };
 
 }  // namespace layers

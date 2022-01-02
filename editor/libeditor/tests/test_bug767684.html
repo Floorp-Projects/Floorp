@@ -8,8 +8,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=767684
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=767684">Mozilla Bug 767684</a>
 <div contenteditable>foo<b>bar</b>baz</div>
 <script>
-getSelection().selectAllChildren(document.querySelector("div"));
-document.execCommand("increaseFontSize");
-is(document.querySelector("div").innerHTML, "<big>foo<b>bar</b>baz</big>",
-   "All selected text must be embiggened");
+SimpleTest.waitForExplicitFinish();
+(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.document.edit_command.increasefontsize.enabled", true]
+    ],
+  });
+  getSelection().selectAllChildren(document.querySelector("div"));
+  document.execCommand("increaseFontSize");
+  is(
+    document.querySelector("div").innerHTML,
+    "<big>foo<b>bar</b>baz</big>",
+    "All selected text must be embiggened"
+  );
+  SimpleTest.finish();
+})();
 </script>

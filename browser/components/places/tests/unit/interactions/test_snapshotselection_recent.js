@@ -19,7 +19,7 @@ add_task(async function test_interactions_recent() {
     { url: TEST_URL3, created_at: now - 3000 },
   ]);
 
-  let selector = new SnapshotSelector(2);
+  let selector = new SnapshotSelector({ count: 2 });
 
   let snapshotPromise = selector.once("snapshots-updated");
   selector.rebuild();

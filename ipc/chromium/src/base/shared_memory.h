@@ -12,7 +12,6 @@
 #if defined(OS_POSIX)
 #  include <sys/types.h>
 #  include <semaphore.h>
-#  include "base/file_descriptor_posix.h"
 #endif
 #include <string>
 
@@ -25,11 +24,7 @@ namespace base {
 
 // SharedMemoryHandle is a platform specific type which represents
 // the underlying OS handle to a shared memory segment.
-#if defined(OS_WIN)
-typedef HANDLE SharedMemoryHandle;
-#elif defined(OS_POSIX)
-typedef FileDescriptor SharedMemoryHandle;
-#endif
+typedef mozilla::UniqueFileHandle SharedMemoryHandle;
 
 // Platform abstraction for shared memory.  Provides a C++ wrapper
 // around the OS primitive for a memory mapped file.
@@ -42,7 +37,7 @@ class SharedMemory {
   // shared memory file.
   SharedMemory(SharedMemoryHandle init_handle, bool read_only)
       : SharedMemory() {
-    SetHandle(init_handle, read_only);
+    SetHandle(std::move(init_handle), read_only);
   }
 
   // Move constructor; transfers ownership.
@@ -98,15 +93,19 @@ class SharedMemory {
   // Mapped via Map().  Returns NULL if it is not mapped.
   void* memory() const { return memory_.get(); }
 
-  // Extracts the underlying file handle; similar to
-  // GiveToProcess(GetCurrentProcId(), ...) but returns a RAII type.
-  // Like GiveToProcess, this unmaps the memory as a side-effect (and
-  // cleans up any OS-specific resources).
+  // Extracts the underlying file handle, returning a RAII type.
+  // This unmaps the memory as a side-effect (and cleans up any OS-specific
+  // resources).
   mozilla::UniqueFileHandle TakeHandle() {
     mozilla::UniqueFileHandle handle = std::move(mapped_file_);
     Close();
     return handle;
   }
+
+  // Creates a copy of the underlying file handle, returning a RAII type.
+  // This operation may fail, in which case the returned file handle will be
+  // invalid.
+  mozilla::UniqueFileHandle CloneHandle();
 
   // Make the shared memory object read-only, such that it cannot be
   // written even if it's sent to an untrusted process.  If it was
@@ -150,27 +149,6 @@ class SharedMemory {
   // something there in the meantime.
   static void* FindFreeAddressSpace(size_t size);
 
-  // Share the shared memory to another process.  Attempts
-  // to create a platform-specific new_handle which can be
-  // used in a remote process to access the shared memory
-  // file.  new_handle is an ouput parameter to receive
-  // the handle for use in the remote process.
-  // Returns true on success, false otherwise.
-  bool ShareToProcess(base::ProcessId target_pid,
-                      SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(target_pid, new_handle, false);
-  }
-
-  // Logically equivalent to:
-  //   bool ok = ShareToProcess(process, new_handle);
-  //   Close();
-  //   return ok;
-  // Note that the memory is unmapped by calling this method, regardless of the
-  // return value.
-  bool GiveToProcess(ProcessId target_pid, SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(target_pid, new_handle, true);
-  }
-
 #ifdef OS_POSIX
   // If named POSIX shm is being used, append the prefix (including
   // the leading '/') that would be used by a process with the given
@@ -180,9 +158,6 @@ class SharedMemory {
 #endif
 
  private:
-  bool ShareToProcessCommon(ProcessId target_pid,
-                            SharedMemoryHandle* new_handle, bool close_self);
-
   bool CreateInternal(size_t size, bool freezeable);
 
   // Unmapping shared memory requires the mapped size on Unix but not

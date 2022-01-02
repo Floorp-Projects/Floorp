@@ -160,6 +160,11 @@ bg{
             }
         }
         concentr{
+            item{
+                dnam{"единици"}
+                one{"{0} единица"}
+                other{"{0} единици"}
+            }
             karat{
                 dnam{"карати"}
                 one{"{0} карат"}
@@ -426,6 +431,11 @@ bg{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"киловатчас на 100 километра"}
+                one{"{0} киловатчас на 100 километра"}
+                other{"{0} киловатчаса на 100 километра"}
+            }
             newton{
                 dnam{"нютони"}
                 one{"{0} нютон"}
@@ -1173,6 +1183,11 @@ bg{
                 other{"{0} г."}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+            }
+        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -1301,6 +1316,14 @@ bg{
             cubic-mile{
                 one{"{0} куб. миля"}
                 other{"{0} куб. мили"}
+            }
+            dessert-spoon{
+                one{"{0} дес. лъж."}
+                other{"{0} дес. лъж."}
+            }
+            dessert-spoon-imperial{
+                one{"{0} брит. дес. лъж."}
+                other{"{0} брит. дес. лъж."}
             }
             liter{
                 dnam{"l"}
@@ -1446,6 +1469,11 @@ bg{
             }
         }
         concentr{
+            item{
+                dnam{"единица"}
+                one{"{0} ед."}
+                other{"{0} ед."}
+            }
             karat{
                 one{"{0} kt"}
                 other{"{0} kt"}
@@ -1709,6 +1737,11 @@ bg{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 one{"{0} N"}
                 other{"{0} N"}
@@ -1773,6 +1806,7 @@ bg{
                 other{"{0} R⊕"}
             }
             fathom{
+                dnam{"fth"}
                 one{"{0} fth"}
                 other{"{0} fth"}
             }
@@ -1781,6 +1815,7 @@ bg{
                 other{"{0} ft"}
             }
             furlong{
+                dnam{"fur"}
                 one{"{0} fur"}
                 other{"{0} fur"}
             }

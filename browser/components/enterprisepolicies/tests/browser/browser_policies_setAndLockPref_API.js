@@ -3,9 +3,8 @@
 
 "use strict";
 
-let { Policies, setAndLockPref, setDefaultPref } = ChromeUtils.import(
-  "resource:///modules/policies/Policies.jsm",
-  null
+let { Policies, setAndLockPref, PoliciesUtils } = ChromeUtils.import(
+  "resource:///modules/policies/Policies.jsm"
 );
 
 add_task(async function test_API_directly() {
@@ -24,7 +23,11 @@ add_task(async function test_API_directly() {
   setAndLockPref("policies.test.stringPref", "policies test");
   checkLockedPref("policies.test.stringPref", "policies test");
 
-  setDefaultPref("policies.test.lockedPref", "policies test", true);
+  PoliciesUtils.setDefaultPref(
+    "policies.test.lockedPref",
+    "policies test",
+    true
+  );
   checkLockedPref("policies.test.lockedPref", "policies test");
 
   // Test that user values do not override the prefs, and the get*Pref call
@@ -127,9 +130,9 @@ add_task(async function test_pref_tracker() {
   defaults.setStringPref("test1.pref2", "test");
 
   setAndLockPref("test1.pref1", 20);
-  setDefaultPref("test1.pref2", "NEW VALUE");
+  PoliciesUtils.setDefaultPref("test1.pref2", "NEW VALUE");
   setAndLockPref("test1.pref3", "NEW VALUE");
-  setDefaultPref("test1.pref4", 20);
+  PoliciesUtils.setDefaultPref("test1.pref4", 20);
 
   PoliciesPrefTracker.restoreDefaultValues();
 

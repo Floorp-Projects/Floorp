@@ -54,7 +54,6 @@ class TextureSourceOGL;
 class BufferTextureHost;
 struct Effect;
 struct EffectChain;
-class GLBlitTextureImageHelper;
 
 /**
  * Interface for pools of temporary gl textures for the compositor.
@@ -125,12 +124,6 @@ class CompositorOGL final : public Compositor {
   already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
-  already_AddRefed<DataTextureSource> CreateDataTextureSourceAroundYCbCr(
-      TextureHost* aTexture) override;
-
-  already_AddRefed<DataTextureSource> CreateDataTextureSourceAround(
-      gfx::DataSourceSurface* aSurface) override;
-
   bool Initialize(GLContext* aGLContext,
                   RefPtr<ShaderProgramOGLsHolder> aProgramsHolder,
                   nsCString* const out_failureReason);
@@ -187,20 +180,11 @@ class CompositorOGL final : public Compositor {
   const char* Name() const override { return "OGL"; }
 #endif  // MOZ_DUMP_PAINTING
 
-  LayersBackend GetBackendType() const override {
-    return LayersBackend::LAYERS_OPENGL;
-  }
-
   void Pause() override;
   bool Resume() override;
 
   GLContext* gl() const { return mGLContext; }
   GLContext* GetGLContext() const override { return mGLContext; }
-
-#ifdef XP_DARWIN
-  void MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost) override;
-  void TryUnlockTextures() override;
-#endif
 
   /**
    * Clear the program state. This must be called
@@ -210,8 +194,6 @@ class CompositorOGL final : public Compositor {
   gfx::SurfaceFormat GetFBOFormat() const {
     return gfx::SurfaceFormat::R8G8B8A8;
   }
-
-  GLBlitTextureImageHelper* BlitTextureImageHelper();
 
   /**
    * The compositor provides with temporary textures for use with direct
@@ -248,8 +230,6 @@ class CompositorOGL final : public Compositor {
 
   void PrepareViewport(CompositingRenderTargetOGL* aRenderTarget);
 
-  bool SupportsTextureDirectMapping();
-
   void InsertFrameDoneSync();
 
   bool NeedToRecreateFullWindowRenderTarget() const;
@@ -259,13 +239,8 @@ class CompositorOGL final : public Compositor {
   RefPtr<GLContext> mGLContext;
   bool mOwnsGLContext = true;
   RefPtr<SurfacePoolHandle> mSurfacePoolHandle;
-  UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
   bool mCanRenderToDefaultFramebuffer = true;
-
-#ifdef XP_DARWIN
-  nsTArray<RefPtr<BufferTextureHost>> mMaybeUnlockBeforeNextComposition;
-#endif
 
   /** The size of the surface we are rendering to */
   gfx::IntSize mSurfaceSize;

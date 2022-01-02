@@ -111,6 +111,10 @@ AutoCompleteResult.prototype = {
     return this.getValueAt(aIndex);
   },
 
+  isRemovableAt(aRowIndex) {
+    return true;
+  },
+
   removeValueAt(aRowIndex) {},
 
   // nsISupports implementation

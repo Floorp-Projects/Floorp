@@ -250,7 +250,10 @@ nsresult nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 void nsContentSink::DoProcessLinkHeader() {
   nsAutoString value;
   mDocument->GetHeaderData(nsGkAtoms::link, value);
-  ProcessLinkHeader(value);
+  auto linkHeaders = ParseLinkHeader(value);
+  for (const auto& linkHeader : linkHeaders) {
+    ProcessLinkFromHeader(linkHeader);
+  }
 }
 
 // check whether the Link header field applies to the context resource
@@ -294,353 +297,35 @@ bool nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor) {
   return same;
 }
 
-// Decode a parameter value using the encoding defined in RFC 5987 (in place)
-//
-//   charset  "'" [ language ] "'" value-chars
-//
-// returns true when decoding happened successfully (otherwise leaves
-// passed value alone)
-bool nsContentSink::Decode5987Format(nsAString& aEncoded) {
-  nsresult rv;
-  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar =
-      do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return false;
-
-  nsAutoCString asciiValue;
-
-  const char16_t* encstart = aEncoded.BeginReading();
-  const char16_t* encend = aEncoded.EndReading();
-
-  // create a plain ASCII string, aborting if we can't do that
-  // converted form is always shorter than input
-  while (encstart != encend) {
-    if (*encstart > 0 && *encstart < 128) {
-      asciiValue.Append((char)*encstart);
-    } else {
-      return false;
-    }
-    encstart++;
-  }
-
-  nsAutoString decoded;
-  nsAutoCString language;
-
-  rv = mimehdrpar->DecodeRFC5987Param(asciiValue, language, decoded);
-  if (NS_FAILED(rv)) return false;
-
-  aEncoded = decoded;
-  return true;
-}
-
-nsresult nsContentSink::ProcessLinkHeader(const nsAString& aLinkData) {
-  nsresult rv = NS_OK;
-
-  // keep track where we are within the header field
-  bool seenParameters = false;
-
-  // parse link content and call process style link
-  nsAutoString href;
-  nsAutoString rel;
-  nsAutoString title;
-  nsAutoString titleStar;
-  nsAutoString integrity;
-  nsAutoString srcset;
-  nsAutoString sizes;
-  nsAutoString type;
-  nsAutoString media;
-  nsAutoString anchor;
-  nsAutoString crossOrigin;
-  nsAutoString referrerPolicy;
-  nsAutoString as;
-
-  crossOrigin.SetIsVoid(true);
-
-  // copy to work buffer
-  nsAutoString stringList(aLinkData);
-
-  // put an extra null at the end
-  stringList.Append(kNullCh);
-
-  char16_t* start = stringList.BeginWriting();
-  char16_t* end = start;
-  char16_t* last = start;
-  char16_t endCh;
-
-  while (*start != kNullCh) {
-    // skip leading space
-    while ((*start != kNullCh) && nsCRT::IsAsciiSpace(*start)) {
-      ++start;
-    }
-
-    end = start;
-    last = end - 1;
-
-    bool wasQuotedString = false;
-
-    // look for semicolon or comma
-    while (*end != kNullCh && *end != kSemicolon && *end != kComma) {
-      char16_t ch = *end;
-
-      if (ch == kQuote || ch == kLessThan) {
-        // quoted string
-
-        char16_t quote = ch;
-        if (quote == kLessThan) {
-          quote = kGreaterThan;
-        }
-
-        wasQuotedString = (ch == kQuote);
-
-        char16_t* closeQuote = (end + 1);
-
-        // seek closing quote
-        while (*closeQuote != kNullCh && quote != *closeQuote) {
-          // in quoted-string, "\" is an escape character
-          if (wasQuotedString && *closeQuote == kBackSlash &&
-              *(closeQuote + 1) != kNullCh) {
-            ++closeQuote;
-          }
-
-          ++closeQuote;
-        }
-
-        if (quote == *closeQuote) {
-          // found closer
-
-          // skip to close quote
-          end = closeQuote;
-
-          last = end - 1;
-
-          ch = *(end + 1);
-
-          if (ch != kNullCh && ch != kSemicolon && ch != kComma) {
-            // end string here
-            *(++end) = kNullCh;
-
-            ch = *(end + 1);
-
-            // keep going until semi or comma
-            while (ch != kNullCh && ch != kSemicolon && ch != kComma) {
-              ++end;
-
-              ch = *(end + 1);
-            }
-          }
-        }
-      }
-
-      ++end;
-      ++last;
-    }
-
-    endCh = *end;
-
-    // end string here
-    *end = kNullCh;
-
-    if (start < end) {
-      if ((*start == kLessThan) && (*last == kGreaterThan)) {
-        *last = kNullCh;
-
-        // first instance of <...> wins
-        // also, do not allow hrefs after the first param was seen
-        if (href.IsEmpty() && !seenParameters) {
-          href = (start + 1);
-          href.StripWhitespace();
-        }
-      } else {
-        char16_t* equals = start;
-        seenParameters = true;
-
-        while ((*equals != kNullCh) && (*equals != kEqual)) {
-          equals++;
-        }
-
-        const bool hadEquals = *equals != kNullCh;
-        *equals = kNullCh;
-        nsAutoString attr(start);
-        attr.StripWhitespace();
-
-        char16_t* value = hadEquals ? ++equals : equals;
-        while (nsCRT::IsAsciiSpace(*value)) {
-          value++;
-        }
-
-        if ((*value == kQuote) && (*value == *last)) {
-          *last = kNullCh;
-          value++;
-        }
-
-        if (wasQuotedString) {
-          // unescape in-place
-          char16_t* unescaped = value;
-          char16_t* src = value;
-
-          while (*src != kNullCh) {
-            if (*src == kBackSlash && *(src + 1) != kNullCh) {
-              src++;
-            }
-            *unescaped++ = *src++;
-          }
-
-          *unescaped = kNullCh;
-        }
-
-        if (attr.LowerCaseEqualsLiteral("rel")) {
-          if (rel.IsEmpty()) {
-            rel = value;
-            rel.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("title")) {
-          if (title.IsEmpty()) {
-            title = value;
-            title.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("title*")) {
-          if (titleStar.IsEmpty() && !wasQuotedString) {
-            // RFC 5987 encoding; uses token format only, so skip if we get
-            // here with a quoted-string
-            nsAutoString tmp;
-            tmp = value;
-            if (Decode5987Format(tmp)) {
-              titleStar = tmp;
-              titleStar.CompressWhitespace();
-            } else {
-              // header value did not parse, throw it away
-              titleStar.Truncate();
-            }
-          }
-        } else if (attr.LowerCaseEqualsLiteral("type")) {
-          if (type.IsEmpty()) {
-            type = value;
-            type.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("media")) {
-          if (media.IsEmpty()) {
-            media = value;
-
-            // The HTML5 spec is formulated in terms of the CSS3 spec,
-            // which specifies that media queries are case insensitive.
-            nsContentUtils::ASCIIToLower(media);
-          }
-        } else if (attr.LowerCaseEqualsLiteral("anchor")) {
-          if (anchor.IsEmpty()) {
-            anchor = value;
-            anchor.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("crossorigin")) {
-          if (crossOrigin.IsVoid()) {
-            crossOrigin.SetIsVoid(false);
-            crossOrigin = value;
-            crossOrigin.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("as")) {
-          if (as.IsEmpty()) {
-            as = value;
-            as.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("referrerpolicy")) {
-          // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#referrer-policy-attribute
-          // Specs says referrer policy attribute is an enumerated attribute,
-          // case insensitive and includes the empty string
-          // We will parse the value with AttributeReferrerPolicyFromString
-          // later, which will handle parsing it as an enumerated attribute.
-          if (referrerPolicy.IsEmpty()) {
-            referrerPolicy = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("integrity")) {
-          if (integrity.IsEmpty()) {
-            integrity = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("imagesrcset")) {
-          if (srcset.IsEmpty()) {
-            srcset = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("imagesizes")) {
-          if (sizes.IsEmpty()) {
-            sizes = value;
-          }
-        }
-      }
-    }
-
-    if (endCh == kComma) {
-      // hit a comma, process what we've got so far
-
-      href.Trim(" \t\n\r\f");  // trim HTML5 whitespace
-      if (!href.IsEmpty() && !rel.IsEmpty()) {
-        rv = ProcessLinkFromHeader(
-            anchor, href, rel,
-            // prefer RFC 5987 variant over non-I18zed version
-            titleStar.IsEmpty() ? title : titleStar, integrity, srcset, sizes,
-            type, media, crossOrigin, referrerPolicy, as);
-      }
-
-      href.Truncate();
-      rel.Truncate();
-      title.Truncate();
-      type.Truncate();
-      integrity.Truncate();
-      srcset.Truncate();
-      sizes.Truncate();
-      media.Truncate();
-      anchor.Truncate();
-      referrerPolicy.Truncate();
-      crossOrigin.SetIsVoid(true);
-      as.Truncate();
-
-      seenParameters = false;
-    }
-
-    start = ++end;
-  }
-
-  href.Trim(" \t\n\r\f");  // trim HTML5 whitespace
-  if (!href.IsEmpty() && !rel.IsEmpty()) {
-    rv = ProcessLinkFromHeader(
-        anchor, href, rel,
-        // prefer RFC 5987 variant over non-I18zed version
-        titleStar.IsEmpty() ? title : titleStar, integrity, srcset, sizes, type,
-        media, crossOrigin, referrerPolicy, as);
-  }
-
-  return rv;
-}
-
-nsresult nsContentSink::ProcessLinkFromHeader(
-    const nsAString& aAnchor, const nsAString& aHref, const nsAString& aRel,
-    const nsAString& aTitle, const nsAString& aIntegrity,
-    const nsAString& aSrcset, const nsAString& aSizes, const nsAString& aType,
-    const nsAString& aMedia, const nsAString& aCrossOrigin,
-    const nsAString& aReferrerPolicy, const nsAString& aAs) {
-  uint32_t linkTypes = LinkStyle::ParseLinkTypes(aRel);
+nsresult nsContentSink::ProcessLinkFromHeader(const LinkHeader& aHeader) {
+  uint32_t linkTypes = LinkStyle::ParseLinkTypes(aHeader.mRel);
 
   // The link relation may apply to a different resource, specified
   // in the anchor parameter. For the link relations supported so far,
   // we simply abort if the link applies to a resource different to the
   // one we've loaded
-  if (!LinkContextIsOurDocument(aAnchor)) {
+  if (!LinkContextIsOurDocument(aHeader.mAnchor)) {
     return NS_OK;
   }
 
   if (nsContentUtils::PrefetchPreloadEnabled(mDocShell)) {
     // prefetch href if relation is "next" or "prefetch"
     if ((linkTypes & LinkStyle::eNEXT) || (linkTypes & LinkStyle::ePREFETCH)) {
-      PrefetchHref(aHref, aAs, aType, aMedia);
+      PrefetchHref(aHeader.mHref, aHeader.mAs, aHeader.mType, aHeader.mMedia);
     }
 
-    if (!aHref.IsEmpty() && (linkTypes & LinkStyle::eDNS_PREFETCH)) {
-      PrefetchDNS(aHref);
+    if (!aHeader.mHref.IsEmpty() && (linkTypes & LinkStyle::eDNS_PREFETCH)) {
+      PrefetchDNS(aHeader.mHref);
     }
 
-    if (!aHref.IsEmpty() && (linkTypes & LinkStyle::ePRECONNECT)) {
-      Preconnect(aHref, aCrossOrigin);
+    if (!aHeader.mHref.IsEmpty() && (linkTypes & LinkStyle::ePRECONNECT)) {
+      Preconnect(aHeader.mHref, aHeader.mCrossOrigin);
     }
 
     if (linkTypes & LinkStyle::ePRELOAD) {
-      PreloadHref(aHref, aAs, aType, aMedia, aIntegrity, aSrcset, aSizes,
-                  aCrossOrigin, aReferrerPolicy);
+      PreloadHref(aHeader.mHref, aHeader.mAs, aHeader.mType, aHeader.mMedia,
+                  aHeader.mIntegrity, aHeader.mSrcset, aHeader.mSizes,
+                  aHeader.mCrossOrigin, aHeader.mReferrerPolicy);
     }
   }
 
@@ -650,8 +335,9 @@ nsresult nsContentSink::ProcessLinkFromHeader(
   }
 
   bool isAlternate = linkTypes & LinkStyle::eALTERNATE;
-  return ProcessStyleLinkFromHeader(aHref, isAlternate, aTitle, aIntegrity,
-                                    aType, aMedia, aReferrerPolicy);
+  return ProcessStyleLinkFromHeader(aHeader.mHref, isAlternate, aHeader.mTitle,
+                                    aHeader.mIntegrity, aHeader.mType,
+                                    aHeader.mMedia, aHeader.mReferrerPolicy);
 }
 
 nsresult nsContentSink::ProcessStyleLinkFromHeader(

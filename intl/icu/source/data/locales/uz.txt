@@ -256,6 +256,16 @@ uz{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -272,6 +282,7 @@ uz{
                 GyMMM{"MMM, y (G)"}
                 GyMMMEd{"E, d-MMM, y (G)"}
                 GyMMMd{"d-MMM, y (G)"}
+                GyMd{"dd.MM.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -438,6 +449,16 @@ uz{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -457,6 +478,7 @@ uz{
                 GyMMM{"MMM, G y"}
                 GyMMMEd{"E, d-MMM, G y"}
                 GyMMMd{"d-MMM, G y"}
+                GyMd{"dd.MM.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -928,6 +950,7 @@ uz{
         }
         islamic{
             availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
                 yyyyMMM{"MMM, y (G)"}
                 yyyyMMMM{"MMMM, y G"}
                 yyyyMMMd{"d-MMM, y G"}
@@ -936,7 +959,7 @@ uz{
             }
             eras{
                 abbreviated{
-                    "Hijriy yil",
+                    "Hijriy",
                 }
             }
             monthNames{

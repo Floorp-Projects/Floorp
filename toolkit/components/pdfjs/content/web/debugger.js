@@ -292,6 +292,7 @@ const Stepper = (function StepperClosure() {
       this.breakPoints = initialBreakPoints;
       this.currentIdx = -1;
       this.operatorListIdx = 0;
+      this.indentLevel = 0;
     }
 
     init(operatorList) {
@@ -382,8 +383,14 @@ const Stepper = (function StepperClosure() {
           table.appendChild(charCodeRow);
           table.appendChild(fontCharRow);
           table.appendChild(unicodeRow);
+        } else if (fn === "restore") {
+          this.indentLevel--;
         }
-        line.appendChild(c("td", fn));
+        line.appendChild(c("td", " ".repeat(this.indentLevel * 2) + fn));
+        if (fn === "save") {
+          this.indentLevel++;
+        }
+
         if (decArgs instanceof HTMLElement) {
           line.appendChild(decArgs);
         } else {
@@ -455,9 +462,7 @@ const Stepper = (function StepperClosure() {
 var Stats = (function Stats() {
   let stats = [];
   function clear(node) {
-    while (node.hasChildNodes()) {
-      node.removeChild(node.lastChild);
-    }
+    node.textContent = ""; // Remove any `node` contents from the DOM.
   }
   function getStatIndex(pageNumber) {
     for (let i = 0, ii = stats.length; i < ii; ++i) {
@@ -483,8 +488,7 @@ var Stats = (function Stats() {
       }
       const statsIndex = getStatIndex(pageNumber);
       if (statsIndex !== false) {
-        const b = stats[statsIndex];
-        this.panel.removeChild(b.div);
+        stats[statsIndex].div.remove();
         stats.splice(statsIndex, 1);
       }
       const wrapper = document.createElement("div");

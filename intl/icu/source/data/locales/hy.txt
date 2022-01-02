@@ -208,6 +208,13 @@ hy{
             }
         }
         minimalPairs{
+            case{
+                ablative{"Վախենում եմ այդ {0}"}
+                dative{"Սպասում եմ այդ {0}"}
+                instrumental{"Հպարտանում եմ այդ {0}"}
+                locative{"Երկրի պտույտը {0}"}
+                nominative{"Մնացել է {0}"}
+            }
             ordinal{
                 one{"Թեքվեք աջ {0}-ին խաչմերուկից:"}
                 other{"Թեքվեք աջ {0}-րդ խաչմերուկից:"}
@@ -238,6 +245,16 @@ hy{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMdd",
+                "GyMMMdd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h-ին"}
                 Bhm{"B h:mm-ին"}
@@ -254,6 +271,7 @@ hy{
                 GyMMM{"G y թ․ MMM"}
                 GyMMMEd{"G y թ․ MMM d, E"}
                 GyMMMd{"G y թ․ MMM d"}
+                GyMd{"dd.MM.y GGGGG"}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
@@ -414,6 +432,16 @@ hy{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -433,6 +461,7 @@ hy{
                 GyMMM{"G y թ. MMM"}
                 GyMMMEd{"G y թ. MMM d, E"}
                 GyMMMd{"d MMM, y թ."}
+                GyMd{"dd.MM.y GGGGG"}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
@@ -910,11 +939,11 @@ hy{
         animals_nature{"կենդանիներ կամ բնություն"}
         arrows{"սլաք"}
         body{"մարմին"}
-        box_drawing{"Կեղծ գրաֆիկա"}
+        box_drawing{"նիշ գծագրում"}
         braille{"բրայլ"}
         building{"շենք"}
         bullets_stars{"պարբերակ կամ աստղանիշ"}
-        consonantal_jamo{"Ջամո բաղաձայններ"}
+        consonantal_jamo{"ջամո բաղաձայններ"}
         currency_symbols{"արժույթի նշան"}
         dash_connector{"անջատման կամ միության գծիկ"}
         digits{"թվանշան"}

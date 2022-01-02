@@ -617,7 +617,6 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
     /** @copydoc FormattedValue::nextPosition() */
     UBool nextPosition(ConstrainedFieldPosition& cfpos, UErrorCode& status) const U_OVERRIDE;
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Extracts the formatted range as a pair of decimal numbers. This endpoint
      * is useful for obtaining the exact number being printed after scaling
@@ -635,11 +634,10 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
      *         for example, std::string.
      * @param status Set if an error occurs.
      * @return A pair of StringClasses containing the numeric strings.
-     * @draft ICU 68
+     * @stable ICU 68
      */
     template<typename StringClass>
     inline std::pair<StringClass, StringClass> getDecimalNumbers(UErrorCode& status) const;
-#endif // U_HIDE_DRAFT_API
 
     /**
      * Returns whether the pair of numbers was successfully formatted as a range or whether an identity fallback was
@@ -651,6 +649,15 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
      * @see UNumberRangeIdentityFallback
      */
     UNumberRangeIdentityResult getIdentityResult(UErrorCode& status) const;
+
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * Default constructor; makes an empty FormattedNumberRange.
+     * @draft ICU 70
+     */
+    FormattedNumberRange()
+        : fData(nullptr), fErrorCode(U_INVALID_STATE_ERROR) {}
+#endif  /* U_HIDE_DRAFT_API */
 
     /**
      * Copying not supported; use move constructor instead.
@@ -714,8 +721,7 @@ class U_I18N_API FormattedNumberRange : public UMemory, public FormattedValue {
     friend struct impl::UFormattedNumberRangeImpl;
 };
 
-#ifndef U_HIDE_DRAFT_API
-// inline impl of @draft ICU 68 method
+// inline impl of @stable ICU 68 method
 template<typename StringClass>
 std::pair<StringClass, StringClass> FormattedNumberRange::getDecimalNumbers(UErrorCode& status) const {
     StringClass str1;
@@ -725,7 +731,6 @@ std::pair<StringClass, StringClass> FormattedNumberRange::getDecimalNumbers(UErr
     getDecimalNumbers(sink1, sink2, status);
     return std::make_pair(str1, str2);
 }
-#endif // U_HIDE_DRAFT_API
 
 /**
  * See the main description in numberrangeformatter.h for documentation and examples.

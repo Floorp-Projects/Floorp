@@ -24,9 +24,6 @@ SPHINX_TREES["/toolkit/components/telemetry"] = "docs"
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["ENABLE_TESTS"]:
     # We used to need GeckoView tests as a separate directory. This
     # is no longer true and we could probably move it to tests/gtest.

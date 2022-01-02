@@ -24,6 +24,8 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc/transport",
     "/media/webrtc",
     "/netwerk/sctp/src",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 DEFINES["SCTP_DEBUG"] = 1
@@ -32,6 +34,3 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__Userspace_os_Windows"] = 1
 else:
     DEFINES["__Userspace_os_%s" % CONFIG["OS_TARGET"]] = 1
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

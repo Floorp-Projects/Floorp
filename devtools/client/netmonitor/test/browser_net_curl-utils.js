@@ -329,6 +329,20 @@ function testEscapeStringWin() {
     '"line1"^\u000d\u000A\u000d\u000A"line2"^\u000d\u000A\u000d\u000A"line3"',
     "Newlines should be escaped."
   );
+
+  const dollarSignCommand = "$(calc.exe)";
+  is(
+    CurlUtils.escapeStringWin(dollarSignCommand),
+    '"`$(calc.exe)"',
+    "Dollar sign should be escaped."
+  );
+
+  const tickSignCommand = "`$(calc.exe)";
+  is(
+    CurlUtils.escapeStringWin(tickSignCommand),
+    '"```$(calc.exe)"',
+    "Both the tick and dollar signs should be escaped."
+  );
 }
 
 async function createCurlData(selected, getLongString, requestData) {

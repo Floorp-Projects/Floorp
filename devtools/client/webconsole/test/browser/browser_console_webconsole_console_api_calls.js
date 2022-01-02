@@ -19,7 +19,7 @@ const contentArgs = {
   timerName: FILTER_PREFIX + "MyTimer",
 };
 
-const TEST_URI = `data:text/html,<meta charset=utf8>console API calls<script>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>console API calls<script>
   console.log("${contentArgs.log}", {hello: "world"});
   console.warn("${contentArgs.warn}", {hello: "world"});
   console.error("${contentArgs.error}", {hello: "world"});

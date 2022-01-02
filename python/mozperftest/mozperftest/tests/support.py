@@ -49,9 +49,8 @@ def get_running_env(**kwargs):
         return ""
 
     def run_pip(args):
-        pip = Path(sys.executable).parent / "pip"
         subprocess.check_call(
-            [str(pip)] + args,
+            [sys.executable, "-m", "pip"] + args,
             stderr=subprocess.STDOUT,
             cwd=config.topsrcdir,
             universal_newlines=True,

@@ -1,0 +1,23 @@
+/* (BUGGY: USE AT OWN RISK!) Hide toolbar buttons other than extensions */
+
+.toolbarbutton-icon,
+.toolbarbutton-badge-stack,
+#nav-bar .toolbarbutton-1 {
+  transition-duration: 0.1s !important;
+  transition-property: width, padding, border !important;
+}
+
+:root:not([customizing]) #navigator-toolbox:not(:hover)>#nav-bar:not([urlbar-exceeds-toolbar-bounds="true"]) .toolbarbutton-1:not(.webextension-browser-action, [open], [checked]) :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+  width: 0 !important;
+  padding: 0 !important;
+}
+
+:root:not([customizing]) #navigator-toolbox:not(:hover)>#nav-bar:not([urlbar-exceeds-toolbar-bounds="true"]) .toolbarbutton-1:not(.webextension-browser-action, [open], [checked]) {
+  border-width: 0 !important;
+}
+
+/* Also Hide urlbar background */
+/*
+:root:not([customizing]) #navigator-toolbox:not(:hover) > #nav-bar
+{ --toolbar-field-background-color: transparent !important; }
+*/

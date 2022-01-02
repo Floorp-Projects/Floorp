@@ -17,7 +17,7 @@ async function createfiles() {
       tmpPath: filePath + ".tmp",
     });
     Assert.ok(await IOUtils.exists(filePath), "file created: " + filePath);
-    await IOUtils.touch(filePath, setTime);
+    await IOUtils.setModificationTime(filePath, setTime);
   }
 }
 

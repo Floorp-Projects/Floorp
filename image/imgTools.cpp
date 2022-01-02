@@ -103,8 +103,8 @@ class ImageDecoderListener final : public nsIStreamListener,
       }
     }
 
-    return mImage->OnImageDataAvailable(aRequest, nullptr, aInputStream,
-                                        aOffset, aCount);
+    return mImage->OnImageDataAvailable(aRequest, aInputStream, aOffset,
+                                        aCount);
   }
 
   NS_IMETHOD
@@ -118,7 +118,7 @@ class ImageDecoderListener final : public nsIStreamListener,
       return NS_OK;
     }
 
-    mImage->OnImageDataComplete(aRequest, nullptr, aStatus, true);
+    mImage->OnImageDataComplete(aRequest, aStatus, true);
     nsCOMPtr<imgIContainer> container = this;
     mCallback->OnImageReady(container, aStatus);
     return NS_OK;
@@ -188,7 +188,7 @@ class ImageDecoderHelper final : public Runnable,
     // operation.
     if (NS_IsMainThread()) {
       // Let the Image know we've sent all the data.
-      mImage->OnImageDataComplete(nullptr, nullptr, mStatus, true);
+      mImage->OnImageDataComplete(nullptr, mStatus, true);
 
       RefPtr<ProgressTracker> tracker = mImage->GetProgressTracker();
       tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
@@ -231,7 +231,7 @@ class ImageDecoderHelper final : public Runnable,
     }
 
     // Send the source data to the Image.
-    rv = mImage->OnImageDataAvailable(nullptr, nullptr, mInputStream, 0,
+    rv = mImage->OnImageDataAvailable(nullptr, mInputStream, 0,
                                       uint32_t(length));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return OperationCompleted(rv);
@@ -347,11 +347,11 @@ imgTools::DecodeImageFromBuffer(const char* aBuffer, uint32_t aSize,
   MOZ_ASSERT(stream);
   MOZ_ASSERT(NS_InputStreamIsBuffered(stream));
 
-  rv = image->OnImageDataAvailable(nullptr, nullptr, stream, 0, aSize);
+  rv = image->OnImageDataAvailable(nullptr, stream, 0, aSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the Image know we've sent all the data.
-  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  rv = image->OnImageDataComplete(nullptr, NS_OK, true);
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
   NS_ENSURE_SUCCESS(rv, rv);
 

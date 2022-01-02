@@ -939,6 +939,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
   }
 
   rec->mResolving++;
+  rec->mTrrAttempts++;
   return NS_OK;
 }
 
@@ -1079,8 +1080,10 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   }
 
   // Make sure we reset the reason each time we attempt to do a new lookup
-  // so we don't wronly report the reason for the previous one.
+  // so we don't wrongly report the reason for the previous one.
   rec->mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
+  rec->mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
+  rec->mTrrAttempts = 0;
 
   ComputeEffectiveTRRMode(rec);
 
@@ -1297,6 +1300,63 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec,
   mQueue.AddToEvictionQ(rec, mMaxCacheEntries, mRecordDB, aLock);
 }
 
+// After a first lookup attempt with TRR in mode 2, we may:
+// - If we are not in strict mode, retry with native.
+// - If we are in strict mode:
+//   - Retry with native if the first attempt failed because we got NXDOMAIN, an
+//     unreachable address (TRR_DISABLED_FLAG), or we skipped TRR because
+//     Confirmation failed.
+//   - Trigger a "strict mode" Confirmation which will start a fresh
+//     connection for TRR, and then retry the lookup with TRR.
+// Returns true if we retried with either TRR or Native.
+bool nsHostResolver::MaybeRetryTRRLookup(
+    AddrHostRecord* aAddrRec, nsresult aFirstAttemptStatus,
+    TRRSkippedReason aFirstAttemptSkipReason, const MutexAutoLock& aLock) {
+  if (NS_SUCCEEDED(aFirstAttemptStatus) ||
+      aAddrRec->mEffectiveTRRMode != nsIRequest::TRR_FIRST_MODE ||
+      aFirstAttemptStatus == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+    return false;
+  }
+
+  MOZ_ASSERT(!aAddrRec->mResolving);
+  if (!StaticPrefs::network_trr_strict_native_fallback()) {
+    LOG(("nsHostResolver::MaybeRetryTRRLookup retrying with native"));
+    NativeLookup(aAddrRec, aLock);
+    return true;
+  }
+
+  if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_NXDOMAIN ||
+      aFirstAttemptSkipReason == TRRSkippedReason::TRR_DISABLED_FLAG ||
+      aFirstAttemptSkipReason == TRRSkippedReason::TRR_NOT_CONFIRMED) {
+    LOG(
+        ("nsHostResolver::MaybeRetryTRRLookup retrying with native in strict "
+         "mode, skip reason was %d",
+         static_cast<uint32_t>(aFirstAttemptSkipReason)));
+    NativeLookup(aAddrRec, aLock);
+    return true;
+  }
+
+  if (aAddrRec->mTrrAttempts > 1) {
+    LOG(("nsHostResolver::MaybeRetryTRRLookup mTrrAttempts>1, not retrying."));
+    return false;
+  }
+
+  LOG(
+      ("nsHostResolver::MaybeRetryTRRLookup triggering Confirmation and "
+       "retrying with TRR, skip reason was %d",
+       static_cast<uint32_t>(aFirstAttemptSkipReason)));
+  TRRService::Get()->StrictModeConfirm();
+
+  {
+    // Clear out the old query
+    auto trrQuery = aAddrRec->mTRRQuery.Lock();
+    trrQuery.ref() = nullptr;
+  }
+  aAddrRec->NotifyRetryingTrr();
+  TrrLookup(aAddrRec, aLock, nullptr /* pushedTRR */);
+  return true;
+}
+
 //
 // CompleteLookup() checks if the resolving should be redone and if so it
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
@@ -1366,17 +1426,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
       addrRec->RecordReason(TRRSkippedReason::TRR_OK);
     }
 
-    bool shouldAttemptNative =
-        !StaticPrefs::network_trr_strict_native_fallback() ||
-        aReason == TRRSkippedReason::TRR_NXDOMAIN ||
-        aReason == TRRSkippedReason::TRR_DISABLED_FLAG ||
-        aReason == TRRSkippedReason::TRR_NOT_CONFIRMED;
-
-    if (NS_FAILED(status) &&
-        addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
-        status != NS_ERROR_DEFINITIVE_UNKNOWN_HOST && shouldAttemptNative) {
-      MOZ_ASSERT(!addrRec->mResolving);
-      NativeLookup(addrRec, aLock);
+    if (MaybeRetryTRRLookup(addrRec, status, aReason, aLock)) {
       MOZ_ASSERT(addrRec->mResolving);
       return LOOKUP_OK;
     }

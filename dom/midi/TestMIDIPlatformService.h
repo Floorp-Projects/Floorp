@@ -12,8 +12,7 @@
 
 class nsIThread;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MIDIPortInterface;
 
@@ -58,7 +57,6 @@ class TestMIDIPlatformService : public MIDIPlatformService {
   bool mIsInitialized;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TestMIDIPlatformService_h

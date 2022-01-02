@@ -96,12 +96,15 @@ def get_parser():
     p.add_argument("--xvfb",
                    action="store_true",
                    help="Start xvfb")
-    p.add_argument("--checkout",
-                   help="Revision to checkout before starting job")
     p.add_argument("--install-certificates", action="store_true", default=None,
                    help="Install web-platform.test certificates to UA store")
     p.add_argument("--no-install-certificates", action="store_false", default=None,
                    help="Don't install web-platform.test certificates to UA store")
+    p.add_argument("--no-setup-repository", action="store_false", dest="setup_repository",
+                   help="Don't run any repository setup steps, instead use the existing worktree. "
+                        "This is useful for local testing.")
+    p.add_argument("--checkout",
+                   help="Revision to checkout before starting job")
     p.add_argument("--ref",
                    help="Git ref for the commit that should be run")
     p.add_argument("--head-rev",
@@ -137,8 +140,12 @@ def install_certificates():
 
 
 def install_chrome(channel):
+    deb_prefix = "https://dl.google.com/linux/direct/"
     if channel in ("experimental", "dev"):
-        deb_archive = "google-chrome-unstable_current_amd64.deb"
+        # Pinned since 98.0.4710.4 began crashing on startup.
+        # See https://github.com/web-platform-tests/wpt/issues/31714.
+        deb_archive = "google-chrome-unstable_97.0.4692.20-1_amd64.deb"
+        deb_prefix = "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-unstable/"
     elif channel == "beta":
         deb_archive = "google-chrome-beta_current_amd64.deb"
     elif channel == "stable":
@@ -147,7 +154,7 @@ def install_chrome(channel):
         raise ValueError("Unrecognized release channel: %s" % channel)
 
     dest = os.path.join("/tmp", deb_archive)
-    deb_url = "https://dl.google.com/linux/direct/%s" % deb_archive
+    deb_url = deb_prefix + deb_archive
     with open(dest, "wb") as f:
         get_download_to_descriptor(f, deb_url)
 
@@ -398,7 +405,8 @@ def main():
     if event:
         set_variables(event)
 
-    setup_repository(args)
+    if args.setup_repository:
+        setup_repository(args)
 
     # Hack for backwards compatibility
     if args.script in ["run-all", "lint", "update_built", "tools_unittest",

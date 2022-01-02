@@ -7,8 +7,8 @@ job-defaults:
         category: mochitest
     target:
         by-test-platform:
-            android-em-7.*: geckoview-androidTest.apk
-            android-hw.*: geckoview-androidTest.apk
+            android-em-7.*: geckoview-test_runner.apk
+            android-hw.*: geckoview-test_runner.apk
             default: null
     tier:
         by-variant:
@@ -50,6 +50,7 @@ mochitest-plain:
     loopback-video: true
     virtualization: virtual
     variants:
+        - aab
         - fission
         - fission-xorigin
         - socketprocess_networking
@@ -82,6 +83,10 @@ mochitest-plain:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux1804-64-qr/debug: built-projects
+                    default: []
+            aab:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -162,9 +167,9 @@ mochitest-browser-chrome:
     variants:
         - fission
         - webrender-sw
-        - webrender-sw-a11y-checks
-        - webrender-sw-fission
-        - webrender-sw-wayland
+        - webrender-sw+a11y-checks
+        - webrender-sw+fission
+        - webrender-sw+wayland
     run-on-projects:
         by-variant:
             fission:
@@ -180,13 +185,16 @@ mochitest-browser-chrome:
                     linux.*64-devedition-qr/opt: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw-a11y-checks: []  # run-on-projects defined in variant config
-            webrender-sw-fission:
+            webrender-sw+a11y-checks:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            webrender-sw+fission:
                 by-test-platform:
                     linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
                     linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
-            webrender-sw-wayland: []
+            webrender-sw+wayland: []
             default:
                 by-test-platform:
                     linux.*-qr/.*: []
@@ -387,11 +395,16 @@ mochitest-devtools-chrome:
         - socketprocess_networking
         - wayland
         - webrender-sw
+        - devtools-no-eft-no-fission
     run-on-projects:
         by-variant:
             a11y-checks:
                 by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: built-projects
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            devtools-no-eft-no-fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
             fission:
                 by-test-platform:

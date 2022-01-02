@@ -33,6 +33,10 @@ add_task(async function() {
   await waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
   assertPausedAtSourceAndLine(dbg, sourceId, 17);
   is(await getScopeValue(dbg, 5), "3");
+  const whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, `Paused on property get\nobj.b`);
 
   info("Resume and wait to pause at the access to b in the first `obj.b;`");
   await resume(dbg);

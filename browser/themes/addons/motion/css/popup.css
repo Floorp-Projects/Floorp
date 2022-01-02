@@ -1,0 +1,1152 @@
+:root {
+  --panel-separator-margin-2: 6px !important;
+  --panel-subview-body-padding: 6px 0 !important;
+  --arrowpanel-menuitem-border-radius: 0 !important;
+  --panel-separator-margin: var(--panel-separator-margin-2) 0 !important;
+}
+
+
+
+menupopup,
+menupopup menuitem,
+menupopup menu,
+menupopup menuseparator,
+panel {
+  -moz-appearance: none !important;
+}
+
+menupopup,
+panel {
+  --menu-border-radius: 6px;
+  --menu-border: 0;
+  --menu-shadow:
+    0 1px 2px 1px rgba(0, 0, 0, .1),
+    0 5px 5px -3px rgba(0, 0, 0, .2),
+    0 6px 10px 1px rgba(0, 0, 0, .14),
+    0 4px 12px 2px rgba(0, 0, 0, .12);
+}
+
+:root[lwthemetextcolor="bright"] :-moz-any(menupopup, panel) {
+  --menu-border: 0;
+  --menu-shadow:
+    0 1px 2px 1px rgba(0, 0, 0, .1),
+    0 5px 5px -3px rgba(0, 0, 0, .2),
+    0 6px 10px 1px rgba(0, 0, 0, .14),
+    0 4px 12px 2px rgba(0, 0, 0, .12);
+}
+
+menupopup,
+panel[type="autocomplete-richlistbox"],
+menulist>menupopup>menucaption {
+  -moz-window-shadow: none !important;
+  background: 0 !important;
+  border: 0 !important;
+  color: var(--arrowpanel-color) !important;
+  box-sizing: content-box !important;
+}
+
+menucaption {
+  padding-inline: 20px !important;
+}
+
+menupopup {
+  padding: 11px 14px 18px !important;
+  margin: -19px -14px 0 !important;
+}
+
+/* needs to align with textbox/bookmark-button but can't overlap it */
+panel[type="autocomplete-richlistbox"],
+.bookmark-item:not(menu)>menupopup[placespopup] {
+  padding: 1px 14px 18px !important;
+  margin: 0 -14px 0 !important;
+}
+
+.panel-arrowcontent {
+  background: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  font: -moz-pull-down-menu !important;
+  border: 0 !important;
+}
+
+.popup-internal-box,
+panel[type="autocomplete-richlistbox"]>.autocomplete-richlistbox,
+#PopupSearchAutoComplete>*,
+.menupopup-arrowscrollbox {
+  background: var(--arrowpanel-background) !important;
+}
+
+/* themes a menupopup (or other root level / shadow dom popup) as a panel */
+/* Mozilla's use of shadow dom means we can't use a menupopup > .popup-internal-box */
+.popup-internal-box,
+panel[type="autocomplete-richlistbox"]>.autocomplete-richlistbox,
+.menupopup-arrowscrollbox {
+  margin: 0 !important;
+  padding: 4px 0 !important;
+  border-radius: var(--menu-border-radius) !important;
+  color: inherit !important;
+}
+
+.popup-internal-box,
+.menupopup-arrowscrollbox {
+  box-shadow: var(--menu-shadow) !important;
+  border: var(--menu-border) !important;
+}
+
+#PopupSearchAutoComplete>* {
+  border-radius: 0 !important;
+}
+
+#PopupSearchAutoComplete> :first-child {
+  border-radius: 4px 4px 0 0 !important;
+}
+
+#PopupSearchAutoComplete> :last-child {
+  border-radius: 0 0 4px 4px !important;
+}
+
+/* autocomplete panel can't overlap the textbox, so shadow can't go up
+   more than 1px */
+panel[type="autocomplete-richlistbox"]>.autocomplete-richlistbox {
+  box-shadow: var(--menu-shadow) !important;
+  border: var(--menu-border) !important
+}
+
+/* search panel gets special treatment; it has multiple children */
+#PopupSearchAutoComplete>.autocomplete-richlistbox {
+  box-shadow: none !important;
+}
+
+#PopupSearchAutoComplete {
+  filter:
+    drop-shadow(0 8px 6px rgba(0, 0, 0, .25)) drop-shadow(0 1px 1px rgba(0, 0, 0, .125)) !important;
+}
+
+/* reset non-layout props when embedded in a panel
+   (panel handles panel theming in this case) */
+.panel-arrowcontent>.popup-internal-box {
+  background: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* shotgun approach to undo this selector...
+   #BMB_bookmarksPopup menupopup[placespopup="true"]:-moz-lwtheme::part(innerbox)
+   ...without being able to use ::part() in userChrome.css */
+[part="innerbox"] {
+  /* this could cause side effects elsewhere */
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+menupopup menuseparator {
+  margin: 4px 0 !important;
+  padding: 0 !important;
+  height: 1px !important;
+  background: none !important;
+  border-top: 1px solid currentColor !important;
+  opacity: .15 !important;
+}
+
+menupopup menuitem,
+menupopup menu,
+.autocomplete-richlistitem {
+  height: 32px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  background: 0 !important;
+  color: inherit !important;
+  fill-opacity: initial !important;
+}
+
+menupopup menuitem:hover:not([disabled=true]),
+menupopup menu:hover:not([disabled=true]),
+.autocomplete-richlistitem:hover:not([disabled=true]):not([selected=true]) {
+  background-color: var(--arrowpanel-dimmed) !important;
+}
+
+menupopup menuitem:hover:active:not([disabled=true]),
+menupopup menu:hover:active:not([disabled=true]),
+.autocomplete-richlistitem:hover:active:not([disabled=true]),
+.autocomplete-richlistitem[selected=true] {
+  background-color: var(--arrowpanel-dimmed-further) !important;
+}
+
+menupopup menuitem[disabled=true],
+menupopup menu[disabled=true],
+.autocomplete-richlistitem[disabled=true] {
+  opacity: .5 !important;
+}
+
+/* disable vertical menu scroll buttons and use a good ol' scrollbar */
+/* this is a shotgun approach, expect side effects */
+scrollbox[orient=vertical]
+
+/* >=71 */
+  {
+  overflow-y: auto !important;
+}
+
+
+/* this is a bit depressing... */
+/* work around lack of ::part selector support */
+:root {
+  --scrollbutton-display: -moz-box !important;
+}
+
+/* hide ancient-looking scrollbuttons in menupopups */
+/* add other selectors here to disable more scrollbuttons */
+menupopup {
+  --scrollbutton-display: none !important;
+}
+
+#scrollbutton-up[part],
+#scrollbutton-down[part] {
+  display: var(--scrollbutton-display) !important;
+}
+
+.menuitem-iconic,
+.menu-iconic-icon
+
+/* .menu-iconic-icons not necessarily within a .menuitem-iconic (don't ask me why...) */
+  {
+  fill: currentColor !important;
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity !important;
+}
+
+.menuitem-iconic[class*="identity-color"] .menu-iconic-icon {
+  fill: var(--identity-icon-color) !important;
+}
+
+.menu-iconic-left:not(#context-navigation .menu-iconic-left) {
+  -moz-appearance: none !important;
+  margin-inline: -4px 0 !important;
+  padding: 0 !important;
+}
+
+.menu-iconic-icon {
+  margin-inline-start: 0 !important;
+  margin-inline-end: 8px !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 4px !important;
+}
+
+menucaption>.menu-iconic-left {
+  display: none !important;
+}
+
+.menu-text,
+.menu-iconic-text {
+  -moz-appearance: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.menu-right {
+  -moz-appearance: none !important;
+  -moz-context-properties: fill !important;
+  fill: currentColor !important;
+  list-style-image: url(chrome://browser/skin/motion/menu-right.svg) !important;
+  margin-inline-end: 0 !important;
+  margin-inline-start: 16px !important;
+  height: 16px !important;
+}
+
+menuitem[type="checkbox"]>.menu-iconic-left>.menu-iconic-icon,
+menuitem[checked="true"]>.menu-iconic-left>.menu-iconic-icon,
+menuitem[type="radio"]>.menu-iconic-left>.menu-iconic-icon,
+menuitem[selected="true"]>.menu-iconic-left>.menu-iconic-icon {
+  display: -moz-box !important;
+  padding: 4px !important;
+}
+
+menuitem[checked="true"]>.menu-iconic-left>.menu-iconic-icon,
+menuitem[selected="true"]>.menu-iconic-left>.menu-iconic-icon {
+  /* checkmark is 18px, not 16px, hence reduced padding */
+  list-style-image: url(chrome://browser/skin/motion/checkmark.svg) !important;
+}
+
+menulist>menupopup>menuitem[checked="true"]::before,
+menulist>menupopup>menuitem[selected="true"]::before {
+  display: none !important;
+}
+
+#context-navigation {
+  background: 0 !important;
+  margin: 0 2px !important;
+  padding: 0 !important;
+}
+
+#context-navigation .menuitem-iconic {
+  background: 0 !important;
+  padding: 0 !important;
+  margin: 0 2px !important;
+  border-radius: 4px !important;
+  -moz-box-pack: center !important;
+}
+
+#context-navigation .menu-iconic-left {
+  border-radius: 50% !important;
+  padding: 0px !important;
+}
+
+#context-navigation .menu-iconic-icon {
+  padding: 0 !important;
+  margin: 0 2px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+#context-navigation .menuitem-iconic:hover:not([disabled]) {
+  background-color: var(--arrowpanel-dimmed) !important;
+}
+
+#context-navigation .menuitem-iconic:hover:active:not([disabled]) {
+  background-color: var(--arrowpanel-dimmed-further) !important;
+}
+
+panel[type="arrow"] {
+  -moz-window-shadow: none !important;
+
+  margin: 0 -14px -18px !important;
+  padding: 0 14px 18px !important;
+}
+
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-left: -39px !important;
+  margin-right: -39px !important;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-top: -44px;
+  margin-bottom: -44px;
+}
+
+.panel-arrowcontent, .panel-arrowcontainer > [part="content"] {
+  background: var(--arrowpanel-background) !important;
+  border: var(--menu-border) !important;
+  border-radius: var(--menu-border-radius) !important;
+  box-shadow: var(--menu-shadow) !important;
+  color: var(--arrowpanel-color) !important;
+}
+
+.panel-arrowbox,
+.cui-widget-panel .panel-arrowbox {
+  display: none !important;
+}
+
+/* .subview-subheader, */
+panelview .toolbarbutton-1,
+.subviewbutton,
+.widget-overflow-list .toolbarbutton-1,
+.panel-banner-item {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+}
+
+#appMenu-fxa-status2[fxastatus] {
+  padding: 0 !important;
+}
+
+#appMenu-zoom-controls>.subviewbutton,
+#appMenu-edit-controls>.subviewbutton {
+  min-width: 42px !important;
+  max-width: 46px !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin-inline-start: 0 !important;
+  background-clip: padding-box !important;
+}
+
+#appMenu-zoom-controls>.subviewbutton-iconic,
+#appMenu-edit-controls>.subviewbutton-iconic {
+  padding: 0 !important;
+  width: 42px !important;
+}
+
+#appMenu-zoomReset-button {
+  width: 46px !important;
+}
+
+#appMenu-edit-controls>.subviewbutton,
+#appMenu-zoom-controls>#appMenu-fullscreen-button,
+#appMenu-zoom-controls>#appMenu-zoomReduce-button {
+  border-left: 1px solid var(--panel-separator-color) !important;
+  padding-left: 1px !important;
+}
+
+#appMenu-zoom-controls>toolbarseparator[orient="vertical"]+.subviewbutton {
+  margin-inline-start: 0 !important;
+}
+
+#appMenu-zoomReset-button {
+  background-color: transparent !important;
+}
+
+#appMenu-zoomReset-button:not([disabled], [open], :active):is(:hover, :focus),
+#appMenu-zoomReset-button2:not([disabled], [open], :active):is(:hover, :focus) {
+  background-color: var(--panelview-toolbarbutton-hover-bgcolor) !important;
+}
+
+#appMenu-zoomReset-button:not([disabled]):is([open], :hover:active),
+#appMenu-zoomReset-button2:not([disabled]):is([open], :hover:active) {
+  background-color: var(--panelview-toolbarbutton-active-bgcolor) !important;
+}
+
+panelview .toolbarbutton-1:not([disabled]):is([open], :hover:active),
+toolbarbutton.subviewbutton:not([disabled]):is([open], :hover:active),
+.navigable.subviewbutton:not([disabled]):is([open], :hover:active),
+menu.subviewbutton:not([disabled])[_moz-menuactive]:active,
+menuitem.subviewbutton:not([disabled])[_moz-menuactive]:active,
+.widget-overflow-list .toolbarbutton-1:not([disabled]):is([open], :hover:active),
+.toolbaritem-combined-buttons:is(:not([cui-areatype="toolbar"]), [overflowedItem="true"])>toolbarbutton:not([disabled]):is([open], :hover:active) {
+  box-shadow: none !important;
+}
+
+.toolbaritem-combined-buttons:not([widget-type="button-and-view"]),
+.toolbaritem-menu-buttons {
+  padding-inline-start: 24px !important;
+  margin-block: -6px !important;
+  margin-inline-end: 0 !important;
+}
+
+.toolbaritem-combined-buttons toolbarseparator {
+  display: none !important;
+}
+
+.panel-banner-item {
+  border: 0 !important;
+}
+
+#appMenu-addon-banners:not(:empty)~#appMenu-fxa-status,
+.panel-banner-item:not([hidden])+#appMenu-fxa-status {
+  border-top: 1px solid var(--panel-separator-color) !important;
+  margin-top: 5px !important;
+  padding-top: 5px !important;
+}
+
+#appMenu-fxa-avatar {
+  display: none !important;
+}
+
+:root[fxastatus="signedin"] #appMenu-fxa-label {
+  list-style-image: var(--avatar-image-url) !important;
+  margin: 0 !important;
+}
+
+:root[fxastatus="signedin"] #appMenu-fxa-label>.toolbarbutton-icon {
+  display: -moz-box !important;
+  border-radius: 99px !important;
+  padding: 2px !important;
+}
+
+.panel-banner-item[notificationid="update-restart"]::after {
+  display: none !important;
+}
+
+.toolbaritem-combined-buttons:-moz-any(:not([cui-areatype="toolbar"]),
+  [overflowedItem="true"])>toolbarbutton>.toolbarbutton-icon {
+  margin: 0 !important;
+}
+
+panelmultiview .toolbaritem-combined-buttons>spacer.before-label {
+  width: 20px !important;
+}
+
+panelmultiview .toolbaritem-combined-buttons>spacer.after-label {
+  width: 14px !important;
+}
+
+.subviewbutton-back {
+  padding: 4px !important;
+  border-radius: 2px !important;
+}
+
+.subviewbutton-back .toolbarbutton-icon {
+  margin: 0 !important;
+}
+
+.subviewbutton[type="highlight-history"]::after {
+  transform: none !important;
+}
+
+.subviewbutton[type="highlight-history"]::after,
+.subviewbutton[shortcut]::after,
+.PanelUI-subView .subviewbutton-nav::after {
+  margin-inline-start: 14px !important;
+}
+
+.PanelUI-subView .subviewbutton-nav::after {
+  transform: none !important;
+  content: url(chrome://browser/skin/motion/menu-right.svg) !important;
+  fill-opacity: 1 !important;
+}
+
+#identity-popup>.panel-arrowcontainer>.panel-arrowcontent {
+  fill-opacity: inherit !important;
+}
+
+.identity-popup-preferences-button {
+  border-radius: 16px !important;
+  background-image: none !important;
+}
+
+.identity-popup-preferences-button>.toolbarbutton-icon {
+  margin: 0 !important;
+}
+
+#identity-popup-permission-preferences-button {
+  padding: 0 !important;
+}
+
+#tracking-protection-preferences-button>.toolbarbutton-icon {
+  margin-inline-end: -8px !important;
+}
+
+#tracking-protection-preferences-button>.toolbarbutton-text {
+  padding-inline-end: 4px !important;
+  -moz-box-ordinal-group: 0 !important;
+}
+
+.identity-popup-section {
+  padding: 8px 16px !important;
+  display: flex !important;
+}
+
+.identity-popup-security-content,
+#identity-popup-content-blocking-content,
+#identity-popup-permissions-content {
+  padding: 0 !important;
+  background: 0 !important;
+  fill-opacity: inherit !important;
+}
+
+.identity-popup-expander {
+  border-radius: 16px !important;
+  width: 32px !important;
+  max-height: 32px !important;
+  margin-inline-start: auto !important;
+  -moz-box-pack: center !important;
+  -moz-box-align: center !important;
+  background-image: none !important;
+}
+
+.identity-popup-expander>.button-box {
+  border: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.identity-popup-expander .button-icon {
+  margin: 0 !important;
+}
+
+.identity-popup-expander .button-text {
+  display: none !important;
+}
+
+.identity-popup-headline {
+  margin: 0 !important;
+}
+
+.PanelUI-subView>.identity-popup-security-content,
+#identity-popup-securityView-body {
+  padding: 16px !important;
+}
+
+#identity-popup-mainView-panel-header {
+  -moz-box-align: start !important;
+  padding: 0 12px !important;
+}
+
+#identity-popup-securityView-body {
+  margin: 0 !important;
+}
+
+#identity-popup-content-blocking-content,
+#identity-popup-permissions-content {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+#identity-popup-content-blocking-content>hbox:first-child,
+#identity-popup-permissions-content>hbox:first-child {
+  display: flex !important;
+}
+
+#identity-popup-content-blocking-category-list,
+#identity-popup-permission-list {
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 -16px !important;
+  width: calc(100% + 32px) !important;
+  padding-top: 8px !important;
+}
+
+.identity-popup-permission-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.identity-popup-permission-label,
+#identity-popup-content-blocking-report-breakage {
+  flex: 1 !important;
+  text-decoration: none !important;
+  cursor: auto !important;
+  color: inherit !important;
+}
+
+.identity-popup-content-blocking-category,
+.identity-popup-permission-item {
+  height: 32px !important;
+  padding: 0 16px !important;
+}
+
+.identity-popup-content-blocking-category-icon,
+.identity-popup-permission-icon {
+  margin: 0 !important;
+  margin-inline-end: 16px !important;
+}
+
+.popup-notification-icon,
+.identity-popup-permission-icon {
+  fill-opacity: 1 !important;
+}
+
+.identity-popup-content-blocking-category-label,
+.identity-popup-permission-label {
+  margin: 0 !important;
+}
+
+.identity-popup-content-blocking-category::after {
+  transform: translateY(1px) !important;
+  content: url(chrome://browser/skin/motion/menu-right.svg) !important;
+  margin: 0 !important;
+}
+
+.identity-popup-preferences-button {
+  margin-inline-start: auto !important;
+}
+
+.identity-popup-permission-remove-button {
+  opacity: 1 !important;
+}
+
+.tracking-protection-button,
+#identity-popup-content-blocking-report-breakage {
+  margin: 0 -16px !important;
+  height: 32px !important;
+  padding: 0 16px !important;
+  background: 0 !important;
+  color: inherit !important;
+  line-height: 32px !important;
+}
+
+#identity-popup-content-blocking-report-breakage {
+  padding-inline-start: 50px !important;
+}
+
+.tracking-protection-button>.button-box {
+  padding: 0 !important;
+}
+
+.tracking-protection-button .button-icon {
+  margin: 0 !important;
+}
+
+#customization-lwtheme-menu-header {
+  height: 8px !important;
+  font-size: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  visibility: hidden !important;
+}
+
+#identity-popup-content-blocking-report-breakage {
+  padding-inline-start: 48px !important;
+  line-height: 32px !important;
+  text-decoration: none !important;
+  cursor: auto !important;
+}
+
+.tracking-protection-button:hover:not([disabled=true]),
+#identity-popup-content-blocking-report-breakage:hover,
+#blocked-popup-indicator-item:hover,
+.customization-lwtheme-menu-theme:hover,
+#customization-lwtheme-menu-footer toolbarbutton:hover {
+  background-color: var(--arrowpanel-dimmed) !important;
+}
+
+.tracking-protection-button:hover:active:not([disabled=true]),
+#identity-popup-content-blocking-report-breakage:hover:active,
+#blocked-popup-indicator-item:hover:active,
+.customization-lwtheme-menu-theme:hover:active,
+#customization-lwtheme-menu-footer toolbarbutton:hover:active {
+  background-color: var(--arrowpanel-dimmed-further) !important;
+}
+
+.identity-popup-content-blocking-empty-label,
+#tracking-protection-preferences-button>.toolbarbutton-text,
+.tracking-protection-button,
+#identity-popup-trackersView-strict-info>label,
+.identity-popup-cookiesView-list-header,
+.identity-popup-content-blocking-list-item>label,
+#identity-popup-mainView-panel-header>label,
+#identity-popup-trackersView>.panel-header,
+#identity-popup-securityView>.panel-header,
+#identity-popup-breakageReportView>.panel-header,
+#identity-popup-content-blocking-report-breakage,
+.identity-popup-content-blocking-category-label,
+.identity-popup-content-blocking-category-state-label,
+.identity-popup-permission-label,
+.identity-popup-permission-state-label,
+#identity-popup-security-descriptions>description,
+#identity-popup-securityView-body>description,
+#identity-popup-permissions-content>description,
+#identity-popup-content-blocking-content>description {
+  font-size: 100% !important;
+}
+
+.panel-header>label {
+  text-align: start !important;
+  margin-inline-start: 4px !important;
+}
+
+.identity-popup-headline {
+  font-size: 110% !important;
+}
+
+.identity-popup-security-content>description,
+#identity-popup-content-blocking-content>description,
+#identity-popup-permissions-content>description,
+.identity-popup-content-blocking-category-state-label,
+.identity-popup-permission-state-label {
+  font-size: 85% !important;
+}
+
+#identity-popup-permissions-content>description,
+#identity-popup-content-blocking-content>description {
+  color: inherit !important;
+  opacity: .6 !important;
+}
+
+.identity-popup-content-blocking-category-state-label {
+  transform: translateY(1px) !important;
+}
+
+.tracking-protection-button>.button-box,
+.panel-footer button>.button-box {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.tracking-protection-button .button-icon,
+.panel-footer button .button-icon {
+  padding-inline-end: 16px !important;
+}
+
+.tracking-protection-button .button-text,
+.panel-footer button .button-text {
+  margin: 0 !important;
+}
+
+#downloadsPanel-multiView {
+  padding-top: 8px !important;
+}
+
+#downloadsListBox .download-state {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+
+#downloadsListBox .downloadMainArea {
+  padding: 0 !important;
+  display: flex !important;
+  flex: 1 !important;
+  margin-inline-end: -48px !important;
+  padding-inline-end: 48px !important;
+  padding-inline-start: 16px !important;
+  height: 100% !important;
+  align-items: center !important;
+}
+
+#downloadsListBox .downloadContainer {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+}
+
+#downloadsListBox .downloadTypeIcon {
+  margin: 0 !important;
+  margin-inline-end: 16px !important;
+}
+
+#downloadsListBox .downloadTarget {
+  font-size: 100% !important;
+}
+
+#downloadsListBox .downloadDetails {
+  font-size: 85% !important;
+}
+
+#downloadsListBox>richlistitem>toolbarseparator {
+  display: none !important;
+}
+
+#downloadsListBox .downloadButton {
+  margin-inline-end: 16px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 16px !important;
+  fill: currentColor !important;
+  -moz-context-properties: fill, fill-opacity !important;
+  display: block !important;
+}
+
+#downloadsListBox .downloadButton .button-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 32px !important;
+}
+
+#confirmation-hint .panel-arrowcontent,
+#UITourTooltip .panel-arrowcontent,
+#customization-lwtheme-menu .panel-arrowcontent,
+#customization-uidensity-menu .panel-arrowcontent {
+  padding: 16px !important;
+}
+
+#customization-uidensity-menu .panel-arrowcontent,
+#customization-lwtheme-menu .panel-arrowcontent {
+  padding-top: 8px !important;
+}
+
+#customization-lwtheme-menu,
+#customization-uidensity-menu {
+  margin-inline: -60px 0 !important;
+  margin-block-end: -20px !important;
+}
+
+.customization-lwtheme-menu-theme,
+.customization-uidensity-menuitem {
+  padding: 0 16px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  height: 48px !important;
+}
+
+.customization-lwtheme-menu-theme .toolbarbutton-icon,
+.customization-uidensity-menuitem .menu-iconic-icon {
+  margin: 0 !important;
+  margin-inline-end: 16px !important;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.customization-lwtheme-menu-theme[active]:not(:hover):not(:active),
+.customization-uidensity-menuitem[active]:not(:hover):not(:active) {
+  background: 0 !important;
+}
+
+.customization-lwtheme-menu-theme[active]::after,
+.customization-uidensity-menuitem[active]::after {
+  content: url(chrome://browser/skin/motion/checkmark.svg) !important;
+  -moz-context-properties: fill, fill-opacity !important;
+  fill: currentColor !important;
+  display: -moz-box !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-inline-start: 16px !important;
+}
+
+.customization-uidensity-menuitem:first-of-type {
+  margin-block-start: 8px !important;
+}
+
+.customization-uidensity-menuitem:last-of-type {
+  margin-block-end: 8px !important;
+}
+
+#customization-lwtheme-menu-footer {
+  padding: 0 0 8px !important;
+  margin: 0 !important;
+  background: 0 !important;
+  border: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#customization-lwtheme-menu-footer toolbarbutton {
+  border: 0 !important;
+  margin: 0 !important;
+  height: 48px !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  background-image: none !important;
+}
+
+#customization-lwtheme-menu-footer toolbarbutton .toolbarbutton-text {
+  text-align: start !important;
+}
+
+#identity-popup-security-button {
+  margin: 0 !important;
+}
+
+.panel-footer {
+  padding: 4px !important;
+  background: 0 !important;
+  border-top: 1px solid var(--panel-separator-color) !important;
+  justify-content: end !important;
+  display: flex !important;
+  margin: 6px 0 0 !important;
+}
+
+.panel-footer button {
+  border: 0 !important;
+  border-radius: 4px !important;
+  margin: 4px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  flex: 0 0 auto !important;
+  position: relative !important;
+  outline: 0 !important;
+}
+
+.panel-footer button>.button-box {
+  -moz-appearance: none !important;
+  position: relative !important;
+  padding-inline-end: 16px !important;
+}
+
+.panel-footer button .button-menu-dropmarker {
+  margin-inline-start: 8px !important;
+  margin-inline-end: -8px !important;
+}
+
+.panel-footer button:not([default])>.button-box::before {
+  content: "" !important;
+  display: block !important;
+  border-radius: 2px !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 1px solid currentColor !important;
+  opacity: .2 !important;
+  box-sizing: border-box !important;
+}
+
+.panel-footer button:not([default]):hover:active:not([disabled])>.button-box::before {
+  border-width: 0 !important;
+}
+
+.panel-footer button:not([default]):hover:active:not([disabled]) {
+  border-width: 0 !important;
+  background: #002275 !important;
+  color: #FFF !important;
+}
+
+#PopupAutoComplete>richlistbox>richlistitem[originaltype="loginWithOrigin"] {
+  height: 48px !important;
+}
+
+richlistitem[originaltype="loginsFooter"],
+richlistitem[originaltype="generatedPassword"]>.two-line-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+
+richlistitem:-moz-any([originaltype="generatedPassword"],
+  [originaltype="loginWithOrigin"],
+  [originaltype="login"],
+  [originaltype="loginsFooter"]) .ac-site-icon {
+  display: block !important;
+  align-self: center !important;
+  margin-inline: 0 16px !important;
+  fill: currentColor !important;
+}
+
+richlistitem[originaltype="loginsFooter"] .ac-site-icon {
+  visibility: hidden !important;
+}
+
+richlistitem:-moz-any([originaltype="generatedPassword"],
+  [originaltype="loginWithOrigin"],
+  [originaltype="login"],
+  [originaltype="loginsFooter"]) .ac-title {
+  margin: 0 !important;
+}
+
+#confirmation-hint-message-container,
+#confirmation-hint-checkmark-animation-container {
+  margin-block: 8px !important;
+  margin-inline: 8px !important;
+}
+
+#confirmation-hint-checkmark-animation-container {
+  margin-inline-end: 0 !important;
+}
+
+.contentSelectDropdown-ingroup {
+  padding-inline-start: 2em !important;
+}
+
+/* Picture In Picture */
+#controls-bottom {
+  left: calc(-1 * var(--resize-margin)) !important;
+  bottom: calc(-1 * var(--resize-margin)) !important;
+  width: calc(100% + var(--resize-margin) * 2) !important;
+}
+
+.control-item {
+  background-size: 20px !important;
+  min-height: 24px !important;
+  min-width: 24px !important;
+  background-position: center !important;
+  -moz-context-properties: fill !important;
+  fill: #fff !important;
+  margin-block: 8px !important;
+  opacity: 1 !important;
+  --close-btn-bg-color: #0006 !important;
+  --btn-bg-color: #0000 !important;
+}
+
+.control-item:hover {
+  --btn-bg-color: #fff8 !important;
+}
+
+#controls-bottom {
+  background-color: #0006 !important;
+}
+
+#controls {
+  opacity: 0 !important;
+  ;
+}
+
+#controls:hover {
+  opacity: 1 !important;
+  ;
+}
+
+#close {
+  margin: 0 !important;
+  box-shadow: 0 0 0 99px inset var(--btn-bg-color) !important;
+}
+
+/* Proton Adjustments */
+@media (-moz-proton) {
+  /* Zoom Controls */
+  #appMenu-zoom-controls2 {
+    margin-block: var(--panel-separator-margin-2) calc(-1 * var(--panel-separator-margin-2)) !important;
+    padding-inline: 44px 0 !important;
+    border-top: 1px solid var(--panel-separator-color) !important;
+  }
+
+  #appMenu-zoomReset-button2 > .toolbarbutton-text {
+    background-color: transparent !important;
+  }
+
+  #appMenu-zoomReduce-button2 > .toolbarbutton-icon, #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon, #appMenu-fullscreen-button2 > .toolbarbutton-icon {
+    background-color: transparent !important;
+  }
+
+  #appMenu-zoomReduce-button2:not([disabled], [open], :active):is(:hover) > .toolbarbutton-icon, #appMenu-zoomEnlarge-button2:not([disabled], [open], :active):is(:hover) > .toolbarbutton-icon, #appMenu-fullscreen-button2:not([disabled], [open], :active):is(:hover) > .toolbarbutton-icon {
+    background-color: var(--panelview-toolbarbutton-hover-bgcolor) !important;
+  }
+
+  #appMenu-zoomReduce-button2:not([disabled]):is([open], :hover:active) > .toolbarbutton-icon, #appMenu-zoomEnlarge-button2:not([disabled]):is([open], :hover:active) > .toolbarbutton-icon, #appMenu-fullscreen-button2:not([disabled]):is([open], :hover:active) > .toolbarbutton-icon {
+    background-color: var(--panelview-toolbarbutton-active-bgcolor) !important;
+  }
+
+  #appMenu-zoom-controls2>.subviewbutton,
+  #appMenu-edit-controls2>.subviewbutton {
+    min-width: 42px !important;
+    max-width: 46px !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin-inline-start: 0 !important;
+    background-clip: padding-box !important;
+  }
+
+  #appMenu-zoom-controls2>.subviewbutton-iconic,
+  #appMenu-edit-controls2>.subviewbutton-iconic {
+    padding: 0 !important;
+    width: 42px !important;
+  }
+
+  #appMenu-zoomReset-button2 {
+    width: 46px !important;
+  }
+
+  #appMenu-edit-controls2>.subviewbutton,
+  #appMenu-zoom-controls2>#appMenu-fullscreen-button2,
+  #appMenu-zoom-controls2>#appMenu-zoomReduce-button2 {
+    border-left: 1px solid var(--panel-separator-color) !important;
+    padding-left: 1px !important;
+  }
+
+  #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
+  #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
+  #appMenu-fullscreen-button2 > .toolbarbutton-icon {
+    border-radius: 0 !important;
+    width: 42px !important;
+    height: 32px !important;
+    padding: 8px 13px !important;
+  }
+
+  /* Arrowpanel */
+  panel menulist {
+    appearance: none !important;
+    color: var(--arrowpanel-color) !important;
+    height: 30px !important;
+    padding-inline: 6px 10px !important;
+    border-radius: 2px !important;
+    box-shadow: 0 0 0 1px var(--panel-separator-color) inset, 0 0 0 1px var(--panel-separator-color) inset !important;
+    background-color: transparent !important;
+  }
+  
+  .panel-header {
+	padding: 4px !important;
+  }
+  
+  .panel-header + toolbarseparator {
+	margin-block: 0 !important;
+  }
+  
+  .subviewbutton-back {
+	margin: 0 !important;
+  }
+
+  .panel-subview-body {
+    padding-block: 6px !important;
+  }
+
+  .panel-subview-body + toolbarseparator {
+    margin-top: 0 !important;
+  }
+
+  panel :is(.toolbarbutton-1 > .toolbarbutton-badge-stack, .toolbarbutton-1 > .toolbarbutton-icon) {
+    margin-inline: 4px 12px !important;
+  }
+
+  .widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text {
+    padding-inline-start: 0 !important;
+  }
+
+  .identity-popup-section {
+    padding-block: 0 !important;
+  }
+}

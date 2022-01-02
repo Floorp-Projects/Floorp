@@ -10,8 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsContentPermissionHelper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct MIDIOptions;
 
@@ -42,7 +41,6 @@ class MIDIPermissionRequest final : public ContentPermissionRequestBase,
   bool mNeedsSysex;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MIDIPermissionRequest_h

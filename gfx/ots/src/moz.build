@@ -7,6 +7,11 @@
 EXPORTS += [
     '../include/opentype-sanitiser.h',
     '../include/ots-memory-stream.h',
+    '../RLBoxWOFF2Types.h',
+]
+
+UNIFIED_SOURCES += [
+    '../RLBoxWOFF2Host.cpp'
 ]
 
 UNIFIED_SOURCES += [
@@ -71,5 +76,6 @@ USE_LIBS += [
 ]
 
 LOCAL_INCLUDES += [
+    '!/security/rlbox',
     '/modules/woff2/src',
 ]

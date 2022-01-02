@@ -57,17 +57,9 @@ class ZoneAllocator : public JS::shadow::Zone,
                                     void* reallocPtr = nullptr);
   void reportAllocationOverflow() const;
 
-  void adoptMallocBytes(ZoneAllocator* other) {
-    mallocHeapSize.adopt(other->mallocHeapSize);
-    jitHeapSize.adopt(other->jitHeapSize);
-#ifdef DEBUG
-    mallocTracker.adopt(other->mallocTracker);
-#endif
-  }
-
   void updateMemoryCountersOnGCStart();
   void updateGCStartThresholds(gc::GCRuntime& gc, const js::AutoLockGC& lock);
-  void setGCSliceThresholds(gc::GCRuntime& gc);
+  void setGCSliceThresholds(gc::GCRuntime& gc, bool waitingOnBGTask);
   void clearGCSliceThresholds();
 
   // Memory accounting APIs for malloc memory owned by GC cells.

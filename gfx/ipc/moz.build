@@ -10,6 +10,8 @@ with Files("**"):
 EXPORTS.mozilla += ["D3DMessageUtils.h", "GfxMessageUtils.h"]
 
 EXPORTS.mozilla.gfx += [
+    "CanvasManagerChild.h",
+    "CanvasManagerParent.h",
     "CrossProcessPaint.h",
     "GPUChild.h",
     "GPUParent.h",
@@ -34,6 +36,8 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "CanvasManagerChild.cpp",
+    "CanvasManagerParent.cpp",
     "CompositorSession.cpp",
     "CompositorWidgetVsyncObserver.cpp",
     "CrossProcessPaint.cpp",
@@ -55,6 +59,7 @@ SOURCES += [
 
 IPDL_SOURCES = [
     "GraphicsMessages.ipdlh",
+    "PCanvasManager.ipdl",
     "PVsyncBridge.ipdl",
 ]
 
@@ -65,6 +70,7 @@ PREPROCESSED_IPDL_SOURCES += [
 LOCAL_INCLUDES += [
     "/dom/ipc",
     "/gfx/cairo/cairo/src",
+    "/ipc/glue",
     "/toolkit/crashreporter",
     "/xpcom/threads",
 ]

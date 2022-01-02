@@ -230,6 +230,21 @@ mr{
             }
         }
         minimalPairs{
+            case{
+                ablative{"{0} दिवसापासून त्याचे प्रयत्न चालू होते"}
+                accusative{"दर {0} दिवसाला येऊन तो विचारणा करत होता"}
+                dative{"{0} दिवसांसाठी तो गावाला गेला आहे"}
+                ergative{"{0} दिवसाने काय फरक पडणार?"}
+                genitive{"{0} दिवसांचा कार्यक्रम होता"}
+                locative{"{0} व्या दिवशी तो हजर झाला"}
+                nominative{"{0} दिवस खूप मजेत गेले"}
+                oblique{"{0} दिवस"}
+            }
+            gender{
+                feminine{"कॅलरी {0} ने वाढली"}
+                masculine{"तो {0} तास खूप महत्वाचा होता"}
+                neuter{"ते {0} वर्ष खूप महत्वाचे होते"}
+            }
             ordinal{
                 few{"{0}थे उजवे वळण घ्या."}
                 one{"{0}ले उजवे वळण घ्या."}
@@ -498,6 +513,16 @@ mr{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -514,6 +539,7 @@ mr{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
                 GyMMMd{"d MMM, y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"H-mm"}
                 Hms{"H-mm-ss"}
@@ -663,6 +689,16 @@ mr{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -682,6 +718,7 @@ mr{
                 GyMMM{"MMM G y"}
                 GyMMMEd{"E, d MMM, G y"}
                 GyMMMd{"d MMM, G y"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}

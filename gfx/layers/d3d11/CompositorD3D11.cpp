@@ -816,13 +816,10 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (mWidget->IsHidden()) {
     // We are not going to render, and not going to call EndFrame so we have to
     // read-unlock our textures to prevent them from accumulating.
-    ReadUnlockTextures();
     return Nothing();
   }
 
   if (mDevice->GetDeviceRemovedReason() != S_OK) {
-    ReadUnlockTextures();
-
     if (!mAttachments->IsDeviceReset()) {
       gfxCriticalNote << "GFX: D3D11 skip BeginFrame with device-removed.";
 
@@ -876,7 +873,6 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Failed to create a render target or the view.
   if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
       mSize.width <= 0 || mSize.height <= 0) {
-    ReadUnlockTextures();
     return Nothing();
   }
 
@@ -1066,7 +1062,6 @@ void CompositorD3D11::Present() {
 }
 
 void CompositorD3D11::CancelFrame(bool aNeedFlush) {
-  ReadUnlockTextures();
   // Flush the context, otherwise the driver might hold some resources alive
   // until the next flush or present.
   if (aNeedFlush) {

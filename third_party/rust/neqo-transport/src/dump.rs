@@ -22,6 +22,10 @@ pub fn dump_packet(
     pn: PacketNumber,
     payload: &[u8],
 ) {
+    if ::log::Level::Debug > ::log::max_level() {
+        return;
+    }
+
     let mut s = String::from("");
     let mut d = Decoder::from(payload);
     while d.remaining() > 0 {

@@ -19,7 +19,9 @@ dsb{
     NumberElements{
         latn{
             miscPatterns{
+                approximately{"≈{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -106,6 +108,80 @@ dsb{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0 tys'.' ¤"}
+                        one{"0 tys'.' ¤"}
+                        other{"0 tys'.' ¤"}
+                        two{"0 tys'.' ¤"}
+                    }
+                    10000{
+                        few{"00 tys'.' ¤"}
+                        one{"00 tys'.' ¤"}
+                        other{"00 tys'.' ¤"}
+                        two{"00 tys'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tys'.' ¤"}
+                        one{"000 tys'.' ¤"}
+                        other{"000 tys'.' ¤"}
+                        two{"000 tys'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mio'.' ¤"}
+                        one{"0 mio'.' ¤"}
+                        other{"0 mio'.' ¤"}
+                        two{"0 mio'.' ¤"}
+                    }
+                    10000000{
+                        few{"00 mio'.' ¤"}
+                        one{"00 mio'.' ¤"}
+                        other{"00 mio'.' ¤"}
+                        two{"00 mio'.' ¤"}
+                    }
+                    100000000{
+                        few{"000 mio'.' ¤"}
+                        one{"000 mio'.' ¤"}
+                        other{"000 mio'.' ¤"}
+                        two{"000 mio'.' ¤"}
+                    }
+                    1000000000{
+                        few{"0 mrd'.' ¤"}
+                        one{"0 mrd'.' ¤"}
+                        other{"0 mrd'.' ¤"}
+                        two{"0 mrd'.' ¤"}
+                    }
+                    10000000000{
+                        few{"00 mrd'.' ¤"}
+                        one{"00 mrd'.' ¤"}
+                        other{"00 mrd'.' ¤"}
+                        two{"00 mrd'.' ¤"}
+                    }
+                    100000000000{
+                        few{"000 mrd'.' ¤"}
+                        one{"000 mrd'.' ¤"}
+                        other{"000 mrd'.' ¤"}
+                        two{"000 mrd'.' ¤"}
+                    }
+                    1000000000000{
+                        few{"0 bil'.' ¤"}
+                        one{"0 bil'.' ¤"}
+                        other{"0 bil'.' ¤"}
+                        two{"0 bil'.' ¤"}
+                    }
+                    10000000000000{
+                        few{"00 bil'.' ¤"}
+                        one{"00 bil'.' ¤"}
+                        other{"00 bil'.' ¤"}
+                        two{"00 bil'.' ¤"}
+                    }
+                    100000000000000{
+                        few{"000 bil'.' ¤"}
+                        one{"000 bil'.' ¤"}
+                        other{"000 bil'.' ¤"}
+                        two{"000 bil'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tys'.'"}
@@ -182,6 +258,7 @@ dsb{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -193,6 +270,17 @@ dsb{
                 plusSign{"+"}
                 superscriptingExponent{"·"}
                 timeSeparator{":"}
+            }
+        }
+        minimalPairs{
+            ordinal{
+                other{"Na {0}. wótbocenje na kśicowanišću napšawo."}
+            }
+            plural{
+                few{"{0} dny"}
+                one{"{0} źeń"}
+                other{"{0} dnjow"}
+                two{"{0} dnja"}
             }
         }
         minimumGroupingDigits{"1"}
@@ -214,31 +302,107 @@ dsb{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyyMd",
+            }
             availableFormats{
+                Bh{"h 'hodź'. B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.M.y GGGGG"}
+                H{"HH 'hodź'."}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
                 d{"d"}
+                h{"h 'hodź'. a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
                 yyyyMEd{"E, d.M.y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d. MMM y G"}
+                yyyyMMMM{"LLLL y G"}
                 yyyyMMMd{"d. MMM y G"}
                 yyyyMd{"d.M.y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h 'hodź'. B – h 'hodź'. B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 M{
                     M{"M. – M."}
                 }
@@ -330,6 +494,16 @@ dsb{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -344,13 +518,22 @@ dsb{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.M.y GGGGG"}
                 H{"'zeg'. H"}
                 Hm{"'zeg'. H:mm"}
                 Hms{"H:mm:ss"}
+                Hmsv{"H:mm:ss v"}
+                Hmv{"H:mm v"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMW{
+                    few{"'tyźeń' W MMMM"}
+                    one{"'tyźeń' W MMMM"}
+                    other{"'tyźeń' W MMMM"}
+                    two{"'tyźeń' W MMMM"}
+                }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 MMd{"d. MM"}
@@ -373,6 +556,12 @@ dsb{
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"'tyźeń' w 'lěta' Y"}
+                    one{"'tyźeń' w 'lěta' Y"}
+                    other{"'tyźeń' w 'lěta' Y"}
+                    two{"'tyźeń' w 'lěta' Y"}
+                }
             }
             dayNames{
                 format{
@@ -452,6 +641,18 @@ dsb{
                     }
                 }
             }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"am"}
+                        pm{"pm"}
+                    }
+                    wide{
+                        am{"dopołdnja"}
+                        pm{"wótpołdnja"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "pś.Chr.n.",
@@ -471,6 +672,53 @@ dsb{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h 'hodź'. B – h 'hodź'. B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"'zeg'. H–H"}
                 }
@@ -699,6 +947,94 @@ dsb{
             }
         }
     }
+    characterLabel{
+        activities{"aktiwity"}
+        african_scripts{"afrikańske pisma"}
+        american_scripts{"amerikańske pisma"}
+        animal{"zwěrje"}
+        animals_nature{"flora abo fawna"}
+        arrows{"šypy"}
+        body{"śěło"}
+        box_drawing{"znamuška ramika"}
+        braille{"braille"}
+        building{"twarjenje"}
+        bullets_stars{"naliceńske znamuška/gwězdki"}
+        consonantal_jamo{"jamo-konsonanty"}
+        currency_symbols{"symbole płaśidłow"}
+        dash_connector{"lažeca smužka/wězawka"}
+        digits{"městna"}
+        dingbats{"pyšnjeńki"}
+        divination_symbols{"symbole wěšćenja"}
+        downwards_arrows{"šypy dołoj"}
+        downwards_upwards_arrows{"šypy górjej - šypy dołoj"}
+        east_asian_scripts{"pódzajšnoaziske pisma"}
+        emoji{"emoji"}
+        european_scripts{"europejske pisma"}
+        female{"žeńska"}
+        flag{"chórgoj"}
+        flags{"chórgoje"}
+        food_drink{"jěza & piśe"}
+        format{"format"}
+        format_whitespace{"format a licha tasta"}
+        full_width_form_variant{"warianty w połnej šyrokosći"}
+        geometric_shapes{"geometriske formy"}
+        half_width_form_variant{"warianty w połojcnej šyrokosći"}
+        han_characters{"han-znamuško"}
+        han_radicals{"han- radikale"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (zjadnorjone))"}
+        hanzi_traditional{"hanzi (tradicionelne)"}
+        heart{"wutšoba"}
+        historic_scripts{"historiske pisma"}
+        ideographic_desc_characters{"ideografiske wopisujuce znamuška"}
+        japanese_kana{"japańske kana"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"tasta"}
+        leftwards_arrows{"šypy nalěwo"}
+        leftwards_rightwards_arrows{"šypy nalěwo - šypy napšawo"}
+        letterlike_symbols{"pismikam pódobne symbole"}
+        limited_use{"wobgranicowane wužywanje"}
+        male{"muski"}
+        math_symbols{"mytematiski symbol"}
+        middle_eastern_scripts{"krotkoaziske pisma"}
+        miscellaneous{"(0)-wšake"}
+        modern_scripts{"moderne pisma"}
+        modifier{"póstajenje"}
+        musical_symbols{"muzikaliske symbole"}
+        nature{"pśiroda"}
+        nonspacing{"šćitane znamuška"}
+        numbers{"cyfry"}
+        objects{"objekty"}
+        other{"(0)-druge"}
+        paired{"pórowany"}
+        person{"wósoba"}
+        phonetic_alphabet{"fonetiski alfabet"}
+        pictographs{"piktogramy"}
+        place{"městno"}
+        plant{"rostlina"}
+        punctuation{"interpunkcija"}
+        rightwards_arrows{"šypy napšawo"}
+        sign_standard_symbols{"znamuško abo symbol"}
+        small_form_variant{"małe formowe warianty"}
+        smiley{"smiley"}
+        smileys_people{"smiley a luźe"}
+        south_asian_scripts{"pódpołdnjoaziske pisma"}
+        southeast_asian_scripts{"krotkozajtšnoaziske pisma"}
+        spacing{"wótstawk"}
+        sport{"sport"}
+        symbols{"symbol"}
+        technical_symbols{"techniski symbol"}
+        tone_marks{"zukowe znamje"}
+        travel{"drogowanje"}
+        travel_places{"drogowanje a města"}
+        upwards_arrows{"šypy górjej"}
+        variant_forms{"warianta"}
+        vocalic_jamo{"jamo-wokale"}
+        weather{"wjedro"}
+        western_asian_scripts{"pódwjacornoaziske pisma"}
+        whitespace{"pusta tasta"}
+    }
     delimiters{
         alternateQuotationEnd{"‘"}
         alternateQuotationStart{"‚"}
@@ -730,6 +1066,11 @@ dsb{
         }
         day-narrow{
             dn{"ź"}
+            relative{
+                "-1"{"cr."}
+                "0"{"źis."}
+                "1"{"wit."}
+            }
             relativeTime{
                 future{
                     few{"za {0} ź"}
@@ -747,6 +1088,11 @@ dsb{
         }
         day-short{
             dn{"źeń"}
+            relative{
+                "-1"{"cra."}
+                "0"{"źins."}
+                "1"{"witś."}
+            }
             relativeTime{
                 future{
                     few{"za {0} dny"}
@@ -762,8 +1108,20 @@ dsb{
                 }
             }
         }
+        dayOfYear{
+            dn{"źeń lěta"}
+        }
+        dayOfYear-narrow{
+            dn{"ź. lě."}
+        }
+        dayOfYear-short{
+            dn{"źeń lěta"}
+        }
         dayperiod{
             dn{"połojca dnja"}
+        }
+        dayperiod-narrow{
+            dn{"poł. dnja"}
         }
         era{
             dn{"epocha"}
@@ -774,12 +1132,40 @@ dsb{
                 "0"{"ten pětk"}
                 "1"{"pśiducy pětk"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pětki"}
+                    one{"za {0} pětk"}
+                    other{"za {0} pětkow"}
+                    two{"za {0} pětka"}
+                }
+                past{
+                    few{"pśed {0} pětkami"}
+                    one{"pśed {0} pětkom"}
+                    other{"pśed {0} pětkami"}
+                    two{"pśed {0} pětkoma"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"slědny pě."}
                 "0"{"ten pě."}
                 "1"{"pśiducy pě."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} pě."}
+                    one{"za {0} pě."}
+                    other{"za {0} pě."}
+                    two{"za {0} pě."}
+                }
+                past{
+                    few{"pśed {0} pě."}
+                    one{"pśed {0} pě."}
+                    other{"pśed {0} pě."}
+                    two{"pśed {0} pě."}
+                }
             }
         }
         fri-short{
@@ -788,9 +1174,26 @@ dsb{
                 "0"{"ten pět."}
                 "1"{"pśiducy pět."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pě."}
+                    one{"za {0} pě."}
+                    other{"za {0} pě."}
+                    two{"za {0} pě."}
+                }
+                past{
+                    few{"pśed {0} pě."}
+                    one{"pśed {0} pě."}
+                    other{"pśed {0} pě."}
+                    two{"pśed {0} pě."}
+                }
+            }
         }
         hour{
             dn{"góźina"}
+            relative{
+                "0"{"w toś tej góźinje"}
+            }
             relativeTime{
                 future{
                     few{"za {0} góźiny"}
@@ -842,6 +1245,9 @@ dsb{
         }
         minute{
             dn{"minuta"}
+            relative{
+                "0"{"w toś tej minuśe"}
+            }
             relativeTime{
                 future{
                     few{"za {0} minuty"}
@@ -897,6 +1303,20 @@ dsb{
                 "0"{"to pónjeźele"}
                 "1"{"pśiduce pónjeźele"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pónjeźelu"}
+                    one{"za {0} pónjeźelu"}
+                    other{"za {0} pónnjeźelami"}
+                    two{"za {0} pónjeźelu"}
+                }
+                past{
+                    few{"pśed {0} pónjeźelami"}
+                    one{"pśed {0} pónjeźelu"}
+                    other{"pśed {0} pónjeźelami"}
+                    two{"pśed {0} pónjeźeloma"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -904,12 +1324,40 @@ dsb{
                 "0"{"to pó."}
                 "1"{"pśiduce pó."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pón."}
+                    one{"za {0} pón."}
+                    other{"za {0} pón."}
+                    two{"za {0} pón."}
+                }
+                past{
+                    few{"pśed {0} pón."}
+                    one{"pśed {0} pón."}
+                    other{"pśed {0} pón."}
+                    two{"pśed {0} pón."}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"slědne pónj."}
                 "0"{"to pónj."}
                 "1"{"pśiduce pónj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} pón."}
+                    one{"za {0} pón."}
+                    other{"za {0} pón."}
+                    two{"za {0} pón."}
+                }
+                past{
+                    few{"pśed {0} pón."}
+                    one{"pśed {0} pón."}
+                    other{"pśed {0} pón."}
+                    two{"pśed {0} pón."}
+                }
             }
         }
         month{
@@ -936,6 +1384,11 @@ dsb{
         }
         month-narrow{
             dn{"mjas."}
+            relative{
+                "-1"{"slě. mjasec"}
+                "0"{"te. mjasec"}
+                "1"{"pśid. mjasec"}
+            }
             relativeTime{
                 future{
                     few{"za {0} mjas."}
@@ -953,6 +1406,11 @@ dsb{
         }
         month-short{
             dn{"mjas."}
+            relative{
+                "-1"{"slěd. mjasec"}
+                "0"{"tot. mjasec"}
+                "1"{"pśiduc. mjasec"}
+            }
             relativeTime{
                 future{
                     few{"za {0} mjas."}
@@ -970,6 +1428,11 @@ dsb{
         }
         quarter{
             dn{"kwartal"}
+            relative{
+                "-1"{"zajźony kwartal"}
+                "0"{"toś ten kwartal"}
+                "1"{"pśiducy kwartal"}
+            }
             relativeTime{
                 future{
                     few{"za {0} kwartale"}
@@ -1025,12 +1488,40 @@ dsb{
                 "0"{"tu sobotu"}
                 "1"{"pśiducu sobotu"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} soboty"}
+                    one{"za {0} sobotu"}
+                    other{"za {0} sobotami"}
+                    two{"za {0} sobośe"}
+                }
+                past{
+                    few{"pśed {0} sobotami"}
+                    one{"pśed {0} sobotu"}
+                    other{"pśed {0} sobotami"}
+                    two{"pśed {0} sobotoma"}
+                }
+            }
         }
         sat-narrow{
             relative{
                 "-1"{"slědnu so."}
                 "0"{"tu so."}
                 "1"{"pśiducu so."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} so."}
+                    one{"za {0} so."}
+                    other{"za {0} so."}
+                    two{"za {0} so."}
+                }
+                past{
+                    few{"pśed {0} so."}
+                    one{"pśed {0} so."}
+                    other{"pśed {0} so."}
+                    two{"pśed {0} so."}
+                }
             }
         }
         sat-short{
@@ -1039,9 +1530,26 @@ dsb{
                 "0"{"tu sob."}
                 "1"{"pśiducu sob."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} sob."}
+                    one{"za {0} sob."}
+                    other{"za {0} sob."}
+                    two{"za {0} sob."}
+                }
+                past{
+                    few{"pśed {0} sob."}
+                    one{"pśed {0} sob."}
+                    other{"pśed {0} sob."}
+                    two{"pśed {0} sob."}
+                }
+            }
         }
         second{
             dn{"sekunda"}
+            relative{
+                "0"{"něnto"}
+            }
             relativeTime{
                 future{
                     few{"za {0} sekundy"}
@@ -1097,12 +1605,40 @@ dsb{
                 "0"{"tu njeźelu"}
                 "1"{"pśiducu njeźelu"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} njeźele"}
+                    one{"za {0} njeźelu"}
+                    other{"za {0} njeźelow"}
+                    two{"za {0} njeźeli"}
+                }
+                past{
+                    few{"pśed {0} njeźelami"}
+                    one{"pśed {0} njeźelu"}
+                    other{"pśed {0} njeźelami"}
+                    two{"pśed {0} njeźeloma"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"slědnu nj."}
                 "0"{"tu nj."}
                 "1"{"pśiducu nj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} nj."}
+                    one{"za {0} nj."}
+                    other{"za {0} nj."}
+                    two{"za {0} nj."}
+                }
+                past{
+                    few{"pśed {0} nj."}
+                    one{"pśed {0} nj."}
+                    other{"pśed {0} nj."}
+                    two{"pśed {0} nj."}
+                }
             }
         }
         sun-short{
@@ -1111,12 +1647,40 @@ dsb{
                 "0"{"tu nje."}
                 "1"{"pśiducu nje."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} nje."}
+                    one{"za {0} nje."}
+                    other{"za {0} nje."}
+                    two{"za {0} nje."}
+                }
+                past{
+                    few{"pśed {0} nje."}
+                    one{"pśed {0} nje."}
+                    other{"pśed {0} nje."}
+                    two{"pśed {0} nje."}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"slědny stwórtk"}
                 "0"{"ten stwórtk"}
                 "1"{"pśiducy stwórtk"}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} stwórtki"}
+                    one{"za {0} stwórtk"}
+                    other{"za {0} stwórtkami"}
+                    two{"za {0} stwórtka"}
+                }
+                past{
+                    few{"pśed {0} stwórtkami"}
+                    one{"pśed {0} stwórtkom"}
+                    other{"pśed {0} stwórtkami"}
+                    two{"pśed {0} stwórtkoma"}
+                }
             }
         }
         thu-narrow{
@@ -1125,12 +1689,40 @@ dsb{
                 "0"{"ten st."}
                 "1"{"pśiducy st."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} stw."}
+                    one{"za {0} stw."}
+                    other{"za {0} stw."}
+                    two{"za {0} stw."}
+                }
+                past{
+                    few{"pśed {0} stw."}
+                    one{"pśed {0} stw."}
+                    other{"pśed {0} stw."}
+                    two{"pśed {0} stw."}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"slědny stw."}
                 "0"{"ten stw."}
                 "1"{"pśiducy stw."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} stw."}
+                    one{"za {0} stw."}
+                    other{"za {0} stw."}
+                    two{"za {0} stw."}
+                }
+                past{
+                    few{"pśed {0} stw."}
+                    one{"pśed {0} stw."}
+                    other{"pśed {0} stw."}
+                    two{"pśed {0} stw."}
+                }
             }
         }
         tue{
@@ -1139,12 +1731,40 @@ dsb{
                 "0"{"tu wałtoru"}
                 "1"{"pśiducu wałtoru"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} wałtory"}
+                    one{"za {0} wałtoru"}
+                    other{"za {0} wałtorami"}
+                    two{"za {0} wałtorje"}
+                }
+                past{
+                    few{"pśed {0} wałtorami"}
+                    one{"pśed {0} wałtoru"}
+                    other{"pśed {0} wutorami"}
+                    two{"pśed {0} wałtoroma"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"slědnu wa."}
                 "0"{"tu wa."}
                 "1"{"pśiducu wa."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} wałt."}
+                    one{"za {0} wałt."}
+                    other{"za {0} wałt."}
+                    two{"za {0} wałt."}
+                }
+                past{
+                    few{"pśed {0} wałt."}
+                    one{"pśed {0} wałt."}
+                    other{"pśed {0} wałt."}
+                    two{"pśed {0} wałt."}
+                }
             }
         }
         tue-short{
@@ -1153,12 +1773,40 @@ dsb{
                 "0"{"tu wałt."}
                 "1"{"pśiducu wałt."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} wałt."}
+                    one{"za {0} wałt."}
+                    other{"za {0} wałt."}
+                    two{"za {0} wałt."}
+                }
+                past{
+                    few{"pśed {0} wałt."}
+                    one{"pśed {0} wałt."}
+                    other{"pśed {0} wałt."}
+                    two{"pśed {0} wałt."}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"slědnu srjodu"}
                 "0"{"tu srjodu"}
                 "1"{"pśiducu srjodu"}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} srjody"}
+                    one{"za {0} srjodu"}
+                    other{"za {0} srjodami"}
+                    two{"za {0} srjoźe"}
+                }
+                past{
+                    few{"pśed {0} srjodami"}
+                    one{"pśed {0} srjodu"}
+                    other{"pśed {0} srjodami"}
+                    two{"pśed {0} srjodoma"}
+                }
             }
         }
         wed-narrow{
@@ -1167,12 +1815,40 @@ dsb{
                 "0"{"tu sr."}
                 "1"{"pśiducu sr."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} srj."}
+                    one{"za {0} srj."}
+                    other{"za {0} srj."}
+                    two{"za {0} srj."}
+                }
+                past{
+                    few{"pśed {0} srj."}
+                    one{"pśed {0} srj."}
+                    other{"pśed {0} srj."}
+                    two{"pśed {0} srj."}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"slědnu srj."}
                 "0"{"tu srj."}
                 "1"{"pśiducu srj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} srj."}
+                    one{"za {0} srj."}
+                    other{"za {0} srj."}
+                    two{"za {0} srj."}
+                }
+                past{
+                    few{"pśed {0} srj."}
+                    one{"pśed {0} srj."}
+                    other{"pśed {0} srj."}
+                    two{"pśed {0} srj."}
+                }
             }
         }
         week{
@@ -1182,6 +1858,7 @@ dsb{
                 "0"{"ten tyźeń"}
                 "1"{"pśiducy tyźeń"}
             }
+            relativePeriod{"tyźeń wot {0}"}
             relativeTime{
                 future{
                     few{"za {0} tyźenje"}
@@ -1199,6 +1876,12 @@ dsb{
         }
         week-narrow{
             dn{"tyź."}
+            relative{
+                "-1"{"slě. tyźeń"}
+                "0"{"te. tyźeń"}
+                "1"{"pśid. tyźeń"}
+            }
+            relativePeriod{"tyźeń wót {0}"}
             relativeTime{
                 future{
                     few{"za {0} tyź."}
@@ -1216,6 +1899,12 @@ dsb{
         }
         week-short{
             dn{"tyź."}
+            relative{
+                "-1"{"slěd. tyźeń"}
+                "0"{"tot. tyźeń"}
+                "1"{"pśiduc. tyźeń"}
+            }
+            relativePeriod{"tyźeń wót {0}"}
             relativeTime{
                 future{
                     few{"za {0} tyź."}
@@ -1231,8 +1920,26 @@ dsb{
                 }
             }
         }
+        weekOfMonth{
+            dn{"tyźeń mjaseca"}
+        }
+        weekOfMonth-narrow{
+            dn{"tyź. mjas."}
+        }
+        weekOfMonth-short{
+            dn{"tyź. mjas."}
+        }
         weekday{
             dn{"źeń tyźenja"}
+        }
+        weekdayOfMonth{
+            dn{"źeń tyźenja w mjasecu"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ź. t. w mjas."}
+        }
+        weekdayOfMonth-short{
+            dn{"ź. tyź. w mjas."}
         }
         year{
             dn{"lěto"}
@@ -1258,6 +1965,11 @@ dsb{
         }
         year-narrow{
             dn{"l."}
+            relative{
+                "-1"{"ło."}
+                "0"{"lět."}
+                "1"{"zno."}
+            }
             relativeTime{
                 future{
                     few{"za {0} l."}
@@ -1275,6 +1987,11 @@ dsb{
         }
         year-short{
             dn{"l."}
+            relative{
+                "-1"{"łon."}
+                "0"{"lěts."}
+                "1"{"znow."}
+            }
             relativeTime{
                 future{
                     few{"za {0} l."}
@@ -1293,12 +2010,23 @@ dsb{
         zone{
             dn{"casowe pasmo"}
         }
+        zone-narrow{
+            dn{"cas. pasmo"}
+        }
     }
     layout{
         characters{"left-to-right"}
         lines{"top-to-bottom"}
     }
     listPattern{
+        or{
+            2{"{0} abo {1}"}
+            end{"{0} abo {1}"}
+        }
+        or-short{
+            2{"{0} abo {1}"}
+            end{"{0} abo {1}"}
+        }
         standard{
             2{"{0} a {1}"}
             end{"{0} a {1}"}

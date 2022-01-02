@@ -64,17 +64,17 @@ nsresult AudioWorkletImpl::SendControlMessage(
 
 void AudioWorkletImpl::OnAddModuleStarted() const {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker(
-      ProfilerStringView("AudioWorklet.addModule"),
-      geckoprofiler::category::MEDIA_RT, {MarkerTiming::IntervalStart()});
+  profiler_add_marker(ProfilerStringView("AudioWorklet.addModule"),
+                      geckoprofiler::category::MEDIA_RT,
+                      {MarkerTiming::IntervalStart()});
 #endif
 }
 
 void AudioWorkletImpl::OnAddModulePromiseSettled() const {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker(
-      ProfilerStringView("AudioWorklet.addModule"),
-      geckoprofiler::category::MEDIA_RT, {MarkerTiming::IntervalEnd()});
+  profiler_add_marker(ProfilerStringView("AudioWorklet.addModule"),
+                      geckoprofiler::category::MEDIA_RT,
+                      {MarkerTiming::IntervalEnd()});
 #endif
 }
 

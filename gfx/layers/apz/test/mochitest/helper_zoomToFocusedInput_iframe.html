@@ -44,6 +44,7 @@ async function test() {
   let prevPosY = window.scrollY;
 
   await transformEndPromise;
+  await promiseApzFlushedRepaints();
 
   window.scrollTo(0, 0);
   await waitToClearOutAnyPotentialScrolls(win);

@@ -203,6 +203,39 @@ def add_resource_monitor(config, jobs):
         yield job
 
 
+@transforms.add
+def make_task_description(config, jobs):
+    """Given a build description, create a task description"""
+    # import plugin modules first, before iterating over jobs
+    import_sibling_modules(exceptions=("common.py",))
+
+    for job in jobs:
+        # only docker-worker uses a fixed absolute path to find directories
+        if job["worker"]["implementation"] == "docker-worker":
+            job["run"].setdefault("workdir", "/builds/worker")
+
+        taskdesc = copy.deepcopy(job)
+
+        # fill in some empty defaults to make run implementations easier
+        taskdesc.setdefault("attributes", {})
+        taskdesc.setdefault("dependencies", {})
+        taskdesc.setdefault("if-dependencies", [])
+        taskdesc.setdefault("soft-dependencies", [])
+        taskdesc.setdefault("routes", [])
+        taskdesc.setdefault("scopes", [])
+        taskdesc.setdefault("extra", {})
+
+        # give the function for job.run.using on this worker implementation a
+        # chance to set up the task description.
+        configure_taskdesc_for_run(
+            config, job, taskdesc, job["worker"]["implementation"]
+        )
+        del taskdesc["run"]
+
+        # yield only the task description, discarding the job description
+        yield taskdesc
+
+
 def get_attribute(dict, key, attributes, attribute_name):
     """Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value."""
@@ -214,37 +247,31 @@ def get_attribute(dict, key, attributes, attribute_name):
 @transforms.add
 def use_fetches(config, jobs):
     artifact_names = {}
+    extra_env = {}
     aliases = {}
+    tasks = []
 
     if config.kind in ("toolchain", "fetch"):
         jobs = list(jobs)
-        for job in jobs:
-            run = job.get("run", {})
-            label = job["label"]
-            get_attribute(artifact_names, label, run, "toolchain-artifact")
-            value = run.get(f"{config.kind}-alias")
-            if not value:
-                value = []
-            elif isinstance(value, str):
-                value = [value]
-            for alias in value:
-                aliases[f"{config.kind}-{alias}"] = label
+        tasks.extend((config.kind, j) for j in jobs)
 
-    for task in config.kind_dependencies_tasks.values():
-        if task.kind in ("fetch", "toolchain"):
-            get_attribute(
-                artifact_names,
-                task.label,
-                task.attributes,
-                f"{task.kind}-artifact",
-            )
-            value = task.attributes.get(f"{task.kind}-alias")
-            if not value:
-                value = []
-            elif isinstance(value, str):
-                value = [value]
-            for alias in value:
-                aliases[f"{task.kind}-{alias}"] = task.label
+    tasks.extend(
+        (task.kind, task.__dict__)
+        for task in config.kind_dependencies_tasks.values()
+        if task.kind in ("fetch", "toolchain")
+    )
+    for (kind, task) in tasks:
+        get_attribute(
+            artifact_names, task["label"], task["attributes"], f"{kind}-artifact"
+        )
+        get_attribute(extra_env, task["label"], task["attributes"], f"{kind}-env")
+        value = task["attributes"].get(f"{kind}-alias")
+        if not value:
+            value = []
+        elif isinstance(value, str):
+            value = [value]
+        for alias in value:
+            aliases[f"{kind}-{alias}"] = task["label"]
 
     artifact_prefixes = {}
     for job in order_tasks(config, jobs):
@@ -256,9 +283,10 @@ def use_fetches(config, jobs):
             continue
 
         job_fetches = []
-        name = job.get("name", job.get("label"))
+        name = job.get("name") or job.get("label").replace(f"{config.kind}-", "")
         dependencies = job.setdefault("dependencies", {})
         worker = job.setdefault("worker", {})
+        env = worker.setdefault("env", {})
         prefix = get_artifact_prefix(job)
         has_sccache = False
         for kind, artifacts in fetches.items():
@@ -272,6 +300,8 @@ def use_fetches(config, jobs):
                                 kind=config.kind, name=name, fetch=fetch_name
                             )
                         )
+                    if label in extra_env:
+                        env.update(extra_env[label])
 
                     path = artifact_names[label]
 
@@ -365,7 +395,6 @@ def use_fetches(config, jobs):
                 )
             artifacts[artifact] = task
 
-        env = worker.setdefault("env", {})
         env["MOZ_FETCHES"] = {
             "task-reference": json.dumps(
                 sorted(job_fetches, key=lambda x: sorted(x.items())), sort_keys=True
@@ -375,39 +404,6 @@ def use_fetches(config, jobs):
         env.setdefault("MOZ_FETCHES_DIR", "fetches")
 
         yield job
-
-
-@transforms.add
-def make_task_description(config, jobs):
-    """Given a build description, create a task description"""
-    # import plugin modules first, before iterating over jobs
-    import_sibling_modules(exceptions=("common.py",))
-
-    for job in jobs:
-        # only docker-worker uses a fixed absolute path to find directories
-        if job["worker"]["implementation"] == "docker-worker":
-            job["run"].setdefault("workdir", "/builds/worker")
-
-        taskdesc = copy.deepcopy(job)
-
-        # fill in some empty defaults to make run implementations easier
-        taskdesc.setdefault("attributes", {})
-        taskdesc.setdefault("dependencies", {})
-        taskdesc.setdefault("if-dependencies", [])
-        taskdesc.setdefault("soft-dependencies", [])
-        taskdesc.setdefault("routes", [])
-        taskdesc.setdefault("scopes", [])
-        taskdesc.setdefault("extra", {})
-
-        # give the function for job.run.using on this worker implementation a
-        # chance to set up the task description.
-        configure_taskdesc_for_run(
-            config, job, taskdesc, job["worker"]["implementation"]
-        )
-        del taskdesc["run"]
-
-        # yield only the task description, discarding the job description
-        yield taskdesc
 
 
 # A registry of all functions decorated with run_job_using

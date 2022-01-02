@@ -109,6 +109,15 @@ We will make a best effort during an orderly shutdown to flush all pending data 
 This means a disorderly shutdown (usually a crash)
 may result in child process data being lost.
 
+#### Size
+
+We don't measure or keep an up-to-date calculation of the size of the IPC Payload.
+We do, however, keep a count of the number of times the IPC Payload has been accessed.
+This is used as a (very) conservative estimate of the size of the IPC Payload so we do not exceed the
+[IPC message size limit](https://searchfox.org/mozilla-central/search?q=kMaximumMessageSize).
+
+See [bug 1745660](https://bugzilla.mozilla.org/show_bug.cgi?id=1745660).
+
 ### Mechanics
 
 The rough design is that the parent process can request an immediate flush of pending data,
@@ -127,6 +136,7 @@ Rust is then responsible for turning the pending data into
 FOG supports messaging between the following types of child process and the parent process:
 * content children (via `PContent`
   (for now. See [bug 1641989](https://bugzilla.mozilla.org/show_bug.cgi?id=1641989))
+* gpu children (via `PGPU`)
 
 See
 [the process model docs](../../../../dom/ipc/process_model.html)

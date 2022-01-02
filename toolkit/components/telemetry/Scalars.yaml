@@ -1402,9 +1402,9 @@ datasanitization:
     expires: never
     kind: uint
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -1595,14 +1595,15 @@ datasanitization:
       - 1617241
       - 1645089
       - 1678210
+      - 1744559
     description: >
       A count of how many "session" cookie exceptions a user has set.
     expires: never
     kind: uint
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
@@ -1956,9 +1957,10 @@ pictureinpicture:
     bug_numbers:
       - 1677107
       - 1706843
+      - 1736690
     description:
       The most concurrent Picture-in-Picture players the user had open at any one time.
-    expires: "96"
+    expires: "never"
     kind: uint
     notification_emails:
       - mconley@mozilla.com
@@ -3436,10 +3438,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been activated.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3454,10 +3457,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been deactivated due to device creation failure.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3472,10 +3476,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been deactivated due to a stream read failure.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -4022,9 +4027,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4042,9 +4045,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4061,9 +4062,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4199,6 +4198,21 @@ pdf.viewer:
     kind: uint
     notification_emails:
       - bdahl@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+  is_attachment:
+    bug_numbers:
+      - 1736864
+    description: >
+      How many times a PDF that sends Content-Disposition: attachment is opened.
+    expires: "100"
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -6011,6 +6025,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http_transactions_captive_portal:
     bug_numbers:
@@ -6027,6 +6042,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http_connections_captive_portal:
     bug_numbers:
@@ -6043,6 +6059,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http3_enabled:
     bug_numbers:
@@ -6080,6 +6097,25 @@ networking:
       - 'firefox'
     record_in_processes:
       - 'main'
+
+  trr_connection_cycle_count:
+    bug_numbers:
+      - 1737198
+    description: >
+      Number of times we cycled the TRR connection during a subsession.
+      Keyed by TRR provider URL.
+    expires: never
+    keyed: true
+    kind: uint
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - nhnt11@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'socket'
 
 blocklist:
   lastModified_rs_addons:
@@ -7856,6 +7892,26 @@ cache:
       - 'firefox'
     record_in_processes:
       - 'main'
+
+content:
+  process_max_precise:
+    bug_numbers:
+      - 1741759
+    description: >
+      The maximum number of content processes, submitted when a
+      new maximum is reached.  Replaces CONTENT_PROCESS_MAX and
+      CONTENT_PROCESS_PRECISE_MAX.
+      
+    notification_emails:
+      - kmadan@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    expires: "98"
+    kind: uint
 
 opaque.response.blocking:
   parsing_size_kb:

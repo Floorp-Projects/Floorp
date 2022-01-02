@@ -49,9 +49,9 @@ export default class LoginIntro extends HTMLElement {
     this.shadowRoot
       .querySelector(".illustration")
       .classList.toggle("logged-in", syncState.loggedIn);
-
     let supportURL =
-      window.AboutLoginsUtils.supportBaseURL + "firefox-lockwise";
+      window.AboutLoginsUtils.supportBaseURL +
+      "password-manager-remember-delete-edit-logins";
     this.shadowRoot
       .querySelector(".intro-help-link")
       .setAttribute("href", supportURL);

@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,<p>test JSTerm Helpers autocomplete";
+  "data:text/html;charset=utf8,<!DOCTYPE html><p>test JSTerm Helpers autocomplete";
 
 add_task(async function() {
   await pushPref("devtools.editor.autoclosebrackets", false);

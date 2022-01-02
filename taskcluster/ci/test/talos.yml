@@ -775,7 +775,7 @@ talos-webgl-profiling:
     treeherder-symbol: T-Prof(webgl)
     tier: 2
     variants:
-        - webgl-ipc-profiling
+        - webgl-ipc
     run-on-projects: []
     max-run-time: 1800
     mozharness:

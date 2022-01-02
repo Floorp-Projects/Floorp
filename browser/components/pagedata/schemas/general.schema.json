@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "general.schema.json",
+  "title": "General",
+  "description": "General data about a page",
+  "type": "object",
+  "properties": {
+    "url": {
+      "description": "The page's url",
+      "type": "string"
+    },
+    "date": {
+      "description": "The date the data was collected as a timestamp",
+      "type": "number"
+    },
+    "description": {
+      "description": "A description of the page",
+      "type": "string"
+    },
+    "siteName": {
+      "description": "A friendly name for the site",
+      "type": "string"
+    },
+    "image": {
+      "description": "The url for an image representative of the page",
+      "type": "string"
+    }
+  },
+  "required": ["url", "date"]
+}

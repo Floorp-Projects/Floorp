@@ -65,6 +65,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "GetKnownFolderPath.cpp",
         "TimeStamp_windows.cpp",
+        "WindowsDllMain.cpp",
         "WindowsDpiInitialization.cpp",
         "WindowsMapRemoteView.cpp",
         "WindowsProcessMitigations.cpp",

@@ -36,14 +36,14 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
  private:
   ~RemoteWorkerParent();
 
-  PFetchEventOpProxyParent* AllocPFetchEventOpProxyParent(
-      const ServiceWorkerFetchEventOpArgs& aArgs);
-
-  bool DeallocPFetchEventOpProxyParent(PFetchEventOpProxyParent* aActor);
+  already_AddRefed<PFetchEventOpProxyParent> AllocPFetchEventOpProxyParent(
+      const ParentToChildServiceWorkerFetchEventOpArgs& aArgs);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
   mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue);
+
+  mozilla::ipc::IPCResult RecvNotifyLock(const bool& aCreated);
 
   mozilla::ipc::IPCResult RecvClose();
 

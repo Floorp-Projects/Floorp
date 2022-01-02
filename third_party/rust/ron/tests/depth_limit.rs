@@ -49,10 +49,10 @@ fn depth_limit() {
     };
 
     let pretty = ron::ser::PrettyConfig::new()
-        .with_depth_limit(1)
-        .with_separate_tuple_members(true)
-        .with_enumerate_arrays(true)
-        .with_new_line("\n".to_string());
+        .depth_limit(1)
+        .separate_tuple_members(true)
+        .enumerate_arrays(true)
+        .new_line("\n".to_string());
     let s = ron::ser::to_string_pretty(&data, pretty);
 
     assert_eq!(s, Ok(EXPECTED.to_string()));

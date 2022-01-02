@@ -25,7 +25,6 @@ namespace layers {
 
 class TextureHost;
 class DataTextureSource;
-class BasicCompositor;
 class Compositor;
 class CompositorOGL;
 
@@ -38,58 +37,16 @@ class TextureSourceProvider {
   virtual already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) = 0;
 
-  virtual already_AddRefed<DataTextureSource> CreateDataTextureSourceAround(
-      gfx::DataSourceSurface* aSurface) {
-    return nullptr;
-  }
-
-  virtual already_AddRefed<DataTextureSource>
-  CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture) {
-    return nullptr;
-  }
-
   virtual TimeStamp GetLastCompositionEndTime() const = 0;
 
-  // Return true if the effect type is supported.
-  //
-  // By default Compositor implementations should support all effects but in
-  // some rare cases it is not possible to support an effect efficiently.
-  // This is the case for BasicCompositor with EffectYCbCr.
-  virtual bool SupportsEffect(EffectTypes aEffect) { return true; }
-
-  /// Most compositor backends operate asynchronously under the hood. This
-  /// means that when a layer stops using a texture it is often desirable to
-  /// wait for the end of the next composition before releasing the texture's
-  /// ReadLock.
-  /// This function provides a convenient way to do this delayed unlocking, if
-  /// the texture itself requires it.
-  virtual void UnlockAfterComposition(TextureHost* aTexture);
-
-  /// Most compositor backends operate asynchronously under the hood. This
-  /// means that when a layer stops using a texture it is often desirable to
-  /// wait for the end of the next composition before NotifyNotUsed() call.
-  /// This function provides a convenient way to do this delayed NotifyNotUsed()
-  /// call, if the texture itself requires it.
-  /// See bug 1260611 and bug 1252835
-  ///
-  /// Returns true if notified, false otherwise.
-  virtual bool NotifyNotUsedAfterComposition(TextureHost* aTextureHost);
-
-  virtual void MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost) {}
   virtual void TryUnlockTextures() {}
 
   // If overridden, make sure to call the base function.
   virtual void Destroy();
 
-  void FlushPendingNotifyNotUsed();
-
   // If this provider is also a Compositor, return the compositor. Otherwise
   // return null.
   virtual Compositor* AsCompositor() { return nullptr; }
-
-  // If this provider is also a BasicCompositor, return the compositor.
-  // Otherwise return nullptr.
-  virtual BasicCompositor* AsBasicCompositor() { return nullptr; }
 
   // If this provider is also a CompositorOGL, return the compositor. Otherwise
   // return nullptr.
@@ -109,30 +66,8 @@ class TextureSourceProvider {
   // used to composite).
   virtual bool IsValid() const = 0;
 
- public:
-  class MOZ_STACK_CLASS AutoReadUnlockTextures final {
-   public:
-    explicit AutoReadUnlockTextures(TextureSourceProvider* aProvider)
-        : mProvider(aProvider) {}
-    ~AutoReadUnlockTextures() { mProvider->ReadUnlockTextures(); }
-
-   private:
-    RefPtr<TextureSourceProvider> mProvider;
-  };
-
  protected:
-  // Should be called at the end of each composition.
-  void ReadUnlockTextures();
-
   virtual ~TextureSourceProvider();
-
- private:
-  // An array of locks that will need to be unlocked after the next composition.
-  nsTArray<RefPtr<TextureHost>> mUnlockAfterComposition;
-
-  // An array of TextureHosts that will need to call NotifyNotUsed() after the
-  // next composition.
-  nsTArray<RefPtr<TextureHost>> mNotifyNotUsedAfterComposition;
 };
 
 }  // namespace layers

@@ -25,26 +25,31 @@ nl{
         angle{
             arc-minute{
                 dnam{"boogminuten"}
+                gender{"common"}
                 one{"{0} boogminuut"}
                 other{"{0} boogminuten"}
             }
             arc-second{
                 dnam{"boogseconden"}
+                gender{"common"}
                 one{"{0} boogseconde"}
                 other{"{0} boogseconden"}
             }
             degree{
                 dnam{"booggraden"}
+                gender{"common"}
                 one{"{0} booggraad"}
                 other{"{0} booggraden"}
             }
             radian{
                 dnam{"radiaal"}
+                gender{"common"}
                 one{"{0} radiaal"}
                 other{"{0} radialen"}
             }
             revolution{
                 dnam{"toeren"}
+                gender{"common"}
                 one{"{0} toer"}
                 other{"{0} toeren"}
             }
@@ -108,6 +113,14 @@ nl{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobi{0}"}
             10p-1{"deci{0}"}
             10p-12{"pico{0}"}
             10p-15{"femto{0}"}
@@ -168,8 +181,14 @@ nl{
             times{"{0}{1}"}
         }
         concentr{
+            item{
+                dnam{"onderdelen"}
+                one{"{0} onderdeel"}
+                other{"{0} onderdelen"}
+            }
             karat{
                 dnam{"karaat"}
+                gender{"neuter"}
                 one{"{0} karaat"}
                 other{"{0} karaat"}
             }
@@ -183,6 +202,9 @@ nl{
                 one{"{0} millimol per liter"}
                 other{"{0} millimol per liter"}
             }
+            mole{
+                gender{"common"}
+            }
             percent{
                 dnam{"procent"}
                 gender{"common"}
@@ -191,16 +213,19 @@ nl{
             }
             permille{
                 dnam{"promille"}
+                gender{"neuter"}
                 one{"{0} promille"}
                 other{"{0} promille"}
             }
             permillion{
                 dnam{"ppm"}
+                gender{"common"}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
             }
             permyriad{
                 dnam{"basispunt"}
+                gender{"neuter"}
                 one{"{0} basispunt"}
                 other{"{0} basispunten"}
             }
@@ -240,11 +265,13 @@ nl{
         digital{
             bit{
                 dnam{"bit"}
+                gender{"common"}
                 one{"{0} bit"}
                 other{"{0} bits"}
             }
             byte{
                 dnam{"byte"}
+                gender{"common"}
                 one{"{0} byte"}
                 other{"{0} byte"}
             }
@@ -297,6 +324,7 @@ nl{
         duration{
             century{
                 dnam{"eeuwen"}
+                gender{"common"}
                 one{"{0} eeuw"}
                 other{"{0} eeuwen"}
             }
@@ -307,8 +335,12 @@ nl{
                 other{"{0} dagen"}
                 per{"{0} per dag"}
             }
+            day-person{
+                gender{"common"}
+            }
             decade{
                 dnam{"decennia"}
+                gender{"neuter"}
                 one{"{0} decennium"}
                 other{"{0} decennia"}
             }
@@ -373,6 +405,7 @@ nl{
         electric{
             ampere{
                 dnam{"ampère"}
+                gender{"common"}
                 one{"{0} ampère"}
                 other{"{0} ampère"}
             }
@@ -383,11 +416,13 @@ nl{
             }
             ohm{
                 dnam{"ohm"}
+                gender{"common"}
                 one{"{0} ohm"}
                 other{"{0} ohm"}
             }
             volt{
                 dnam{"volt"}
+                gender{"common"}
                 one{"{0} volt"}
                 other{"{0} volt"}
             }
@@ -400,6 +435,7 @@ nl{
             }
             calorie{
                 dnam{"calorie"}
+                gender{"common"}
                 one{"{0} calorie"}
                 other{"{0} calorieën"}
             }
@@ -416,6 +452,7 @@ nl{
             }
             joule{
                 dnam{"joules"}
+                gender{"common"}
                 one{"{0} joule"}
                 other{"{0} joules"}
             }
@@ -442,8 +479,14 @@ nl{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ki­lo­wattuur per 100 kilometer"}
+                one{"{0} ki­lo­wattuur per 100 kilometer"}
+                other{"{0} ki­lo­wattuur per 100 kilometer"}
+            }
             newton{
                 dnam{"newton"}
+                gender{"common"}
                 one{"{0} newton"}
                 other{"{0} newton"}
             }
@@ -461,6 +504,7 @@ nl{
             }
             hertz{
                 dnam{"hertz"}
+                gender{"common"}
                 one{"{0} hertz"}
                 other{"{0} hertz"}
             }
@@ -477,7 +521,7 @@ nl{
         }
         graphics{
             dot{
-                dnam{"punt"}
+                dnam{"dot"}
                 one{"dot"}
                 other{"{0} dot"}
             }
@@ -493,6 +537,7 @@ nl{
             }
             em{
                 dnam{"typografische em"}
+                gender{"common"}
                 one{"{0} em"}
                 other{"{0} ems"}
             }
@@ -503,6 +548,7 @@ nl{
             }
             pixel{
                 dnam{"pixels"}
+                gender{"common"}
                 one{"{0} pixel"}
                 other{"{0} pixels"}
             }
@@ -591,6 +637,7 @@ nl{
             }
             mile-scandinavian{
                 dnam{"Scandinavische mijl"}
+                gender{"common"}
                 one{"{0} Scandinavische mijl"}
                 other{"{0} Scandinavische mijl"}
             }
@@ -641,8 +688,21 @@ nl{
             }
         }
         light{
+            candela{
+                dnam{"candela"}
+                gender{"common"}
+                one{"{0} candela"}
+                other{"{0} candela"}
+            }
+            lumen{
+                dnam{"lumen"}
+                gender{"neuter"}
+                one{"{0} lumen"}
+                other{"{0} lumen"}
+            }
             lux{
                 dnam{"lux"}
+                gender{"common"}
                 one{"{0} lux"}
                 other{"{0} lux"}
             }
@@ -656,6 +716,7 @@ nl{
         mass{
             carat{
                 dnam{"karaat"}
+                gender{"neuter"}
                 one{"{0} karaat"}
                 other{"{0} karaat"}
             }
@@ -693,6 +754,7 @@ nl{
             }
             metric-ton{
                 dnam{"metrische ton"}
+                gender{"common"}
                 one{"{0} metrische ton"}
                 other{"{0} metrische ton"}
             }
@@ -771,6 +833,7 @@ nl{
             }
             watt{
                 dnam{"watt"}
+                gender{"common"}
                 one{"{0} watt"}
                 other{"{0} watt"}
             }
@@ -778,11 +841,13 @@ nl{
         pressure{
             atmosphere{
                 dnam{"atmosfeer"}
+                gender{"common"}
                 one{"{0} atmosfeer"}
                 other{"{0} atmosfeer"}
             }
             bar{
                 dnam{"bar"}
+                gender{"common"}
                 one{"{0} bar"}
                 other{"{0} bar"}
             }
@@ -819,6 +884,7 @@ nl{
             }
             pascal{
                 dnam{"pascal"}
+                gender{"common"}
                 one{"{0} pascal"}
                 other{"{0} pascal"}
             }
@@ -961,6 +1027,7 @@ nl{
             }
             cup-metric{
                 dnam{"metrische cup"}
+                gender{"common"}
                 one{"{0} metrische cup"}
                 other{"{0} metrische cup"}
             }
@@ -1062,6 +1129,7 @@ nl{
             }
             pint-metric{
                 dnam{"metrische pint"}
+                gender{"common"}
                 one{"{0} metrische pint"}
                 other{"{0} metrische pint"}
             }
@@ -1188,6 +1256,11 @@ nl{
             times{"{0}{1}"}
         }
         concentr{
+            item{
+                dnam{"onderdeel"}
+                one{"{0} onderdeel"}
+                other{"{0} onderdelen"}
+            }
             karat{
                 dnam{"K"}
                 one{"{0} K"}
@@ -1317,6 +1390,10 @@ nl{
                 other{"{0} d"}
                 per{"{0}/d"}
             }
+            decade{
+                one{"{0} dec."}
+                other{"{0} dec."}
+            }
             hour{
                 dnam{"u"}
                 one{"{0} u"}
@@ -1423,6 +1500,12 @@ nl{
                 other{"{0} kWh"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0}kWh/100km"}
+                other{"{0}kWh/100km"}
+            }
+        }
         frequency{
             gigahertz{
                 dnam{"GHz"}
@@ -1446,6 +1529,11 @@ nl{
             }
         }
         graphics{
+            dot{
+                dnam{"dot"}
+                one{"{0} dot"}
+                other{"{0} dot"}
+            }
             megapixel{
                 dnam{"MP"}
             }
@@ -1572,6 +1660,11 @@ nl{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            grain{
+                dnam{"gr"}
+                one{"{0} gr"}
+                other{"{0} gr"}
             }
             gram{
                 dnam{"g"}
@@ -1739,8 +1832,6 @@ nl{
         volume{
             acre-foot{
                 dnam{"acre ft"}
-                one{"{0} l/m²"}
-                other{"{0} l/m²"}
             }
             bushel{
                 dnam{"bu"}
@@ -1804,6 +1895,21 @@ nl{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon-imperial{
+                dnam{"imp. d l"}
+                one{"{0} imp. d l"}
+                other{"{0} imp. d l"}
+            }
+            dram{
+                dnam{"fl dr"}
+                one{"{0} fl dr"}
+                other{"{0} fl dr"}
+            }
+            drop{
+                dnam{"dr"}
+                one{"{0} dr"}
+                other{"{0} drs"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
@@ -1845,6 +1951,11 @@ nl{
                 dnam{"ml"}
                 one{"{0} ml"}
                 other{"{0} ml"}
+            }
+            pinch{
+                dnam{"sn"}
+                one{"{0} sn"}
+                other{"{0} sn"}
             }
             pint{
                 dnam{"pt"}
@@ -1970,6 +2081,11 @@ nl{
             times{"{0}{1}"}
         }
         concentr{
+            item{
+                dnam{"onderdeel"}
+                one{"{0} onderdeel"}
+                other{"{0} onderdelen"}
+            }
             karat{
                 dnam{"K"}
                 one{"{0} K"}
@@ -2238,10 +2354,6 @@ nl{
             }
         }
         graphics{
-            dot{
-                one{"{0} dot"}
-                other{"{0} px"}
-            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}

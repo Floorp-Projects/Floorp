@@ -394,6 +394,19 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
+      let currentDialogBox = gBrowser.selectedBrowser.tabDialogBox;
+      if (currentDialogBox) {
+        let manager = currentDialogBox.getTabDialogManager();
+        let dialogs = manager.hasDialogs && manager.dialogs;
+        if (dialogs) {
+          for (let dialog of dialogs) {
+            if (dialog._openedURL.includes("print.html")) {
+              dialog.close();
+              return Promise.resolve();
+            }
+          }
+        }
+      }
       let browsingContext = gBrowser.selectedBrowser.browsingContext;
       let focusedBc = Services.focus.focusedContentBrowsingContext;
       if (
@@ -1062,10 +1075,6 @@ class PrintPreview extends MozElements.BaseControl {
     return this.sourceBrowsingContext;
   }
 
-  get canPrintSelectionOnly() {
-    return !!this.sourceBrowsingContext.currentRemoteType;
-  }
-
   get currentBrowsingContext() {
     return this.lastPreviewBrowser.browsingContext;
   }
@@ -1100,8 +1109,7 @@ class PrintPreview extends MozElements.BaseControl {
   }
 
   async _printPreview(settings, { sourceVersion, sourceURI }) {
-    let printSelectionOnly =
-      sourceVersion == "selection" && this.canPrintSelectionOnly;
+    let printSelectionOnly = sourceVersion == "selection";
     let simplifyPage = sourceVersion == "simplified";
     let selectionTypeBrowser;
     let previewBrowser;

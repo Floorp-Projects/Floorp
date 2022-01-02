@@ -14,7 +14,7 @@
           C4661 No suitable definition provided for explicit template instantiation request.
           C4715 Not all control paths return a value.
           C4706 Assignment within conditional expression.
-          C4005 Macro redifintion.
+          C4005 Macro redefinition.
           C4068 Unknown pragma.
           C4267 Conversion from size_t to type, possible loss of data.
           C4910 __declspec(dllexport) and extern are incompatible on an explicit instantiation.

@@ -404,7 +404,7 @@ en >> it
 @supported=es-AR, es
 es-MX >> es-AR
 @supported=fr, en, en-GB
-en-CA >> en-GB
+en-CA >> en
 @supported=de-AT, de-DE, de-CH
 de >> de-DE
 
@@ -412,7 +412,7 @@ de >> de-DE
 @supported=es-AR, es
 es-MX >> es-AR
 @supported=fr, en, en-GB
-en-CA >> en-GB
+en-CA >> en
 @supported=de-AT, de-DE, de-CH
 de >> de-DE
 
@@ -837,7 +837,7 @@ pt-US, pt-PT >> pt
 
 ** test: TestScriptAndRegion
 @supported=en-GB, en
-en-CA >> en-GB
+en-CA >> en
 # fr-CA is a "close enough" match to "fr" to be returned in favor of "en-GB"
 @supported=fr, en-GB, en
 fr-CA, en-CA >> fr
@@ -846,7 +846,7 @@ zh-HK >> zh-Hant
 
 @favor=script
 @supported=en-GB, en
-en-CA >> en-GB
+en-CA >> en
 @supported=fr, en-GB, en
 fr-CA, en-CA >> fr
 @supported=zh-Hant, zh-TW
@@ -1306,7 +1306,6 @@ fr-CA >> und
 # Great Britain fallback
 en-AU >> en-GB
 en-BZ >> en-GB
-en-CA >> en-GB
 en-IN >> en-GB
 en-IE >> en-GB
 en-JM >> en-GB
@@ -1316,6 +1315,7 @@ en-TT >> en-GB
 en-ZA >> en-GB
 
 # United States fallback
+en-CA >> en-US
 en-US >> en-US
 en >> en-US
 
@@ -1325,7 +1325,7 @@ ja >> und
 fr-CA >> en-US
 en-AU >> en-GB
 en-BZ >> en-GB
-en-CA >> en-GB
+en-CA >> en-US
 en-IN >> en-GB
 en-IE >> en-GB
 en-JM >> en-GB
@@ -1877,10 +1877,10 @@ es-MX >> es-419
 
 ** test: testLooseMatchForEnglish_getBestMatches
 @supported=en, en-GB
-en-CA >> en-GB
+en-CA >> en
 
 @favor=script
-en-CA >> en-GB
+en-CA >> en
 
 ** test: testLooseMatchForChinese_getBestMatches
 @supported=zh

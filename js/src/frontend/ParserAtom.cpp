@@ -9,13 +9,11 @@
 #include "mozilla/TextUtils.h"  // mozilla::IsAscii
 
 #include <memory>  // std::uninitialized_fill_n
-#include <type_traits>
 
 #include "jsnum.h"  // CharsToNumber
 
 #include "frontend/BytecodeCompiler.h"  // IsIdentifier
 #include "frontend/CompilationStencil.h"
-#include "frontend/NameCollections.h"
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
@@ -23,6 +21,7 @@
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
 #include "vm/SelfHosting.h"  // ExtendedUnclonedSelfHostedFunctionNamePrefix
+#include "vm/StaticStrings.h"
 #include "vm/StringType.h"
 
 using namespace js;
@@ -395,6 +394,49 @@ bool ParserAtomsTable::addPlaceholder(JSContext* cx) {
   return true;
 }
 
+TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomIndex(
+    JSContext* cx, const CompilationStencil& context,
+    TaggedParserAtomIndex atom) {
+  // When the atom is not a parser atom index, the value represent the atom
+  // without the need for a ParserAtom, and thus we can skip interning it.
+  if (!atom.isParserAtomIndex()) {
+    return atom;
+  }
+  auto index = atom.toParserAtomIndex();
+  return internExternalParserAtom(cx, context.parserAtomData[index]);
+}
+
+bool ParserAtomsTable::isEqualToExternalParserAtomIndex(
+    TaggedParserAtomIndex internal, const CompilationStencil& context,
+    TaggedParserAtomIndex external) const {
+  // If one is null, well-known or static, then testing the equality of the bits
+  // of the TaggedParserAtomIndex is sufficient.
+  if (!internal.isParserAtomIndex() || !external.isParserAtomIndex()) {
+    return internal == external;
+  }
+
+  // Otherwise we have to compare 2 atom-indexes from different ParserAtomTable.
+  ParserAtom* internalAtom = getParserAtom(internal.toParserAtomIndex());
+  ParserAtom* externalAtom =
+      context.parserAtomData[external.toParserAtomIndex()];
+
+  if (internalAtom->hash() != externalAtom->hash()) {
+    return false;
+  }
+
+  HashNumber hash = internalAtom->hash();
+  size_t length = internalAtom->length();
+  if (internalAtom->hasLatin1Chars()) {
+    const Latin1Char* chars = internalAtom->latin1Chars();
+    InflatedChar16Sequence<Latin1Char> seq(chars, length);
+    return externalAtom->equalsSeq(hash, seq);
+  }
+
+  const char16_t* chars = internalAtom->twoByteChars();
+  InflatedChar16Sequence<char16_t> seq(chars, length);
+  return externalAtom->equalsSeq(hash, seq);
+}
+
 bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
                                      size_t count) {
   if (count >= TaggedParserAtomIndex::IndexLimit) {
@@ -574,11 +616,7 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   }
 
   const auto* atom = getParserAtom(index.toParserAtomIndex());
-  if (atom->length() < 2) {
-    return false;
-  }
-
-  return atom->charAt(0) == '#';
+  return atom->isPrivateName();
 }
 
 bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(

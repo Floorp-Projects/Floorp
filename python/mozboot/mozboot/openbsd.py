@@ -11,7 +11,7 @@ class OpenBSDBootstrapper(BaseBootstrapper):
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
-        self.packages = ["gmake", "gtar", "rust", "wget", "unzip", "zip"]
+        self.packages = ["gmake", "gtar", "rust", "unzip", "zip"]
 
         self.browser_packages = ["llvm", "nasm", "gtk+3", "dbus-glib", "pulseaudio"]
 

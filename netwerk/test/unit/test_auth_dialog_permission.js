@@ -10,9 +10,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+var prefs = Services.prefs;
 
 // Since this test creates a TYPE_DOCUMENT channel via javascript, it will
 // end up using the wrong LoadInfo constructor. Setting this pref will disable
@@ -102,16 +100,15 @@ Requestor.prototype = {
 };
 
 function make_uri(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  return ios.newURI(url);
+  return Services.io.newURI(url);
 }
 
 function makeChan(loadingUrl, url, contentPolicy) {
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
   var uri = make_uri(loadingUrl);
-  var principal = ssm.createContentPrincipal(uri, {});
+  var principal = Services.scriptSecurityManager.createContentPrincipal(
+    uri,
+    {}
+  );
 
   return NetUtil.newChannel({
     uri: url,

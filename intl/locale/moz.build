@@ -25,23 +25,21 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "locale"
 
 EXPORTS += [
-    "DateTimeFormat.h",
     "nsLanguageAtomService.h",
     "nsUConvPropertySearch.h",
 ]
 
 EXPORTS.mozilla.intl += [
+    "AppDateTimeFormat.h",
     "LocaleService.h",
-    "MozLocale.h",
     "MozLocaleBindings.h",
     "OSPreferences.h",
     "Quotes.h",
 ]
 
 UNIFIED_SOURCES += [
-    "DateTimeFormat.cpp",
+    "AppDateTimeFormat.cpp",
     "LocaleService.cpp",
-    "MozLocale.cpp",
     "nsLanguageAtomService.cpp",
     "nsUConvPropertySearch.cpp",
     "OSPreferences.cpp",

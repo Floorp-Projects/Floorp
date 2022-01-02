@@ -476,6 +476,24 @@ fn read_hdlr() {
 }
 
 #[test]
+fn read_hdlr_multiple_nul_in_name() {
+    let mut stream = make_fullbox(BoxSize::Short(45), b"hdlr", 0, |s| {
+        s.B32(0)
+            .append_bytes(b"vide")
+            .B32(0)
+            .B32(0)
+            .B32(0)
+            .append_bytes(b"Vide\0Handler")
+            .B8(0) // null-terminate string
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::HandlerBox);
+    assert_eq!(stream.head.size, 45);
+    assert!(super::read_hdlr(&mut stream, ParseStrictness::Strict).is_err());
+}
+
+#[test]
 fn read_hdlr_short_name() {
     let mut stream = make_fullbox(BoxSize::Short(33), b"hdlr", 0, |s| {
         s.B32(0).append_bytes(b"vide").B32(0).B32(0).B32(0).B8(0) // null-terminate string
@@ -1056,6 +1074,35 @@ fn read_esds_aac_type5() {
     assert_eq!(es.extended_audio_object_type, Some(5));
     assert_eq!(es.audio_sample_rate, Some(24000));
     assert_eq!(es.audio_channel_count, Some(8));
+    assert_eq!(es.codec_esds, aac_esds);
+    assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
+}
+
+#[test]
+fn read_esds_mpeg2_aac_lc() {
+    // Recognize MPEG-2 AAC LC (ISO 13818-7) object type as AAC.
+    // Extracted from BMO #1722497 sdasdasdasd_001.mp4 using Bento4.
+    // "mp4extract --payload-only moov/trak[1]/mdia/minf/stbl/stsd/mp4a/esds sdasdasdasd_001.mp4 /dev/stdout | xxd -i -c 15"
+    let aac_esds = vec![
+        0x03, 0x19, 0x00, 0x00, 0x00, 0x04, 0x11, 0x67, 0x15, 0x00, 0x02, 0x38, 0x00, 0x01, 0x0f,
+        0xd0, 0x00, 0x00, 0xf5, 0x48, 0x05, 0x02, 0x13, 0x90, 0x06, 0x01, 0x02,
+    ];
+    let aac_dc_descriptor = &aac_esds[22..24];
+
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+            .append_bytes(aac_esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let es = super::read_esds(&mut stream).unwrap();
+
+    assert_eq!(es.audio_codec, super::CodecType::AAC);
+    assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.extended_audio_object_type, None);
+    assert_eq!(es.audio_sample_rate, Some(22050));
+    assert_eq!(es.audio_channel_count, Some(2));
     assert_eq!(es.codec_esds, aac_esds);
     assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
 }

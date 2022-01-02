@@ -522,7 +522,7 @@ class MochitestArguments(ArgumentContainer):
             {
                 "action": "store_true",
                 "default": False,
-                "help": "Start the browser JS debugger before running the test. Implies --no-autorun.",  # NOQA: E501
+                "help": "Start the browser JS debugger before running the test.",
             },
         ],
         [
@@ -1205,6 +1205,14 @@ class AndroidArguments(ArgumentContainer):
             },
         ],
         [
+            ["--aab"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Install the test_runner app using AAB.",
+            },
+        ],
+        [
             ["--deviceSerial"],
             {
                 "dest": "deviceSerial",
@@ -1307,7 +1315,7 @@ class AndroidArguments(ArgumentContainer):
         options.webServer = options.remoteWebServer
 
         if options.app is None:
-            options.app = "org.mozilla.geckoview.test"
+            options.app = "org.mozilla.geckoview.test_runner"
 
         if build_obj and "MOZ_HOST_BIN" in os.environ:
             options.xrePath = os.environ["MOZ_HOST_BIN"]

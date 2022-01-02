@@ -147,6 +147,7 @@ Status DecodeFile(const DecompressParams& dparams,
         io->frames.back().jpeg_data = std::move(jpeg_data);
       }
       // Skip frames that are not displayed.
+      bool found_displayed_frame = true;
       do {
         dec_ok =
             DecodeFrame(dparams, &dec_state, pool, &reader, &io->frames.back(),
@@ -155,13 +156,19 @@ Status DecodeFile(const DecompressParams& dparams,
           JXL_RETURN_IF_ERROR(dec_ok);
         } else if (!dec_ok) {
           io->frames.pop_back();
+          found_displayed_frame = false;
           break;
         }
       } while (dec_state.shared->frame_header.frame_type !=
                    FrameType::kRegularFrame &&
                dec_state.shared->frame_header.frame_type !=
                    FrameType::kSkipProgressive);
-      io->dec_pixels += io->frames.back().xsize() * io->frames.back().ysize();
+      if (found_displayed_frame) {
+        // if found_displayed_frame is true io->frames shouldn't be empty
+        // because we added a frame before the loop.
+        JXL_ASSERT(!io->frames.empty());
+        io->dec_pixels += io->frames.back().xsize() * io->frames.back().ysize();
+      }
     } while (!dec_state.shared->frame_header.is_last && dec_ok);
 
     if (io->frames.empty()) return JXL_FAILURE("Not enough data.");

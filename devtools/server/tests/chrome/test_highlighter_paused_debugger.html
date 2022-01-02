@@ -17,7 +17,7 @@ Test the PausedDebuggerOverlay highlighter.
 window.onload = async function() {
   SimpleTest.waitForExplicitFinish();
 
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const {require} = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   require("devtools/server/actors/inspector/inspector");
   const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
   const {PausedDebuggerOverlay} = require("devtools/server/actors/highlighters/paused-debugger");

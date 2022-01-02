@@ -18,7 +18,7 @@ void misuseStackClass(int len) {
   Stack valid;
   Stack alsoValid[2];
   static Stack notValid; // expected-error {{variable of type 'Stack' only valid on the stack}} expected-note {{value incorrectly allocated in a global variable}}
-  static Stack alsoNotValid[2]; // expected-error {{variable of type 'Stack [2]' only valid on the stack}} expected-note {{'Stack [2]' is a stack type because it is an array of stack type 'Stack'}} expected-note {{value incorrectly allocated in a global variable}}
+  static Stack alsoNotValid[2]; // expected-error-re {{variable of type 'Stack{{ ?}}[2]' only valid on the stack}} expected-note-re {{'Stack{{ ?}}[2]' is a stack type because it is an array of stack type 'Stack'}} expected-note {{value incorrectly allocated in a global variable}}
 
   gobble(&valid);
   gobble(&notValid);

@@ -10,8 +10,8 @@
 #include "CodecConfig.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
-#include "webrtc/media/base/videoadapter.h"
-#include "call/video_config.h"
+#include "api/video_codecs/video_encoder_config.h"
+#include "media/base/video_adapter.h"
 
 namespace mozilla {
 
@@ -26,6 +26,10 @@ class VideoStreamFactory
     int start_bitrate_bps;
     int max_bitrate_bps;
   };
+
+  static ResolutionAndBitrateLimits GetLimitsFor(unsigned int aWidth,
+                                                 unsigned int aHeight,
+                                                 int aCapBps = 0);
 
   VideoStreamFactory(VideoCodecConfig aConfig,
                      webrtc::VideoCodecMode aCodecMode, int aMinBitrate,

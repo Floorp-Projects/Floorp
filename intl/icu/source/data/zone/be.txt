@@ -1883,6 +1883,9 @@ be{
             lg{"Екацярынбургскі час"}
             ls{"Екацярынбургскі стандартны час"}
         }
+        "meta:Yukon"{
+            ls{"Час Юкана"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

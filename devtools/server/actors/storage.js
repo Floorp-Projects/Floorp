@@ -675,7 +675,7 @@ StorageActors.createActor(
       } else {
         // If we can't find the window by host, fallback to the top window
         // origin attributes.
-        originAttributes = this.storageActor.document.effectiveStoragePrincipal
+        originAttributes = this.storageActor.document?.effectiveStoragePrincipal
           .originAttributes;
       }
 

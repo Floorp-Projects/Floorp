@@ -102,16 +102,4 @@ inline void JS::Zone::removeUniqueId(js::gc::Cell* cell) {
   uniqueIds().remove(cell);
 }
 
-inline void JS::Zone::adoptUniqueIds(JS::Zone* source) {
-  js::AutoEnterOOMUnsafeRegion oomUnsafe;
-  for (js::gc::UniqueIdMap::Enum e(source->uniqueIds()); !e.empty();
-       e.popFront()) {
-    MOZ_ASSERT(!uniqueIds().has(e.front().key()));
-    if (!uniqueIds().put(e.front().key(), e.front().value())) {
-      oomUnsafe.crash("failed to transfer unique ids from off-thread");
-    }
-  }
-  source->uniqueIds().clear();
-}
-
 #endif  // gc_Zone_inl_h

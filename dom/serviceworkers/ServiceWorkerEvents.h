@@ -139,6 +139,7 @@ class FetchEvent final : public ExtendableEvent {
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<Request> mRequest;
   RefPtr<Promise> mHandled;
+  RefPtr<Promise> mPreloadResponse;
   nsCString mScriptSpec;
   nsCString mPreventDefaultScriptSpec;
   nsString mClientId;
@@ -186,6 +187,8 @@ class FetchEvent final : public ExtendableEvent {
   }
 
   Promise* Handled() const { return mHandled; }
+
+  Promise* PreloadResponse() const { return mPreloadResponse; }
 
   void RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv);
 

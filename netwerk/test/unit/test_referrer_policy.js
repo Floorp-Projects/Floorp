@@ -9,9 +9,7 @@ const ReferrerInfo = Components.Constructor(
 function test_policy(test) {
   info("Running test: " + test.toSource());
 
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
+  var prefs = Services.prefs;
   if (test.defaultReferrerPolicyPref !== undefined) {
     prefs.setIntPref(
       "network.http.referer.defaultPolicy",

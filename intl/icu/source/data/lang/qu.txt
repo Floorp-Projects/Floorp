@@ -51,6 +51,7 @@ qu{
         dav{"Taita Simi"}
         de{"Aleman Simi"}
         dje{"Zarma Simi"}
+        doi{"Dogri Simi"}
         dsb{"Bajo Sorbio Simi"}
         dua{"Duala Simi"}
         dv{"Divehi Simi"}
@@ -186,6 +187,7 @@ qu{
         pt{"Portugues Simi"}
         qu{"Runasimi"}
         quc{"Kʼicheʼ Simi"}
+        rhg{"Rohingya Simi"}
         rm{"Romanche Simi"}
         rn{"Rundi Simi"}
         ro{"Rumano Simi"}

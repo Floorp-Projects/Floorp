@@ -19,6 +19,8 @@
 
 namespace jxl {
 
+// Options per-frame, this is not used for codestream-wide settings or global
+// encoder settings.
 typedef struct JxlEncoderOptionsValuesStruct {
   // lossless is a separate setting from cparams because it is a combination
   // setting that overrides multiple settings inside of cparams.
@@ -44,6 +46,8 @@ constexpr unsigned char kContainerHeader[] = {
     0,   0,   0, 0xc, 'J',  'X', 'L', ' ', 0xd, 0xa, 0x87,
     0xa, 0,   0, 0,   0x14, 'f', 't', 'y', 'p', 'j', 'x',
     'l', ' ', 0, 0,   0,    0,   'j', 'x', 'l', ' '};
+
+constexpr unsigned char kLevelBoxHeader[] = {0, 0, 0, 0x9, 'j', 'x', 'l', 'l'};
 
 namespace {
 template <typename T>
@@ -91,6 +95,11 @@ struct JxlEncoderStruct {
   std::vector<uint8_t> output_byte_queue;
 
   bool use_container = false;
+
+  // TODO(lode): move level into jxl::CompressParams since some C++
+  // implementation decisions should be based on it: level 10 allows more
+  // features to be used.
+  uint32_t codestream_level = 5;
   bool store_jpeg_metadata = false;
   jxl::CodecMetadata metadata;
   std::vector<uint8_t> jpeg_metadata;
@@ -105,6 +114,10 @@ struct JxlEncoderStruct {
   // Takes the first frame in the input_frame_queue, encodes it, and appends the
   // bytes to the output_byte_queue.
   JxlEncoderStatus RefillOutputByteQueue();
+
+  bool MustUseContainer() const {
+    return use_container || codestream_level != 5 || store_jpeg_metadata;
+  }
 
   // Appends the bytes of a JXL box header with the provided type and size to
   // the end of the output_byte_queue. If unbounded is true, the size won't be

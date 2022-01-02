@@ -1117,6 +1117,10 @@ fil{
             one{"dolyar ng Liberia"}
             other{"dolyares ng Liberia"}
         }
+        LSL{
+            one{"Lesotho loti"}
+            other{"Lesotho lotis"}
+        }
         LTL{
             one{"Lithuanian litas"}
             other{"Lithuanian litai"}

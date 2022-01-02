@@ -327,6 +327,16 @@ pl{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "UMMMMEEEEd",
+                "UMMMMd",
+                "UMMMd",
+                "yMMdd",
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -448,12 +458,23 @@ pl{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GyMMdd",
+            }
             availableFormats{
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"dd.MM.y GGGGG"}
                 MEd{"E, d.MM"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
@@ -630,12 +651,22 @@ pl{
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "dd.MM.y",
+                "d.MM.y",
                 "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -659,6 +690,7 @@ pl{
                 GyMMMMEd{"E, d MMMM y G"}
                 GyMMMMd{"d MMMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d.MM.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1006,7 +1038,7 @@ pl{
                 }
                 yMMMMEd{
                     M{"E, d MMMM – E, d MMMM y"}
-                    d{"E, d – E, d MMMM y"}
+                    d{"E, d MMMM – E, d MMMM y"}
                     y{"E, d MMMM y – E, d MMMM y"}
                 }
                 yMMMMd{
@@ -1401,6 +1433,16 @@ pl{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GyMMdd",
             }
         }
         persian{

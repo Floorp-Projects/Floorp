@@ -72,6 +72,7 @@ SpecialPowers.pushPrefEnv(
   {"set": [["privacy.trackingprotection.enabled", true],
            ["urlclassifier.trackingTable", "test-track-simple"],
            ["urlclassifier.trackingWhitelistTable", "test-trackwhite-simple"],
+           ["dom.security.https_first", false],
            ["network.stricttransportsecurity.preloadlist", false]]},
   test);
 

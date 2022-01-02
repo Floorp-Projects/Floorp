@@ -212,6 +212,18 @@ ml{
             }
         }
         minimalPairs{
+            case{
+                accusative{"{0} ദിവസത്തിനെ"}
+                dative{"{0} ദിവസത്തിന്"}
+                genitive{"{0} ദിവസത്തിന്റെ"}
+                instrumental{"{0} ദിവസത്തിനാൽ"}
+                locative{"{0} ദിവസത്തിൽ"}
+                nominative{"{0} ദിവസം"}
+                sociative{"{0} ദിവസത്തിനോട്"}
+            }
+            gender{
+                feminine{"{0} സ്ത്രീലിംഗം"}
+            }
             ordinal{
                 other{"{0}-ാമത്തെ വലത്തേക്ക് തിരിയുക."}
             }
@@ -499,6 +511,16 @@ ml{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -672,6 +694,16 @@ ml{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -691,6 +723,7 @@ ml{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1763,7 +1796,7 @@ ml{
             dn{"കാലഘട്ടം"}
         }
         era-narrow{
-            dn{"കാലഘട്ടം"}
+            dn{"കാല."}
         }
         era-short{
             dn{"കാലഘട്ടം"}

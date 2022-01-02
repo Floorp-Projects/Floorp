@@ -13,12 +13,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
+  SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
   SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 // Initialize profile.
 var gProfD = do_get_profile(true);
+Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", true);
 
 // Observer notifications.
 const TOPIC_ADDED = "places-snapshots-added";
@@ -199,6 +201,34 @@ function assertSnapshot(actual, expected) {
       "Should have the Snapshot URL's common name."
     );
   }
+  if (expected.overlappingVisitScoreIs != null) {
+    Assert.equal(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreIs,
+      "Should have an overlappingVisitScore equal to the expected score"
+    );
+  }
+  if (expected.overlappingVisitScoreGreaterThan != null) {
+    Assert.greater(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreGreaterThan,
+      "Should have an overlappingVisitScore greater than the expected score"
+    );
+  }
+  if (expected.overlappingVisitScoreLessThan != null) {
+    Assert.less(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreLessThan,
+      "Should have an overlappingVisitScore less than the expected score"
+    );
+  }
+  if (expected.overlappingVisitScoreLessThanEqualTo != null) {
+    Assert.lessOrEqual(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreLessThanEqualTo,
+      "Should have an overlappingVisitScore less than or equal to the expected score"
+    );
+  }
   if (expected.removedAt) {
     Assert.greaterOrEqual(
       actual.removedAt.getTime(),
@@ -249,9 +279,51 @@ async function assertSnapshots(expected, options) {
 }
 
 /**
+ * Asserts that the snapshots in the database match the expected values.
+ *
+ * @param {Snapshot[]} expected
+ *   The expected snapshots.
+ * @param {object} context
+ *   @see SnapshotSelector.#context.
+ */
+async function assertSnapshotsWithContext(expected, context) {
+  let snapshots = await Snapshots.queryOverlapping(context.url);
+
+  await assertSnapshotList(snapshots, expected);
+}
+/**
  * Clears all data from the snapshots and metadata tables.
  */
 async function reset() {
   await Snapshots.reset();
   await Interactions.reset();
+}
+
+/**
+ * Asserts relevancy scores for snapshots are correct.
+ *
+ * @param {Snapshot[]} combinedSnapshots
+ *   The array of combined snapshots.
+ * @param {object[]} expectedSnapshots
+ *   An array of objects containing expected url and relevancyScore properties.
+ */
+function assertSnapshotScores(combinedSnapshots, expectedSnapshots) {
+  Assert.equal(
+    combinedSnapshots.length,
+    expectedSnapshots.length,
+    "Should have returned the correct amount of snapshots"
+  );
+
+  for (let i = 0; i < combinedSnapshots.length; i++) {
+    Assert.equal(
+      combinedSnapshots[i].url,
+      expectedSnapshots[i].url,
+      "Should have returned the expected URL for the snapshot"
+    );
+    Assert.equal(
+      combinedSnapshots[i].relevancyScore,
+      expectedSnapshots[i].score,
+      `Should have set the expected score for ${expectedSnapshots[i].url}`
+    );
+  }
 }

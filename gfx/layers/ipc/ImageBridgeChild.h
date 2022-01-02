@@ -164,7 +164,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
   base::ProcessId GetParentPid() const override { return OtherPid(); }
 
   PTextureChild* AllocPTextureChild(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId);
@@ -240,9 +240,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   void UseTextures(CompositableClient* aCompositable,
                    const nsTArray<TimedTextureClient>& aTextures) override;
-  void UseComponentAlphaTextures(CompositableClient* aCompositable,
-                                 TextureClient* aClientOnBlack,
-                                 TextureClient* aClientOnWhite) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
 
@@ -269,12 +266,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                      TextureClient* aTexture) override;
 
-  void UpdateTextureRegion(CompositableClient* aCompositable,
-                           const ThebesBufferData& aThebesBufferData,
-                           const nsIntRegion& aUpdatedRegion) override {
-    MOZ_CRASH("should not be called");
-  }
-
   // ISurfaceAllocator
 
   /**
@@ -299,7 +290,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PTextureChild* CreateTexture(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
       LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
       wr::MaybeExternalImageId& aExternalImageId,
       nsISerialEventTarget* aTarget = nullptr) override;

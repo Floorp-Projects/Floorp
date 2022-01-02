@@ -5,7 +5,6 @@
 
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {
   NetworkThrottleManager,
 } = require("devtools/shared/webconsole/throttle");

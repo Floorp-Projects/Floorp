@@ -580,6 +580,3 @@ GeneratedFile(
     entry_point="use_counter_list",
     inputs=["UseCountersWorker.conf"],
 )
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

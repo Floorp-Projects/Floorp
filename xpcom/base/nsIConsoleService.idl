@@ -8,10 +8,20 @@
 interface nsIConsoleListener;
 interface nsIConsoleMessage;
 
-[scriptable, uuid(0eb81d20-c37e-42d4-82a8-ca9ae96bdf52)]
+[scriptable, builtinclass, uuid(0eb81d20-c37e-42d4-82a8-ca9ae96bdf52)]
 interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
+
+    // This is a variant of LogMessage which allows the caller to determine
+    // if the message should be output to an OS-specific log. This is used on
+    // B2G to control whether the message is logged to the android log or not.
+    cenum OutputMode : 8 {
+        SuppressLog = 0,
+        OutputToLog
+    };
+    void logMessageWithMode(in nsIConsoleMessage message,
+                            in nsIConsoleService_OutputMode mode);
 
     /**
      * Convenience method for logging simple messages.

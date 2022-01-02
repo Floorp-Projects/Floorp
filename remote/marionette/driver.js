@@ -1466,6 +1466,42 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 };
 
 /**
+ * Return the shadow root of an element in the document.
+ *
+ * @param {id}
+ *     A web element id reference.
+ * @return {ShadowRoot}
+ *     ShadowRoot of the element.
+ *
+ * @throws {InvalidArgumentError}
+ *     If element <var>id</var> is not a string.
+ * @throws {NoSuchElementError}
+ *     If element represented by reference <var>id</var> is unknown.
+ * @throws {NoSuchShadowRoot}
+ *     Element does not have a shadow root attached.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in chrome current context.
+ */
+GeckoDriver.prototype.getShadowRoot = async function(cmd) {
+  // Bug 1743541: Add support for chrome scope.
+  assert.content(this.context);
+  assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  let id = assert.string(
+    cmd.parameters.id,
+    pprint`Expected "id" to be a string, got ${cmd.parameters.id}`
+  );
+  let webEl = WebElement.fromUUID(id, this.context);
+
+  return this.getActor().getShadowRoot(webEl);
+};
+
+/**
  * Return the active element in the document.
  *
  * @return {WebElement}
@@ -2863,9 +2899,9 @@ GeckoDriver.prototype.teardownReftest = function() {
  *     Right margin in cm. Defaults to 1cm (~0.4 inches).
  * @param {number=} margin.top
  *     Top margin in cm. Defaults to 1cm (~0.4 inches).
- * @param {string=} pageRanges (not supported)
- *     Paper ranges to print, e.g., '1-5, 8, 11-13'.
- *     Defaults to the empty string, which means print all pages.
+ * @param {Array.<string|number>=} pageRanges
+ *     Paper ranges to print, e.g., ['1-5', 8, '11-13'].
+ *     Defaults to the empty array, which means print all pages.
  * @param {number=} page.height
  *     Paper height in cm. Defaults to US letter height (11 inches / 27.94cm)
  * @param {number=} page.width
@@ -2914,6 +2950,7 @@ GeckoDriver.prototype.print = async function(cmd) {
   assert.boolean(settings.shrinkToFit);
   assert.boolean(settings.landscape);
   assert.boolean(settings.printBackground);
+  assert.array(settings.pageRanges);
 
   const linkedBrowser = this.curBrowser.tab.linkedBrowser;
   const filePath = await print.printToFile(linkedBrowser, settings);
@@ -3014,6 +3051,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetElementTagName": GeckoDriver.prototype.getElementTagName,
   "WebDriver:GetElementText": GeckoDriver.prototype.getElementText,
   "WebDriver:GetPageSource": GeckoDriver.prototype.getPageSource,
+  "WebDriver:GetShadowRoot": GeckoDriver.prototype.getShadowRoot,
   "WebDriver:GetTimeouts": GeckoDriver.prototype.getTimeouts,
   "WebDriver:GetTitle": GeckoDriver.prototype.getTitle,
   "WebDriver:GetWindowHandle": GeckoDriver.prototype.getWindowHandle,

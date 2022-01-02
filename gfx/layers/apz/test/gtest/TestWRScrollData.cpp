@@ -63,8 +63,6 @@ TestWRScrollData TestWRScrollData::Create(const char* aTreeShape,
     if (aVisibleRegions) {
       layer.SetVisibleRegion(LayerIntRegion::FromUnknownRegion(
           aVisibleRegions[entry.mLayerIndex]));
-      APZTestAccess::SetEventRegions(
-          layer, EventRegions(aVisibleRegions[entry.mLayerIndex]));
     }
     if (aTransforms) {
       layer.SetTransform(aTransforms[entry.mLayerIndex]);

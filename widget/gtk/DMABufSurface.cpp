@@ -507,10 +507,10 @@ bool DMABufSurfaceRGBA::Serialize(
     refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
   }
 
-  aOutDescriptor =
-      SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, mGbmBufferFlags,
-                              fds, width, height, format, strides, offsets,
-                              GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
+  aOutDescriptor = SurfaceDescriptorDMABuf(
+      mSurfaceType, mBufferModifier, mGbmBufferFlags, fds, width, height,
+      format, strides, offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID,
+      refCountFDs);
   return true;
 }
 
@@ -563,12 +563,13 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
   mEGLImage =
       egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
                         nullptr, attribs.Elements());
+
+  CloseFileDescriptors(lockFD);
+
   if (mEGLImage == LOCAL_EGL_NO_IMAGE) {
     LOGDMABUF(("EGLImageKHR creation failed"));
     return false;
   }
-
-  CloseFileDescriptors(lockFD);
 
   aGLContext->MakeCurrent();
   aGLContext->fGenTextures(1, &mTexture);
@@ -623,6 +624,7 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
 
   RefPtr<nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
   if (!waylandDisplay->GetDmabuf()) {
+    CloseFileDescriptors(lockFD);
     return false;
   }
 
@@ -1042,6 +1044,7 @@ bool DMABufSurfaceYUV::ImportSurfaceDescriptor(
   mSurfaceType = (mBufferPlaneCount == 2) ? SURFACE_NV12 : SURFACE_YUV420;
   mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
+  mColorRange = aDesc.colorRange();
   mUID = aDesc.uid();
 
   LOGDMABUF(("DMABufSurfaceYUV::ImportSurfaceDescriptor() UID %d", mUID));
@@ -1118,7 +1121,7 @@ bool DMABufSurfaceYUV::Serialize(
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
       mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
-      offsets, GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
+      offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID, refCountFDs);
   return true;
 }
 
@@ -1150,7 +1153,15 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_OFFSET_EXT); \
   attribs.AppendElement((int)mOffsets[aPlane]);                           \
   attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
-  attribs.AppendElement((int)mStrides[aPlane]);
+  attribs.AppendElement((int)mStrides[aPlane]);                           \
+  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
+    attribs.AppendElement(                                                \
+        LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
+    attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
+    attribs.AppendElement(                                                \
+        LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
+    attribs.AppendElement(mBufferModifier >> 32);                         \
+  }
   ADD_PLANE_ATTRIBS_NV12(0);
 #undef ADD_PLANE_ATTRIBS_NV12
   attribs.AppendElement(LOCAL_EGL_NONE);

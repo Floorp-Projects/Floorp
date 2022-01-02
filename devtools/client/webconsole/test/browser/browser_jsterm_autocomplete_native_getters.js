@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Test document.body autocompletion";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test document.body autocompletion";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

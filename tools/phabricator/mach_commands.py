@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import mozfile
 from mach.decorators import Command, CommandArgument
+from mach.site import MozSiteMetadata
 
 
 @Command(
@@ -36,21 +37,34 @@ def install_moz_phab(command_context, force=False):
         )
         sys.exit(1)
 
+    active_metadata = MozSiteMetadata.from_runtime()
+    external_python = active_metadata.external_python.python_path
+    is_external_python_virtualenv = (
+        subprocess.check_output(
+            [
+                external_python,
+                "-c",
+                "import sys; print(sys.prefix != sys.base_prefix)",
+            ]
+        ).strip()
+        == b"True"
+    )
+
     # pip3 is part of Python since 3.4, however some distros choose to
     # remove core components from languages, so show a useful error message
     # if pip3 is missing.
-    pip3 = mozfile.which("pip3")
-    if not pip3:
+    has_pip = subprocess.run([external_python, "-c", "import pip"]).returncode == 0
+    if not has_pip:
         command_context.log(
             logging.ERROR,
-            "pip3_not_installed",
+            "pip_not_installed",
             {},
-            "`pip3` is not installed. Try installing it with your system "
+            "Python 3's `pip` is not installed. Try installing it with your system "
             "package manager.",
         )
         sys.exit(1)
 
-    command = [pip3, "install", "--upgrade", "MozPhab"]
+    command = [external_python, "-m", "pip", "install", "--upgrade", "MozPhab"]
 
     if (
         sys.platform.startswith("linux")
@@ -80,7 +94,7 @@ def install_moz_phab(command_context, force=False):
         )
         platform_prefers_user_install = True
 
-    if platform_prefers_user_install and not os.environ.get("VIRTUAL_ENV"):
+    if platform_prefers_user_install and not is_external_python_virtualenv:
         # Virtual environments don't see user packages, so only perform a user
         # installation if we're not within one.
         command.append("--user")
@@ -97,7 +111,8 @@ def install_moz_phab(command_context, force=False):
     # 4. Join the two paths, and execute the script at that location
 
     info = subprocess.check_output(
-        [pip3, "show", "-f", "MozPhab"], universal_newlines=True
+        [external_python, "-m", "pip", "show", "-f", "MozPhab"],
+        universal_newlines=True,
     )
     mozphab_package_location = re.compile(r"Location: (.*)").search(info).group(1)
     # This needs to match "moz-phab" (*nix) and "moz-phab.exe" (Windows) while missing

@@ -153,7 +153,7 @@ format for analysis. Anytime a code coverage run generates \*.gcda and
 permanently fail when it is running on a build that is instrumented with
 GCOV. To debug these issues without overloading ActiveData with garbage
 coverage data, open the file
-`taskcluster/gecko_taskgraph/transforms/tests.py <https://searchfox.org/mozilla-central/source/taskcluster/gecko_taskgraph/transforms/tests.py#516>`__
+`taskcluster/gecko_taskgraph/transforms/test/__init__.py <https://searchfox.org/mozilla-central/source/taskcluster/gecko_taskgraph/transforms/test/__init__.py#516>`__
 and add the following line,
 
 .. code:: python

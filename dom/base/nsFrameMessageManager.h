@@ -362,16 +362,13 @@ class nsScriptCacheCleaner final : public nsIObserver {
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
     if (obsSvc) {
-      obsSvc->AddObserver(this, "message-manager-flush-caches", false);
       obsSvc->AddObserver(this, "xpcom-shutdown", false);
     }
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override {
-    if (strcmp("message-manager-flush-caches", aTopic) == 0) {
-      nsMessageManagerScriptExecutor::PurgeCache();
-    } else if (strcmp("xpcom-shutdown", aTopic) == 0) {
+    if (strcmp("xpcom-shutdown", aTopic) == 0) {
       nsMessageManagerScriptExecutor::Shutdown();
     }
     return NS_OK;

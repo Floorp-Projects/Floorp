@@ -57,6 +57,9 @@ var gExceptionPaths = [
   // Points to theme preview images, which are defined in browser/ but only used
   // in toolkit/mozapps/extensions/content/aboutaddons.js.
   "resource://usercontext-content/builtin-themes/",
+
+  // Page data schemas are referenced programmatically.
+  "chrome://browser/content/pagedata/schemas/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
@@ -122,7 +125,17 @@ var whitelist = [
   // extensions/pref/autoconfig/src/nsReadConfig.cpp
   { file: "resource://gre/defaults/autoconfig/prefcalls.js" },
 
-  // modules/libpref/Preferences.cpp
+  // browser/components/preferences/moreFromMozilla.js
+  // These files URLs are constructed programatically at run time.
+  {
+    file:
+      "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
+  },
+  {
+    file:
+      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
+  },
+
   { file: "resource://gre/greprefs.js" },
 
   // layout/mathml/nsMathMLChar.cpp
@@ -261,8 +274,6 @@ var whitelist = [
     file:
       "chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg",
   },
-  { file: "chrome://browser/content/screenshots/menu-fullpage.svg" },
-  { file: "chrome://browser/content/screenshots/menu-visible.svg" },
 
   { file: "resource://app/modules/SnapshotSelector.jsm" },
 
@@ -345,7 +356,7 @@ if (!isDevtools) {
     whitelist.add("resource://services-sync/engines/" + module);
   }
   // resource://devtools/shared/worker/loader.js,
-  // resource://devtools/shared/builtin-modules.js
+  // resource://devtools/shared/loader/builtin-modules.js
   if (!AppConstants.ENABLE_WEBDRIVER) {
     whitelist.add("resource://gre/modules/jsdebugger.jsm");
   }
@@ -798,9 +809,9 @@ function findChromeUrlsFromArray(array, prefix) {
 add_task(async function checkAllTheFiles() {
   let libxulPath = OS.Constants.Path.libxul;
   if (AppConstants.platform != "macosx") {
-    libxulPath = OS.Constants.Path.libDir + "/" + libxulPath;
+    libxulPath = PathUtils.join(OS.Constants.Path.libDir, libxulPath);
   }
-  let libxul = await OS.File.read(libxulPath);
+  let libxul = await IOUtils.read(libxulPath);
   findChromeUrlsFromArray(libxul, "chrome://");
   findChromeUrlsFromArray(libxul, "resource://");
   // Handle NS_LITERAL_STRING.

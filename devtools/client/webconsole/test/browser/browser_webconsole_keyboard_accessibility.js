@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf-8,<p>Test keyboard accessibility</p>
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><p>Test keyboard accessibility</p>
   <script>
     for (let i = 1; i <= 100; i++) {
       console.log("console message " + i);

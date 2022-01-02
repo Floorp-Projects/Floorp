@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-var Cm = Components.manager;
 const URL_HOST = "http://localhost";
 const PR_USEC_PER_MSEC = 1000;
 
@@ -20,6 +19,9 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
+);
+const { ServiceRequest } = ChromeUtils.import(
+  "resource://gre/modules/ServiceRequest.jsm"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
@@ -154,7 +156,7 @@ add_task(async function test_checkForAddons_uninitWithoutCheck() {
  * Tests that an uninit without an install works fine
  */
 add_test(function test_checkForAddons_uninitWithoutInstall() {
-  overrideXHR(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -168,7 +170,7 @@ add_test(function test_checkForAddons_uninitWithoutInstall() {
  * Tests that no response returned rejects
  */
 add_test(function test_checkForAddons_noResponse() {
-  overrideXHR(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -182,7 +184,7 @@ add_test(function test_checkForAddons_noResponse() {
  * Tests that no addons element returned resolves with no addons
  */
 add_task(async function test_checkForAddons_noAddonsElement() {
-  overrideXHR(200, "<updates></updates>");
+  overrideServiceRequest(200, "<updates></updates>");
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 0);
@@ -193,7 +195,7 @@ add_task(async function test_checkForAddons_noAddonsElement() {
  * Tests that empty addons element returned resolves with no addons
  */
 add_task(async function test_checkForAddons_emptyAddonsElement() {
-  overrideXHR(200, "<updates><addons/></updates>");
+  overrideServiceRequest(200, "<updates><addons/></updates>");
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 0);
@@ -204,7 +206,10 @@ add_task(async function test_checkForAddons_emptyAddonsElement() {
  * Tests that a response with the wrong root element rejects
  */
 add_test(function test_checkForAddons_wrongResponseXML() {
-  overrideXHR(200, "<digits_of_pi>3.141592653589793....</digits_of_pi>");
+  overrideServiceRequest(
+    200,
+    "<digits_of_pi>3.141592653589793....</digits_of_pi>"
+  );
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -218,7 +223,7 @@ add_test(function test_checkForAddons_wrongResponseXML() {
  * Tests that a 404 error works as expected
  */
 add_test(function test_checkForAddons_404Error() {
-  overrideXHR(404, "");
+  overrideServiceRequest(404, "");
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -229,20 +234,22 @@ add_test(function test_checkForAddons_404Error() {
 });
 
 /**
- * Tests that a xhr abort() works as expected
+ * Tests that a xhr/ServiceRequest abort() works as expected
  */
 add_test(function test_checkForAddons_abort() {
-  let overriddenXhr = overrideXHR(200, "", { dropRequest: true });
+  let overriddenServiceRequest = overrideServiceRequest(200, "", {
+    dropRequest: true,
+  });
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
 
-  // Since the XHR is created in checkForAddons asynchronously,
-  // we need to delay aborting till the XHR is running.
+  // Since the ServiceRequest is created in checkForAddons asynchronously,
+  // we need to delay aborting till the request is running.
   // Since checkForAddons returns a Promise already only after
   // the abort is triggered, we can't use that, and instead
   // we'll use a fake timer.
   setTimeout(() => {
-    overriddenXhr.abort();
+    overriddenServiceRequest.abort();
   }, 100);
 
   promise.then(res => {
@@ -256,7 +263,7 @@ add_test(function test_checkForAddons_abort() {
  * Tests that a defensive timeout works as expected
  */
 add_test(function test_checkForAddons_timeout() {
-  overrideXHR(200, "", { dropRequest: true, timeout: true });
+  overrideServiceRequest(200, "", { dropRequest: true, timeout: true });
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -286,7 +293,7 @@ add_test(function test_checkForAddons_bad_ssl() {
   );
   Services.prefs.setCharPref(CERTS_BRANCH_DOT_ONE, "funky value");
 
-  overrideXHR(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
   promise.then(res => {
@@ -309,7 +316,7 @@ add_test(function test_checkForAddons_bad_ssl() {
  * Tests that gettinga a funky non XML response works as expected
  */
 add_test(function test_checkForAddons_notXML() {
-  overrideXHR(200, "3.141592653589793....");
+  overrideServiceRequest(200, "3.141592653589793....");
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
 
@@ -335,7 +342,7 @@ add_task(async function test_checkForAddons_singleAddon() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
@@ -370,7 +377,7 @@ add_task(async function test_checkForAddons_singleAddonWithSize() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
@@ -443,7 +450,7 @@ add_task(
       '               notversion="9.1"/>' +
       "  </addons>" +
       "</updates>";
-    overrideXHR(200, responseXML);
+    overrideServiceRequest(200, responseXML);
     let installManager = new GMPInstallManager();
     let res = await installManager.checkForAddons();
     Assert.equal(res.addons.length, 7);
@@ -501,7 +508,7 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
@@ -525,8 +532,9 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
  */
 add_task(async function test_checkForAddons_contentSignatureSuccess() {
   // We want the product checker to actually do a check to our test server,
-  // so revert any overrideXHR changes other tests have made prior to this.
-  revertOverrideXHR();
+  // so revert any overrideServiceRequest changes other tests have made prior
+  //to this.
+  revertOverrideServiceRequest();
 
   Preferences.set("media.gmp-manager.checkContentSignature", true);
 
@@ -623,8 +631,9 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
  */
 add_task(async function test_checkForAddons_contentSignatureFailure() {
   // We want the product checker to actually do a check to our test server,
-  // so revert any overrideXHR changes other tests have made prior to this.
-  revertOverrideXHR();
+  // so revert any overrideServiceRequest changes other tests have made prior
+  // to this.
+  revertOverrideServiceRequest();
 
   Preferences.set("media.gmp-manager.checkContentSignature", true);
 
@@ -755,7 +764,7 @@ async function test_checkForAddons_installAddon(
     "  </addons>" +
     "</updates>";
 
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
@@ -846,7 +855,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
     "  </addons>" +
     "</updates>";
 
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "nothing-new-to-install");
@@ -864,7 +873,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
 add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
   let responseXML = '<?xml version="1.0"?><updates></updates>';
 
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "nothing-new-to-install");
@@ -876,7 +885,7 @@ add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
 add_task(async function test_simpleCheckAndInstall_tooFrequent() {
   let responseXML = '<?xml version="1.0"?><updates></updates>';
 
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "too-frequent-no-check");
@@ -903,7 +912,7 @@ add_test(function test_installAddon_noServer() {
     "  </addons>" +
     "</updates>";
 
-  overrideXHR(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
   let checkPromise = installManager.checkForAddons();
   checkPromise.then(
@@ -1072,10 +1081,10 @@ function makeHandler(aVal) {
   return aVal;
 }
 /**
- * Constructs a mock xhr which is used for testing different aspects
- * of responses.
+ * Constructs a mock xhr/ServiceRequest which is used for testing different
+ * aspects of responses.
  */
-function xhr(inputStatus, inputResponse, options) {
+function mockRequest(inputStatus, inputResponse, options) {
   this.inputStatus = inputStatus;
   this.inputResponse = inputResponse;
   this.status = 0;
@@ -1093,7 +1102,7 @@ function xhr(inputStatus, inputResponse, options) {
   this._notified = false;
   this._options = options || {};
 }
-xhr.prototype = {
+mockRequest.prototype = {
   overrideMimeType(aMimetype) {},
   setRequestHeader(aHeader, aValue) {},
   status: null,
@@ -1207,27 +1216,29 @@ xhr.prototype = {
 };
 
 /**
- * Helper used to overrideXHR requests (no matter to what URL) with the
+ * Helper used to overrideServiceRequest requests (no matter to what URL) with the
  * specified status and response.
- * @param status The status you want to get back when an XHR request is made
- * @param response The response you want to get back when an XHR request is made
+ * @param status The status you want to get back when a ServiceRequest request
+ *        is made.
+ * @param response The response you want to get back when a ServiceRequest
+ *        request is made.
  */
-function overrideXHR(status, response, options) {
-  overrideXHR.myxhr = new xhr(status, response, options);
-  ProductAddonCheckerScope.CreateXHR = function() {
-    return overrideXHR.myxhr;
+function overrideServiceRequest(status, response, options) {
+  overrideServiceRequest.myRequest = new mockRequest(status, response, options);
+  ProductAddonCheckerScope.CreateServiceRequest = function() {
+    return overrideServiceRequest.myRequest;
   };
-  return overrideXHR.myxhr;
+  return overrideServiceRequest.myRequest;
 }
 
 /**
- * Reverts any changes from overrideXHR. This is used to ensure the
- * ProductAddonChecker performs XHRs. This is useful if a test needs to
- * actually connect to a test server.
+ * Reverts any changes from overrideServiceRequest. This is used to ensure the
+ * ProductAddonChecker performs ServiceRequests. This is useful if a test
+ * needs to actually connect to a test server.
  */
-function revertOverrideXHR(status, response, options) {
-  ProductAddonCheckerScope.CreateXHR = function() {
-    return new XMLHttpRequest();
+function revertOverrideServiceRequest(status, response, options) {
+  ProductAddonCheckerScope.CreateServiceRequest = function() {
+    return new ServiceRequest();
   };
 }
 

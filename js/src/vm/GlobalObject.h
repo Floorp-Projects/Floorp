@@ -638,8 +638,7 @@ class GlobalObject : public NativeObject {
   }
 
   static bool ensureModulePrototypesCreated(JSContext* cx,
-                                            Handle<GlobalObject*> global,
-                                            bool setUsedAsPrototype = false);
+                                            Handle<GlobalObject*> global);
 
   static JSObject* getOrCreateModulePrototype(JSContext* cx,
                                               Handle<GlobalObject*> global) {
@@ -1099,34 +1098,9 @@ class GlobalObject : public NativeObject {
   static JSObject* getOrCreateRealmKeyObject(JSContext* cx,
                                              Handle<GlobalObject*> global);
 
-  // A class used in place of a prototype during off-thread parsing.
-  struct OffThreadPlaceholderObject : public NativeObject {
-    // The slot either stores a JSProtoKey (Int32Value >= 0) or a ProtoKind
-    // (Int32Value < 0).
-    static const int32_t ProtoKeyOrProtoKindSlot = 0;
-    static const JSClass class_;
-    static OffThreadPlaceholderObject* New(JSContext* cx, JSProtoKey key);
-    static OffThreadPlaceholderObject* New(JSContext* cx, ProtoKind kind);
-    inline int32_t getProtoKeyOrProtoKind() const;
-  };
-
-  static bool isOffThreadPrototypePlaceholder(JSObject* obj) {
-    return obj->is<OffThreadPlaceholderObject>();
-  }
-
-  JSObject* getPrototypeForOffThreadPlaceholder(JSObject* placeholder);
-
   static size_t offsetOfGlobalDataSlot() {
     return getFixedSlotOffset(GLOBAL_DATA_SLOT);
   }
-
- private:
-  static bool resolveOffThreadConstructor(JSContext* cx,
-                                          Handle<GlobalObject*> global,
-                                          JSProtoKey key);
-  static JSObject* createOffThreadBuiltinProto(JSContext* cx,
-                                               Handle<GlobalObject*> global,
-                                               ProtoKind kind);
 };
 
 /*

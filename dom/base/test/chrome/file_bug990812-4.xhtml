@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
   <label value="Mozilla Bug 990812"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-
+    /* global messageManager, sendAsyncMessage, getGroupMessageManager */
     var FRAME_SCRIPT1 = "data:,addMessageListener('test', function () {" +
                         "sendSyncMessage('test', 'frame1')})";
     var FRAME_SCRIPT2 = "data:,addMessageListener('test', function () {" +

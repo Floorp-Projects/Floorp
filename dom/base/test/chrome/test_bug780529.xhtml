@@ -29,7 +29,7 @@ ok(sink instanceof Ci.nsIChannelEventSink,
 ok("asyncOnChannelRedirect" in sink,
    "Should have the right methods for an event sink");
 
-sinkReq = sink.QueryInterface(Ci.nsIInterfaceRequestor);
+let sinkReq = sink.QueryInterface(Ci.nsIInterfaceRequestor);
 isnot(sinkReq, callbacks, "Sink should not be the XHR object");
   ]]>
   </script>

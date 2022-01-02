@@ -12,6 +12,8 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
 });
@@ -80,8 +82,13 @@ class ContentDelegateChild extends GeckoViewActorChild {
         const isMedia =
           elementType === "HTMLVideoElement" ||
           elementType === "HTMLAudioElement";
-        const elementSrc =
-          (isImage || isMedia) && (node.currentSrc || node.src);
+        let elementSrc = (isImage || isMedia) && (node.currentSrc || node.src);
+        if (elementSrc) {
+          const isBlob = elementSrc.startsWith("blob:");
+          if (isBlob && !URL.isValidURL(elementSrc)) {
+            elementSrc = null;
+          }
+        }
 
         if (uri || isImage || isMedia) {
           const msg = {

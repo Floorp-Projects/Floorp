@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PrintingSelectionChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class PrintingSelectionChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
@@ -19,11 +17,7 @@ class PrintingSelectionChild extends JSWindowActorChild {
   }
 
   hasSelection() {
-    let focusedWindow = Services.focus.focusedWindow;
-    if (focusedWindow) {
-      let selection = focusedWindow.getSelection();
-      return selection && selection.type == "Range";
-    }
-    return false;
+    let selection = this.browsingContext.associatedWindow?.getSelection();
+    return selection && selection.type == "Range";
   }
 }

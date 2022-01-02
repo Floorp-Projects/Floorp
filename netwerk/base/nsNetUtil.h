@@ -27,6 +27,7 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 class nsIPrincipal;
 class nsIAsyncStreamCopier;
@@ -1004,5 +1005,26 @@ nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
                           bool* aResult);
 
 void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI);
+
+struct LinkHeader {
+  nsString mHref;
+  nsString mRel;
+  nsString mTitle;
+  nsString mIntegrity;
+  nsString mSrcset;
+  nsString mSizes;
+  nsString mType;
+  nsString mMedia;
+  nsString mAnchor;
+  nsString mCrossOrigin;
+  nsString mReferrerPolicy;
+  nsString mAs;
+
+  LinkHeader();
+  void Reset();
+  bool operator==(const LinkHeader& rhs) const;
+};
+
+nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData);
 
 #endif  // !nsNetUtil_h__

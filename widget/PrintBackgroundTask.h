@@ -9,8 +9,9 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Telemetry.h"
-#include <utility>
+
 #include <tuple>
+#include <utility>
 
 // A helper to resolve a DOM Promise with the result of a const method, executed
 // in another thread.

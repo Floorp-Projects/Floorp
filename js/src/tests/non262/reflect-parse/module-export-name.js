@@ -1,10 +1,26 @@
 // |reftest| skip-if(!xulRuntime.shell)
 
-function importDecl(specifiers, source) {
+function moduleRequest(source, assertions) {
+  return {
+    type: "ModuleRequest",
+    source,
+    assertions,
+  };
+}
+
+function importAssertion(key, value) {
+  return {
+    type: "ImportAssertion",
+    key,
+    value,
+  };
+}
+
+function importDecl(specifiers, moduleRequest) {
   return {
     type: "ImportDeclaration",
     specifiers,
-    source,
+    moduleRequest,
   };
 }
 
@@ -16,12 +32,12 @@ function importSpec(id, name) {
   };
 }
 
-function exportDecl(declaration, specifiers, source, isDefault) {
+function exportDecl(declaration, specifiers, moduleRequest, isDefault) {
   return {
     type: "ExportDeclaration",
     declaration,
     specifiers,
-    source,
+    moduleRequest,
     isDefault,
   };
 }
@@ -48,7 +64,7 @@ function assertModule(src, patt) {
 assertModule(`
   import {"x" as y} from "module";
 `, [
-  importDecl([importSpec(literal("x"), ident("y"))], literal("module")),
+  importDecl([importSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), [])),
 ]);
 
 assertModule(`
@@ -62,32 +78,40 @@ assertModule(`
 assertModule(`
   export {x as "y"} from "module";
 `, [
-  exportDecl(null, [exportSpec(ident("x"), literal("y"))], literal("module"), false),
+  exportDecl(null, [exportSpec(ident("x"), literal("y"))], moduleRequest(literal("module"), []), false),
 ]);
 
 assertModule(`
   export {"x" as y} from "module";
 `, [
-  exportDecl(null, [exportSpec(literal("x"), ident("y"))], literal("module"), false),
+  exportDecl(null, [exportSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), []), false),
 ]);
 
 assertModule(`
   export {"x" as "y"} from "module";
 `, [
-  exportDecl(null, [exportSpec(literal("x"), literal("y"))], literal("module"), false),
+  exportDecl(null, [exportSpec(literal("x"), literal("y"))], moduleRequest(literal("module"), []), false),
 ]);
 
 assertModule(`
   export {"x"} from "module";
 `, [
-  exportDecl(null, [exportSpec(literal("x"), literal("x"))], literal("module"), false),
+  exportDecl(null, [exportSpec(literal("x"), literal("x"))], moduleRequest(literal("module"), []), false),
 ]);
 
 assertModule(`
   export * as "x" from "module";
 `, [
-  exportDecl(null, [exportNamespaceSpec(literal("x"))], literal("module"), false),
+  exportDecl(null, [exportNamespaceSpec(literal("x"))], moduleRequest(literal("module"), []), false),
 ]);
+
+if (getRealmConfiguration()['importAssertions']) {
+  assertModule(`
+    import {"x" as y} from "module" assert {type: "json"};
+  `, [
+    importDecl([importSpec(literal("x"), ident("y"))], moduleRequest(literal("module"), [importAssertion(ident("type"), literal("json"))])),
+  ]);
+}
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);

@@ -101,18 +101,11 @@ function selectElementsInPanelview(panelview) {
 function createViewControllers(state, elements) {
   return {
     updateInfoCollapse() {
-      const { header, info, infoButton, panelview } = elements;
+      const { header, info, infoButton } = elements;
       header.setAttribute(
         "isinfocollapsed",
         state.isInfoCollapsed ? "true" : "false"
       );
-      // @ts-ignore - Bug 1674368
-      panelview
-        .closest("panel")
-        .setAttribute(
-          "isinfoexpanded",
-          state.isInfoCollapsed ? "false" : "true"
-        );
       // @ts-ignore - Bug 1674368
       infoButton.checked = !state.isInfoCollapsed;
 
@@ -232,7 +225,6 @@ function createViewControllers(state, elements) {
       if (!panel) {
         throw new Error("Could not find the panel from the panelview.");
       }
-      panel.removeAttribute("isinfoexpanded");
       /** @type {any} */ (panel).hidePopup();
     },
   };

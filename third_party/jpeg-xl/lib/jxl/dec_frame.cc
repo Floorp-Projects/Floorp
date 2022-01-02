@@ -21,6 +21,7 @@
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
@@ -541,16 +542,26 @@ Status FrameDecoder::ProcessACGlobal(BitReader* br) {
     size_t num_components = jpeg_data->components.size();
     bool is_gray = (num_components == 1);
     auto jpeg_c_map = JpegOrder(frame_header_.color_transform, is_gray);
+    size_t qt_set = 0;
     for (size_t c = 0; c < num_components; c++) {
       // TODO(eustas): why 1-st quant table for gray?
       size_t quant_c = is_gray ? 1 : c;
       size_t qpos = jpeg_data->components[jpeg_c_map[c]].quant_idx;
       JXL_CHECK(qpos != jpeg_data->quant.size());
+      qt_set |= 1 << qpos;
       for (size_t x = 0; x < 8; x++) {
         for (size_t y = 0; y < 8; y++) {
           jpeg_data->quant[qpos].values[x * 8 + y] =
               (*qe[0].qraw.qtable)[quant_c * 64 + y * 8 + x];
         }
+      }
+    }
+    for (size_t i = 0; i < jpeg_data->quant.size(); i++) {
+      if (qt_set & (1 << i)) continue;
+      if (i == 0) return JXL_FAILURE("First quant table unused.");
+      // Unused quant table is set to copy of previous quant table
+      for (size_t j = 0; j < 64; j++) {
+        jpeg_data->quant[i].values[j] = jpeg_data->quant[i - 1].values[j];
       }
     }
   }

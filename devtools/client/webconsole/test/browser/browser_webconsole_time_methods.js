@@ -10,15 +10,15 @@ const TEST_URI =
   "test/browser/test-time-methods.html";
 
 const TEST_URI2 =
-  "data:text/html;charset=utf-8,<script>" +
+  "data:text/html;charset=utf-8,<!DOCTYPE html><script>" +
   "console.timeEnd('bTimer');</script>";
 
 const TEST_URI3 =
-  "data:text/html;charset=utf-8,<script>" +
+  "data:text/html;charset=utf-8,<!DOCTYPE html><script>" +
   "console.time('bTimer');console.log('smoke signal');</script>";
 
 const TEST_URI4 =
-  "data:text/html;charset=utf-8," +
+  "data:text/html;charset=utf-8,<!DOCTYPE html>" +
   "<script>console.timeEnd('bTimer');</script>";
 
 add_task(async function() {

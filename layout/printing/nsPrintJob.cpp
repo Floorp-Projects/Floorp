@@ -649,27 +649,15 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // The dialog is not shown, but this means we don't need to access the printer
   // driver from the child, which causes sandboxing issues.
   if (!mIsCreatingPrintPreview || printingViaParent) {
-    // The new print UI does not need to enter ShowPrintDialog below to spin
-    // the event loop and fetch real printer settings from the parent process,
-    // since it always passes complete print settings. (In fact, trying to
-    // fetch them from the parent can cause crashes.) Here we check for that
-    // case so that we can avoid calling ShowPrintDialog below. To err on the
-    // safe side, we exclude the old UI.
-    //
-    // TODO: We should MOZ_DIAGNOSTIC_ASSERT that GetIsInitializedFromPrinter
-    // returns true.
-    bool settingsAreComplete = false;
-    if (StaticPrefs::print_tab_modal_enabled()) {
-      printData->mPrintSettings->GetIsInitializedFromPrinter(
-          &settingsAreComplete);
-    }
-
     // Ask dialog to be Print Shown via the Plugable Printing Dialog Service
     // This service is for the Print Dialog and the Print Progress Dialog
     // If printing silently or you can't get the service continue on
     // If printing via the parent then we need to confirm that the pref is set
     // and get a remote print job, but the parent won't display a prompt.
-    if (!settingsAreComplete && (!printSilently || printingViaParent)) {
+    // Note: The new print UI does not need to enter ShowPrintDialog below to
+    // spin the event loop and fetch real printer settings from the parent.
+    if (!StaticPrefs::print_tab_modal_enabled() &&
+        (!printSilently || printingViaParent)) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(
           do_GetService(kPrintingPromptService));
       if (printPromptService) {

@@ -14,6 +14,9 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   const BASE = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/";
   const URL = BASE + "file_iframe_document.html";
 

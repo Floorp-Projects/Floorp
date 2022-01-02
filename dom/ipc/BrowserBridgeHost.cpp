@@ -38,6 +38,10 @@ nsILoadContext* BrowserBridgeHost::GetLoadContext() const {
   return mBridge->GetLoadContext();
 }
 
+bool BrowserBridgeHost::CanRecv() const {
+  return mBridge && mBridge->CanRecv();
+}
+
 void BrowserBridgeHost::LoadURL(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState);
   Unused << mBridge->SendLoadURL(aLoadState);
@@ -55,9 +59,7 @@ void BrowserBridgeHost::DestroyStart() {
   }
 }
 
-void BrowserBridgeHost::DestroyComplete() {
-  mBridge = nullptr;
-}
+void BrowserBridgeHost::DestroyComplete() { mBridge = nullptr; }
 
 bool BrowserBridgeHost::Show(const OwnerShowInfo& aShowInfo) {
   Unused << mBridge->SendShow(aShowInfo);

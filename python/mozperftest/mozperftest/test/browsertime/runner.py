@@ -82,7 +82,7 @@ class BrowsertimeRunner(NodeRunner):
             "default": False,
             "help": "Use the window recorder",
         },
-        "viewport-size": {"type": str, "default": "1366x695", "help": "Viewport size"},
+        "viewport-size": {"type": str, "default": "1280x1024", "help": "Viewport size"},
     }
 
     def __init__(self, env, mach_cmd):

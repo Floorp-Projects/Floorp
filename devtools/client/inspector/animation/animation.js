@@ -147,10 +147,10 @@ class AnimationInspector {
   }
 
   async initListeners() {
-    await this.inspector.commands.targetCommand.watchTargets(
-      [this.inspector.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable
-    );
+    await this.inspector.commands.targetCommand.watchTargets({
+      types: [this.inspector.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+    });
 
     this.inspector.on("new-root", this.onNavigate);
     this.inspector.selection.on("new-node-front", this.update);

@@ -919,6 +919,8 @@ pub struct SymRef(u32);
 
 #[derive(Debug)]
 struct Scope {
+    // The field is not actively used but useful for `Debug`.
+    #[allow(dead_code)]
     name: String,
     names: HashMap<String, SymRef>,
 }

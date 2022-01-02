@@ -21,13 +21,15 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 
   document.cookie = "a=cookie_is_set";
 
-  SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ]] },
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ], ["network.cookie.sameSite.laxByDefault", false]] },
                             () => {
     let w = window.open("window_worker_xhr_3rdparty.html");
 
     onmessage = e => {
       if (e.data.type == "finish") {
         w.close();
+        SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
         SimpleTest.finish();
         return;
       }

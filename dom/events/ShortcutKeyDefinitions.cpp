@@ -183,12 +183,13 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},   // Win, Linux, Emacs
 #endif  // XP_WIN || MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},  // Win, macOS, Android
-#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_ANDROID
-#if defined(MOZ_WIDGET_GTK) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Linux, Emacs
-#endif  // MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK) ||\
+    defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},  // Win, macOS, Linux, Android
+#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_GTK || MOZ_WIDGET_ANDROID
+#if defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Emacs
+#endif  // USE_EMACS_KEY_BINDINGS
 
     /**************************************************************************
      * Emacs specific shortcut keys in <input>.
@@ -359,13 +360,13 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},       // Win, Linux, Emacs
 #endif  // XP_WIN || MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) ||\
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK) ||\
     defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},  // Win, macOS, Android
-#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_ANDROID
-#if defined(MOZ_WIDGET_GTK) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Linux, Emacs
-#endif  // MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},  // Win, macOS, Linux, Android
+#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_GTK || MOZ_WIDGET_ANDROID
+#if defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Emacs
+#endif  // USE_EMACS_KEY_BINDINGS
 
     /**************************************************************************
      * Emacs specific shortcut keys in <textarea>.
@@ -554,9 +555,9 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
 #endif  // XP_WIN
 
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},  // Win, macOS, Linux, Android, Emacs
-#if defined(MOZ_WIDGET_GTK) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Linux, Emacs
-#endif  // MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+#if defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},  // Emacs
+#endif  // USE_EMACS_KEY_BINDINGS
 
     /**************************************************************************
      * Space key in non-editable element.
@@ -722,12 +723,13 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", nullptr, u"y", u"accel",           u"cmd_redo"},               // Emacs
 #endif  // XP_WIN || MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},          // Win, macOS, Android
-#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_ANDROID
-#if defined(MOZ_WIDGET_GTK) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u"a", u"alt",             u"cmd_selectAll"},          // Linux, Emacs
-#endif  // MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK) ||\
+    defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},          // Win, macOS, Linux, Android
+#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_GTK || MOZ_WIDGET_ANDROID
+#if defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", nullptr, u"a", u"alt",             u"cmd_selectAll"},          // Emacs
+#endif  // USE_EMACS_KEY_BINDINGS
 
     /**************************************************************************
      * Space key in HTMLEditor.

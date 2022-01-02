@@ -25,6 +25,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsLiteralString.h"
 #include "nsString.h"
@@ -1544,136 +1545,6 @@ INSTANTIATE_TEST_CASE_P(
         std::pair("https://foo.bar.com:8000", "https://aaa.aaa.aaa:DDDD"),
         std::pair("file://UNIVERSAL_FILE_ORIGIN",
                   "file://aaaaaaaaa_aaaa_aaaaaa")));
-
-TEST(QuotaCommon_ToResultGet, Lambda_NoInput)
-{
-  auto res = ToResultGet<int32_t>([](nsresult* aRv) -> int32_t {
-    *aRv = NS_OK;
-    return 42;
-  });
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isOk());
-  EXPECT_EQ(res.unwrap(), 42);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Err)
-{
-  auto res = ToResultGet<int32_t>([](nsresult* aRv) -> int32_t {
-    *aRv = NS_ERROR_FAILURE;
-    return -1;
-  });
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isErr());
-  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_WithInput)
-{
-  auto res = ToResultGet<int32_t>(
-      [](int32_t aValue, nsresult* aRv) -> int32_t {
-        *aRv = NS_OK;
-        return aValue * 2;
-      },
-      42);
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isOk());
-  EXPECT_EQ(res.unwrap(), 84);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err)
-{
-  auto res = ToResultGet<int32_t>(
-      [](int32_t aValue, nsresult* aRv) -> int32_t {
-        *aRv = NS_ERROR_FAILURE;
-        return -1;
-      },
-      42);
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isErr());
-  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Macro_Typed)
-{
-  auto res = MOZ_TO_RESULT_GET_TYPED(int32_t, [](nsresult* aRv) -> int32_t {
-    *aRv = NS_OK;
-    return 42;
-  });
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isOk());
-  EXPECT_EQ(res.unwrap(), 42);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Macro_Typed_Parens)
-{
-  auto res =
-      MOZ_TO_RESULT_GET_TYPED((std::pair<int32_t, int32_t>),
-                              [](nsresult* aRv) -> std::pair<int32_t, int32_t> {
-                                *aRv = NS_OK;
-                                return std::pair{42, 42};
-                              });
-
-  static_assert(std::is_same_v<decltype(res),
-                               Result<std::pair<int32_t, int32_t>, nsresult>>);
-
-  EXPECT_TRUE(res.isOk());
-  EXPECT_EQ(res.unwrap(), (std::pair{42, 42}));
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_NoInput_Err_Macro_Typed)
-{
-  auto res = MOZ_TO_RESULT_GET_TYPED(int32_t, [](nsresult* aRv) -> int32_t {
-    *aRv = NS_ERROR_FAILURE;
-    return -1;
-  });
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isErr());
-  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Macro_Typed)
-{
-  auto res = MOZ_TO_RESULT_GET_TYPED(
-      int32_t,
-      [](int32_t aValue, nsresult* aRv) -> int32_t {
-        *aRv = NS_OK;
-        return aValue * 2;
-      },
-      42);
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isOk());
-  EXPECT_EQ(res.unwrap(), 84);
-}
-
-TEST(QuotaCommon_ToResultGet, Lambda_WithInput_Err_Macro_Typed)
-{
-  auto res = MOZ_TO_RESULT_GET_TYPED(
-      int32_t,
-      [](int32_t aValue, nsresult* aRv) -> int32_t {
-        *aRv = NS_ERROR_FAILURE;
-        return -1;
-      },
-      42);
-
-  static_assert(std::is_same_v<decltype(res), Result<int32_t, nsresult>>);
-
-  EXPECT_TRUE(res.isErr());
-  EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
-}
 
 // BEGIN COPY FROM mfbt/tests/TestResult.cpp
 struct Failed {};

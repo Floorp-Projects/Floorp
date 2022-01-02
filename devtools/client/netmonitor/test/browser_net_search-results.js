@@ -176,11 +176,9 @@ add_task(async function() {
 });
 
 async function makeRequests(urls) {
-  content.wrappedJSObject.get(urls[0], () => {
-    content.wrappedJSObject.get(urls[1], () => {
-      info("XHR Requests executed");
-    });
-  });
+  await content.wrappedJSObject.get(urls[0]);
+  await content.wrappedJSObject.get(urls[1]);
+  info("XHR Requests executed");
 }
 
 /**

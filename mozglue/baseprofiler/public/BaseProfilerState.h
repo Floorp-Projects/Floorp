@@ -148,6 +148,7 @@ class MOZ_RAII AutoProfilerStats {
 // values are used internally only and so can be changed without consequence.
 // Any changes to this list should also be applied to the feature list in
 // toolkit/components/extensions/schemas/geckoProfiler.json.
+// *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 #  define BASE_PROFILER_FOR_EACH_FEATURE(MACRO)                                \
     MACRO(0, "java", Java, "Profile Java code, Android only")                  \
                                                                                \
@@ -205,7 +206,20 @@ class MOZ_RAII AutoProfilerStats {
                                                                                \
     MACRO(19, "notimerresolutionchange", NoTimerResolutionChange,              \
           "Do not adjust the timer resolution for fast sampling, so that "     \
-          "other Firefox timers do not get affected")
+          "other Firefox timers do not get affected")                          \
+                                                                               \
+    MACRO(20, "cpuallthreads", CPUAllThreads,                                  \
+          "Sample the CPU utilization of all registered threads")              \
+                                                                               \
+    MACRO(21, "samplingallthreads", SamplingAllThreads,                        \
+          "Sample the stacks of all registered threads")                       \
+                                                                               \
+    MACRO(22, "markersallthreads", MarkersAllThreads,                          \
+          "Record markers from all registered threads")                        \
+                                                                               \
+    MACRO(23, "unregisteredthreads", UnregisteredThreads,                      \
+          "Discover and profile unregistered threads -- beware: expensive!")
+// *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                                \

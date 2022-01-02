@@ -9,15 +9,16 @@
 #include <algorithm>
 #include <utility>
 
+#include "EditAction.h"
+#include "EditorDOMPoint.h"
+#include "EditorUtils.h"
+#include "HTMLEditHelpers.h"
 #include "HTMLEditUtils.h"
 #include "WSRunObject.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
@@ -4253,23 +4254,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   while (leftContentToJoin && rightContentToJoin && parentNode &&
          HTMLEditUtils::CanContentsBeJoined(
              *leftContentToJoin, *rightContentToJoin, kCompareStyle)) {
-    uint32_t length = leftContentToJoin->Length();
-
     // Do the join
-    nsresult rv = aHTMLEditor.JoinNodesWithTransaction(*leftContentToJoin,
-                                                       *rightContentToJoin);
-    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
+    JoinNodesResult joinNodesResult = aHTMLEditor.JoinNodesWithTransaction(
+        *leftContentToJoin, *rightContentToJoin);
+    if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
       NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-      return Err(rv);
+      return Err(joinNodesResult.Rv());
     }
 
-    // XXX rightContentToJoin may have fewer children or shorter length text.
-    //     So, we need some adjustment here.
-    ret.Set(rightContentToJoin, length);
-    if (NS_WARN_IF(!ret.IsSet())) {
+    ret = joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
+    if (MOZ_UNLIKELY(NS_WARN_IF(!ret.IsSet()))) {
       return Err(NS_ERROR_FAILURE);
     }
 
@@ -4279,8 +4273,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     }
 
     // Get new left and right nodes, and begin anew
-    parentNode = rightContentToJoin;
-    rightContentToJoin = parentNode->GetChildAt_Deprecated(length);
+    rightContentToJoin = ret.GetCurrentChildAtOffset();
     if (rightContentToJoin) {
       leftContentToJoin = rightContentToJoin->GetPreviousSibling();
     } else {

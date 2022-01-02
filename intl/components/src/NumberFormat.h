@@ -396,12 +396,11 @@ class NumberFormat final {
   template <typename C, typename B>
   Result<Ok, ICUError> formatResult(B& buffer) const {
     // We only support buffers with char or char16_t.
-    static_assert(std::is_same<C, char>::value ||
-                  std::is_same<C, char16_t>::value);
+    static_assert(std::is_same_v<C, char> || std::is_same_v<C, char16_t>);
 
     return formatResult().andThen(
         [&buffer](std::u16string_view result) -> Result<Ok, ICUError> {
-          if constexpr (std::is_same<C, char>::value) {
+          if constexpr (std::is_same_v<C, char>) {
             if (!FillBuffer(Span(result.data(), result.size()), buffer)) {
               return Err(ICUError::OutOfMemory);
             }

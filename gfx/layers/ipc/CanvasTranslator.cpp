@@ -127,15 +127,16 @@ void CanvasTranslator::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
 
 mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     const TextureType& aTextureType,
-    const ipc::SharedMemoryBasic::Handle& aReadHandle,
-    const CrossProcessSemaphoreHandle& aReaderSem,
-    const CrossProcessSemaphoreHandle& aWriterSem) {
+    ipc::SharedMemoryBasic::Handle&& aReadHandle,
+    CrossProcessSemaphoreHandle&& aReaderSem,
+    CrossProcessSemaphoreHandle&& aWriterSem) {
   mTextureType = aTextureType;
 
   // We need to initialize the stream first, because it might be used to
   // communicate other failures back to the writer.
   mStream = MakeUnique<CanvasEventRingBuffer>();
-  if (!mStream->InitReader(aReadHandle, aReaderSem, aWriterSem,
+  if (!mStream->InitReader(std::move(aReadHandle), std::move(aReaderSem),
+                           std::move(aWriterSem),
                            MakeUnique<RingBufferReaderServices>(this))) {
     return IPC_FAIL(this, "Failed to initialize ring buffer reader.");
   }

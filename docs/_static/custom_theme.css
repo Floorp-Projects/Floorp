@@ -31,3 +31,41 @@ span.strikethrough {
 .matcher-cookbook td {
     white-space: break-spaces !important;
 }
+
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: normal;
+}
+
+img.center {
+    display: block;
+    margin: auto;
+}
+
+img.border {
+    border: 1px solid black;
+    display: block;
+    margin: auto;
+}
+
+.center {
+    text-align: center;
+}
+
+/* Keyboard shortcuts styling */
+kbd {
+    background: linear-gradient(180deg,#f4f4f4,#d5d5d5);
+    background-color: #f4f4f4;
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    font-family: consolas,"Liberation Mono",courier,monospace;
+    font-size: .9rem;
+    font-weight: 700;
+    line-height: 2.3;
+    margin: 3px;
+    padding: 4px 6px 1px 6px;
+    white-space: nowrap;
+}
+
+table.docutils {
+    width: 100%;
+}

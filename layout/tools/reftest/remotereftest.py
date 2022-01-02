@@ -252,7 +252,7 @@ class RemoteReftest(RefTest):
         return None
 
     def startWebServer(self, options):
-        """ Create the webserver on the host and start it up """
+        """Create the webserver on the host and start it up"""
         remoteXrePath = options.xrePath
         remoteUtilityPath = options.utilityPath
 
@@ -300,7 +300,7 @@ class RemoteReftest(RefTest):
         self.server.stop()
 
     def killNamedProc(self, pname, orphans=True):
-        """ Kill processes matching the given command name """
+        """Kill processes matching the given command name"""
         try:
             import psutil
         except ImportError as e:

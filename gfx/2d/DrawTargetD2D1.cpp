@@ -1640,6 +1640,8 @@ void DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp,
       return;
     }
 
+    PushAllClips();
+
     blendEffect->SetInput(0, tmpImage);
     blendEffect->SetInput(1, source);
     blendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
@@ -1668,6 +1670,8 @@ void DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp,
                    << hexa(hr);
       return;
     }
+
+    PushAllClips();
 
     conicGradientEffect->SetValue(
         CONIC_PROP_STOP_COLLECTION,
@@ -1711,6 +1715,8 @@ void DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp,
                  << hexa(hr);
     return;
   }
+
+  PushAllClips();
 
   radialGradientEffect->SetValue(
       RADIAL_PROP_STOP_COLLECTION,

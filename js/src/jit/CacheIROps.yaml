@@ -868,6 +868,15 @@
     newShape: ShapeField
     numNewSlots: RawInt32Field
 
+- name: AddSlotAndCallAddPropHook
+  shared: true
+  transpile: true
+  cost_estimate: 6
+  args:
+    obj: ObjId
+    rhs: ValId
+    newShape: ShapeField
+
 - name: StoreDenseElement
   shared: true
   transpile: true
@@ -1659,14 +1668,13 @@
 
 
 # Meta ops generate no code, but contain data for BaselineInspector.
-- name: MetaTwoByte
+- name: MetaScriptedThisShape
   shared: true
   transpile: true
   cost_estimate: 0
   custom_writer: true
   args:
-    functionObject: ObjectField
-    templateObject: ObjectField
+    thisShape: ShapeField
 
 - name: LoadFixedSlotResult
   shared: false
@@ -1790,6 +1798,22 @@
     result: Int32Id
 
 - name: LoadArgumentsObjectArgResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadArgumentsObjectArgHoleResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    index: Int32Id
+
+- name: LoadArgumentsObjectArgExistsResult
   shared: true
   transpile: true
   cost_estimate: 2
@@ -2772,6 +2796,14 @@
   args:
     map: ObjId
     obj: ObjId
+
+- name: ArrayFromArgumentsObjectResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    obj: ObjId
+    shape: ShapeField
 
 - name: CallPrintString
   shared: true

@@ -96,6 +96,7 @@ fil{
         de_CH{"Swiss High German"}
         dgr{"Dogrib"}
         dje{"Zarma"}
+        doi{"Dogri"}
         dsb{"Lower Sorbian"}
         dua{"Duala"}
         dv{"Divehi"}
@@ -252,7 +253,7 @@ fil{
         mgh{"Makhuwa-Meetto"}
         mgo{"Meta’"}
         mh{"Marshallese"}
-        mi{"Maori"}
+        mi{"Māori"}
         mic{"Micmac"}
         min{"Minangkabau"}
         mk{"Macedonian"}
@@ -317,6 +318,7 @@ fil{
         quc{"Kʼicheʼ"}
         rap{"Rapanui"}
         rar{"Rarotongan"}
+        rhg{"Rohingya"}
         rm{"Romansh"}
         rn{"Rundi"}
         ro{"Romanian"}
@@ -435,6 +437,7 @@ fil{
         zh_Hant{"Tradisyonal na Mandarin Chinese"}
     }
     Languages%menu{
+        ckb{"Kurdish, Central"}
         yue{"Chinese, Cantonese"}
         zh{"Chinese, Mandarin"}
     }
@@ -444,6 +447,7 @@ fil{
         en_US{"Ingles sa US"}
     }
     Languages%variant{
+        ckb{"Kurdish, Sorani"}
         ps{"Pushto"}
         ug{"Uighur"}
     }

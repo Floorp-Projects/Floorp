@@ -5,7 +5,7 @@
 
 // Test the cache mechanism of the ResourceCommand.
 
-const TEST_URI = "data:text/html;charset=utf-8,Cache Test";
+const TEST_URI = "data:text/html;charset=utf-8,<!DOCTYPE html>Cache Test";
 
 add_task(async function() {
   info("Test whether multiple listener can get same cached resources");

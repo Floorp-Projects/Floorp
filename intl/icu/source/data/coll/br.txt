@@ -4,8 +4,11 @@
 br{
     collations{
         standard{
-            Sequence{"&C<ch<<<Ch<<<CH<c''h=c\u2019h<<<C''h=C\u2019h<<<C''H=C\u2019H"}
-            Version{"39"}
+            Sequence{
+                "&C<ch<<<Ch<<<CH<c''h=c\u02BCh=c\u2019h<<<C''h=C\u02BCh=C\u2019h<<<C'"
+                "'H=C\u02BCH=C\u2019H"
+            }
+            Version{"40"}
         }
     }
 }

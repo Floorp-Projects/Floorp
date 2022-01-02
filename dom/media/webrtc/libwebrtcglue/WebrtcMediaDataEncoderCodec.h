@@ -11,7 +11,7 @@
 #include "PlatformEncoderModule.h"
 #include "WebrtcGmpVideoCodec.h"
 #include "common_video/include/bitrate_adjuster.h"
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 namespace mozilla {
 
@@ -24,25 +24,26 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
  public:
   static bool CanCreate(const webrtc::VideoCodecType aCodecType);
 
-  WebrtcMediaDataEncoder();
-
-  uint64_t PluginID() const override { return 0; }
+  explicit WebrtcMediaDataEncoder(const webrtc::SdpVideoFormat& aFormat);
 
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
+                     const webrtc::VideoEncoder::Settings& aSettings) override;
 
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) override;
 
   int32_t Shutdown() override;
 
-  int32_t Encode(const webrtc::VideoFrame& aFrame,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override;
+  int32_t Encode(
+      const webrtc::VideoFrame& aFrame,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
-  int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRtt) override;
+  int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
-  int32_t SetRates(uint32_t aNewBitrateKbps, uint32_t aFrameRate) override;
+  MediaEventSource<uint64_t>* InitPluginEvent() override { return nullptr; }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override { return nullptr; }
 
  private:
   virtual ~WebrtcMediaDataEncoder() = default;
@@ -51,9 +52,11 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   already_AddRefed<MediaDataEncoder> CreateEncoder(
       const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
-  webrtc::RTPFragmentationHeader GetFragHeader(
-      const webrtc::VideoCodecType aCodecType,
-      const RefPtr<MediaRawData>& aFrame);
+  /*
+    webrtc::RTPFragmentationHeader GetFragHeader(
+        const webrtc::VideoCodecType aCodecType,
+        const RefPtr<MediaRawData>& aFrame);
+  */
 
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;
@@ -64,6 +67,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   MediaResult mError = NS_OK;
 
   VideoInfo mInfo;
+  webrtc::SdpVideoFormat::Parameters mFormatParams;
   webrtc::CodecSpecificInfo mCodecSpecific;
   webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate;

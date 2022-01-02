@@ -1,0 +1,10 @@
+[
+    {
+        "filename": "mitmproxy-7.0.4-linux.tar.gz",
+        "size": 76230418,
+        "algorithm": "sha512",
+        "digest": "fe572230ecb512dc4a162804bd36b6535ea9f85ac8f40ebb076fe0a6d4eb03c3fed1a85bc6f56de964218059961bec46ddf502d7da025c2744e66d0acd597852",
+        "visibility": "public",
+        "unpack": true
+    }
+]

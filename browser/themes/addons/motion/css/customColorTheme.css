@@ -1,0 +1,167 @@
+/* Light Mode */
+:root:not([style]),
+:root:not([lwtheme]),
+:root[style*="--lwt-accent-color:rgb(227, 228, 230); --lwt-text-color:rgba(24, 25, 26);"] {
+  /* accentcolor */
+  --lwt-accent-color: #cecece !important;
+
+  /* textcolor */
+  --lwt-text-color: #000 !important;
+
+  /* toolbar */
+  --toolbar-bgcolor: #f7f7f7 !important;
+
+  /* tab background (unset to match toolbar-bgcolor) */
+  --lwt-selected-tab-background-color: unset !important;
+
+  /* toolbar_text */
+  --toolbar-color: #000 !important;
+
+  /* toolbar_bottom_separator */
+  --chrome-content-separator-color: #d2d2d2 !important;
+
+  /* icons */
+  --lwt-toolbarbutton-icon-fill: #000 !important;
+
+  /* icons_attention */
+  --lwt-toolbarbutton-icon-fill-attention: #0078d4 !important;
+
+  /* button_background_hover */
+  --lwt-toolbarbutton-hover-background: #0000001a !important;
+
+  /* button_background_active */
+  --lwt-toolbarbutton-active-background: #0000002a !important;
+
+  --lwt-toolbar-field-color: #000 !important;
+  --lwt-toolbar-field-focus-color: #000 !important;
+
+  /* popup_highlight */
+  --autocomplete-popup-highlight-background: #0001 !important;
+
+  /* popup_highlight_text */
+  --autocomplete-popup-highlight-color: #000 !important;
+
+  --urlbar-popup-url-color: #0172C9 !important;
+  --lwt-toolbar-field-background-color: #fff !important;
+  --lwt-toolbar-field-focus: #fff !important;
+  --lwt-toolbar-field-border-color: #ccc !important;
+
+  --tab-line-col: #0078d4 !important;
+  --toolbar-field-focus-border-color: #0078d4a0 !important;
+  --private-browsing-indicator: #0078d4 !important;
+}
+
+/* Dark Mode */
+:root[style*="--lwt-accent-color:rgb(12, 12, 13); --lwt-text-color:rgba(249, 249, 250);"] {
+  /* accentcolor */
+  --lwt-accent-color: #1b1b1b !important;
+
+  /* textcolor */
+  --lwt-text-color: #fff !important;
+
+  /* toolbar */
+  --toolbar-bgcolor: #3b3b3b !important;
+
+  /* tab background (unset to match toolbar-bgcolor) */
+  --lwt-selected-tab-background-color: unset !important;
+
+  /* toolbar_text */
+  --toolbar-color: #fff !important;
+
+  /* toolbar_bottom_separator */
+  --toolbox-border-bottom-color: #5B5B5B !important;
+  /* legacy */
+  --chrome-content-separator-color: #5B5B5B !important;
+
+  /* icons */
+  --lwt-toolbarbutton-icon-fill: #fff !important;
+
+  /* icons_attention */
+  --lwt-toolbarbutton-icon-fill-attention: #4C98D1 !important;
+
+  /* button_background_hover */
+  --lwt-toolbarbutton-hover-background: #ffffff1a !important;
+
+  /* button_background_active */
+  --lwt-toolbarbutton-active-background: #ffffff2a !important;
+
+  --lwt-toolbar-field-color: #fff !important;
+  --lwt-toolbar-field-focus-color: #fff !important;
+
+  /* popup */
+  --arrowpanel-background: #4a4a4a !important;
+
+  /* popup_text */
+  --arrowpanel-color: #fff !important;
+  --autocomplete-popup-color: #fff !important;
+  --panel-disabled-color: hsla(0, 0%, 100%, .5) !important;
+
+  /* popup_border */
+  --arrowpanel-border-color: #63636363 !important;
+  --autocomplete-popup-border-color: #636363 !important;
+
+  /* popup_highlight */
+  --autocomplete-popup-highlight-background: #fff1 !important;
+
+  /* popup_highlight_text */
+  --autocomplete-popup-highlight-color: #fff !important;
+
+  --urlbar-popup-url-color: #75B6E8 !important;
+  --lwt-toolbar-field-background-color: #2b2b2b !important;
+  --lwt-toolbar-field-focus: #2b2b2b !important;
+  --lwt-toolbar-field-border-color: #656565 !important;
+
+  --tab-line-col: #4C98D1 !important;
+  --toolbar-field-focus-border-color: #4c97d1a0 !important;
+  --private-browsing-indicator: #006cbe !important;
+}
+
+/* Inactive Window Light Mode */
+:-moz-any(:root:not([style]), :root:not([lwtheme]), :root[style*="--lwt-accent-color:rgb(227, 228, 230); --lwt-text-color:rgba(24, 25, 26);"]):-moz-window-inactive :-moz-any(#TabsToolbar, #navigator-toolbox) {
+  --lwt-accent-color: #e8e8e8 !important;
+  --lwt-text-color: #3a3a3a !important;
+  --toolbar-color: #3a3a3a !important;
+}
+
+/* Inactive Window Dark Mode */
+:-moz-any(:root[style*="--lwt-accent-color:rgb(12, 12, 13); --lwt-text-color:rgba(249, 249, 250);"]):-moz-window-inactive :-moz-any(#TabsToolbar, #navigator-toolbox) {
+  --lwt-accent-color: #2e2e2e !important;
+  --lwt-text-color: #b7b7b7 !important;
+  --toolbar-color: #cecece !important;
+}
+
+/* Sidebar Light Mode */
+:-moz-any(#sidebar-box, #sidebar),
+:-moz-any(.sidebar-panel, body) {
+  /* sidebar */
+  --sidebar-background-color: #f5f5f5 !important;
+  --lwt-sidebar-background-color: var(--sidebar-background-color) !important;
+
+  /* sidebar_text */
+  --sidebar-text-color: #000 !important;
+  --lwt-sidebar-text-color: var(--sidebar-text-color) !important;
+}
+
+/* Sidebar Dark Mode */
+:-moz-any(#sidebar-box, #sidebar)[style*="--sidebar-background-color:rgb(56, 56, 61);"],
+:-moz-any(.sidebar-panel, body)[style*="--lwt-sidebar-background-color:rgb(56, 56, 61);"] {
+  /* sidebar */
+  --sidebar-background-color: #3b3b3b !important;
+  --lwt-sidebar-background-color: var(--sidebar-background-color) !important;
+
+  /* sidebar_text */
+  --sidebar-text-color: #fff !important;
+  --lwt-sidebar-text-color: var(--sidebar-text-color) !important;
+}
+
+/* Urlbar Button Backgrounds Light Mode */
+:-moz-any(#urlbar, #searchbar) {
+  --toolbarbutton-hover-background: #0001 !important;
+  --toolbarbutton-active-background: #0002 !important;
+}
+
+/* Urlbar Button Backgrounds Dark Mode */
+:root:-moz-lwtheme-brighttext :-moz-any(#urlbar, #searchbar) {
+  --toolbarbutton-hover-background: #fff1 !important;
+  --toolbarbutton-active-background: #fff2 !important;
+}

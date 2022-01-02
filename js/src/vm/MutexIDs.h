@@ -21,7 +21,6 @@
   _(ShellWorkerThreads, 100)          \
   _(ShellObjectMailbox, 100)          \
                                       \
-  _(AtomsTable, 200)                  \
   _(WasmInitBuiltinThunks, 250)       \
   _(WasmLazyStubsTier1, 250)          \
   _(WasmLazyStubsTier2, 251)          \

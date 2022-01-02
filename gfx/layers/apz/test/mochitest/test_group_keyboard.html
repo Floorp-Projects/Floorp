@@ -5,34 +5,46 @@
   <title>Various keyboard scrolling tests</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+
+var smoothness_prefs = [
+  ["apz.test.logging_enabled", true],
+  // The default verticalScrollDistance (which is 3) is too small for native
+  // keyboard scrolling, it sometimes produces same scroll offsets in the early
+  // stages of the smooth animation.
+  ["toolkit.scrollbox.verticalScrollDistance", 5],
+  // Use a longer animation duration to avoid the situation that the
+  // animation stops accidentally in between each arrow down key press.
+  // If the situation happens, scroll offsets will not change at the moment.
+  ["general.smoothScroll.lines.durationMaxMS", 1500],
+  ["general.smoothScroll.lines.durationMinMS", 1500]
+];
 
 var subtests = [
   {"file": "helper_key_scroll.html", prefs: [["apz.test.logging_enabled", true],
                                              ["test.events.async.enabled", true]]},
   {"file": "helper_bug1674935.html", prefs: []},
-  {"file": "helper_relative_scroll_smoothness.html",
-   prefs: [
-    ["apz.test.logging_enabled", true],
-    // Use a longer animation duration to avoid the situation that the
-    // animation stops accidentally in between each arrow down key press.
-    // If the situation happens, scroll offsets will not change at the moment.
-    ["general.smoothScroll.lines.durationMaxMS", 1500],
-    ["general.smoothScroll.lines.durationMinMS", 1500]
-   ]
-  },
+  {"file": "helper_relative_scroll_smoothness.html?input-type=key&scroll-method=scrollBy",
+    prefs: smoothness_prefs },
+  {"file": "helper_relative_scroll_smoothness.html?input-type=native-key&scroll-method=scrollBy",
+    prefs: smoothness_prefs },
+  {"file": "helper_relative_scroll_smoothness.html?input-type=native-key&scroll-method=scrollTo",
+    prefs: smoothness_prefs },
+  {"file": "helper_relative_scroll_smoothness.html?input-type=native-key&scroll-method=scrollTop",
+    prefs: smoothness_prefs }
 ];
 
-    if (isKeyApzEnabled()) {
-      SimpleTest.waitForExplicitFinish();
-      window.onload = function() {
-        runSubtestsSeriallyInFreshWindows(subtests)
-        .then(SimpleTest.finish, SimpleTest.finishWithFailure);
-      };
-    } else {
-      SimpleTest.ok(true, "Keyboard APZ is disabled");
-    }
+if (isKeyApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+} else {
+  SimpleTest.ok(true, "Keyboard APZ is disabled");
+}
   </script>
 </head>
 <body>

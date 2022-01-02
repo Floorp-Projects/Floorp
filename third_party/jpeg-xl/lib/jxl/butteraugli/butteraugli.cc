@@ -41,6 +41,7 @@
 #define HWY_TARGET_INCLUDE "lib/jxl/butteraugli/butteraugli.cc"
 #include <hwy/foreach_target.h>
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
@@ -1136,7 +1137,7 @@ void Mask(const ImageF& mask0, const ImageF& mask1,
   FuzzyErosion(blurred1, &diff1);
   for (size_t y = 0; y < ysize; ++y) {
     for (size_t x = 0; x < xsize; ++x) {
-      mask->Row(y)[x] = diff1.Row(y)[x];
+      mask->Row(y)[x] = diff0.Row(y)[x];
       if (diff_ac != nullptr) {
         static const float kMaskToErrorMul = 10.0;
         float diff = blurred0.Row(y)[x] - blurred1.Row(y)[x];
@@ -1796,9 +1797,9 @@ bool ButteraugliDiffmap(const Image3F& rgb0, const Image3F& rgb1,
       for (size_t y = 0; y < yscaled; ++y) {
         for (size_t x = 0; x < xscaled; ++x) {
           size_t x2 =
-              std::min<size_t>(xsize - 1, std::max<size_t>(0, x - xborder));
+              std::min<size_t>(xsize - 1, x > xborder ? x - xborder : 0);
           size_t y2 =
-              std::min<size_t>(ysize - 1, std::max<size_t>(0, y - yborder));
+              std::min<size_t>(ysize - 1, y > yborder ? y - yborder : 0);
           scaled0.PlaneRow(i, y)[x] = rgb0.PlaneRow(i, y2)[x2];
           scaled1.PlaneRow(i, y)[x] = rgb1.PlaneRow(i, y2)[x2];
         }

@@ -10,6 +10,9 @@
 #include "base/process.h"
 #include "mozilla/Mutex.h"
 
+#if defined(OS_WIN)
+#  include "mozilla/UniquePtrExtensions.h"
+#endif
 #if !defined(OS_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD)
 #  include <pthread.h>
 #  include "mozilla/ipc/SharedMemoryBasic.h"
@@ -34,7 +37,7 @@ struct ParamTraits;
 //
 namespace mozilla {
 #if defined(OS_WIN)
-typedef HANDLE CrossProcessMutexHandle;
+typedef mozilla::UniqueFileHandle CrossProcessMutexHandle;
 #elif !defined(OS_NETBSD) && !defined(OS_OPENBSD)
 typedef mozilla::ipc::SharedMemoryBasic::Handle CrossProcessMutexHandle;
 #else
@@ -83,13 +86,13 @@ class CrossProcessMutex {
   void Unlock();
 
   /**
-   * ShareToProcess
+   * CloneHandle
    * This function is called to generate a serializable structure that can
    * be sent to the specified process and opened on the other side.
    *
    * @returns A handle that can be shared to another process
    */
-  CrossProcessMutexHandle ShareToProcess(base::ProcessId aTargetPid);
+  CrossProcessMutexHandle CloneHandle();
 
  private:
   friend struct IPC::ParamTraits<CrossProcessMutex>;

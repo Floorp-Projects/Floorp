@@ -11,7 +11,7 @@ function run_test() {
   const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(
     Ci.nsIJSInspector
   );
-  const g = testGlobal("test1");
+  const g = createTestGlobal("test1");
 
   const dbg = makeDebugger();
   dbg.uncaughtExceptionHook = testExceptionHook;

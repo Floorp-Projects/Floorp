@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/intl/ICU4CGlue.h"
+#include "unicode/uformattedvalue.h"
 
 namespace mozilla::intl {
 
@@ -19,6 +20,19 @@ ICUResult ToICUResult(UErrorCode status) {
     return Ok();
   }
   return Err(ToICUError(status));
+}
+
+// static
+Result<Span<const char16_t>, ICUError> FormattedResult::ToSpanImpl(
+    const UFormattedValue* value) {
+  UErrorCode status = U_ZERO_ERROR;
+  int32_t strLength;
+  const char16_t* str = ufmtval_getString(value, &strLength, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  return Span{str, AssertedCast<size_t>(strLength)};
 }
 
 }  // namespace mozilla::intl

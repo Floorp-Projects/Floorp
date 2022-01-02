@@ -465,6 +465,10 @@ LoginAutoCompleteResult.prototype = {
     return this.getValueAt(index);
   },
 
+  isRemovableAt(index) {
+    return true;
+  },
+
   removeValueAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");

@@ -8,7 +8,8 @@
 
 add_task(async function() {
   const TEST_URI =
-    "data:text/html;charset=utf8,<title>bug871156</title>\n" + "<p>hello world";
+    "data:text/html;charset=utf8,<!DOCTYPE html><title>bug871156</title>\n" +
+    "<p>hello world";
   const firstTab = gBrowser.selectedTab;
 
   let hud = await openNewTabAndConsole(TEST_URI);

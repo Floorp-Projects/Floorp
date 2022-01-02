@@ -191,32 +191,32 @@ fa{
                         other{"00 میلیون"}
                     }
                     100000000{
-                        one{"000 م"}
-                        other{"000 م"}
+                        one{"000 میلیون"}
+                        other{"000 میلیون"}
                     }
                     1000000000{
-                        one{"0 م"}
-                        other{"0 م"}
+                        one{"0 میلیارد"}
+                        other{"0 میلیارد"}
                     }
                     10000000000{
-                        one{"00 م"}
-                        other{"00 م"}
+                        one{"00 میلیارد"}
+                        other{"00 میلیارد"}
                     }
                     100000000000{
-                        one{"000 ب"}
-                        other{"000B"}
+                        one{"000 میلیارد"}
+                        other{"000 میلیارد"}
                     }
                     1000000000000{
-                        one{"0 ت"}
+                        one{"0 تریلیون"}
                         other{"0 تریلیون"}
                     }
                     10000000000000{
-                        one{"00 ت"}
-                        other{"00 ت"}
+                        one{"00 تریلیون"}
+                        other{"00 تریلیون"}
                     }
                     100000000000000{
-                        one{"000 ت"}
-                        other{"000 ت"}
+                        one{"000 تریلیون"}
+                        other{"000 تریلیون"}
                     }
                 }
             }
@@ -462,6 +462,16 @@ fa{
                 "{1}،‏ {0}",
                 "{1}،‏ {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             appendItems{
                 Day-Of-Week{"{1} {0}"}
                 Timezone{"{0} ({1})"}
@@ -482,6 +492,7 @@ fa{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"H"}
                 HHmmZ{"HH:mm (Z)"}
                 Hm{"H:mm"}
@@ -682,6 +693,16 @@ fa{
                 "{1}،‏ {0}",
                 "{1}،‏ {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMd",
+            }
             appendItems{
                 Day-Of-Week{"{1} {0}"}
                 Timezone{"{0} ({1})"}
@@ -702,6 +723,7 @@ fa{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"y/M/d GGGGG"}
                 H{"H"}
                 HHmmZ{"HH:mm (Z)"}
                 Hm{"H:mm"}
@@ -841,7 +863,7 @@ fa{
                         night2{"ن"}
                     }
                     wide{
-                        afternoon1{"ظهر"}
+                        afternoon1{"بعدازظهر"}
                         afternoon2{"عصر"}
                         morning1{"بامداد"}
                         morning2{"صبح"}
@@ -1053,13 +1075,13 @@ fa{
             monthNames{
                 format{
                     abbreviated{
-                        "ژانویهٔ",
-                        "فوریهٔ",
+                        "ژانویه",
+                        "فوریه",
                         "مارس",
                         "آوریل",
-                        "مهٔ",
+                        "مه",
                         "ژوئن",
-                        "ژوئیهٔ",
+                        "ژوئیه",
                         "اوت",
                         "سپتامبر",
                         "اکتبر",
@@ -1389,6 +1411,16 @@ fa{
                 "{1}،‏ {0}",
                 "{1}،‏ {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GyMd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"E dم"}
@@ -1396,6 +1428,7 @@ fa{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"H"}
                 Hm{"H:mm"}
                 HmZ{"HH:mm (Z)"}
@@ -2327,6 +2360,16 @@ fa{
                 "{1}، ساعت {0}",
                 "{1}،‏ {0}",
                 "{1}،‏ {0}",
+            }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMd",
             }
             availableFormats{
                 Ed{"E dم"}

@@ -8,6 +8,14 @@ from __future__ import unicode_literals
 
 import re
 import warnings
+try:
+	from typing import (
+		AnyStr,
+		Optional,
+		Text,
+		Tuple)
+except ImportError:
+	pass
 
 from .. import util
 from ..compat import unicode
@@ -15,6 +23,14 @@ from ..pattern import RegexPattern
 
 #: The encoding to use when parsing a byte string pattern.
 _BYTES_ENCODING = 'latin1'
+
+
+class GitWildMatchPatternError(ValueError):
+	"""
+	The :class:`GitWildMatchPatternError` indicates an invalid git wild match
+	pattern.
+	"""
+	pass
 
 
 class GitWildMatchPattern(RegexPattern):
@@ -28,6 +44,7 @@ class GitWildMatchPattern(RegexPattern):
 
 	@classmethod
 	def pattern_to_regex(cls, pattern):
+		# type: (AnyStr) -> Tuple[Optional[AnyStr], Optional[bool]]
 		"""
 		Convert the pattern into a regular expression.
 
@@ -47,6 +64,7 @@ class GitWildMatchPattern(RegexPattern):
 		else:
 			raise TypeError("pattern:{!r} is not a unicode or byte string.".format(pattern))
 
+		original_pattern = pattern
 		pattern = pattern.strip()
 
 		if pattern.startswith('#'):
@@ -63,7 +81,6 @@ class GitWildMatchPattern(RegexPattern):
 			include = None
 
 		elif pattern:
-
 			if pattern.startswith('!'):
 				# A pattern starting with an exclamation mark ('!') negates the
 				# pattern (exclude instead of include). Escape the exclamation
@@ -80,10 +97,30 @@ class GitWildMatchPattern(RegexPattern):
 				# exclamation mark ('!').
 				pattern = pattern[1:]
 
+			# Allow a regex override for edge cases that cannot be handled
+			# through normalization.
+			override_regex = None
+
 			# Split pattern into segments.
 			pattern_segs = pattern.split('/')
 
 			# Normalize pattern to make processing easier.
+
+			# EDGE CASE: Deal with duplicate double-asterisk sequences.
+			# Collapse each sequence down to one double-asterisk. Iterate over
+			# the segments in reverse and remove the duplicate double
+			# asterisks as we go.
+			for i in range(len(pattern_segs) - 1, 0, -1):
+				prev = pattern_segs[i-1]
+				seg = pattern_segs[i]
+				if prev == '**' and seg == '**':
+					del pattern_segs[i]
+
+			if len(pattern_segs) == 2 and pattern_segs[0] == '**' and not pattern_segs[1]:
+				# EDGE CASE: The '**/' pattern should match everything except
+				# individual files in the root directory. This case cannot be
+				# adequately handled through normalization. Use the override.
+				override_regex = '^.+/.*$'
 
 			if not pattern_segs[0]:
 				# A pattern beginning with a slash ('/') will only match paths
@@ -109,58 +146,75 @@ class GitWildMatchPattern(RegexPattern):
 				# according to `git check-ignore` (v2.4.1).
 				pass
 
+			if not pattern_segs:
+				# After resolving the edge cases, we end up with no
+				# pattern at all. This must be because the pattern is
+				# invalid.
+				raise GitWildMatchPatternError("Invalid git pattern: %r" % (original_pattern,))
+
 			if not pattern_segs[-1] and len(pattern_segs) > 1:
-				# A pattern ending with a slash ('/') will match all descendant
-				# paths if it is a directory but not if it is a regular file.
-				# This is equivilent to "{pattern}/**". So, set last segment to
-				# double asterisks to include all descendants.
+				# A pattern ending with a slash ('/') will match all
+				# descendant paths if it is a directory but not if it is a
+				# regular file. This is equivalent to "{pattern}/**". So, set
+				# last segment to a double-asterisk to include all
+				# descendants.
 				pattern_segs[-1] = '**'
 
-			# Build regular expression from pattern.
-			output = ['^']
-			need_slash = False
-			end = len(pattern_segs) - 1
-			for i, seg in enumerate(pattern_segs):
-				if seg == '**':
-					if i == 0 and i == end:
-						# A pattern consisting solely of double-asterisks ('**')
-						# will match every path.
-						output.append('.+')
-					elif i == 0:
-						# A normalized pattern beginning with double-asterisks
-						# ('**') will match any leading path segments.
-						output.append('(?:.+/)?')
-						need_slash = False
-					elif i == end:
-						# A normalized pattern ending with double-asterisks ('**')
-						# will match any trailing path segments.
-						output.append('/.*')
-					else:
-						# A pattern with inner double-asterisks ('**') will match
-						# multiple (or zero) inner path segments.
-						output.append('(?:/.+)?')
+			if override_regex is None:
+				# Build regular expression from pattern.
+				output = ['^']
+				need_slash = False
+				end = len(pattern_segs) - 1
+				for i, seg in enumerate(pattern_segs):
+					if seg == '**':
+						if i == 0 and i == end:
+							# A pattern consisting solely of double-asterisks ('**')
+							# will match every path.
+							output.append('.+')
+						elif i == 0:
+							# A normalized pattern beginning with double-asterisks
+							# ('**') will match any leading path segments.
+							output.append('(?:.+/)?')
+							need_slash = False
+						elif i == end:
+							# A normalized pattern ending with double-asterisks ('**')
+							# will match any trailing path segments.
+							output.append('/.*')
+						else:
+							# A pattern with inner double-asterisks ('**') will match
+							# multiple (or zero) inner path segments.
+							output.append('(?:/.+)?')
+							need_slash = True
+
+					elif seg == '*':
+						# Match single path segment.
+						if need_slash:
+							output.append('/')
+						output.append('[^/]+')
 						need_slash = True
-				elif seg == '*':
-					# Match single path segment.
-					if need_slash:
-						output.append('/')
-					output.append('[^/]+')
-					need_slash = True
-				else:
-					# Match segment glob pattern.
-					if need_slash:
-						output.append('/')
-					output.append(cls._translate_segment_glob(seg))
-					if i == end and include is True:
-						# A pattern ending without a slash ('/') will match a file
-						# or a directory (with paths underneath it). E.g., "foo"
-						# matches "foo", "foo/bar", "foo/bar/baz", etc.
-						# EDGE CASE: However, this does not hold for exclusion cases
-						# according to `git check-ignore` (v2.4.1).
-						output.append('(?:/.*)?')
-					need_slash = True
-			output.append('$')
-			regex = ''.join(output)
+
+					else:
+						# Match segment glob pattern.
+						if need_slash:
+							output.append('/')
+
+						output.append(cls._translate_segment_glob(seg))
+						if i == end and include is True:
+							# A pattern ending without a slash ('/') will match a file
+							# or a directory (with paths underneath it). E.g., "foo"
+							# matches "foo", "foo/bar", "foo/bar/baz", etc.
+							# EDGE CASE: However, this does not hold for exclusion cases
+							# according to `git check-ignore` (v2.4.1).
+							output.append('(?:/.*)?')
+
+						need_slash = True
+
+				output.append('$')
+				regex = ''.join(output)
+
+			else:
+				# Use regex override.
+				regex = override_regex
 
 		else:
 			# A blank pattern is a null-operation (neither includes nor
@@ -175,6 +229,7 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def _translate_segment_glob(pattern):
+		# type: (Text) -> Text
 		"""
 		Translates the glob pattern to a regular expression. This is used in
 		the constructor to translate a path segment glob pattern to its
@@ -215,28 +270,28 @@ class GitWildMatchPattern(RegexPattern):
 				regex += '[^/]'
 
 			elif char == '[':
-				# Braket expression wildcard. Except for the beginning
-				# exclamation mark, the whole braket expression can be used
+				# Bracket expression wildcard. Except for the beginning
+				# exclamation mark, the whole bracket expression can be used
 				# directly as regex but we have to find where the expression
 				# ends.
-				# - "[][!]" matchs ']', '[' and '!'.
-				# - "[]-]" matchs ']' and '-'.
-				# - "[!]a-]" matchs any character except ']', 'a' and '-'.
+				# - "[][!]" matches ']', '[' and '!'.
+				# - "[]-]" matches ']' and '-'.
+				# - "[!]a-]" matches any character except ']', 'a' and '-'.
 				j = i
 				# Pass brack expression negation.
 				if j < end and pattern[j] == '!':
 					j += 1
-				# Pass first closing braket if it is at the beginning of the
+				# Pass first closing bracket if it is at the beginning of the
 				# expression.
 				if j < end and pattern[j] == ']':
 					j += 1
-				# Find closing braket. Stop once we reach the end or find it.
+				# Find closing bracket. Stop once we reach the end or find it.
 				while j < end and pattern[j] != ']':
 					j += 1
 
 				if j < end:
-					# Found end of braket expression. Increment j to be one past
-					# the closing braket:
+					# Found end of bracket expression. Increment j to be one past
+					# the closing bracket:
 					#
 					#  [...]
 					#   ^   ^
@@ -250,7 +305,7 @@ class GitWildMatchPattern(RegexPattern):
 						expr += '^'
 						i += 1
 					elif pattern[i] == '^':
-						# POSIX declares that the regex braket expression negation
+						# POSIX declares that the regex bracket expression negation
 						# "[^...]" is undefined in a glob pattern. Python's
 						# `fnmatch.translate()` escapes the caret ('^') as a
 						# literal. To maintain consistency with undefined behavior,
@@ -258,19 +313,19 @@ class GitWildMatchPattern(RegexPattern):
 						expr += '\\^'
 						i += 1
 
-					# Build regex braket expression. Escape slashes so they are
+					# Build regex bracket expression. Escape slashes so they are
 					# treated as literal slashes by regex as defined by POSIX.
 					expr += pattern[i:j].replace('\\', '\\\\')
 
-					# Add regex braket expression to regex result.
+					# Add regex bracket expression to regex result.
 					regex += expr
 
-					# Set i to one past the closing braket.
+					# Set i to one past the closing bracket.
 					i = j
 
 				else:
-					# Failed to find closing braket, treat opening braket as a
-					# braket literal instead of as an expression.
+					# Failed to find closing bracket, treat opening bracket as a
+					# bracket literal instead of as an expression.
 					regex += '\\['
 
 			else:
@@ -281,18 +336,33 @@ class GitWildMatchPattern(RegexPattern):
 
 	@staticmethod
 	def escape(s):
+		# type: (AnyStr) -> AnyStr
 		"""
 		Escape special characters in the given string.
 
 		*s* (:class:`unicode` or :class:`bytes`) a filename or a string
 		that you want to escape, usually before adding it to a `.gitignore`
 
-		Returns the escaped string (:class:`unicode`, :class:`bytes`)
+		Returns the escaped string (:class:`unicode` or :class:`bytes`)
 		"""
+		if isinstance(s, unicode):
+			return_type = unicode
+			string = s
+		elif isinstance(s, bytes):
+			return_type = bytes
+			string = s.decode(_BYTES_ENCODING)
+		else:
+			raise TypeError("s:{!r} is not a unicode or byte string.".format(s))
+
 		# Reference: https://git-scm.com/docs/gitignore#_pattern_format
 		meta_characters = r"[]!*#?"
 
-		return "".join("\\" + x if x in meta_characters else x for x in s)
+		out_string = "".join("\\" + x if x in meta_characters else x for x in string)
+
+		if return_type is bytes:
+			return out_string.encode(_BYTES_ENCODING)
+		else:
+			return out_string
 
 util.register_pattern('gitwildmatch', GitWildMatchPattern)
 
@@ -308,7 +378,7 @@ class GitIgnorePattern(GitWildMatchPattern):
 		Warn about deprecation.
 		"""
 		self._deprecated()
-		return super(GitIgnorePattern, self).__init__(*args, **kw)
+		super(GitIgnorePattern, self).__init__(*args, **kw)
 
 	@staticmethod
 	def _deprecated():

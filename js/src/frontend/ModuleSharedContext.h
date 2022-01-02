@@ -10,20 +10,23 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
-#include "builtin/ModuleObject.h"    // js::ModuleObject
+#include "jstypes.h"
+
 #include "frontend/SharedContext.h"  // js::frontend::SharedContext
-#include "js/CompileOptions.h"       // JS::ReadOnlyCompileOptions
-#include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
-#include "vm/Scope.h"                // js::{Module,}Scope
-#include "vm/StencilEnums.h"         // ImmutableScriptFlagsEnum
+#include "vm/Scope.h"                // js::ModuleScope
+
+struct JS_PUBLIC_API JSContext;
+
+namespace JS {
+class JS_PUBLIC_API ReadOnlyCompileOptions;
+}
 
 namespace js {
 
 class ModuleBuilder;
+struct SourceExtent;
 
 namespace frontend {
-
-struct CompilationStencil;
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
  public:

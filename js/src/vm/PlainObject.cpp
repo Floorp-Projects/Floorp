@@ -28,10 +28,17 @@ using namespace js;
 using JS::Handle;
 using JS::Rooted;
 
-PlainObject* js::CreateThisForFunction(JSContext* cx,
-                                       Handle<JSFunction*> callee,
-                                       Handle<JSObject*> newTarget,
-                                       NewObjectKind newKind) {
+static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
+    JSContext* cx, JSObject* proto, gc::AllocKind kind) {
+  MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(&PlainObject::class_) == 0,
+             "all slots can be used for properties");
+  uint32_t nfixed = GetGCKindSlots(kind);
+  return SharedShape::getInitialShape(cx, &PlainObject::class_, cx->realm(),
+                                      TaggedProto(proto), nfixed);
+}
+
+Shape* js::ThisShapeForFunction(JSContext* cx, Handle<JSFunction*> callee,
+                                Handle<JSObject*> newTarget) {
   MOZ_ASSERT(cx->realm() == callee->realm());
   MOZ_ASSERT(!callee->constructorNeedsUninitializedThis());
 
@@ -42,14 +49,14 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
 
   js::gc::AllocKind allocKind = NewObjectGCKind();
 
-  PlainObject* res;
-  if (proto) {
-    res = NewPlainObjectWithProtoAndAllocKind(cx, proto, allocKind, newKind);
+  Shape* res;
+  if (proto && proto != cx->global()->maybeGetPrototype(JSProto_Object)) {
+    res = GetPlainObjectShapeWithProto(cx, proto, allocKind);
   } else {
-    res = NewPlainObjectWithAllocKind(cx, allocKind, newKind);
+    res = GlobalObject::getPlainObjectShapeWithDefaultProto(cx, allocKind);
   }
 
-  MOZ_ASSERT_IF(res, res->nonCCWRealm() == callee->realm());
+  MOZ_ASSERT_IF(res, res->realm() == callee->realm());
 
   return res;
 }
@@ -122,15 +129,6 @@ static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
   }
 
   return true;
-}
-
-static MOZ_ALWAYS_INLINE Shape* GetPlainObjectShapeWithProto(
-    JSContext* cx, JSObject* proto, gc::AllocKind kind) {
-  MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(&PlainObject::class_) == 0,
-             "all slots can be used for properties");
-  uint32_t nfixed = GetGCKindSlots(kind);
-  return SharedShape::getInitialShape(cx, &PlainObject::class_, cx->realm(),
-                                      TaggedProto(proto), nfixed);
 }
 
 // static

@@ -16,7 +16,7 @@ namespace dom {
 
 class FetchEventOpParent;
 class PRemoteWorkerParent;
-class ServiceWorkerFetchEventOpArgs;
+class ParentToParentServiceWorkerFetchEventOpArgs;
 
 /**
  * FetchEventOpProxyParent owns a FetchEventOpParent in order to propagate
@@ -31,18 +31,20 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
   friend class PFetchEventOpProxyParent;
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyParent, override);
+
   static void Create(
       PRemoteWorkerParent* aManager,
       RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise,
-      const ServiceWorkerFetchEventOpArgs& aArgs,
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs,
       RefPtr<FetchEventOpParent> aReal, nsCOMPtr<nsIInputStream> aBodyStream);
-
-  ~FetchEventOpProxyParent();
 
  private:
   FetchEventOpProxyParent(
       RefPtr<FetchEventOpParent>&& aReal,
       RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise);
+
+  ~FetchEventOpProxyParent();
 
   mozilla::ipc::IPCResult RecvAsyncLog(const nsCString& aScriptSpec,
                                        const uint32_t& aLineNumber,
@@ -51,7 +53,7 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
                                        nsTArray<nsString>&& aParams);
 
   mozilla::ipc::IPCResult RecvRespondWith(
-      const IPCFetchEventRespondWithResult& aResult);
+      const ChildToParentFetchEventRespondWithResult& aResult);
 
   mozilla::ipc::IPCResult Recv__delete__(
       const ServiceWorkerFetchEventOpResult& aResult);

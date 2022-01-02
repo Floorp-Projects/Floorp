@@ -45,9 +45,7 @@ function RequestObserver() {
 RequestObserver.prototype = {
   register() {
     info("Registering " + notification);
-    Cc["@mozilla.org/observer-service;1"]
-      .getService(Ci.nsIObserverService)
-      .addObserver(this, notification, true);
+    Services.obs.addObserver(this, notification, true);
   },
 
   QueryInterface: ChromeUtils.generateQI([

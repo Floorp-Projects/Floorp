@@ -12,6 +12,7 @@ interface mozIExtensionServiceWorkerInfo : nsISupports
   readonly attribute nsIPrincipal principal;
   readonly attribute AString scriptURL;
   readonly attribute AString clientInfoId;
+  readonly attribute unsigned long long descriptorId;
 };
 
 [scriptable, uuid(876d45db-5c1b-4c9b-9148-1c86b33d120b)]
@@ -159,4 +160,33 @@ interface mozIExtensionAPIRequestHandler : nsISupports
   void handleAPIRequest(in nsISupports extension,
                         in mozIExtensionAPIRequest apiRequest,
                         [optional, retval] out mozIExtensionAPIRequestResult apiRequestResult);
+
+  /**
+   * A method called when an extension background service worker is initialized and
+   * ready to execute its main script.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param serviceWorkerInfo
+   */ 
+  void initExtensionWorker(in nsISupports extension,
+                           in mozIExtensionServiceWorkerInfo serviceWorkerInfo);
+
+  /**
+   * A method called when an extension background service worker has loaded its
+   * main script.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param serviceWorkerDescriptorId
+   */
+   void onExtensionWorkerLoaded(in nsISupports extension,
+                                in unsigned long long serviceWorkerDescriptorId);
+
+  /**
+   * A method called when an extension background service worker is destroyed.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param serviceWorkerDescriptorId
+   */
+   void onExtensionWorkerDestroyed(in nsISupports extension,
+                                   in unsigned long long serviceWorkerDescriptorId);
 };

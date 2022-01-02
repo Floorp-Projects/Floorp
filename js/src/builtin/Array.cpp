@@ -3863,17 +3863,14 @@ static const JSFunctionSpec array_methods[] = {
     /* Proposal */
     JS_SELF_HOSTED_FN("at", "ArrayAt", 1, 0),
 
-    JS_FS_END};
-
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-static const JSFunctionSpec change_array_by_copy_methods[] = {
     JS_SELF_HOSTED_FN("withReversed", "ArrayWithReversed", 0, 0),
     JS_SELF_HOSTED_FN("withSorted", "ArrayWithSorted", 1, 0),
     JS_FN("withSpliced", array_with_spliced, 2, 0),
     JS_FN("withAt", array_with_at, 2, 0),
+#endif
 
     JS_FS_END};
-#endif
 
 static const JSFunctionSpec array_static_methods[] = {
     JS_INLINABLE_FN("isArray", array_isArray, 1, 0, ArrayIsArray),
@@ -4130,10 +4127,6 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
         !DefineDataProperty(cx, unscopables, cx->names().withReversed, value) ||
         !DefineDataProperty(cx, unscopables, cx->names().withSorted, value) ||
         !DefineDataProperty(cx, unscopables, cx->names().withSpliced, value)) {
-      return false;
-    }
-
-    if (!JS_DefineFunctions(cx, proto, change_array_by_copy_methods)) {
       return false;
     }
   }

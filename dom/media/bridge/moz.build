@@ -24,7 +24,7 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/media/webrtc/",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 if CONFIG["MOZ_WEBRTC"]:
@@ -33,6 +33,3 @@ if CONFIG["MOZ_WEBRTC"]:
     ]
 
 FINAL_LIBRARY = "xul"
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

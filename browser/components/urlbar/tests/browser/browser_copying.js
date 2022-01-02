@@ -137,6 +137,33 @@ var tests = [
     copyVal: "<example>.com/foo",
     copyExpected: "example",
   },
+  // Test that partially selected URL is copied with encoded spaces
+  {
+    loadURL: "http://example.com/%20space/test",
+    expectedURL: "example.com/ space/test",
+    copyExpected: "http://example.com/%20space/test",
+  },
+  {
+    copyVal: "<example.com/ space>/test",
+    copyExpected: "http://example.com/%20space",
+  },
+  {
+    copyVal: "<example.com/ space/test>",
+    copyExpected: "http://example.com/%20space/test",
+  },
+  {
+    loadURL: "http://example.com/%20foo%20bar%20baz/",
+    expectedURL: "example.com/ foo bar baz/",
+    copyExpected: "http://example.com/%20foo%20bar%20baz/",
+  },
+  {
+    copyVal: "<example.com/ foo bar> baz/",
+    copyExpected: "http://example.com/%20foo%20bar",
+  },
+  {
+    copyVal: "example.<com/ foo bar> baz/",
+    copyExpected: "com/ foo bar",
+  },
 
   // Test that userPass is stripped out
   {
@@ -180,7 +207,7 @@ var tests = [
   },
   {
     copyVal: "<example.com/\xe9>\xe9",
-    copyExpected: "http://example.com/\xe9",
+    copyExpected: "http://example.com/%C3%A9",
   },
   {
     // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
@@ -194,7 +221,7 @@ var tests = [
   },
   {
     copyVal: "<sub2.ält.mochi.test:8888/f>oo",
-    copyExpected: "http://sub2.ält.mochi.test:8888/f",
+    copyExpected: "http://sub2.%C3%A4lt.mochi.test:8888/f",
   },
 
   {
@@ -208,7 +235,7 @@ var tests = [
   },
   {
     copyVal: "<example.com/?\xf7>\xf7",
-    copyExpected: "http://example.com/?\xf7",
+    copyExpected: "http://example.com/?%C3%B7",
   },
   {
     loadURL: "http://example.com/a%20test",
@@ -276,7 +303,7 @@ var tests = [
   },
   {
     copyVal: "<example.com/би>ография",
-    copyExpected: "http://example.com/би",
+    copyExpected: "http://example.com/%D0%B1%D0%B8",
   },
 
   {

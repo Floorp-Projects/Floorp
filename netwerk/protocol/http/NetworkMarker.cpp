@@ -23,7 +23,7 @@ void profiler_add_network_marker(
     UniquePtr<ProfileChunkedBuffer> aSource,
     const Maybe<nsDependentCString>& aContentType, nsIURI* aRedirectURI,
     uint32_t aRedirectFlags, uint64_t aRedirectChannelId) {
-  if (!profiler_thread_is_being_profiled()) {
+  if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
   }
 

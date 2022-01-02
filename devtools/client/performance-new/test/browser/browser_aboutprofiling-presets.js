@@ -28,33 +28,27 @@ add_task(async function test() {
       "Stackwalking is not enabled for the Web Developer workflow"
     );
 
-    const platform = await getNearestInputFromText(
-      document,
-      "Firefox Platform"
-    );
+    const graphics = await getNearestInputFromText(document, "Graphics");
 
-    ok(!platform.checked, "The Firefox Platform preset is not checked.");
-    platform.click();
+    ok(!graphics.checked, "The Graphics preset is not checked.");
+    graphics.click();
     ok(
-      platform.checked,
-      "After clicking the input, the Firefox Platform preset is now checked."
+      graphics.checked,
+      "After clicking the input, the Graphics preset is now checked."
     );
 
     ok(
       activeConfigurationHasFeature("stackwalk"),
-      "The Firefox Platform preset uses stackwalking."
+      "The graphics preset uses stackwalking."
     );
 
-    const frontEnd = await getNearestInputFromText(
-      document,
-      "Firefox Front-End"
-    );
+    const media = await getNearestInputFromText(document, "Media");
 
-    ok(!frontEnd.checked, "The Firefox front-end preset is not checked.");
-    frontEnd.click();
+    ok(!media.checked, "The media preset is not checked.");
+    media.click();
     ok(
-      frontEnd.checked,
-      "After clicking the input, the Firefox front-end preset is now checked."
+      media.checked,
+      "After clicking the input, the Media preset is now checked."
     );
   });
 });

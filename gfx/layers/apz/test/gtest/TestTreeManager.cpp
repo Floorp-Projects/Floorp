@@ -10,7 +10,7 @@
 
 class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
  protected:
-  void CreateSimpleDTCScrollingLayer() {
+  void CreateSimpleScrollingLayer() {
     const char* treeShape = "x";
     nsIntRegion layerVisibleRegion[] = {
         nsIntRegion(IntRect(0, 0, 200, 200)),
@@ -18,11 +18,6 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 500, 500));
-
-    EventRegions regions;
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 200, 200));
-    regions.mDispatchToContentHitRegion = regions.mHitRegion;
-    APZTestAccess::SetEventRegions(*layers[0], regions);
   }
 
   void CreateSimpleMultiLayerTree() {
@@ -51,7 +46,7 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 3);
   }
 
-  void CreateTwoLayerDTCTree(int32_t aRootContentLayerIndex) {
+  void CreateTwoLayerTree(int32_t aRootContentLayerIndex) {
     const char* treeShape = "x(x)";
     // LayerID               0 1
     nsIntRegion layerVisibleRegion[] = {
@@ -69,13 +64,6 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                        [](ScrollMetadata& sm, FrameMetrics& fm) {
                          fm.SetIsRootContent(true);
                        });
-
-    // Both layers are fully dispatch-to-content
-    EventRegions regions;
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    regions.mDispatchToContentHitRegion = regions.mHitRegion;
-    APZTestAccess::SetEventRegions(*layers[0], regions);
-    APZTestAccess::SetEventRegions(*layers[1], regions);
   }
 };
 
@@ -118,10 +106,15 @@ TEST_F(APZCTreeManagerGenericTester, Bug1068268) {
   EXPECT_EQ(ApzcOf(layers[5]), ApzcOf(layers[6])->GetParent());
 }
 
-TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
+class APZCTreeManagerGenericTesterMock : public APZCTreeManagerGenericTester {
+ public:
+  APZCTreeManagerGenericTesterMock() { CreateMockHitTester(); }
+};
+
+TEST_F(APZCTreeManagerGenericTesterMock, Bug1194876) {
   // Create a layer tree with parent and child scrollable layers, with the
   // child being the root content.
-  CreateTwoLayerDTCTree(1);
+  CreateTwoLayerTree(1);
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
@@ -133,7 +126,10 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   MultiTouchInput mti;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
-      SingleTouchData(0, ParentLayerPoint(25, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(0, ScreenIntPoint(25, 50), ScreenSize(0, 0), 0, 0));
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, false);
   targets.AppendElement(ApzcOf(layers[0])->GetGuid());
@@ -145,7 +141,14 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   // layers[1]. Again we tell it both touches landed on layers[0], but because
   // layers[1] is the RCD layer, it will end up being the multitouch target.
   mti.mTouches.AppendElement(
-      SingleTouchData(1, ParentLayerPoint(75, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(1, ScreenIntPoint(75, 50), ScreenSize(0, 0), 0, 0));
+  // Each touch will get hit-tested, so queue two hit-test results.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, false);
   targets.AppendElement(ApzcOf(layers[0])->GetGuid());
@@ -158,10 +161,10 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
 }
 
-TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
+TEST_F(APZCTreeManagerGenericTesterMock, TargetChangesMidGesture_Bug1570559) {
   // Create a layer tree with parent and child scrollable layers, with the
   // parent being the root content.
-  CreateTwoLayerDTCTree(0);
+  CreateTwoLayerTree(0);
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
@@ -174,7 +177,10 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   MultiTouchInput mti =
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
-      SingleTouchData(0, ParentLayerPoint(25, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(0, ScreenIntPoint(25, 50), ScreenSize(0, 0), 0, 0));
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, /* default prevented = */ false);
   targets.AppendElement(ApzcOf(layers[1])->GetGuid());
@@ -186,7 +192,14 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   // clear the parent's gesture state. The bug is that we fail to clear the
   // child's gesture state.
   mti.mTouches.AppendElement(
-      SingleTouchData(1, ParentLayerPoint(75, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(1, ScreenIntPoint(75, 50), ScreenSize(0, 0), 0, 0));
+  // Each touch will get hit-tested, so queue two hit-test results.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, /* default prevented = */ true);
   targets.AppendElement(ApzcOf(layers[1])->GetGuid());
@@ -197,10 +210,10 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
 }
 
-TEST_F(APZCTreeManagerGenericTester, Bug1198900) {
+TEST_F(APZCTreeManagerGenericTesterMock, Bug1198900) {
   // This is just a test that cancels a wheel event to make sure it doesn't
   // crash.
-  CreateSimpleDTCScrollingLayer();
+  CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
@@ -210,6 +223,9 @@ TEST_F(APZCTreeManagerGenericTester, Bug1198900) {
                        ScrollWheelInput::SCROLLDELTA_PIXEL, origin, 0, 10,
                        false, WheelDeltaAdjustmentStrategy::eNone);
   uint64_t blockId;
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   blockId = manager->ReceiveInputEvent(swi).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, /* preventDefault= */ true);
 }

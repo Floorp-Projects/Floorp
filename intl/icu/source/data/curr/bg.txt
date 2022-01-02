@@ -1104,7 +1104,6 @@ bg{
         BRL{"BRL"}
         BSD{"BSD"}
         BWP{"P"}
-        BYN{"BYN"}
         BZD{"BZD"}
         CAD{"CAD"}
         CLP{"CLP"}

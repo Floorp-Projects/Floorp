@@ -99,17 +99,6 @@ class ShmemTextureData : public BufferTextureData {
   mozilla::ipc::Shmem mShmem;
 };
 
-bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend,
-                                  bool aSupportsTextureDirectMapping) {
-  if (aSupportsTextureDirectMapping) {
-    return false;
-  }
-
-  return aLayersBackend != LayersBackend::LAYERS_BASIC ||
-         aFormat == gfx::SurfaceFormat::UNKNOWN;
-}
-
 BufferTextureData* BufferTextureData::Create(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     gfx::BackendType aMoz2DBackend, LayersBackend aLayersBackend,
@@ -168,24 +157,9 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
                                            aCbCrSize.height, yOffset, cbOffset,
                                            crOffset);
 
-  bool supportsTextureDirectMapping =
-      aAllocator->SupportsTextureDirectMapping() &&
-      aAllocator->GetMaxTextureSize() >
-          std::max(aYSize.width,
-                   std::max(aYSize.height,
-                            std::max(aCbCrSize.width, aCbCrSize.height)));
-
-  bool hasIntermediateBuffer =
-      aAllocator
-          ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                         aAllocator->GetCompositorBackendType(),
-                                         supportsTextureDirectMapping)
-          : true;
-
-  YCbCrDescriptor descriptor =
-      YCbCrDescriptor(aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride,
-                      yOffset, cbOffset, crOffset, aStereoMode, aColorDepth,
-                      aYUVColorSpace, aColorRange, hasIntermediateBuffer);
+  YCbCrDescriptor descriptor = YCbCrDescriptor(
+      aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride, yOffset, cbOffset,
+      crOffset, aStereoMode, aColorDepth, aYUVColorSpace, aColorRange);
 
   return CreateInternal(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr, descriptor,
@@ -197,14 +171,6 @@ void BufferTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.format = GetFormat();
   aInfo.hasSynchronization = false;
   aInfo.canExposeMappedData = true;
-
-  if (mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor) {
-    aInfo.hasIntermediateBuffer =
-        mDescriptor.get_YCbCrDescriptor().hasIntermediateBuffer();
-  } else {
-    aInfo.hasIntermediateBuffer =
-        mDescriptor.get_RGBDescriptor().hasIntermediateBuffer();
-  }
 
   switch (aInfo.format) {
     case gfx::SurfaceFormat::YUV:
@@ -419,8 +385,7 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat,
     return false;
   }
 
-  if ((aAllocFlags & ALLOC_CLEAR_BUFFER) ||
-      (aAllocFlags & ALLOC_CLEAR_BUFFER_BLACK)) {
+  if (aAllocFlags & ALLOC_CLEAR_BUFFER) {
     if (aFormat == gfx::SurfaceFormat::B8G8R8X8) {
       // Even though BGRX was requested, XRGB_UINT32 is what is meant,
       // so use 0xFF000000 to put alpha in the right place.
@@ -429,10 +394,6 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat,
     } else if (!aAlreadyZero) {
       memset(buf, 0, bufSize);
     }
-  }
-
-  if (aAllocFlags & ALLOC_CLEAR_BUFFER_WHITE) {
-    memset(buf, 0xFF, bufSize);
   }
 
   return true;
@@ -464,13 +425,9 @@ MemoryTextureData* MemoryTextureData::Create(gfx::IntSize aSize,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(
-      aFormat, aLayersBackend, aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
-
   GfxMemoryImageReporter::DidAlloc(buf);
 
-  BufferDescriptor descriptor =
-      RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
 
   return new MemoryTextureData(descriptor, aMoz2DBackend, buf, bufSize);
 }
@@ -538,11 +495,7 @@ ShmemTextureData* ShmemTextureData::Create(gfx::IntSize aSize,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer = ComputeHasIntermediateBuffer(
-      aFormat, aLayersBackend, aAllocFlags & ALLOC_ALLOW_DIRECT_MAPPING);
-
-  BufferDescriptor descriptor =
-      RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
 
   return new ShmemTextureData(descriptor, aMoz2DBackend, shm);
 }

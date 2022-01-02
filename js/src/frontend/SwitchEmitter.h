@@ -18,7 +18,6 @@
 #include "frontend/EmitterScope.h"               // EmitterScope
 #include "frontend/JumpList.h"                   // JumpList, JumpTarget
 #include "frontend/TDZCheckCache.h"              // TDZCheckCache
-#include "gc/Rooting.h"                          // Handle
 #include "js/AllocPolicy.h"                      // SystemAllocPolicy
 #include "js/Value.h"                            // JSVAL_INT_MAX, JSVAL_INT_MIN
 #include "js/Vector.h"                           // Vector

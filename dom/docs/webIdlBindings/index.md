@@ -1,4 +1,4 @@
-# WebIDL bindings
+# Web IDL bindings
 
 <div class="note">
 <div class="admonition-title">Note</div>
@@ -8,12 +8,12 @@ setters/creators/deleters.
 
 </div>
 
-The [WebIDL](https://heycam.github.io/webidl/) bindings are generated
-at build time based on two things: the actual WebIDL file and a
-configuration file that lists some metadata about how the WebIDL should
+The [Web IDL](https://webidl.spec.whatwg.org/) bindings are generated
+at build time based on two things: the actual Web IDL file and a
+configuration file that lists some metadata about how the Web IDL should
 be reflected into Gecko-internal code.
 
-All WebIDL files should be placed in
+All Web IDL files should be placed in
 [`dom/webidl`](https://searchfox.org/mozilla-central/source/dom/webidl/)
 and added to the list in the
 [moz.build](https://searchfox.org/mozilla-central/source/dom/webidl/moz.build)
@@ -45,9 +45,9 @@ that are also all in the `mozilla::dom` namespace and whose headers
 are all exported into `mozilla/dom` (placed in
 `$OBJDIR/dist/include` by the build process).
 
-## Adding WebIDL bindings to a class
+## Adding Web IDL bindings to a class
 
-To add a WebIDL binding for interface `MyInterface` to a class
+To add a Web IDL binding for interface `MyInterface` to a class
 `mozilla::dom::MyInterface` that's supposed to implement that
 interface, you need to do the following:
 
@@ -82,7 +82,7 @@ interface, you need to do the following:
    (unless you write explicit code that handles your parent object
    changing by reparenting JS wrappers, as nodes do). The idea is that
    walking the `GetParentObject` chain will eventually get you to a
-   Window, so that every WebIDL object is associated with a particular
+   Window, so that every Web IDL object is associated with a particular
    Window.
    For example, `nsINode::GetParentObject` returns the node's owner
    document. The return type of `GetParentObject` doesn't matter other
@@ -91,7 +91,7 @@ interface, you need to do the following:
    [`ToSupports`](https://searchfox.org/mozilla-central/search?q=ToSupports&path=&case=true&regexp=false)
    method that can produce an `nsISupports` from it. (This allows the
    return value to be implicitly converted to a
-   [ParentObject](https://searchfox.org/mozilla-central/search?q=ParentObject&path=&case=true&regexp=false)
+   [`ParentObject`](https://searchfox.org/mozilla-central/search?q=ParentObject&path=&case=true&regexp=false)
    instance by the compiler via one of that class's non-explicit
    constructors.)
    If many instances of `MyInterface` are expected to be created
@@ -105,7 +105,7 @@ interface, you need to do the following:
    must be defined in a header included from your implementation header,
    so that this type's definition is visible to the binding code.
 
-1. Add the WebIDL for `MyInterface` in `dom/webidl` and to the list
+1. Add the Web IDL for `MyInterface` in `dom/webidl` and to the list
    in `dom/webidl/moz.build`.
 
 1. Add an entry to `dom/bindings/Bindings.conf` that sets some basic
@@ -123,7 +123,7 @@ interface, you need to do the following:
    annotations.
 
 1. Add external interface entries to `Bindings.conf` for whatever
-   non-WebIDL interfaces your new interface has as arguments or return
+   non-Web IDL interfaces your new interface has as arguments or return
    values.
 
 1. Implement a `WrapObject` override on `mozilla::dom::MyInterface`
@@ -144,7 +144,7 @@ interface, you need to do the following:
    interface using a class that inherits from `nsISupports` and has a
    wrapper cache.
 
-See this [sample patch that migrates window.performance.\* to WebIDL
+See this [sample patch that migrates window.performance.\* to Web IDL
 bindings](https://hg.mozilla.org/mozilla-central/rev/dd08c10193c6).
 
 <div class="note"><div class="admonition-title">Note</div>
@@ -153,33 +153,33 @@ If your object can only be reflected into JS by creating it, not by
 retrieving it from somewhere, you can skip steps 1 and 2 above and
 instead add `'wrapperCache': False` to your descriptor. You will
 need to flag the functions that return your object as
-[`[NewObject]`](https://heycam.github.io/webidl/#NewObject) in
-the WebIDL. If your object is not refcounted then the return value of
-functions that return it should return an nsAutoPtr.
+[`[NewObject]`](https://webidl.spec.whatwg.org/#NewObject) in
+the Web IDL. If your object is not refcounted then the return value of
+functions that return it should return a UniquePtr.
 
 </div>
 
-## C++ reflections of WebIDL constructs
+## C++ reflections of Web IDL constructs
 
-### C++ reflections of WebIDL operations (methods)
+### C++ reflections of Web IDL operations (methods)
 
-A WebIDL operation is turned into a method call on the underlying C++
+A Web IDL operation is turned into a method call on the underlying C++
 object. The return type and argument types are determined [as described
 below](#c-reflections-of-webidl-constructs). In addition to those, all [methods that are
 allowed to throw](#throws-getterthrows-setterthrows) will get an `ErrorResult&` argument
 appended to their argument list. Non-static methods that use certain
-WebIDL types like `any` or `object` will get a `JSContext*`
+Web IDL types like `any` or `object` will get a `JSContext*`
 argument prepended to the argument list. Static methods will be passed a
 [`const GlobalObject&`](#globalobject) for the relevant global and
 can get a `JSContext*` by calling `Context()` on it.
 
-The name of the C++ method is simply the name of the WebIDL operation
+The name of the C++ method is simply the name of the Web IDL operation
 with the first letter converted to uppercase.
 
-WebIDL overloads are turned into C++ overloads: they simply call C++
+Web IDL overloads are turned into C++ overloads: they simply call C++
 methods with the same name and different signatures.
 
-For example, this webidl:
+For example, this Web IDL:
 
 ``` webidl
 interface MyInterface
@@ -220,9 +220,9 @@ class MyClass
 }
 ```
 
-### C++ reflections of WebIDL attributes
+### C++ reflections of Web IDL attributes
 
-A WebIDL attribute is turned into a pair of method calls for the getter
+A Web IDL attribute is turned into a pair of method calls for the getter
 and setter on the underlying C++ object. A readonly attribute only has a
 getter and no setter.
 
@@ -243,11 +243,11 @@ the first letter converted to uppercase. The method signature looks just
 like an operation with a void return value and a single argument whose
 type is the attribute's type.
 
-### C++ reflections of WebIDL constructors
+### C++ reflections of Web IDL constructors
 
-A WebIDL constructor is turned into a static class method named
+A Web IDL constructor is turned into a static class method named
 `Constructor`. The arguments of this method will be the arguments of
-the WebIDL constructor, with a
+the Web IDL constructor, with a
 [`const GlobalObject&`](#globalobject) for the relevant global
 prepended. For the non-worker case, the global is typically the inner
 window for the DOM Window the constructor function is attached to. If a
@@ -280,9 +280,9 @@ class MyClass {
 };
 ```
 
-### C++ reflections of WebIDL types
+### C++ reflections of Web IDL types
 
-The exact C++ representation for WebIDL types can depend on the precise
+The exact C++ representation for Web IDL types can depend on the precise
 way that they're being used (e.g., return values, arguments, and
 sequence or dictionary members might all have different
 representations).
@@ -299,13 +299,13 @@ actual type of the object in the process. Optional arguments which do
 have a default value are just represented by the argument type itself,
 set to the default value if the argument was not in fact passed in.
 
-Variadic WebIDL arguments are treated as a
+Variadic Web IDL arguments are treated as a
 [`const Sequence<>&`](#sequence-t) around the actual argument type.
 
 Here's a table, see the specific sections below for more details and
 explanations.
 
-| WebIDL Type                | Argument Type                     | Return Type                                                                                                      | Dictionary/Member Type                 |
+| Web IDL Type                | Argument Type                     | Return Type                                                                                                      | Dictionary/Member Type                 |
 | -------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | any                        | `JS::Handle<JS::Value>`           | `JS::MutableHandle<JS::Value>`                                                                                   | `JS::Value`                            |
 | boolean                    | `bool`                            | `bool`                                                                                                           | `bool`                                 |
@@ -349,7 +349,7 @@ explanations.
 
 Methods using `any` always get a `JSContext*` argument.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -371,9 +371,9 @@ void MyMethod(JSContext* cx, JS::Handle<JS::Value> arg1,
 
 #### `boolean`
 
-The `boolean` WebIDL type is represented as a C++ `bool`.
+The `boolean` Web IDL type is represented as a C++ `bool`.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -392,9 +392,9 @@ JS::Value MyMethod(const Optional<bool>& arg);
 
 #### Integer types
 
-Integer WebIDL types are mapped to the corresponding C99 stdint types.
+Integer Web IDL types are mapped to the corresponding C99 stdint types.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -413,11 +413,11 @@ int64_t MyMethod(const Nullable<uint32_t>& arg);
 
 #### Floating point types
 
-Floating point WebIDL types are mapped to the C++ type of the same
+Floating point Web IDL types are mapped to the C++ type of the same
 name.  So `float` and `unrestricted float` become a C++ `float`,
 while `double` and `unrestricted double` become a C++ `double`.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -454,7 +454,7 @@ null as a string value can be done using `SetDOMStringToNull` on the
 out param if it's an `nsAString` or calling `SetNull()` on a
 `DOMString`.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -480,7 +480,7 @@ void MyMethod(const Sequence<nsString>& arg1, const nsAString& arg2,
 #### `UTF8String`
 
 `UTF8String` is a string with guaranteed-valid UTF-8 contents. It is
-not a standard in the WebIDL spec, but its observables are the same as
+not a standard in the Web IDL spec, but its observables are the same as
 those of `USVString`.
 
 It is a good fit for when the specification allows a `USVString`, but
@@ -534,7 +534,7 @@ the out param.
 
 Methods using `object` always get a `JSContext*` argument.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -558,11 +558,11 @@ void MyMethod(JSContext* cx, JS::Handle<JSObject*> arg1, JS::Handle<JSObject*> a
 
 #### Interface types
 
-There are four kinds of interface types in the WebIDL bindings. Callback
+There are four kinds of interface types in the Web IDL bindings. Callback
 interfaces are used to represent script objects that browser code can
 call into. External interfaces are used to represent objects that have
-not been converted to the WebIDL bindings yet. WebIDL interfaces are
-used to represent WebIDL binding objects. "SpiderMonkey" interfaces are
+not been converted to the Web IDL bindings yet. Web IDL interfaces are
+used to represent Web IDL binding objects. "SpiderMonkey" interfaces are
 used to represent objects that are implemented natively by the
 JavaScript engine (e.g., typed arrays).
 
@@ -571,7 +571,7 @@ JavaScript engine (e.g., typed arrays).
 Callback interfaces are represented in C++ as objects inheriting from
 [`mozilla::dom::CallbackInterface`](#callbackinterface), whose
 name, in the `mozilla::dom` namespace, matches the name of the
-callback interface in the WebIDL. The exact representation depends on
+callback interface in the Web IDL. The exact representation depends on
 how the type is being used.
 
 -  Nullable arguments become `Foo*`.
@@ -581,7 +581,7 @@ how the type is being used.
    code, but it should only be used if the return value was not addrefed
    (and so it can only be used if the return value is kept alive by the
    callee until at least the binding method has returned).
--  WebIDL callback interfaces in sequences, dictionaries, owning unions,
+-  Web IDL callback interfaces in sequences, dictionaries, owning unions,
    and variadic arguments are represented by `RefPtr<Foo>` if nullable
    and [`OwningNonNull<Foo>`](#owningnonnull-t) otherwise.
 
@@ -599,15 +599,15 @@ single method for every IDL method/getter/setter.
 
 The signatures of the methods correspond to the signatures for throwing
 IDL methods/getters/setters with an additional trailing
-"`mozilla::dom::CallbackObject::ExceptionHandling`
-`aExceptionHandling`" argument, defaulting to `eReportExceptions`.
+`mozilla::dom::CallbackObject::ExceptionHandling aExceptionHandling`
+argument, defaulting to `eReportExceptions`.
 If `aReportExceptions` is set to `eReportExceptions`, the methods
 will report JS exceptions before returning. If `aReportExceptions` is
 set to `eRethrowExceptions`, JS exceptions will be stashed in the
 `ErrorResult` and will be reported when the stack unwinds to wherever
 the `ErrorResult` was set up.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 callback interface MyCallback {
@@ -703,9 +703,9 @@ depends on how the type is being used.
 -  External interfaces in sequences, dictionaries, owning unions, and
    variadic arguments are represented by `RefPtr<nsIFoo>`.
 
-##### WebIDL interfaces
+##### Web IDL interfaces
 
-WebIDL interfaces are represented in C++ as C++ classes. The class
+Web IDL interfaces are represented in C++ as C++ classes. The class
 involved must either be refcounted or must be explicitly annotated in
 `Bindings.conf` as being directly owned by the JS object. If the class
 inherits from `nsISupports`, then the canonical `nsISupports` must
@@ -727,11 +727,11 @@ representation depends on how the type is being used.
    code, but it should only be used if the return value was not addrefed
    (and so it can only be used if the return value is kept alive by the
    callee until at least the binding method has returned).
--  WebIDL interfaces in sequences, dictionaries, owning unions, and
+-  Web IDL interfaces in sequences, dictionaries, owning unions, and
    variadic arguments are represented by `RefPtr<Foo>` if nullable and
    [`OwningNonNull<Foo>`](#owningnonnull-t) otherwise.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 interface MyInterface {
@@ -762,7 +762,7 @@ MyClass* SomeYetOtherAttr(); // Don't have to return already_AddRefed!
 
 Typed array, array buffer, and array buffer view arguments are
 represented by the objects in [`TypedArray.h`](#typed-arrays-arraybuffers-array-buffer-views).  For
-example, this WebIDL:
+example, this Web IDL:
 
 ``` webidl
 interface Test {
@@ -799,7 +799,7 @@ whose name is the dictionary name in the `mozilla::dom` namespace.
 The struct has one member for each of the dictionary's members with the
 same name except the first letter uppercased and prefixed with "m". The
 members that are required or have default values have types as described
-under the corresponding WebIDL type in this document. The members that
+under the corresponding Web IDL type in this document. The members that
 are not required and don't have default values have those types wrapped
 in [`Optional<>`](#optional-t).
 
@@ -822,7 +822,7 @@ second argument. If `Init()` or `ToJSValue()` returns false, they
 will generally set a pending exception on the JSContext; reporting those
 is the responsibility of the caller.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 dictionary Dict {
@@ -886,13 +886,13 @@ MyInterface::InitSomething(const Dict& aArg){
 
 #### Enumeration types
 
-WebIDL enumeration types are represented as C++ enum classes. The values
-of the C++ enum are named by taking the strings in the WebIDL
+Web IDL enumeration types are represented as C++ enum classes. The values
+of the C++ enum are named by taking the strings in the Web IDL
 enumeration, replacing all non-alphanumerics with underscores, and
 uppercasing the first letter, with a special case for the empty string,
 which becomes the value `_empty`.
 
-For a WebIDL enum named `MyEnum`, the C++ enum is named `MyEnum` and
+For a Web IDL enum named `MyEnum`, the C++ enum is named `MyEnum` and
 placed in the `mozilla::dom` namespace, while the values are placed in
 the `mozilla::dom::MyEnum` namespace. There is also a
 `mozilla::dom::MyEnumValues::strings` which is an array of
@@ -901,10 +901,10 @@ representations of the values.
 
 The type of the enum class is automatically selected to be the smallest
 unsigned integer type that can hold all the values.  In practice, this
-is always uint8_t, because WebIDL enums tend to not have more than 255
+is always uint8_t, because Web IDL enums tend to not have more than 255
 values.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 enum MyEnum {
@@ -935,20 +935,20 @@ extern const EnumEntry strings[10];
 Callback functions are represented as an object, inheriting from
 [`mozilla::dom::CallbackFunction`](#callbackfunction), whose name,
 in the `mozilla::dom` namespace, matches the name of the callback
-function in the WebIDL. If the type is nullable, a pointer is passed in;
+function in the Web IDL. If the type is nullable, a pointer is passed in;
 otherwise a reference is passed in.
 
 The object exposes two `Call` methods, which both invoke the
 underlying JS callable. The first `Call` method has the same signature
 as a throwing method declared just like the callback function, with an
-additional trailing "`mozilla::dom::CallbackObject::ExceptionHandling`
-`aExceptionHandling`" argument, defaulting to `eReportExceptions`,
+additional trailing `mozilla::dom::CallbackObject::ExceptionHandling aExceptionHandling`
+argument, defaulting to `eReportExceptions`,
 and calling it will invoke the callable with `undefined` as the
 `this` value. The second `Call` method allows passing in an explicit
 `this` value as the first argument. This second call method is a
 template on the type of the first argument, so the `this` value can be
 passed in in whatever form is most convenient, as long as it's either a
-type that can be wrapped by XPConnect or a WebIDL interface type.
+type that can be wrapped by XPConnect or a Web IDL interface type.
 
 If `aReportExceptions` is set to `eReportExceptions`, the `Call`
 methods will report JS exceptions before returning.  If
@@ -956,7 +956,7 @@ methods will report JS exceptions before returning.  If
 will be stashed in the `ErrorResult` and will be reported when the
 stack unwinds to wherever the `ErrorResult` was set up.
 
-For example, this WebIDL:
+For example, this Web IDL:
 
 ``` webidl
 callback MyCallback = long (MyInterface arg1, boolean arg2);
@@ -1021,11 +1021,11 @@ SomeClass::DoSomethingWithCallback(MyCallback& aCallback, MyInterface& aInterfac
 
 Sequence arguments are represented by
 [`const Sequence<T>&`](#sequence-t), where `T` depends on the type
-of elements in the WebIDL sequence.
+of elements in the Web IDL sequence.
 
 Sequence return values are represented by an `nsTArray<T>` out param
 appended to the argument list, where `T` is the return type for the
-elements of the WebIDL sequence. This comes after all IDL arguments, but
+elements of the Web IDL sequence. This comes after all IDL arguments, but
 before the `ErrorResult&`, if any, for the method.
 
 #### Arrays
@@ -1084,12 +1084,12 @@ Owning unions used on the stack should be declared as a
 
 #### `Date`
 
-WebIDL `Date` types are represented by a `mozilla::dom::Date`
+Web IDL `Date` types are represented by a `mozilla::dom::Date`
 struct.
 
-### C++ reflections of WebIDL declarations
+### C++ reflections of Web IDL declarations
 
-WebIDL declarations (maplike/setlike/iterable) are turned into a set of
+Web IDL declarations (maplike/setlike/iterable) are turned into a set of
 properties and functions on the interface they are declared on. Each has
 a different set of helper functions it comes with. In addition, for
 iterable, there are requirements for C++ function implementation by the
@@ -1196,10 +1196,10 @@ public:
 
 ### Stringifiers
 
-Named stringifiers operations in WebIDL will just invoke the
+Named stringifiers operations in Web IDL will just invoke the
 corresponding C++ method.
 
-Anonymous stringifiers in WebIDL will invoke the C++ method called
+Anonymous stringifiers in Web IDL will invoke the C++ method called
 `Stringify`. So, for example, given this IDL:
 
 ``` webidl
@@ -1324,9 +1324,9 @@ public:
 };
 ```
 
-## Throwing exceptions from WebIDL methods, getters, and setters
+## Throwing exceptions from Web IDL methods, getters, and setters
 
-WebIDL methods, getters, and setters that are [explicitly marked as
+Web IDL methods, getters, and setters that are [explicitly marked as
 allowed to throw](#throws-getterthrows-setterthrows) have an `ErrorResult&` argument as their
 last argument.  To throw an exception, simply call `Throw()` on the
 `ErrorResult&` and return from your C++ back into the binding code.
@@ -1337,8 +1337,8 @@ should use `ErrorResult::ThrowTypeError()` instead of calling
 
 ## Custom extended attributes
 
-Our WebIDL parser and code generator recognize several extended
-attributes that are not present in the WebIDL spec.
+Our Web IDL parser and code generator recognize several extended
+attributes that are not present in the Web IDL spec.
 
 ### `[Alias=propName]`
 
@@ -1442,7 +1442,7 @@ If specified on an interface as a whole, this functions like
 [`[Func]`](#func-funcname) except that the binding will check the value of
 the preference directly without calling into the C++ implementation of
 the interface at all. This is useful when the enable check is simple and
-it's desirable to keep the prefname with the WebIDL declaration.
+it's desirable to keep the prefname with the Web IDL declaration.
 
 If specified on a dictionary member, the web-observable behavior when
 the pref is set to false will be as if the dictionary did not have a
@@ -1541,7 +1541,7 @@ will need to test true for the interface or interface member to be
 exposed.
 
 Binding code will include the headers necessary for a `[Func]`, unless
-the interface is using a non-deafault heder file.  If a non-default
+the interface is using a non-default header file.  If a non-default
 header file is used, that header file needs to do any header inclusions
 necessary for `[Func]` annotations.
 
@@ -1697,7 +1697,7 @@ code should call the `ClearCachedFooValue` method in the namespace of
 the relevant binding, where `foo` is the name of the attribute. This
 will immediately call the C++ getter and cache the value it returns, so
 it needs a `JSContext` to work on. This extended attribute can only be
-used in on attributes whose getters are [`[Pure]`](#pure) or
+used on attributes whose getters are [`[Pure]`](#pure) or
 [`[Constant]`](#constant) and which are not
 [`[Throws]`](#throws-getterthrows-setterthrows) or [`[GetterThrows]`](#throws-getterthrows-setterthrows).
 
@@ -1724,7 +1724,7 @@ Used to flag attributes that, when their getter is called, will cache
 the returned value on the JS object. This can be used to implement
 attributes whose value is a sequence or dictionary (which would
 otherwise end up returning a new object each time and hence not be
-allowed in WebIDL).
+allowed in Web IDL).
 
 Unlike [`[StoreInSlot]`](#storeinslot) this does *not* cause the
 getter to be eagerly called at JS wrapper creation time; the caching is
@@ -1748,7 +1748,7 @@ interface MyInterface {
 the C++ implementation of MyInterface would clear the cached value by
 calling
 `mozilla::dom::MyInterface_Binding::ClearCachedMyAttributeValue(this)`.
-JS-implemented WebIDL can clear the cached value by calling
+JS-implemented Web IDL can clear the cached value by calling
 `this.__DOM_IMPL__._clearCachedMyAttributeValue()`.
 
 If the attribute is not readonly, setting it will automatically clear
@@ -1796,7 +1796,7 @@ public:
 ### `[Deprecated="tag"]`
 
 When deprecating an interface or method, the `[Deprecated]` annotation
-causes the WebIDL compiler to insert code that generates deprecation
+causes the Web IDL compiler to insert code that generates deprecation
 warnings.  This annotation can be added to interface methods or
 interfaces.  Adding this to an interface causes a warning to be issued
 the first time the object is constructed, or any static method on the
@@ -1828,14 +1828,14 @@ origin.
 ### `[SecureContext]`
 
 We implement the [standard extended
-attribute](https://heycam.github.io/webidl/#SecureContext) with a few
+attribute](https://webidl.spec.whatwg.org/#SecureContext) with a few
 details specific to Gecko:
 
 -  System principals are considered secure.
 -  An extension poking at non-secured DOM objects will see APIs marked
    with `[SecureContext]`.
--  XPConnect sandboxes doesn't see `[SecureContext]` APIs, but this
-   may change in {{bug(1273687)}}.
+-  XPConnect sandboxes don't see `[SecureContext]` APIs, except if
+   they're created with `isSecureContext: true`.
 
 ### `[NeedsSubjectPrincipal]`, `[GetterNeedsSubjectPrincipal]`, `[SetterNeedsSubjectPrincipal]`
 
@@ -1862,7 +1862,7 @@ attributes.
 Used to flag a method or an attribute that needs to know the caller
 type, in the `mozilla::dom::CallerType` sense.  This can be safely
 used for APIs exposed in workers; there it will indicate whether the
-worker involved is a `ChromeWorker` or not.  At the momen the only
+worker involved is a `ChromeWorker` or not.  At the moment the only
 possible caller types are `System` (representing system-principal
 callers) and `NonSystem`.
 
@@ -1884,8 +1884,8 @@ be used to get the value when it's not null.
 
 `Nullable<T>` has a `SetNull()` setter that sets it as representing
 null and two setters that can be used to set it to a value:
-`"void SetValue(T)"` (for setting it to a given value) and
-`"T& SetValue()"` for directly modifying the underlying `T&`.
+`void SetValue(T)` (for setting it to a given value) and
+`T& SetValue()` for directly modifying the underlying `T&`.
 
 ### `Optional<T>`
 
@@ -1959,7 +1959,7 @@ must make sure to cycle-collect it, since it keeps JS objects alive.
 `DOMString` is a class declared in
 [BindingDeclarations.h](https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h)
 and exported to `mozilla/dom/BindingDeclarations.h` that is used for
-WebIDL `DOMString` return values. It has a conversion operator to
+Web IDL `DOMString` return values. It has a conversion operator to
 `nsString&` so that it can be passed to methods that take that type or
 `nsAString&`, but callees that care about performance, have an
 `nsStringBuffer` available, and promise to hold on to the
@@ -1988,7 +1988,7 @@ the `JSContext` may not match the compartment of the global!
 `Date` is a class declared in
 [BindingDeclarations.h](https://searchfox.org/mozilla-central/source/dom/bindings/BindingDeclarations.h)
 and exported to `mozilla/dom/BindingDeclarations.h` that is used to
-represent WebIDL Dates. It has a `TimeStamp()` method returning a
+represent Web IDL Dates. It has a `TimeStamp()` method returning a
 double which represents a number of milliseconds since the epoch, as
 well as `SetTimeStamp()` methods that can be used to initialize it
 with a double timestamp or a JS `Date` object. It also has a
@@ -1999,7 +1999,7 @@ with a double timestamp or a JS `Date` object. It also has a
 `ErrorResult` is a class declared in
 [ErrorResult.h](https://searchfox.org/mozilla-central/source/dom/bindings/ErrorResult.h)
 and exported to `mozilla/ErrorResult.h` that is used to represent
-exceptions in WebIDL bindings. This has the following methods:
+exceptions in Web IDL bindings. This has the following methods:
 
 -  `Throw`: allows throwing an `nsresult`. The `nsresult` must be
    a failure code.
@@ -2082,16 +2082,16 @@ to a C++ method that wouldn't otherwise get such an argument. To see how
 to achieve this, search for `implicitJSContext` in
 [dom/bindings/Bindings.conf](#bindings-conf-details).
 
-## Implementing WebIDL using Javascript
+## Implementing Web IDL using Javascript
 
 <div class="warning"><div class="admonition-title">Warning</div>
 
-Implementing WebIDL using Javascript is deprecated. New interfaces
+Implementing Web IDL using Javascript is deprecated. New interfaces
 should always be implemented in C++!
 
 </div>
 
-It is possible to implement WebIDL interfaces in JavaScript within Gecko
+It is possible to implement Web IDL interfaces in JavaScript within Gecko
 -- however, **this is limited to interfaces that are not exposed in Web
 Workers**. When the binding occurs, two objects are created:
 
@@ -2103,13 +2103,13 @@ Workers**. When the binding occurs, two objects are created:
 Because there are two types of objects, you have to be careful about
 which object you are creating.
 
-### Creating JS-implemented WebIDL objects
+### Creating JS-implemented Web IDL objects
 
-To create a JS-implemented WebIDL object, one must create both the
+To create a JS-implemented Web IDL object, one must create both the
 chrome-side implementation object and the content-side page-exposed
 object. There are three ways to do this.
 
-#### Using the WebIDL constructor
+#### Using the Web IDL constructor
 
 If the interface has a constructor, a content-side object can be created
 by getting that constructor from the relevant content window and
@@ -2154,19 +2154,19 @@ new MyPeerConnectionImpl());
 Creating the object this way will not invoke its `__init` method or
 `init` method.
 
-#### By returning a chrome-side object from a JS-implemented WebIDL method
+#### By returning a chrome-side object from a JS-implemented Web IDL method
 
-If a JS-implemented WebIDL method is declared as returning a
-JS-implemented interface, then a non-WebIDL object returned from that
+If a JS-implemented Web IDL method is declared as returning a
+JS-implemented interface, then a non-Web IDL object returned from that
 method will be treated as the chrome-side part of a JS-implemented
 WebIdL object and the content-side part will be automatically created.
 
 Creating the object this way will not invoke its `__init` method or
 `init` method.
 
-### Implementing a WebIDL object in JavaScript
+### Implementing a Web IDL object in JavaScript
 
-To implement a WebIDL interface in JavaScript, first add a WebIDL file,
+To implement a Web IDL interface in JavaScript, first add a Web IDL file,
 in the same way as you would for a C++-implemented interface. To support
 implementation in JS, you must add an extended attribute
 `JSImplementation="CONTRACT_ID_STRING"` on your interface, where
@@ -2187,21 +2187,21 @@ interface MyNumber {
 Next, create an XPCOM component that implements this interface. [Basic
 directions](/en-US/docs/How_to_Build_an_XPCOM_Component_in_Javascript)
 for how to do this can be found elsewhere on MDN. Use the same contract
-ID as you specified in the WebIDL file. The class ID doesn't matter,
+ID as you specified in the Web IDL file. The class ID doesn't matter,
 except that it should be a newly generated one. For `QueryInterface`,
 you only need to implement `nsISupports`, not anything corresponding
-to the WebIDL interface. The name you use for the XPCOM component should
+to the Web IDL interface. The name you use for the XPCOM component should
 be distinct from the name of the interface, to avoid confusing error
 messages.
 
-WebIDL attributes are implemented as properties on the JS object or its
-prototype chain, whereas WebIDL methods are implemented as methods on
+Web IDL attributes are implemented as properties on the JS object or its
+prototype chain, whereas Web IDL methods are implemented as methods on
 the object or prototype. Note that any other instances of the interface
 that you are passed in as arguments are the full web-facing version of
 the object, and not the JS implementation, so you currently cannot
 access any private data.
 
-The WebIDL constructor invocation will first create your object. If the
+The Web IDL constructor invocation will first create your object. If the
 XPCOM component implements `nsIDOMGlobalPropertyInitializer`, then
 the object's `init` method will be invoked with a single argument:
 the content window the constructor came from. This allows the JS
@@ -2213,7 +2213,7 @@ constructor arguments as its arguments.
 
 ### Static Members
 
-Static attributes and methods are not supported on JS-implemented WebIDL
+Static attributes and methods are not supported on JS-implemented Web IDL
 (see [bug
 863952](https://bugzilla.mozilla.org/show_bug.cgi?id=863952)).
 However, with the changes in [bug
@@ -2238,11 +2238,11 @@ Rather than calling into a method on the JS implementation; calling
 
 ### Checking for Permissions or Preferences
 
-With JS-implemented WebIDL, the `init` method should only return
+With JS-implemented Web IDL, the `init` method should only return
 undefined. If any other value, such as `null`, is returned, the
 bindings code will assert or crash. In other words, it acts like it has
 a "void" return type. Preference or permission checking should be
-implemented by adding an extended attribute to the WebIDL interface.
+implemented by adding an extended attribute to the Web IDL interface.
 This has the advantage that if the check fails, the constructor or
 object will not show up at all.
 
@@ -2293,7 +2293,7 @@ stuff you need to implement an XPCOM component.
 
 ### Guarantees provided by bindings
 
-When implementing a WebIDL interface in JavaScript, certain guarantees
+When implementing a Web IDL interface in JavaScript, certain guarantees
 will be provided by the binding implementation. For example, string or
 numeric arguments will actually be primitive strings or numbers.
 Dictionaries will contain only the properties that they are declared to
@@ -2309,13 +2309,13 @@ possible.
 
 ### Accessing the content object from the implementation
 
-If the JS implementation of the WebIDL interface needs to access the
+If the JS implementation of the Web IDL interface needs to access the
 content object, it is available as a property called `__DOM_IMPL__` on
 the chrome implementation object. This property only appears after the
 content-side object has been created. So it is available in `__init`
 but not in `init`.
 
-### Determining the principal of the caller that invoked the WebIDL API
+### Determining the principal of the caller that invoked the Web IDL API
 
 This can be done by calling
 `Component.utils.getWebIDLCallerPrincipal()`.
@@ -2333,7 +2333,7 @@ content code that invoked your API. This will avoid exposing chrome URIs
 and other implementation details to the content code.
 
 When throwing because a specification requires an exception, you need to
-create the exception from the window your WebIDL object is associated
+create the exception from the window your Web IDL object is associated
 with (the one that was passed to your `init` method). The binding code
 will then rethrow that exception to the web page.  An example of how
 this could work:

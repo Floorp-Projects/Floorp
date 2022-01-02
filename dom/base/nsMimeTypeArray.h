@@ -34,8 +34,6 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void Refresh() {}
-
   // MimeTypeArray WebIDL methods
   nsMimeType* Item(uint32_t index, mozilla::dom::CallerType aCallerType) {
     return nullptr;

@@ -33,12 +33,10 @@ class MultipartImage : public ImageWrapper, public IProgressObserver {
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
   virtual void SetProgressTracker(ProgressTracker* aTracker) override;
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aStatus,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aStatus,
                                        bool aLastPart) override;
 
   // We don't support locking or track animation consumers for individual parts,

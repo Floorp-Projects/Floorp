@@ -11,7 +11,7 @@ const BROWSER_TOOLBOX_WINDOW_URL =
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 const { require, DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 

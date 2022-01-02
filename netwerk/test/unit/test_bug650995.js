@@ -9,9 +9,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 do_get_profile();
 
-const prefService = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+const prefService = Services.prefs;
 
 const httpserver = new HttpServer();
 
@@ -92,7 +90,7 @@ function nextTest() {
   // We really want each test to be self-contained. Make sure cache is
   // cleared and also let all operations finish before starting a new test
   syncWithCacheIOThread(function() {
-    get_cache_service().clear();
+    Services.cache2.clear();
     syncWithCacheIOThread(runNextTest);
   });
 }

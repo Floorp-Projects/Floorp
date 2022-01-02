@@ -60,11 +60,11 @@ yo{
         BH{"Báránì"}
         BI{"Bùùrúndì"}
         BJ{"Bẹ̀nẹ̀"}
-        BL{"St. Barthélemy"}
+        BL{"Ìlú Bátílẹ́mì"}
         BM{"Bémúdà"}
         BN{"Búrúnẹ́lì"}
         BO{"Bọ̀lífíyà"}
-        BQ{"Caribbean Netherlands"}
+        BQ{"Káríbíánì ti Nẹ́dálándì"}
         BR{"Bàràsílì"}
         BS{"Bàhámásì"}
         BT{"Bútánì"}
@@ -88,7 +88,7 @@ yo{
         CR{"Kuusita Ríkà"}
         CU{"Kúbà"}
         CV{"Etíokun Kápé féndè"}
-        CW{"Curaçao"}
+        CW{"Kúrásáò"}
         CX{"Erékùsù Christmas"}
         CY{"Kúrúsì"}
         CZ{"Ṣẹ́ẹ́kì"}
@@ -181,7 +181,7 @@ yo{
         MC{"Monako"}
         MD{"Modofia"}
         ME{"Montenegro"}
-        MF{"St. Martin"}
+        MF{"Ìlú Mátíìnì"}
         MG{"Madasika"}
         MH{"Etikun Máṣali"}
         MK{"Àríwá Macedonia"}
@@ -231,7 +231,7 @@ yo{
         QO{"Agbègbè Òṣọ́ọ́níà"}
         RE{"Riuniyan"}
         RO{"Romaniya"}
-        RS{"Serbia"}
+        RS{"Sẹ́bíà"}
         RU{"Rọṣia"}
         RW{"Ruwanda"}
         SA{"Saudi Arabia"}
@@ -242,7 +242,7 @@ yo{
         SG{"Singapo"}
         SH{"Hẹlena"}
         SI{"Silofania"}
-        SJ{"Svalbard & Jan Mayen"}
+        SJ{"Sífábáàdì àti Jánì Máyẹ̀nì"}
         SK{"Silofakia"}
         SL{"Siria looni"}
         SM{"Sani Marino"}
@@ -252,7 +252,7 @@ yo{
         SS{"Gúúsù Sudan"}
         ST{"Sao tomi ati piriiṣipi"}
         SV{"Ẹẹsáfádò"}
-        SX{"Sint Maarten"}
+        SX{"Síntì Mátẹ́ẹ̀nì"}
         SY{"Siria"}
         SZ{"Saṣiland"}
         TA{"Tristan da Kunha"}

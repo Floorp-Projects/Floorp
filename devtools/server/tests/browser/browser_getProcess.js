@@ -48,7 +48,7 @@ add_task(async () => {
     ok(descriptor, "Got the new process descriptor");
 
     // Connect to the first content process available
-    const content = processes.filter(p => !p.isParent)[0];
+    const content = processes.filter(p => !p.isParentProcessDescriptor)[0];
 
     const processDescriptor = await client.mainRoot.getProcess(content.id);
     const front = await processDescriptor.getTarget();

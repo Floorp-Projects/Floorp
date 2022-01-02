@@ -305,15 +305,6 @@ pub struct HitTestItem {
 
     /// The tag of the hit display item.
     pub tag: ItemTag,
-
-    /// The hit point in the coordinate space of the "viewport" of the display item. The
-    /// viewport is the scroll node formed by the root reference frame of the display item's
-    /// pipeline.
-    pub point_in_viewport: LayoutPoint,
-
-    /// The coordinates of the original hit test point relative to the origin of this item.
-    /// This is useful for calculating things like text offsets in the client.
-    pub point_relative_to_item: LayoutPoint,
 }
 
 /// Returned by `RenderApi::hit_test`.
@@ -509,8 +500,8 @@ pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Parameter {
     Bool(BoolParameter, bool),
+    Int(IntParameter, i32),
 }
-
 
 /// Boolean configuration option.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -520,6 +511,13 @@ pub enum BoolParameter {
     Multithreading = 1,
     BatchedUploads = 2,
     DrawCallsForTextureCopy = 3,
+}
+
+/// Integer configuration option.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum IntParameter {
+    BatchedUploadThreshold = 0,
 }
 
 bitflags! {
@@ -621,12 +619,12 @@ bitflags! {
         const SMART_PROFILER        = 1 << 22;
         /// If set, dump picture cache invalidation debug to console.
         const INVALIDATION_DBG = 1 << 23;
-        /// Log tile cache to memory for later saving as part of wr-capture
-        const TILE_CACHE_LOGGING_DBG   = 1 << 24;
         /// Collect and dump profiler statistics to captures.
         const PROFILER_CAPTURE = (1 as u32) << 25; // need "as u32" until we have cbindgen#556
         /// Invalidate picture tiles every frames (useful when inspecting GPU work in external tools).
         const FORCE_PICTURE_INVALIDATION = (1 as u32) << 26;
+        /// Display window visibility on screen.
+        const WINDOW_VISIBILITY_DBG     = 1 << 27;
     }
 }
 

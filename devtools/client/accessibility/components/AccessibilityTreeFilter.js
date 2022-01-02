@@ -95,7 +95,7 @@ class AccessibilityTreeFilter extends Component {
         onClick: this.onClick.bind(this, FILTERS.NONE),
         disabled: auditing.length > 0,
       }),
-      hr(),
+      hr({ key: "hr-1" }),
     ];
 
     const { [FILTERS.ALL]: filterAllChecked, ...filtersWithoutAll } = filters;
@@ -108,7 +108,7 @@ class AccessibilityTreeFilter extends Component {
         onClick: this.onClick.bind(this, FILTERS.ALL),
         disabled: auditing.length > 0,
       }),
-      hr(),
+      hr({ key: "hr-2" }),
       Object.entries(filtersWithoutAll).map(([filterKey, active]) =>
         MenuItem({
           key: filterKey,

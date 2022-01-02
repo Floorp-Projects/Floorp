@@ -7,24 +7,28 @@
 
 # To regenerate cldr-quotes.inc for a new CLDR release, download the data file
 # "cldr-common-##.zip" from http://unicode.org/Public/cldr/latest into the
-# current directory, update the $filename variable below accordingly, run
+# current directory, run
 #
-#   perl cldr-quotes.pl > cldr-quotes.inc
+#   perl cldr-quotes.pl <filename>  > cldr-quotes.inc
 #
+# (where <filename> is the downloaded cldr-common-## archive), and
 # then use `hg diff` to check that the result looks sane.
 
 use warnings;
 use strict;
 
 use Encode;
-use IO::Uncompress::Unzip;
+use IO::Uncompress::Unzip "unzip";
 
-my $filename = 'cldr-common-36.0.zip';
+die "Usage: perl cldr-quotes.pl <filename>" unless $#ARGV == 0;
+
+my $filename = $ARGV[0];
 
 my (%langQuotes, %quoteLangs);
 
 my $zip = IO::Uncompress::Unzip->new($filename) ||
   die "unzip failed: $IO::Uncompress::Unzip::UnzipError\n";
+
 my $status = 1;
 while ($status > 0) {
   my $name = $zip->getHeaderInfo()->{Name};
@@ -71,7 +75,7 @@ foreach my $lang (sort keys %langQuotes) {
 
   # Record this locale in the list of those which use this particular set of quotes
   $quoteLangs{$quoteChars} = [] unless exists $quoteLangs{$quoteChars};
-  push $quoteLangs{$quoteChars}, $lang;
+  push @{$quoteLangs{$quoteChars}}, $lang;
 }
 
 # Output each unique list of quotes, with the string of associated locales

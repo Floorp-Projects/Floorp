@@ -84,6 +84,7 @@ HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
 
 HttpTransactionParent::~HttpTransactionParent() {
   LOG(("Destroying HttpTransactionParent @%p\n", this));
+  mEventQ->NotifyReleasingOwner();
 }
 
 //-----------------------------------------------------------------------------
@@ -680,6 +681,18 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnH2PushStream(
   mOnPushCallback(aPushedStreamId, aResourceUrl, aRequestString, this);
   return IPC_OK();
 }  // namespace net
+
+mozilla::ipc::IPCResult HttpTransactionParent::RecvEarlyHint(
+    const nsCString& aValue) {
+  LOG(("HttpTransactionParent::RecvEarlyHint header=%s",
+       PromiseFlatCString(aValue).get()));
+  nsCOMPtr<nsIEarlyHintObserver> obs = do_QueryInterface(mChannel);
+  if (obs) {
+    Unused << obs->EarlyHint(aValue);
+  }
+
+  return IPC_OK();
+}
 
 //-----------------------------------------------------------------------------
 // HttpTransactionParent <nsIRequest>

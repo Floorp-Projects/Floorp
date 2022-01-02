@@ -121,7 +121,7 @@ def run_mochitest_desktop(context, args):
 
 
 def set_android_args(context, args):
-    args.app = args.app or "org.mozilla.geckoview.test"
+    args.app = args.app or "org.mozilla.geckoview.test_runner"
     args.utilityPath = context.hostutils
     args.xrePath = context.hostutils
     config = context.mozharness_config

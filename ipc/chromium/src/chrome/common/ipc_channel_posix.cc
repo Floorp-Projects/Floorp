@@ -9,6 +9,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#if defined(OS_MACOSX)
+#  include <mach/message.h>
+#  include <mach/port.h>
+#  include "mozilla/UniquePtrExtensions.h"
+#  include "chrome/common/mach_ipc_mac.h"
+#endif
 #if defined(OS_MACOSX) || defined(OS_NETBSD)
 #  include <sched.h>
 #endif
@@ -29,7 +35,6 @@
 #include "base/process_util.h"
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
-#include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_channel_utils.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -167,7 +172,6 @@ Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
     : factory_(this) {
   Init(mode, listener);
   SetPipe(fd);
-  waiting_connect_ = (MODE_SERVER == mode);
 
   EnqueueHelloMessage();
 }
@@ -217,6 +221,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   closed_ = false;
 #if defined(OS_MACOSX)
   last_pending_fd_id_ = 0;
+  other_task_ = nullptr;
 #endif
   output_queue_length_ = 0;
 }
@@ -257,7 +262,6 @@ bool Channel::ChannelImpl::CreatePipe(Mode mode) {
     CHECK(!consumed.exchange(true))
     << "child process main channel can be created only once";
     SetPipe(gClientChannelFd);
-    waiting_connect_ = false;
   }
 
   return true;
@@ -289,12 +293,20 @@ bool Channel::ChannelImpl::Connect() {
     return false;
   }
 
+#if defined(OS_MACOSX)
+  // If we're still waiting for our peer task to be provided, don't start
+  // listening yet. We'll start receiving messages once the task_t is set.
+  if (accept_mach_ports_ && privileged_ && !other_task_) {
+    MOZ_ASSERT(waiting_connect_);
+    return true;
+  }
+#endif
+
   MessageLoopForIO::current()->WatchFileDescriptor(
       pipe_, true, MessageLoopForIO::WATCH_READ, &read_watcher_, this);
   waiting_connect_ = false;
 
-  if (!waiting_connect_) return ProcessOutgoingMessages();
-  return true;
+  return ProcessOutgoingMessages();
 }
 
 bool Channel::ChannelImpl::ProcessIncomingMessages() {
@@ -483,17 +495,17 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
       Message& m = incoming_message_.ref();
 
-      if (m.header()->num_fds) {
+      if (m.header()->num_handles) {
         // the message has file descriptors
         const char* error = NULL;
-        if (m.header()->num_fds > num_fds - fds_i) {
+        if (m.header()->num_handles > num_fds - fds_i) {
           // the message has been completely received, but we didn't get
           // enough file descriptors.
           error = "Message needs unreceived descriptors";
         }
 
-        if (m.header()->num_fds >
-            FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        if (m.header()->num_handles >
+            IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
           // There are too many descriptors in this message
           error = "Message requires an excessive number of descriptors";
         }
@@ -501,7 +513,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         if (error) {
           CHROMIUM_LOG(WARNING)
               << error << " channel:" << this << " message-type:" << m.type()
-              << " header()->num_fds:" << m.header()->num_fds
+              << " header()->num_handles:" << m.header()->num_handles
               << " num_fds:" << num_fds << " fds_i:" << fds_i;
           // close the existing file descriptors so that we don't leak them
           for (unsigned i = fds_i; i < num_fds; ++i)
@@ -521,9 +533,12 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         OutputQueuePush(std::move(fdAck));
 #endif
 
-        m.file_descriptor_set()->SetDescriptors(&fds[fds_i],
-                                                m.header()->num_fds);
-        fds_i += m.header()->num_fds;
+        nsTArray<mozilla::UniqueFileHandle> handles(m.header()->num_handles);
+        for (unsigned end_i = fds_i + m.header()->num_handles; fds_i < end_i;
+             ++fds_i) {
+          handles.AppendElement(mozilla::UniqueFileHandle(fds[fds_i]));
+        }
+        m.SetAttachedFileHandles(std::move(handles));
       }
 
       // Note: We set other_pid_ below when we receive a Hello message (which
@@ -550,6 +565,11 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 #endif
       } else {
         mozilla::LogIPCMessage::Run run(&m);
+#if defined(OS_MACOSX)
+        if (!AcceptMachPorts(m)) {
+          return false;
+        }
+#endif
         listener_->OnMessageReceived(std::move(m));
       }
 
@@ -591,10 +611,15 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     struct msghdr msgh = {0};
 
     static const int tmp =
-        CMSG_SPACE(sizeof(int[FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE]));
+        CMSG_SPACE(sizeof(int[IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE]));
     char buf[tmp];
 
     if (partial_write_iter_.isNothing()) {
+#if defined(OS_MACOSX)
+      if (!TransferMachPorts(*msg)) {
+        return false;
+      }
+#endif
       Pickle::BufferList::IterImpl iter(msg->Buffers());
       MOZ_DIAGNOSTIC_ASSERT(!iter.Done(), "empty message");
       partial_write_iter_.emplace(iter);
@@ -610,12 +635,12 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
                            MessagePhase::TransferStart);
 
-      if (!msg->file_descriptor_set()->empty()) {
+      if (!msg->attached_handles_.IsEmpty()) {
         // This is the first chunk of a message which has descriptors to send
         struct cmsghdr* cmsg;
-        const unsigned num_fds = msg->file_descriptor_set()->size();
+        const unsigned num_fds = msg->attached_handles_.Length();
 
-        if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        if (num_fds > IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
           MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
           CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
           // This should not be reached.
@@ -628,11 +653,13 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
         cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num_fds);
-        msg->file_descriptor_set()->GetDescriptors(
-            reinterpret_cast<int*>(CMSG_DATA(cmsg)));
+        for (unsigned i = 0; i < num_fds; ++i) {
+          reinterpret_cast<int*>(CMSG_DATA(cmsg))[i] =
+              msg->attached_handles_[i].get();
+        }
         msgh.msg_controllen = cmsg->cmsg_len;
 
-        msg->header()->num_fds = num_fds;
+        msg->header()->num_handles = num_fds;
 #if defined(OS_MACOSX)
         msg->set_fd_cookie(++last_pending_fd_id_);
 #endif
@@ -678,9 +705,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         HANDLE_EINTR(corrected_sendmsg(pipe_, &msgh, MSG_DONTWAIT));
 
 #if !defined(OS_MACOSX)
-    // On OSX CommitAll gets called later, once we get the
+    // On OSX the attached_handles_ array gets cleared later, once we get the
     // RECEIVED_FDS_MESSAGE_TYPE message.
-    if (bytes_written > 0) msg->file_descriptor_set()->CommitAll();
+    if (bytes_written > 0) {
+      msg->attached_handles_.Clear();
+    }
 #endif
 
     if (bytes_written < 0) {
@@ -745,9 +774,10 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       partial_write_iter_.reset();
 
 #if defined(OS_MACOSX)
-      if (!msg->file_descriptor_set()->empty())
-        pending_fds_.push_back(
-            PendingDescriptors(msg->fd_cookie(), msg->file_descriptor_set()));
+      if (!msg->attached_handles_.IsEmpty()) {
+        pending_fds_.push_back(PendingDescriptors{
+            msg->fd_cookie(), std::move(msg->attached_handles_)});
+      }
 #endif
 
       // Message sent OK!
@@ -834,7 +864,6 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
   for (std::list<PendingDescriptors>::iterator i = pending_fds_.begin();
        i != pending_fds_.end(); i++) {
     if ((*i).id == pending_fd_id) {
-      (*i).fds->CommitAll();
       pending_fds_.erase(i);
       return;
     }
@@ -904,15 +933,274 @@ void Channel::ChannelImpl::Close() {
   input_overflow_fds_.clear();
 
 #if defined(OS_MACOSX)
-  for (std::list<PendingDescriptors>::iterator i = pending_fds_.begin();
-       i != pending_fds_.end(); i++) {
-    (*i).fds->CommitAll();
-  }
   pending_fds_.clear();
+
+  other_task_ = nullptr;
 #endif
 
   closed_ = true;
 }
+
+#if defined(OS_MACOSX)
+void Channel::ChannelImpl::SetOtherMachTask(task_t task) {
+  if (NS_WARN_IF(closed_)) {
+    return;
+  }
+
+  MOZ_ASSERT(accept_mach_ports_ && privileged_ && waiting_connect_);
+  other_task_ = mozilla::RetainMachSendRight(task);
+  // Now that `other_task_` is provided, we can continue connecting.
+  Connect();
+}
+
+void Channel::ChannelImpl::StartAcceptingMachPorts(Mode mode) {
+  if (accept_mach_ports_) {
+    MOZ_ASSERT(privileged_ == (MODE_SERVER == mode));
+    return;
+  }
+  accept_mach_ports_ = true;
+  privileged_ = MODE_SERVER == mode;
+}
+
+//------------------------------------------------------------------------------
+// Mach port transferring logic
+//
+// It is currently not possible to directly transfer a mach send right between
+// two content processes using SCM_RIGHTS, unlike how we can handle file
+// descriptors. This means that mach ports need to be transferred through a
+// separate mechanism. This file only implements support for transferring mach
+// ports between a (potentially sandboxed) child process and the parent process.
+// Support for transferring mach ports between other process pairs is handled by
+// `NodeController`, which is responsible for relaying messages which carry
+// handles via the parent process.
+//
+// The logic which we use for doing this is based on the following from
+// Chromium, which pioneered this technique. As of this writing, chromium no
+// longer uses this strategy, as all IPC messages are sent using mach ports on
+// macOS.
+// https://source.chromium.org/chromium/chromium/src/+/9f707e5e04598d8303fa99ca29eb507c839767d8:mojo/core/mach_port_relay.cc
+// https://source.chromium.org/chromium/chromium/src/+/9f707e5e04598d8303fa99ca29eb507c839767d8:base/mac/mach_port_util.cc.
+//
+// As we only need to consider messages between the privileged (parent) and
+// unprivileged (child) processes in this code, there are 2 relevant cases which
+// we need to handle:
+//
+// # Unprivileged (child) to Privileged (parent)
+//
+// As the privileged process has access to the unprivileged process' `task_t`,
+// it is possible to directly extract the mach port from the target process'
+// address space, given its name, using `mach_port_extract_right`.
+//
+// To transfer the port, the unprivileged process will leak a reference to the
+// send right, and include the port's name in the message footer. The privileged
+// process will extract that port right (and drop the reference in the old
+// process) using `mach_port_extract_right` with `MACH_MSG_TYPE_MOVE_SEND`. The
+// call to `mach_port_extract_right` is handled by `BrokerExtractSendRight`
+//
+// # Privileged (parent) to Unprivileged (child)
+//
+// Unfortunately, the process of transferring a right into a target process is
+// more complex.  The only well-supported way to transfer a right into a process
+// is by sending it with `mach_msg`, and receiving it on the other side [1].
+//
+// To work around this, the privileged process uses `mach_port_allocate` to
+// create a new receive right in the target process using its `task_t`, and
+// `mach_port_extract_right` to extract a send-once right to that port. It then
+// sends a message to the port with port we're intending to send as an
+// attachment. This is handled by `BrokerTransferSendRight`, which returns the
+// name of the newly created receive right in the target process to be sent in
+// the message footer.
+//
+// In the unprivileged process, `mach_msg` is used to receive a single message
+// from the receive right, which will have the actual port we were trying to
+// transfer as an attachment. This is handled by the `MachReceivePortSendRight`
+// function.
+//
+// [1] We cannot use `mach_port_insert_right` to transfer the right into the
+// target process, as that method requires explicitly specifying the remote
+// port's name, and we do not control the port name allocator.
+
+// Extract a send right from the given peer task. A reference to the remote
+// right will be dropped.  See comment above for details.
+static mozilla::UniqueMachSendRight BrokerExtractSendRight(
+    task_t task, mach_port_name_t name) {
+  mach_port_t extractedRight = MACH_PORT_NULL;
+  mach_msg_type_name_t extractedRightType;
+  kern_return_t kr =
+      mach_port_extract_right(task, name, MACH_MSG_TYPE_MOVE_SEND,
+                              &extractedRight, &extractedRightType);
+  if (kr != KERN_SUCCESS) {
+    CHROMIUM_LOG(ERROR) << "failed to extract port right from other process. "
+                        << mach_error_string(kr);
+    return nullptr;
+  }
+  MOZ_ASSERT(extractedRightType == MACH_MSG_TYPE_PORT_SEND,
+             "We asked the OS for a send port");
+  return mozilla::UniqueMachSendRight(extractedRight);
+}
+
+// Transfer a send right to the given peer task. The name of a receive right in
+// the remote process will be returned if successful. The sent port can be
+// obtained from that port in the peer task using `MachReceivePortSendRight`.
+// See comment above for details.
+static mozilla::Maybe<mach_port_name_t> BrokerTransferSendRight(
+    task_t task, mozilla::UniqueMachSendRight port_to_send) {
+  mach_port_name_t endpoint;
+  kern_return_t kr =
+      mach_port_allocate(task, MACH_PORT_RIGHT_RECEIVE, &endpoint);
+  if (kr != KERN_SUCCESS) {
+    CHROMIUM_LOG(ERROR)
+        << "Unable to create receive right in TransferMachPorts. "
+        << mach_error_string(kr);
+    return mozilla::Nothing();
+  }
+
+  // Clean up the endpoint on error.
+  auto destroyEndpoint =
+      mozilla::MakeScopeExit([&] { mach_port_deallocate(task, endpoint); });
+
+  // Change its message queue limit so that it accepts one message.
+  mach_port_limits limits = {};
+  limits.mpl_qlimit = 1;
+  kr = mach_port_set_attributes(task, endpoint, MACH_PORT_LIMITS_INFO,
+                                reinterpret_cast<mach_port_info_t>(&limits),
+                                MACH_PORT_LIMITS_INFO_COUNT);
+  if (kr != KERN_SUCCESS) {
+    CHROMIUM_LOG(ERROR)
+        << "Unable configure receive right in TransferMachPorts. "
+        << mach_error_string(kr);
+    return mozilla::Nothing();
+  }
+
+  // Get a send right.
+  mach_port_t send_once_right;
+  mach_msg_type_name_t send_right_type;
+  kr = mach_port_extract_right(task, endpoint, MACH_MSG_TYPE_MAKE_SEND_ONCE,
+                               &send_once_right, &send_right_type);
+  if (kr != KERN_SUCCESS) {
+    CHROMIUM_LOG(ERROR) << "Unable extract send right in TransferMachPorts. "
+                        << mach_error_string(kr);
+    return mozilla::Nothing();
+  }
+  MOZ_ASSERT(MACH_MSG_TYPE_PORT_SEND_ONCE == send_right_type);
+
+  kr = MachSendPortSendRight(send_once_right, port_to_send.get(),
+                             mozilla::Some(0), MACH_MSG_TYPE_MOVE_SEND_ONCE);
+  if (kr != KERN_SUCCESS) {
+    // This right will be destroyed due to being a SEND_ONCE right if we
+    // succeed.
+    mach_port_deallocate(mach_task_self(), send_once_right);
+    CHROMIUM_LOG(ERROR) << "Unable to transfer right in TransferMachPorts. "
+                        << mach_error_string(kr);
+    return mozilla::Nothing();
+  }
+
+  destroyEndpoint.release();
+  return mozilla::Some(endpoint);
+}
+
+// Process footer information attached to the message, and acquire owning
+// references to any transferred mach ports. See comment above for details.
+bool Channel::ChannelImpl::AcceptMachPorts(Message& msg) {
+  uint32_t num_send_rights = msg.header()->num_send_rights;
+  if (num_send_rights == 0) {
+    return true;
+  }
+
+  if (!accept_mach_ports_) {
+    CHROMIUM_LOG(ERROR) << "invalid message: " << msg.name()
+                        << ". channel is not configured to accept mach ports";
+    return false;
+  }
+
+  // Read in the payload from the footer, truncating the message.
+  nsTArray<uint32_t> payload;
+  payload.AppendElements(num_send_rights);
+  if (!msg.ReadFooter(payload.Elements(), num_send_rights * sizeof(uint32_t),
+                      /* truncate */ true)) {
+    CHROMIUM_LOG(ERROR) << "failed to read mach port payload from message";
+    return false;
+  }
+  msg.header()->num_send_rights = 0;
+
+  // Read in the handles themselves, transferring ownership as required.
+  nsTArray<mozilla::UniqueMachSendRight> rights(num_send_rights);
+  for (uint32_t name : payload) {
+    mozilla::UniqueMachSendRight right;
+    if (privileged_) {
+      if (!other_task_) {
+        CHROMIUM_LOG(ERROR) << "other_task_ is invalid in AcceptMachPorts";
+        return false;
+      }
+      right = BrokerExtractSendRight(other_task_.get(), name);
+    } else {
+      kern_return_t kr = MachReceivePortSendRight(
+          mozilla::UniqueMachReceiveRight(name), mozilla::Some(0), &right);
+      if (kr != KERN_SUCCESS) {
+        CHROMIUM_LOG(ERROR)
+            << "failed to receive mach send right. " << mach_error_string(kr);
+        return false;
+      }
+    }
+    if (!right) {
+      return false;
+    }
+    rights.AppendElement(std::move(right));
+  }
+
+  // We're done with the handle footer, truncate the message at that point.
+  msg.attached_send_rights_ = std::move(rights);
+  MOZ_ASSERT(msg.num_send_rights() == num_send_rights);
+  return true;
+}
+
+// Transfer ownership of any attached mach ports to the peer task, and add the
+// required information for AcceptMachPorts to the message footer. See comment
+// above for details.
+bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
+  uint32_t num_send_rights = msg.num_send_rights();
+  if (num_send_rights == 0) {
+    return true;
+  }
+
+  if (!accept_mach_ports_) {
+    CHROMIUM_LOG(ERROR) << "cannot send message: " << msg.name()
+                        << ". channel is not configured to accept mach ports";
+    return false;
+  }
+
+#  ifdef DEBUG
+  uint32_t rights_offset = msg.header()->payload_size;
+#  endif
+
+  nsTArray<uint32_t> payload(num_send_rights);
+  for (auto& port_to_send : msg.attached_send_rights_) {
+    if (privileged_) {
+      if (!other_task_) {
+        CHROMIUM_LOG(ERROR) << "other_task_ is invalid in TransferMachPorts";
+        return false;
+      }
+      mozilla::Maybe<mach_port_name_t> endpoint =
+          BrokerTransferSendRight(other_task_.get(), std::move(port_to_send));
+      if (!endpoint) {
+        return false;
+      }
+      payload.AppendElement(*endpoint);
+    } else {
+      payload.AppendElement(port_to_send.release());
+    }
+  }
+  msg.attached_send_rights_.Clear();
+
+  msg.WriteFooter(payload.Elements(), payload.Length() * sizeof(uint32_t));
+  msg.header()->num_send_rights = num_send_rights;
+
+  MOZ_ASSERT(msg.header()->payload_size ==
+                 rights_offset + (sizeof(uint32_t) * num_send_rights),
+             "Unexpected number of bytes written for send rights footer?");
+  return true;
+}
+#endif
 
 bool Channel::ChannelImpl::Unsound_IsClosed() const { return closed_; }
 
@@ -974,6 +1262,16 @@ bool Channel::Unsound_IsClosed() const {
 uint32_t Channel::Unsound_NumQueuedMessages() const {
   return channel_impl_->Unsound_NumQueuedMessages();
 }
+
+#if defined(OS_MACOSX)
+void Channel::SetOtherMachTask(task_t task) {
+  channel_impl_->SetOtherMachTask(task);
+}
+
+void Channel::StartAcceptingMachPorts(Mode mode) {
+  channel_impl_->StartAcceptingMachPorts(mode);
+}
+#endif
 
 // static
 Channel::ChannelId Channel::GenerateVerifiedChannelID() { return {}; }

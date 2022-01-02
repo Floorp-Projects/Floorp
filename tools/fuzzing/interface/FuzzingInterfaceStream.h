@@ -32,7 +32,7 @@ namespace mozilla {
 
 typedef int (*FuzzingTestFuncStream)(nsCOMPtr<nsIInputStream>);
 
-#ifdef __AFL_COMPILER
+#ifdef AFLFUZZ
 void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
 
 #  define MOZ_AFL_INTERFACE_COMMON(initFunc)                              \

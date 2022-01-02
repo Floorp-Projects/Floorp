@@ -472,6 +472,7 @@ sv{
         rap{"rapanui"}
         rar{"rarotonganska"}
         rgn{"romagnol"}
+        rhg{"ruáingga"}
         rif{"riffianska"}
         rm{"rätoromanska"}
         rn{"rundi"}
@@ -689,6 +690,7 @@ sv{
         Chrs{"khwarezmiska"}
         Cirt{"cirt"}
         Copt{"koptiska"}
+        Cpmn{"cypro-minoisk skrift"}
         Cprt{"cypriotiska"}
         Cyrl{"kyrilliska"}
         Cyrs{"fornkyrkoslavisk kyrilliska"}

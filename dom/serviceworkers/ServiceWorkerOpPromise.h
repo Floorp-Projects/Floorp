@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
 namespace mozilla {
@@ -20,7 +20,7 @@ namespace dom {
 class InternalResponse;
 
 using SynthesizeResponseArgs =
-    Tuple<RefPtr<InternalResponse>, FetchEventRespondWithClosure,
+    Tuple<SafeRefPtr<InternalResponse>, FetchEventRespondWithClosure,
           FetchEventTimeStamps>;
 
 using FetchEventRespondWithResult =
@@ -29,6 +29,11 @@ using FetchEventRespondWithResult =
 
 using FetchEventRespondWithPromise =
     MozPromise<FetchEventRespondWithResult, CancelInterceptionArgs, true>;
+
+// The reject type int is arbitrary, since this promise will never get rejected.
+// Unfortunately void is not supported as a reject type.
+using FetchEventPreloadResponsePromise =
+    MozPromise<SafeRefPtr<InternalResponse>, int, true>;
 
 using ServiceWorkerOpPromise =
     MozPromise<ServiceWorkerOpResult, nsresult, true>;

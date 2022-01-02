@@ -888,6 +888,9 @@ pt_PT{
             lg{"Hora de Ecaterimburgo"}
             ls{"Hora padrão de Ecaterimburgo"}
         }
+        "meta:Yukon"{
+            ls{"Hora do Yukon"}
+        }
         regionFormat{"Hora de {0}"}
         regionFormatDaylight{"Hora padrão de {0}"}
         regionFormatStandard{"Hora padrão de {0}"}

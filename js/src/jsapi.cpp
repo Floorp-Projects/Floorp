@@ -33,9 +33,7 @@
 #include "builtin/JSON.h"
 #include "builtin/Promise.h"
 #include "builtin/Symbol.h"
-#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil, frontend::InstantiateStencils
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationGCOutput
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
@@ -55,7 +53,6 @@
 #include "js/LocaleSensitive.h"
 #include "js/MemoryCallbacks.h"
 #include "js/MemoryFunctions.h"
-#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/ScriptPrivate.h"
@@ -90,7 +87,6 @@
 #include "vm/StringType.h"
 #include "vm/ToSource.h"
 #include "vm/WrapperObject.h"
-#include "vm/Xdr.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
 
@@ -1381,14 +1377,14 @@ JS_PUBLIC_API void JS_RemoveWeakPointerCompartmentCallback(
   cx->runtime()->gc.removeWeakPointerCompartmentCallback(cb);
 }
 
-JS_PUBLIC_API void JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject*>* objp) {
-  JS_UpdateWeakPointerAfterGCUnbarriered(objp->unsafeGet());
+JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGC(JSTracer* trc,
+                                               JS::Heap<JSObject*>* objp) {
+  return TraceWeakEdge(trc, objp);
 }
 
-JS_PUBLIC_API void JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp) {
-  if (IsAboutToBeFinalizedUnbarriered(objp)) {
-    *objp = nullptr;
-  }
+JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGCUnbarriered(JSTracer* trc,
+                                                          JSObject** objp) {
+  return TraceManuallyBarrieredWeakEdge(trc, objp, "External weak pointer");
 }
 
 JS_PUBLIC_API void JS_SetGCParameter(JSContext* cx, JSGCParamKey key,
@@ -1764,14 +1760,9 @@ JS_PUBLIC_API void JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global) {
   GlobalObject* globalObj = &global->as<GlobalObject>();
   Realm* globalRealm = globalObj->realm();
 
-  // Off thread parsing and compilation tasks create a dummy global which is
-  // then merged back into the host realm. Since it used to be a global, it
-  // will still have this trace hook, but it does not have a meaning relative
-  // to its new realm. We can safely skip it.
-  //
-  // Similarly, if we GC when creating the global, we may not have set that
-  // global's realm's global pointer yet. In this case, the realm will not yet
-  // contain anything that needs to be traced.
+  // If we GC when creating the global, we may not have set that global's
+  // realm's global pointer yet. In this case, the realm will not yet contain
+  // anything that needs to be traced.
   if (globalRealm->unsafeUnbarrieredMaybeGlobal() != globalObj) {
     return;
   }
@@ -2010,12 +2001,11 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
 }
 
 bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
-                          MutableHandleId id,
-                          js::PinningBehavior pin = js::DoNotPinAtom) {
+                          MutableHandleId id) {
   if (name.isSymbol()) {
     id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(name.symbol())));
   } else {
-    JSAtom* atom = Atomize(cx, name.string(), strlen(name.string()), pin);
+    JSAtom* atom = Atomize(cx, name.string(), strlen(name.string()));
     if (!atom) {
       return false;
     }
@@ -2031,8 +2021,16 @@ JS_PUBLIC_API bool JS::PropertySpecNameToPermanentId(JSContext* cx,
   // location that will never be marked. This is OK because the whole point
   // of this API is to populate *idp with a jsid that does not need to be
   // marked.
-  return PropertySpecNameToId(
-      cx, name, MutableHandleId::fromMarkedLocation(idp), js::PinAtom);
+  MutableHandleId id = MutableHandleId::fromMarkedLocation(idp);
+  if (!PropertySpecNameToId(cx, name, id)) {
+    return false;
+  }
+
+  if (id.isString() && !PinAtom(cx, &id.toString()->asAtom())) {
+    return false;
+  }
+
+  return true;
 }
 
 JS_PUBLIC_API bool JS::ObjectToCompletePropertyDescriptor(
@@ -2291,29 +2289,39 @@ extern JS_PUBLIC_API bool JS_IsConstructor(JSFunction* fun) {
 
 void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
     const TransitiveCompileOptions& rhs) {
+  // filename_, introducerFilename_, sourceMapURL_ should be handled in caller.
+
   mutedErrors_ = rhs.mutedErrors_;
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
-  skipFilenameValidation_ = rhs.skipFilenameValidation_;
   sourcePragmas_ = rhs.sourcePragmas_;
+  skipFilenameValidation_ = rhs.skipFilenameValidation_;
+  hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
+  deferDebugMetadata_ = rhs.deferDebugMetadata_;
+
   selfHostingMode = rhs.selfHostingMode;
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
   forceAsync = rhs.forceAsync;
   discardSource = rhs.discardSource;
   sourceIsLazy = rhs.sourceIsLazy;
+  allowHTMLComments = rhs.allowHTMLComments;
+  nonSyntacticScope = rhs.nonSyntacticScope;
+
+  privateClassFields = rhs.privateClassFields;
+  privateClassMethods = rhs.privateClassMethods;
+  topLevelAwait = rhs.topLevelAwait;
+  classStaticBlocks = rhs.classStaticBlocks;
+  importAssertions = rhs.importAssertions;
+  useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
+
+  borrowBuffer = rhs.borrowBuffer;
+  usePinnedBytecode = rhs.usePinnedBytecode;
+
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
-  hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
-  deferDebugMetadata_ = rhs.deferDebugMetadata_;
-  nonSyntacticScope = rhs.nonSyntacticScope;
-  privateClassFields = rhs.privateClassFields;
-  privateClassMethods = rhs.privateClassMethods;
-  classStaticBlocks = rhs.classStaticBlocks;
-  useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
-  useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
@@ -2398,7 +2406,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
 
   classStaticBlocks = cx->options().classStaticBlocks();
 
-  useOffThreadParseGlobal = UseOffThreadParseGlobal();
+  importAssertions = cx->options().importAssertions();
 
   useFdlibmForSinCosTan = math_use_fdlibm_for_sin_cos_tan();
 
@@ -2975,7 +2983,7 @@ JS_PUBLIC_API JSString* JS_AtomizeStringN(JSContext* cx, const char* s,
                                           size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return Atomize(cx, s, length, DoNotPinAtom);
+  return Atomize(cx, s, length);
 }
 
 JS_PUBLIC_API JSString* JS_AtomizeAndPinString(JSContext* cx, const char* s) {
@@ -2986,7 +2994,11 @@ JS_PUBLIC_API JSString* JS_AtomizeAndPinStringN(JSContext* cx, const char* s,
                                                 size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  JSAtom* atom = Atomize(cx, s, length, PinAtom);
+  JSAtom* atom = Atomize(cx, s, length);
+  if (!atom || !PinAtom(cx, atom)) {
+    return nullptr;
+  }
+
   MOZ_ASSERT_IF(atom, JS_StringHasBeenPinned(cx, atom));
   return atom;
 }
@@ -3042,7 +3054,7 @@ JS_PUBLIC_API JSString* JS_AtomizeUCStringN(JSContext* cx, const char16_t* s,
                                             size_t length) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return AtomizeChars(cx, s, length, DoNotPinAtom);
+  return AtomizeChars(cx, s, length);
 }
 
 JS_PUBLIC_API size_t JS_GetStringLength(JSString* str) { return str->length(); }

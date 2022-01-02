@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Click a link whose event we intercept</title>
+</head>
+<body>
+
+<a id="test" href="https://example.com/">click me</a><br><br>
+
+<a id="untrusted-only" href="https://example.com/" target="_blank">This is a link, works only with untrusted events</a><br>
+<input id="fire-untrusted" type=button value="Click me to trigger an untrusted event"><br><br>
+
+<a id="fire-targetless-link" href="unused">Click me (dispatch untrusted event to link without href)</a><br>
+<a id="fire-button" href="unused">Click me (dispatch untrusted event to button)</a>
+
+<script>
+
+  document.getElementById("test").addEventListener("click", originalClick => {
+      const newLink = document.createElement("a");
+      newLink.setAttribute("rel", "noreferrer");
+      newLink.setAttribute("target", "_blank");
+      newLink.setAttribute("href", "https://example.org/");
+
+
+      document.body.appendChild(newLink);
+
+      const evt = document.createEvent('MouseEvent');
+      evt.initMouseEvent(
+        "click", true, true, window, 0,
+        originalClick.screenX, originalClick.screenY, originalClick.clientX, originalClick.clientY,
+        originalClick.ctrlKey, originalClick.altKey, originalClick.shiftKey, originalClick.metaKey,
+        originalClick.button, originalClick.relatedTarget
+      );
+      newLink.dispatchEvent(evt);
+
+
+      originalClick.preventDefault();
+      originalClick.stopPropagation();
+  });
+
+  document.getElementById("untrusted-only").addEventListener("click", ev => {
+    if (ev.isTrusted) {
+      ev.preventDefault();
+    }
+  });
+
+  document.getElementById("fire-untrusted").addEventListener("click", () => {
+    document.getElementById("untrusted-only").dispatchEvent(new MouseEvent("click"));
+  });
+
+  function handleTargetless(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const buttonOrLink = e.target.id.includes("button") ? "button" : "a";
+    const newElement = document.createElement(buttonOrLink);
+    document.body.appendChild(newElement);
+
+    const evt = document.createEvent("MouseEvent");
+    evt.initMouseEvent("click", true, true, window, 0, e.screenX, e.screenY,
+        e.clientX, e.clientY, e.ctrlKey, e.altKey, e.shiftKey,
+        e.metaKey, e.button, e.relatedTarget);
+    newElement.dispatchEvent(evt);
+    newElement.remove();
+
+    setTimeout(() => {
+      window.open();
+    }, 0);
+  }
+  document.getElementById("fire-targetless-link").addEventListener("click", handleTargetless);
+  document.getElementById("fire-button").addEventListener("click", handleTargetless);
+
+</script>
+</body>
+</html>

@@ -13,17 +13,13 @@
 #include "mozilla/gfx/Types.h"
 #include "nsITheme.h"
 #include "nsNativeTheme.h"
+#include "ScrollbarDrawing.h"
 
 namespace mozilla {
 
 enum class StyleSystemColor : uint8_t;
 
 namespace widget {
-
-static constexpr gfx::sRGBColor sDefaultAccent(
-    gfx::sRGBColor::UnusualFromARGB(0xff0060df));  // Luminance: 13.69346%
-static constexpr gfx::sRGBColor sDefaultAccentForeground(
-    gfx::sRGBColor::OpaqueWhite());
 
 static constexpr gfx::sRGBColor sColorGrey10(
     gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
@@ -54,13 +50,6 @@ static constexpr gfx::sRGBColor sColorMeterRed10(
     gfx::sRGBColor::UnusualFromARGB(0xffe22850));
 static constexpr gfx::sRGBColor sColorMeterRed20(
     gfx::sRGBColor::UnusualFromARGB(0xff810220));
-
-static constexpr gfx::sRGBColor sScrollbarColor(
-    gfx::sRGBColor::UnusualFromARGB(0xfff0f0f0));
-static constexpr gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
-                                                                     1.0f));
-static constexpr gfx::sRGBColor sScrollbarThumbColor(
-    gfx::sRGBColor::UnusualFromARGB(0xffcdcdcd));
 
 static const CSSCoord kMinimumColorPickerHeight = 32.0f;
 static const CSSCoord kMinimumRangeThumbSize = 20.0f;
@@ -96,10 +85,20 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using RectCornerRadii = mozilla::gfx::RectCornerRadii;
   using LayoutDeviceCoord = mozilla::LayoutDeviceCoord;
   using LayoutDeviceRect = mozilla::LayoutDeviceRect;
-  class AccentColor;
-  class Colors;
+  using Colors = mozilla::widget::ThemeColors;
+  using AccentColor = mozilla::widget::ThemeAccentColor;
+  using ScrollbarDrawing = mozilla::widget::ScrollbarDrawing;
+  using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
+  using LookAndFeel = mozilla::LookAndFeel;
+  using ThemeChangeKind = mozilla::widget::ThemeChangeKind;
 
  public:
+  explicit nsNativeBasicTheme(
+      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
+      : mScrollbarDrawing(std::move(aScrollbarDrawing)) {
+    mScrollbarDrawing->RecomputeScrollbarParams();
+  }
+
   static void Init();
   static void Shutdown();
   static void LookAndFeelChanged();
@@ -113,13 +112,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                   StyleAppearance, const nsRect& aRect,
                                   const nsRect& aDirtyRect,
                                   DrawOverflow) override;
-
-  struct WebRenderBackendData {
-    mozilla::wr::DisplayListBuilder& mBuilder;
-    mozilla::wr::IpcResourceUpdateQueue& mResources;
-    const mozilla::layers::StackingContextHelper& mSc;
-    mozilla::layers::RenderRootStateManager* mManager;
-  };
 
   bool CreateWebRenderCommandsForWidget(
       mozilla::wr::DisplayListBuilder& aBuilder,
@@ -159,27 +151,22 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                                StyleAppearance) override;
   bool ThemeSupportsWidget(nsPresContext*, nsIFrame*, StyleAppearance) override;
   bool WidgetIsContainer(StyleAppearance) override;
-  bool ThemeDrawsFocusForWidget(StyleAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
-  static nscolor AdjustUnthemedScrollbarThumbColor(nscolor, EventStates);
-  static nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
-  static mozilla::Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
-  static nscolor ComputeCustomAccentForeground(nscolor aAccent);
 
   nscoord GetCheckboxRadioPrefSize() override;
 
+  static mozilla::UniquePtr<ScrollbarDrawing>
+  DetermineScrollbarStyleSetByPrefs();
+  static mozilla::UniquePtr<ScrollbarDrawing> DetermineScrollbarStyle();
+
  protected:
-  nsNativeBasicTheme() = default;
   virtual ~nsNativeBasicTheme() = default;
 
-  static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
   static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
-
-  // Whether we should use system colors (for high contrast mode).
-  static bool ShouldBeHighContrast(const nsPresContext&);
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
                                                         StyleAppearance,
@@ -207,21 +194,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
       const EventStates& aMeterState, const Colors&);
   std::array<sRGBColor, 3> ComputeFocusRectColors(const Colors&);
 
-  static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
-  bool IsScrollbarTrackOpaque(nsIFrame*);
-  sRGBColor ComputeScrollbarTrackColor(nsIFrame*, const ComputedStyle&,
-                                       const EventStates& aDocumentState,
-                                       const Colors&);
-  sRGBColor ComputeScrollbarThumbColor(nsIFrame*, const ComputedStyle&,
-                                       const EventStates& aElementState,
-                                       const EventStates& aDocumentState,
-                                       const Colors&);
-  // Returned colors are button, arrow.
-  std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
-      nsIFrame*, StyleAppearance, const ComputedStyle&,
-      const EventStates& aElementState, const EventStates& aDocumentState,
-      const Colors&);
-
   template <typename PaintBackendData>
   void PaintRoundedFocusRect(PaintBackendData&, const LayoutDeviceRect&,
                              const Colors&, DPIRatio, CSSCoord aRadius,
@@ -229,35 +201,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   template <typename PaintBackendData>
   void PaintAutoStyleOutline(nsIFrame*, PaintBackendData&,
                              const LayoutDeviceRect&, const Colors&, DPIRatio);
-
-  static void PaintRoundedRectWithRadius(DrawTarget&,
-                                         const LayoutDeviceRect& aRect,
-                                         const LayoutDeviceRect& aClipRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio);
-  static void PaintRoundedRectWithRadius(WebRenderBackendData&,
-                                         const LayoutDeviceRect& aRect,
-                                         const LayoutDeviceRect& aClipRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio);
-  template <typename PaintBackendData>
-  static void PaintRoundedRectWithRadius(PaintBackendData& aData,
-                                         const LayoutDeviceRect& aRect,
-                                         const sRGBColor& aBackgroundColor,
-                                         const sRGBColor& aBorderColor,
-                                         CSSCoord aBorderWidth,
-                                         CSSCoord aRadius, DPIRatio aDpiRatio) {
-    PaintRoundedRectWithRadius(aData, aRect, aRect, aBackgroundColor,
-                               aBorderColor, aBorderWidth, aRadius, aDpiRatio);
-  }
-
-  static void FillRect(DrawTarget&, const LayoutDeviceRect&, const sRGBColor&);
-  static void FillRect(WebRenderBackendData&, const LayoutDeviceRect&,
-                       const sRGBColor&);
 
   void PaintCheckboxControl(DrawTarget& aDrawTarget, const LayoutDeviceRect&,
                             const EventStates&, const Colors&, DPIRatio);
@@ -295,10 +238,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   template <typename PaintBackendData>
   void PaintMenulist(PaintBackendData&, const LayoutDeviceRect&,
                      const EventStates&, const Colors&, DPIRatio);
-  void PaintArrow(DrawTarget&, const LayoutDeviceRect&,
-                  const float aArrowPolygonX[], const float aArrowPolygonY[],
-                  const float aArrowPolygonSize, const int32_t aArrowNumPoints,
-                  const sRGBColor aFillColor);
   void PaintMenulistArrowButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
                                 const EventStates&);
   void PaintSpinnerButton(nsIFrame*, DrawTarget&, const LayoutDeviceRect&,
@@ -316,88 +255,18 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
                    const EventStates&, const Colors&, DPIRatio);
 
-  void PaintScrollbarButton(DrawTarget&, StyleAppearance,
-                            const LayoutDeviceRect&, nsIFrame*,
-                            const ComputedStyle&,
-                            const EventStates& aElementState,
-                            const EventStates& aDocumentState, const Colors&,
-                            DPIRatio);
-
-  virtual bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
-                                   bool aHorizontal, nsIFrame*,
-                                   const ComputedStyle&,
-                                   const EventStates& aElementState,
-                                   const EventStates& aDocumentState,
-                                   const Colors&, DPIRatio);
-  virtual bool PaintScrollbarThumb(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
-                                   nsIFrame*, const ComputedStyle&,
-                                   const EventStates& aElementState,
-                                   const EventStates& aDocumentState,
-                                   const Colors&, DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
-                                    bool aHorizontal, nsIFrame*,
-                                    const ComputedStyle&,
-                                    const EventStates& aElementState,
-                                    const EventStates& aDocumentState,
-                                    const Colors&, DPIRatio);
-
-  virtual bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              DPIRatio);
-  virtual bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
-                              bool aHorizontal, nsIFrame*, const ComputedStyle&,
-                              const EventStates& aElementState,
-                              const EventStates& aDocumentState, const Colors&,
-                              DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollbar(PaintBackendData&, const LayoutDeviceRect&,
-                               bool aHorizontal, nsIFrame*,
-                               const ComputedStyle&,
-                               const EventStates& aElementState,
-                               const EventStates& aDocumentState, const Colors&,
-                               DPIRatio);
-
-  virtual bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
-                                   bool aHorizontal, nsIFrame*,
-                                   const ComputedStyle&,
-                                   const EventStates& aDocumentState,
-                                   const Colors&, DPIRatio) {
-    // Draw nothing by default. Subclasses can override this.
-    return true;
-  }
-  virtual bool PaintScrollbarTrack(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
-                                   nsIFrame*, const ComputedStyle&,
-                                   const EventStates& aDocumentState,
-                                   const Colors&, DPIRatio) {
-    // Draw nothing by default. Subclasses can override this.
-    return true;
+  static void PrefChangedCallback(const char*, void*) {
+    LookAndFeel::NotifyChangedAllWindows(ThemeChangeKind::Layout);
   }
 
-  virtual bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
-                                 const EventStates& aDocumentState,
-                                 const Colors&, DPIRatio);
-  virtual bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
-                                 const EventStates& aDocumentState,
-                                 const Colors&, DPIRatio);
-  template <typename PaintBackendData>
-  bool DoPaintDefaultScrollCorner(PaintBackendData&, const LayoutDeviceRect&,
-                                  nsIFrame*, const ComputedStyle&,
-                                  const EventStates& aDocumentState,
-                                  const Colors&, DPIRatio);
+  void SetScrollbarDrawing(
+      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing) {
+    mScrollbarDrawing = std::move(aScrollbarDrawing);
+  }
+  ScrollbarDrawing& GetScrollbarDrawing() const { return *mScrollbarDrawing; }
+  mozilla::UniquePtr<ScrollbarDrawing> mScrollbarDrawing;
 
-  static CSSIntCoord sHorizontalScrollbarHeight;
-  static CSSIntCoord sVerticalScrollbarWidth;
-
-  static void PrefChangedCallback(const char*, void*) { LookAndFeelChanged(); }
-  static void RecomputeAccentColors();
-  static void RecomputeScrollbarParams();
+  bool ThemeSupportsScrollbarButtons() override;
 };
 
 #endif

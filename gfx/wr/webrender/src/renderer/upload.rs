@@ -19,6 +19,7 @@
 use std::mem;
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::time::Duration;
 use euclid::{Transform3D, point2};
 use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
@@ -60,6 +61,7 @@ pub fn upload_to_texture_cache(
         cpu_copy_time: 0,
         gpu_copy_commands_time: 0,
         bytes_uploaded: 0,
+        items_uploaded: 0,
     };
 
     let upload_total_start = precise_time_ns();
@@ -132,10 +134,13 @@ pub fn upload_to_texture_cache(
                 }
             };
 
+            stats.items_uploaded += 1;
+
             let use_batch_upload = renderer.device.use_batched_texture_uploads() &&
                 texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
                 rect.width() <= BATCH_UPLOAD_TEXTURE_SIZE.width &&
-                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height;
+                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height &&
+                rect.area() < renderer.device.batched_upload_threshold();
 
             if use_batch_upload
                 && arc_data.is_some()
@@ -250,7 +255,7 @@ pub fn upload_to_texture_cache(
         let gpu_copy_start = precise_time_ns();
 
         if renderer.device.use_draw_calls_for_texture_copy() {
-            // Some drivers are very have a very high CPU overhead when submitting hundreds of small blit
+            // Some drivers have a very high CPU overhead when submitting hundreds of small blit
             // commands (low end intel drivers on Windows for example can take take 100+ ms submitting a
             // few hundred blits). In this case we do the copy with batched draw calls.
             copy_from_staging_to_cache_using_draw_calls(
@@ -333,6 +338,12 @@ pub fn upload_to_texture_cache(
             profiler::UPLOAD_GPU_COPY_TIME,
             profiler::ns_to_ms(stats.gpu_copy_commands_time)
         );
+    }
+
+    let add_markers = profiler::thread_is_being_profiled();
+    if add_markers && stats.bytes_uploaded > 0 {
+    	let details = format!("{} bytes uploaded, {} items", stats.bytes_uploaded, stats.items_uploaded);
+    	profiler::add_text_marker(&"Texture uploads", &details, Duration::from_nanos(upload_total));
     }
 }
 
@@ -797,6 +808,7 @@ struct UploadStats {
     cpu_copy_time: u64,
     gpu_copy_commands_time: u64,
     bytes_uploaded: usize,
+    items_uploaded: usize,
 }
 
 #[derive(Debug)]

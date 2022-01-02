@@ -1,9 +1,7 @@
 "use strict";
 
 function run_test() {
-  const ios = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
+  const ios = Services.io;
 
   var uri = ios.newURI("http://foo.com/file.txt");
   uri = uri

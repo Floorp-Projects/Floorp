@@ -820,7 +820,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    When suspended, parsing can be resumed by calling XML_ResumeParser(). 
 */
 XMLPARSEAPI(enum XML_Status)
-XML_StopParser(XML_Parser parser, XML_Bool resumable);
+XML_StopParser(XML_Parser parser, int resumable);
 
 /* Resumes parsing after it has been suspended with XML_StopParser().
    Must not be called from within a handler call-back. Returns same

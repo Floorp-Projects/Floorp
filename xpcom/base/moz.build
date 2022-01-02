@@ -130,6 +130,8 @@ EXPORTS.mozilla += [
     "nsMemoryInfoDumper.h",
     "NSPRLogModulesParser.h",
     "OwningNonNull.h",
+    "RLBoxSandboxPool.h",
+    "RLBoxUtils.h",
     "ShutdownPhase.h",
     "SizeOfState.h",
     "StaticLocalPtr.h",
@@ -196,6 +198,7 @@ UNIFIED_SOURCES += [
     "nsVersionComparator.cpp",
     "nsVersionComparatorImpl.cpp",
     "nsWeakReference.cpp",
+    "RLBoxSandboxPool.cpp",
 ]
 
 if CONFIG["OS_TARGET"] in ("Linux", "Android"):
@@ -217,6 +220,13 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "MemoryPressureLevelMac.h",
     ]
 
+if CONFIG["OS_TARGET"] == "Linux":
+    UNIFIED_SOURCES += [
+        "AvailableMemoryWatcherLinux.cpp",
+    ]
+    EXPORTS.mozilla += [
+        "AvailableMemoryWatcherUtils.h",
+    ]
 
 GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
 GeneratedFile(

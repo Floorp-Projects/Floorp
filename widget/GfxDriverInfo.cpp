@@ -478,6 +478,55 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x0600, INT32_MAX);
       APPEND_RANGE(0x06c0, INT32_MAX);
       break;
+    case DeviceFamily::IntelWebRenderBlocked:
+      // powervr
+      // sgx535
+      APPEND_DEVICE(0x2e5b);
+      APPEND_DEVICE(0x8108);
+      APPEND_DEVICE(0x8109);
+      APPEND_DEVICE(0x4102);
+      // sgx545
+      APPEND_DEVICE(0x0be0);
+      APPEND_DEVICE(0x0be1);
+      APPEND_DEVICE(0x0be3);
+      APPEND_RANGE(0x08c7, 0x08cf);
+
+      // gen4
+      APPEND_DEVICE(0x2972);
+      APPEND_DEVICE(0x2973);
+      APPEND_DEVICE(0x2992);
+      APPEND_DEVICE(0x2993);
+      APPEND_DEVICE(0x29a2);
+      APPEND_DEVICE(0x29a3);
+
+      APPEND_DEVICE(0x2982);
+      APPEND_DEVICE(0x2983);
+
+      APPEND_DEVICE(0x2a02);
+      APPEND_DEVICE(0x2a03);
+      APPEND_DEVICE(0x2a12);
+      APPEND_DEVICE(0x2a13);
+
+      // gen4.5
+      APPEND_DEVICE(0x2e02);
+      APPEND_DEVICE(0x2e42); /* IntelB43_1 */
+      APPEND_DEVICE(0x2e43); /* IntelB43_2 */
+      APPEND_DEVICE(0x2e92); /* IntelB43_3 */
+      APPEND_DEVICE(0x2e93); /* IntelB43_4 */
+      APPEND_DEVICE(0x2e12); /* IntelQ45_1 */
+      APPEND_DEVICE(0x2e13); /* IntelQ45_2 */
+      APPEND_DEVICE(0x2e32); /* IntelG41_1 */
+      APPEND_DEVICE(0x2e33); /* IntelG41_2 */
+      APPEND_DEVICE(0x2e22); /* IntelG45_1 */
+
+      APPEND_DEVICE(0x2e23); /* IntelG45_2 */
+      APPEND_DEVICE(0x2a42); /* IntelGMA4500MHD_1 */
+      APPEND_DEVICE(0x2a43); /* IntelGMA4500MHD_2 */
+
+      // gen5 (ironlake)
+      APPEND_DEVICE(0x0042);
+      APPEND_DEVICE(0x0046);
+      break;
     case DeviceFamily::IntelRolloutWebRender:
       // Disable WebRender on these devices for now
       // to match what's going out into release
@@ -891,6 +940,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelRolloutWebRender:
     case DeviceFamily::IntelModernRolloutWebRender:
+    case DeviceFamily::IntelWebRenderBlocked:
     case DeviceFamily::Bug1116812:
     case DeviceFamily::Bug1155608:
     case DeviceFamily::Bug1207665:

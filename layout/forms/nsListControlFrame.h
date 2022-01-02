@@ -249,7 +249,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
    * fire a native focus event for accessibility
    * (Some 3rd party products need to track our focus)
    */
-  void FireMenuItemActiveEvent();  // Inform assistive tech what got focused
+  void FireMenuItemActiveEvent(
+      nsIContent* aPreviousOption);  // Inform assistive tech what got focused
 #endif
 
  protected:

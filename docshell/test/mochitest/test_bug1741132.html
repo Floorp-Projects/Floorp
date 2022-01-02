@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form restoration for no-store pages</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    // The number of entries which we keep in the BFCache (see nsSHistory.h).
+    const VIEWER_WINDOW = 3;
+
+    SimpleTest.waitForExplicitFinish();
+
+    function runTest() {
+      let bc = new BroadcastChannel("bug1741132");
+
+      // Setting the pref to 0 should evict all content viewers.
+      let load = SpecialPowers.pushPrefEnv({
+        set: [["browser.sessionhistory.max_total_viewers", 0]],
+      }).then(() => {
+        // Set the pref to VIEWER_WINDOW + 2 now, to be sure we
+        // could fit all entries.
+        SpecialPowers.pushPrefEnv({
+          set: [["browser.sessionhistory.max_total_viewers", VIEWER_WINDOW + 2]],
+        });
+      }).then(() => {
+        return new Promise(resolve => {
+          bc.addEventListener("message", resolve, { once: true });
+          window.open("file_bug1741132.html", "", "noopener");
+        });
+      });
+      // We want to try to keep one entry too many in the BFCache,
+      // so we ensure that there's at least VIEWER_WINDOW + 2
+      // entries in session history (with one for the displayed
+      // page).
+      for (let i = 0; i < VIEWER_WINDOW + 2; ++i) {
+        load = load.then(() => {
+          return new Promise((resolve) => {
+            bc.addEventListener("message", resolve, { once: true });
+            bc.postMessage({ cmd: "load", arg: `file_bug1741132.html?${i}` });
+          });
+        });
+      }
+      load.then(() => {
+        return new Promise((resolve) => {
+          bc.addEventListener("message", ({ data: persisted }) => {
+            resolve(persisted);
+          }, { once: true });
+          // Go back past the first entry that should be in the BFCache.
+          bc.postMessage({ cmd: "go", arg: -(VIEWER_WINDOW + 1) });
+        });
+      }).then((persisted) => {
+        ok(!persisted, "Only 3 pages should be kept in the BFCache");
+      }).then(() => {
+        return new Promise((resolve) => {
+          bc.addEventListener("message", ({ data: persisted }) => {
+            resolve(persisted);
+          }, { once: true });
+          // Go forward to the first entry that should be in the BFCache.
+          bc.postMessage({ cmd: "go", arg: 1 });
+        });
+      }).then((persisted) => {
+        ok(persisted, "3 pages should be kept in the BFCache");
+
+        bc.postMessage("close");
+
+        bc.close();
+
+        SimpleTest.finish();
+      });
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

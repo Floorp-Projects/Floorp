@@ -21,7 +21,9 @@ function all() {
 }
 
 function isHtml({ mimeType }) {
-  return mimeType && mimeType.includes("/html");
+  return (
+    mimeType && (mimeType.includes("/html") || mimeType.includes("/xhtml+xml"))
+  );
 }
 
 function isCss({ mimeType }) {

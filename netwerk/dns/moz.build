@@ -65,6 +65,7 @@ UNIFIED_SOURCES += [
     "DNSRequestChild.cpp",
     "DNSRequestParent.cpp",
     "DNSResolverInfo.cpp",
+    "DNSServiceBase.cpp",
     "DNSUtils.cpp",
     "HostRecordQueue.cpp",
     "HTTPSSVC.cpp",
@@ -104,10 +105,8 @@ GeneratedFile(
 # need to include etld_data.inc
 LOCAL_INCLUDES += [
     "/netwerk/base",
+    "/netwerk/ipc",
     "/netwerk/protocol/http",
 ]
 
 USE_LIBS += ["icu"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

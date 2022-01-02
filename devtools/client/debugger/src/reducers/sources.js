@@ -54,8 +54,6 @@ import {
 } from "./source-actors";
 import { getAllThreads } from "./threads";
 
-import { uniq } from "lodash";
-
 export function initialSourcesState(state) {
   return {
     sources: createInitial(),
@@ -488,11 +486,13 @@ function updateBlackBoxListSources(state, sources, shouldBlackBox) {
 const getSourcesState = state => state.sources;
 
 export function getSourceThreads(state, source) {
-  return uniq(
-    getSourceActors(state, state.sources.actors[source.id]).map(
-      actor => actor.thread
-    )
-  );
+  return [
+    ...new Set(
+      getSourceActors(state, state.sources.actors[source.id]).map(
+        actor => actor.thread
+      )
+    ),
+  ];
 }
 
 export function getSourceInSources(sources, id) {
@@ -508,7 +508,7 @@ export function getSource(state, id) {
 export function getSourceFromId(state, id) {
   const source = getSource(state, id);
   if (!source) {
-    throw new Error(`source ${id} does not exist`);
+    console.warn(`source ${id} does not exist`);
   }
   return source;
 }

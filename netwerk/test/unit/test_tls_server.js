@@ -21,9 +21,7 @@ const socketTransportService = Cc[
   "@mozilla.org/network/socket-transport-service;1"
 ].getService(Ci.nsISocketTransportService);
 
-const prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+const prefs = Services.prefs;
 
 function getCert() {
   return new Promise((resolve, reject) => {

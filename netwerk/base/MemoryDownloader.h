@@ -35,8 +35,8 @@ class MemoryDownloader final : public nsIStreamListener {
    public:
     // Note: aData may be null if (and only if) aStatus indicates failure.
     virtual void OnDownloadComplete(MemoryDownloader* aDownloader,
-                                    nsIRequest* aRequest, nsISupports* aCtxt,
-                                    nsresult aStatus, Data aData) = 0;
+                                    nsIRequest* aRequest, nsresult aStatus,
+                                    Data aData) = 0;
   };
 
   explicit MemoryDownloader(IObserver* aObserver);

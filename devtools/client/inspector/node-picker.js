@@ -43,7 +43,6 @@ class NodePicker extends EventEmitter {
     );
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
 
-    this.cancel = this.cancel.bind(this);
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
     this.togglePicker = this.togglePicker.bind(this);
@@ -63,7 +62,7 @@ class NodePicker extends EventEmitter {
    */
   togglePicker(doFocus) {
     if (this.isPicking) {
-      return this.stop();
+      return this.stop({ canceled: true });
     }
     return this.start(doFocus);
   }
@@ -156,10 +155,10 @@ class NodePicker extends EventEmitter {
 
     this.emit("picker-starting");
 
-    this.targetCommand.watchTargets(
-      this.targetCommand.ALL_TYPES,
-      this._onTargetAvailable
-    );
+    this.targetCommand.watchTargets({
+      types: this.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+    });
 
     this.emit("picker-started");
   }
@@ -171,18 +170,21 @@ class NodePicker extends EventEmitter {
    * @param {Boolean} isDestroyCodePath
    *        Optional. If true, we assume that's when the toolbox closes
    *        and we should avoid doing any RDP request.
+   * @param {Boolean} canceled
+   *        Optional. If true, emit an additional event to notify that the
+   *        picker was canceled, ie stopped without selecting a node.
    */
-  async stop({ isDestroyCodepath } = {}) {
+  async stop({ isDestroyCodepath, canceled } = {}) {
     if (!this.isPicking) {
       return;
     }
     this.isPicking = false;
     this.doFocus = false;
 
-    this.targetCommand.unwatchTargets(
-      this.targetCommand.ALL_TYPES,
-      this._onTargetAvailable
-    );
+    this.targetCommand.unwatchTargets({
+      types: this.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+    });
 
     for (const inspectorFront of this._currentInspectorFronts) {
       await this._onInspectorFrontDestroyed(inspectorFront, {
@@ -193,6 +195,10 @@ class NodePicker extends EventEmitter {
     this._currentInspectorFronts.clear();
 
     this.emit("picker-stopped");
+
+    if (canceled) {
+      this.emit("picker-node-canceled");
+    }
   }
 
   destroy() {
@@ -203,14 +209,6 @@ class NodePicker extends EventEmitter {
   }
 
   /**
-   * Stop the picker, but also emit an event that the picker was canceled.
-   */
-  async cancel() {
-    await this.stop();
-    this.emit("picker-node-canceled");
-  }
-
-  /**
    * When a node is hovered by the mouse when the highlighter is in picker mode
    *
    * @param {Object} data
@@ -218,12 +216,6 @@ class NodePicker extends EventEmitter {
    */
   _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
-
-    // @backward-compat { version 94 } The clearPickerSupport trait was added in 94 and
-    // can be removed when it hits release.
-    if (!data.node.walkerFront.traits.clearPickerSupport) {
-      return;
-    }
 
     // We're going to cleanup references for all the other walkers, so that if we hover
     // back the same node, we will receive a new `picker-node-hovered` event.
@@ -261,7 +253,7 @@ class NodePicker extends EventEmitter {
    * gets the focus.
    */
   _onCanceled() {
-    return this.cancel();
+    return this.stop({ canceled: true });
   }
 }
 

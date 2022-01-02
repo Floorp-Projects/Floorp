@@ -243,6 +243,16 @@ bool WorkerGlobalScopeBase::IsSharedMemoryAllowed() const {
   return mWorkerPrivate->IsSharedMemoryAllowed();
 }
 
+bool WorkerGlobalScopeBase::ShouldResistFingerprinting() const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  return mWorkerPrivate->ShouldResistFingerprinting();
+}
+
+uint32_t WorkerGlobalScopeBase::GetPrincipalHashValue() const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  return mWorkerPrivate->GetPrincipalHashValue();
+}
+
 StorageAccess WorkerGlobalScopeBase::GetStorageAccess() {
   mWorkerPrivate->AssertIsOnWorkerThread();
   return mWorkerPrivate->StorageAccess();
@@ -454,7 +464,7 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
   {
     AUTO_PROFILER_MARKER_TEXT(
         "ImportScripts", JS, MarkerStack::Capture(),
-        profiler_thread_is_being_profiled()
+        profiler_thread_is_being_profiled_for_markers()
             ? StringJoin(","_ns, aScriptURLs,
                          [](nsACString& dest, const auto& scriptUrl) {
                            AppendUTF16toUTF8(scriptUrl, dest);

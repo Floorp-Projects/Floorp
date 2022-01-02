@@ -103,29 +103,14 @@ namespace ipc {
 class ProtocolFuzzerHelper;
 #endif
 
-#ifdef XP_WIN
-const base::ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
-
-// In theory, on Windows, this is a valid process ID, but in practice they are
-// currently divisible by four. Process IDs share the kernel handle allocation
-// code and they are guaranteed to be divisible by four.
-// As this could change for process IDs we shouldn't generally rely on this
-// property, however even if that were to change, it seems safe to rely on this
-// particular value never being used.
-const base::ProcessId kInvalidProcessId = kuint32max;
-#else
-const base::ProcessHandle kInvalidProcessHandle = -1;
-const base::ProcessId kInvalidProcessId = -1;
-#endif
-
 // Scoped base::ProcessHandle to ensure base::CloseProcessHandle is called.
 struct ScopedProcessHandleTraits {
   typedef base::ProcessHandle type;
 
-  static type empty() { return kInvalidProcessHandle; }
+  static type empty() { return base::kInvalidProcessHandle; }
 
   static void release(type aProcessHandle) {
-    if (aProcessHandle && aProcessHandle != kInvalidProcessHandle) {
+    if (aProcessHandle && aProcessHandle != base::kInvalidProcessHandle) {
       base::CloseProcessHandle(aProcessHandle);
     }
   }
@@ -204,6 +189,7 @@ class IProtocol : public HasResultCodes {
         mToplevel(nullptr) {}
 
   IToplevelProtocol* ToplevelProtocol() { return mToplevel; }
+  const IToplevelProtocol* ToplevelProtocol() const { return mToplevel; }
 
   // The following methods either directly forward to the toplevel protocol, or
   // almost directly do.
@@ -239,8 +225,6 @@ class IProtocol : public HasResultCodes {
 
   nsISerialEventTarget* GetActorEventTarget();
   already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
-
-  ProcessId OtherPid() const;
 
   // Actor lifecycle and other properties.
   ProtocolId GetProtocolId() const { return mProtocolId; }
@@ -314,7 +298,7 @@ class IProtocol : public HasResultCodes {
       GetIPCChannel()->Send(std::move(msg), this, std::move(aResolve),
                             std::move(aReject));
     } else {
-      NS_WARNING("IPC message discarded: actor cannot send");
+      WarnMessageDiscarded(msg.get());
       aReject(ResponseRejectReason::SendError);
     }
   }
@@ -358,6 +342,12 @@ class IProtocol : public HasResultCodes {
   static const int32_t kFreedActorId = 1;
 
  private:
+#ifdef DEBUG
+  void WarnMessageDiscarded(IPC::Message* aMsg);
+#else
+  void WarnMessageDiscarded(IPC::Message*) {}
+#endif
+
   int32_t mId;
   ProtocolId mProtocolId;
   Side mSide;
@@ -442,7 +432,6 @@ class IToplevelProtocol : public IProtocol {
   nsISerialEventTarget* GetActorEventTarget();
   already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
 
-  ProcessId OtherPid() const;
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
   virtual void OnChannelClose() = 0;
@@ -638,16 +627,6 @@ MOZ_NEVER_INLINE void UnionTypeReadError(const char* aUnionName);
 MOZ_NEVER_INLINE void ArrayLengthReadError(const char* aElementName);
 
 MOZ_NEVER_INLINE void SentinelReadError(const char* aElementName);
-
-#if defined(XP_WIN)
-// This is a restricted version of Windows' DuplicateHandle() function
-// that works inside the sandbox and can send handles but not retrieve
-// them.  Unlike DuplicateHandle(), it takes a process ID rather than
-// a process handle.  It returns true on success, false otherwise.
-bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
-                     HANDLE* aTargetHandle, DWORD aDesiredAccess,
-                     DWORD aOptions);
-#endif
 
 /**
  * Annotate the crash reporter with the error code from the most recent system

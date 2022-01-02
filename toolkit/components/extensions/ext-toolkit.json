@@ -172,6 +172,14 @@
       ["runtime"]
     ]
   },
+  "scripting": {
+    "url": "chrome://extensions/content/parent/ext-scripting.js",
+    "schema": "chrome://extensions/content/schemas/scripting.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["scripting"]
+    ]
+  },
   "storage": {
     "url": "chrome://extensions/content/parent/ext-storage.js",
     "schema": "chrome://extensions/content/schemas/storage.json",

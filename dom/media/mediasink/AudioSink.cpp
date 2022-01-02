@@ -291,7 +291,7 @@ UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
              mCurrentData->mTime.ToMicroseconds(),
              mCurrentData->Frames() - mCursor->Available(), framesToPop);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     mOwnerThread->Dispatch(NS_NewRunnableFunction(
         "AudioSink:AddMarker",
         [startTime = mCurrentData->mTime.ToMicroseconds(),

@@ -19,6 +19,8 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -559,8 +561,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags::PICTURE_CACHING_DBG)
   GFX_WEBRENDER_DEBUG(".force-picture-invalidation",
                       wr::DebugFlags::FORCE_PICTURE_INVALIDATION)
-  GFX_WEBRENDER_DEBUG(".tile-cache-logging",
-                      wr::DebugFlags::TILE_CACHE_LOGGING_DBG)
   GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags::PRIMITIVE_DBG)
   // Bit 18 is for the zoom display, which requires the mouse position and thus
   // currently only works in wrench.
@@ -575,6 +575,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags::OBSCURE_IMAGES)
   GFX_WEBRENDER_DEBUG(".glyph-flashing", wr::DebugFlags::GLYPH_FLASHING)
   GFX_WEBRENDER_DEBUG(".capture-profiler", wr::DebugFlags::PROFILER_CAPTURE)
+  GFX_WEBRENDER_DEBUG(".window-visibility",
+                      wr::DebugFlags::WINDOW_VISIBILITY_DBG)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
@@ -596,6 +598,15 @@ static void WebRenderBlobTileSizePrefChangeCallback(const char* aPrefName,
   uint32_t tileSize = Preferences::GetUint(
       StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size(), 256);
   gfx::gfxVars::SetWebRenderBlobTileSize(tileSize);
+}
+
+static void WebRenderUploadThresholdPrefChangeCallback(const char* aPrefName,
+                                                       void*) {
+  int value = Preferences::GetInt(
+      StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold(),
+      512 * 512);
+
+  gfxVars::SetWebRenderBatchedUploadThreshold(value);
 }
 
 static uint32_t GetSkiaGlyphCacheSize() {
@@ -745,14 +756,11 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
         helper.ReportTexture(aReport.vertex_data_textures, "vertex-data");
         helper.ReportTexture(aReport.render_target_textures, "render-targets");
+        helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
+        helper.ReportTexture(aReport.picture_tile_textures, "picture-tiles");
         helper.ReportTexture(aReport.atlas_textures, "texture-cache/atlas");
         helper.ReportTexture(aReport.standalone_textures,
                              "texture-cache/standalone");
-        helper.ReportTexture(aReport.picture_tile_textures,
-                             "texture-cache/picture-tiles");
-        helper.ReportTexture(aReport.render_target_textures,
-                             "texture-cache/render-targets");
-        helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
         helper.ReportTexture(aReport.texture_upload_pbos,
                              "texture-upload-pbos");
         helper.ReportTexture(aReport.swap_chain, "swap-chains");
@@ -862,7 +870,7 @@ void gfxPlatform::Init() {
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ",
                              StaticPrefs::gfx_android_rgb16_force_AtStartup(),
-                             0,  // SkiaGL canvas no longer supported
+                             StaticPrefs::gfx_canvas_accelerated(),
                              StaticPrefs::layers_force_shmem_tiles_AtStartup());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
@@ -1296,6 +1304,7 @@ void gfxPlatform::ShutdownLayersIPC() {
 
   if (XRE_IsContentProcess()) {
     gfx::VRManagerChild::ShutDown();
+    gfx::CanvasManagerChild::Shutdown();
     // cf bug 1215265.
     if (StaticPrefs::layers_child_process_shutdown()) {
       layers::CompositorManagerChild::Shutdown();
@@ -1304,8 +1313,11 @@ void gfxPlatform::ShutdownLayersIPC() {
 
   } else if (XRE_IsParentProcess()) {
     gfx::VRManagerChild::ShutDown();
+    gfx::CanvasManagerChild::Shutdown();
     layers::CompositorManagerChild::Shutdown();
     layers::ImageBridgeChild::ShutDown();
+    // This could be running on either the Compositor or the Renderer thread.
+    gfx::CanvasManagerParent::Shutdown();
     // This has to happen after shutting down the child protocols.
     layers::CompositorThreadHolder::Shutdown();
     image::ImageMemoryReporter::ShutdownForWebRender();
@@ -2612,6 +2624,11 @@ void gfxPlatform::InitWebRenderConfig() {
         nsDependentCString(
             StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
 
+    Preferences::RegisterCallbackAndCall(
+        WebRenderUploadThresholdPrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold()));
+
     if (WebRenderResourcePathOverride()) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IsWebRenderResourcePathOverridden, true);
@@ -2704,17 +2721,14 @@ void gfxPlatform::InitWebGLConfig() {
     }
   }
 
-  {
-    bool allowWebGLOop =
-        IsFeatureOk(nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS);
+  bool allowWebGLOop =
+      IsFeatureOk(nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS);
+  gfxVars::SetAllowWebglOop(allowWebGLOop);
 
-    const bool threadsafeGl = IsFeatureOk(nsIGfxInfo::FEATURE_THREADSAFE_GL);
-    if (gfxVars::UseWebRender() && !threadsafeGl) {
-      allowWebGLOop = false;
-    }
-
-    gfxVars::SetAllowWebglOop(allowWebGLOop);
-  }
+  bool threadsafeGL = IsFeatureOk(nsIGfxInfo::FEATURE_THREADSAFE_GL);
+  threadsafeGL |= StaticPrefs::webgl_threadsafe_gl_force_enabled_AtStartup();
+  threadsafeGL &= !StaticPrefs::webgl_threadsafe_gl_force_disabled_AtStartup();
+  gfxVars::SetSupportsThreadsafeGL(threadsafeGL);
 
   if (kIsAndroid) {
     // Don't enable robust buffer access on Adreno 630 devices.

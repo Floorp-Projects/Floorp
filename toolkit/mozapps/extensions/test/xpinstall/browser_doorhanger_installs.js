@@ -431,6 +431,42 @@ var TESTS = [
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   },
 
+  async function test_blockedInstallDomain() {
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["extensions.postDownloadThirdPartyPrompt", true],
+        ["extensions.install_origins.enabled", true],
+      ],
+    });
+    // The addon has an unknown property that will be supported in later patches (D131317).
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+
+    let progressPromise = waitForProgressNotification();
+    let notificationPromise = waitForNotification("addon-install-failed");
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: TESTROOT2 + "webmidi_permission.xpi",
+      })
+    );
+    BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+    await progressPromise;
+    let panel = await notificationPromise;
+
+    let notification = panel.childNodes[0];
+    is(
+      notification.getAttribute("label"),
+      "The add-on WebMIDI test addon can not be installed from this location.",
+      "Should have seen the right message"
+    );
+
+    await removeTabAndWaitForNotificationClose();
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+    await SpecialPowers.popPrefEnv();
+  },
+
   async function test_blockedPostDownload() {
     SpecialPowers.pushPrefEnv({
       set: [["extensions.postDownloadThirdPartyPrompt", true]],

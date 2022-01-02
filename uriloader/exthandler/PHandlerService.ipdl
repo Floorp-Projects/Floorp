@@ -20,7 +20,7 @@ struct HandlerInfo {
   nsCString[] extensions;
   HandlerApp preferredApplicationHandler;
   HandlerApp[] possibleApplicationHandlers;
-  long preferredAction;
+  int32_t preferredAction;
 };
 
 [RefCounted] sync protocol PHandlerService

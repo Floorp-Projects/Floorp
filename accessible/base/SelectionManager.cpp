@@ -148,9 +148,9 @@ void SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent) {
                                              selection->FocusOffset());
   mAccWithCaret = caretCntr;
   if (mCaretOffset != -1) {
-    RefPtr<AccCaretMoveEvent> caretMoveEvent =
-        new AccCaretMoveEvent(caretCntr, mCaretOffset, selection->IsCollapsed(),
-                              aEvent->FromUserInput());
+    RefPtr<AccCaretMoveEvent> caretMoveEvent = new AccCaretMoveEvent(
+        caretCntr, mCaretOffset, selection->IsCollapsed(),
+        caretCntr->IsCaretAtEndOfLine(), aEvent->FromUserInput());
     nsEventShell::FireEvent(caretMoveEvent);
   }
 }

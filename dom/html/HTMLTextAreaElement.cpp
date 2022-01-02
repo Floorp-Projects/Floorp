@@ -928,7 +928,7 @@ bool HTMLTextAreaElement::IsValueEmpty() const {
 }
 
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
-  nsIConstraintValidation::SetCustomValidity(aError);
+  ConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
@@ -991,7 +991,8 @@ void HTMLTextAreaElement::UpdateValueMissingValidityState() {
 
 void HTMLTextAreaElement::UpdateBarredFromConstraintValidation() {
   SetBarredFromConstraintValidation(
-      HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) || IsDisabled());
+      HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) ||
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
 }
 
 nsresult HTMLTextAreaElement::GetValidationMessage(
@@ -1038,8 +1039,8 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       aValidationMessage = message;
     } break;
     default:
-      rv = nsIConstraintValidation::GetValidationMessage(aValidationMessage,
-                                                         aType);
+      rv =
+          ConstraintValidation::GetValidationMessage(aValidationMessage, aType);
   }
 
   return rv;

@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,<p>browser_console_devtools_loader_exception.js</p>";
+  "data:text/html;charset=utf8,<!DOCTYPE html><p>browser_console_devtools_loader_exception.js</p>";
 
 add_task(async function() {
   // Disable the preloaded process as it creates processes intermittently
@@ -71,14 +71,17 @@ add_task(async function() {
     : new Promise(resolve => {
         const onAvailable = ({ targetFront }) => {
           if (targetFront.url.includes("view-source:")) {
-            targetCommand.unwatchTargets(
-              [targetCommand.TYPES.FRAME],
-              onAvailable
-            );
+            targetCommand.unwatchTargets({
+              types: [targetCommand.TYPES.FRAME],
+              onAvailable,
+            });
             resolve();
           }
         };
-        targetCommand.watchTargets([targetCommand.TYPES.FRAME], onAvailable);
+        targetCommand.watchTargets({
+          types: [targetCommand.TYPES.FRAME],
+          onAvailable,
+        });
       });
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(

@@ -55,12 +55,12 @@ pub fn parse_counter_style_name<'i, 't>(
 }
 
 fn is_valid_name_definition(ident: &CustomIdent) -> bool {
-    ident.0 != atom!("decimal")
-        && ident.0 != atom!("disc")
-        && ident.0 != atom!("circle")
-        && ident.0 != atom!("square")
-        && ident.0 != atom!("disclosure-closed")
-        && ident.0 != atom!("disclosure-open")
+    ident.0 != atom!("decimal") &&
+        ident.0 != atom!("disc") &&
+        ident.0 != atom!("circle") &&
+        ident.0 != atom!("square") &&
+        ident.0 != atom!("disclosure-closed") &&
+        ident.0 != atom!("disclosure-open")
 }
 
 /// Parse the prelude of an @counter-style rule
@@ -113,7 +113,7 @@ pub fn parse_counter_style_body<'i, 't>(
             Some(ContextualParseError::InvalidCounterStyleWithoutSymbols(
                 system,
             ))
-        }
+        },
         ref system @ System::Alphabetic | ref system @ System::Numeric
             if rule.symbols().unwrap().0.len() < 2 =>
         {
@@ -121,7 +121,7 @@ pub fn parse_counter_style_body<'i, 't>(
             Some(ContextualParseError::InvalidCounterStyleNotEnoughSymbols(
                 system,
             ))
-        }
+        },
         System::Additive if rule.additive_symbols.is_none() => {
             Some(ContextualParseError::InvalidCounterStyleWithoutAdditiveSymbols)
         },

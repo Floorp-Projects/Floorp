@@ -1,10 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import json
 import os
 from pathlib import Path
-import subprocess
 
 from packaging.requirements import Requirement
 
@@ -12,26 +10,6 @@ from packaging.requirements import Requirement
 THUNDERBIRD_PYPI_ERROR = """
 Thunderbird requirements definitions cannot include PyPI packages.
 """.strip()
-
-
-class EnvironmentPackageValidationResult:
-    def __init__(self):
-        self._package_discrepancies = []
-        self.has_all_packages = True
-
-    def add_discrepancy(self, requirement, found):
-        self._package_discrepancies.append((requirement, found))
-        self.has_all_packages = False
-
-    def report(self):
-        lines = []
-        for requirement, found in self._package_discrepancies:
-            if found:
-                error = f'Installed with unexpected version "{found}"'
-            else:
-                error = "Not installed"
-            lines.append(f"{requirement}: {error}")
-        return "\n".join(lines)
 
 
 class PthSpecifier:
@@ -53,18 +31,18 @@ class PypiOptionalSpecifier(PypiSpecifier):
 class MachEnvRequirements:
     """Requirements associated with a "virtualenv_packages.txt" definition
 
-    Represents the dependencies of a virtualenv. The source files consist
+    Represents the dependencies of a site. The source files consist
     of colon-delimited fields. The first field
     specifies the action. The remaining fields are arguments to that
     action. The following actions are supported:
 
     pth -- Adds the path given as argument to "mach.pth" under
-        the virtualenv site packages directory.
+        the virtualenv's site packages directory.
 
     pypi -- Fetch the package, plus dependencies, from PyPI.
 
     pypi-optional -- Attempt to install the package and dependencies from PyPI.
-        Continue using the virtualenv, even if the package could not be installed.
+        Continue using the site, even if the package could not be installed.
 
     packages.txt -- Denotes that the specified path is a child manifest. It
         will be read and processed as if its contents were concatenated
@@ -82,41 +60,20 @@ class MachEnvRequirements:
         self.pypi_optional_requirements = []
         self.vendored_requirements = []
 
-    def validate_environment_packages(self, pip_command):
-        result = EnvironmentPackageValidationResult()
-        if not self.pypi_requirements and not self.pypi_optional_requirements:
-            return result
-
-        pip_json = subprocess.check_output(
-            pip_command + ["list", "--format", "json"], universal_newlines=True
+    def pths_as_absolute(self, topsrcdir):
+        return sorted(
+            [
+                os.path.normcase(os.path.join(topsrcdir, pth.path))
+                for pth in (self.pth_requirements + self.vendored_requirements)
+            ]
         )
-
-        installed_packages = json.loads(pip_json)
-        installed_packages = {
-            package["name"]: package["version"] for package in installed_packages
-        }
-        for pkg in self.pypi_requirements:
-            installed_version = installed_packages.get(pkg.requirement.name)
-            if not installed_version or not pkg.requirement.specifier.contains(
-                installed_version
-            ):
-                result.add_discrepancy(pkg.requirement, installed_version)
-
-        for pkg in self.pypi_optional_requirements:
-            installed_version = installed_packages.get(pkg.requirement.name)
-            if installed_version and not pkg.requirement.specifier.contains(
-                installed_version
-            ):
-                result.add_discrepancy(pkg.requirement, installed_version)
-
-        return result
 
     @classmethod
     def from_requirements_definition(
         cls,
         topsrcdir,
         is_thunderbird,
-        is_mach_or_build_virtualenv,
+        is_mach_or_build_site,
         requirements_definition,
     ):
         requirements = cls()
@@ -125,7 +82,7 @@ class MachEnvRequirements:
             requirements_definition,
             topsrcdir,
             is_thunderbird,
-            is_mach_or_build_virtualenv,
+            is_mach_or_build_site,
         )
         return requirements
 
@@ -135,7 +92,7 @@ def _parse_mach_env_requirements(
     root_requirements_path,
     topsrcdir,
     is_thunderbird,
-    is_mach_or_build_virtualenv,
+    is_mach_or_build_site,
 ):
     topsrcdir = Path(topsrcdir)
 
@@ -180,9 +137,7 @@ def _parse_mach_env_requirements(
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
 
             requirements_output.pypi_requirements.append(
-                PypiSpecifier(
-                    _parse_package_specifier(params, is_mach_or_build_virtualenv)
-                )
+                PypiSpecifier(_parse_package_specifier(params, is_mach_or_build_site))
             )
         elif action == "pypi-optional":
             if is_thunderbird_packages_txt:
@@ -198,9 +153,7 @@ def _parse_mach_env_requirements(
             requirements_output.pypi_optional_requirements.append(
                 PypiOptionalSpecifier(
                     repercussion,
-                    _parse_package_specifier(
-                        raw_requirement, is_mach_or_build_virtualenv
-                    ),
+                    _parse_package_specifier(raw_requirement, is_mach_or_build_site),
                 )
             )
         elif action == "thunderbird-packages.txt":
@@ -215,7 +168,9 @@ def _parse_mach_env_requirements(
         requirements_path, is_thunderbird_packages_txt
     ):
         """Parse requirements file into list of requirements"""
-        assert os.path.isfile(requirements_path)
+        if not os.path.isfile(requirements_path):
+            raise Exception(f'Missing requirements file at "{requirements_path}"')
+
         requirements_output.requirements_paths.append(requirements_path)
 
         with open(requirements_path, "r") as requirements_file:
@@ -229,14 +184,14 @@ def _parse_mach_env_requirements(
     _parse_requirements_definition_file(root_requirements_path, False)
 
 
-def _parse_package_specifier(raw_requirement, is_mach_or_build_virtualenv):
+def _parse_package_specifier(raw_requirement, is_mach_or_build_site):
     requirement = Requirement(raw_requirement)
 
-    if not is_mach_or_build_virtualenv and [
+    if not is_mach_or_build_site and [
         s for s in requirement.specifier if s.operator != "=="
     ]:
         raise Exception(
-            'All virtualenvs except for "mach" and "build" must pin pypi package '
+            'All sites except for "mach" and "build" must pin pypi package '
             f'versions in the format "package==version", found "{raw_requirement}"'
         )
     return requirement

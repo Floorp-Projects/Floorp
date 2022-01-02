@@ -74,7 +74,8 @@ void SharedSurfacesParent::ShutdownRenderThread() {
     // There may be lingering consumers of the surfaces that didn't get shutdown
     // yet but since we are here, we know the render thread is finished and we
     // can unregister everything.
-    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(key);
+    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(
+        wr::ToExternalImageId(key));
   }
 }
 
@@ -138,7 +139,7 @@ bool SharedSurfacesParent::Release(const wr::ExternalImageId& aId,
 
   if (surface->RemoveConsumer(aForCreator)) {
     RemoveTrackingLocked(surface, lock);
-    wr::RenderThread::Get()->UnregisterExternalImage(id);
+    wr::RenderThread::Get()->UnregisterExternalImage(wr::ToExternalImageId(id));
     sInstance->mSurfaces.Remove(id);
   }
 
@@ -169,7 +170,7 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
 
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
-  wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
+  wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
   surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));
@@ -189,7 +190,8 @@ void SharedSurfacesParent::DestroyProcess(base::ProcessId aPid) {
     if (surface->GetCreatorPid() == aPid && surface->HasCreatorRef() &&
         surface->RemoveConsumer(/* aForCreator */ true)) {
       RemoveTrackingLocked(surface, lock);
-      wr::RenderThread::Get()->UnregisterExternalImage(i.Key());
+      wr::RenderThread::Get()->UnregisterExternalImage(
+          wr::ToExternalImageId(i.Key()));
       i.Remove();
     }
   }
@@ -197,7 +199,7 @@ void SharedSurfacesParent::DestroyProcess(base::ProcessId aPid) {
 
 /* static */
 void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
-                               const SurfaceDescriptorShared& aDesc,
+                               SurfaceDescriptorShared&& aDesc,
                                base::ProcessId aPid) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aPid != base::GetCurrentProcId());
@@ -212,8 +214,8 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   // second, to avoid deadlock.
   //
   // Note that the surface wrapper maps in the given handle as read only.
-  surface->Init(aDesc.size(), aDesc.stride(), aDesc.format(), aDesc.handle(),
-                aPid);
+  surface->Init(aDesc.size(), aDesc.stride(), aDesc.format(),
+                std::move(aDesc.handle()), aPid);
 
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
@@ -225,7 +227,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
 
   auto texture = MakeRefPtr<wr::RenderSharedSurfaceTextureHost>(surface);
-  wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
+  wr::RenderThread::Get()->RegisterExternalImage(aId, texture.forget());
 
   surface->AddConsumer();
   sInstance->mSurfaces.InsertOrUpdate(id, std::move(surface));

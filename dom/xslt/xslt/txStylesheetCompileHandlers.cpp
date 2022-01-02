@@ -22,6 +22,9 @@
 #include "txToplevelItems.h"
 #include "txURIUtils.h"
 #include "txXSLTFunctions.h"
+#include "nsStringFlags.h"
+#include "nsStyleUtil.h"
+#include "nsStringIterator.h"
 
 using namespace mozilla;
 
@@ -807,7 +810,7 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
   getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None, nsGkAtoms::mediaType,
                false, &attr);
   if (attr) {
-    item->mFormat.mMediaType = attr->mValue;
+    item->mFormat.mMediaType = NS_ConvertUTF16toUTF8(attr->mValue);
   }
 
   aState.addToplevelItem(item.release());

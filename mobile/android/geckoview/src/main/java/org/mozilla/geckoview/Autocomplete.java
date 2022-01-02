@@ -843,6 +843,17 @@ public class Autocomplete {
     }
 
     /**
+     * Request login entries for all domains.
+     *
+     * @return A {@link GeckoResult} that completes with an array of {@link LoginEntry} containing
+     *     the existing logins.
+     */
+    @UiThread
+    default @Nullable GeckoResult<LoginEntry[]> onLoginFetch() {
+      return null;
+    }
+
+    /**
      * Request credit card entries. While processing the web document, we have identified elements
      * resembling credit card input fields suitable for autofill. We will attempt to match the
      * provided credit card information to the identified input fields.
@@ -1337,7 +1348,8 @@ public class Autocomplete {
 
       if (FETCH_LOGIN_EVENT.equals(event)) {
         final String domain = message.getString("domain");
-        final GeckoResult<Autocomplete.LoginEntry[]> result = mDelegate.onLoginFetch(domain);
+        final GeckoResult<Autocomplete.LoginEntry[]> result =
+            domain != null ? mDelegate.onLoginFetch(domain) : mDelegate.onLoginFetch();
 
         if (result == null) {
           callback.sendSuccess(new GeckoBundle[0]);

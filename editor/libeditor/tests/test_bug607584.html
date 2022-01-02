@@ -29,7 +29,7 @@ SimpleTest.waitForFocus(function() {
   var paragraphs = content.querySelectorAll("p");
   is(paragraphs.length, 2, "The paragraph should be split in two");
   is(paragraphs[0].textContent, "Hello", "The first paragraph should have the correct content");
-  is(paragraphs[1].textContent, " world", "The second paragraph should have the correct content");
+  is(paragraphs[1].textContent, "\u00A0world", "The second paragraph should have the correct content");
   is(paragraphs[0].getAttribute("id"), "foo", "The id of the first paragraph should be retained");
   is(paragraphs[1].hasAttribute("id"), false, "The second paragraph shouldn't have an ID");
   SimpleTest.finish();

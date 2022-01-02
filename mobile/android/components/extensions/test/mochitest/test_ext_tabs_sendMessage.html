@@ -14,6 +14,9 @@
 "use strict";
 
 add_task(async function tabsSendMessageReply() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -152,6 +155,9 @@ add_task(async function tabsSendMessageReply() {
 
 
 add_task(async function tabsSendHidden() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -234,6 +240,9 @@ add_task(async function tabsSendHidden() {
 
 
 add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],

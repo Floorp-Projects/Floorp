@@ -26,6 +26,9 @@ class Selection;
 class Text;
 }  // namespace dom
 
+enum class JoinNodesDirection;  // Declared in HTMLEditHelpers.h
+enum class SplitNodeDirection;  // Declared in HTMLEditHelpers.h
+
 /**
  * A helper struct for saving/setting ranges.
  */
@@ -140,10 +143,39 @@ class MOZ_STACK_CLASS RangeUpdater final {
   template <typename PT, typename CT>
   nsresult SelAdjInsertNode(const EditorDOMPointBase<PT, CT>& aPoint);
   void SelAdjDeleteNode(nsINode& aNode);
-  nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent& aNewLeftNode);
-  nsresult SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
-                           nsINode& aParent, uint32_t aOffset,
-                           uint32_t aOldLeftNodeLength);
+
+  /**
+   * SelAdjSplitNode() is called immediately after spliting aOriginalNode
+   * and inserted aNewContent into the DOM tree.
+   *
+   * @param aOriginalContent    The node which was split.
+   * @param aSplitOffset        The old offset in aOriginalContent at splitting
+   *                            it.
+   * @param aNewContent         The new content node which was inserted into
+   *                            the DOM tree.
+   * @param aSplitNodeDirection Whether aNewNode was inserted before or after
+   *                            aOriginalContent.
+   */
+  nsresult SelAdjSplitNode(nsIContent& aOriginalContent, uint32_t aSplitOffset,
+                           nsIContent& aNewContent,
+                           SplitNodeDirection aSplitNodeDirection);
+
+  /**
+   * SelAdjJoinNodes() is called immediately after joining aRemovedContent and
+   * the container of aStartOfRightContent.
+   *
+   * @param aStartOfRightContent    The container is joined content node which
+   *                                now has all children or text data which were
+   *                                in aRemovedContent.  And this points where
+   *                                the joined position.
+   * @param aRemovedContent         The removed content.
+   * @param aOffsetOfRemovedContent The offset which aRemovedContent was in
+   *                                its ex-parent.
+   */
+  nsresult SelAdjJoinNodes(const EditorRawDOMPoint& aStartOfRightContent,
+                           const nsIContent& aRemovedContent,
+                           uint32_t aOffsetOfRemovedContent,
+                           JoinNodesDirection aJoinNodesDirection);
   void SelAdjInsertText(const dom::Text& aTextNode, uint32_t aOffset,
                         uint32_t aInsertedLength);
   void SelAdjDeleteText(const dom::Text& aTextNode, uint32_t aOffset,
@@ -202,7 +234,6 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       : mRangeUpdater(aRangeUpdater),
         mNode(aNode),
         mOffset(aOffset),
-        mPoint(nullptr),
         mRangeItem(do_AddRef(new RangeItem())) {
     mRangeItem->mStartContainer = *mNode;
     mRangeItem->mEndContainer = *mNode;
@@ -215,33 +246,40 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       : mRangeUpdater(aRangeUpdater),
         mNode(nullptr),
         mOffset(nullptr),
-        mPoint(aPoint),
+        mPoint(Some(aPoint->IsSet() ? aPoint : nullptr)),
         mRangeItem(do_AddRef(new RangeItem())) {
-    mRangeItem->mStartContainer = mPoint->GetContainer();
-    mRangeItem->mEndContainer = mPoint->GetContainer();
-    mRangeItem->mStartOffset = mPoint->Offset();
-    mRangeItem->mEndOffset = mPoint->Offset();
+    if (!aPoint->IsSet()) {
+      return;  // Nothing should be tracked.
+    }
+    mRangeItem->mStartContainer = aPoint->GetContainer();
+    mRangeItem->mEndContainer = aPoint->GetContainer();
+    mRangeItem->mStartOffset = aPoint->Offset();
+    mRangeItem->mEndOffset = aPoint->Offset();
     mRangeUpdater.RegisterRangeItem(mRangeItem);
   }
 
   ~AutoTrackDOMPoint() {
-    mRangeUpdater.DropRangeItem(mRangeItem);
-    if (mPoint) {
+    if (mPoint.isSome()) {
+      if (!mPoint.ref()) {
+        return;  // We don't track anything.
+      }
+      mRangeUpdater.DropRangeItem(mRangeItem);
       // Setting `mPoint` with invalid DOM point causes hitting `NS_ASSERTION()`
       // and the number of times may be too many.  (E.g., 1533913.html hits
       // over 700 times!)  We should just put warning instead.
       if (NS_WARN_IF(!mRangeItem->mStartContainer)) {
-        mPoint->Clear();
+        mPoint.ref()->Clear();
         return;
       }
       if (NS_WARN_IF(mRangeItem->mStartContainer->Length() <
                      mRangeItem->mStartOffset)) {
-        mPoint->SetToEndOf(mRangeItem->mStartContainer);
+        mPoint.ref()->SetToEndOf(mRangeItem->mStartContainer);
         return;
       }
-      mPoint->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
+      mPoint.ref()->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
       return;
     }
+    mRangeUpdater.DropRangeItem(mRangeItem);
     *mNode = mRangeItem->mStartContainer;
     *mOffset = mRangeItem->mStartOffset;
   }
@@ -251,7 +289,7 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
   // Allow tracking nsINode until nsNode is gone
   nsCOMPtr<nsINode>* mNode;
   uint32_t* mOffset;
-  EditorDOMPoint* mPoint;
+  Maybe<EditorDOMPoint*> mPoint;
   OwningNonNull<RangeItem> mRangeItem;
 };
 

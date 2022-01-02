@@ -44,7 +44,7 @@ async function testRearrange(walker) {
     [[nextNode.actorID]],
     async function(actorID) {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const { DevToolsServer } = require("devtools/server/devtools-server");
       const {
@@ -83,7 +83,7 @@ async function testInsertInvalidInput(walker) {
     [[longlist.actorID]],
     async function(actorID) {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const { DevToolsServer } = require("devtools/server/devtools-server");
       // Convert actorID to current compartment string otherwise

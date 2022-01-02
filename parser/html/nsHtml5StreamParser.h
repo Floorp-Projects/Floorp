@@ -264,13 +264,6 @@ class nsHtml5StreamParser final : public nsISupports {
   void DropTimer();
 
   /**
-   * Sets mEncoding and mCharsetSource appropriately for the XML View Source
-   * case if aEncoding names a supported rough ASCII superset and sets
-   * the mEncoding and mCharsetSource to the UTF-8 default otherwise.
-   */
-  void SetEncodingFromExpat(const char16_t* aEncoding);
-
-  /**
    * Sets the URL for View Source title in case this parser ends up being
    * used for View Source. If aURL is a view-source: URL, takes the inner
    * URL. data: URLs are shown with an ellipsis instead of the actual data.

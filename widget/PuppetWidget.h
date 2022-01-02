@@ -17,10 +17,8 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "nsBaseScreen.h"
 #include "nsBaseWidget.h"
 #include "nsCOMArray.h"
-#include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentCache.h"
@@ -183,7 +181,7 @@ class PuppetWidget : public nsBaseWidget,
   bool CreateRemoteLayerManager(
       const std::function<bool(WebRenderLayerManager*)>& aInitializeFunc);
 
-  bool HasLayerManager() { return !!mWindowRenderer; }
+  bool HasWindowRenderer() { return !!mWindowRenderer; }
 
   virtual void SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction) override;
@@ -222,8 +220,6 @@ class PuppetWidget : public nsBaseWidget,
     mRounding = aRounding;
     mDefaultScale = aScale;
   }
-
-  nsIntSize GetScreenDimensions();
 
   // safe area insets support
   virtual ScreenIntMargin GetSafeAreaInsets() const override;
@@ -409,32 +405,6 @@ class PuppetWidget : public nsBaseWidget,
   // destroyed. So, until this meets new eCompositionStart, following
   // composition events should be ignored if this is set to true.
   bool mIgnoreCompositionEvents;
-};
-
-class PuppetScreen : public nsBaseScreen {
- public:
-  explicit PuppetScreen(void* nativeScreen);
-  ~PuppetScreen();
-
-  NS_IMETHOD GetRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth,
-                     int32_t* aHeight) override;
-  NS_IMETHOD GetAvailRect(int32_t* aLeft, int32_t* aTop, int32_t* aWidth,
-                          int32_t* aHeight) override;
-  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
-  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override;
-};
-
-class PuppetScreenManager final : public nsIScreenManager {
-  ~PuppetScreenManager();
-
- public:
-  PuppetScreenManager();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCREENMANAGER
-
- protected:
-  nsCOMPtr<nsIScreen> mOneScreen;
 };
 
 }  // namespace widget

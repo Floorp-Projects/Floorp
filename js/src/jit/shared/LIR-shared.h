@@ -340,6 +340,26 @@ class LGetInlinedArgument : public LVariadicInstruction<BOX_PIECES, 0> {
   MGetInlinedArgument* mir() const { return mir_->toGetInlinedArgument(); }
 };
 
+class LGetInlinedArgumentHole : public LVariadicInstruction<BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GetInlinedArgumentHole)
+
+  static const size_t Index = 0;
+  static const size_t NumNonArgumentOperands = 1;
+  static size_t ArgIndex(size_t i) {
+    return NumNonArgumentOperands + BOX_PIECES * i;
+  }
+
+  explicit LGetInlinedArgumentHole(uint32_t numOperands)
+      : LVariadicInstruction(classOpcode, numOperands) {}
+
+  const LAllocation* getIndex() { return getOperand(Index); }
+
+  MGetInlinedArgumentHole* mir() const {
+    return mir_->toGetInlinedArgumentHole();
+  }
+};
+
 // Common code for LIR descended from MCall.
 template <size_t Defs, size_t Operands, size_t Temps>
 class LJSCallInstructionHelper
@@ -616,6 +636,42 @@ class LApplyArrayGeneric
 
   const LDefinition* getTempObject() { return getTemp(0); }
   const LDefinition* getTempStackCounter() { return getTemp(1); }
+};
+
+class LConstructArgsGeneric
+    : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES + 3, 1> {
+ public:
+  LIR_HEADER(ConstructArgsGeneric)
+
+  LConstructArgsGeneric(const LAllocation& func, const LAllocation& argc,
+                        const LAllocation& newTarget,
+                        const LBoxAllocation& thisv,
+                        const LDefinition& tmpobjreg)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, func);
+    setOperand(1, argc);
+    setOperand(2, newTarget);
+    setBoxOperand(ThisIndex, thisv);
+    setTemp(0, tmpobjreg);
+  }
+
+  MConstructArgs* mir() const { return mir_->toConstructArgs(); }
+
+  bool hasSingleTarget() const { return getSingleTarget() != nullptr; }
+  WrappedFunction* getSingleTarget() const { return mir()->getSingleTarget(); }
+
+  const LAllocation* getFunction() { return getOperand(0); }
+  const LAllocation* getArgc() { return getOperand(1); }
+  const LAllocation* getNewTarget() { return getOperand(2); }
+
+  static const size_t ThisIndex = 3;
+
+  const LDefinition* getTempObject() { return getTemp(0); }
+
+  // tempStackCounter is mapped to the same register as newTarget:
+  // tempStackCounter becomes live as newTarget is dying, all registers are
+  // calltemps.
+  const LAllocation* getTempStackCounter() { return getOperand(2); }
 };
 
 class LConstructArrayGeneric
@@ -1026,6 +1082,13 @@ class LBitNotI : public LInstructionHelper<1, 1, 0> {
   LIR_HEADER(BitNotI)
 
   LBitNotI() : LInstructionHelper(classOpcode) {}
+};
+
+class LBitNotI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0> {
+ public:
+  LIR_HEADER(BitNotI64)
+
+  LBitNotI64() : LInstructionHelper(classOpcode) {}
 };
 
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning
@@ -1843,10 +1906,6 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0> {
       : LInstructionHelper(classOpcode) {
     setOperand(0, elements);
     setOperand(1, index);
-  }
-
-  const char* extraName() const {
-    return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
   }
 
   const MLoadElement* mir() const { return mir_->toLoadElement(); }
@@ -3547,9 +3606,8 @@ class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 0> {
 
 // (v128, i32) -> v128 effect-free variable-width shift operations
 // lhs and dest are the same.
-// temp0 is a GPR (if in use).
-// temp1 is an FPR (if in use).
-class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 2> {
+// temp is an FPR (if in use).
+class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 1> {
  public:
   LIR_HEADER(WasmVariableShiftSimd128)
 
@@ -3558,12 +3616,11 @@ class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 2> {
   static constexpr uint32_t Rhs = 1;
 
   LWasmVariableShiftSimd128(const LAllocation& lhs, const LAllocation& rhs,
-                            const LDefinition& temp0, const LDefinition& temp1)
+                            const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(Lhs, lhs);
     setOperand(Rhs, rhs);
-    setTemp(0, temp0);
-    setTemp(1, temp1);
+    setTemp(0, temp);
   }
 
   const LAllocation* lhs() { return getOperand(Lhs); }

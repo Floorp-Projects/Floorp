@@ -26,7 +26,7 @@ function check(aHadCharset, aCharset, aCharsetStart, aCharsetEnd) {
 }
 
 function run_test() {
-  var netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
+  var netutil = Services.io;
   hadCharset = netutil.extractCharsetFromContentType(
     "text/html",
     charset,

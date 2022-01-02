@@ -11,6 +11,9 @@ import stat
 import subprocess
 import sys
 import time
+import requests
+from pathlib import Path
+from tqdm import tqdm
 
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
@@ -18,8 +21,10 @@ import time
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
 
 NDK_VERSION = "r21d"
-CMDLINE_TOOLS_VERSION_STRING = "4.0"
-CMDLINE_TOOLS_VERSION = "7302050"
+CMDLINE_TOOLS_VERSION_STRING = "5.0"
+CMDLINE_TOOLS_VERSION = "7583922"
+
+BUNDLETOOL_VERSION = "1.8.0"
 
 # We expect the emulator AVD definitions to be platform agnostic
 LINUX_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
@@ -27,6 +32,7 @@ LINUX_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 
 MACOS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 MACOS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+MACOS_ARM64_ANDROID_AVD = "linux64-android-avd-arm64-repack"
 
 WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
@@ -37,6 +43,13 @@ AVD_MANIFEST_X86_64 = os.path.abspath(
 AVD_MANIFEST_ARM = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "android-avds/arm.json")
 )
+AVD_MANIFEST_ARM64 = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "android-avds/arm64.json")
+)
+
+JAVA_VERSION_MAJOR = "8"
+JAVA_VERSION_MINOR = "u312"
+JAVA_VERSION_PATCH = "b07"
 
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
@@ -72,7 +85,7 @@ ac_add_options --enable-application=mobile/android
 # For regular phones, no --target is needed.
 # For x86 emulators (and x86 devices, which are uncommon):
 # ac_add_options --target=i686
-# For newer phones.
+# For newer phones or Apple silicon
 # ac_add_options --target=aarch64
 # For x86_64 emulators (and x86_64 devices, which are even less common):
 # ac_add_options --target=x86_64
@@ -96,21 +109,31 @@ class GetNdkVersionError(Exception):
     pass
 
 
+def install_bundletool(url, path):
+    """
+    Fetch bundletool to the desired directory.
+    """
+    old_path = os.getcwd()
+    try:
+        os.chdir(path)
+        subprocess.check_call(
+            ["wget", "--continue", url, "--output-document", "bundletool.jar"]
+        )
+    finally:
+        os.chdir(old_path)
+
+
 def install_mobile_android_sdk_or_ndk(url, path):
     """
-    Fetch an Android SDK or NDK from |url| and unpack it into
-    the given |path|.
+    Fetch an Android SDK or NDK from |url| and unpack it into the given |path|.
 
-    We expect wget to be installed and found on the system path.
-
-    We use, and wget respects, https.  We could also include SHAs for a
+    We use, and 'requests' respects, https. We could also include SHAs for a
     small improvement in the integrity guarantee we give. But this script is
     bootstrapped over https anyway, so it's a really minor improvement.
 
-    We use |wget --continue| as a cheap cache of the downloaded artifacts,
-    writing into |path|/mozboot.  We don't yet clean the cache; it's better
-    to waste disk and not require a long re-download than to wipe the cache
-    prematurely.
+    We keep a cache of the downloaded artifacts, writing into |path|/mozboot.
+    We don't yet clean the cache; it's better to waste some disk space and
+    not require a long re-download than to wipe the cache prematurely.
     """
 
     old_path = os.getcwd()
@@ -125,26 +148,45 @@ def install_mobile_android_sdk_or_ndk(url, path):
                 raise
 
         os.chdir(download_path)
-        subprocess.check_call(["wget", "--continue", url])
-        file = url.split("/")[-1]
+
+        file_name = url.split("/")[-1]
+        abspath = os.path.join(download_path, file_name)
+
+        file = Path(abspath)
+
+        with requests.Session() as session:
+            request = session.head(url)
+            remote_file_size = int(request.headers["content-length"])
+
+            if file.is_file():
+                local_file_size = file.stat().st_size
+
+                if local_file_size == remote_file_size:
+                    print(f"{file} already downloaded. Skipping download...")
+                else:
+                    print(f"Partial download detected. Resuming download of {file}...")
+                    download(file_name, session, url, remote_file_size, local_file_size)
+            else:
+                print(f"Downloading {file}...")
+                download(file_name, session, url, remote_file_size)
 
         os.chdir(path)
-        abspath = os.path.join(download_path, file)
-        if file.endswith(".tar.gz") or file.endswith(".tgz"):
+
+        if file_name.endswith(".tar.gz") or file_name.endswith(".tgz"):
             cmd = ["tar", "zxf", abspath]
-        elif file.endswith(".tar.bz2"):
+        elif file_name.endswith(".tar.bz2"):
             cmd = ["tar", "jxf", abspath]
-        elif file.endswith(".zip"):
+        elif file_name.endswith(".zip"):
             cmd = ["unzip", "-q", abspath]
-        elif file.endswith(".bin"):
+        elif file_name.endswith(".bin"):
             # Execute the .bin file, which unpacks the content.
             mode = os.stat(path).st_mode
             os.chmod(abspath, mode | stat.S_IXUSR)
             cmd = [abspath]
         else:
-            raise NotImplementedError("Don't know how to unpack file: %s" % file)
+            raise NotImplementedError(f"Don't know how to unpack file: {file_name}")
 
-        print("Unpacking %s..." % abspath)
+        print(f"Unpacking {file}...")
 
         with open(os.devnull, "w") as stdout:
             # These unpack commands produce a ton of output; ignore it.  The
@@ -152,11 +194,45 @@ def install_mobile_android_sdk_or_ndk(url, path):
             # output, so we use this hammer.
             subprocess.check_call(cmd, stdout=stdout)
 
-        print("Unpacking %s... DONE" % abspath)
+        print(f"Unpacking {file}... DONE")
         # Now delete the archive
         os.unlink(abspath)
     finally:
         os.chdir(old_path)
+
+
+def download(
+    file_name, session, url, remote_file_size, resume_from_byte_pos: int = None
+):
+    """
+    Handles both a fresh SDK/NDK download, as well as resuming a partial one
+    """
+    # "ab" will behave same as "wb" if file does not exist
+    with open(file_name, "ab") as file:
+        # 64 KB/s should be fine on even the slowest internet connections
+        chunk_size = 1024 * 64
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range#directives
+        resume_header = (
+            {"Range": f"bytes={resume_from_byte_pos}-"}
+            if resume_from_byte_pos
+            else None
+        )
+
+        request = session.get(
+            url, stream=True, allow_redirects=True, headers=resume_header
+        )
+
+        with tqdm(
+            total=int(remote_file_size),
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            desc=file_name,
+            initial=resume_from_byte_pos if resume_from_byte_pos else 0,
+        ) as progress_bar:
+            for chunk in request.iter_content(chunk_size):
+                file.write(chunk)
+                progress_bar.update(len(chunk))
 
 
 def get_ndk_version(ndk_path):
@@ -252,6 +328,7 @@ def ensure_dir(dir):
 
 def ensure_android(
     os_name,
+    os_arch,
     artifact_mode=False,
     ndk_only=False,
     system_images_only=False,
@@ -286,14 +363,19 @@ def ensure_android(
         os_tag, CMDLINE_TOOLS_VERSION
     )
     ndk_url = android_ndk_url(os_name)
+    bundletool_url = "https://github.com/google/bundletool/releases/download/{v}/bundletool-all-{v}.jar".format(  # NOQA: E501
+        v=BUNDLETOOL_VERSION
+    )
 
     ensure_android_sdk_and_ndk(
         mozbuild_path,
         os_name,
+        os_arch,
         sdk_path=sdk_path,
         sdk_url=sdk_url,
         ndk_path=ndk_path,
         ndk_url=ndk_url,
+        bundletool_url=bundletool_url,
         artifact_mode=artifact_mode,
         ndk_only=ndk_only,
         emulator_only=emulator_only,
@@ -306,10 +388,16 @@ def ensure_android(
     if avd_manifest_path is not None:
         with open(avd_manifest_path) as f:
             avd_manifest = json.load(f)
+        # Some AVDs cannot be prewarmed in CI because they cannot run on linux64
+        # (like the arm64 AVD).
+        if "emulator_prewarm" in avd_manifest:
+            prewarm_avd = prewarm_avd and avd_manifest["emulator_prewarm"]
 
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/cmdline-tools/$CMDLINE_TOOLS_VERSION_STRING/bin/sdkmanager. # NOQA: E501
     ensure_android_packages(
+        os_name,
+        os_arch,
         sdkmanager_tool=sdkmanager_tool(sdk_path),
         emulator_only=emulator_only,
         system_images_only=system_images_only,
@@ -337,10 +425,12 @@ def ensure_android(
 def ensure_android_sdk_and_ndk(
     mozbuild_path,
     os_name,
+    os_arch,
     sdk_path,
     sdk_url,
     ndk_path,
     ndk_url,
+    bundletool_url,
     artifact_mode,
     ndk_only,
     emulator_only,
@@ -395,6 +485,7 @@ def ensure_android_sdk_and_ndk(
             os.path.join(cmdline_tools_path, "cmdline-tools"),
             os.path.join(cmdline_tools_path, CMDLINE_TOOLS_VERSION_STRING),
         )
+        install_bundletool(bundletool_url, mozbuild_path)
 
 
 def get_packages_to_install(packages_file_content, avd_manifest):
@@ -526,6 +617,8 @@ def run_prewarm_avd(
 
 
 def ensure_android_packages(
+    os_name,
+    os_arch,
     sdkmanager_tool,
     emulator_only=False,
     system_images_only=False,
@@ -557,10 +650,18 @@ def ensure_android_packages(
     print(INSTALLING_ANDROID_PACKAGES % "\n".join(packages))
 
     args = [sdkmanager_tool]
+    if os_name == "macosx" and os_arch == "arm64":
+        # Support for Apple Silicon is still in nightly
+        args.append("--channel=3")
     args.extend(packages)
 
+    # sdkmanager needs JAVA_HOME
+    java_bin_path = ensure_java(os_name, os_arch)
+    env = os.environ.copy()
+    env["JAVA_HOME"] = os.path.dirname(java_bin_path)
+
     if not no_interactive:
-        subprocess.check_call(args)
+        subprocess.check_call(args, env=env)
         return
 
     # Flush outputs before running sdkmanager.
@@ -569,7 +670,7 @@ def ensure_android_packages(
     # Emulate yes.  For a discussion of passing input to check_output,
     # see https://stackoverflow.com/q/10103551.
     yes = "\n".join(["y"] * 100).encode("UTF-8")
-    proc = subprocess.Popen(args, stdin=subprocess.PIPE)
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
     proc.communicate(yes)
 
     retcode = proc.poll()
@@ -631,6 +732,12 @@ def main(argv):
         dest="artifact_mode",
         action="store_true",
         help="If true, install only the Android SDK (and not the Android NDK).",
+    )
+    parser.add_option(
+        "--jdk-only",
+        dest="jdk_only",
+        action="store_true",
+        help="If true, install only the Java JDK.",
     )
     parser.add_option(
         "--ndk-only",
@@ -695,8 +802,15 @@ def main(argv):
             "NDK) on {0} yet!".format(platform.system())
         )
 
+    os_arch = platform.machine()
+
+    if options.jdk_only:
+        ensure_java(os_name, os_arch)
+        return 0
+
     ensure_android(
         os_name,
+        os_arch,
         artifact_mode=options.artifact_mode,
         ndk_only=options.ndk_only,
         system_images_only=options.system_images_only,
@@ -716,6 +830,82 @@ def main(argv):
     print("\n" + suggestion)
 
     return 0
+
+
+def ensure_java(os_name, os_arch):
+    mozbuild_path, _, _, _, _ = get_paths(os_name)
+
+    if os_name == "macosx":
+        os_tag = "mac"
+    else:
+        os_tag = os_name
+
+    # One we migrate to Java 17 we will be able to use native arm64 binaries
+    arch = "x64"
+
+    ext = "zip" if os_name == "windows" else "tar.gz"
+
+    java_path = java_bin_path(os_name, mozbuild_path)
+    if not java_path:
+        raise NotImplementedError(f"Could not bootstrap java for {os_name}.")
+
+    if not os.path.exists(java_path):
+        # e.g. https://github.com/adoptium/temurin8-binaries/releases/
+        #      download/jdk8u312-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u312b07.tar.gz
+        java_url = (
+            "https://github.com/adoptium/temurin{major}-binaries/releases/"
+            "download/jdk{major}{minor}-{patch}/"
+            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}{minor}{patch}.{ext}"
+        ).format(
+            major=JAVA_VERSION_MAJOR,
+            minor=JAVA_VERSION_MINOR,
+            patch=JAVA_VERSION_PATCH,
+            os=os_tag,
+            arch=arch,
+            ext=ext,
+        )
+        install_mobile_android_sdk_or_ndk(java_url, os.path.join(mozbuild_path, "jdk"))
+    return java_path
+
+
+def java_bin_path(os_name, toolchain_path):
+    jdk_folder = "jdk{major}{minor}-{patch}".format(
+        major=JAVA_VERSION_MAJOR, minor=JAVA_VERSION_MINOR, patch=JAVA_VERSION_PATCH
+    )
+
+    java_path = os.path.join(toolchain_path, "jdk", jdk_folder)
+
+    if os_name == "macosx":
+        return os.path.join(java_path, "Contents", "Home", "bin")
+    elif os_name == "linux":
+        return os.path.join(java_path, "bin")
+    elif os_name == "windows":
+        return os.path.join(java_path, "bin")
+    else:
+        return None
+
+
+def locate_java_bin_path(host_kernel, toolchain_path):
+    if host_kernel == "WINNT":
+        os_name = "windows"
+    elif host_kernel == "Darwin":
+        os_name = "macosx"
+    elif host_kernel == "Linux":
+        os_name = "linux"
+    else:
+        # Default to Linux
+        os_name = "linux"
+    path = java_bin_path(os_name, toolchain_path)
+    if not os.path.isdir(path):
+        raise JavaLocationFailedException(
+            "Could not locate Java at {}, please run "
+            "./mach bootstrap --no-system-changes".format(path)
+        )
+    return path
+
+
+class JavaLocationFailedException(Exception):
+    pass
 
 
 if __name__ == "__main__":

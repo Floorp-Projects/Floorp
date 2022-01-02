@@ -301,6 +301,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Dumps the changes made by the regexp peephole optimizer to stderr
   SET_DEFAULT(traceRegExpPeephole, false);
 
+  // Controls how much assertion checking code is emitted
+  SET_DEFAULT(lessDebugCode, false);
+
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
   SET_DEFAULT(enableWasmIonFastCalls, true);

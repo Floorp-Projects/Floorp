@@ -1,26 +1,31 @@
 # GENERATED, DO NOT EDIT
 
-error:SyntaxError script language/comments/hashbang/escaped-bang-041.js
-error:SyntaxError script language/comments/hashbang/escaped-bang-u0021.js
-error:SyntaxError script language/comments/hashbang/escaped-bang-u21.js
-error:SyntaxError script language/comments/hashbang/escaped-bang-x21.js
-error:SyntaxError script language/comments/hashbang/escaped-hash-043.js
-error:SyntaxError script language/comments/hashbang/escaped-hash-u0023.js
-error:SyntaxError script language/comments/hashbang/escaped-hash-u23.js
-error:SyntaxError script language/comments/hashbang/escaped-hash-x23.js
-error:SyntaxError script language/comments/hashbang/escaped-hashbang.js
-module script language/comments/hashbang/module.js
-error:SyntaxError script language/comments/hashbang/multi-line-comment.js
-error:SyntaxError script language/comments/hashbang/preceding-directive-prologue-sc.js
-error:SyntaxError script language/comments/hashbang/preceding-directive-prologue.js
-error:SyntaxError script language/comments/hashbang/preceding-empty-statement.js
-error:SyntaxError script language/comments/hashbang/preceding-hashbang.js
-error:SyntaxError script language/comments/hashbang/preceding-line-comment.js
-error:SyntaxError script language/comments/hashbang/preceding-multi-line-comment.js
-error:SyntaxError script language/comments/hashbang/preceding-whitespace.js
-error:SyntaxError script language/directive-prologue/10.1.1-2gs.js
-error:SyntaxError script language/directive-prologue/10.1.1-5gs.js
-error:SyntaxError script language/directive-prologue/10.1.1-8gs.js
-error:SyntaxError script language/directive-prologue/14.1-4gs.js
-error:SyntaxError script language/directive-prologue/14.1-5gs.js
-skip module script language/module-code/eval-gtbndng-indirect-faux-assertion.js # import-assertions is not supported
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-041.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-u0021.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-u21.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-x21.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-hash-043.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-hash-u0023.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-hash-u23.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-hash-x23.js
+test262-raw error:SyntaxError script language/comments/hashbang/escaped-hashbang.js
+test262-raw script language/comments/hashbang/line-terminator-carriage-return.js
+test262-raw script language/comments/hashbang/line-terminator-line-separator.js
+test262-raw script language/comments/hashbang/line-terminator-paragraph-separator.js
+test262-raw module script language/comments/hashbang/module.js
+test262-raw error:SyntaxError script language/comments/hashbang/multi-line-comment.js
+test262-raw script language/comments/hashbang/not-empty.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-directive-prologue-sc.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-directive-prologue.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-empty-statement.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-hashbang.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-line-comment.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-multi-line-comment.js
+test262-raw error:SyntaxError script language/comments/hashbang/preceding-whitespace.js
+test262-raw script language/comments/hashbang/use-strict.js
+test262-raw error:SyntaxError script language/directive-prologue/10.1.1-2gs.js
+test262-raw error:SyntaxError script language/directive-prologue/10.1.1-5gs.js
+test262-raw error:SyntaxError script language/directive-prologue/10.1.1-8gs.js
+test262-raw error:SyntaxError script language/directive-prologue/14.1-4gs.js
+test262-raw error:SyntaxError script language/directive-prologue/14.1-5gs.js
+shell-option(--enable-import-assertions) test262-raw skip-if(!xulRuntime.shell) module script language/module-code/eval-gtbndng-indirect-faux-assertion.js # requires shell-options

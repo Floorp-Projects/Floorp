@@ -203,17 +203,10 @@ class AndroidEmulatorTest(
         dirs["abs_xpcshell_dir"] = os.path.join(
             dirs["abs_test_install_dir"], "xpcshell"
         )
-        fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
-        if fetches_dir:
-            dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
-            dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
-        else:
-            dirs["abs_sdk_dir"] = os.path.join(
-                abs_dirs["abs_work_dir"], "android-sdk-linux"
-            )
-            dirs["abs_avds_dir"] = os.path.join(
-                abs_dirs["abs_work_dir"], "android-device"
-            )
+        work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
+        dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
+        dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
+        dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
 
         for key in dirs.keys():
             if key not in abs_dirs:
@@ -444,7 +437,7 @@ class AndroidEmulatorTest(
         assert (
             self.installer_path is not None
         ), "Either add installer_path to the config or use --installer-path."
-        self.install_apk(self.installer_path)
+        self.install_android_app(self.installer_path)
         self.info("Finished installing apps for %s" % self.device_serial)
 
     def run_tests(self):

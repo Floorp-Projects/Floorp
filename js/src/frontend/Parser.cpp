@@ -21,7 +21,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Range.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Utf8.h"
@@ -34,10 +33,7 @@
 #include "jsnum.h"
 #include "jstypes.h"
 
-#include "builtin/ModuleObject.h"
-#include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/BytecodeSection.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"
@@ -48,33 +44,26 @@
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RegExpFlags.h"           // JS::RegExpFlags
-#include "util/StringBuffer.h"        // StringBuffer
-#include "vm/BigIntType.h"
+#include "js/HashTable.h"
+#include "js/RegExpFlags.h"     // JS::RegExpFlags
+#include "util/StringBuffer.h"  // StringBuffer
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
-#include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
-#include "vm/RegExpObject.h"
-#include "vm/Scope.h"  // GetScopeDataTrailingNames
-#include "vm/SelfHosting.h"
-#include "vm/StringType.h"
+#include "vm/Scope.h"          // GetScopeDataTrailingNames
 #include "vm/WellKnownAtom.h"  // js_*_str
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
 #include "frontend/SharedContext-inl.h"
-#include "vm/EnvironmentObject-inl.h"
 
 using namespace js;
 
 using mozilla::AssertedCast;
 using mozilla::AsVariant;
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::PointerRangeSize;
@@ -1763,7 +1752,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 
 #ifdef DEBUG
   if (evalpc.superScopeNeedsHomeObject() &&
-      this->compilationState_.input.enclosingScope) {
+      !this->compilationState_.input.enclosingScope.isNull()) {
     // If superScopeNeedsHomeObject_ is set and we are an entry-point
     // ParseContext, then we must be emitting an eval script, and the
     // outer function must already be marked as needing a home object
@@ -4998,6 +4987,103 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 }
 
 template <class ParseHandler, typename Unit>
+bool GeneralParser<ParseHandler, Unit>::assertClause(
+    ListNodeType assertionsSet) {
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert));
+
+  if (!options().importAssertions) {
+    error(JSMSG_IMPORT_ASSERTIONS_NOT_SUPPORTED);
+    return false;
+  }
+
+  if (!abortIfSyntaxParser()) {
+    return false;
+  }
+
+  if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_AFTER_ASSERT)) {
+    return false;
+  }
+
+  // Handle the form |... assert {}|
+  TokenKind token;
+  if (!tokenStream.getToken(&token)) {
+    return false;
+  }
+  if (token == TokenKind::RightCurly) {
+    return true;
+  }
+
+  js::HashSet<TaggedParserAtomIndex, TaggedParserAtomIndexHasher,
+              js::SystemAllocPolicy>
+      usedAssertionKeys;
+
+  for (;;) {
+    TaggedParserAtomIndex keyName;
+    if (TokenKindIsPossibleIdentifierName(token)) {
+      keyName = anyChars.currentName();
+    } else if (token == TokenKind::String) {
+      keyName = anyChars.currentToken().atom();
+    } else {
+      error(JSMSG_ASSERT_KEY_EXPECTED);
+      return false;
+    }
+
+    auto p = usedAssertionKeys.lookupForAdd(keyName);
+    if (p) {
+      UniqueChars str = this->parserAtoms().toPrintableString(cx_, keyName);
+      if (!str) {
+        return false;
+      }
+      error(JSMSG_DUPLICATE_ASSERT_KEY, str.get());
+      return false;
+    }
+    if (!usedAssertionKeys.add(p, keyName)) {
+      ReportOutOfMemory(cx_);
+      return false;
+    }
+
+    NameNodeType keyNode = newName(keyName);
+    if (!keyNode) {
+      return false;
+    }
+
+    if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_ASSERT_KEY)) {
+      return false;
+    }
+    if (!mustMatchToken(TokenKind::String, JSMSG_ASSERT_STRING_LITERAL)) {
+      return false;
+    }
+
+    NameNodeType valueNode = stringLiteral();
+    if (!valueNode) {
+      return false;
+    }
+
+    BinaryNodeType importAssertionNode =
+        handler_.newImportAssertion(keyNode, valueNode);
+    if (!importAssertionNode) {
+      return false;
+    }
+
+    handler_.addList(assertionsSet, importAssertionNode);
+
+    if (!tokenStream.getToken(&token)) {
+      return false;
+    }
+    if (token == TokenKind::Comma) {
+      if (!tokenStream.getToken(&token)) {
+        return false;
+      }
+    }
+    if (token == TokenKind::RightCurly) {
+      break;
+    }
+  }
+
+  return true;
+}
+
+template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::namedImports(
     ListNodeType importSpecSet) {
   if (!abortIfSyntaxParser()) {
@@ -5265,12 +5351,37 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
     return null();
   }
 
-  if (!matchOrInsertSemicolon()) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+
+  ListNodeType importAssertionList =
+      handler_.newList(ParseNodeKind::ImportAssertionList, pos());
+  if (!importAssertionList) {
+    return null();
+  }
+
+  if (tt == TokenKind::Assert) {
+    tokenStream.consumeKnownToken(TokenKind::Assert,
+                                  TokenStream::SlashIsRegExp);
+
+    if (!assertClause(importAssertionList)) {
+      return null();
+    }
+  }
+
+  if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+
+  BinaryNodeType moduleRequest = handler_.newModuleRequest(
+      moduleSpec, importAssertionList, TokenPos(begin, pos().end));
+  if (!moduleRequest) {
     return null();
   }
 
   BinaryNodeType node = handler_.newImportDeclaration(
-      importSpecSet, moduleSpec, TokenPos(begin, pos().end));
+      importSpecSet, moduleRequest, TokenPos(begin, pos().end));
   if (!node || !processImport(node)) {
     return null();
   }
@@ -5594,12 +5705,32 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
     return null();
   }
 
-  if (!matchOrInsertSemicolon()) {
+  TokenKind tt;
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+  uint32_t moduleSpecPos = pos().begin;
+
+  ListNodeType importAssertionList =
+      handler_.newList(ParseNodeKind::ImportAssertionList, pos());
+  if (tt == TokenKind::Assert) {
+    tokenStream.consumeKnownToken(TokenKind::Assert,
+                                  TokenStream::SlashIsRegExp);
+
+    if (!assertClause(importAssertionList)) {
+      return null();
+    }
+  }
+
+  if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
     return null();
   }
 
+  BinaryNodeType moduleRequest = handler_.newModuleRequest(
+      moduleSpec, importAssertionList, TokenPos(moduleSpecPos, pos().end));
+
   BinaryNodeType node =
-      handler_.newExportFromDeclaration(begin, specList, moduleSpec);
+      handler_.newExportFromDeclaration(begin, specList, moduleRequest);
   if (!node) {
     return null();
   }
@@ -11945,11 +12076,64 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
+    if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+      return null();
+    }
+
+    Node optionalArg;
+    if (options().importAssertions) {
+      if (next == TokenKind::Comma) {
+        tokenStream.consumeKnownToken(TokenKind::Comma,
+                                      TokenStream::SlashIsRegExp);
+
+        if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+          return null();
+        }
+
+        if (next != TokenKind::RightParen) {
+          optionalArg =
+              assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+          if (!optionalArg) {
+            return null();
+          }
+
+          if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+            return null();
+          }
+
+          if (next == TokenKind::Comma) {
+            tokenStream.consumeKnownToken(TokenKind::Comma,
+                                          TokenStream::SlashIsRegExp);
+          }
+        } else {
+          optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+          if (!optionalArg) {
+            return null();
+          }
+        }
+      } else {
+        optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+        if (!optionalArg) {
+          return null();
+        }
+      }
+    } else {
+      optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+      if (!optionalArg) {
+        return null();
+      }
+    }
+
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
       return null();
     }
 
-    return handler_.newCallImport(importHolder, arg);
+    Node spec = handler_.newCallImportSpec(arg, optionalArg);
+    if (!spec) {
+      return null();
+    }
+
+    return handler_.newCallImport(importHolder, spec);
   } else {
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
     return null();

@@ -12,7 +12,7 @@
 
 [package]
 name = "core-foundation-sys"
-version = "0.8.2"
+version = "0.8.3"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 description = "Bindings to Core Foundation for macOS"

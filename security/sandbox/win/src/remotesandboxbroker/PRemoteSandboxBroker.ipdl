@@ -23,6 +23,7 @@ struct LaunchParameters {
   bool enableLogging;
 };
 
+[NeedsOtherPid]
 intr protocol PRemoteSandboxBroker
 {
 parent:

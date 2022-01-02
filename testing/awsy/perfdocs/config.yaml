@@ -4,5 +4,12 @@
 ---
 name: awsy
 manifest: None
-static-only: True
-suites: {}
+static-only: False
+suites:
+    Awsy tests:
+        description: ""
+        tests:
+            base: "FF"
+            dmd: "FF"
+            tp5: "FF"
+            tp6: "FF"

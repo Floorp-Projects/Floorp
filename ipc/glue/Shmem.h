@@ -156,23 +156,24 @@ class Shmem final {
                                                      bool aUnsafe,
                                                      bool aProtect = false);
 
-  // Prepare this to be shared with |aProcess|.  Return an IPC message
-  // that contains enough information for the other process to map
-  // this segment in OpenExisting() below.  Return a new message if
-  // successful (owned by the caller), nullptr if not.
-  UniquePtr<IPC::Message> ShareTo(PrivateIPDLCaller, base::ProcessId aTargetPid,
-                                  int32_t routingId);
+  // Prepare this to be shared with another process. Return an IPC message that
+  // contains enough information for the other process to map this segment in
+  // OpenExisting() below.  Return a new message if successful (owned by the
+  // caller), nullptr if not.
+  UniquePtr<IPC::Message> MkCreatedMessage(PrivateIPDLCaller,
+                                           int32_t routingId);
 
-  // Stop sharing this with |aTargetPid|.  Return an IPC message that
+  // Stop sharing this with another process. Return an IPC message that
   // contains enough information for the other process to unmap this
   // segment.  Return a new message if successful (owned by the
   // caller), nullptr if not.
-  UniquePtr<IPC::Message> UnshareFrom(PrivateIPDLCaller, int32_t routingId);
+  UniquePtr<IPC::Message> MkDestroyedMessage(PrivateIPDLCaller,
+                                             int32_t routingId);
 
-  // Return a SharedMemory instance in this process using the
-  // descriptor shared to us by the process that created the
-  // underlying OS shmem resource.  The contents of the descriptor
-  // depend on the type of SharedMemory that was passed to us.
+  // Return a SharedMemory instance in this process using the descriptor shared
+  // to us by the process that created the underlying OS shmem resource.  The
+  // contents of the descriptor depend on the type of SharedMemory that was
+  // passed to us.
   static already_AddRefed<SharedMemory> OpenExisting(
       PrivateIPDLCaller, const IPC::Message& aDescriptor, id_t* aId,
       bool aProtect = false);

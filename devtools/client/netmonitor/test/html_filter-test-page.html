@@ -18,49 +18,39 @@
       /* exported performRequests */
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        // Use a random parameter to defeat caching.
-        xhr.open("GET", address + "&" + Math.random(), true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          // Use a random parameter to defeat caching.
+          xhr.open("GET", address + "&" + Math.random(), true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(null);
+        });
       }
 
-      function performRequests(optionsText) {
+      async function performRequests(optionsText) {
         const options = JSON.parse(optionsText);
 
-        /* eslint-disable max-nested-callbacks */
-        get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent,
-            function() {
-              get("sjs_content-type-test-server.sjs?fmt=css", function() {
-                get("sjs_content-type-test-server.sjs?fmt=js", function() {
-                  if (!options.getMedia) {
-                    return;
-                  }
-                  get("sjs_content-type-test-server.sjs?fmt=font", function() {
-                    get("sjs_content-type-test-server.sjs?fmt=image", function() {
-                      get("sjs_content-type-test-server.sjs?fmt=audio", function() {
-                        get("sjs_content-type-test-server.sjs?fmt=video", function() {
-                          if (!options.getFlash) {
-                            return;
-                          }
-                          get("sjs_content-type-test-server.sjs?fmt=flash", function() {
-                            // Done.
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            }
-        );
-        /* eslint-enable max-nested-callbacks */
+        await get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent);
+        await get("sjs_content-type-test-server.sjs?fmt=css");
+        await get("sjs_content-type-test-server.sjs?fmt=js");
+        await get("sjs_content-type-test-server.sjs?fmt=xhtml");
+        if (!options.getMedia) {
+          return;
+        }
+        await get("sjs_content-type-test-server.sjs?fmt=font");
+        await get("sjs_content-type-test-server.sjs?fmt=image");
+        await get("sjs_content-type-test-server.sjs?fmt=audio");
+        await get("sjs_content-type-test-server.sjs?fmt=video");
+        if (!options.getFlash) {
+          return;
+        }
+        await get("sjs_content-type-test-server.sjs?fmt=flash");
       }
     </script>
   </body>

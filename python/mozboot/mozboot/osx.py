@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import subprocess
 import sys
 import tempfile
@@ -54,6 +55,85 @@ this bootstrap again.
 """
 
 
+class OSXAndroidBootstrapper(object):
+    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
+        os_arch = platform.machine()
+        if os_arch != "x86_64" and os_arch != "arm64":
+            raise Exception(
+                "You need a 64-bit version of Mac OS X to build "
+                "GeckoView/Firefox for Android."
+            )
+
+        from mozboot import android
+
+        android.ensure_android(
+            "macosx",
+            os_arch,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
+        )
+
+        if os_arch == "x86_64" or os_arch == "x86":
+            android.ensure_android(
+                "macosx",
+                os_arch,
+                system_images_only=True,
+                artifact_mode=artifact_mode,
+                no_interactive=self.no_interactive,
+                avd_manifest_path=android.AVD_MANIFEST_X86_64,
+            )
+            android.ensure_android(
+                "macosx",
+                os_arch,
+                system_images_only=True,
+                artifact_mode=artifact_mode,
+                no_interactive=self.no_interactive,
+                avd_manifest_path=android.AVD_MANIFEST_ARM,
+            )
+        else:
+            android.ensure_android(
+                "macosx",
+                os_arch,
+                system_images_only=True,
+                artifact_mode=artifact_mode,
+                no_interactive=self.no_interactive,
+                avd_manifest_path=android.AVD_MANIFEST_ARM64,
+            )
+
+    def ensure_mobile_android_packages(self, state_dir, checkout_root):
+        from mozboot import android
+
+        arch = platform.machine()
+        android.ensure_java("macosx", arch)
+
+        if arch == "x86_64" or arch == "x86":
+            self.install_toolchain_artifact(
+                state_dir, checkout_root, android.MACOS_X86_64_ANDROID_AVD
+            )
+            self.install_toolchain_artifact(
+                state_dir, checkout_root, android.MACOS_ARM_ANDROID_AVD
+            )
+        elif arch == "arm64":
+            # The only emulator supported on Apple Silicon is the Arm64 one.
+            self.install_toolchain_artifact(
+                state_dir, checkout_root, android.MACOS_ARM64_ANDROID_AVD
+            )
+
+    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
+        self.install_mobile_android_packages(mozconfig_builder, artifact_mode=True)
+
+    def generate_mobile_android_mozconfig(self):
+        return self._generate_mobile_android_mozconfig()
+
+    def generate_mobile_android_artifact_mode_mozconfig(self):
+        return self._generate_mobile_android_mozconfig(artifact_mode=True)
+
+    def _generate_mobile_android_mozconfig(self, artifact_mode=False):
+        from mozboot import android
+
+        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
+
+
 def ensure_command_line_tools():
     # We need either the command line tools or Xcode (one is sufficient).
     # Python 3, required to run this code, is not installed by default on macos
@@ -92,7 +172,7 @@ def ensure_command_line_tools():
         sys.exit(1)
 
 
-class OSXBootstrapperLight(BaseBootstrapper):
+class OSXBootstrapperLight(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
@@ -120,7 +200,7 @@ class OSXBootstrapperLight(BaseBootstrapper):
         pass
 
 
-class OSXBootstrapper(BaseBootstrapper):
+class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
@@ -152,73 +232,6 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
-
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. System packages.
-        packages = ["wget"]
-        self._ensure_homebrew_packages(packages)
-
-        casks = ["adoptopenjdk8"]
-        self._ensure_homebrew_casks(casks)
-
-        is_64bits = sys.maxsize > 2 ** 32
-        if not is_64bits:
-            raise Exception(
-                "You need a 64-bit version of Mac OS X to build "
-                "GeckoView/Firefox for Android."
-            )
-
-        # 2. Android pieces.
-        java_path = self.ensure_java(mozconfig_builder)
-        # Prefer our validated java binary by putting it on the path first.
-        os.environ["PATH"] = "{}{}{}".format(java_path, os.pathsep, os.environ["PATH"])
-        from mozboot import android
-
-        android.ensure_android(
-            "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
-        )
-        android.ensure_android(
-            "macosx",
-            system_images_only=True,
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            avd_manifest_path=android.AVD_MANIFEST_X86_64,
-        )
-        android.ensure_android(
-            "macosx",
-            system_images_only=True,
-            artifact_mode=artifact_mode,
-            no_interactive=self.no_interactive,
-            avd_manifest_path=android.AVD_MANIFEST_ARM,
-        )
-
-    def ensure_mobile_android_packages(self, state_dir, checkout_root):
-        from mozboot import android
-
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, android.MACOS_X86_64_ANDROID_AVD
-        )
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, android.MACOS_ARM_ANDROID_AVD
-        )
-
-    def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
-        self.install_mobile_android_packages(mozconfig_builder, artifact_mode=True)
-
-    def generate_mobile_android_mozconfig(self):
-        return self._generate_mobile_android_mozconfig()
-
-    def generate_mobile_android_artifact_mode_mozconfig(self):
-        return self._generate_mobile_android_mozconfig(artifact_mode=True)
-
-    def _generate_mobile_android_mozconfig(self, artifact_mode=False):
-        from mozboot import android
-
-        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
 
     def _ensure_homebrew_found(self):
         self.brew = which("brew")

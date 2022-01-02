@@ -74,11 +74,12 @@ function setupFrameValueTest() {
   }).then(children => {
     const nodes = children.nodes;
     is(nodes.length, 1, "There should be only one child of the iframe");
-    is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
-    return gWalker.querySelector(nodes[0], "#longstring");
+    const [node] =nodes;
+    is(node.nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
+    return node.walkerFront.querySelector(node, "#longstring");
   }).then(node => {
     longStringFront = node;
-    return gWalker.children(node);
+    return longStringFront.walkerFront.children(node);
   }).then(children => {
     valueFront = children.nodes[0];
   }).then(runNextTest));
@@ -97,7 +98,7 @@ function testKeepLongValue() {
   ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
 
   valueNode.nodeValue = longString;
-  gWalker.once("mutations", (changes) => {
+  valueFront.walkerFront.once("mutations", (changes) => {
     ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
     ok(!changes.some(change => change.type === "inlineTextChild"),
       "No inline text child mutation was fired.");
@@ -109,7 +110,7 @@ function testSetShortValue() {
   ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
 
   valueNode.nodeValue = shortString;
-  gWalker.once("mutations", (changes) => {
+  valueFront.walkerFront.once("mutations", (changes) => {
     ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
     ok(changes.some(change => change.type === "inlineTextChild"),
       "An inlineTextChild mutation was fired.");
@@ -121,7 +122,7 @@ function testKeepShortValue() {
   ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
 
   valueNode.nodeValue = shortString2;
-  gWalker.once("mutations", (changes) => {
+  valueFront.walkerFront.once("mutations", (changes) => {
     ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
     ok(!changes.some(change => change.type === "inlineTextChild"),
       "No inline text child mutation was fired.");
@@ -133,7 +134,7 @@ function testSetLongValue() {
   ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
 
   valueNode.nodeValue = longString;
-  gWalker.once("mutations", (changes) => {
+  valueFront.walkerFront.once("mutations", (changes) => {
     ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
     ok(changes.some(change => change.type === "inlineTextChild"),
       "An inlineTextChild mutation was fired.");

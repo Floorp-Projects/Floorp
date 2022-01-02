@@ -70,8 +70,16 @@ struct nsCounterNode : public nsGenConNode {
   // to avoid virtual function calls in the common case
   inline void Calc(nsCounterList* aList, bool aNotify);
 
-  // Is this a <ol reversed> RESET node?
+  // Is this a RESET node for a content-based (i.e. without a start value)
+  // reversed() counter?
   inline bool IsContentBasedReset();
+
+  // Is this a RESET node for a reversed() counter?
+  inline bool IsReversed();
+
+  // Is this an INCREMENT node that needs to be initialized to -1 or 1
+  // depending on if our scope is reversed() or not?
+  inline bool IsUnitializedIncrementNode();
 };
 
 struct nsCounterUseNode : public nsCounterNode {
@@ -114,15 +122,14 @@ struct nsCounterUseNode : public nsCounterNode {
 };
 
 struct nsCounterChangeNode : public nsCounterNode {
-  int32_t mChangeValue;  // the numeric value of the increment, set or reset
-
   // |aPseudoFrame| is not necessarily a pseudo-element's frame, but
   // since it is for every other subclass of nsGenConNode, we follow
   // the naming convention here.
   // |aPropIndex| is the index of the value within the list in the
   // 'counter-increment', 'counter-reset' or 'counter-set' property.
   nsCounterChangeNode(nsIFrame* aPseudoFrame, nsCounterNode::Type aChangeType,
-                      int32_t aChangeValue, int32_t aPropIndex)
+                      int32_t aChangeValue, int32_t aPropIndex,
+                      bool aIsReversed)
       : nsCounterNode(  // Fake a content index for resets, increments and sets
                         // that comes before all the real content, with
                         // the resets first, in order, and then the increments
@@ -132,7 +139,9 @@ struct nsCounterChangeNode : public nsCounterNode {
                                                       ? ((INT32_MIN / 3) * 2)
                                                       : INT32_MIN / 3)),
             aChangeType),
-        mChangeValue(aChangeValue) {
+        mChangeValue(aChangeValue),
+        mIsReversed(aIsReversed),
+        mSeenSetNode(false) {
     NS_ASSERTION(aPropIndex >= 0, "out of range");
     NS_ASSERTION(
         aChangeType == INCREMENT || aChangeType == SET || aChangeType == RESET,
@@ -144,6 +153,18 @@ struct nsCounterChangeNode : public nsCounterNode {
   // assign the correct |mValueAfter| value to a node that has been inserted
   // Should be called immediately after calling |Insert|.
   void Calc(nsCounterList* aList);
+
+  // The numeric value of the INCREMENT, SET or RESET.
+  // Note: numeric_limits<int32_t>::min() is used for content-based reversed()
+  // RESET nodes, and temporarily on INCREMENT nodes to signal that it should be
+  // initialized to -1 or 1 depending on if the scope is reversed() or not.
+  int32_t mChangeValue;
+
+  // True if the counter is reversed(). Only used on RESET nodes.
+  bool mIsReversed : 1;
+  // True if we've seen a SET node during the initialization of
+  // an IsContentBasedReset() node; always false on other nodes.
+  bool mSeenSetNode : 1;
 };
 
 inline nsCounterUseNode* nsCounterNode::UseNode() {
@@ -165,6 +186,15 @@ inline void nsCounterNode::Calc(nsCounterList* aList, bool aNotify) {
 
 inline bool nsCounterNode::IsContentBasedReset() {
   return mType == RESET &&
+         ChangeNode()->mChangeValue == std::numeric_limits<int32_t>::min();
+}
+
+inline bool nsCounterNode::IsReversed() {
+  return mType == RESET && ChangeNode()->mIsReversed;
+}
+
+inline bool nsCounterNode::IsUnitializedIncrementNode() {
+  return mType == INCREMENT &&
          ChangeNode()->mChangeValue == std::numeric_limits<int32_t>::min();
 }
 

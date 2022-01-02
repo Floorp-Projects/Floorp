@@ -8,12 +8,15 @@
 #define jit_IonIC_h
 
 #include "jit/CacheIR.h"
+#include "jit/ICState.h"
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {
 
 class CacheIRStubInfo;
+class CacheIRWriter;
+class IonScript;
 
 // An optimized stub attached to an IonIC.
 class IonICStub {
@@ -398,12 +401,12 @@ class IonGetIteratorIC : public IonIC {
 class IonOptimizeSpreadCallIC : public IonIC {
   LiveRegisterSet liveRegs_;
   ValueOperand value_;
-  Register output_;
+  ValueOperand output_;
   Register temp_;
 
  public:
   IonOptimizeSpreadCallIC(LiveRegisterSet liveRegs, ValueOperand value,
-                          Register output, Register temp)
+                          ValueOperand output, Register temp)
       : IonIC(CacheKind::OptimizeSpreadCall),
         liveRegs_(liveRegs),
         value_(value),
@@ -411,13 +414,13 @@ class IonOptimizeSpreadCallIC : public IonIC {
         temp_(temp) {}
 
   ValueOperand value() const { return value_; }
-  Register output() const { return output_; }
+  ValueOperand output() const { return output_; }
   Register temp() const { return temp_; }
   LiveRegisterSet liveRegs() const { return liveRegs_; }
 
   static bool update(JSContext* cx, HandleScript outerScript,
                      IonOptimizeSpreadCallIC* ic, HandleValue value,
-                     bool* result);
+                     MutableHandleValue result);
 };
 
 class IonHasOwnIC : public IonIC {

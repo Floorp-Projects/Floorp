@@ -39,4 +39,4 @@ Library('breakpad_linux_common_s')
 include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Wno-error=stack-protector']
+    CXXFLAGS += ['-Wno-error=stack-protector']

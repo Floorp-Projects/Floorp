@@ -58,7 +58,6 @@ static const float kLargeOpFactor = float(M_SQRT2);
 static const float kIntegralFactor = 2.0;
 
 static void NormalizeDefaultFont(nsFont& aFont, float aFontSizeInflation) {
-  Servo_FontFamilyList_Normalize(&aFont.family.families);
   aFont.size.ScaleBy(aFontSizeInflation);
 }
 

@@ -32,7 +32,9 @@ es_419{
         ht{"haitiano"}
         kbd{"cabardiano"}
         krc{"karachái-bálkaro"}
+        ks{"cachemiro"}
         lo{"laosiano"}
+        ml{"malabar"}
         nl_BE{"flamenco"}
         nr{"ndebele del sur"}
         nso{"sesotho del norte"}
@@ -66,11 +68,11 @@ es_419{
         ug{"uighur"}
     }
     Scripts{
-        Hanb{"han con bopomofo"}
+        Gujr{"gujarati"}
         Hrkt{"katakana o hiragana"}
         Laoo{"lao"}
         Latn{"latín"}
-        Mlym{"malayalam"}
+        Mlym{"malabar"}
         Olck{"ol chiki"}
     }
     Types{

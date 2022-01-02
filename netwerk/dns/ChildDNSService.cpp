@@ -31,7 +31,6 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 static StaticRefPtr<ChildDNSService> gChildDNSService;
-static const char kPrefNameDisablePrefetch[] = "network.dns.disablePrefetch";
 
 already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
   MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
@@ -51,7 +50,8 @@ already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
   return do_AddRef(gChildDNSService);
 }
 
-NS_IMPL_ISUPPORTS(ChildDNSService, nsIDNSService, nsPIDNSService, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(ChildDNSService, DNSServiceBase, nsIDNSService,
+                            nsPIDNSService)
 
 ChildDNSService::ChildDNSService() {
   MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
@@ -90,6 +90,13 @@ nsresult ChildDNSService::AsyncResolveInternal(
     NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
   }
 
+  if (DNSForbiddenByActiveProxy(hostname, flags)) {
+    // nsHostResolver returns NS_ERROR_UNKNOWN_HOST for lots of reasons.
+    // We use a different error code to differentiate this failure and to make
+    // it clear(er) where this error comes from.
+    return NS_ERROR_UNKNOWN_PROXY_HOST;
+  }
+
   bool resolveDNSInSocketProcess = false;
   if (XRE_IsParentProcess() && nsIOService::UseSocketProcess()) {
     resolveDNSInSocketProcess = true;
@@ -125,6 +132,9 @@ nsresult ChildDNSService::AsyncResolveInternal(
   RefPtr<DNSRequestActor> dnsReq;
   if (resolveDNSInSocketProcess) {
     dnsReq = new DNSRequestParent(sender);
+    if (!mTRRServiceParent->TRRConnectionInfoInited()) {
+      mTRRServiceParent->InitTRRConnectionInfo();
+    }
   } else {
     dnsReq = new DNSRequestChild(sender);
   }
@@ -296,7 +306,7 @@ ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mTRRServiceParent->GetTrrURI(aURI);
+  mTRRServiceParent->GetURI(aURI);
   return NS_OK;
 }
 
@@ -312,7 +322,12 @@ ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
 
 NS_IMETHODIMP
 ChildDNSService::GetCurrentTrrConfirmationState(uint32_t* aConfirmationState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mTRRServiceParent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aConfirmationState = mTRRServiceParent->GetConfirmationState();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -373,35 +388,18 @@ void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
 //-----------------------------------------------------------------------------
 
 nsresult ChildDNSService::Init() {
-  // Disable prefetching either by explicit preference or if a manual proxy
-  // is configured
-  bool disablePrefetch = false;
+  ReadPrefs(nullptr);
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    prefs->GetBoolPref(kPrefNameDisablePrefetch, &disablePrefetch);
+    AddPrefObserver(prefs);
   }
 
-  if (mFirstTime) {
-    mFirstTime = false;
-    if (prefs) {
-      prefs->AddObserver(kPrefNameDisablePrefetch, this, false);
-
-      // Monitor these to see if there is a change in proxy configuration
-      // If a manual proxy is in use, disable prefetch implicitly
-      prefs->AddObserver("network.proxy.type", this, false);
-    }
-
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->AddObserver(this, "odoh-service-activated", false);
-    }
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, "odoh-service-activated", false);
   }
-
-  mDisablePrefetch =
-      disablePrefetch || (StaticPrefs::network_proxy_type() ==
-                          nsIProtocolProxyService::PROXYCONFIG_MANUAL);
 
   return NS_OK;
 }
@@ -447,7 +445,7 @@ ChildDNSService::Observe(nsISupports* subject, const char* topic,
                          const char16_t* data) {
   if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     // Reread prefs
-    Init();
+    ReadPrefs(NS_ConvertUTF16toUTF8(data).get());
   } else if (!strcmp(topic, "odoh-service-activated")) {
     mODoHActivated = u"true"_ns.Equals(data);
   }

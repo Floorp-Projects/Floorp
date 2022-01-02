@@ -196,7 +196,7 @@ RBTestDataModule::RBTestDataModule(const char* name, TestLog& log, UErrorCode& s
     fNumberOfTests = ures_getSize(fTestData);
     fInfoRB = ures_getByKey(fModuleBundle, "Info", NULL, &status);
     if(status != U_ZERO_ERROR) {
-      log.errln(UNICODE_STRING_SIMPLE("Unable to initalize test data - missing mandatory description resources!"));
+      log.errln(UNICODE_STRING_SIMPLE("Unable to initialize test data - missing mandatory description resources!"));
       fDataTestValid = FALSE;
     } else {
       fInfo = new RBDataMap(fInfoRB, status);

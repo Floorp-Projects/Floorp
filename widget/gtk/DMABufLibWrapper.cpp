@@ -266,22 +266,20 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufVideoEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufVideoEnabled: EGL %d DMABufEnabled %d  "
-       "!media_ffmpeg_dmabuf_textures_disabled %d !XRE_IsRDDProcess() %d\n",
+       "!media_ffmpeg_dmabuf_textures_disabled %d\n",
        gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
-       !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled(),
-       !XRE_IsRDDProcess()));
+       !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled()));
   return !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled() &&
-         !XRE_IsRDDProcess() && gfx::gfxVars::UseDMABuf() && IsDMABufEnabled();
+         gfx::gfxVars::UseDMABuf() && IsDMABufEnabled();
 }
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
-       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
-       "!XRE_IsRDDProcess %d\n",
+       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d\n",
        gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
        StaticPrefs::media_ffmpeg_vaapi_enabled(),
-       gfx::gfxVars::CanUseHardwareVideoDecoding(), !XRE_IsRDDProcess()));
-  return StaticPrefs::media_ffmpeg_vaapi_enabled() && !XRE_IsRDDProcess() &&
+       gfx::gfxVars::CanUseHardwareVideoDecoding()));
+  return StaticPrefs::media_ffmpeg_vaapi_enabled() &&
          gfx::gfxVars::UseDMABuf() && IsDMABufEnabled() &&
          gfx::gfxVars::CanUseHardwareVideoDecoding();
 }

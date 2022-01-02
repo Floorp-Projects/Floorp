@@ -2119,9 +2119,9 @@ void MacroAssembler::absInt64x2(FloatRegister src, FloatRegister dest) {
 // Left shift by scalar
 
 void MacroAssembler::leftShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                                      Register temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(lhsDest, rhs, temp1,
-                                                          temp2, lhsDest);
+                                      FloatRegister temp) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(lhsDest, rhs, temp,
+                                                          lhsDest);
 }
 
 void MacroAssembler::leftShiftInt8x16(Imm32 count, FloatRegister src,
@@ -2129,9 +2129,8 @@ void MacroAssembler::leftShiftInt8x16(Imm32 count, FloatRegister src,
   MacroAssemblerX86Shared::packedLeftShiftByScalarInt8x16(count, src, dest);
 }
 
-void MacroAssembler::leftShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                                      Register temp) {
-  MacroAssemblerX86Shared::packedLeftShiftByScalarInt16x8(lhsDest, rhs, temp,
+void MacroAssembler::leftShiftInt16x8(Register rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt16x8(lhsDest, rhs,
                                                           lhsDest);
 }
 
@@ -2141,9 +2140,8 @@ void MacroAssembler::leftShiftInt16x8(Imm32 count, FloatRegister src,
   vpsllw(count, src, dest);
 }
 
-void MacroAssembler::leftShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                                      Register temp) {
-  MacroAssemblerX86Shared::packedLeftShiftByScalarInt32x4(lhsDest, rhs, temp,
+void MacroAssembler::leftShiftInt32x4(Register rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt32x4(lhsDest, rhs,
                                                           lhsDest);
 }
 
@@ -2153,9 +2151,8 @@ void MacroAssembler::leftShiftInt32x4(Imm32 count, FloatRegister src,
   vpslld(count, src, dest);
 }
 
-void MacroAssembler::leftShiftInt64x2(Register rhs, FloatRegister lhsDest,
-                                      Register temp) {
-  MacroAssemblerX86Shared::packedLeftShiftByScalarInt64x2(lhsDest, rhs, temp,
+void MacroAssembler::leftShiftInt64x2(Register rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt64x2(lhsDest, rhs,
                                                           lhsDest);
 }
 
@@ -2168,9 +2165,9 @@ void MacroAssembler::leftShiftInt64x2(Imm32 count, FloatRegister src,
 // Right shift by scalar
 
 void MacroAssembler::rightShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                                       Register temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(lhsDest, rhs, temp1,
-                                                           temp2, lhsDest);
+                                       FloatRegister temp) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt8x16(lhsDest, rhs, temp,
+                                                           lhsDest);
 }
 
 void MacroAssembler::rightShiftInt8x16(Imm32 count, FloatRegister src,
@@ -2180,10 +2177,9 @@ void MacroAssembler::rightShiftInt8x16(Imm32 count, FloatRegister src,
 
 void MacroAssembler::unsignedRightShiftInt8x16(Register rhs,
                                                FloatRegister lhsDest,
-                                               Register temp1,
-                                               FloatRegister temp2) {
+                                               FloatRegister temp) {
   MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt8x16(
-      lhsDest, rhs, temp1, temp2, lhsDest);
+      lhsDest, rhs, temp, lhsDest);
 }
 
 void MacroAssembler::unsignedRightShiftInt8x16(Imm32 count, FloatRegister src,
@@ -2192,9 +2188,8 @@ void MacroAssembler::unsignedRightShiftInt8x16(Imm32 count, FloatRegister src,
                                                                    dest);
 }
 
-void MacroAssembler::rightShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                                       Register temp) {
-  MacroAssemblerX86Shared::packedRightShiftByScalarInt16x8(lhsDest, rhs, temp,
+void MacroAssembler::rightShiftInt16x8(Register rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt16x8(lhsDest, rhs,
                                                            lhsDest);
 }
 
@@ -2205,10 +2200,9 @@ void MacroAssembler::rightShiftInt16x8(Imm32 count, FloatRegister src,
 }
 
 void MacroAssembler::unsignedRightShiftInt16x8(Register rhs,
-                                               FloatRegister lhsDest,
-                                               Register temp) {
-  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt16x8(
-      lhsDest, rhs, temp, lhsDest);
+                                               FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt16x8(lhsDest, rhs,
+                                                                   lhsDest);
 }
 
 void MacroAssembler::unsignedRightShiftInt16x8(Imm32 count, FloatRegister src,
@@ -2217,9 +2211,8 @@ void MacroAssembler::unsignedRightShiftInt16x8(Imm32 count, FloatRegister src,
   vpsrlw(count, src, dest);
 }
 
-void MacroAssembler::rightShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                                       Register temp) {
-  MacroAssemblerX86Shared::packedRightShiftByScalarInt32x4(lhsDest, rhs, temp,
+void MacroAssembler::rightShiftInt32x4(Register rhs, FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt32x4(lhsDest, rhs,
                                                            lhsDest);
 }
 
@@ -2230,10 +2223,9 @@ void MacroAssembler::rightShiftInt32x4(Imm32 count, FloatRegister src,
 }
 
 void MacroAssembler::unsignedRightShiftInt32x4(Register rhs,
-                                               FloatRegister lhsDest,
-                                               Register temp) {
-  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt32x4(
-      lhsDest, rhs, temp, lhsDest);
+                                               FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt32x4(lhsDest, rhs,
+                                                                   lhsDest);
 }
 
 void MacroAssembler::unsignedRightShiftInt32x4(Imm32 count, FloatRegister src,
@@ -2243,9 +2235,9 @@ void MacroAssembler::unsignedRightShiftInt32x4(Imm32 count, FloatRegister src,
 }
 
 void MacroAssembler::rightShiftInt64x2(Register rhs, FloatRegister lhsDest,
-                                       Register temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::packedRightShiftByScalarInt64x2(lhsDest, rhs, temp1,
-                                                           temp2, lhsDest);
+                                       FloatRegister temp) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt64x2(lhsDest, rhs, temp,
+                                                           lhsDest);
 }
 
 void MacroAssembler::rightShiftInt64x2(Imm32 count, FloatRegister src,
@@ -2254,10 +2246,9 @@ void MacroAssembler::rightShiftInt64x2(Imm32 count, FloatRegister src,
 }
 
 void MacroAssembler::unsignedRightShiftInt64x2(Register rhs,
-                                               FloatRegister lhsDest,
-                                               Register temp) {
-  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt64x2(
-      lhsDest, rhs, temp, lhsDest);
+                                               FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt64x2(lhsDest, rhs,
+                                                                   lhsDest);
 }
 
 void MacroAssembler::unsignedRightShiftInt64x2(Imm32 count, FloatRegister src,

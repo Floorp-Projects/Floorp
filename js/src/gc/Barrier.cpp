@@ -257,7 +257,7 @@ template <typename T>
   // removed from the table later on.
   if (!zone->hasUniqueId(k)) {
     Key key = k;
-    MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(&key));
+    MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(key));
   }
   MOZ_ASSERT(zone->hasUniqueId(l));
 #endif

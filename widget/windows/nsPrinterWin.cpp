@@ -10,14 +10,19 @@
 #include <winspool.h>
 
 #include "mozilla/Array.h"
+#include "mozilla/dom/Promise.h"
 #include "nsPaper.h"
 #include "nsPrintSettingsImpl.h"
+#include "nsPrintSettingsWin.h"
 #include "nsWindowsHelpers.h"
+#include "PrintBackgroundTask.h"
 #include "WinUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
+using mozilla::PrintSettingsInitializer;
+using mozilla::dom::Promise;
 
 static const double kPointsPerTenthMM = 72.0 / 254.0;
 static const double kPointsPerInch = 72.0;
@@ -89,6 +94,88 @@ static nsTArray<T> GetDeviceCapabilityArray(const LPWSTR aPrinterName,
   return caps;
 }
 
+static void DevmodeToSettingsInitializer(
+    const nsString& aPrinterName, const DEVMODEW* aDevmode,
+    mozilla::Mutex& aDriverMutex,
+    PrintSettingsInitializer& aSettingsInitializer) {
+  aSettingsInitializer.mPrinter.Assign(aPrinterName);
+
+  HDC dc;
+  {
+    MutexAutoLock autoLock(aDriverMutex);
+    dc = ::CreateICW(nullptr, aPrinterName.get(), nullptr, aDevmode);
+  }
+  nsAutoHDC printerDc(dc);
+  MOZ_ASSERT(printerDc, "CreateICW failed");
+  if (!printerDc) {
+    return;
+  }
+
+  if (aDevmode->dmFields & DM_PAPERSIZE) {
+    aSettingsInitializer.mPaperInfo.mId.Truncate();
+    aSettingsInitializer.mPaperInfo.mId.AppendInt(aDevmode->dmPaperSize);
+    // If it is not a paper size we know about, the unit will remain unchanged.
+    nsPrintSettingsWin::PaperSizeUnitFromDmPaperSize(
+        aDevmode->dmPaperSize, aSettingsInitializer.mPaperSizeUnit);
+  }
+
+  int pixelsPerInchY = ::GetDeviceCaps(printerDc, LOGPIXELSY);
+  int physicalHeight = ::GetDeviceCaps(printerDc, PHYSICALHEIGHT);
+  double heightInInches = double(physicalHeight) / pixelsPerInchY;
+  int pixelsPerInchX = ::GetDeviceCaps(printerDc, LOGPIXELSX);
+  int physicalWidth = ::GetDeviceCaps(printerDc, PHYSICALWIDTH);
+  double widthInches = double(physicalWidth) / pixelsPerInchX;
+  if (aDevmode->dmFields & DM_ORIENTATION &&
+      aDevmode->dmOrientation == DMORIENT_LANDSCAPE) {
+    std::swap(widthInches, heightInInches);
+  }
+  aSettingsInitializer.mPaperInfo.mSize.SizeTo(widthInches * kPointsPerInch,
+                                               heightInInches * kPointsPerInch);
+
+  gfx::MarginDouble margin =
+      WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
+  aSettingsInitializer.mPaperInfo.mUnwriteableMargin = Some(MarginDouble{
+      margin.top * kPointsPerInch, margin.right * kPointsPerInch,
+      margin.bottom * kPointsPerInch, margin.left * kPointsPerInch});
+
+  // Using Y to match existing code for print scaling calculations.
+  aSettingsInitializer.mResolution = pixelsPerInchY;
+
+  if (aDevmode->dmFields & DM_COLOR) {
+    // See comment for PrintSettingsInitializer.mPrintInColor
+    aSettingsInitializer.mPrintInColor =
+        aDevmode->dmColor != DMCOLOR_MONOCHROME;
+  }
+
+  if (aDevmode->dmFields & DM_ORIENTATION) {
+    aSettingsInitializer.mSheetOrientation =
+        int32_t(aDevmode->dmOrientation == DMORIENT_PORTRAIT
+                    ? nsPrintSettings::kPortraitOrientation
+                    : nsPrintSettings::kLandscapeOrientation);
+  }
+
+  if (aDevmode->dmFields & DM_COPIES) {
+    aSettingsInitializer.mNumCopies = aDevmode->dmCopies;
+  }
+
+  if (aDevmode->dmFields & DM_DUPLEX) {
+    switch (aDevmode->dmDuplex) {
+      default:
+        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
+        [[fallthrough]];
+      case DMDUP_SIMPLEX:
+        aSettingsInitializer.mDuplex = nsPrintSettings::kDuplexNone;
+        break;
+      case DMDUP_VERTICAL:
+        aSettingsInitializer.mDuplex = nsPrintSettings::kDuplexFlipOnLongEdge;
+        break;
+      case DMDUP_HORIZONTAL:
+        aSettingsInitializer.mDuplex = nsPrintSettings::kDuplexFlipOnShortEdge;
+        break;
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsPrinterWin::GetName(nsAString& aName) {
   aName.Assign(mName);
@@ -99,6 +186,28 @@ NS_IMETHODIMP
 nsPrinterWin::GetSystemName(nsAString& aName) {
   aName.Assign(mName);
   return NS_OK;
+}
+
+namespace mozilla {
+template <>
+void ResolveOrReject(Promise& aPromise, nsPrinterWin& aPrinter,
+                     const PrintSettingsInitializer& aResult) {
+  aPromise.MaybeResolve(
+      RefPtr<nsIPrintSettings>(CreatePlatformPrintSettings(aResult)));
+}
+}  // namespace mozilla
+
+NS_IMETHODIMP nsPrinterWin::CopyFromWithValidation(
+    nsIPrintSettings* aSettingsToCopyFrom, JSContext* aCx,
+    Promise** aResultPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResultPromise);
+
+  PrintSettingsInitializer settingsInitializer =
+      aSettingsToCopyFrom->GetSettingsInitializer();
+  return PrintBackgroundTaskPromise(
+      *this, aCx, aResultPromise, "CopyFromWithValidation"_ns,
+      &nsPrinterWin::GetValidatedSettings, settingsInitializer);
 }
 
 bool nsPrinterWin::SupportsDuplex() const {
@@ -288,11 +397,6 @@ nsTArray<mozilla::PaperInfo> nsPrinterWin::PaperList() const {
 }
 
 PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
-  // Initialize to something reasonable, in case we fail to get usable data
-  // from the devmode below.
-  nsString paperIdString(u"1");  // DMPAPER_LETTER
-  bool color = true;
-
   nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
   if (devmodeWStorage.IsEmpty()) {
     return {};
@@ -301,56 +405,109 @@ PrintSettingsInitializer nsPrinterWin::DefaultSettings() const {
   const auto* devmode =
       reinterpret_cast<const DEVMODEW*>(devmodeWStorage.Elements());
 
-  // XXX If DM_PAPERSIZE is not set, or is not a known value, should we
-  // be returning a "Custom" name of some kind?
-  if (devmode->dmFields & DM_PAPERSIZE) {
-    paperIdString.Truncate(0);
-    paperIdString.AppendInt(devmode->dmPaperSize);
+  PrintSettingsInitializer settingsInitializer;
+  DevmodeToSettingsInitializer(mName, devmode, mDriverMutex,
+                               settingsInitializer);
+  settingsInitializer.mDevmodeWStorage = std::move(devmodeWStorage);
+  return settingsInitializer;
+}
+
+PrintSettingsInitializer nsPrinterWin::GetValidatedSettings(
+    PrintSettingsInitializer aSettingsToValidate) const {
+  // This function validates the settings by relying on the printer driver
+  // rejecting any invalid settings and resetting them to valid values.
+
+  // Create a copy of the default DEVMODE for this printer.
+  nsTArray<uint8_t> devmodeWStorage = CopyDefaultDevmodeW();
+  if (devmodeWStorage.IsEmpty()) {
+    return aSettingsToValidate;
   }
 
-  if (devmode->dmFields & DM_COLOR) {
-    // See comment for PrintSettingsInitializer.mPrintInColor
-    color = devmode->dmColor != DMCOLOR_MONOCHROME;
+  nsHPRINTER hPrinter = nullptr;
+  if (NS_WARN_IF(!::OpenPrinterW(mName.get(), &hPrinter, nullptr))) {
+    return aSettingsToValidate;
+  }
+  nsAutoPrinter autoPrinter(hPrinter);
+
+  // Copy the settings from aSettingsToValidate into our DEVMODE.
+  DEVMODEW* devmode = reinterpret_cast<DEVMODEW*>(devmodeWStorage.Elements());
+  if (!aSettingsToValidate.mPaperInfo.mId.IsEmpty()) {
+    devmode->dmPaperSize = _wtoi(
+        (const wchar_t*)aSettingsToValidate.mPaperInfo.mId.BeginReading());
+    devmode->dmFields |= DM_PAPERSIZE;
+  } else {
+    devmode->dmPaperSize = 0;
+    devmode->dmFields &= ~DM_PAPERSIZE;
   }
 
-  HDC dc;
+  devmode->dmFields |= DM_COLOR;
+  devmode->dmColor =
+      aSettingsToValidate.mPrintInColor ? DMCOLOR_COLOR : DMCOLOR_MONOCHROME;
+
+  // Note: small page sizes can be required here for sticker, label and slide
+  // printers etc. see bug 1271900.
+  if (aSettingsToValidate.mPaperInfo.mSize.height > 0) {
+    devmode->dmPaperLength = std::round(
+        aSettingsToValidate.mPaperInfo.mSize.height / kPointsPerTenthMM);
+    devmode->dmFields |= DM_PAPERLENGTH;
+  } else {
+    devmode->dmPaperLength = 0;
+    devmode->dmFields &= ~DM_PAPERLENGTH;
+  }
+
+  if (aSettingsToValidate.mPaperInfo.mSize.width > 0) {
+    devmode->dmPaperWidth = std::round(
+        aSettingsToValidate.mPaperInfo.mSize.width / kPointsPerTenthMM);
+    devmode->dmFields |= DM_PAPERWIDTH;
+  } else {
+    devmode->dmPaperWidth = 0;
+    devmode->dmFields &= ~DM_PAPERWIDTH;
+  }
+
+  // Setup Orientation
+  devmode->dmOrientation = aSettingsToValidate.mSheetOrientation ==
+                                   nsPrintSettings::kPortraitOrientation
+                               ? DMORIENT_PORTRAIT
+                               : DMORIENT_LANDSCAPE;
+  devmode->dmFields |= DM_ORIENTATION;
+
+  // Setup Number of Copies
+  devmode->dmCopies = aSettingsToValidate.mNumCopies;
+  devmode->dmFields |= DM_COPIES;
+
+  // Setup Simplex/Duplex mode
+  devmode->dmFields |= DM_DUPLEX;
+  switch (aSettingsToValidate.mDuplex) {
+    case nsPrintSettings::kDuplexNone:
+      devmode->dmDuplex = DMDUP_SIMPLEX;
+      break;
+    case nsPrintSettings::kDuplexFlipOnLongEdge:
+      devmode->dmDuplex = DMDUP_VERTICAL;
+      break;
+    case nsPrintSettings::kDuplexFlipOnShortEdge:
+      devmode->dmDuplex = DMDUP_HORIZONTAL;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("bad value for duplex option");
+      break;
+  }
+
+  // Apply the settings in the DEVMODE to the printer and retrieve the updated
+  // DEVMODE back into the same structure.
+  LONG ret;
   {
     MutexAutoLock autoLock(mDriverMutex);
-    dc = ::CreateICW(nullptr, mName.get(), nullptr, devmode);
+    ret = ::DocumentPropertiesW(nullptr, autoPrinter.get(), mName.get(),
+                                devmode, devmode, DM_IN_BUFFER | DM_OUT_BUFFER);
   }
-  nsAutoHDC printerDc(dc);
-  MOZ_ASSERT(printerDc, "CreateICW failed");
-  if (!printerDc) {
-    return {};
+  if (ret != IDOK) {
+    return aSettingsToValidate;
   }
 
-  int pixelsPerInchY = ::GetDeviceCaps(printerDc, LOGPIXELSY);
-  int physicalHeight = ::GetDeviceCaps(printerDc, PHYSICALHEIGHT);
-  double heightInInches = double(physicalHeight) / pixelsPerInchY;
-  int pixelsPerInchX = ::GetDeviceCaps(printerDc, LOGPIXELSX);
-  int physicalWidth = ::GetDeviceCaps(printerDc, PHYSICALWIDTH);
-  double widthInches = double(physicalWidth) / pixelsPerInchX;
-  if (devmode->dmFields & DM_ORIENTATION &&
-      devmode->dmOrientation == DMORIENT_LANDSCAPE) {
-    std::swap(widthInches, heightInInches);
-  }
-  SizeDouble paperSize(widthInches * kPointsPerInch,
-                       heightInInches * kPointsPerInch);
-
-  gfx::MarginDouble margin =
-      WinUtils::GetUnwriteableMarginsForDeviceInInches(printerDc);
-  margin.top *= kPointsPerInch;
-  margin.right *= kPointsPerInch;
-  margin.bottom *= kPointsPerInch;
-  margin.left *= kPointsPerInch;
-
-  // Using Y to match existing code for print scaling calculations.
-  int resolution = pixelsPerInchY;
-
-  // We don't actually need the paper name in the settings because the
-  // paperIdString is used to look up the paper details in the front end.
-  nsString paperName;
-  return PrintSettingsInitializer{
-      mName, PaperInfo(paperIdString, paperName, paperSize, Some(margin)),
-      color, resolution, std::move(devmodeWStorage)};
+  // Copy the settings back from the DEVMODE into aSettingsToValidate and
+  // return.
+  DevmodeToSettingsInitializer(mName, devmode, mDriverMutex,
+                               aSettingsToValidate);
+  aSettingsToValidate.mDevmodeWStorage = std::move(devmodeWStorage);
+  return aSettingsToValidate;
 }

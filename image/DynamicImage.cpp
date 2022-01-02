@@ -51,7 +51,6 @@ uint32_t DynamicImage::GetAnimationConsumers() { return 0; }
 #endif
 
 nsresult DynamicImage::OnImageDataAvailable(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsIInputStream* aInStr,
                                             uint64_t aSourceOffset,
                                             uint32_t aCount) {
@@ -59,7 +58,6 @@ nsresult DynamicImage::OnImageDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult DynamicImage::OnImageDataComplete(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsresult aStatus, bool aLastPart) {
   return NS_OK;
 }
@@ -123,7 +121,7 @@ DynamicImage::GetType(uint16_t* aType) {
 }
 
 NS_IMETHODIMP
-DynamicImage::GetProducerId(uint32_t* aId) {
+DynamicImage::GetProviderId(uint32_t* aId) {
   *aId = 0;
   return NS_OK;
 }
@@ -170,12 +168,12 @@ DynamicImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-DynamicImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
-                                      const gfx::IntSize& aSize,
-                                      const Maybe<SVGImageContext>& aSVGContext,
-                                      const Maybe<ImageIntRegion>& aRegion,
-                                      uint32_t aFlags,
-                                      layers::ImageContainer** aContainer) {
+DynamicImage::GetImageProvider(WindowRenderer* aRenderer,
+                               const gfx::IntSize& aSize,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               const Maybe<ImageIntRegion>& aRegion,
+                               uint32_t aFlags,
+                               WebRenderImageProvider** aProvider) {
   return ImgDrawResult::NOT_SUPPORTED;
 }
 

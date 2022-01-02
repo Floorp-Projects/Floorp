@@ -39,6 +39,12 @@ function TargetMixin(parentClass) {
     constructor(client, targetFront, parentFront) {
       super(client, targetFront, parentFront);
 
+      // TargetCommand._onTargetAvailable will set this public attribute.
+      // This is a reference to the related `commands` object and helps all fronts
+      // easily call any command method. Without this bit of magic, Fronts wouldn't
+      // be able to interact with any commands while it is frequently useful.
+      this.commands = null;
+
       this._forceChrome = false;
 
       this.destroy = this.destroy.bind(this);
@@ -200,28 +206,27 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     async getParentTarget() {
-      // We now support frames watching via watchTargets for Tab and Process descriptors.
-      const watcherFront = await this.getWatcherFront();
-      if (watcherFront) {
-        // Safety check, in theory all watcher should support frames. We should be able
-        // to remove this as part of Bug 1680280.
-        if (watcherFront.traits.frame) {
-          // Retrieve the Watcher, which manage all the targets and should already have a reference to
-          // to the parent target.
-          return watcherFront.getParentWindowGlobalTarget(
-            this.browsingContextID
-          );
-        }
-        return null;
+      return this.commands.targetCommand.getParentTarget(this);
+    }
+
+    /**
+     * Returns a Promise that resolves to a boolean indicating if the provided target is
+     * an ancestor of this instance.
+     *
+     * @param {TargetFront} target: The possible ancestor target.
+     * @returns Promise<Boolean>
+     */
+    async isTargetAnAncestor(target) {
+      const parentTargetFront = await this.getParentTarget();
+      if (!parentTargetFront) {
+        return false;
       }
 
-      if (this.parentFront.getParentTarget) {
-        return this.parentFront.getParentTarget();
+      if (parentTargetFront == target) {
+        return true;
       }
 
-      // Other targets, like WebExtensions, don't have a Watcher yet, nor do expose `getParentTarget`.
-      // We can't fetch parent target yet for these targets.
-      return null;
+      return parentTargetFront.isTargetAnAncestor(target);
     }
 
     /**
@@ -367,11 +372,7 @@ function TargetMixin(parentClass) {
     // interface and requires to call `attach` request before being used and
     // `detach` during cleanup.
     get isBrowsingContext() {
-      // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
-      return (
-        this.typeName === "windowGlobalTarget" ||
-        this.typeName == "browsingContextTarget"
-      );
+      return this.typeName === "windowGlobalTarget";
     }
 
     get name() {
@@ -495,14 +496,25 @@ function TargetMixin(parentClass) {
         return;
       }
 
-      // WorkerTargetFront don't have an attach function as the related console and thread
-      // actors are created right away (from devtools/server/startup/worker.js)
-      if (this.attach) {
+      // We still need to attach workers.
+      // The current class we have is actually the WorkerDescriptorFront,
+      // which will morph into a target by fetching the underlying target's form.
+      // Ideally, worker targets would be spawn by the server, and we would no longer
+      // have the hybrid descriptor/target class which brings lots of complexity and confusion.
+      // By doing so, the "attach" would be done on the server side and would simply be
+      // part of the target actor instantiation.
+      //
+      // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+      //                  Once Fx95 support is dropped, we can remove:
+      //                  - the trait
+      //                  - "attach" methods from fronts and specs for all but worker targets
+      //                  - here, we will still have to call attach for worker targets (`if (this.attach) await this.attach()`)
+      if (this.attach && !this.getTrait("isAutoAttached")) {
         await this.attach();
       }
 
       const isBrowserToolbox =
-        targetCommand.descriptorFront.isParentProcessDescriptor;
+        targetCommand.descriptorFront.isBrowserProcessDescriptor;
       const isNonTopLevelFrameTarget =
         !this.isTopLevel && this.targetType === targetCommand.TYPES.FRAME;
 
@@ -687,10 +699,6 @@ function TargetMixin(parentClass) {
     _cleanup() {
       this.threadFront = null;
       this._client = null;
-
-      // All target front subclasses set this variable in their `attach` method.
-      // None of them overload destroy, so clean this up from here.
-      this._attach = null;
 
       this._title = null;
       this._url = null;

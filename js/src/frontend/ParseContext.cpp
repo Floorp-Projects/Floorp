@@ -11,8 +11,6 @@
 #include "js/friend/ErrorMessages.h"      // JSMSG_*
 #include "vm/WellKnownAtom.h"             // js_*_str
 
-#include "vm/EnvironmentObject-inl.h"
-
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;

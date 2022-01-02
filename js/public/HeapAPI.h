@@ -246,7 +246,6 @@ static_assert((FirstArenaAdjustmentBits % MarkBitmapWordBits) == 0);
 constexpr size_t FirstArenaAdjustmentWords =
     FirstArenaAdjustmentBits / MarkBitmapWordBits;
 
-const size_t ChunkRuntimeOffset = offsetof(ChunkBase, runtime);
 const size_t ChunkStoreBufferOffset = offsetof(ChunkBase, storeBuffer);
 const size_t ChunkMarkBitmapOffset = offsetof(TenuredChunkBase, markBits);
 
@@ -477,11 +476,11 @@ void ApplyGCThingTyped(GCCellPtr thing, F&& f) {
 // These are defined in the toplevel namespace instead of within JS so that
 // they won't shadow other operator== overloads (see bug 1456512.)
 
-inline bool operator==(const JS::GCCellPtr& ptr1, const JS::GCCellPtr& ptr2) {
+inline bool operator==(JS::GCCellPtr ptr1, JS::GCCellPtr ptr2) {
   return ptr1.asCell() == ptr2.asCell();
 }
 
-inline bool operator!=(const JS::GCCellPtr& ptr1, const JS::GCCellPtr& ptr2) {
+inline bool operator!=(JS::GCCellPtr ptr1, JS::GCCellPtr ptr2) {
   return !(ptr1 == ptr2);
 }
 

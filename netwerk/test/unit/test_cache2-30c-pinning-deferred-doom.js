@@ -33,7 +33,7 @@ function run_test() {
   do_get_profile();
 
   var lci = Services.loadContextInfo.default;
-  var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
+  var testingInterface = Services.cache2.QueryInterface(Ci.nsICacheTesting);
   Assert.ok(testingInterface);
 
   var mc = new MultipleCallbacks(
@@ -53,7 +53,7 @@ function run_test() {
         log_("purging");
 
         // Invokes cacheservice:purge-memory-pools when done.
-        get_cache_service().purgeFromMemory(
+        Services.cache2.purgeFromMemory(
           Ci.nsICacheStorageService.PURGE_EVERYTHING
         ); // goes to (3)
       });
@@ -93,10 +93,7 @@ function run_test() {
 
   mc.fired(); // Goes to (2)
 
-  var os = Cc["@mozilla.org/observer-service;1"].getService(
-    Ci.nsIObserverService
-  );
-  os.addObserver(
+  Services.obs.addObserver(
     {
       observe(subject, topic, data) {
         // (3)
@@ -144,7 +141,7 @@ function run_test() {
 
         log_("clearing");
         // Now clear everything except pinned, all entries are in state of reading
-        get_cache_service().clear();
+        Services.cache2.clear();
         log_("cleared");
 
         // Resume reading the cache data, only now the pinning status on entries will be discovered,

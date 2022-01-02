@@ -54,6 +54,9 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
   // overflowing nscoord values in the 'width' and 'height' fields by
   // clamping the width and height values to nscoord_MAX if necessary.
 
+  // Returns the smallest rectangle that contains both the area of both
+  // this and aRect. Thus, empty input rectangles are ignored.
+  // Note: if both rectangles are empty, returns aRect.
   [[nodiscard]] nsRect SaturatingUnion(const nsRect& aRect) const {
     if (IsEmpty()) {
       return aRect;
@@ -217,13 +220,6 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
   }
 #  endif
 #endif
-
-  void SaturatingUnionRect(const nsRect& aRect1, const nsRect& aRect2) {
-    *this = aRect1.SaturatingUnion(aRect2);
-  }
-  void SaturatingUnionRectEdges(const nsRect& aRect1, const nsRect& aRect2) {
-    *this = aRect1.SaturatingUnionEdges(aRect2);
-  }
 
   // Return whether this rect's right or bottom edge overflow int32.
   bool Overflows() const;

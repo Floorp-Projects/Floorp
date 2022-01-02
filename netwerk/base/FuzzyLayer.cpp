@@ -36,6 +36,7 @@ typedef struct {
   size_t size;
   bool allowRead;
   bool allowUnused;
+  PRNetAddr* addr;
 } NetworkFuzzingBuffer;
 
 // This holds all connections we have currently open.
@@ -77,6 +78,7 @@ void addNetworkFuzzingBuffer(const uint8_t* data, size_t size, bool readFirst,
   buf->size = size;
   buf->allowRead = readFirst;
   buf->allowUnused = useIsOptional;
+  buf->addr = nullptr;
 
   gNetworkFuzzingBuffers.Push(buf);
 
@@ -159,6 +161,46 @@ static PRStatus FuzzyConnect(PRFileDesc* fd, const PRNetAddr* addr,
   return PR_SUCCESS;
 }
 
+static PRInt32 FuzzySendTo(PRFileDesc* fd, const void* buf, PRInt32 amount,
+                           PRIntn flags, const PRNetAddr* addr,
+                           PRIntervalTime timeout) {
+  MOZ_RELEASE_ASSERT(fd->identity == sFuzzyLayerIdentity);
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  MutexAutoLock lock(gConnRecvMutex);
+
+  NetworkFuzzingBuffer* fuzzBuf = gConnectedNetworkFuzzingBuffers.Get(fd);
+  if (!fuzzBuf) {
+    NetworkFuzzingBuffer* buf = gNetworkFuzzingBuffers.PopFront();
+    if (!buf) {
+      FUZZING_LOG(("[FuzzySentTo] Denying additional connection."));
+      return 0;
+    }
+
+    gConnectedNetworkFuzzingBuffers.InsertOrUpdate(fd, buf);
+
+    // Store connection address
+    buf->addr = new PRNetAddr;
+    memcpy(buf->addr, addr, sizeof(PRNetAddr));
+
+    fuzzingNoWaitRequired = false;
+
+    FUZZING_LOG(("[FuzzySendTo] Successfully opened connection: %p", fd));
+
+    gFuzzingConnClosed = false;
+  }
+
+  // Allow reading once the implementation has written at least some data
+  if (fuzzBuf && !fuzzBuf->allowRead) {
+    FUZZING_LOG(("[FuzzySendTo] Write received, allowing further reads."));
+    fuzzBuf->allowRead = true;
+  }
+
+  FUZZING_LOG(("[FuzzySendTo] Sent %" PRIx32 " bytes of data.", amount));
+
+  return amount;
+}
+
 static PRInt32 FuzzySend(PRFileDesc* fd, const void* buf, PRInt32 amount,
                          PRIntn flags, PRIntervalTime timeout) {
   MOZ_RELEASE_ASSERT(fd->identity == sFuzzyLayerIdentity);
@@ -233,6 +275,26 @@ static PRInt32 FuzzyRecv(PRFileDesc* fd, void* buf, PRInt32 amount,
   return amount;
 }
 
+static PRInt32 FuzzyRecvFrom(PRFileDesc* fd, void* buf, PRInt32 amount,
+                             PRIntn flags, PRNetAddr* addr,
+                             PRIntervalTime timeout) {
+  // Return the same address used for initial SendTo on this fd
+  if (addr) {
+    NetworkFuzzingBuffer* fuzzBuf = gConnectedNetworkFuzzingBuffers.Get(fd);
+    if (!fuzzBuf) {
+      FUZZING_LOG(("[FuzzyRecvFrom] Denying read, connection is closed."));
+      return 0;
+    }
+
+    if (fuzzBuf->addr) {
+      memcpy(addr, fuzzBuf->addr, sizeof(PRNetAddr));
+    } else {
+      FUZZING_LOG(("[FuzzyRecvFrom] No address found for connection"));
+    }
+  }
+  return FuzzyRecv(fd, buf, amount, flags, timeout);
+}
+
 static PRInt32 FuzzyRead(PRFileDesc* fd, void* buf, PRInt32 amount) {
   return FuzzyRecv(fd, buf, amount, 0, PR_INTERVAL_NO_WAIT);
 }
@@ -252,6 +314,9 @@ static PRStatus FuzzyClose(PRFileDesc* fd) {
   NetworkFuzzingBuffer* fuzzBuf = nullptr;
   if (gConnectedNetworkFuzzingBuffers.Remove(fd, &fuzzBuf)) {
     FUZZING_LOG(("[FuzzyClose] Received close on socket %p", fd));
+    if (fuzzBuf->addr) {
+      delete fuzzBuf->addr;
+    }
     delete fuzzBuf;
   } else {
     /* Happens when close is called on a non-connected socket */
@@ -311,8 +376,10 @@ nsresult AttachFuzzyIOLayer(PRFileDesc* fd) {
     sFuzzyLayerMethods = *PR_GetDefaultIOMethods();
     sFuzzyLayerMethods.connect = FuzzyConnect;
     sFuzzyLayerMethods.send = FuzzySend;
+    sFuzzyLayerMethods.sendto = FuzzySendTo;
     sFuzzyLayerMethods.write = FuzzyWrite;
     sFuzzyLayerMethods.recv = FuzzyRecv;
+    sFuzzyLayerMethods.recvfrom = FuzzyRecvFrom;
     sFuzzyLayerMethods.read = FuzzyRead;
     sFuzzyLayerMethods.close = FuzzyClose;
     sFuzzyLayerMethods.poll = FuzzyPoll;

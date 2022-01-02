@@ -90,8 +90,9 @@ add_task(async function show_major_upgrade() {
   AssertEvents(
     "Upgrade dialog opened and closed from major upgrade",
     ["trigger", "reason", "satisfied"],
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
+    ["content", "show", "2-screens"],
+    ["content", "show", "random-1"],
+    ["content", "show", "upgrade-dialog-colorway-primary-button"],
     ["content", "close", "external"]
   );
 

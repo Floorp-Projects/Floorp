@@ -90,7 +90,9 @@ private:
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
     {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
       RLBOX_ACQUIRE_SHARED_GUARD(lock, thread_data.sandbox->callback_mutex);
+#endif
       func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
     }
     // Callbacks are invoked through function pointers, cannot use std::forward
@@ -100,12 +102,11 @@ private:
   }
 
 protected:
-
-  #if defined(_WIN32)
+#if defined(_WIN32)
   using path_buf = const LPCWSTR;
-  #else
+#else
   using path_buf = const char*;
-  #endif
+#endif
 
   inline void impl_create_sandbox(path_buf path)
   {
@@ -239,7 +240,11 @@ protected:
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
     auto& thread_data = *get_rlbox_dylib_sandbox_thread_data();
 #endif
+    auto old_sandbox = thread_data.sandbox;
     thread_data.sandbox = this;
+    auto on_exit = detail::make_scope_exit([&] {
+      thread_data.sandbox = old_sandbox;
+    });
     return (*func_ptr)(params...);
   }
 

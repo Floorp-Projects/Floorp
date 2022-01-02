@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,
+const TEST_URI = `data:text/html,<!DOCTYPE html>
 <main>
   <ul>
     <li>First</li>

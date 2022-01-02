@@ -97,7 +97,7 @@ uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() const {
 
 template <class Derived>
 int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
-    const Derived* aChild) {
+    Accessible* aChild) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {
@@ -415,6 +415,61 @@ void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
     mCachedFields->GetAttribute(nsGkAtoms::id, aID);
     VERIFY_CACHE(CacheDomain::DOMNodeID);
   }
+}
+
+template <class Derived>
+RefPtr<const AccAttributes>
+RemoteAccessibleBase<Derived>::GetCachedTextAttributes() {
+  MOZ_ASSERT(IsText() || IsHyperText());
+  if (mCachedFields) {
+    auto attrs =
+        mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::style);
+    VERIFY_CACHE(CacheDomain::Text);
+    return attrs;
+  }
+  return nullptr;
+}
+
+template <class Derived>
+already_AddRefed<AccAttributes>
+RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
+  RefPtr<const AccAttributes> attrs = GetCachedTextAttributes();
+  RefPtr<AccAttributes> result = new AccAttributes();
+  if (attrs) {
+    attrs->CopyTo(result);
+  }
+  return result.forget();
+}
+
+template <class Derived>
+uint64_t RemoteAccessibleBase<Derived>::State() {
+  uint64_t state = 0;
+  if (mCachedFields) {
+    if (auto rawState =
+            mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
+      VERIFY_CACHE(CacheDomain::State);
+      state = *rawState;
+      // Handle states that are derived from other states.
+      if (!(state & states::UNAVAILABLE)) {
+        state |= states::ENABLED | states::SENSITIVE;
+      }
+      if (state & states::EXPANDABLE && !(state & states::EXPANDED)) {
+        state |= states::COLLAPSED;
+      }
+    }
+  }
+  auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
+  if (browser == dom::BrowserParent::GetFocused()) {
+    if (this == Document()->GetFocusedAcc()) {
+      state |= states::FOCUSED;
+    }
+  }
+  return state;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::TakeFocus() const {
+  Unused << mDoc->SendTakeFocus(mID);
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

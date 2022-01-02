@@ -6,9 +6,7 @@
 
 #include "nsIConstraintValidation.h"
 
-#include "nsAString.h"
 #include "nsGenericHTMLElement.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
@@ -42,79 +40,27 @@ mozilla::dom::ValidityState* nsIConstraintValidation::Validity() {
   return mValidity;
 }
 
-void nsIConstraintValidation::GetValidationMessage(
-    nsAString& aValidationMessage, ErrorResult& aError) {
-  aValidationMessage.Truncate();
-
-  if (IsCandidateForConstraintValidation() && !IsValid()) {
-    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR)) {
-      aValidationMessage.Assign(mCustomValidity);
-      if (aValidationMessage.Length() > sContentSpecifiedMaxLengthMessage) {
-        aValidationMessage.Truncate(sContentSpecifiedMaxLengthMessage);
-      }
-    } else if (GetValidityState(VALIDITY_STATE_TOO_LONG)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_LONG);
-    } else if (GetValidityState(VALIDITY_STATE_TOO_SHORT)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_SHORT);
-    } else if (GetValidityState(VALIDITY_STATE_VALUE_MISSING)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_VALUE_MISSING);
-    } else if (GetValidityState(VALIDITY_STATE_TYPE_MISMATCH)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TYPE_MISMATCH);
-    } else if (GetValidityState(VALIDITY_STATE_PATTERN_MISMATCH)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_PATTERN_MISMATCH);
-    } else if (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_RANGE_OVERFLOW);
-    } else if (GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_RANGE_UNDERFLOW);
-    } else if (GetValidityState(VALIDITY_STATE_STEP_MISMATCH)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_STEP_MISMATCH);
-    } else if (GetValidityState(VALIDITY_STATE_BAD_INPUT)) {
-      GetValidationMessage(aValidationMessage, VALIDITY_STATE_BAD_INPUT);
-    } else {
-      // There should not be other validity states.
-      aError.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-  } else {
-    aValidationMessage.Truncate();
-  }
-}
-
-bool nsIConstraintValidation::CheckValidity() {
+bool nsIConstraintValidation::CheckValidity(nsIContent& aEventTarget,
+                                            bool* aEventDefaultAction) {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(this);
-  NS_ASSERTION(content,
-               "This class should be inherited by HTML elements only!");
-
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       u"invalid"_ns, CanBubble::eNo,
-                                       Cancelable::eYes);
+  nsContentUtils::DispatchTrustedEvent(
+      aEventTarget.OwnerDoc(), &aEventTarget, u"invalid"_ns, CanBubble::eNo,
+      Cancelable::eYes, Composed::eDefault, aEventDefaultAction);
   return false;
 }
 
-nsresult nsIConstraintValidation::CheckValidity(bool* aValidity) {
-  NS_ENSURE_ARG_POINTER(aValidity);
-
-  *aValidity = CheckValidity();
-
-  return NS_OK;
-}
-
 bool nsIConstraintValidation::ReportValidity() {
-  if (!IsCandidateForConstraintValidation() || IsValid()) {
-    return true;
-  }
-
   nsCOMPtr<Element> element = do_QueryInterface(this);
   MOZ_ASSERT(element, "This class should be inherited by HTML elements only!");
 
   bool defaultAction = true;
-  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
-                                       u"invalid"_ns, CanBubble::eNo,
-                                       Cancelable::eYes, &defaultAction);
+  if (CheckValidity(*element, &defaultAction)) {
+    return true;
+  }
+
   if (!defaultAction) {
     return false;
   }
@@ -203,11 +149,6 @@ void nsIConstraintValidation::SetValidityState(ValidityStateType aState,
       fieldSet->UpdateValidity(IsValid());
     }
   }
-}
-
-void nsIConstraintValidation::SetCustomValidity(const nsAString& aError) {
-  mCustomValidity.Assign(aError);
-  SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, !mCustomValidity.IsEmpty());
 }
 
 void nsIConstraintValidation::SetBarredFromConstraintValidation(bool aBarred) {

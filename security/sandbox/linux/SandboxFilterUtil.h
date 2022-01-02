@@ -42,10 +42,13 @@ class SandboxPolicyBase : public sandbox::bpf_dsl::Policy {
     return Nothing();
   }
 
-#ifndef ANDROID
   // Android doesn't use SysV IPC (and doesn't define the selector
   // constants in its headers), so this isn't implemented there.
-  virtual Maybe<ResultExpr> EvaluateIpcCall(int aCall) const {
+#ifndef ANDROID
+  // aArgShift is the offset to add the argument index when
+  // constructing `Arg` objects: it's 0 for separate syscalls and 1
+  // for ipc().
+  virtual Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const {
     return Nothing();
   }
 #endif

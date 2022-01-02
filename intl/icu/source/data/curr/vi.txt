@@ -1460,6 +1460,9 @@ vi{
         LRD{
             other{"Đô la Liberia"}
         }
+        LSL{
+            other{"Loti Lesotho"}
+        }
         LTL{
             other{"litas Lít-va"}
         }

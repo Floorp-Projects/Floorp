@@ -9,15 +9,25 @@ so_KE{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, MMMM dd, y",
-                "dd MMMM y",
+                "EEEE, MMMM d, y",
+                "MMMM d, y",
                 "dd-MMM-y",
                 "dd/MM/yy",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yyMMdd",
             }
         }
     }

@@ -39,12 +39,12 @@ Running in Android (GeckoView)
 You can run the tests against a Gecko-based browser (GeckoView) on an
 Android emulator. As shown below, to do so you must start an emulator,
 build Firefox for Android and then run mach wpt with the
-`org.mozilla.geckoview.test` package. The package will be installed
+`org.mozilla.geckoview.test_runner` package. The package will be installed
 interactively by `mach` and tests will run against TestRunnerActivity.
 
     ./mach android-emulator --version x86-7.0
     ./mach build
-    ./mach wpt --package=org.mozilla.geckoview.test
+    ./mach wpt --package=org.mozilla.geckoview.test_runner
 
 FAQ
 ---

@@ -2205,7 +2205,7 @@ lt{
         LSL{
             few{"Lesoto lotis"}
             many{"Lesoto lotis"}
-            one{"Lesoto loti"}
+            one{"Lesoto lotis"}
             other{"Lesoto lotis"}
         }
         LTL{

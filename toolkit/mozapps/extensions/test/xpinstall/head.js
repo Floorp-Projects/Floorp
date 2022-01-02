@@ -114,8 +114,6 @@ var Harness = {
 
       Services.obs.addObserver(this, "addon-install-started");
       Services.obs.addObserver(this, "addon-install-disabled");
-      // XXX this breaks a bunch of stuff, see comment in onInstallCancelled
-      // Services.obs.addObserver(this, "addon-install-cancelled", false);
       Services.obs.addObserver(this, "addon-install-origin-blocked");
       Services.obs.addObserver(this, "addon-install-blocked");
       Services.obs.addObserver(this, "addon-install-failed");
@@ -142,7 +140,6 @@ var Harness = {
 
         Services.obs.removeObserver(self, "addon-install-started");
         Services.obs.removeObserver(self, "addon-install-disabled");
-        // Services.obs.removeObserver(self, "addon-install-cancelled");
         Services.obs.removeObserver(self, "addon-install-origin-blocked");
         Services.obs.removeObserver(self, "addon-install-blocked");
         Services.obs.removeObserver(self, "addon-install-failed");
@@ -459,9 +456,7 @@ var Harness = {
 
   onInstallCancelled(install) {
     // This is ugly.  We have a bunch of tests that cancel installs
-    // but don't expect this event to be raised (they also don't
-    // expecte addon-install-cancelled to be raised but even though
-    // we have code to handle that, it is never attached, see setup() above)
+    // but don't expect this event to be raised.
     // For at least one test (browser_whitelist3.js), we used to generate
     // onDownloadCancelled when the user cancelled the installation at the
     // confirmation prompt.  We're now generating onInstallCancelled instead

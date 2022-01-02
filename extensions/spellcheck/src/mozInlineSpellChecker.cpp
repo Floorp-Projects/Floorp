@@ -36,12 +36,15 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
@@ -91,8 +94,6 @@ using namespace mozilla::ipc;
 
 static mozilla::LazyLogModule sInlineSpellCheckerLog("InlineSpellChecker");
 
-static const char kMaxSpellCheckSelectionSize[] =
-    "extensions.spellcheck.inline.max-misspellings";
 static const PRTime kMaxSpellCheckTimeInUsec =
     INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC;
 
@@ -562,18 +563,14 @@ mozInlineSpellChecker::SpellCheckingState
 
 mozInlineSpellChecker::mozInlineSpellChecker()
     : mNumWordsInSpellSelection(0),
-      mMaxNumWordsInSpellSelection(250),
+      mMaxNumWordsInSpellSelection(
+          StaticPrefs::extensions_spellcheck_inline_max_misspellings()),
       mNumPendingSpellChecks(0),
       mNumPendingUpdateCurrentDictionary(0),
       mDisabledAsyncToken(0),
       mNeedsCheckAfterNavigation(false),
       mFullSpellCheckScheduled(false),
-      mIsListeningToEditSubActions(false) {
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-    prefs->GetIntPref(kMaxSpellCheckSelectionSize,
-                      &mMaxNumWordsInSpellSelection);
-}
+      mIsListeningToEditSubActions(false) {}
 
 mozInlineSpellChecker::~mozInlineSpellChecker() {}
 
@@ -1010,22 +1007,6 @@ mozInlineSpellChecker::IgnoreWords(const nsTArray<nsString>& aWordsToIgnore) {
   UniquePtr<mozInlineSpellStatus> status =
       mozInlineSpellStatus::CreateForSelection(*this);
   return ScheduleSpellCheck(std::move(status));
-}
-
-void mozInlineSpellChecker::DidSplitNode(nsINode* aExistingRightNode,
-                                         nsINode* aNewLeftNode) {
-  if (!mIsListeningToEditSubActions) {
-    return;
-  }
-  SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
-}
-
-void mozInlineSpellChecker::DidJoinNodes(nsINode& aLeftNode,
-                                         nsINode& aRightNode) {
-  if (!mIsListeningToEditSubActions) {
-    return;
-  }
-  SpellCheckBetweenNodes(&aRightNode, 0, &aRightNode, 0);
 }
 
 // mozInlineSpellChecker::MakeSpellCheckRange

@@ -961,6 +961,7 @@ void nsHttpChannel::ReleaseListeners() {
   HttpBaseChannel::ReleaseListeners();
   mChannelClassifier = nullptr;
   mWarningReporter = nullptr;
+  mEarlyHintObserver = nullptr;
 
   for (StreamFilterRequest& request : mStreamFilterRequests) {
     request.mPromise->Reject(false, __func__);
@@ -1435,6 +1436,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
                      "CORS preflight must have been finished by the time we "
                      "call OnStartRequest");
 
+  mEarlyHintObserver = nullptr;
+
   if (LoadOnStartRequestCalled()) {
     // This can only happen when a range request loading rest of the data
     // after interrupted concurrent cache read asynchronously failed, e.g.
@@ -1588,8 +1591,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     if (mustRunStreamFilterInParent) {
       mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
       mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
-      nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-          base::GetCurrentProcId(), request.mChildProcessId, &parent, &child);
+      nsresult rv = extensions::PStreamFilter::CreateEndpoints(&parent, &child);
       if (NS_FAILED(rv)) {
         request.mPromise->Reject(false, __func__);
       } else {
@@ -5014,7 +5016,7 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
        "[this=%p newChannel=%p preserveMethod=%d]",
        this, newChannel, preserveMethod));
 
-  if (!mEndMarkerAdded && profiler_thread_is_being_profiled()) {
+  if (!mEndMarkerAdded && profiler_thread_is_being_profiled_for_markers()) {
     mEndMarkerAdded = true;
 
     nsAutoCString requestMethod;
@@ -5407,6 +5409,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRaceCacheWithNetwork)
   NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIEarlyHintObserver)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -5438,6 +5441,9 @@ nsHttpChannel::Cancel(nsresult status) {
   MOZ_ASSERT_IF(!(mConnectionInfo && mConnectionInfo->UsingConnect()) &&
                     NS_SUCCEEDED(mStatus),
                 !AllowedErrorForHTTPSRRFallback(status));
+
+  mEarlyHintObserver = nullptr;
+
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
     return NS_OK;
@@ -5538,11 +5544,12 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
     StoreChannelClassifierCancellationPending(0);
   }
 
+  mEarlyHintObserver = nullptr;
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
 
   if (mLastStatusReported && !mEndMarkerAdded &&
-      profiler_thread_is_being_profiled()) {
+      profiler_thread_is_being_profiled_for_markers()) {
     // These do allocations/frees/etc; avoid if not active
     // mLastStatusReported can be null if Cancel is called before we added the
     // start marker.
@@ -5591,6 +5598,8 @@ void nsHttpChannel::CancelNetworkRequest(nsresult aStatus) {
     }
   }
   if (mTransactionPump) mTransactionPump->Cancel(aStatus);
+
+  mEarlyHintObserver = nullptr;
 }
 
 NS_IMETHODIMP
@@ -5861,7 +5870,7 @@ void nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   // We save this timestamp from outside of the if block in case we enable the
   // profiler after AsyncOpen().
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -6049,8 +6058,20 @@ nsresult nsHttpChannel::BeginConnect() {
   gHttpHandler->MaybeAddAltSvcForTesting(mURI, mUsername, mPrivateBrowsing,
                                          mCallbacks, originAttributes);
 
-  RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
-      host, port, ""_ns, mUsername, proxyInfo, originAttributes, isHttps);
+  RefPtr<nsHttpConnectionInfo> connInfo;
+#ifdef FUZZING
+  if (StaticPrefs::fuzzing_necko_http3()) {
+    connInfo =
+        new nsHttpConnectionInfo(host, port, "h3"_ns, mUsername, proxyInfo,
+                                 originAttributes, host, port, true);
+  } else {
+#endif
+    connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername, proxyInfo,
+                                        originAttributes, isHttps);
+#ifdef FUZZING
+  }
+#endif
+
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
 
   bool http3Allowed = Http3Allowed();
@@ -6393,8 +6414,7 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
 
   mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
-  nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-      ProcessId(), aChildProcessId, &parent, &child);
+  nsresult rv = extensions::PStreamFilter::CreateEndpoints(&parent, &child);
   if (NS_FAILED(rv)) {
     return ChildEndpointPromise::CreateAndReject(false, __func__);
   }
@@ -7485,7 +7505,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   MaybeFlushConsoleReports();
 
-  if (!mEndMarkerAdded && profiler_thread_is_being_profiled()) {
+  if (!mEndMarkerAdded && profiler_thread_is_being_profiled_for_markers()) {
     // These do allocations/frees/etc; avoid if not active
     mEndMarkerAdded = true;
 
@@ -8630,10 +8650,6 @@ void nsHttpChannel::SetCouldBeSynthesized() {
   StoreResponseCouldBeSynthesized(true);
 }
 
-void nsHttpChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
-  mConnectionInfo = aCI ? aCI->Clone() : nullptr;
-}
-
 NS_IMETHODIMP
 nsHttpChannel::OnPreflightSucceeded() {
   MOZ_ASSERT(LoadRequireCORSPreflight(), "Why did a preflight happen?");
@@ -9547,6 +9563,23 @@ void nsHttpChannel::PerformBackgroundCacheRevalidationNow() {
 
   LOG(("  %p is re-validating with a new channel %p", this,
        validatingChannel.get()));
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
+  mEarlyHintObserver = aObserver;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::EarlyHint(const nsACString& linkHeader) {
+  LOG(("nsHttpChannel::EarlyHint.\n"));
+
+  if (mEarlyHintObserver && nsContentUtils::ComputeIsSecureContext(this)) {
+    LOG(("nsHttpChannel::EarlyHint propagated.\n"));
+    mEarlyHintObserver->EarlyHint(linkHeader);
+  }
+  return NS_OK;
 }
 
 }  // namespace net

@@ -74,6 +74,7 @@ struct DefaultJitOptions {
   bool traceRegExpAssembler;
   bool traceRegExpInterpreter;
   bool traceRegExpPeephole;
+  bool lessDebugCode;
   bool enableWasmJitExit;
   bool enableWasmJitEntry;
   bool enableWasmIonFastCalls;

@@ -194,7 +194,7 @@ def generic_worker_run_task(config, job, taskdesc):
             "file": "./run-task",
         }
     )
-    if worker.get("env", {}).get("MOZ_FETCHES"):
+    if job.get("fetches", {}):
         worker["mounts"].append(
             {
                 "content": {

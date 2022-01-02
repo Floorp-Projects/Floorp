@@ -319,7 +319,7 @@ void swgl_drawSpanR8() {
         float scale = -dot(local_step, (normal));                             \
         if (scale >= 0.0) {                                                   \
             if (dist > opaque_start * scale) {                                \
-                start_corner = info;                                          \
+                SET_CORNER(start_corner, info);                               \
                 start_plane = vec4(offset, normal);                           \
                 float inv_scale = recip(max(scale, 1.0e-6));                  \
                 opaque_start = dist * inv_scale;                              \
@@ -327,7 +327,7 @@ void swgl_drawSpanR8() {
                 aa_start = opaque_start - apex * inv_scale;                   \
             }                                                                 \
         } else if (dist > opaque_end * scale) {                               \
-            end_corner = info;                                                \
+            SET_CORNER(end_corner, info);                                     \
             end_plane = vec4(offset, normal);                                 \
             float inv_scale = recip(min(scale, -1.0e-6));                     \
             opaque_end = dist * inv_scale;                                    \
@@ -353,14 +353,13 @@ void swgl_drawSpanR8() {
         vec2 n_br = vClipParams.zz;
         vec2 n_bl = vec2(-vClipParams.z, vClipParams.z);
 
-        bool start_corner = false;
-        bool end_corner = false;
+        #define SET_CORNER(corner, info)
 
         // Clip against the corner half-spaces.
-        CLIP_CORNER(corner_tl, n_tl, true);
-        CLIP_CORNER(corner_tr, n_tr, true);
-        CLIP_CORNER(corner_br, n_br, true);
-        CLIP_CORNER(corner_bl, n_bl, true);
+        CLIP_CORNER(corner_tl, n_tl, );
+        CLIP_CORNER(corner_tr, n_tr, );
+        CLIP_CORNER(corner_br, n_br, );
+        CLIP_CORNER(corner_bl, n_bl, );
 
         // Later we need to calculate distance AA for both corners and the
         // outer bounding rect. For the fast-path, this is all done inside
@@ -375,6 +374,8 @@ void swgl_drawSpanR8() {
         // if no corner is intersected, they will just zero the AA.
         vec4 start_corner = vec4(vec2(1.0e6), vec2(1.0));
         vec4 end_corner = vec4(vec2(1.0e6), vec2(1.0));
+
+        #define SET_CORNER(corner, info) corner = info
 
         // Clip against the corner half-spaces. We have already computed the
         // corner half-spaces in the vertex shader.

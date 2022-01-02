@@ -11,6 +11,8 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/Casting.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsAccUtils.h"
@@ -21,6 +23,7 @@
 #include "nsTextFrame.h"
 #include "nsUnicodeProperties.h"
 #include "Pivot.h"
+#include "TextAttrs.h"
 
 using mozilla::intl::WordBreaker;
 
@@ -97,6 +100,15 @@ static Accessible* DocumentFor(Accessible* aAcc) {
     return localAcc->Document();
   }
   return aAcc->AsRemote()->Document();
+}
+
+static HyperTextAccessible* HyperTextFor(LocalAccessible* aAcc) {
+  for (LocalAccessible* acc = aAcc; acc; acc = acc->LocalParent()) {
+    if (HyperTextAccessible* ht = acc->AsHyperText()) {
+      return ht;
+    }
+  }
+  return nullptr;
 }
 
 static Accessible* NextLeaf(Accessible* aOrigin) {
@@ -345,7 +357,7 @@ static bool IsAcceptableWordStart(Accessible* aAcc, const nsAutoString& aText,
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
-  if (aAcc->HasChildren()) {
+  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
     for (Accessible* acc = aAcc->FirstChild(); acc; acc = acc->FirstChild()) {
@@ -637,16 +649,17 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     }
   }
   // Keep walking forward until we find an acceptable word start.
+  intl::WordBreakIteratorUtf16 wordBreakIter(text);
+  Maybe<uint32_t> nextBreak = wordBreakIter.Seek(wordStart);
   for (;;) {
-    wordStart = WordBreaker::Next(text.get(), text.Length(), wordStart);
-    if (wordStart == NS_WORDBREAKER_NEED_MORE_TEXT ||
-        wordStart == static_cast<int32_t>(text.Length())) {
+    if (!nextBreak || *nextBreak == text.Length()) {
       if (lineStart) {
         // A line start always starts a new word.
         return lineStart;
       }
       return TextLeafPoint();
     }
+    wordStart = AssertedCast<int32_t>(*nextBreak);
     if (lineStart && wordStart > lineStart.mOffset) {
       // A line start always starts a new word.
       return lineStart;
@@ -654,14 +667,72 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     if (IsAcceptableWordStart(mAcc, text, wordStart)) {
       break;
     }
+    nextBreak = wordBreakIter.Next();
   }
   return TextLeafPoint(mAcc, wordStart);
+}
+
+bool TextLeafPoint::IsCaretAtEndOfLine() const {
+  MOZ_ASSERT(IsCaret());
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    HyperTextAccessible* ht = HyperTextFor(acc);
+    if (!ht) {
+      return false;
+    }
+    // Use HyperTextAccessible::IsCaretAtEndOfLine. Eventually, we'll want to
+    // move that code into TextLeafPoint, but existing code depends on it living
+    // in HyperTextAccessible (including caret events).
+    return ht->IsCaretAtEndOfLine();
+  }
+  return mAcc->AsRemote()->Document()->IsCaretAtEndOfLine();
+}
+
+TextLeafPoint TextLeafPoint::ActualizeCaret(bool aAdjustAtEndOfLine) const {
+  MOZ_ASSERT(IsCaret());
+  HyperTextAccessibleBase* ht;
+  int32_t htOffset;
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    // Use HyperTextAccessible::CaretOffset. Eventually, we'll want to move
+    // that code into TextLeafPoint, but existing code depends on it living in
+    // HyperTextAccessible (including caret events).
+    ht = HyperTextFor(acc);
+    if (!ht) {
+      return TextLeafPoint();
+    }
+    htOffset = ht->CaretOffset();
+    if (htOffset == -1) {
+      return TextLeafPoint();
+    }
+  } else {
+    // Ideally, we'd cache the caret as a leaf, but our events are based on
+    // HyperText for now.
+    std::tie(ht, htOffset) = mAcc->AsRemote()->Document()->GetCaret();
+    if (!ht) {
+      return TextLeafPoint();
+    }
+  }
+  if (aAdjustAtEndOfLine && htOffset > 0 && IsCaretAtEndOfLine()) {
+    // It is the same character offset when the caret is visually at the very
+    // end of a line or the start of a new line (soft line break). Getting text
+    // at the line should provide the line with the visual caret. Otherwise,
+    // screen readers will announce the wrong line as the user presses up or
+    // down arrow and land at the end of a line.
+    --htOffset;
+  }
+  return ht->ToTextLeafPoint(htOffset);
 }
 
 TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           nsDirection aDirection,
                                           bool aIncludeOrigin) const {
-  // XXX Add handling for caret at end of wrapped line.
+  if (IsCaret()) {
+    if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR) {
+      // The caret is at the end of the line. Return no character.
+      return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+    }
+    return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
+                                         aIncludeOrigin);
+  }
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
@@ -735,6 +806,131 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
   }
   MOZ_ASSERT_UNREACHABLE();
   return TextLeafPoint();
+}
+
+already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
+    bool aIncludeDefaults) const {
+  LocalAccessible* acc = mAcc->AsLocal();
+  MOZ_ASSERT(acc);
+  MOZ_ASSERT(acc->IsText());
+  // TextAttrsMgr wants a HyperTextAccessible.
+  LocalAccessible* parent = acc->LocalParent();
+  HyperTextAccessible* hyperAcc = parent->AsHyperText();
+  MOZ_ASSERT(hyperAcc);
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  TextAttrsMgr mgr(hyperAcc, aIncludeDefaults, acc,
+                   acc ? acc->IndexInParent() : -1);
+  mgr.GetAttributes(attributes, nullptr, nullptr);
+  return attributes.forget();
+}
+
+already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributes(
+    bool aIncludeDefaults) const {
+  if (!mAcc->IsText()) {
+    return nullptr;
+  }
+  if (mAcc->IsLocal()) {
+    return GetTextAttributesLocalAcc(aIncludeDefaults);
+  }
+  RefPtr<AccAttributes> attrs = new AccAttributes();
+  if (aIncludeDefaults) {
+    Accessible* parent = mAcc->Parent();
+    if (parent && parent->IsRemote() && parent->IsHyperText()) {
+      if (auto defAttrs = parent->AsRemote()->GetCachedTextAttributes()) {
+        defAttrs->CopyTo(attrs);
+      }
+    }
+  }
+  if (auto thisAttrs = mAcc->AsRemote()->GetCachedTextAttributes()) {
+    thisAttrs->CopyTo(attrs);
+  }
+  return attrs.forget();
+}
+
+TextLeafPoint TextLeafPoint::FindTextAttrsStart(
+    nsDirection aDirection, bool aIncludeOrigin,
+    const AccAttributes* aOriginAttrs, bool aIncludeDefaults) const {
+  if (IsCaret()) {
+    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin,
+                                               aOriginAttrs, aIncludeDefaults);
+  }
+  // XXX Add support for spelling errors.
+  RefPtr<const AccAttributes> lastAttrs;
+  const bool isRemote = mAcc->IsRemote();
+  if (isRemote) {
+    // For RemoteAccessible, leaf attrs and default attrs are cached
+    // separately. To combine them, we have to copy. Since we're not walking
+    // outside the container, we don't care about defaults. Therefore, we
+    // always just fetch the leaf attrs.
+    // We ignore aOriginAttrs because it might include defaults. Fetching leaf
+    // attrs is very cheap anyway.
+    lastAttrs = mAcc->AsRemote()->GetCachedTextAttributes();
+  } else {
+    // For LocalAccessible, we want to avoid calculating attrs more than
+    // necessary, so we want to use aOriginAttrs if provided.
+    if (aOriginAttrs) {
+      lastAttrs = aOriginAttrs;
+      // Whether we include defaults henceforth must match aOriginAttrs, which
+      // depends on aIncludeDefaults. Defaults are always calculated even if
+      // they aren't returned, so calculation cost isn't a concern.
+    } else {
+      lastAttrs = GetTextAttributesLocalAcc(aIncludeDefaults);
+    }
+  }
+  if (aIncludeOrigin && aDirection == eDirNext && mOffset == 0) {
+    // Even when searching forward, the only way to know whether the origin is
+    // the start of a text attrs run is to compare with the previous sibling.
+    // Anything other than text breaks an attrs run.
+    TextLeafPoint point;
+    point.mAcc = mAcc->PrevSibling();
+    if (!point.mAcc || !point.mAcc->IsText()) {
+      return *this;
+    }
+    // For RemoteAccessible, we can get attributes from the cache without any
+    // calculation or copying.
+    RefPtr<const AccAttributes> attrs =
+        isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
+                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+    if (!attrs->Equal(lastAttrs)) {
+      return *this;
+    }
+  }
+  TextLeafPoint lastPoint(mAcc, 0);
+  for (;;) {
+    TextLeafPoint point;
+    point.mAcc = aDirection == eDirNext ? lastPoint.mAcc->NextSibling()
+                                        : lastPoint.mAcc->PrevSibling();
+    if (!point.mAcc || !point.mAcc->IsText()) {
+      break;
+    }
+    RefPtr<const AccAttributes> attrs =
+        isRemote ? point.mAcc->AsRemote()->GetCachedTextAttributes()
+                 : point.GetTextAttributesLocalAcc(aIncludeDefaults);
+    if (!attrs->Equal(lastAttrs)) {
+      // The attributes change here. If we're moving forward, we want to
+      // return this point. If we're moving backward, we've now moved before
+      // the start of the attrs run containing the origin, so return the last
+      // point we hit.
+      if (aDirection == eDirPrevious) {
+        point = lastPoint;
+      }
+      if (!aIncludeOrigin && point == *this) {
+        MOZ_ASSERT(aDirection == eDirPrevious);
+        // The origin is the start of an attrs run, but the caller doesn't want
+        // the origin included.
+        continue;
+      }
+      return point;
+    }
+    lastPoint = point;
+    lastAttrs = attrs;
+  }
+  // We couldn't move any further. Use the start/end.
+  return TextLeafPoint(
+      lastPoint.mAcc,
+      aDirection == eDirPrevious
+          ? 0
+          : static_cast<int32_t>(nsAccUtils::TextLength(lastPoint.mAcc)));
 }
 
 }  // namespace mozilla::a11y

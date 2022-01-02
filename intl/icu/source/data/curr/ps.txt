@@ -335,6 +335,10 @@ ps{
             "LRD",
             "لايبيرين ډالر",
         }
+        LSL{
+            "LSL",
+            "Lesotho Loti",
+        }
         LYD{
             "LYD",
             "ليبياېي دينار",
@@ -970,6 +974,10 @@ ps{
         LRD{
             one{"لايبيرين ډالر"}
             other{"لايبيرين ډالرې"}
+        }
+        LSL{
+            one{"Lesotho loti"}
+            other{"Lesotho lotis"}
         }
         LYD{
             one{"ليبياېي دينار"}

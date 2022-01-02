@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import sys
+from subprocess import CalledProcessError
+
 import mozunit
 from unittest import mock
 import pytest
@@ -80,8 +82,17 @@ def _req(package):
 def test_install_package():
     vem = mock.Mock()
     vem.bin_path = "someplace"
-    assert install_package(vem, "foo")
-    vem._run_pip.assert_called()
+    with mock.patch("subprocess.check_call") as mock_check_call:
+        assert install_package(vem, "foo")
+        mock_check_call.assert_called_once_with(
+            [
+                vem.python_path,
+                "-m",
+                "pip",
+                "install",
+                "foo",
+            ]
+        )
 
 
 @mock.patch("pip._internal.req.constructors.install_req_from_line", new=_req)
@@ -89,13 +100,12 @@ def test_install_package_failures():
     vem = mock.Mock()
     vem.bin_path = "someplace"
 
-    def run_pip(*args):
-        raise Exception()
+    def check_call(*args):
+        raise CalledProcessError(1, "")
 
-    vem._run_pip = run_pip
-
-    with pytest.raises(Exception):
-        install_package(vem, "foo")
+    with pytest.raises(CalledProcessError):
+        with mock.patch("subprocess.check_call", new=check_call):
+            install_package(vem, "foo")
 
     # we can also absorb the error, and just return False
     assert not install_package(vem, "foo", ignore_failure=True)

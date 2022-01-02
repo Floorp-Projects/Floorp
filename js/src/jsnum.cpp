@@ -44,6 +44,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/StaticStrings.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
@@ -854,7 +855,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
     indexValue.emplace(si);
   }
 
-  JSAtom* atom = Atomize(cx, start, length, js::DoNotPinAtom, indexValue);
+  JSAtom* atom = Atomize(cx, start, length, indexValue);
   if (!atom) {
     return nullptr;
   }

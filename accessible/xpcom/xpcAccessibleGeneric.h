@@ -38,6 +38,7 @@ class xpcAccessibleGeneric : public xpcAccessible,
 
   // nsIAccessible
   LocalAccessible* ToInternalAccessible() const final;
+  Accessible* ToInternalGeneric() const final { return mIntl; }
 
   // xpcAccessibleGeneric
   virtual void Shutdown();

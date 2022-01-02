@@ -28,6 +28,7 @@ from .timeout import Timeouts
 CHROME_ELEMENT_KEY = "chromeelement-9fc5-4b51-a3c8-01716eedeb04"
 FRAME_KEY = "frame-075b-4da1-b6ba-e579c2d3230a"
 WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
+WEB_SHADOW_ROOT_KEY = "shadow-6066-11e4-a52e-4f735466cecf"
 WINDOW_KEY = "window-fcc6-11e5-b4f8-330a88ab9d7f"
 
 
@@ -353,6 +354,13 @@ class HTMLElement(object):
             "WebDriver:GetElementCSSValue", body, key="value"
         )
 
+    @property
+    def shadow_root(self):
+        """Gets the shadow root of the current element"""
+        return self.marionette._send_message(
+            "WebDriver:GetShadowRoot", {"id": self.id}, key="value"
+        )
+
     @classmethod
     def _from_json(cls, json, marionette):
         if isinstance(json, dict):
@@ -365,6 +373,35 @@ class HTMLElement(object):
             elif WINDOW_KEY in json:
                 return cls(marionette, json[WINDOW_KEY], WINDOW_KEY)
         raise ValueError("Unrecognised web element")
+
+
+class ShadowRoot(object):
+    """A Class to handling Shadow Roots"""
+
+    identifiers = WEB_SHADOW_ROOT_KEY
+
+    def __init__(self, marionette, id, kind=WEB_SHADOW_ROOT_KEY):
+        self.marionette = marionette
+        assert id is not None
+        self.id = id
+        self.kind = kind
+
+    def __str__(self):
+        return self.id
+
+    def __eq__(self, other_element):
+        return self.id == other_element.id
+
+    def __hash__(self):
+        # pylint --py3k: W1641
+        return hash(self.id)
+
+    @classmethod
+    def _from_json(cls, json, marionette):
+        if isinstance(json, dict):
+            if WEB_SHADOW_ROOT_KEY in json:
+                return cls(marionette, json[WEB_SHADOW_ROOT_KEY])
+        raise ValueError("Unrecognised shadow root")
 
 
 class Alert(object):
@@ -635,10 +672,13 @@ class Marionette(object):
             return self._unwrap_response(res)
 
     def _unwrap_response(self, value):
+
         if isinstance(value, dict) and any(
             k in value.keys() for k in HTMLElement.identifiers
         ):
             return HTMLElement._from_json(value, self)
+        elif isinstance(value, dict) and ShadowRoot.identifiers in value.keys():
+            return ShadowRoot._from_json(value, self)
         elif isinstance(value, list):
             return list(self._unwrap_response(item) for item in value)
         else:

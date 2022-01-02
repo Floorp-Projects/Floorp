@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=UTF-8,test";
+const TEST_URI = "data:text/html;charset=UTF-8,<!DOCTYPE html>test";
 const COMMANDS = ["document", "window", "window.location"];
 
 add_task(async function() {

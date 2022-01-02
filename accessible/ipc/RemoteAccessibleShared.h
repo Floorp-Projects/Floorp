@@ -15,7 +15,7 @@
 /*
  * Return the states for the proxied accessible.
  */
-uint64_t State() const;
+virtual uint64_t State() override;
 
 /*
  * Return the native states for the proxied accessible.
@@ -94,11 +94,6 @@ void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
 
 char16_t CharAt(int32_t aOffset);
 
-void TextAttributes(bool aIncludeDefAttrs, const int32_t aOffset,
-                    RefPtr<AccAttributes>* aAttributes, int32_t* aStartOffset,
-                    int32_t* aEndOffset);
-void DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs);
-
 nsIntRect TextBounds(
     int32_t aStartOffset, int32_t aEndOffset,
     uint32_t aCoordType =
@@ -142,8 +137,6 @@ nsIntPoint ImagePosition(uint32_t aCoordType);
 
 nsIntSize ImageSize();
 
-uint32_t StartOffset(bool* aOk);
-
 uint32_t EndOffset(bool* aOk);
 
 bool IsLinkValid();
@@ -157,10 +150,6 @@ RemoteAccessible* AnchorAt(uint32_t aIndex);
 uint32_t LinkCount();
 
 RemoteAccessible* LinkAt(const uint32_t& aIndex);
-
-int32_t LinkIndexOf(RemoteAccessible* aLink);
-
-int32_t LinkIndexAtOffset(uint32_t aOffset);
 
 RemoteAccessible* TableOfACell();
 
@@ -241,7 +230,6 @@ double MaxValue() const override;
 double Step() const override;
 bool SetCurValue(double aValue);
 
-void TakeFocus();
 RemoteAccessible* FocusedChild();
 virtual Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,

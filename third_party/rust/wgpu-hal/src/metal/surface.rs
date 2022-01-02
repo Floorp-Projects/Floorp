@@ -31,7 +31,6 @@ extern "C" fn layer_should_inherit_contents_scale_from_window(
     YES
 }
 
-const CAML_DELEGATE_CLASS: &str = "HalManagedMetalLayerDelegate";
 static CAML_DELEGATE_REGISTER: Once = Once::new();
 
 #[derive(Debug)]
@@ -39,9 +38,11 @@ pub struct HalManagedMetalLayerDelegate(&'static Class);
 
 impl HalManagedMetalLayerDelegate {
     pub fn new() -> Self {
+        let class_name = format!("HalManagedMetalLayerDelegate@{:p}", &CAML_DELEGATE_REGISTER);
+
         CAML_DELEGATE_REGISTER.call_once(|| {
             type Fun = extern "C" fn(&Class, Sel, *mut Object, CGFloat, *mut Object) -> BOOL;
-            let mut decl = ClassDecl::new(CAML_DELEGATE_CLASS, class!(NSObject)).unwrap();
+            let mut decl = ClassDecl::new(&class_name, class!(NSObject)).unwrap();
             #[allow(trivial_casts)] // false positive
             unsafe {
                 decl.add_class_method(
@@ -51,7 +52,7 @@ impl HalManagedMetalLayerDelegate {
             }
             decl.register();
         });
-        Self(Class::get(CAML_DELEGATE_CLASS).unwrap())
+        Self(Class::get(&class_name).unwrap())
     }
 }
 
@@ -60,7 +61,6 @@ impl super::Surface {
         Self {
             view,
             render_layer: Mutex::new(layer),
-            swapchain_format: wgt::TextureFormat::Bgra8UnormSrgb, // no value invalid, pick something not too far-fetched
             raw_swapchain_format: mtl::MTLPixelFormat::Invalid,
             extent: wgt::Extent3d::default(),
             main_thread_id: thread::current().id(),
@@ -211,7 +211,6 @@ impl crate::Surface<super::Api> for super::Surface {
         log::info!("build swapchain {:?}", config);
 
         let caps = &device.shared.private_caps;
-        self.swapchain_format = config.format;
         self.raw_swapchain_format = caps.map_format(config.format);
         self.extent = config.extent;
 
@@ -267,15 +266,18 @@ impl crate::Surface<super::Api> for super::Surface {
         _timeout_ms: u32, //TODO
     ) -> Result<Option<crate::AcquiredSurfaceTexture<super::Api>>, crate::SurfaceError> {
         let render_layer = self.render_layer.lock();
-        let (drawable, texture) = autoreleasepool(|| {
-            let drawable = render_layer.next_drawable().unwrap();
-            (drawable.to_owned(), drawable.texture().to_owned())
-        });
+        let (drawable, texture) = match autoreleasepool(|| {
+            render_layer
+                .next_drawable()
+                .map(|drawable| (drawable.to_owned(), drawable.texture().to_owned()))
+        }) {
+            Some(pair) => pair,
+            None => return Ok(None),
+        };
 
         let suf_texture = super::SurfaceTexture {
             texture: super::Texture {
                 raw: texture,
-                format: self.swapchain_format,
                 raw_format: self.raw_swapchain_format,
                 raw_type: mtl::MTLTextureType::D2,
                 array_layers: 1,

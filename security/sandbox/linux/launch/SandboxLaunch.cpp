@@ -326,7 +326,8 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
     case GeckoProcessType_RDD:
       if (level >= 1) {
         canChroot = true;
-        flags |= CLONE_NEWNET | CLONE_NEWIPC;
+        // Can't use CLONE_NEWIPC because of intel-media-driver.
+        flags |= CLONE_NEWNET;
       }
       break;
     case GeckoProcessType_Content:

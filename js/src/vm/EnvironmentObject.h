@@ -271,7 +271,7 @@ class EnvironmentObject : public NativeObject {
   // GlobalObject, or a non-syntactic environment object.
   static const uint32_t ENCLOSING_ENV_SLOT = 0;
 
-  inline void setAliasedBinding(JSContext* cx, uint32_t slot, const Value& v);
+  inline void setAliasedBinding(uint32_t slot, const Value& v);
 
   void setEnclosingEnvironment(JSObject* enclosing) {
     setReservedSlot(ENCLOSING_ENV_SLOT, ObjectOrNullValue(enclosing));
@@ -308,11 +308,9 @@ class EnvironmentObject : public NativeObject {
     return getSlot(bi.location().slot());
   }
 
-  inline void setAliasedBinding(JSContext* cx, EnvironmentCoordinate ec,
-                                const Value& v);
+  inline void setAliasedBinding(EnvironmentCoordinate ec, const Value& v);
 
-  inline void setAliasedBinding(JSContext* cx, const BindingIter& bi,
-                                const Value& v);
+  inline void setAliasedBinding(const BindingIter& bi, const Value& v);
 
   // For JITs.
   static size_t offsetOfEnclosingEnvironment() {
@@ -446,8 +444,6 @@ class ModuleEnvironmentObject : public EnvironmentObject {
 
   bool lookupImport(jsid name, ModuleEnvironmentObject** envOut,
                     mozilla::Maybe<PropertyInfo>* propOut);
-
-  void fixEnclosingEnvironmentAfterRealmMerge(GlobalObject& global);
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
@@ -815,7 +811,7 @@ class MOZ_RAII EnvironmentIter {
 
   // Constructing from a frame. Places the EnvironmentIter on the innermost
   // environment at pc.
-  EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc);
+  EnvironmentIter(JSContext* cx, AbstractFramePtr frame, const jsbytecode* pc);
 
   // Constructing from an environment, scope and frame. The frame is given
   // to initialize to proper enclosing environment/scope.
@@ -1141,7 +1137,7 @@ class DebugEnvironments {
   static void onPopVar(JSContext* cx, const EnvironmentIter& ei);
   static void onPopLexical(JSContext* cx, const EnvironmentIter& ei);
   static void onPopLexical(JSContext* cx, AbstractFramePtr frame,
-                           jsbytecode* pc);
+                           const jsbytecode* pc);
   static void onPopWith(AbstractFramePtr frame);
   static void onPopModule(JSContext* cx, const EnvironmentIter& ei);
   static void onRealmUnsetIsDebuggee(Realm* realm);
@@ -1302,7 +1298,7 @@ ModuleObject* GetModuleObjectForScript(JSScript* script);
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
 [[nodiscard]] bool GetThisValueForDebuggerFrameMaybeOptimizedOut(
-    JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+    JSContext* cx, AbstractFramePtr frame, const jsbytecode* pc,
     MutableHandleValue res);
 [[nodiscard]] bool GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
     JSContext* cx, AbstractGeneratorObject& genObj, JSScript* script,
@@ -1335,7 +1331,7 @@ ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
 [[nodiscard]] bool GetFrameEnvironmentAndScope(JSContext* cx,
                                                AbstractFramePtr frame,
-                                               jsbytecode* pc,
+                                               const jsbytecode* pc,
                                                MutableHandleObject env,
                                                MutableHandleScope scope);
 

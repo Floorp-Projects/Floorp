@@ -123,6 +123,33 @@ const MESSAGE_CATEGORY = {
   CSS_PARSER: "CSS Parser",
 };
 
+/* Debugger ============================================================= */
+
+// Map protocol pause "why" reason to a valid L10N key (in devtools/shared/locales/en-US/debugger-paused-reasons.ftl)
+const DEBUGGER_PAUSED_REASONS_L10N_MAPPING = {
+  debuggerStatement: "whypaused-debugger-statement",
+  breakpoint: "whypaused-breakpoint",
+  exception: "whypaused-exception",
+  resumeLimit: "whypaused-resume-limit",
+  breakpointConditionThrown: "whypaused-breakpoint-condition-thrown",
+  eventBreakpoint: "whypaused-event-breakpoint",
+  getWatchpoint: "whypaused-get-watchpoint",
+  setWatchpoint: "whypaused-set-watchpoint",
+  mutationBreakpoint: "whypaused-mutation-breakpoint",
+  interrupted: "whypaused-interrupted",
+
+  // V8
+  DOM: "whypaused-breakpoint",
+  EventListener: "whypaused-pause-on-dom-events",
+  XHR: "whypaused-xhr",
+  promiseRejection: "whypaused-promise-rejection",
+  assert: "whypaused-assert",
+  debugCommand: "whypaused-debug-command",
+  other: "whypaused-other",
+};
+
+/* Exports ============================================================= */
+
 module.exports = {
   accessibility: {
     AUDIT_TYPE,
@@ -131,6 +158,7 @@ module.exports = {
     SIMULATION_TYPE,
   },
   COMPATIBILITY_ISSUE_TYPE,
+  DEBUGGER_PAUSED_REASONS_L10N_MAPPING,
   MESSAGE_CATEGORY,
   style: {
     ELEMENT_STYLE,

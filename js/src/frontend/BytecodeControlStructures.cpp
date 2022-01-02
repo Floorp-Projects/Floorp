@@ -7,7 +7,6 @@
 #include "frontend/BytecodeControlStructures.h"
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
-#include "frontend/EmitterScope.h"     // EmitterScope
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;

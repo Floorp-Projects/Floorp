@@ -150,10 +150,12 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
         auto defaultType = defaultVariableName.IsGeneric()
                                ? defaultVariableName.AsGeneric()
                                : StyleGenericFontFamily::None;
-        NS_ASSERTION(defaultType == StyleGenericFontFamily::Serif ||
-                         defaultType == StyleGenericFontFamily::SansSerif,
-                     "default type must be serif or sans-serif");
-        mDefaultVariableFont.family.families.fallback = defaultType;
+        if (defaultType == StyleGenericFontFamily::Serif ||
+            defaultType == StyleGenericFontFamily::SansSerif) {
+          mDefaultVariableFont.family = *Servo_FontFamily_Generic(defaultType);
+        } else {
+          NS_WARNING("default type must be serif or sans-serif");
+        }
       }
     } else {
       if (type != DefaultFont::Monospace) {

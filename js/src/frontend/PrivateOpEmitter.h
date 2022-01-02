@@ -10,13 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
-#include <stdint.h>
+#include <stddef.h>
 
-#include "frontend/ElemOpEmitter.h"      // ElemOpEmitter
 #include "frontend/NameAnalysisTypes.h"  // NameLocation
 #include "frontend/ParserAtom.h"         // TaggedParserAtomIndex
-#include "js/TypeDecls.h"
-#include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
 namespace frontend {

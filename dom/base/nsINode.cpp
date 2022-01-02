@@ -725,7 +725,6 @@ std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
   nsAutoString elemDesc;
   const nsINode* curr = &aNode;
   while (curr) {
-    const nsString& localName = curr->LocalName();
     nsString id;
     if (curr->IsElement()) {
       curr->AsElement()->GetId(id);
@@ -735,10 +734,24 @@ std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
       elemDesc = elemDesc + u"."_ns;
     }
 
-    elemDesc = elemDesc + localName;
+    if (!curr->LocalName().IsEmpty()) {
+      elemDesc.Append(curr->LocalName());
+    } else {
+      elemDesc.Append(curr->NodeName());
+    }
 
     if (!id.IsEmpty()) {
       elemDesc = elemDesc + u"['"_ns + id + u"']"_ns;
+    }
+
+    if (curr->IsElement() &&
+        curr->AsElement()->HasAttr(nsGkAtoms::contenteditable)) {
+      nsAutoString val;
+      curr->AsElement()->GetAttr(nsGkAtoms::contenteditable, val);
+      elemDesc = elemDesc + u"[contenteditable=\""_ns + val + u"\"]"_ns;
+    }
+    if (curr->IsDocument() && curr->IsInDesignMode()) {
+      elemDesc.Append(u"[designMode=\"on\"]"_ns);
     }
 
     curr = curr->GetParentNode();
@@ -2867,7 +2880,15 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
   RawServoSelectorList* list = cache.GetListOrInsertFrom(aSelectorString, [&] {
     // Note that we want to cache even if null was returned, because we
     // want to cache the "This is not a valid selector" result.
-    return Servo_SelectorList_Parse(&aSelectorString).Consume();
+    //
+    // NOTE(emilio): Off-hand, getting a CallerType here might seem like a
+    // better idea than using IsDocumentURISchemeChrome(), but that would mean
+    // that we'd need to key the selector cache by that.
+    // IsDocumentURISchemeChrome() gives us the same semantics as any inline
+    // style associated to a document, which seems reasonable.
+    return Servo_SelectorList_Parse(&aSelectorString,
+                                    doc->IsDocumentURISchemeChrome())
+        .Consume();
   });
 
   if (!list) {
@@ -3210,6 +3231,9 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
         }
         if (elm->MayHaveSelectionChangeEventListener()) {
           window->SetHasSelectionChangeEventListeners();
+        }
+        if (elm->MayHaveFormSelectEventListener()) {
+          window->SetHasFormSelectEventListeners();
         }
       }
     }

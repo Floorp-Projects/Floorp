@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const RuleRewriter = require("devtools/client/fronts/inspector/rule-rewriter");
 const { isCssPropertyKnown } = require("devtools/server/actors/css-properties");
 

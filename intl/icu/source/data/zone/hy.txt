@@ -1883,6 +1883,9 @@ hy{
             lg{"Եկատերինբուրգի ժամանակ"}
             ls{"Եկատերինբուրգի ստանդարտ ժամանակ"}
         }
+        "meta:Yukon"{
+            ls{"Յուկոնի ժամանակ"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

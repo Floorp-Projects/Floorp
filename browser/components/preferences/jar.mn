@@ -18,3 +18,5 @@ browser.jar:
    content/browser/preferences/fxaPairDevice.xhtml
    content/browser/preferences/fxaPairDevice.js
    content/browser/preferences/findInPage.js
+   content/browser/preferences/more-from-mozilla-qr-code-simple.svg
+   content/browser/preferences/more-from-mozilla-qr-code-advanced.svg

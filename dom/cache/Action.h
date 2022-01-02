@@ -55,9 +55,10 @@ class Action : public SafeRefCounted<Action> {
   // Note: Action should hold Resolver ref until its ready to call Resolve().
   // Note: The "target" thread is determined when the Action is scheduled on
   //       Context.  The Action should not assume any particular thread is used.
-  virtual void RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                           const QuotaInfo& aQuotaInfo,
-                           Data* aOptionalData) = 0;
+  virtual void RunOnTarget(
+      SafeRefPtr<Resolver> aResolver,
+      const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
+      Data* aOptionalData) = 0;
 
   // Called on initiating thread when the Action is canceled.  The Action is
   // responsible for calling Resolver::Resolve() as normal; either with a

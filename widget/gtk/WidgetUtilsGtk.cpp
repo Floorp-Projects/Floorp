@@ -71,9 +71,8 @@ bool GdkIsX11Display(GdkDisplay* display) {
 }
 
 bool GdkIsWaylandDisplay() {
-  static bool isWaylandDisplay =
-      gdk_display_get_default() ? GdkIsWaylandDisplay(gdk_display_get_default())
-                                : false;
+  static bool isWaylandDisplay = gdk_display_get_default() &&
+                                 GdkIsWaylandDisplay(gdk_display_get_default());
   return isWaylandDisplay;
 }
 

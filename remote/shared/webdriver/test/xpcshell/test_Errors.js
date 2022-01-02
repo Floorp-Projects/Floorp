@@ -197,6 +197,16 @@ add_test(function test_WebDriverError() {
   run_next_test();
 });
 
+add_test(function test_DetachedShadowRootError() {
+  let err = new error.DetachedShadowRootError("foo");
+  equal("DetachedShadowRootError", err.name);
+  equal("foo", err.message);
+  equal("detached shadow root", err.status);
+  ok(err instanceof error.WebDriverError);
+
+  run_next_test();
+});
+
 add_test(function test_ElementClickInterceptedError() {
   let otherEl = {
     hasAttribute: attr => attr in otherEl,
@@ -373,6 +383,16 @@ add_test(function test_NoSuchFrameError() {
   equal("NoSuchFrameError", err.name);
   equal("foo", err.message);
   equal("no such frame", err.status);
+  ok(err instanceof error.WebDriverError);
+
+  run_next_test();
+});
+
+add_test(function test_NoSuchShadowRootError() {
+  let err = new error.NoSuchShadowRootError("foo");
+  equal("NoSuchShadowRootError", err.name);
+  equal("foo", err.message);
+  equal("no such shadow root", err.status);
   ok(err instanceof error.WebDriverError);
 
   run_next_test();

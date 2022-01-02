@@ -1509,6 +1509,27 @@ SearchService.prototype = {
   },
 
   /**
+   * Updates a search engine that is specified from enterprise policies.
+   *
+   * @param {object} details
+   *   An object that simulates the manifest object from a WebExtension. See
+   *   the idl for more details.
+   */
+  async updatePolicyEngine(details) {
+    let engine = this.getEngineByName(
+      details.chrome_settings_overrides.search_provider.name
+    );
+    if (engine && !engine.isAppProvided) {
+      engine._updateFromManifest(
+        "set-via-policy",
+        "",
+        details,
+        engine._locale || SearchUtils.DEFAULT_TAG
+      );
+    }
+  },
+
+  /**
    * Adds a search engine that is specified by the user.
    *
    * @param {string} name

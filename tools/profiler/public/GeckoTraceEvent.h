@@ -11,6 +11,23 @@
 // Extracted from Chromium's src/base/debug/trace_event.h, modified to talk to
 // the Gecko profiler.
 
+#if defined(RTC_DISABLE_TRACE_EVENTS)
+#define RTC_TRACE_EVENTS_ENABLED 0
+#else
+#define RTC_TRACE_EVENTS_ENABLED 1
+#endif
+
+// Type values for identifying types in the TraceValue union.
+#define TRACE_VALUE_TYPE_BOOL         (static_cast<unsigned char>(1))
+#define TRACE_VALUE_TYPE_UINT         (static_cast<unsigned char>(2))
+#define TRACE_VALUE_TYPE_INT          (static_cast<unsigned char>(3))
+#define TRACE_VALUE_TYPE_DOUBLE       (static_cast<unsigned char>(4))
+#define TRACE_VALUE_TYPE_POINTER      (static_cast<unsigned char>(5))
+#define TRACE_VALUE_TYPE_STRING       (static_cast<unsigned char>(6))
+#define TRACE_VALUE_TYPE_COPY_STRING  (static_cast<unsigned char>(7))
+
+#if RTC_TRACE_EVENTS_ENABLED
+
 // This header is designed to give you trace_event macros without specifying
 // how the events actually get collected and stored. If you need to expose trace
 // event to some other universe, you can copy-and-paste this file,
@@ -162,35 +179,6 @@
 #define TRACE_EVENT2(category, name, arg1_name, arg1_val, arg2_name, arg2_val) \
     INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, arg1_name, arg1_val, \
         arg2_name, arg2_val)
-
-// Same as TRACE_EVENT except that they are not included in official builds.
-#ifdef OFFICIAL_BUILD
-#define UNSHIPPED_TRACE_EVENT0(category, name) (void)0
-#define UNSHIPPED_TRACE_EVENT1(category, name, arg1_name, arg1_val) (void)0
-#define UNSHIPPED_TRACE_EVENT2(category, name, arg1_name, arg1_val, \
-                               arg2_name, arg2_val) (void)0
-#define UNSHIPPED_TRACE_EVENT_INSTANT0(category, name) (void)0
-#define UNSHIPPED_TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val) \
-    (void)0
-#define UNSHIPPED_TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, \
-                                       arg2_name, arg2_val) (void)0
-#else
-#define UNSHIPPED_TRACE_EVENT0(category, name) \
-    TRACE_EVENT0(category, name)
-#define UNSHIPPED_TRACE_EVENT1(category, name, arg1_name, arg1_val) \
-    TRACE_EVENT1(category, name, arg1_name, arg1_val)
-#define UNSHIPPED_TRACE_EVENT2(category, name, arg1_name, arg1_val, \
-                               arg2_name, arg2_val) \
-    TRACE_EVENT2(category, name, arg1_name, arg1_val, arg2_name, arg2_val)
-#define UNSHIPPED_TRACE_EVENT_INSTANT0(category, name) \
-    TRACE_EVENT_INSTANT0(category, name)
-#define UNSHIPPED_TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val) \
-    TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val)
-#define UNSHIPPED_TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, \
-                                       arg2_name, arg2_val) \
-    TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, \
-                         arg2_name, arg2_val)
-#endif
 
 // Records a single event called "name" immediately, with 0, 1 or 2
 // associated arguments. If the category is not enabled, then this
@@ -631,13 +619,133 @@
 #define TRACE_EVENT_FLAG_HAS_ID      (static_cast<unsigned char>(1 << 1))
 #define TRACE_EVENT_FLAG_MANGLE_ID   (static_cast<unsigned char>(1 << 2))
 
-// Type values for identifying types in the TraceValue union.
-#define TRACE_VALUE_TYPE_BOOL         (static_cast<unsigned char>(1))
-#define TRACE_VALUE_TYPE_UINT         (static_cast<unsigned char>(2))
-#define TRACE_VALUE_TYPE_INT          (static_cast<unsigned char>(3))
-#define TRACE_VALUE_TYPE_DOUBLE       (static_cast<unsigned char>(4))
-#define TRACE_VALUE_TYPE_POINTER      (static_cast<unsigned char>(5))
-#define TRACE_VALUE_TYPE_STRING       (static_cast<unsigned char>(6))
-#define TRACE_VALUE_TYPE_COPY_STRING  (static_cast<unsigned char>(7))
+#else
+
+////////////////////////////////////////////////////////////////////////////////
+// This section defines no-op alternatives to the tracing macros when
+// RTC_DISABLE_TRACE_EVENTS is defined.
+
+#define RTC_NOOP() do {} while (0)
+
+#define TRACE_STR_COPY(str) RTC_NOOP()
+
+#define TRACE_DISABLED_BY_DEFAULT(name) "disabled-by-default-" name
+
+#define TRACE_ID_MANGLE(id) 0
+
+#define TRACE_EVENT0(category, name) RTC_NOOP()
+#define TRACE_EVENT1(category, name, arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT2(category, name, arg1_name, arg1_val, arg2_name, arg2_val) \
+    RTC_NOOP()
+
+#define TRACE_EVENT_INSTANT0(category, name) RTC_NOOP()
+#define TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val) RTC_NOOP()
+
+#define TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_COPY_INSTANT0(category, name) RTC_NOOP()
+#define TRACE_EVENT_COPY_INSTANT1(category, name, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_COPY_INSTANT2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_BEGIN0(category, name) RTC_NOOP()
+#define TRACE_EVENT_BEGIN1(category, name, arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_BEGIN2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_BEGIN0(category, name) RTC_NOOP()
+#define TRACE_EVENT_COPY_BEGIN1(category, name, arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_BEGIN2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_END0(category, name) RTC_NOOP()
+#define TRACE_EVENT_END1(category, name, arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_END2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_END0(category, name) RTC_NOOP()
+#define TRACE_EVENT_COPY_END1(category, name, arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_END2(category, name, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_COUNTER1(category, name, value) RTC_NOOP()
+#define TRACE_COPY_COUNTER1(category, name, value) RTC_NOOP()
+
+#define TRACE_COUNTER2(category, name, value1_name, value1_val, \
+        value2_name, value2_val) RTC_NOOP()
+#define TRACE_COPY_COUNTER2(category, name, value1_name, value1_val, \
+        value2_name, value2_val) RTC_NOOP()
+
+#define TRACE_COUNTER_ID1(category, name, id, value) RTC_NOOP()
+#define TRACE_COPY_COUNTER_ID1(category, name, id, value) RTC_NOOP()
+
+#define TRACE_COUNTER_ID2(category, name, id, value1_name, value1_val, \
+        value2_name, value2_val) RTC_NOOP()
+#define TRACE_COPY_COUNTER_ID2(category, name, id, value1_name, value1_val, \
+        value2_name, value2_val) RTC_NOOP()
+
+#define TRACE_EVENT_ASYNC_BEGIN0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_BEGIN0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_ASYNC_STEP0(category, name, id, step) RTC_NOOP()
+#define TRACE_EVENT_ASYNC_STEP1(category, name, id, step, \
+                                      arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_STEP0(category, name, id, step) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_STEP1(category, name, id, step, \
+        arg1_name, arg1_val) RTC_NOOP()
+
+#define TRACE_EVENT_ASYNC_END0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_ASYNC_END1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_ASYNC_END2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_END0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_END1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_COPY_ASYNC_END2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_FLOW_BEGIN0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_BEGIN0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_FLOW_STEP0(category, name, id, step) RTC_NOOP()
+#define TRACE_EVENT_FLOW_STEP1(category, name, id, step, \
+        arg1_name, arg1_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_STEP0(category, name, id, step) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_STEP1(category, name, id, step, \
+        arg1_name, arg1_val) RTC_NOOP()
+
+#define TRACE_EVENT_FLOW_END0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_FLOW_END1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_FLOW_END2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_END0(category, name, id) RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_END1(category, name, id, arg1_name, arg1_val) \
+    RTC_NOOP()
+#define TRACE_EVENT_COPY_FLOW_END2(category, name, id, arg1_name, arg1_val, \
+        arg2_name, arg2_val) RTC_NOOP()
+
+#define TRACE_EVENT_API_GET_CATEGORY_ENABLED ""
+
+#define TRACE_EVENT_API_ADD_TRACE_EVENT RTC_NOOP()
+
+#endif  // RTC_TRACE_EVENTS_ENABLED
 
 #endif  // GECKO_TRACE_EVENT_H_

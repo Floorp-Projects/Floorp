@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,<p>test code completion
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><p>test code completion
   <script>
     foobar = true;
   </script>`;

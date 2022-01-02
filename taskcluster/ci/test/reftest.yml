@@ -7,8 +7,8 @@ job-defaults:
         category: reftest
     target:
         by-test-platform:
-            android-em-7.*: geckoview-androidTest.apk
-            android-hw-.*: geckoview-androidTest.apk
+            android-em-7.*: geckoview-test_runner.apk
+            android-hw-.*: geckoview-test_runner.apk
             default: null
     python-3: true
     tier:

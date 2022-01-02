@@ -13,9 +13,6 @@ es_MX{
         "Africa:Dar_es_Salaam"{
             ec{"Dar es-Salaam"}
         }
-        "Africa:Khartoum"{
-            ec{"Jartum"}
-        }
         "America:Fort_Nelson"{
             ec{"Fort Nelson"}
         }

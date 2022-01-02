@@ -14,11 +14,14 @@
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
 #include "jsfriendapi.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Compression.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
@@ -29,6 +32,7 @@
 #include "mozilla/Utf8.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "PathUtils.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsFileStreams.h"
@@ -53,14 +57,15 @@
 #  include "nsSystemInfo.h"
 #endif
 
-#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
-  do {                                                                   \
-    if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
-      (_promise)->MaybeRejectWithOperationError(                         \
-          FormatErrorMessage(_rv, "Could not parse path (%s)",           \
-                             NS_ConvertUTF16toUTF8(_path).get()));       \
-      return (_promise).forget();                                        \
-    }                                                                    \
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
+  do {                                                                \
+    if (nsresult _rv = PathUtils::InitFileWithPath((_file), (_path)); \
+        NS_FAILED(_rv)) {                                             \
+      (_promise)->MaybeRejectWithOperationError(                      \
+          FormatErrorMessage(_rv, "Could not parse path (%s)",        \
+                             NS_ConvertUTF16toUTF8(_path).get()));    \
+      return (_promise).forget();                                     \
+    }                                                                 \
   } while (0)
 
 static constexpr auto SHUTDOWN_ERROR =
@@ -237,8 +242,8 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
       aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
       break;
     default:
-      aPromise->MaybeRejectWithUnknownError(
-          errMsg.refOr(FormatErrorMessage(aError.Code(), "Unexpected error")));
+      aPromise->MaybeRejectWithUnknownError(FormatErrorMessage(
+          aError.Code(), errMsg.refOr("Unexpected error"_ns).get()));
   }
 }
 
@@ -303,6 +308,44 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     RejectShuttingDown(promise);
   }
   return promise.forget();
+}
+
+/* static */
+RefPtr<SyncReadFile> IOUtils::OpenFileForSyncReading(GlobalObject& aGlobal,
+                                                     const nsAString& aPath,
+                                                     ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  // This API is only exposed to workers, so we should not be on the main
+  // thread here.
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  if (nsresult rv = PathUtils::InitFileWithPath(file, aPath); NS_FAILED(rv)) {
+    aRv.ThrowOperationError(FormatErrorMessage(
+        rv, "Could not parse path (%s)", NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  RefPtr<nsFileStream> stream = new nsFileStream();
+  if (nsresult rv =
+          stream->Init(file, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
+      NS_FAILED(rv)) {
+    aRv.ThrowOperationError(
+        FormatErrorMessage(rv, "Could not open the file at %s",
+                           NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  int64_t size = 0;
+  if (nsresult rv = stream->GetSize(&size); NS_FAILED(rv)) {
+    aRv.ThrowOperationError(FormatErrorMessage(
+        rv, "Could not get the stream size for the file at %s",
+        NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  return new SyncReadFile(aGlobal.GetAsSupports(), std::move(stream), size);
 }
 
 /* static */
@@ -666,7 +709,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::Touch(
+already_AddRefed<Promise> IOUtils::SetModificationTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
@@ -685,7 +728,7 @@ already_AddRefed<Promise> IOUtils::Touch(
     }
     DispatchAndResolve<int64_t>(state.ref()->mEventQueue, promise,
                                 [file = std::move(file), newTime]() {
-                                  return TouchSync(file, newTime);
+                                  return SetModificationTimeSync(file, newTime);
                                 });
   } else {
     RejectShuttingDown(promise);
@@ -694,8 +737,9 @@ already_AddRefed<Promise> IOUtils::Touch(
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath) {
+already_AddRefed<Promise> IOUtils::GetChildren(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const GetChildrenOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   if (!promise) {
@@ -708,7 +752,9 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
 
     DispatchAndResolve<nsTArray<nsString>>(
         state.ref()->mEventQueue, promise,
-        [file = std::move(file)]() { return GetChildrenSync(file); });
+        [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent]() {
+          return GetChildrenSync(file, ignoreAbsent);
+        });
   } else {
     RejectShuttingDown(promise);
   }
@@ -783,7 +829,7 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 
 /* static */
 Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
-    nsIFile* aFile, const uint32_t aOffset, const Maybe<uint32_t> aMaxBytes,
+    nsIFile* aFile, const uint64_t aOffset, const Maybe<uint32_t> aMaxBytes,
     const bool aDecompress, IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -794,6 +840,15 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
                 "The `maxBytes` and `decompress` options are not compatible"));
   }
 
+  if (aOffset > static_cast<uint64_t>(INT64_MAX)) {
+    return Err(IOError(NS_ERROR_ILLEGAL_INPUT)
+                   .WithMessage("Requested offset is too large (%" PRIu64
+                                " > %" PRId64 ")",
+                                aOffset, INT64_MAX));
+  }
+
+  const int64_t offset = static_cast<int64_t>(aOffset);
+
   RefPtr<nsFileStream> stream = new nsFileStream();
   if (nsresult rv =
           stream->Init(aFile, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
@@ -801,43 +856,45 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     return Err(IOError(rv).WithMessage("Could not open the file at %s",
                                        aFile->HumanReadablePath().get()));
   }
-  int64_t bufSize = 0;
+
+  uint32_t bufSize = 0;
 
   if (aMaxBytes.isNothing()) {
-    // Limitation: We cannot read files that are larger than the max size of a
-    //             TypedArray (UINT32_MAX bytes). Reject if the file is too
-    //             big to be read.
+    // Limitation: We cannot read more than the maximum size of a TypedArray
+    //            (UINT32_MAX bytes). Reject if we have been requested to
+    //            perform too large of a read.
 
-    int64_t streamSize = -1;
-    if (nsresult rv = stream->GetSize(&streamSize); NS_FAILED(rv)) {
+    int64_t rawStreamSize = -1;
+    if (nsresult rv = stream->GetSize(&rawStreamSize); NS_FAILED(rv)) {
       return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
                      .WithMessage("Could not get info for the file at %s",
                                   aFile->HumanReadablePath().get()));
     }
-    MOZ_RELEASE_ASSERT(streamSize >= 0);
+    MOZ_RELEASE_ASSERT(rawStreamSize >= 0);
 
-    if (streamSize > static_cast<int64_t>(UINT32_MAX)) {
-      return Err(
-          IOError(NS_ERROR_FILE_TOO_BIG)
-              .WithMessage("Could not read the file at %s because it is too "
-                           "large(size=%" PRId64 " bytes)",
-                           aFile->HumanReadablePath().get(), streamSize));
-    }
-    bufSize = static_cast<uint32_t>(streamSize);
-
-    if (aOffset >= bufSize) {
+    uint64_t streamSize = static_cast<uint64_t>(rawStreamSize);
+    if (aOffset >= streamSize) {
       bufSize = 0;
     } else {
-      bufSize = bufSize - aOffset;
+      if (streamSize - offset > static_cast<int64_t>(UINT32_MAX)) {
+        return Err(IOError(NS_ERROR_FILE_TOO_BIG)
+                       .WithMessage(
+                           "Could not read the file at %s with offset %" PRIu32
+                           " because it is too large(size=%" PRIu64 " bytes)",
+                           aFile->HumanReadablePath().get(), offset,
+                           streamSize));
+      }
+
+      bufSize = static_cast<uint32_t>(streamSize - offset);
     }
   } else {
     bufSize = aMaxBytes.value();
   }
 
-  if (aOffset > 0) {
-    if (nsresult rv = stream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+  if (offset > 0) {
+    if (nsresult rv = stream->Seek(PR_SEEK_SET, offset); NS_FAILED(rv)) {
       return Err(IOError(rv).WithMessage(
-          "Could not seek to position %" PRId64 " in file %s", aOffset,
+          "Could not seek to position %" PRId64 " in file %s", offset,
           aFile->HumanReadablePath().get()));
     }
   }
@@ -855,9 +912,13 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     // Read the file from disk.
     uint32_t totalRead = 0;
     while (totalRead != bufSize) {
+      // Read no more than INT32_MAX on each call to stream->Read, otherwise it
+      // returns an error.
+      uint32_t bytesToReadThisChunk =
+          std::min<uint32_t>(bufSize - totalRead, INT32_MAX);
       uint32_t bytesRead = 0;
       if (nsresult rv =
-              stream->Read(toRead.Elements(), bufSize - totalRead, &bytesRead);
+              stream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
           NS_FAILED(rv)) {
         return Err(IOError(rv).WithMessage(
             "Encountered an unexpected error while reading file(%s)",
@@ -1370,7 +1431,7 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
 }
 
 /* static */
-Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
+Result<int64_t, IOUtils::IOError> IOUtils::SetModificationTimeSync(
     nsIFile* aFile, const Maybe<int64_t>& aNewModTime) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -1396,8 +1457,8 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
         IOError(NS_ERROR_ILLEGAL_VALUE)
             .WithMessage(
                 "Refusing to set the modification time of file(%s) to 0.\n"
-                "To use the current system time, call `touch` with no "
-                "arguments",
+                "To use the current system time, call `setModificationTime` "
+                "with no arguments",
                 aFile->HumanReadablePath().get()));
   }
 
@@ -1407,7 +1468,8 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     IOError err(rv);
     if (IsFileNotFound(rv)) {
       return Err(
-          err.WithMessage("Could not touch file(%s) because it does not exist",
+          err.WithMessage("Could not set modification time of file(%s) "
+                          "because it does not exist",
                           aFile->HumanReadablePath().get()));
     }
     return Err(err);
@@ -1417,11 +1479,15 @@ Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
 
 /* static */
 Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    nsIFile* aFile) {
+    nsIFile* aFile, bool aIgnoreAbsent) {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  nsTArray<nsString> children;
   nsCOMPtr<nsIDirectoryEnumerator> iter;
   nsresult rv = aFile->GetDirectoryEntries(getter_AddRefs(iter));
+  if (aIgnoreAbsent && IsFileNotFound(rv)) {
+    return children;
+  }
   if (NS_FAILED(rv)) {
     IOError err(rv);
     if (IsFileNotFound(rv)) {
@@ -1436,7 +1502,6 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
     }
     return Err(err);
   }
-  nsTArray<nsString> children;
 
   bool hasMoreElements = false;
   MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
@@ -1830,8 +1895,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
 
   if (aOptions.mBackupFile.WasPassed()) {
     opts.mBackupFile = new nsLocalFile();
-    if (nsresult rv =
-            opts.mBackupFile->InitWithPath(aOptions.mBackupFile.Value());
+    if (nsresult rv = PathUtils::InitFileWithPath(opts.mBackupFile,
+                                                  aOptions.mBackupFile.Value());
         NS_FAILED(rv)) {
       return Err(IOUtils::IOError(rv).WithMessage(
           "Could not parse path of backupFile (%s)",
@@ -1841,7 +1906,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
 
   if (aOptions.mTmpPath.WasPassed()) {
     opts.mTmpFile = new nsLocalFile();
-    if (nsresult rv = opts.mTmpFile->InitWithPath(aOptions.mTmpPath.Value());
+    if (nsresult rv = PathUtils::InitFileWithPath(opts.mTmpFile,
+                                                  aOptions.mTmpPath.Value());
         NS_FAILED(rv)) {
       return Err(IOUtils::IOError(rv).WithMessage(
           "Could not parse path of temp file (%s)",
@@ -1983,6 +2049,86 @@ JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
   aValue.setObject(*array);
   return true;
 }
+
+// SyncReadFile
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SyncReadFile)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SyncReadFile)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SyncReadFile)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SyncReadFile, mParent)
+
+SyncReadFile::SyncReadFile(nsISupports* aParent, RefPtr<nsFileStream>&& aStream,
+                           int64_t aSize)
+    : mParent(aParent), mStream(std::move(aStream)), mSize(aSize) {
+  MOZ_RELEASE_ASSERT(mSize >= 0);
+}
+
+SyncReadFile::~SyncReadFile() = default;
+
+JSObject* SyncReadFile::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  return SyncReadFile_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
+                                 const int64_t aOffset, ErrorResult& aRv) {
+  if (!mStream) {
+    return aRv.ThrowOperationError("SyncReadFile is closed");
+  }
+
+  aDestArray.ComputeState();
+
+  auto rangeEnd = CheckedInt64(aOffset) + aDestArray.Length();
+  if (!rangeEnd.isValid()) {
+    return aRv.ThrowOperationError("Requested range overflows i64");
+  }
+
+  if (rangeEnd.value() > mSize) {
+    return aRv.ThrowOperationError(
+        "Requested range overflows SyncReadFile size");
+  }
+
+  uint32_t readLen{aDestArray.Length()};
+  if (readLen == 0) {
+    return;
+  }
+
+  if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+    return aRv.ThrowOperationError(
+        FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
+  }
+
+  Span<char> toRead(reinterpret_cast<char*>(aDestArray.Data()), readLen);
+
+  uint32_t totalRead = 0;
+  while (totalRead != readLen) {
+    // Read no more than INT32_MAX on each call to mStream->Read, otherwise it
+    // returns an error.
+    uint32_t bytesToReadThisChunk =
+        std::min<uint32_t>(readLen - totalRead, INT32_MAX);
+
+    uint32_t bytesRead = 0;
+    if (nsresult rv =
+            mStream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
+        NS_FAILED(rv)) {
+      return aRv.ThrowOperationError(FormatErrorMessage(
+          rv, "Encountered an unexpected error while reading file stream"));
+    }
+    if (bytesRead == 0) {
+      return aRv.ThrowOperationError(
+          "Reading stopped before the entire array was filled");
+    }
+    totalRead += bytesRead;
+    toRead = toRead.From(bytesRead);
+  }
+}
+
+void SyncReadFile::Close() { mStream = nullptr; }
 
 }  // namespace mozilla::dom
 

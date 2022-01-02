@@ -333,6 +333,7 @@ LOCAL_INCLUDES += [
     "/caps",
     "/docshell/base",
     "/dom/base",
+    "/dom/media/webrtc",
     "/layout/generic",
     "/layout/xul",
     "/media/libyuv/libyuv/include",
@@ -344,7 +345,7 @@ if CONFIG["MOZ_WEBRTC"]:
     LOCAL_INCLUDES += [
         "/dom/media/webrtc/common",
         "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
+        "/third_party/libwebrtc/third_party/abseil-cpp",
     ]
 
 DEFINES["MOZILLA_INTERNAL_API"] = True
@@ -375,7 +376,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
         "-Wno-error=attributes",
-        "-Wno-error=shadow",
     ]
 
 CXXFLAGS += ["-Werror=switch"]

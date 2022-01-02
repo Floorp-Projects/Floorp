@@ -98,6 +98,10 @@ es_MX{
             one{"rupia de Maldivas"}
             other{"rupias de Maldivas"}
         }
+        RON{
+            one{"leu rumano"}
+            other{"lei rumanos"}
+        }
         STN{
             one{"dobra santotomense"}
             other{"dobras santotomenses"}
@@ -105,10 +109,6 @@ es_MX{
         THB{
             one{"baht tailandés"}
             other{"bahts tailandeses"}
-        }
-        TMT{
-            one{"manat turcomano"}
-            other{"manats turcomanos"}
         }
         VES{
             one{"bolívar venezolano"}

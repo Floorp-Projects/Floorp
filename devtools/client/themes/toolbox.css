@@ -418,10 +418,6 @@
 
 /* Command button images */
 
-#command-button-paintflashing::before {
-  background-image: url("chrome://devtools/skin/images/command-paintflashing.svg");
-}
-
 #command-button-screenshot::before {
   background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
 }

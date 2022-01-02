@@ -242,7 +242,7 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
 
   aStr.Truncate();
 
-  params.Serialize(value);
+  params.Serialize(value, true);
   if (!value.IsEmpty()) {
     aStr.AppendLiteral("^");
     aStr.Append(NS_ConvertUTF16toUTF8(value));

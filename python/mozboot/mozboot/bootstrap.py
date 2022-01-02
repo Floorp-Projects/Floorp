@@ -14,7 +14,7 @@ import subprocess
 import time
 from distutils.version import LooseVersion
 from mozfile import which
-from mach.util import UserError
+from mach.util import get_state_dir, UserError
 from mach.telemetry import initialize_telemetry_setting
 
 from mozboot.base import MODERN_RUST_VERSION
@@ -31,12 +31,11 @@ from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
-from mozboot.util import get_state_dir
 
 # Use distro package to retrieve linux platform information
 import distro
 
-ARTIFACT_MODE_NOTE = """
+APPLICATION_CHOICE = """
 Note on Artifact Mode:
 
 Artifact builds download prebuilt C++ components rather than building
@@ -46,9 +45,7 @@ Artifact builds are recommended for people working on Firefox or
 Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
 for those working on C++ code. For more information see:
 https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
-""".lstrip()
 
-APPLICATION_CHOICE = """
 Please choose the version of Firefox you want to build:
 %s
 Your choice:
@@ -91,14 +88,23 @@ mozilla-unified).
 Would you like to run a few configuration steps to ensure Git is
 optimally configured?"""
 
-DEBIAN_DISTROS = ("debian", "ubuntu", "linuxmint", "elementary", "neon", "pop", "kali")
+DEBIAN_DISTROS = (
+    "debian",
+    "ubuntu",
+    "linuxmint",
+    "elementary",
+    "neon",
+    "pop",
+    "kali",
+    "devuan",
+)
 
 ADD_GIT_CINNABAR_PATH = """
 To add git-cinnabar to the PATH, edit your shell initialization script, which
-may be called ~/.bashrc or ~/.bash_profile or ~/.profile, and add the following
+may be called {prefix}/.bash_profile or {prefix}/.profile, and add the following
 lines:
 
-    export PATH="{}:$PATH"
+    export PATH="{cinnabar_dir}:$PATH"
 
 Then restart your shell.
 """
@@ -252,19 +258,6 @@ class Bootstrapper(object):
     def bootstrap(self, settings):
         if self.choice is None:
             applications = APPLICATIONS
-            if isinstance(self.instance, OSXBootstrapperLight):
-                applications = {
-                    key: value
-                    for key, value in applications.items()
-                    if "mobile_android" not in value
-                }
-                print(
-                    "Note: M1 Macs don't support Android builds, so "
-                    "they have been removed from the list of options below"
-                )
-            else:
-                print(ARTIFACT_MODE_NOTE)
-
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = [
                 "%s. %s" % (i, name) for i, name in enumerate(applications.keys(), 1)
@@ -328,7 +321,6 @@ class Bootstrapper(object):
         self._validate_python_environment()
 
         if self.instance.no_system_changes:
-            self.instance.ensure_mach_environment(checkout_root)
             self.maybe_install_private_packages_or_exit(
                 state_dir, checkout_root, application
             )
@@ -336,10 +328,6 @@ class Bootstrapper(object):
             sys.exit(0)
 
         self.instance.install_system_packages()
-        # Install mach environment python packages after system packages.
-        # Some mach packages require building native modules, which require
-        # tools which are installed to the system.
-        self.instance.ensure_mach_environment(checkout_root)
 
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
         getattr(self.instance, "install_%s_packages" % application)(mozconfig_builder)
@@ -629,7 +617,19 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
     cinnabar_dir = update_git_tools(git, root_state_dir)
 
     if not cinnabar:
-        print(ADD_GIT_CINNABAR_PATH.format(cinnabar_dir))
+        if "MOZILLABUILD" in os.environ:
+            # Slightly modify the path on Windows to be correct
+            # for the copy/paste into the .bash_profile
+            cinnabar_dir = "/" + cinnabar_dir
+            cinnabar_dir = cinnabar_dir.replace(":", "")
+
+            print(
+                ADD_GIT_CINNABAR_PATH.format(
+                    prefix="%USERPROFILE%", cinnabar_dir=cinnabar_dir
+                )
+            )
+        else:
+            print(ADD_GIT_CINNABAR_PATH.format(prefix="~", cinnabar_dir=cinnabar_dir))
 
 
 def _warn_if_risky_revision(path):

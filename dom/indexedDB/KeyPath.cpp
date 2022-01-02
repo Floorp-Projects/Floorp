@@ -19,6 +19,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"

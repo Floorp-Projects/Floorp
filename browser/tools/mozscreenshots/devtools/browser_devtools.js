@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 add_task(async function capture() {

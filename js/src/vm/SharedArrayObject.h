@@ -231,9 +231,9 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                      JS::ClassInfo* info,
                                      JS::RuntimeSizes* runtimeSizes);
 
-  static void copyData(Handle<SharedArrayBufferObject*> toBuffer,
+  static void copyData(Handle<ArrayBufferObjectMaybeShared*> toBuffer,
                        size_t toIndex,
-                       Handle<SharedArrayBufferObject*> fromBuffer,
+                       Handle<ArrayBufferObjectMaybeShared*> fromBuffer,
                        size_t fromIndex, size_t count);
 
   SharedArrayRawBuffer* rawBufferObject() const;

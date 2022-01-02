@@ -91,6 +91,11 @@ interface nsIWebBrowserChrome : nsISupports
 
     const unsigned long CHROME_ALL                    = 0x00000ffe;
 
+    const unsigned long CHROME_MINIMAL_POPUP =
+      CHROME_WINDOW_BORDERS | CHROME_WINDOW_CLOSE | CHROME_WINDOW_RESIZE |
+      CHROME_LOCATIONBAR | CHROME_STATUSBAR | CHROME_SCROLLBARS |
+      CHROME_TITLEBAR | CHROME_WINDOW_MIN;
+
     /**
      * The chrome flags for this browser chrome. The implementation should
      * reflect the value of this attribute by hiding or showing its chrome

@@ -12,7 +12,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
@@ -40,11 +40,11 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-using EmbeddingLevel = mozilla::intl::Bidi::EmbeddingLevel;
+using BidiEmbeddingLevel = mozilla::intl::BidiEmbeddingLevel;
 
 // The bidi indicator hangs off the caret to one side, to show which
-// direction the typing is in. It needs to be at least 2x2 to avoid looking like
-// an insignificant dot
+// direction the typing is in. It needs to be at least 2x2 to avoid looking
+// like an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
 
 /**
@@ -389,8 +389,7 @@ nsIFrame* nsCaret::GetFrameAndOffset(const Selection* aSelection,
 
   nsIContent* contentNode = focusNode->AsContent();
   nsFrameSelection* frameSelection = aSelection->GetFrameSelection();
-  mozilla::intl::Bidi::EmbeddingLevel bidiLevel =
-      frameSelection->GetCaretBidiLevel();
+  BidiEmbeddingLevel bidiLevel = frameSelection->GetCaretBidiLevel();
 
   return nsCaret::GetCaretFrameForNodeOffset(
       frameSelection, contentNode, focusOffset, frameSelection->GetHint(),
@@ -658,11 +657,13 @@ void nsCaret::StopBlinking() {
   }
 }
 
-nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
-    nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
-    int32_t aOffset, CaretAssociationHint aFrameHint,
-    mozilla::intl::Bidi::EmbeddingLevel aBidiLevel,
-    nsIFrame** aReturnUnadjustedFrame, int32_t* aReturnOffset) {
+nsIFrame* nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
+                                              nsIContent* aContentNode,
+                                              int32_t aOffset,
+                                              CaretAssociationHint aFrameHint,
+                                              BidiEmbeddingLevel aBidiLevel,
+                                              nsIFrame** aReturnUnadjustedFrame,
+                                              int32_t* aReturnOffset) {
   if (!aFrameSelection) {
     return nullptr;
   }
@@ -713,9 +714,9 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
 
     nsIFrame* frameBefore;
     nsIFrame* frameAfter;
-    mozilla::intl::Bidi::EmbeddingLevel
+    BidiEmbeddingLevel
         levelBefore;  // Bidi level of the character before the caret
-    mozilla::intl::Bidi::EmbeddingLevel
+    BidiEmbeddingLevel
         levelAfter;  // Bidi level of the character after the caret
 
     auto [start, end] = theFrame->GetOffsets();
@@ -754,8 +755,7 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
                 // the first frame on the line has a different Bidi level from
                 // the paragraph level, there is no real frame for the caret to
                 // be in. We have to find the visually first frame on the line.
-                mozilla::intl::Bidi::EmbeddingLevel baseLevel =
-                    frameAfter->GetBaseLevel();
+                BidiEmbeddingLevel baseLevel = frameAfter->GetBaseLevel();
                 if (baseLevel != levelAfter) {
                   nsPeekOffsetStruct pos(eSelectBeginLine, eDirPrevious, 0,
                                          nsPoint(0, 0), false, true, false,
@@ -786,8 +786,7 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(
                 // Bidi level from the paragraph level, there is no real frame
                 // for the caret to be in. We have to find the visually last
                 // frame on the line.
-                mozilla::intl::Bidi::EmbeddingLevel baseLevel =
-                    frameBefore->GetBaseLevel();
+                BidiEmbeddingLevel baseLevel = frameBefore->GetBaseLevel();
                 if (baseLevel != levelBefore) {
                   nsPeekOffsetStruct pos(eSelectEndLine, eDirNext, 0,
                                          nsPoint(0, 0), false, true, false,

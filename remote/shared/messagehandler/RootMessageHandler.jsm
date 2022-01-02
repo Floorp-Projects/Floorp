@@ -11,10 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXT_DESCRIPTOR_TYPES:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   FrameTransport:
     "chrome://remote/content/shared/messagehandler/transports/FrameTransport.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  SessionData:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
@@ -61,6 +65,28 @@ class RootMessageHandler extends MessageHandler {
     super(sessionId, null);
 
     this._frameTransport = new FrameTransport(this);
+    this._sessionData = new SessionData(this);
+  }
+
+  get sessionData() {
+    return this._sessionData;
+  }
+
+  destroy() {
+    this._sessionData.destroy();
+    super.destroy();
+  }
+
+  /**
+   * Add new session data items of a given module, category and
+   * contextDescriptor.
+   *
+   * Forwards the call to the SessionData instance owned by this
+   * RootMessageHandler and propagates the information via a command to existing
+   * MessageHandlers.
+   */
+  addSessionData(sessionData = {}) {
+    return this._updateSessionData(sessionData, { mode: "add" });
   }
 
   /**
@@ -81,5 +107,58 @@ class RootMessageHandler extends MessageHandler {
           `Cannot forward command to "${command.destination.type}" from "${this.constructor.type}".`
         );
     }
+  }
+
+  /**
+   * Remove session data items of a given module, category and
+   * contextDescriptor.
+   *
+   * Forwards the call to the SessionData instance owned by this
+   * RootMessageHandler and propagates the information via a command to existing
+   * MessageHandlers.
+   */
+  removeSessionData(sessionData = {}) {
+    return this._updateSessionData(sessionData, { mode: "remove" });
+  }
+
+  _updateSessionData(sessionData, options = {}) {
+    const { mode } = options;
+
+    // TODO: We currently only support adding or removing items separately.
+    // Supporting both will be added with transactions in Bug 1741834.
+    if (mode != "add" && mode != "remove") {
+      throw new Error(`Unsupported mode for _updateSessionData ${mode}`);
+    }
+
+    const { moduleName, category, contextDescriptor, values } = sessionData;
+    const isAdding = mode === "add";
+
+    const updateMethod = isAdding ? "addSessionData" : "removeSessionData";
+    const updatedValues = this._sessionData[updateMethod](
+      moduleName,
+      category,
+      contextDescriptor,
+      values
+    );
+
+    if (updatedValues.length == 0) {
+      // Avoid unnecessary broadcast if no value was removed.
+      return [];
+    }
+
+    return this.handleCommand({
+      moduleName,
+      commandName: "_applySessionData",
+      params: {
+        [isAdding ? "added" : "removed"]: updatedValues,
+        category,
+      },
+      destination: {
+        type: WindowGlobalMessageHandler.type,
+        contextDescriptor: {
+          type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+        },
+      },
+    });
   }
 }

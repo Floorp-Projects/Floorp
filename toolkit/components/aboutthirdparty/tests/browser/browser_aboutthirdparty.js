@@ -85,15 +85,22 @@ add_task(async () => {
         { childList: true },
         () => mainDiv.childElementCount > 0
       );
+      Assert.ok(content.fetchDataDone, "onLoad() is complated.");
+    }
+
+    const reload = content.document.getElementById("button-reload");
+    if (!reload.hidden) {
+      reload.click();
+      await BrowserTestUtils.waitForMutationCondition(
+        reload,
+        { attributes: true, attributeFilter: ["hidden"] },
+        () => reload.hidden
+      );
     }
 
     Assert.ok(
       content.document.getElementById("no-data").hidden,
       "The no-data message is hidden."
-    );
-    Assert.ok(
-      content.document.getElementById("button-reload").hidden,
-      "The reload button is hidden."
     );
 
     const cards = getCardsByName(content.document, kExtensionModuleName);

@@ -100,7 +100,7 @@ void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
   if (NS_WARN_IF(!target)) {
     return;
   }
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  nsIContent* targetContent = nsIContent::FromEventTarget(target);
   if (NS_WARN_IF(!targetContent)) {
     return;
   }

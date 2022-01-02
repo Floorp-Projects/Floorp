@@ -39,9 +39,6 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        "openjdk-8",
-        # For downloading the Android SDK and NDK.
-        "wget",
         # See comment about 32 bit binaries and multilib below.
         "ncurses-32bit",
         "readline-32bit",
@@ -74,7 +71,6 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             raise e
 
         # 2. Android pieces.
-        self.ensure_java(mozconfig_builder)
         super().install_mobile_android_packages(
             mozconfig_builder, artifact_mode=artifact_mode
         )

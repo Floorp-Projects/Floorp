@@ -17,6 +17,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
+#include "nsIEarlyHintObserver.h"
 #include "nsTHashMap.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
@@ -118,7 +119,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void DisableSpdy() override;
   void DoNotRemoveAltSvc() override { mDoNotRemoveAltSvc = true; }
-  void DisableHttp3() override;
+  void DisableHttp3(bool aAllowRetryHTTPSRR) override;
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 
@@ -170,6 +171,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   virtual nsresult OnHTTPSRRAvailable(
       nsIDNSHTTPSSVCRecord* aHTTPSSVCRecord,
       nsISVCBRecord* aHighestPriorityRecord) override;
+
+  void GetHashKeyOfConnectionEntry(nsACString& aResult);
 
  private:
   friend class DeleteHttpTransaction;
@@ -390,6 +393,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<uint32_t> mCapsToClear{0};
   Atomic<bool, ReleaseAcquire> mResponseIsComplete{false};
   Atomic<bool, ReleaseAcquire> mClosed{false};
+  Atomic<bool, Relaxed> mIsHttp3Used{false};
 
   // True iff WriteSegments was called while this transaction should be
   // throttled (stop reading) Used to resume read on unblock of reading.  Conn
@@ -420,8 +424,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mContentDecodingCheck{false};
   bool mDeferredSendProgress{false};
   bool mWaitingOnPipeOut{false};
-
-  bool mIsHttp3Used = false;
   bool mDoNotRemoveAltSvc{false};
 
   // mClosed           := transaction has been explicitly closed
@@ -501,7 +503,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   ASpdySession* TunnelProvider() { return mTunnelProvider; }
   nsIInterfaceRequestor* SecurityCallbacks() { return mCallbacks; }
   // Called when this transaction is inserted in the pending queue.
-  void OnPendingQueueInserted();
+  void OnPendingQueueInserted(const nsACString& aConnectionHashKey);
 
  private:
   RefPtr<ASpdySession> mTunnelProvider;
@@ -551,6 +553,14 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   bool mEarlyDataWasAvailable = false;
   bool ShouldRestartOn0RttError(nsresult reason);
+
+  nsCOMPtr<nsIEarlyHintObserver> mEarlyHintObserver;
+  // This hash key is set when a transaction is inserted into the connection
+  // entry's pending queue.
+  // See nsHttpConnectionMgr::GetOrCreateConnectionEntry(). A transaction could
+  // be associated with the connection entry whose hash key is not the same as
+  // this transaction's.
+  nsCString mHashKeyOfConnectionEntry;
 };
 
 }  // namespace net

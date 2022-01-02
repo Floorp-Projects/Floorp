@@ -6,6 +6,7 @@
 #include "lib/jxl/blending.h"
 
 #include "lib/jxl/alpha.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {

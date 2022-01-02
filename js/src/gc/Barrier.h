@@ -15,7 +15,7 @@
 
 #include "gc/Cell.h"
 #include "gc/StoreBuffer.h"
-#include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
+#include "js/ComparisonOperators.h"     // JS::detail::DefineComparisonOps
 #include "js/experimental/TypedData.h"  // js::EnableIfABOVType
 #include "js/HeapAPI.h"
 #include "js/Id.h"
@@ -1208,6 +1208,7 @@ using GCPtrId = GCPtr<jsid>;
 using ImmutablePropertyNamePtr = ImmutableTenuredPtr<PropertyName*>;
 using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
+using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
 using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
 using WeakHeapPtrGlobalObject = WeakHeapPtr<GlobalObject*>;
 using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;

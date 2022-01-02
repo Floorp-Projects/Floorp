@@ -69,6 +69,20 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
+/*
+ * [SMDOC] WebAssembly code rules (evolving)
+ *
+ * TlsContext.get() is only to be invoked from functions that have been invoked
+ *   _directly_ by generated code as cold(!) Builtin calls, from code that is
+ *   only used by signal handlers, or from helper functions that have been
+ *   called _directly_ from a simulator.  All other code shall pass in a
+ *   JSContext* to functions that need it, or an Instance* or TlsData* since the
+ *   context is available through them.
+ *
+ *   Code that uses TlsContext.get() shall annotate each such call with the
+ *   reason why the call is OK.
+ */
+
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
@@ -112,7 +126,7 @@ static inline bool WasmThreadsFlag(JSContext* cx) {
   static inline bool Wasm##NAME##Flag(JSContext* cx) {                         \
     return (COMPILE_PRED) && (FLAG_PRED) && cx->options().wasm##NAME();        \
   }
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE);
 #undef WASM_FEATURE
 
 static inline bool WasmDebuggerActive(JSContext* cx) {
@@ -338,7 +352,7 @@ bool wasm::AnyCompilerAvailable(JSContext* cx) {
   bool wasm::NAME##Available(JSContext* cx) {                                  \
     return Wasm##NAME##Flag(cx) && (COMPILER_PRED);                            \
   }
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 bool wasm::IsSimdPrivilegedContext(JSContext* cx) {
@@ -598,7 +612,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           imports->globalObjs[index] = obj;
           val = obj->val();
         } else {
-          if (IsNumberType(global.type())) {
+          if (!global.type().isRefType()) {
             if (global.type() == ValType::I64 && !v.isBigInt()) {
               return ThrowBadImportType(cx, import.field.get(), "BigInt");
             }
@@ -606,7 +620,6 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
               return ThrowBadImportType(cx, import.field.get(), "Number");
             }
           } else {
-            MOZ_ASSERT(global.type().isReference());
             if (!global.type().isExternRef() && !v.isObjectOrNull()) {
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null value required for "
@@ -3391,7 +3404,11 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
   switch (tab.repr()) {
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!tab.isAsmJS());
-      tab.fillFuncRef(index, length, FuncRef::fromJSFunction(fun), cx);
+      if (!tab.fillFuncRef(Nothing(), index, length,
+                           FuncRef::fromJSFunction(fun), cx)) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
       break;
     case TableRepr::Ref:
       tab.fillAnyRef(index, length, any);
@@ -3406,6 +3423,7 @@ void WasmTableObject::assertRangeNull(uint32_t index, uint32_t length) const {
   switch (tab.repr()) {
     case TableRepr::Func:
       for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getFuncRef(i).tls == nullptr);
         MOZ_ASSERT(tab.getFuncRef(i).code == nullptr);
       }
       break;
@@ -3550,7 +3568,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   // Override with non-undefined value, if provided.
   RootedValue valueVal(cx, args.get(1));
   if (!valueVal.isUndefined() ||
-      (args.length() >= 2 && globalType.isReference())) {
+      (args.length() >= 2 && globalType.isRefType())) {
     if (!Val::fromJSValue(cx, globalType, valueVal, &globalVal)) {
       return false;
     }
@@ -3975,7 +3993,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (params[i].isReference()) {
+    if (params[i].isRefRepr()) {
       ASSERT_ANYREF_IS_JSOBJECT;
       RootedAnyRef anyref(cx, AnyRef::null());
       if (!ToWebAssemblyValue(cx, nextArg, params[i],
@@ -4098,7 +4116,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
 
   uint32_t offset = exnTag->tagType().argOffsets[index];
   RootedValue result(cx);
-  if (params[index].isReference()) {
+  if (params[index].isRefRepr()) {
     ASSERT_ANYREF_IS_JSOBJECT;
     RootedValue val(cx, exnObj->refs().getDenseElement(offset / sizeof(Value)));
     RootedAnyRef anyref(cx, AnyRef::fromJSObject(val.toObjectOrNull()));

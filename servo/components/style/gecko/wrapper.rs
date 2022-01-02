@@ -28,6 +28,7 @@ use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::bindings::Gecko_ElementHasAnimations;
 use crate::gecko_bindings::bindings::Gecko_ElementHasCSSAnimations;
 use crate::gecko_bindings::bindings::Gecko_ElementHasCSSTransitions;
+use crate::gecko_bindings::bindings::Gecko_ElementState;
 use crate::gecko_bindings::bindings::Gecko_GetActiveLinkAttrDeclarationBlock;
 use crate::gecko_bindings::bindings::Gecko_GetAnimationEffectCount;
 use crate::gecko_bindings::bindings::Gecko_GetAnimationRule;
@@ -40,11 +41,9 @@ use crate::gecko_bindings::bindings::Gecko_IsSignificantChild;
 use crate::gecko_bindings::bindings::Gecko_MatchLang;
 use crate::gecko_bindings::bindings::Gecko_UnsetDirtyStyleAttr;
 use crate::gecko_bindings::bindings::Gecko_UpdateAnimations;
-use crate::gecko_bindings::bindings::{Gecko_ElementState, Gecko_GetDocumentLWTheme};
 use crate::gecko_bindings::bindings::{Gecko_SetNodeFlags, Gecko_UnsetNodeFlags};
 use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::nsChangeHint;
-use crate::gecko_bindings::structs::Document_DocumentTheme as DocumentTheme;
 use crate::gecko_bindings::structs::EffectCompositor_CascadeLevel as CascadeLevel;
 use crate::gecko_bindings::structs::ELEMENT_HANDLED_SNAPSHOT;
 use crate::gecko_bindings::structs::ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO;
@@ -63,7 +62,7 @@ use crate::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use crate::properties::{ComputedValues, LonghandId};
 use crate::properties::{Importance, PropertyDeclaration, PropertyDeclarationBlock};
 use crate::rule_tree::CascadeLevel as ServoCascadeLevel;
-use crate::selector_parser::{AttrValue, HorizontalDirection, Lang};
+use crate::selector_parser::{AttrValue, Lang};
 use crate::shared_lock::{Locked, SharedRwLock};
 use crate::string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
 use crate::stylist::CascadeData;
@@ -757,12 +756,6 @@ impl<'le> GeckoElement<'le> {
             .get_bool_flag(nsINode_BooleanFlag::ElementMayHaveStyle)
     }
 
-    #[inline]
-    fn document_theme(&self) -> DocumentTheme {
-        let node = self.as_node();
-        unsafe { Gecko_GetDocumentLWTheme(node.owner_doc().0) }
-    }
-
     /// Only safe to call on the main thread, with exclusive access to the
     /// element and its ancestors.
     ///
@@ -1322,7 +1315,11 @@ impl<'le> TElement for GeckoElement<'le> {
     where
         F: FnMut(&AtomIdent),
     {
-        for attr in self.non_mapped_attrs().iter().chain(self.mapped_attrs().iter()) {
+        for attr in self
+            .non_mapped_attrs()
+            .iter()
+            .chain(self.mapped_attrs().iter())
+        {
             let is_nodeinfo = attr.mName.mBits & 1 != 0;
             unsafe {
                 let atom = if is_nodeinfo {
@@ -1512,15 +1509,14 @@ impl<'le> TElement for GeckoElement<'le> {
     #[inline]
     fn may_have_animations(&self) -> bool {
         if let Some(pseudo) = self.implemented_pseudo_element() {
-            if !pseudo.is_animatable() {
-                return false;
+            if pseudo.animations_stored_in_parent() {
+                // FIXME(emilio): When would the parent of a ::before / ::after
+                // pseudo-element be null?
+                return self.parent_element().map_or(false, |p| {
+                    p.as_node()
+                        .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
+                });
             }
-            // FIXME(emilio): When would the parent of a ::before / ::after
-            // pseudo-element be null?
-            return self.parent_element().map_or(false, |p| {
-                p.as_node()
-                    .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
-            });
         }
         self.as_node()
             .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
@@ -2084,7 +2080,6 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::InRange |
             NonTSPseudoClass::OutOfRange |
             NonTSPseudoClass::Default |
-            NonTSPseudoClass::MozSubmitInvalid |
             NonTSPseudoClass::UserValid |
             NonTSPseudoClass::UserInvalid |
             NonTSPseudoClass::MozMeterOptimum |
@@ -2098,9 +2093,10 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozTopmostModalDialog |
             NonTSPseudoClass::Active |
             NonTSPseudoClass::Hover |
-            NonTSPseudoClass::MozAutofillPreview => {
-                self.state().intersects(pseudo_class.state_flag())
-            },
+            NonTSPseudoClass::MozAutofillPreview |
+            NonTSPseudoClass::MozRevealed |
+            NonTSPseudoClass::MozValueEmpty |
+            NonTSPseudoClass::Dir(..) => self.state().intersects(pseudo_class.state_flag()),
             NonTSPseudoClass::AnyLink => self.is_link(),
             NonTSPseudoClass::Link => {
                 self.is_link() && context.visited_handling().matches_unvisited()
@@ -2151,40 +2147,27 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 bindings::Gecko_IsSelectListBox(self.0)
             },
             NonTSPseudoClass::MozIsHTML => self.is_html_element_in_html_document(),
-            NonTSPseudoClass::MozLWTheme => self.document_theme() != DocumentTheme::Doc_Theme_None,
-            NonTSPseudoClass::MozLWThemeBrightText => {
-                self.document_theme() == DocumentTheme::Doc_Theme_Bright
-            },
-            NonTSPseudoClass::MozLWThemeDarkText => {
-                self.document_theme() == DocumentTheme::Doc_Theme_Dark
-            },
+
+            NonTSPseudoClass::MozLWTheme |
+            NonTSPseudoClass::MozLWThemeBrightText |
+            NonTSPseudoClass::MozLWThemeDarkText |
+            NonTSPseudoClass::MozLocaleDir(..) |
             NonTSPseudoClass::MozWindowInactive => {
-                let state_bit = DocumentState::NS_DOCUMENT_STATE_WINDOW_INACTIVE;
+                let state_bit = pseudo_class.document_state_flag();
+                if state_bit.is_empty() {
+                    debug_assert!(
+                        matches!(pseudo_class, NonTSPseudoClass::MozLocaleDir(..)),
+                        "Only moz-locale-dir should ever return an empty state"
+                    );
+                    return false;
+                }
                 if context.extra_data.document_state.intersects(state_bit) {
                     return !context.in_negation();
                 }
-
                 self.document_state().contains(state_bit)
             },
             NonTSPseudoClass::MozPlaceholder => false,
             NonTSPseudoClass::Lang(ref lang_arg) => self.match_element_lang(None, lang_arg),
-            NonTSPseudoClass::MozLocaleDir(ref dir) => {
-                let state_bit = DocumentState::NS_DOCUMENT_STATE_RTL_LOCALE;
-                if context.extra_data.document_state.intersects(state_bit) {
-                    // NOTE(emilio): We could still return false for values
-                    // other than "ltr" and "rtl", but we don't bother.
-                    return !context.in_negation();
-                }
-
-                let doc_is_rtl = self.document_state().contains(state_bit);
-
-                match dir.as_horizontal_direction() {
-                    Some(HorizontalDirection::Ltr) => !doc_is_rtl,
-                    Some(HorizontalDirection::Rtl) => doc_is_rtl,
-                    None => false,
-                }
-            },
-            NonTSPseudoClass::Dir(ref dir) => self.state().intersects(dir.element_state()),
         }
     }
 

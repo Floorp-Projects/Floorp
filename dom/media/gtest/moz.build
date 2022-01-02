@@ -10,9 +10,11 @@ DEFINES["ENABLE_SET_CUBEB_BACKEND"] = True
 
 LOCAL_INCLUDES += [
     "/dom/media/mediasink",
-    "/dom/media/webrtc/common/",
+    "/dom/media/systemservices",
+    "/dom/media/webrtc",
+    "/dom/media/webrtc/common",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [
@@ -52,6 +54,7 @@ UNIFIED_SOURCES += [
     "TestMuxer.cpp",
     "TestOggWriter.cpp",
     "TestOpusParser.cpp",
+    "TestPacer.cpp",
     "TestRust.cpp",
     "TestTimeUnit.cpp",
     "TestVideoSegment.cpp",
@@ -74,6 +77,7 @@ if CONFIG["MOZ_WEBM_ENCODER"]:
 if CONFIG["MOZ_WEBRTC"]:
     UNIFIED_SOURCES += [
         "TestAudioInputProcessing.cpp",
+        "TestRTCStatsTimestampMaker.cpp",
     ]
 
 if CONFIG["OS_TARGET"] != "Android":
@@ -128,9 +132,6 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = "xul-gtest"
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += [

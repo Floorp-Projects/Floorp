@@ -761,8 +761,10 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
   JxlEncoderOptions* enc_opts;
   enc_opts = JxlEncoderOptionsCreate(enc.get(), nullptr);
 
-  JxlEncoderOptionsSetEffort(enc_opts, jxl_save_opts.encoding_effort);
-  JxlEncoderOptionsSetDecodingSpeed(enc_opts, jxl_save_opts.faster_decoding);
+  JxlEncoderOptionsSetInteger(enc_opts, JXL_ENC_OPTION_EFFORT,
+                              jxl_save_opts.encoding_effort);
+  JxlEncoderOptionsSetInteger(enc_opts, JXL_ENC_OPTION_DECODING_SPEED,
+                              jxl_save_opts.faster_decoding);
 
   // lossless mode
   if (jxl_save_opts.lossless || jxl_save_opts.distance < 0.01) {

@@ -47,3 +47,17 @@ document.getElementById("onboardingLearnMore").addEventListener("click", () => {
   window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE;
   window.close();
 });
+
+// If we change the system font size while displaying the dialog, problem that
+// components are hidden might happen dependent on the size. To avoid it, we
+// resize dialog explicitly whenever the size of internal components are changed.
+window.addEventListener("load", () => {
+  const resizeObserver = new ResizeObserver(() => {
+    // resizeDialog() does not make window height smaller even if the total
+    // height of internal components is smaller. So, we minimize the window
+    // size once, then prompt to recalculate to be appropriate size.
+    window.resizeBy(0, -window.innerHeight);
+    window.opener.gDialogBox.dialog.resizeDialog();
+  });
+  resizeObserver.observe(document.getElementById("infoContainer"));
+});

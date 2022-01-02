@@ -156,7 +156,8 @@ IPCResult LockManagerParent::RecvPLockRequestConstructor(
     mManagedLocks->mHeldLocks.RemoveElementsBy(
         [&aRequest](const RefPtr<LockRequestParent>& aHeld) {
           if (aHeld->Data().name() == aRequest.name()) {
-            Unused << NS_WARN_IF(!aHeld->SendAbort());
+            Unused << NS_WARN_IF(
+                !PLockRequestParent::Send__delete__(aHeld, true));
             return true;
           }
           return false;

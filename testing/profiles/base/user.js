@@ -4,8 +4,3 @@
 
 // This is useful for testing a pref on try.
 /* globals user_pref */
-
-// Explicitly turn off fission so we don't accidentally use the wrong default
-// value. This can be removed once harnesses and tasks assume fission by
-// default.
-user_pref("fission.autostart", false);

@@ -45,7 +45,6 @@ interface nsIDownloadObserver : nsISupports
      */
     void onDownloadComplete(in nsIDownloader downloader,
                             in nsIRequest    request,
-                            in nsISupports   ctxt,
                             in nsresult      status,
                             in nsIFile       result);
 };

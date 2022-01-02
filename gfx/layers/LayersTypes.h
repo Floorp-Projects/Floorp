@@ -165,15 +165,7 @@ typedef BaseTransactionId<CompositionOpportunityType> CompositionOpportunityId;
 /// content in the window.
 enum class WindowKind : int8_t { MAIN = 0, SECONDARY, LAST };
 
-enum class LayersBackend : int8_t {
-  LAYERS_NONE = 0,
-  LAYERS_BASIC,
-  LAYERS_OPENGL,
-  LAYERS_D3D11,
-  LAYERS_CLIENT,
-  LAYERS_WR,
-  LAYERS_LAST
-};
+enum class LayersBackend : int8_t { LAYERS_NONE = 0, LAYERS_WR, LAYERS_LAST };
 
 enum class WebRenderBackend : int8_t { HARDWARE = 0, SOFTWARE, LAST };
 
@@ -220,62 +212,6 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
 // Unimplemented - PRESERVE_ASPECT_RATIO_CONTAIN
 ));
 // clang-format on
-
-struct EventRegions {
-  // The hit region for a layer contains all areas on the layer that are
-  // sensitive to events. This region is an over-approximation and may
-  // contain regions that are not actually sensitive, but any such regions
-  // will be included in the mDispatchToContentHitRegion.
-  nsIntRegion mHitRegion;
-  // The mDispatchToContentHitRegion for a layer contains all areas for
-  // which the main-thread must be consulted before responding to events.
-  // This region will be a subregion of mHitRegion.
-  nsIntRegion mDispatchToContentHitRegion;
-
-  // The following regions represent the touch-action areas of this layer.
-  // All of these regions are approximations to the true region, but any
-  // variance between the approximation and the true region is guaranteed
-  // to be included in the mDispatchToContentHitRegion.
-  nsIntRegion mNoActionRegion;
-  nsIntRegion mHorizontalPanRegion;
-  nsIntRegion mVerticalPanRegion;
-
-  // Set to true if events targeting the dispatch-to-content region
-  // require target confirmation.
-  // See CompositorHitTestFlags::eRequiresTargetConfirmation.
-  // We don't bother tracking a separate region for this (which would
-  // be a sub-region of the dispatch-to-content region), because the added
-  // overhead of region computations is not worth it, and because
-  // EventRegions are going to be deprecated anyways.
-  bool mDTCRequiresTargetConfirmation;
-
-  EventRegions();
-
-  explicit EventRegions(nsIntRegion aHitRegion);
-
-  // This constructor takes the maybe-hit region and uses it to update the
-  // hit region and dispatch-to-content region. It is useful from converting
-  // from the display item representation to the layer representation.
-  EventRegions(const nsIntRegion& aHitRegion,
-               const nsIntRegion& aMaybeHitRegion,
-               const nsIntRegion& aDispatchToContentRegion,
-               const nsIntRegion& aNoActionRegion,
-               const nsIntRegion& aHorizontalPanRegion,
-               const nsIntRegion& aVerticalPanRegion,
-               bool aDTCRequiresTargetConfirmation);
-
-  bool operator==(const EventRegions& aRegions) const;
-  bool operator!=(const EventRegions& aRegions) const;
-  friend std::ostream& operator<<(std::ostream& aStream, const EventRegions& e);
-
-  void ApplyTranslationAndScale(float aXTrans, float aYTrans, float aXScale,
-                                float aYScale);
-  void Transform(const gfx::Matrix4x4& aTransform);
-  void OrWith(const EventRegions& aOther);
-
-  bool IsEmpty() const;
-  void SetEmpty();
-};
 
 // Bit flags that go on a RefLayer and override the
 // event regions in the entire subtree below. This is needed for propagating

@@ -740,18 +740,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkAt(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkIndexOf(
-    const uint64_t& aID, const uint64_t& aLinkID, int32_t* aIndex) {
-  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
-  LocalAccessible* link = IdToAccessible(aLinkID);
-  *aIndex = -1;
-  if (acc && link) {
-    *aIndex = acc->LinkIndexOf(link);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkIndexAtOffset(
     const uint64_t& aID, const uint32_t& aOffset, int32_t* aIndex) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
@@ -1498,15 +1486,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvStep(const uint64_t& aID,
   LocalAccessible* acc = IdToAccessible(aID);
   if (acc) {
     *aStep = acc->Step();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessibleChild::RecvTakeFocus(const uint64_t& aID) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->TakeFocus();
   }
 
   return IPC_OK();

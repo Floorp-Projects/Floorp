@@ -15,6 +15,8 @@
  */
 
 #![allow(
+    // for `if_then_panic` until it reaches stable
+    unknown_lints,
     // We use loops for getting early-out of scope without closures.
     clippy::never_loop,
     // We don't use syntax sugar where it's not necessary.
@@ -29,6 +31,10 @@
     clippy::single_match,
     // Push commands are more regular than macros.
     clippy::vec_init_then_push,
+    // "if panic" is a good uniform construct.
+    clippy::if_then_panic,
+    // We unsafe impl `Send` for a reason.
+    clippy::non_send_fields_in_send_ty,
     // TODO!
     clippy::missing_safety_doc,
 )]
@@ -49,7 +55,13 @@ compile_error!("DX12 API enabled on non-Windows OS. If your project is not using
 #[cfg(all(feature = "dx12", windows))]
 mod dx12;
 mod empty;
-#[cfg(feature = "gles")]
+#[cfg(all(
+    feature = "gles",
+    any(
+        target_arch = "wasm32",
+        all(unix, not(target_os = "ios"), not(target_os = "macos"))
+    )
+))]
 mod gles;
 #[cfg(all(feature = "metal", any(target_os = "macos", target_os = "ios")))]
 mod metal;
@@ -61,7 +73,13 @@ pub mod api {
     #[cfg(feature = "dx12")]
     pub use super::dx12::Api as Dx12;
     pub use super::empty::Api as Empty;
-    #[cfg(feature = "gles")]
+    #[cfg(all(
+        feature = "gles",
+        any(
+            target_arch = "wasm32",
+            all(unix, not(target_os = "ios"), not(target_os = "macos"))
+        )
+    ))]
     pub use super::gles::Api as Gles;
     #[cfg(feature = "metal")]
     pub use super::metal::Api as Metal;
@@ -69,10 +87,13 @@ pub mod api {
     pub use super::vulkan::Api as Vulkan;
 }
 
+#[cfg(feature = "vulkan")]
+pub use vulkan::UpdateAfterBindTypes;
+
 use std::{
     borrow::Borrow,
     fmt,
-    num::NonZeroU8,
+    num::{NonZeroU32, NonZeroU8},
     ops::{Range, RangeInclusive},
     ptr::NonNull,
 };
@@ -188,7 +209,11 @@ pub trait Surface<A: Api>: Send + Sync {
 }
 
 pub trait Adapter<A: Api>: Send + Sync {
-    unsafe fn open(&self, features: wgt::Features) -> Result<OpenDevice<A>, DeviceError>;
+    unsafe fn open(
+        &self,
+        features: wgt::Features,
+        limits: &wgt::Limits,
+    ) -> Result<OpenDevice<A>, DeviceError>;
 
     /// Return the set of supported capabilities for a texture format.
     unsafe fn texture_format_capabilities(
@@ -345,13 +370,6 @@ pub trait CommandEncoder<A: Api>: Send + Sync {
     // copy operations
 
     unsafe fn clear_buffer(&mut self, buffer: &A::Buffer, range: MemoryRange);
-
-    // Does not support depth/stencil or multisampled textures
-    unsafe fn clear_texture(
-        &mut self,
-        texture: &A::Texture,
-        subresource_range: &wgt::ImageSubresourceRange,
-    );
 
     unsafe fn copy_buffer_to_buffer<T>(&mut self, src: &A::Buffer, dst: &A::Buffer, regions: T)
     where
@@ -521,6 +539,14 @@ bitflags!(
         const BASE_VERTEX_INSTANCE = 1 << 0;
         /// Include support for num work groups builtin.
         const NUM_WORK_GROUPS = 1 << 1;
+    }
+);
+
+bitflags!(
+    /// Pipeline layout creation flags.
+    pub struct BindGroupLayoutFlags: u32 {
+        /// Allows for bind group binding arrays to be shorter than the array in the BGL.
+        const PARTIALLY_BOUND = 1 << 0;
     }
 );
 
@@ -798,6 +824,7 @@ pub struct SamplerDescriptor<'a> {
 #[derive(Clone, Debug)]
 pub struct BindGroupLayoutDescriptor<'a> {
     pub label: Label<'a>,
+    pub flags: BindGroupLayoutFlags,
     pub entries: &'a [wgt::BindGroupLayoutEntry],
 }
 
@@ -847,6 +874,7 @@ impl<A: Api> Clone for TextureBinding<'_, A> {
 pub struct BindGroupEntry {
     pub binding: u32,
     pub resource_index: u32,
+    pub count: u32,
 }
 
 /// BindGroup descriptor.
@@ -891,6 +919,7 @@ impl fmt::Debug for NagaShader {
 }
 
 /// Shader input.
+#[allow(clippy::large_enum_variant)]
 pub enum ShaderInput<'a> {
     Naga(NagaShader),
     SpirV(&'a [u32]),
@@ -898,6 +927,7 @@ pub enum ShaderInput<'a> {
 
 pub struct ShaderModuleDescriptor<'a> {
     pub label: Label<'a>,
+    pub runtime_checks: bool,
 }
 
 /// Describes a programmable pipeline stage.
@@ -961,6 +991,9 @@ pub struct RenderPipelineDescriptor<'a, A: Api> {
     pub fragment_stage: Option<ProgrammableStage<'a, A>>,
     /// The effect of draw calls on the color aspect of the output target.
     pub color_targets: &'a [wgt::ColorTargetState],
+    /// If the pipeline will be used with a multiview render pass, this indicates how many array
+    /// layers the attachments will have.
+    pub multiview: Option<NonZeroU32>,
 }
 
 /// Specifies how the alpha channel of the textures should be handled during (martin mouv i step)
@@ -1114,6 +1147,7 @@ pub struct RenderPassDescriptor<'a, A: Api> {
     pub sample_count: u32,
     pub color_attachments: &'a [ColorAttachment<'a, A>],
     pub depth_stencil_attachment: Option<DepthStencilAttachment<'a, A>>,
+    pub multiview: Option<NonZeroU32>,
 }
 
 #[derive(Clone, Debug)]

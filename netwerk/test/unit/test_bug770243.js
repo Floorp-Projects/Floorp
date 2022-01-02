@@ -232,9 +232,7 @@ function run_test() {
   httpserv.registerPathHandler("/", handler);
   httpserv.start(-1);
 
-  const prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
+  const prefs = Services.prefs;
   prefs.setCharPref("network.proxy.http", "localhost");
   prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);

@@ -20,6 +20,7 @@
 
 #ifdef XP_WIN
 #  include "mozilla/webrender/RenderCompositorANGLE.h"
+#  include "mozilla/widget/WinCompositorWidget.h"
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WAYLAND) || defined(MOZ_X11)
@@ -119,6 +120,12 @@ void wr_compositor_get_capabilities(void* aCompositor,
                                     CompositorCapabilities* aCaps) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
   compositor->GetCompositorCapabilities(aCaps);
+}
+
+void wr_compositor_get_window_visibility(void* aCompositor,
+                                         WindowVisibility* aVisibility) {
+  RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
+  compositor->GetWindowVisibility(aVisibility);
 }
 
 void wr_compositor_unbind(void* aCompositor) {
@@ -225,6 +232,17 @@ void RenderCompositor::GetCompositorCapabilities(
   } else {
     aCaps->max_update_rects = 0;
   }
+}
+
+void RenderCompositor::GetWindowVisibility(WindowVisibility* aVisibility) {
+#ifdef XP_WIN
+  auto* widget = mWidget->AsWindows();
+  if (!widget) {
+    return;
+  }
+  aVisibility->size_mode = ToWrWindowSizeMode(widget->GetWindowSizeMode());
+  aVisibility->is_fully_occluded = widget->GetWindowIsFullyOccluded();
+#endif
 }
 
 GLenum RenderCompositor::IsContextLost(bool aForce) {

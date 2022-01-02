@@ -38,7 +38,7 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
   ~RemoteWorkerControllerChild() = default;
 
   PFetchEventOpChild* AllocPFetchEventOpChild(
-      const ServiceWorkerFetchEventOpArgs& aArgs);
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs);
 
   bool DeallocPFetchEventOpChild(PFetchEventOpChild* aActor);
 

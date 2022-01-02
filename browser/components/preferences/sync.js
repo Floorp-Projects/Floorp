@@ -4,18 +4,8 @@
 
 /* import-globals-from preferences.js */
 
-var { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-var { FxAccounts, fxAccounts } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
-);
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UIState: "resource://services-sync/UIState.jsm",
 });
 
 const FXA_PAGE_LOGGED_OUT = 0;

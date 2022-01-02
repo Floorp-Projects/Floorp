@@ -15,6 +15,8 @@
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
 
+#include "gc/ObjectKind-inl.h"
+
 namespace js {
 namespace jit {
 
@@ -144,8 +146,7 @@ static bool IsLambdaEscaped(MInstruction* lambda, const Shape* shape) {
 
 static inline bool IsOptimizableObjectInstruction(MInstruction* ins) {
   return ins->isNewObject() || ins->isNewPlainObject() ||
-         ins->isCreateThisWithTemplate() || ins->isNewCallObject() ||
-         ins->isNewIterator();
+         ins->isNewCallObject() || ins->isNewIterator();
 }
 
 // Returns False if the object is not escaped and if it is optimizable by
@@ -729,10 +730,22 @@ static bool IndexOf(MDefinition* ins, int32_t* res) {
   return true;
 }
 
+static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
+  return ins->isNewArray() || ins->isNewArrayObject();
+}
+
+// We don't support storing holes when doing scalar replacement, so any
+// optimizable MNewArrayObject instruction is guaranteed to be packed.
+static inline bool IsPackedArray(MInstruction* ins) {
+  return ins->isNewArrayObject();
+}
+
 // Returns False if the elements is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
-static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
+static bool IsElementEscaped(MDefinition* def, MInstruction* newArray,
+                             uint32_t arraySize) {
   MOZ_ASSERT(def->isElements());
+  MOZ_ASSERT(IsOptimizableArrayInstruction(newArray));
 
   JitSpewDef(JitSpew_Escape, "Check elements\n", def);
   JitSpewIndent spewIndent(JitSpew_Escape);
@@ -809,6 +822,24 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
         MOZ_ASSERT(access->toArrayLength()->elements() == def);
         break;
 
+      case MDefinition::Opcode::ApplyArray:
+        MOZ_ASSERT(access->toApplyArray()->getElements() == def);
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n",
+                     access);
+          return true;
+        }
+        break;
+
+      case MDefinition::Opcode::ConstructArray:
+        MOZ_ASSERT(access->toConstructArray()->getElements() == def);
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n",
+                     access);
+          return true;
+        }
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", access);
         return true;
@@ -816,10 +847,6 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
   }
   JitSpew(JitSpew_Escape, "Elements is not escaped");
   return false;
-}
-
-static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
-  return ins->isNewArray() || ins->isNewArrayObject();
 }
 
 // Returns False if the array is not escaped and if it is optimizable by
@@ -873,7 +900,7 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
       case MDefinition::Opcode::Elements: {
         MElements* elem = def->toElements();
         MOZ_ASSERT(elem->object() == ins);
-        if (IsElementEscaped(elem, length)) {
+        if (IsElementEscaped(elem, newArray, length)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", elem);
           return true;
         }
@@ -909,6 +936,19 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
         break;
       }
 
+      case MDefinition::Opcode::GuardArrayIsPacked: {
+        auto* guard = def->toGuardArrayIsPacked();
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n", def);
+          return true;
+        }
+        if (IsArrayEscaped(guard, newArray)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
       case MDefinition::Opcode::Unbox: {
         if (def->type() != MIRType::Object) {
           JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
@@ -916,6 +956,16 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
         }
         if (IsArrayEscaped(def->toInstruction(), newArray)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      // This instruction is supported for |JSOp::OptimizeSpreadCall|.
+      case MDefinition::Opcode::Compare: {
+        bool canFold;
+        if (!def->toCompare()->tryFold(&canFold)) {
+          JitSpewDef(JitSpew_Escape, "has an unsupported compare\n", def);
           return true;
         }
         break;
@@ -998,7 +1048,11 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitPostWriteElementBarrier(MPostWriteElementBarrier* ins);
   void visitGuardShape(MGuardShape* ins);
   void visitGuardToClass(MGuardToClass* ins);
+  void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
   void visitUnbox(MUnbox* ins);
+  void visitCompare(MCompare* ins);
+  void visitApplyArray(MApplyArray* ins);
+  void visitConstructArray(MConstructArray* ins);
 };
 
 const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -1322,6 +1376,19 @@ void ArrayMemoryView::visitGuardToClass(MGuardToClass* ins) {
   ins->block()->discard(ins);
 }
 
+void ArrayMemoryView::visitGuardArrayIsPacked(MGuardArrayIsPacked* ins) {
+  // Skip guards on other objects.
+  if (ins->array() != arr_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(arr_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 void ArrayMemoryView::visitUnbox(MUnbox* ins) {
   // Skip unrelated unboxes.
   if (ins->getOperand(0) != arr_) {
@@ -1334,6 +1401,109 @@ void ArrayMemoryView::visitUnbox(MUnbox* ins) {
 
   // Remove the unbox.
   ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitCompare(MCompare* ins) {
+  // Skip unrelated comparisons.
+  if (ins->lhs() != arr_ && ins->rhs() != arr_) {
+    return;
+  }
+
+  bool folded;
+  MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
+
+  auto* cst = MConstant::New(alloc_, BooleanValue(folded));
+  ins->block()->insertBefore(ins, cst);
+
+  // Replace the comparison with a constant.
+  ins->replaceAllUsesWith(cst);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitApplyArray(MApplyArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isArrayStateElements(elements)) {
+    return;
+  }
+
+  uint32_t numElements = state_->numElements();
+
+  CallInfo callInfo(alloc_, /*constructing=*/false, ins->ignoresReturnValue());
+  if (!callInfo.initForApplyArray(ins->getFunction(), ins->getThis(),
+                                  numElements)) {
+    oom_ = true;
+    return;
+  }
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    auto* element = state_->getElement(i);
+    MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+    callInfo.initArg(i, element);
+  }
+
+  auto addUndefined = [this]() { return undefinedVal_; };
+
+  bool needsThisCheck = false;
+  bool isDOMCall = false;
+  auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
+                        ins->getSingleTarget(), isDOMCall);
+  if (!ins->maybeCrossRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, call);
+  ins->replaceAllUsesWith(call);
+
+  call->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void ArrayMemoryView::visitConstructArray(MConstructArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isArrayStateElements(elements)) {
+    return;
+  }
+
+  uint32_t numElements = state_->numElements();
+
+  CallInfo callInfo(alloc_, /*constructing=*/true, ins->ignoresReturnValue());
+  if (!callInfo.initForConstructArray(ins->getFunction(), ins->getThis(),
+                                      ins->getNewTarget(), numElements)) {
+    oom_ = true;
+    return;
+  }
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    auto* element = state_->getElement(i);
+    MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+    callInfo.initArg(i, element);
+  }
+
+  auto addUndefined = [this]() { return undefinedVal_; };
+
+  bool needsThisCheck = ins->needsThisCheck();
+  bool isDOMCall = false;
+  auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
+                        ins->getSingleTarget(), isDOMCall);
+  if (!ins->maybeCrossRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, call);
+  ins->replaceAllUsesWith(call);
+
+  call->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
 }
 
 static inline bool IsOptimizableArgumentsInstruction(MInstruction* ins) {
@@ -1354,12 +1524,16 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   }
 
   void visitGuardToClass(MGuardToClass* ins);
+  void visitGuardProto(MGuardProto* ins);
   void visitGuardArgumentsObjectFlags(MGuardArgumentsObjectFlags* ins);
   void visitUnbox(MUnbox* ins);
   void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
   void visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins);
+  void visitLoadArgumentsObjectArgHole(MLoadArgumentsObjectArgHole* ins);
+  void visitInArgumentsObjectArg(MInArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
   void visitApplyArgsObj(MApplyArgsObj* ins);
+  void visitArrayFromArgumentsObject(MArrayFromArgumentsObject* ins);
   void visitLoadFixedSlot(MLoadFixedSlot* ins);
 
  public:
@@ -1419,6 +1593,14 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
         break;
       }
 
+      case MDefinition::Opcode::GuardProto: {
+        if (escapes(def->toInstruction(), guardedForMapped)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
       case MDefinition::Opcode::GuardArgumentsObjectFlags: {
         if (escapes(def->toInstruction(), guardedForMapped)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
@@ -1464,6 +1646,9 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
+      case MDefinition::Opcode::LoadArgumentsObjectArgHole:
+      case MDefinition::Opcode::InArgumentsObjectArg:
+      case MDefinition::Opcode::ArrayFromArgumentsObject:
         break;
 
       // This instruction is a no-op used to test that scalar replacement
@@ -1526,6 +1711,35 @@ void ArgumentsReplacer::visitGuardToClass(MGuardToClass* ins) {
     return;
   }
   MOZ_ASSERT(ins->isArgumentsObjectClass());
+
+  // Replace the guard with the args object.
+  ins->replaceAllUsesWith(args_);
+
+  // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitGuardProto(MGuardProto* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != args_) {
+    return;
+  }
+
+#ifdef DEBUG
+  // The prototype can only be changed through explicit operations, for example
+  // by calling |Reflect.setPrototype|. We have already determined that the args
+  // object doesn't escape, so its prototype can't be mutated.
+  //
+  // Additionally check the prototype of the template object, if present, to
+  // ensure the expected prototype is used.
+
+  if (args_->isCreateArgumentsObject()) {
+    auto* expected = &ins->expected()->toConstant()->toObject();
+    auto* templateObj = args_->toCreateArgumentsObject()->templateObject();
+
+    MOZ_ASSERT_IF(templateObj, templateObj->staticPrototype() == expected);
+  }
+#endif
 
   // Replace the guard with the args object.
   ins->replaceAllUsesWith(args_);
@@ -1677,6 +1891,65 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
   ins->block()->discard(ins);
 }
 
+void ArgumentsReplacer::visitLoadArgumentsObjectArgHole(
+    MLoadArgumentsObjectArgHole* ins) {
+  // Skip other arguments objects.
+  if (ins->argsObject() != args_) {
+    return;
+  }
+
+  MDefinition* index = ins->index();
+
+  MInstruction* loadArg;
+  if (isInlinedArguments()) {
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
+
+    loadArg = MGetInlinedArgumentHole::New(alloc(), index, actualArgs);
+  } else {
+    auto* length = MArgumentsLength::New(alloc());
+    ins->block()->insertBefore(ins, length);
+
+    loadArg = MGetFrameArgumentHole::New(alloc(), index, length);
+  }
+  loadArg->setBailoutKind(ins->bailoutKind());
+  ins->block()->insertBefore(ins, loadArg);
+  ins->replaceAllUsesWith(loadArg);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitInArgumentsObjectArg(MInArgumentsObjectArg* ins) {
+  // Skip other arguments objects.
+  if (ins->argsObject() != args_) {
+    return;
+  }
+
+  MDefinition* index = ins->index();
+
+  // Ensure the index is non-negative.
+  auto* guardedIndex = MGuardInt32IsNonNegative::New(alloc(), index);
+  guardedIndex->setBailoutKind(ins->bailoutKind());
+  ins->block()->insertBefore(ins, guardedIndex);
+
+  MInstruction* length;
+  if (isInlinedArguments()) {
+    uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
+    length = MConstant::New(alloc(), Int32Value(argc));
+  } else {
+    length = MArgumentsLength::New(alloc());
+  }
+  ins->block()->insertBefore(ins, length);
+
+  auto* compare = MCompare::New(alloc(), guardedIndex, length, JSOp::Lt,
+                                MCompare::Compare_Int32);
+  ins->block()->insertBefore(ins, compare);
+  ins->replaceAllUsesWith(compare);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 void ArgumentsReplacer::visitArgumentsObjectLength(
     MArgumentsObjectLength* ins) {
   // Skip other arguments objects.
@@ -1754,6 +2027,95 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
   ins->block()->discard(ins);
 }
 
+void ArgumentsReplacer::visitArrayFromArgumentsObject(
+    MArrayFromArgumentsObject* ins) {
+  // Skip other arguments objects.
+  if (ins->argsObject() != args_) {
+    return;
+  }
+
+  // We can only replace `arguments` because we've verified that the `arguments`
+  // object hasn't been modified in any way. This implies that the arguments
+  // stored in the stack frame haven't been changed either.
+  //
+  // The idea to replace `arguments` in spread calls `f(...arguments)` is now as
+  // follows:
+  // We replace |MArrayFromArgumentsObject| with the identical instructions we
+  // emit when building a rest-array object, cf. |WarpBuilder::build_Rest()|. In
+  // a next step, scalar replacement will then replace these new instructions
+  // themselves.
+
+  Shape* shape = ins->shape();
+  MOZ_ASSERT(shape);
+
+  MDefinition* replacement;
+  if (isInlinedArguments()) {
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
+    uint32_t numActuals = actualArgs->numActuals();
+    MOZ_ASSERT(numActuals <= ArgumentsObject::MaxInlinedArgs);
+
+    // Contrary to |WarpBuilder::build_Rest()|, we can always create
+    // MNewArrayObject, because we're guaranteed to have a shape and all
+    // arguments can be stored into fixed elements.
+    static_assert(
+        gc::CanUseFixedElementsForArray(ArgumentsObject::MaxInlinedArgs));
+
+    gc::InitialHeap heap = gc::DefaultHeap;
+
+    // Allocate an array of the correct size.
+    auto* shapeConstant = MConstant::NewShape(alloc(), shape);
+    ins->block()->insertBefore(ins, shapeConstant);
+
+    auto* newArray =
+        MNewArrayObject::New(alloc(), shapeConstant, numActuals, heap);
+    ins->block()->insertBefore(ins, newArray);
+
+    if (numActuals) {
+      auto* elements = MElements::New(alloc(), newArray);
+      ins->block()->insertBefore(ins, elements);
+
+      MConstant* index = nullptr;
+      for (uint32_t i = 0; i < numActuals; i++) {
+        index = MConstant::New(alloc(), Int32Value(i));
+        ins->block()->insertBefore(ins, index);
+
+        MDefinition* arg = actualArgs->getArg(i);
+        auto* store = MStoreElement::New(alloc(), elements, index, arg,
+                                         /* needsHoleCheck = */ false);
+        ins->block()->insertBefore(ins, store);
+
+        auto* barrier = MPostWriteBarrier::New(alloc(), newArray, arg);
+        ins->block()->insertBefore(ins, barrier);
+      }
+
+      auto* initLength = MSetInitializedLength::New(alloc(), elements, index);
+      ins->block()->insertBefore(ins, initLength);
+    }
+
+    replacement = newArray;
+  } else {
+    // We can use |MRest| to read all arguments, because we've guaranteed that
+    // the arguments stored in the stack frame haven't changed; see the comment
+    // at the start of this method.
+
+    auto* numActuals = MArgumentsLength::New(alloc());
+    ins->block()->insertBefore(ins, numActuals);
+
+    // Set |numFormals| to zero to read all arguments, including any formals.
+    uint32_t numFormals = 0;
+
+    auto* rest = MRest::New(alloc(), numActuals, numFormals, shape);
+    ins->block()->insertBefore(ins, rest);
+
+    replacement = rest;
+  }
+
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 void ArgumentsReplacer::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   // Skip other arguments objects.
   if (ins->object() != args_) {
@@ -1774,6 +2136,487 @@ void ArgumentsReplacer::visitLoadFixedSlot(MLoadFixedSlot* ins) {
 
   // Remove original instruction.
   ins->block()->discard(ins);
+}
+
+static inline bool IsOptimizableRestInstruction(MInstruction* ins) {
+  return ins->isRest();
+}
+
+class RestReplacer : public MDefinitionVisitorDefaultNoop {
+ private:
+  MIRGenerator* mir_;
+  MIRGraph& graph_;
+  MInstruction* rest_;
+
+  TempAllocator& alloc() { return graph_.alloc(); }
+  MRest* rest() const { return rest_->toRest(); }
+
+  bool isRestElements(MDefinition* elements);
+  void discardInstruction(MInstruction* ins, MDefinition* elements);
+  void visitLength(MInstruction* ins, MDefinition* elements);
+
+  void visitGuardToClass(MGuardToClass* ins);
+  void visitGuardShape(MGuardShape* ins);
+  void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
+  void visitUnbox(MUnbox* ins);
+  void visitCompare(MCompare* ins);
+  void visitLoadElement(MLoadElement* ins);
+  void visitArrayLength(MArrayLength* ins);
+  void visitInitializedLength(MInitializedLength* ins);
+  void visitApplyArray(MApplyArray* ins);
+  void visitConstructArray(MConstructArray* ins);
+
+  bool escapes(MElements* ins);
+
+ public:
+  RestReplacer(MIRGenerator* mir, MIRGraph& graph, MInstruction* rest)
+      : mir_(mir), graph_(graph), rest_(rest) {
+    MOZ_ASSERT(IsOptimizableRestInstruction(rest_));
+  }
+
+  bool escapes(MInstruction* ins);
+  bool run();
+  void assertSuccess();
+};
+
+// Returns false if the rest array object does not escape.
+bool RestReplacer::escapes(MInstruction* ins) {
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  JitSpewDef(JitSpew_Escape, "Check rest array\n", ins);
+  JitSpewIndent spewIndent(JitSpew_Escape);
+
+  // We can replace rest arrays in scripts with OSR entries, but the outermost
+  // rest object has already been allocated before we enter via OSR and can't be
+  // replaced.
+  // See also the same restriction when replacing |arguments|.
+  if (graph_.osrBlock()) {
+    JitSpew(JitSpew_Escape, "Can't replace outermost OSR rest array");
+    return true;
+  }
+
+  // Check all uses to see whether they can be supported without allocating an
+  // ArrayObject for the rest parameter.
+  for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
+    MNode* consumer = (*i)->consumer();
+
+    // If a resume point can observe this instruction, we can only optimize
+    // if it is recoverable.
+    if (consumer->isResumePoint()) {
+      if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
+        JitSpew(JitSpew_Escape, "Observable rest array cannot be recovered");
+        return true;
+      }
+      continue;
+    }
+
+    MDefinition* def = consumer->toDefinition();
+    switch (def->op()) {
+      case MDefinition::Opcode::Elements: {
+        auto* elem = def->toElements();
+        MOZ_ASSERT(elem->object() == ins);
+        if (escapes(elem)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::GuardShape: {
+        const Shape* shape = rest()->shape();
+        if (!shape) {
+          JitSpew(JitSpew_Escape, "No shape defined.");
+          return true;
+        }
+
+        auto* guard = def->toGuardShape();
+        if (shape != guard->shape()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", def);
+          return true;
+        }
+        if (escapes(guard)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::GuardToClass: {
+        auto* guard = def->toGuardToClass();
+        if (guard->getClass() != &ArrayObject::class_) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching class guard\n", def);
+          return true;
+        }
+        if (escapes(guard)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::GuardArrayIsPacked: {
+        // Rest arrays are always packed as long as they aren't modified.
+        auto* guard = def->toGuardArrayIsPacked();
+        if (escapes(guard)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::Unbox: {
+        if (def->type() != MIRType::Object) {
+          JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
+          return true;
+        }
+        if (escapes(def->toInstruction())) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      // This instruction is supported for |JSOp::OptimizeSpreadCall|.
+      case MDefinition::Opcode::Compare: {
+        bool canFold;
+        if (!def->toCompare()->tryFold(&canFold)) {
+          JitSpewDef(JitSpew_Escape, "has an unsupported compare\n", def);
+          return true;
+        }
+        break;
+      }
+
+      // This instruction is a no-op used to test that scalar replacement is
+      // working as expected.
+      case MDefinition::Opcode::AssertRecoveredOnBailout:
+        break;
+
+      default:
+        JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+        return true;
+    }
+  }
+
+  JitSpew(JitSpew_Escape, "Rest array object is not escaped");
+  return false;
+}
+
+bool RestReplacer::escapes(MElements* ins) {
+  JitSpewDef(JitSpew_Escape, "Check rest array elements\n", ins);
+  JitSpewIndent spewIndent(JitSpew_Escape);
+
+  for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
+    // The MIRType::Elements cannot be captured in a resume point as it does not
+    // represent a value allocation.
+    MDefinition* def = (*i)->consumer()->toDefinition();
+
+    switch (def->op()) {
+      case MDefinition::Opcode::LoadElement:
+        MOZ_ASSERT(def->toLoadElement()->elements() == ins);
+        break;
+
+      case MDefinition::Opcode::ArrayLength:
+        MOZ_ASSERT(def->toArrayLength()->elements() == ins);
+        break;
+
+      case MDefinition::Opcode::InitializedLength:
+        MOZ_ASSERT(def->toInitializedLength()->elements() == ins);
+        break;
+
+      case MDefinition::Opcode::ApplyArray:
+        MOZ_ASSERT(def->toApplyArray()->getElements() == ins);
+
+        // We don't yet support skipping initial formals when scalar replacing
+        // the rest array.
+        if (rest()->numFormals()) {
+          JitSpewDef(JitSpew_Escape, "has extra formals\n", def);
+          return true;
+        }
+        break;
+
+      case MDefinition::Opcode::ConstructArray:
+        MOZ_ASSERT(def->toConstructArray()->getElements() == ins);
+
+        // We don't yet support skipping initial formals when scalar replacing
+        // the rest array.
+        if (rest()->numFormals()) {
+          JitSpewDef(JitSpew_Escape, "has extra formals\n", def);
+          return true;
+        }
+        break;
+
+      default:
+        JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+        return true;
+    }
+  }
+
+  JitSpew(JitSpew_Escape, "Rest array object is not escaped");
+  return false;
+}
+
+// Replacing the rest array object is simpler than replacing an object or array,
+// because the rest array object does not change state.
+bool RestReplacer::run() {
+  MBasicBlock* startBlock = rest_->block();
+
+  // Iterate over each basic block.
+  for (ReversePostorderIterator block = graph_.rpoBegin(startBlock);
+       block != graph_.rpoEnd(); block++) {
+    if (mir_->shouldCancel("Scalar replacement of rest array object")) {
+      return false;
+    }
+
+    // Iterates over phis and instructions.
+    // We do not have to visit resume points. Any resume points that capture the
+    // rest array object will be handled by the Sink pass.
+    for (MDefinitionIterator iter(*block); iter;) {
+      // Increment the iterator before visiting the instruction, as the visit
+      // function might discard itself from the basic block.
+      MDefinition* def = *iter++;
+      switch (def->op()) {
+#define MIR_OP(op)              \
+  case MDefinition::Opcode::op: \
+    visit##op(def->to##op());   \
+    break;
+        MIR_OPCODE_LIST(MIR_OP)
+#undef MIR_OP
+      }
+    }
+  }
+
+  assertSuccess();
+  return true;
+}
+
+void RestReplacer::assertSuccess() {
+  MOZ_ASSERT(rest_->canRecoverOnBailout());
+  MOZ_ASSERT(!rest_->hasLiveDefUses());
+}
+
+bool RestReplacer::isRestElements(MDefinition* elements) {
+  return elements->isElements() && elements->toElements()->object() == rest_;
+}
+
+void RestReplacer::discardInstruction(MInstruction* ins,
+                                      MDefinition* elements) {
+  MOZ_ASSERT(elements->isElements());
+  ins->block()->discard(ins);
+  if (!elements->hasLiveDefUses()) {
+    elements->block()->discard(elements->toInstruction());
+  }
+}
+
+void RestReplacer::visitGuardToClass(MGuardToClass* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != rest_) {
+    return;
+  }
+  MOZ_ASSERT(ins->getClass() == &ArrayObject::class_);
+
+  // Replace the guard with the array object.
+  ins->replaceAllUsesWith(rest_);
+
+  // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void RestReplacer::visitGuardShape(MGuardShape* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != rest_) {
+    return;
+  }
+
+  // Replace the guard with the array object.
+  ins->replaceAllUsesWith(rest_);
+
+  // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void RestReplacer::visitGuardArrayIsPacked(MGuardArrayIsPacked* ins) {
+  // Skip guards on other objects.
+  if (ins->array() != rest_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(rest_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void RestReplacer::visitUnbox(MUnbox* ins) {
+  // Skip unrelated unboxes.
+  if (ins->input() != rest_) {
+    return;
+  }
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  // Replace the unbox with the array object.
+  ins->replaceAllUsesWith(rest_);
+
+  // Remove the unbox.
+  ins->block()->discard(ins);
+}
+
+void RestReplacer::visitCompare(MCompare* ins) {
+  // Skip unrelated comparisons.
+  if (ins->lhs() != rest_ && ins->rhs() != rest_) {
+    return;
+  }
+
+  bool folded;
+  MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
+
+  auto* cst = MConstant::New(alloc(), BooleanValue(folded));
+  ins->block()->insertBefore(ins, cst);
+
+  // Replace the comparison with a constant.
+  ins->replaceAllUsesWith(cst);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void RestReplacer::visitLoadElement(MLoadElement* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->elements();
+  if (!isRestElements(elements)) {
+    return;
+  }
+
+  MDefinition* index = ins->index();
+
+  // Adjust the index to skip any extra formals.
+  if (uint32_t formals = rest()->numFormals()) {
+    auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
+    ins->block()->insertBefore(ins, numFormals);
+
+    auto* add = MAdd::New(alloc(), index, numFormals, TruncateKind::Truncate);
+    ins->block()->insertBefore(ins, add);
+
+    index = add;
+  }
+
+  auto* loadArg = MGetFrameArgument::New(alloc(), index);
+
+  ins->block()->insertBefore(ins, loadArg);
+  ins->replaceAllUsesWith(loadArg);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void RestReplacer::visitLength(MInstruction* ins, MDefinition* elements) {
+  MOZ_ASSERT(ins->isArrayLength() || ins->isInitializedLength());
+
+  // Skip other array objects.
+  if (!isRestElements(elements)) {
+    return;
+  }
+
+  // Compute |Math.max(numActuals - numFormals, 0)| for the rest array length.
+
+  auto* numActuals = rest()->numActuals();
+
+  MDefinition* replacement;
+  if (uint32_t formals = rest()->numFormals()) {
+    auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
+    ins->block()->insertBefore(ins, numFormals);
+
+    auto* length = MSub::New(alloc(), numActuals, numFormals, MIRType::Int32);
+    length->setTruncateKind(TruncateKind::Truncate);
+    ins->block()->insertBefore(ins, length);
+
+    auto* zero = MConstant::New(alloc(), Int32Value(0));
+    ins->block()->insertBefore(ins, zero);
+
+    bool isMax = true;
+    auto* minmax = MMinMax::New(alloc(), length, zero, MIRType::Int32, isMax);
+    ins->block()->insertBefore(ins, minmax);
+
+    replacement = minmax;
+  } else {
+    replacement = numActuals;
+  }
+
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void RestReplacer::visitArrayLength(MArrayLength* ins) {
+  visitLength(ins, ins->elements());
+}
+
+void RestReplacer::visitInitializedLength(MInitializedLength* ins) {
+  // The initialized length of a rest array is equal to its length.
+  visitLength(ins, ins->elements());
+}
+
+void RestReplacer::visitApplyArray(MApplyArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isRestElements(elements)) {
+    return;
+  }
+
+  // When no extra formals are present, the contents of the rest array are equal
+  // to the frame arguments.
+  MOZ_ASSERT(rest()->numFormals() == 0);
+
+  auto* numActuals = rest()->numActuals();
+
+  auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
+                                ins->getFunction(), numActuals, ins->getThis());
+  apply->setBailoutKind(ins->bailoutKind());
+  if (!ins->maybeCrossRealm()) {
+    apply->setNotCrossRealm();
+  }
+  if (ins->ignoresReturnValue()) {
+    apply->setIgnoresReturnValue();
+  }
+  ins->block()->insertBefore(ins, apply);
+
+  ins->replaceAllUsesWith(apply);
+
+  apply->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void RestReplacer::visitConstructArray(MConstructArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isRestElements(elements)) {
+    return;
+  }
+
+  // When no extra formals are present, the contents of the rest array are equal
+  // to the frame arguments.
+  MOZ_ASSERT(rest()->numFormals() == 0);
+
+  auto* numActuals = rest()->numActuals();
+
+  auto* construct =
+      MConstructArgs::New(alloc(), ins->getSingleTarget(), ins->getFunction(),
+                          numActuals, ins->getThis(), ins->getNewTarget());
+  construct->setBailoutKind(ins->bailoutKind());
+  if (!ins->maybeCrossRealm()) {
+    construct->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, construct);
+  ins->replaceAllUsesWith(construct);
+
+  construct->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
 }
 
 bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
@@ -1813,6 +2656,17 @@ bool ScalarReplacement(MIRGenerator* mir, MIRGraph& graph) {
 
       if (IsOptimizableArgumentsInstruction(*ins)) {
         ArgumentsReplacer replacer(mir, graph, *ins);
+        if (replacer.escapes(*ins)) {
+          continue;
+        }
+        if (!replacer.run()) {
+          return false;
+        }
+        continue;
+      }
+
+      if (IsOptimizableRestInstruction(*ins)) {
+        RestReplacer replacer(mir, graph, *ins);
         if (replacer.escapes(*ins)) {
           continue;
         }

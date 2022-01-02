@@ -2,9 +2,6 @@
 /* globals user_pref */
 /* eslint quotes: 0 */
 
-// XXX: Bug 1617611 - Fix all the tests broken by "cookies SameSite=lax by default"
-user_pref("network.cookie.sameSite.laxByDefault", false);
-
 // Enable blocking access to storage from tracking resources by default.
 // We don't want to run mochitest using BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (5 - aka Dynamic First Party Isolation) yet.
 user_pref("network.cookie.cookieBehavior", 4);
@@ -17,3 +14,8 @@ user_pref("browser.sessionstore.resume_from_crash", false);
 // is suppressed, synthetic click events and co. go to the old page, which can
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
+
+// Explicitly turn off fission so we don't accidentally use the wrong default
+// value. This can be removed once harnesses and tasks assume fission by
+// default.
+user_pref("fission.autostart", false);

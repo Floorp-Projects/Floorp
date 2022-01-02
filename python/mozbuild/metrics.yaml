@@ -4,6 +4,10 @@
 
 # If this file is changed, update the generated docs:
 # https://firefox-source-docs.mozilla.org/mach/telemetry.html#updating-generated-metrics-docs
+
+# Adding a new metric? We have docs for that!
+# https://mozilla.github.io/glean/book/user/metrics/adding-new-metrics.html
+
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 

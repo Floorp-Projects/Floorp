@@ -44,6 +44,3 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/xul",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

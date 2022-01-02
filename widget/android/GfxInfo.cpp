@@ -595,10 +595,18 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     if (aFeature == FEATURE_WEBRENDER) {
       const bool isMali4xx =
           mGLStrings->Renderer().Find("Mali-4", /*ignoreCase*/ true) >= 0;
+
+      const bool isPowerVrG6110 =
+          mGLStrings->Renderer().Find("PowerVR Rogue G6110",
+                                      /* ignoreCase */ true) >= 0;
       if (isMali4xx) {
         // Mali 4xx does not support GLES 3.
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_NO_GLES_3";
+      } else if (isPowerVrG6110) {
+        // Blocked on PowerVR Rogue G6110 due to bug 1742986 and bug 1717863.
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_POWERVR_G6110";
       } else {
         *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }

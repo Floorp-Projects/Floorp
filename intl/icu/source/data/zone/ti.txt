@@ -4,1312 +4,1452 @@
 ti{
     zoneStrings{
         "Africa:Abidjan"{
-            ec{"Abidjan"}
+            ec{"ኣቢጃን"}
         }
         "Africa:Accra"{
-            ec{"Accra"}
+            ec{"ኣክራ"}
         }
         "Africa:Addis_Ababa"{
-            ec{"Addis Ababa"}
+            ec{"ኣዲስ ኣበባ"}
         }
         "Africa:Algiers"{
-            ec{"Algiers"}
+            ec{"ኣልጀርስ"}
         }
         "Africa:Asmera"{
-            ec{"Asmara"}
+            ec{"ኣስመራ"}
         }
         "Africa:Bamako"{
-            ec{"Bamako"}
+            ec{"ባማኮ"}
         }
         "Africa:Bangui"{
-            ec{"Bangui"}
+            ec{"ባንጊ"}
         }
         "Africa:Banjul"{
-            ec{"Banjul"}
+            ec{"ባንጁል"}
         }
         "Africa:Bissau"{
-            ec{"Bissau"}
+            ec{"ቢሳው"}
         }
         "Africa:Blantyre"{
-            ec{"Blantyre"}
+            ec{"ብላንታየር"}
         }
         "Africa:Brazzaville"{
-            ec{"Brazzaville"}
+            ec{"ብራዛቪል"}
         }
         "Africa:Bujumbura"{
-            ec{"Bujumbura"}
+            ec{"ቡጁምቡራ"}
         }
         "Africa:Cairo"{
-            ec{"Cairo"}
+            ec{"ካይሮ"}
         }
         "Africa:Casablanca"{
-            ec{"Casablanca"}
+            ec{"ካዛብላንካ"}
         }
         "Africa:Ceuta"{
-            ec{"Ceuta"}
+            ec{"ሴውታ"}
         }
         "Africa:Conakry"{
-            ec{"Conakry"}
+            ec{"ኮናክሪ"}
         }
         "Africa:Dakar"{
-            ec{"Dakar"}
+            ec{"ዳካር"}
         }
         "Africa:Dar_es_Salaam"{
-            ec{"Dar es Salaam"}
+            ec{"ዳር ኤስ ሳላም"}
         }
         "Africa:Djibouti"{
-            ec{"Djibouti"}
+            ec{"ጅቡቲ"}
         }
         "Africa:Douala"{
-            ec{"Douala"}
+            ec{"ዱዋላ"}
         }
         "Africa:El_Aaiun"{
-            ec{"El Aaiun"}
+            ec{"ኤል ኣዩን"}
         }
         "Africa:Freetown"{
-            ec{"Freetown"}
+            ec{"ፍሪታውን"}
         }
         "Africa:Gaborone"{
-            ec{"Gaborone"}
+            ec{"ጋቦሮን"}
         }
         "Africa:Harare"{
-            ec{"Harare"}
+            ec{"ሃራረ"}
         }
         "Africa:Johannesburg"{
-            ec{"Johannesburg"}
+            ec{"ጆሃንስበርግ"}
         }
         "Africa:Juba"{
-            ec{"Juba"}
+            ec{"ጁባ"}
         }
         "Africa:Kampala"{
-            ec{"Kampala"}
+            ec{"ካምፓላ"}
         }
         "Africa:Khartoum"{
-            ec{"Khartoum"}
+            ec{"ካርቱም"}
         }
         "Africa:Kigali"{
-            ec{"Kigali"}
+            ec{"ኪጋሊ"}
         }
         "Africa:Kinshasa"{
-            ec{"Kinshasa"}
+            ec{"ኪንሻሳ"}
         }
         "Africa:Lagos"{
-            ec{"Lagos"}
+            ec{"ሌጎስ"}
         }
         "Africa:Libreville"{
-            ec{"Libreville"}
+            ec{"ሊብረቪል"}
         }
         "Africa:Lome"{
-            ec{"Lome"}
+            ec{"ሎመ"}
         }
         "Africa:Luanda"{
-            ec{"Luanda"}
+            ec{"ሉዋንዳ"}
         }
         "Africa:Lubumbashi"{
-            ec{"Lubumbashi"}
+            ec{"ሉቡምባሺ"}
         }
         "Africa:Lusaka"{
-            ec{"Lusaka"}
+            ec{"ሉሳካ"}
         }
         "Africa:Malabo"{
-            ec{"Malabo"}
+            ec{"ማላቦ"}
         }
         "Africa:Maputo"{
-            ec{"Maputo"}
+            ec{"ማፑቶ"}
         }
         "Africa:Maseru"{
-            ec{"Maseru"}
+            ec{"ማሰሩ"}
         }
         "Africa:Mbabane"{
-            ec{"Mbabane"}
+            ec{"ምባባነ"}
         }
         "Africa:Mogadishu"{
-            ec{"Mogadishu"}
+            ec{"ሞቓድሾ"}
         }
         "Africa:Monrovia"{
-            ec{"Monrovia"}
+            ec{"ሞንሮቭያ"}
         }
         "Africa:Nairobi"{
-            ec{"Nairobi"}
+            ec{"ናይሮቢ"}
         }
         "Africa:Ndjamena"{
-            ec{"Ndjamena"}
+            ec{"ንጃመና"}
         }
         "Africa:Niamey"{
-            ec{"Niamey"}
+            ec{"ንያመይ"}
         }
         "Africa:Nouakchott"{
-            ec{"Nouakchott"}
+            ec{"ንዋክሾት"}
         }
         "Africa:Ouagadougou"{
-            ec{"Ouagadougou"}
+            ec{"ዋጋዱጉ"}
         }
         "Africa:Porto-Novo"{
-            ec{"Porto-Novo"}
+            ec{"ፖርቶ ኖቮ"}
         }
         "Africa:Sao_Tome"{
-            ec{"Sao Tome"}
+            ec{"ሳኦ ቶመ"}
         }
         "Africa:Tripoli"{
-            ec{"Tripoli"}
+            ec{"ትሪፖሊ"}
         }
         "Africa:Tunis"{
-            ec{"Tunis"}
+            ec{"ቱኒስ"}
         }
         "Africa:Windhoek"{
-            ec{"Windhoek"}
+            ec{"ዊንድሆክ"}
         }
         "America:Adak"{
-            ec{"Adak"}
+            ec{"ኣዳክ"}
         }
         "America:Anchorage"{
-            ec{"Anchorage"}
+            ec{"ኣንኮረጅ"}
         }
         "America:Anguilla"{
-            ec{"Anguilla"}
+            ec{"ኣንጒላ"}
         }
         "America:Antigua"{
-            ec{"Antigua"}
+            ec{"ኣንቲጓ"}
         }
         "America:Araguaina"{
-            ec{"Araguaina"}
+            ec{"ኣራጓይና"}
         }
         "America:Argentina:La_Rioja"{
-            ec{"La Rioja"}
+            ec{"ላ ርዮሃ"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"Rio Gallegos"}
+            ec{"ርዮ ጋየጎስ"}
         }
         "America:Argentina:Salta"{
-            ec{"Salta"}
+            ec{"ሳልታ"}
         }
         "America:Argentina:San_Juan"{
-            ec{"San Juan"}
+            ec{"ሳን ህዋን"}
         }
         "America:Argentina:San_Luis"{
-            ec{"San Luis"}
+            ec{"ሳን ልዊስ"}
         }
         "America:Argentina:Tucuman"{
-            ec{"Tucuman"}
+            ec{"ቱኩማን"}
         }
         "America:Argentina:Ushuaia"{
-            ec{"Ushuaia"}
+            ec{"ኡሽዋያ"}
         }
         "America:Aruba"{
-            ec{"Aruba"}
+            ec{"ኣሩባ"}
         }
         "America:Asuncion"{
-            ec{"Asuncion"}
+            ec{"ኣሱንስዮን"}
         }
         "America:Bahia"{
-            ec{"Bahia"}
+            ec{"ባህያ"}
         }
         "America:Bahia_Banderas"{
-            ec{"Bahia Banderas"}
+            ec{"ባእያ ደ ባንደራስ"}
         }
         "America:Barbados"{
-            ec{"Barbados"}
+            ec{"ባርባዶስ"}
         }
         "America:Belem"{
-            ec{"Belem"}
+            ec{"በለም"}
         }
         "America:Belize"{
-            ec{"Belize"}
+            ec{"በሊዝ"}
         }
         "America:Blanc-Sablon"{
-            ec{"Blanc-Sablon"}
+            ec{"ብላንክ-ሳብሎን"}
         }
         "America:Boa_Vista"{
-            ec{"Boa Vista"}
+            ec{"ቦዋ ቪስታ"}
         }
         "America:Bogota"{
-            ec{"Bogota"}
+            ec{"ቦጎታ"}
         }
         "America:Boise"{
-            ec{"Boise"}
+            ec{"ቦይዚ"}
         }
         "America:Buenos_Aires"{
-            ec{"Buenos Aires"}
+            ec{"ብወኖስ ኣይረስ"}
         }
         "America:Cambridge_Bay"{
-            ec{"Cambridge Bay"}
+            ec{"ካምብሪጅ በይ"}
         }
         "America:Campo_Grande"{
-            ec{"Campo Grande"}
+            ec{"ካምፖ ግራንደ"}
         }
         "America:Cancun"{
-            ec{"Cancun"}
+            ec{"ካንኩን"}
         }
         "America:Caracas"{
-            ec{"Caracas"}
+            ec{"ካራካስ"}
         }
         "America:Catamarca"{
-            ec{"Catamarca"}
+            ec{"ካታማርካ"}
         }
         "America:Cayenne"{
-            ec{"Cayenne"}
+            ec{"ካየን"}
         }
         "America:Cayman"{
-            ec{"Cayman"}
+            ec{"ካይማን"}
         }
         "America:Chicago"{
-            ec{"Chicago"}
+            ec{"ቺካጎ"}
         }
         "America:Chihuahua"{
-            ec{"Chihuahua"}
+            ec{"ቺዋዋ"}
         }
         "America:Coral_Harbour"{
-            ec{"Atikokan"}
+            ec{"ኣቲኮካን"}
         }
         "America:Cordoba"{
-            ec{"Cordoba"}
+            ec{"ኮርዶባ"}
         }
         "America:Costa_Rica"{
-            ec{"Costa Rica"}
+            ec{"ኮስታ ሪካ"}
         }
         "America:Creston"{
-            ec{"Creston"}
+            ec{"ክረስተን"}
         }
         "America:Cuiaba"{
-            ec{"Cuiaba"}
+            ec{"ኩያባ"}
         }
         "America:Curacao"{
-            ec{"Curacao"}
+            ec{"ኩራሳው"}
         }
         "America:Danmarkshavn"{
-            ec{"Danmarkshavn"}
+            ec{"ዳንማርክሻቭን"}
         }
         "America:Dawson"{
-            ec{"Dawson"}
+            ec{"ዳውሰን"}
         }
         "America:Dawson_Creek"{
-            ec{"Dawson Creek"}
+            ec{"ዳውሰን ክሪክ"}
         }
         "America:Denver"{
-            ec{"Denver"}
+            ec{"ደንቨር"}
         }
         "America:Detroit"{
-            ec{"Detroit"}
+            ec{"ዲትሮይት"}
         }
         "America:Dominica"{
-            ec{"Dominica"}
+            ec{"ዶሚኒካ"}
         }
         "America:Edmonton"{
-            ec{"Edmonton"}
+            ec{"ኤድመንተን"}
         }
         "America:Eirunepe"{
-            ec{"Eirunepe"}
+            ec{"ኤይሩኔፒ"}
         }
         "America:El_Salvador"{
-            ec{"El Salvador"}
+            ec{"ኤል ሳልቫዶር"}
         }
         "America:Fort_Nelson"{
-            ec{"Fort Nelson"}
+            ec{"ፎርት ነልሰን"}
         }
         "America:Fortaleza"{
-            ec{"Fortaleza"}
+            ec{"ፎርታለዛ"}
         }
         "America:Glace_Bay"{
-            ec{"Glace Bay"}
+            ec{"ግሌስ በይ"}
         }
         "America:Godthab"{
-            ec{"Nuuk"}
+            ec{"ኑክ"}
         }
         "America:Goose_Bay"{
-            ec{"Goose Bay"}
+            ec{"ጉዝ በይ"}
         }
         "America:Grand_Turk"{
-            ec{"Grand Turk"}
+            ec{"ግራንድ ቱርክ"}
         }
         "America:Grenada"{
-            ec{"Grenada"}
+            ec{"ግረናዳ"}
         }
         "America:Guadeloupe"{
-            ec{"Guadeloupe"}
+            ec{"ጓደሉፕ"}
         }
         "America:Guatemala"{
-            ec{"Guatemala"}
+            ec{"ጓቲማላ"}
         }
         "America:Guayaquil"{
-            ec{"Guayaquil"}
+            ec{"ጓያኪል"}
         }
         "America:Guyana"{
-            ec{"Guyana"}
+            ec{"ጉያና"}
         }
         "America:Halifax"{
-            ec{"Halifax"}
+            ec{"ሃሊፋክስ"}
         }
         "America:Havana"{
-            ec{"Havana"}
+            ec{"ሃቫና"}
         }
         "America:Hermosillo"{
-            ec{"Hermosillo"}
+            ec{"ኤርሞስዮ"}
         }
         "America:Indiana:Knox"{
-            ec{"Knox, Indiana"}
+            ec{"ኖክስ፣ ኢንድያና"}
         }
         "America:Indiana:Marengo"{
-            ec{"Marengo, Indiana"}
+            ec{"ማረንጎ፣ ኢንድያና"}
         }
         "America:Indiana:Petersburg"{
-            ec{"Petersburg, Indiana"}
+            ec{"ፒተርስበርግ፣ ኢንድያና"}
         }
         "America:Indiana:Tell_City"{
-            ec{"Tell City, Indiana"}
+            ec{"ተል ሲቲ፣ ኢንድያና"}
         }
         "America:Indiana:Vevay"{
-            ec{"Vevay, Indiana"}
+            ec{"ቪቪ፣ ኢንድያና"}
         }
         "America:Indiana:Vincennes"{
-            ec{"Vincennes, Indiana"}
+            ec{"ቪንሰንስ፣ ኢንድያና"}
         }
         "America:Indiana:Winamac"{
-            ec{"Winamac, Indiana"}
+            ec{"ዊናማክ፣ ኢንድያና"}
         }
         "America:Indianapolis"{
-            ec{"Indianapolis"}
+            ec{"ኢንድያናፖሊስ"}
         }
         "America:Inuvik"{
-            ec{"Inuvik"}
+            ec{"ኢኑቪክ"}
         }
         "America:Iqaluit"{
-            ec{"Iqaluit"}
+            ec{"ኢቃልዊት"}
         }
         "America:Jamaica"{
-            ec{"Jamaica"}
+            ec{"ጃማይካ"}
         }
         "America:Jujuy"{
-            ec{"Jujuy"}
+            ec{"ሁሁይ"}
         }
         "America:Juneau"{
-            ec{"Juneau"}
+            ec{"ጁነው"}
         }
         "America:Kentucky:Monticello"{
-            ec{"Monticello, Kentucky"}
+            ec{"ሞንቲቸሎ፣ ከንታኪ"}
         }
         "America:Kralendijk"{
-            ec{"Kralendijk"}
+            ec{"ክራለንዳይክ"}
         }
         "America:La_Paz"{
-            ec{"La Paz"}
+            ec{"ላ ፓዝ"}
         }
         "America:Lima"{
-            ec{"Lima"}
+            ec{"ሊማ"}
         }
         "America:Los_Angeles"{
-            ec{"Los Angeles"}
+            ec{"ሎስ ኣንጀለስ"}
         }
         "America:Louisville"{
-            ec{"Louisville"}
+            ec{"ልዊቪል"}
         }
         "America:Lower_Princes"{
-            ec{"Lower Prince’s Quarter"}
+            ec{"ለወር ፕሪንሰስ ኳርተር"}
         }
         "America:Maceio"{
-            ec{"Maceio"}
+            ec{"ማሰዮ"}
         }
         "America:Managua"{
-            ec{"Managua"}
+            ec{"ማናጓ"}
         }
         "America:Manaus"{
-            ec{"Manaus"}
+            ec{"ማናውስ"}
         }
         "America:Marigot"{
-            ec{"Marigot"}
+            ec{"ማሪጎት"}
         }
         "America:Martinique"{
-            ec{"Martinique"}
+            ec{"ማርቲኒክ"}
         }
         "America:Matamoros"{
-            ec{"Matamoros"}
+            ec{"ማታሞሮስ"}
         }
         "America:Mazatlan"{
-            ec{"Mazatlan"}
+            ec{"ማዛትላን"}
         }
         "America:Mendoza"{
-            ec{"Mendoza"}
+            ec{"መንዶዛ"}
         }
         "America:Menominee"{
-            ec{"Menominee"}
+            ec{"ሜኖሚኒ"}
         }
         "America:Merida"{
-            ec{"Merida"}
+            ec{"መሪዳ"}
         }
         "America:Metlakatla"{
-            ec{"Metlakatla"}
+            ec{"መትላካትላ"}
         }
         "America:Mexico_City"{
-            ec{"Mexico City"}
+            ec{"ከተማ ሜክሲኮ"}
         }
         "America:Miquelon"{
-            ec{"Miquelon"}
+            ec{"ሚከሎን"}
         }
         "America:Moncton"{
-            ec{"Moncton"}
+            ec{"ሞንክተን"}
         }
         "America:Monterrey"{
-            ec{"Monterrey"}
+            ec{"ሞንተረይ"}
         }
         "America:Montevideo"{
-            ec{"Montevideo"}
+            ec{"ሞንተቪደዮ"}
         }
         "America:Montserrat"{
-            ec{"Montserrat"}
+            ec{"ሞንትሰራት"}
         }
         "America:Nassau"{
-            ec{"Nassau"}
+            ec{"ናሳው"}
         }
         "America:New_York"{
-            ec{"New York"}
+            ec{"ኒው ዮርክ"}
         }
         "America:Nipigon"{
-            ec{"Nipigon"}
+            ec{"ኒፒጎን"}
         }
         "America:Nome"{
-            ec{"Nome"}
+            ec{"ነውም"}
         }
         "America:Noronha"{
-            ec{"Noronha"}
+            ec{"ኖሮንያ"}
         }
         "America:North_Dakota:Beulah"{
-            ec{"Beulah, North Dakota"}
+            ec{"ብዩላ፣ ሰሜን ዳኮታ"}
         }
         "America:North_Dakota:Center"{
-            ec{"Center, North Dakota"}
+            ec{"ሰንተር፣ ሰሜን ዳኮታ"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"New Salem, North Dakota"}
+            ec{"ኒው ሳለም፣ ሰሜን ዳኮታ"}
         }
         "America:Ojinaga"{
-            ec{"Ojinaga"}
+            ec{"ኦጂናጋ"}
         }
         "America:Panama"{
-            ec{"Panama"}
+            ec{"ፓናማ"}
         }
         "America:Pangnirtung"{
-            ec{"Pangnirtung"}
+            ec{"ፓንግኒርተንግ"}
         }
         "America:Paramaribo"{
-            ec{"Paramaribo"}
+            ec{"ፓራማሪቦ"}
         }
         "America:Phoenix"{
-            ec{"Phoenix"}
+            ec{"ፊኒክስ"}
         }
         "America:Port-au-Prince"{
-            ec{"Port-au-Prince"}
+            ec{"ፖርት-ኦ-ፕሪንስ"}
         }
         "America:Port_of_Spain"{
-            ec{"Port of Spain"}
+            ec{"ፖርት ኦፍ ስፔን"}
         }
         "America:Porto_Velho"{
-            ec{"Porto Velho"}
+            ec{"ፖርቶ ቨልዮ"}
         }
         "America:Puerto_Rico"{
-            ec{"Puerto Rico"}
+            ec{"ፖርቶ ሪኮ"}
         }
         "America:Punta_Arenas"{
-            ec{"Punta Arenas"}
+            ec{"ፑንታ ኣረናስ"}
         }
         "America:Rainy_River"{
-            ec{"Rainy River"}
+            ec{"ረይኒ ሪቨር"}
         }
         "America:Rankin_Inlet"{
-            ec{"Rankin Inlet"}
+            ec{"ራንኪን ኢንለት"}
         }
         "America:Recife"{
-            ec{"Recife"}
+            ec{"ረሲፈ"}
         }
         "America:Regina"{
-            ec{"Regina"}
+            ec{"ረጂና"}
         }
         "America:Resolute"{
-            ec{"Resolute"}
+            ec{"ረዞሉት"}
         }
         "America:Rio_Branco"{
-            ec{"Rio Branco"}
+            ec{"ርዮ ብራንኮ"}
         }
         "America:Santarem"{
-            ec{"Santarem"}
+            ec{"ሳንታረም"}
         }
         "America:Santiago"{
-            ec{"Santiago"}
+            ec{"ሳንትያጎ"}
         }
         "America:Santo_Domingo"{
-            ec{"Santo Domingo"}
+            ec{"ሳንቶ ዶሚንጎ"}
         }
         "America:Sao_Paulo"{
-            ec{"Sao Paulo"}
+            ec{"ሳኦ ፓውሎ"}
         }
         "America:Scoresbysund"{
-            ec{"Ittoqqortoormiit"}
+            ec{"ኢቶቆርቶሚት"}
         }
         "America:Sitka"{
-            ec{"Sitka"}
+            ec{"ሲትካ"}
         }
         "America:St_Barthelemy"{
-            ec{"St. Barthelemy"}
+            ec{"ቅዱስ ባርተለሚ"}
         }
         "America:St_Johns"{
-            ec{"St. John’s"}
+            ec{"ቅዱስ ዮሃንስ"}
         }
         "America:St_Kitts"{
-            ec{"St. Kitts"}
+            ec{"ቅዱስ ኪትስ"}
         }
         "America:St_Lucia"{
-            ec{"St. Lucia"}
+            ec{"ቅድስቲ ሉስያ"}
         }
         "America:St_Thomas"{
-            ec{"St. Thomas"}
+            ec{"ሰይንት ቶማስ"}
         }
         "America:St_Vincent"{
-            ec{"St. Vincent"}
+            ec{"ቅዱስ ቪንሰንት"}
         }
         "America:Swift_Current"{
-            ec{"Swift Current"}
+            ec{"ስዊፍት ካረንት"}
         }
         "America:Tegucigalpa"{
-            ec{"Tegucigalpa"}
+            ec{"ተጉሲጋልፓ"}
         }
         "America:Thule"{
-            ec{"Thule"}
+            ec{"ዙል"}
         }
         "America:Thunder_Bay"{
-            ec{"Thunder Bay"}
+            ec{"ዛንደር በይ"}
         }
         "America:Tijuana"{
-            ec{"Tijuana"}
+            ec{"ቲጅዋና"}
         }
         "America:Toronto"{
-            ec{"Toronto"}
+            ec{"ቶሮንቶ"}
         }
         "America:Tortola"{
-            ec{"Tortola"}
+            ec{"ቶርቶላ"}
         }
         "America:Vancouver"{
-            ec{"Vancouver"}
+            ec{"ቫንኩቨር"}
         }
         "America:Whitehorse"{
-            ec{"Whitehorse"}
+            ec{"ዋይትሆዝ"}
         }
         "America:Winnipeg"{
-            ec{"Winnipeg"}
+            ec{"ዊኒፐግ"}
         }
         "America:Yakutat"{
-            ec{"Yakutat"}
+            ec{"ያኩታት"}
         }
         "America:Yellowknife"{
-            ec{"Yellowknife"}
+            ec{"የለውናይፍ"}
         }
         "Antarctica:Casey"{
-            ec{"Casey"}
+            ec{"ከይዚ"}
         }
         "Antarctica:Davis"{
-            ec{"Davis"}
+            ec{"ደቪስ"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
+            ec{"ዱሞንት ዲኡርቪል"}
         }
         "Antarctica:Macquarie"{
-            ec{"Macquarie"}
+            ec{"ማኳሪ"}
         }
         "Antarctica:Mawson"{
-            ec{"Mawson"}
+            ec{"ማውሰን"}
         }
         "Antarctica:McMurdo"{
-            ec{"McMurdo"}
+            ec{"ማክሙርዶ"}
         }
         "Antarctica:Palmer"{
-            ec{"Palmer"}
+            ec{"ፓልመር"}
         }
         "Antarctica:Rothera"{
-            ec{"Rothera"}
+            ec{"ሮዘራ"}
         }
         "Antarctica:Syowa"{
-            ec{"Syowa"}
+            ec{"ስዮዋ"}
         }
         "Antarctica:Troll"{
-            ec{"Troll"}
+            ec{"ትሮል"}
         }
         "Antarctica:Vostok"{
-            ec{"Vostok"}
+            ec{"ቮስቶክ"}
         }
         "Arctic:Longyearbyen"{
-            ec{"Longyearbyen"}
+            ec{"ሎንግየርባየን"}
         }
         "Asia:Aden"{
-            ec{"Aden"}
+            ec{"ዓደን"}
         }
         "Asia:Almaty"{
-            ec{"Almaty"}
+            ec{"ኣልማቲ"}
         }
         "Asia:Amman"{
-            ec{"Amman"}
+            ec{"ዓማን"}
         }
         "Asia:Anadyr"{
-            ec{"Anadyr"}
+            ec{"ኣናዲር"}
         }
         "Asia:Aqtau"{
-            ec{"Aqtau"}
+            ec{"ኣክታው"}
         }
         "Asia:Aqtobe"{
-            ec{"Aqtobe"}
+            ec{"ኣክቶበ"}
         }
         "Asia:Ashgabat"{
-            ec{"Ashgabat"}
+            ec{"ኣሽጋባት"}
         }
         "Asia:Atyrau"{
-            ec{"Atyrau"}
+            ec{"ኣቲራው"}
         }
         "Asia:Baghdad"{
-            ec{"Baghdad"}
+            ec{"ባቕዳድ"}
         }
         "Asia:Bahrain"{
-            ec{"Bahrain"}
+            ec{"ባሕሬን"}
         }
         "Asia:Baku"{
-            ec{"Baku"}
+            ec{"ባኩ"}
         }
         "Asia:Bangkok"{
-            ec{"Bangkok"}
+            ec{"ባንግኮክ"}
         }
         "Asia:Barnaul"{
-            ec{"Barnaul"}
+            ec{"ባርናውል"}
         }
         "Asia:Beirut"{
-            ec{"Beirut"}
+            ec{"በይሩት"}
         }
         "Asia:Bishkek"{
-            ec{"Bishkek"}
+            ec{"ቢሽኬክ"}
         }
         "Asia:Brunei"{
-            ec{"Brunei"}
+            ec{"ብሩነይ"}
         }
         "Asia:Calcutta"{
-            ec{"Kolkata"}
+            ec{"ኮልካታ"}
         }
         "Asia:Chita"{
-            ec{"Chita"}
+            ec{"ቺታ"}
         }
         "Asia:Choibalsan"{
-            ec{"Choibalsan"}
+            ec{"ቾይባልሳን"}
         }
         "Asia:Colombo"{
-            ec{"Colombo"}
+            ec{"ኮሎምቦ"}
         }
         "Asia:Damascus"{
-            ec{"Damascus"}
+            ec{"ደማስቆ"}
         }
         "Asia:Dhaka"{
-            ec{"Dhaka"}
+            ec{"ዳካ"}
         }
         "Asia:Dili"{
-            ec{"Dili"}
+            ec{"ዲሊ"}
         }
         "Asia:Dubai"{
-            ec{"Dubai"}
+            ec{"ዱባይ"}
         }
         "Asia:Dushanbe"{
-            ec{"Dushanbe"}
+            ec{"ዱሻንበ"}
         }
         "Asia:Famagusta"{
-            ec{"Famagusta"}
+            ec{"ፋማጉስታ"}
         }
         "Asia:Gaza"{
-            ec{"Gaza"}
+            ec{"ቓዛ"}
         }
         "Asia:Hebron"{
-            ec{"Hebron"}
+            ec{"ኬብሮን"}
         }
         "Asia:Hong_Kong"{
-            ec{"Hong Kong"}
+            ec{"ሆንግ ኮንግ"}
         }
         "Asia:Hovd"{
-            ec{"Hovd"}
+            ec{"ሆቭድ"}
         }
         "Asia:Irkutsk"{
-            ec{"Irkutsk"}
+            ec{"ኢርኩትስክ"}
         }
         "Asia:Jakarta"{
-            ec{"Jakarta"}
+            ec{"ጃካርታ"}
         }
         "Asia:Jayapura"{
-            ec{"Jayapura"}
+            ec{"ጃያፑራ"}
         }
         "Asia:Jerusalem"{
-            ec{"Jerusalem"}
+            ec{"የሩሳሌም"}
         }
         "Asia:Kabul"{
-            ec{"Kabul"}
+            ec{"ካቡል"}
         }
         "Asia:Kamchatka"{
-            ec{"Kamchatka"}
+            ec{"ካምቻትካ"}
         }
         "Asia:Karachi"{
-            ec{"Karachi"}
+            ec{"ካራቺ"}
         }
         "Asia:Katmandu"{
-            ec{"Kathmandu"}
+            ec{"ካትማንዱ"}
         }
         "Asia:Khandyga"{
-            ec{"Khandyga"}
+            ec{"ካንዲጋ"}
         }
         "Asia:Krasnoyarsk"{
-            ec{"Krasnoyarsk"}
+            ec{"ክራስኖያርስክ"}
         }
         "Asia:Kuala_Lumpur"{
-            ec{"Kuala Lumpur"}
+            ec{"ኳላ ሉምፑር"}
         }
         "Asia:Kuching"{
-            ec{"Kuching"}
+            ec{"ኩቺንግ"}
         }
         "Asia:Kuwait"{
-            ec{"Kuwait"}
+            ec{"ኩዌት"}
         }
         "Asia:Macau"{
-            ec{"Macau"}
+            ec{"ማካው"}
         }
         "Asia:Magadan"{
-            ec{"Magadan"}
+            ec{"ማጋዳን"}
         }
         "Asia:Makassar"{
-            ec{"Makassar"}
+            ec{"ማካሳር"}
         }
         "Asia:Manila"{
-            ec{"Manila"}
+            ec{"ማኒላ"}
         }
         "Asia:Muscat"{
-            ec{"Muscat"}
+            ec{"ሙስካት"}
         }
         "Asia:Nicosia"{
-            ec{"Nicosia"}
+            ec{"ኒኮስያ"}
         }
         "Asia:Novokuznetsk"{
-            ec{"Novokuznetsk"}
+            ec{"ኖቮኩዝነትስክ"}
         }
         "Asia:Novosibirsk"{
-            ec{"Novosibirsk"}
+            ec{"ኖቮሲቢርስክ"}
         }
         "Asia:Omsk"{
-            ec{"Omsk"}
+            ec{"ኦምስክ"}
         }
         "Asia:Oral"{
-            ec{"Oral"}
+            ec{"ኦራል"}
         }
         "Asia:Phnom_Penh"{
-            ec{"Phnom Penh"}
+            ec{"ፕኖም ፐን"}
         }
         "Asia:Pontianak"{
-            ec{"Pontianak"}
+            ec{"ፖንትያናክ"}
         }
         "Asia:Pyongyang"{
-            ec{"Pyongyang"}
+            ec{"ፕዮንግያንግ"}
         }
         "Asia:Qatar"{
-            ec{"Qatar"}
+            ec{"ቐጠር"}
         }
         "Asia:Qostanay"{
-            ec{"Kostanay"}
+            ec{"ኮስታናይ"}
         }
         "Asia:Qyzylorda"{
-            ec{"Qyzylorda"}
+            ec{"ኪዚሎርዳ"}
         }
         "Asia:Rangoon"{
-            ec{"Rangoon"}
+            ec{"ያንጎን"}
         }
         "Asia:Riyadh"{
-            ec{"Riyadh"}
+            ec{"ርያድ"}
         }
         "Asia:Saigon"{
-            ec{"Ho Chi Minh"}
+            ec{"ከተማ ሆ ቺ ሚን"}
         }
         "Asia:Sakhalin"{
-            ec{"Sakhalin"}
+            ec{"ሳካሊን"}
         }
         "Asia:Samarkand"{
-            ec{"Samarkand"}
+            ec{"ሳማርካንድ"}
         }
         "Asia:Seoul"{
-            ec{"Seoul"}
+            ec{"ሶውል"}
         }
         "Asia:Shanghai"{
-            ec{"Shanghai"}
+            ec{"ሻንግሃይ"}
         }
         "Asia:Singapore"{
-            ec{"Singapore"}
+            ec{"ሲንጋፖር"}
         }
         "Asia:Srednekolymsk"{
-            ec{"Srednekolymsk"}
+            ec{"ስሬድነኮሊምስክ"}
         }
         "Asia:Taipei"{
-            ec{"Taipei"}
+            ec{"ታይፐይ"}
         }
         "Asia:Tashkent"{
-            ec{"Tashkent"}
+            ec{"ታሽከንት"}
         }
         "Asia:Tbilisi"{
-            ec{"Tbilisi"}
+            ec{"ትቢሊሲ"}
         }
         "Asia:Tehran"{
-            ec{"Tehran"}
+            ec{"ተህራን"}
         }
         "Asia:Thimphu"{
-            ec{"Thimphu"}
+            ec{"ቲምፉ"}
         }
         "Asia:Tokyo"{
-            ec{"Tokyo"}
+            ec{"ቶክዮ"}
         }
         "Asia:Tomsk"{
-            ec{"Tomsk"}
+            ec{"ቶምስክ"}
         }
         "Asia:Ulaanbaatar"{
-            ec{"Ulaanbaatar"}
+            ec{"ኡላን ባቶር"}
         }
         "Asia:Urumqi"{
-            ec{"Urumqi"}
+            ec{"ኡሩምኪ"}
         }
         "Asia:Ust-Nera"{
-            ec{"Ust-Nera"}
+            ec{"ኡስት-ኔራ"}
         }
         "Asia:Vientiane"{
-            ec{"Vientiane"}
+            ec{"ቭየንትያን"}
         }
         "Asia:Vladivostok"{
-            ec{"Vladivostok"}
+            ec{"ቭላዲቮስቶክ"}
         }
         "Asia:Yakutsk"{
-            ec{"Yakutsk"}
+            ec{"ያኩትስክ"}
         }
         "Asia:Yekaterinburg"{
-            ec{"Yekaterinburg"}
+            ec{"የካተሪንበርግ"}
         }
         "Asia:Yerevan"{
-            ec{"Yerevan"}
+            ec{"የረቫን"}
         }
         "Atlantic:Azores"{
-            ec{"Azores"}
+            ec{"ኣዞረስ"}
         }
         "Atlantic:Bermuda"{
-            ec{"Bermuda"}
+            ec{"በርሙዳ"}
         }
         "Atlantic:Canary"{
-            ec{"Canary"}
+            ec{"ካናሪ"}
         }
         "Atlantic:Cape_Verde"{
-            ec{"Cape Verde"}
+            ec{"ኬፕ ቨርደ"}
         }
         "Atlantic:Faeroe"{
-            ec{"Faroe"}
+            ec{"ደሴታት ፋሮ"}
         }
         "Atlantic:Madeira"{
-            ec{"Madeira"}
+            ec{"ማደይራ"}
         }
         "Atlantic:Reykjavik"{
-            ec{"Reykjavik"}
+            ec{"ረይክያቪክ"}
         }
         "Atlantic:South_Georgia"{
-            ec{"South Georgia"}
+            ec{"ደቡብ ጆርጅያ"}
         }
         "Atlantic:St_Helena"{
-            ec{"St. Helena"}
+            ec{"ቅድስቲ ሄለና"}
         }
         "Atlantic:Stanley"{
-            ec{"Stanley"}
+            ec{"ስታንሊ"}
         }
         "Australia:Adelaide"{
-            ec{"Adelaide"}
+            ec{"ኣደለይድ"}
         }
         "Australia:Brisbane"{
-            ec{"Brisbane"}
+            ec{"ብሪዝቤን"}
         }
         "Australia:Broken_Hill"{
-            ec{"Broken Hill"}
+            ec{"ብሮክን ሂል"}
         }
         "Australia:Currie"{
-            ec{"Currie"}
+            ec{"ኩሪ"}
         }
         "Australia:Darwin"{
-            ec{"Darwin"}
+            ec{"ዳርዊን"}
         }
         "Australia:Eucla"{
-            ec{"Eucla"}
+            ec{"ዩክላ"}
         }
         "Australia:Hobart"{
-            ec{"Hobart"}
+            ec{"ሆባርት"}
         }
         "Australia:Lindeman"{
-            ec{"Lindeman"}
+            ec{"ሊንድማን"}
         }
         "Australia:Lord_Howe"{
-            ec{"Lord Howe"}
+            ec{"ሎርድ ሃው"}
         }
         "Australia:Melbourne"{
-            ec{"Melbourne"}
+            ec{"መልበርን"}
         }
         "Australia:Perth"{
-            ec{"Perth"}
+            ec{"ፐርዝ"}
         }
         "Australia:Sydney"{
-            ec{"Sydney"}
+            ec{"ሲድኒ"}
         }
         "Etc:UTC"{
-            ls{"Coordinated Universal Time"}
+            ls{"ዝተሳነየ ኣድማሳዊ ግዜ"}
         }
         "Etc:Unknown"{
-            ec{"Unknown"}
+            ec{"ዘይተፈልጠ ከተማ"}
         }
         "Europe:Amsterdam"{
-            ec{"Amsterdam"}
+            ec{"ኣምስተርዳም"}
         }
         "Europe:Andorra"{
-            ec{"Andorra"}
+            ec{"ኣንዶራ"}
         }
         "Europe:Astrakhan"{
-            ec{"Astrakhan"}
+            ec{"ኣስትራካን"}
         }
         "Europe:Athens"{
-            ec{"Athens"}
+            ec{"ኣቴንስ"}
         }
         "Europe:Belgrade"{
-            ec{"Belgrade"}
+            ec{"በልግሬድ"}
         }
         "Europe:Berlin"{
-            ec{"Berlin"}
+            ec{"በርሊን"}
         }
         "Europe:Bratislava"{
-            ec{"Bratislava"}
+            ec{"ብራቲስላቫ"}
         }
         "Europe:Brussels"{
-            ec{"Brussels"}
+            ec{"ብራስልስ"}
         }
         "Europe:Bucharest"{
-            ec{"Bucharest"}
+            ec{"ቡካረስት"}
         }
         "Europe:Budapest"{
-            ec{"Budapest"}
+            ec{"ቡዳፐስት"}
         }
         "Europe:Busingen"{
-            ec{"Busingen"}
+            ec{"ቡሲንገን"}
         }
         "Europe:Chisinau"{
-            ec{"Chisinau"}
+            ec{"ኪሺናው"}
         }
         "Europe:Copenhagen"{
-            ec{"Copenhagen"}
+            ec{"ኮፐንሃገን"}
         }
         "Europe:Dublin"{
-            ec{"Dublin"}
+            ec{"ደብሊን"}
             ld{"Irish Standard Time"}
         }
         "Europe:Gibraltar"{
-            ec{"Gibraltar"}
+            ec{"ጂብራልታር"}
         }
         "Europe:Guernsey"{
-            ec{"Guernsey"}
+            ec{"ገርንዚ"}
         }
         "Europe:Helsinki"{
-            ec{"Helsinki"}
+            ec{"ሄልሲንኪ"}
         }
         "Europe:Isle_of_Man"{
-            ec{"Isle of Man"}
+            ec{"ኣይል ኦፍ ማን"}
         }
         "Europe:Istanbul"{
-            ec{"Istanbul"}
+            ec{"ኢስታንቡል"}
         }
         "Europe:Jersey"{
-            ec{"Jersey"}
+            ec{"ጀርዚ"}
         }
         "Europe:Kaliningrad"{
-            ec{"Kaliningrad"}
+            ec{"ካሊኒንግራድ"}
         }
         "Europe:Kiev"{
-            ec{"Kiev"}
+            ec{"ክየቭ"}
         }
         "Europe:Kirov"{
-            ec{"Kirov"}
+            ec{"ኪሮቭ"}
         }
         "Europe:Lisbon"{
-            ec{"Lisbon"}
+            ec{"ሊዝበን"}
         }
         "Europe:Ljubljana"{
-            ec{"Ljubljana"}
+            ec{"ልዩብልያና"}
         }
         "Europe:London"{
-            ec{"London"}
-            ld{"British Summer Time"}
+            ec{"ሎንደን"}
+            ld{"ግዜ ክረምቲ ብሪጣንያ"}
         }
         "Europe:Luxembourg"{
-            ec{"Luxembourg"}
+            ec{"ሉክሰምበርግ"}
         }
         "Europe:Madrid"{
-            ec{"Madrid"}
+            ec{"ማድሪድ"}
         }
         "Europe:Malta"{
-            ec{"Malta"}
+            ec{"ማልታ"}
         }
         "Europe:Mariehamn"{
-            ec{"Mariehamn"}
+            ec{"ማሪሃምን"}
         }
         "Europe:Minsk"{
-            ec{"Minsk"}
+            ec{"ሚንስክ"}
         }
         "Europe:Monaco"{
-            ec{"Monaco"}
+            ec{"ሞናኮ"}
         }
         "Europe:Moscow"{
-            ec{"Moscow"}
+            ec{"ሞስኮ"}
         }
         "Europe:Oslo"{
-            ec{"Oslo"}
+            ec{"ኦስሎ"}
         }
         "Europe:Paris"{
-            ec{"Paris"}
+            ec{"ፓሪስ"}
         }
         "Europe:Podgorica"{
-            ec{"Podgorica"}
+            ec{"ፖድጎሪጻ"}
         }
         "Europe:Prague"{
-            ec{"Prague"}
+            ec{"ፕራግ"}
         }
         "Europe:Riga"{
-            ec{"Riga"}
+            ec{"ሪጋ"}
         }
         "Europe:Rome"{
-            ec{"Rome"}
+            ec{"ሮማ"}
         }
         "Europe:Samara"{
-            ec{"Samara"}
+            ec{"ሳማራ"}
         }
         "Europe:San_Marino"{
-            ec{"San Marino"}
+            ec{"ሳን ማሪኖ"}
         }
         "Europe:Sarajevo"{
-            ec{"Sarajevo"}
+            ec{"ሳራየቮ"}
         }
         "Europe:Saratov"{
-            ec{"Saratov"}
+            ec{"ሳራቶቭ"}
         }
         "Europe:Simferopol"{
-            ec{"Simferopol"}
+            ec{"ሲምፈሮፖል"}
         }
         "Europe:Skopje"{
-            ec{"Skopje"}
+            ec{"ስኮፕየ"}
         }
         "Europe:Sofia"{
-            ec{"Sofia"}
+            ec{"ሶፍያ"}
         }
         "Europe:Stockholm"{
-            ec{"Stockholm"}
+            ec{"ስቶክሆልም"}
         }
         "Europe:Tallinn"{
-            ec{"Tallinn"}
+            ec{"ታሊን"}
         }
         "Europe:Tirane"{
-            ec{"Tirane"}
+            ec{"ቲራና"}
         }
         "Europe:Ulyanovsk"{
-            ec{"Ulyanovsk"}
+            ec{"ኡልያኖቭስክ"}
         }
         "Europe:Uzhgorod"{
-            ec{"Uzhgorod"}
+            ec{"ኡዝጎሮድ"}
         }
         "Europe:Vaduz"{
-            ec{"Vaduz"}
+            ec{"ቫዱዝ"}
         }
         "Europe:Vatican"{
-            ec{"Vatican"}
+            ec{"ቫቲካን"}
         }
         "Europe:Vienna"{
-            ec{"Vienna"}
+            ec{"ቭየና"}
         }
         "Europe:Vilnius"{
-            ec{"Vilnius"}
+            ec{"ቪልንየስ"}
         }
         "Europe:Volgograd"{
-            ec{"Volgograd"}
+            ec{"ቮልጎግራድ"}
         }
         "Europe:Warsaw"{
-            ec{"Warsaw"}
+            ec{"ዋርሳው"}
         }
         "Europe:Zagreb"{
-            ec{"Zagreb"}
+            ec{"ዛግረብ"}
         }
         "Europe:Zaporozhye"{
-            ec{"Zaporozhye"}
+            ec{"ዛፖሪዥያ"}
         }
         "Europe:Zurich"{
-            ec{"Zurich"}
+            ec{"ዙሪክ"}
         }
         "Indian:Antananarivo"{
-            ec{"Antananarivo"}
+            ec{"ኣንታናናሪቮ"}
         }
         "Indian:Chagos"{
-            ec{"Chagos"}
+            ec{"ቻጎስ"}
         }
         "Indian:Christmas"{
-            ec{"Christmas"}
+            ec{"ክሪስማስ"}
         }
         "Indian:Cocos"{
-            ec{"Cocos"}
+            ec{"ኮኮስ"}
         }
         "Indian:Comoro"{
-            ec{"Comoro"}
+            ec{"ኮሞሮ"}
         }
         "Indian:Kerguelen"{
-            ec{"Kerguelen"}
+            ec{"ከርጉለን"}
         }
         "Indian:Mahe"{
-            ec{"Mahe"}
+            ec{"ማሄ"}
         }
         "Indian:Maldives"{
-            ec{"Maldives"}
+            ec{"ማልዲቭስ"}
         }
         "Indian:Mauritius"{
-            ec{"Mauritius"}
+            ec{"ማውሪሸስ"}
         }
         "Indian:Mayotte"{
-            ec{"Mayotte"}
+            ec{"ማዮት"}
         }
         "Indian:Reunion"{
-            ec{"Reunion"}
+            ec{"ርዩንየን"}
         }
         "Pacific:Apia"{
-            ec{"Apia"}
+            ec{"ኣፕያ"}
         }
         "Pacific:Auckland"{
-            ec{"Auckland"}
+            ec{"ኦክላንድ"}
         }
         "Pacific:Bougainville"{
-            ec{"Bougainville"}
+            ec{"ቡገንቪል"}
         }
         "Pacific:Chatham"{
-            ec{"Chatham"}
+            ec{"ቻታም"}
         }
         "Pacific:Easter"{
-            ec{"Easter"}
+            ec{"ደሴት ፋሲካ"}
         }
         "Pacific:Efate"{
-            ec{"Efate"}
+            ec{"ኤፋቴ"}
         }
         "Pacific:Enderbury"{
-            ec{"Enderbury"}
+            ec{"ኤንደርበሪ"}
         }
         "Pacific:Fakaofo"{
-            ec{"Fakaofo"}
+            ec{"ፋካኦፎ"}
         }
         "Pacific:Fiji"{
-            ec{"Fiji"}
+            ec{"ፊጂ"}
         }
         "Pacific:Funafuti"{
-            ec{"Funafuti"}
+            ec{"ፉናፉቲ"}
         }
         "Pacific:Galapagos"{
-            ec{"Galapagos"}
+            ec{"ጋላፓጎስ"}
         }
         "Pacific:Gambier"{
-            ec{"Gambier"}
+            ec{"ጋምብየር"}
         }
         "Pacific:Guadalcanal"{
-            ec{"Guadalcanal"}
+            ec{"ጓዳልካናል"}
         }
         "Pacific:Guam"{
-            ec{"Guam"}
+            ec{"ጓም"}
         }
         "Pacific:Honolulu"{
-            ec{"Honolulu"}
+            ec{"ሆኖሉሉ"}
         }
         "Pacific:Johnston"{
-            ec{"Johnston"}
+            ec{"ጆንስተን"}
         }
         "Pacific:Kiritimati"{
-            ec{"Kiritimati"}
+            ec{"ኪሪቲማቲ"}
         }
         "Pacific:Kosrae"{
-            ec{"Kosrae"}
+            ec{"ኮስሬ"}
         }
         "Pacific:Kwajalein"{
-            ec{"Kwajalein"}
+            ec{"ክዋጃሊን"}
         }
         "Pacific:Majuro"{
-            ec{"Majuro"}
+            ec{"ማጁሮ"}
         }
         "Pacific:Marquesas"{
-            ec{"Marquesas"}
+            ec{"ማርኬሳስ"}
         }
         "Pacific:Midway"{
-            ec{"Midway"}
+            ec{"ሚድወይ"}
         }
         "Pacific:Nauru"{
-            ec{"Nauru"}
+            ec{"ናውሩ"}
         }
         "Pacific:Niue"{
-            ec{"Niue"}
+            ec{"ኒዩ"}
         }
         "Pacific:Norfolk"{
-            ec{"Norfolk"}
+            ec{"ኖርፎልክ"}
         }
         "Pacific:Noumea"{
-            ec{"Noumea"}
+            ec{"ኑመያ"}
         }
         "Pacific:Pago_Pago"{
-            ec{"Pago Pago"}
+            ec{"ፓጎ ፓጎ"}
         }
         "Pacific:Palau"{
-            ec{"Palau"}
+            ec{"ፓላው"}
         }
         "Pacific:Pitcairn"{
-            ec{"Pitcairn"}
+            ec{"ፒትከርን"}
         }
         "Pacific:Ponape"{
-            ec{"Pohnpei"}
+            ec{"ፖንፐይ"}
         }
         "Pacific:Port_Moresby"{
-            ec{"Port Moresby"}
+            ec{"ፖርት ሞርስቢ"}
         }
         "Pacific:Rarotonga"{
-            ec{"Rarotonga"}
+            ec{"ራሮቶንጋ"}
         }
         "Pacific:Saipan"{
-            ec{"Saipan"}
+            ec{"ሳይፓን"}
         }
         "Pacific:Tahiti"{
-            ec{"Tahiti"}
+            ec{"ታሂቲ"}
         }
         "Pacific:Tarawa"{
-            ec{"Tarawa"}
+            ec{"ታራዋ"}
         }
         "Pacific:Tongatapu"{
-            ec{"Tongatapu"}
+            ec{"ቶንጋታፑ"}
         }
         "Pacific:Truk"{
-            ec{"Chuuk"}
+            ec{"ቹክ"}
         }
         "Pacific:Wake"{
-            ec{"Wake"}
+            ec{"ዌክ"}
         }
         "Pacific:Wallis"{
-            ec{"Wallis"}
+            ec{"ዋሊስ"}
+        }
+        "meta:Acre"{
+            ld{"ግዜ ክረምቲ ኣክሪ"}
+            lg{"ግዜ ኣክሪ"}
+            ls{"ምዱብ ግዜ ኣክሪ"}
+        }
+        "meta:Africa_Central"{
+            ls{"ግዜ ማእከላይ ኣፍሪቃ"}
+        }
+        "meta:Africa_Eastern"{
+            ls{"ግዜ ምብራቕ ኣፍሪቃ"}
+        }
+        "meta:Africa_Southern"{
+            ls{"ግዜ ደቡብ ኣፍሪቃ"}
+        }
+        "meta:Africa_Western"{
+            ld{"ግዜ ክረምቲ ምዕራብ ኣፍሪቃ"}
+            lg{"ግዜ ምዕራብ ኣፍሪቃ"}
+            ls{"ምዱብ ግዜ ምዕራብ ኣፍሪቃ"}
+        }
+        "meta:Alaska"{
+            ld{"ግዜ ክረምቲ ኣላስካ"}
+            lg{"ግዜ ኣላስካ"}
+            ls{"ምዱብ ግዜ ኣላስካ"}
+        }
+        "meta:Amazon"{
+            ld{"ግዜ ክረምቲ ኣማዞን"}
+            lg{"ግዜ ኣማዞን"}
+            ls{"ምዱብ ግዜ ኣማዞን"}
+        }
+        "meta:Argentina"{
+            ld{"ግዜ ክረምቲ ኣርጀንቲና"}
+            lg{"ግዜ ኣርጀንቲና"}
+            ls{"ምዱብ ግዜ ኣርጀንቲና"}
+        }
+        "meta:Azores"{
+            ld{"ግዜ ክረምቲ ኣዞረስ"}
+            lg{"ግዜ ኣዞረስ"}
+            ls{"ምዱብ ግዜ ኣዞረስ"}
+        }
+        "meta:Bolivia"{
+            ls{"ግዜ ቦሊቭያ"}
+        }
+        "meta:Brasilia"{
+            ld{"ግዜ ክረምቲ ብራዚልያ"}
+            lg{"ግዜ ብራዚልያ"}
+            ls{"ምዱብ ግዜ ብራዚልያ"}
+        }
+        "meta:Cape_Verde"{
+            ld{"ግዜ ክረምቲ ኬፕ ቨርደ"}
+            lg{"ግዜ ኬፕ ቨርደ"}
+            ls{"ምዱብ ግዜ ኬፕ ቨርደ"}
+        }
+        "meta:Chile"{
+            ld{"ግዜ ክረምቲ ቺሌ"}
+            lg{"ግዜ ቺሌ"}
+            ls{"ምዱብ ግዜ ቺሌ"}
+        }
+        "meta:Colombia"{
+            ld{"ግዜ ክረምቲ ኮሎምብያ"}
+            lg{"ግዜ ኮሎምብያ"}
+            ls{"ምዱብ ግዜ ኮሎምብያ"}
+        }
+        "meta:Easter"{
+            ld{"ግዜ ክረምቲ ደሴት ፋሲካ"}
+            lg{"ግዜ ደሴት ፋሲካ"}
+            ls{"ምዱብ ግዜ ደሴት ፋሲካ"}
+        }
+        "meta:Ecuador"{
+            ls{"ግዜ ኤኳዶር"}
+        }
+        "meta:Europe_Central"{
+            ld{"ግዜ ክረምቲ ኤውሮጳ"}
+            lg{"ግዜ ማእከላይ ኤውሮጳ"}
+            ls{"ምዱብ ግዜ ማእከላይ ኤውሮጳ"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"ግዜ ክረምቲ ምብራቕ ኤውሮጳ"}
+            lg{"ግዜ ምብራቕ ኤውሮጳ"}
+            ls{"ምዱብ ግዜ ምብራቕ ኤውሮጳ"}
+        }
+        "meta:Falkland"{
+            ld{"ግዜ ከረምቲ ደሴታት ፎክላንድ"}
+            lg{"ግዜ ደሴታት ፎክላንድ"}
+            ls{"ምዱብ ግዜ ደሴታት ፎክላንድ"}
+        }
+        "meta:French_Guiana"{
+            ls{"ግዜ ፈረንሳዊት ጊያና"}
+        }
+        "meta:French_Southern"{
+            ls{"ግዜ ፈረንሳዊ ደቡባዊ ግዝኣታትን ኣንታርቲክን"}
+        }
+        "meta:Galapagos"{
+            ls{"ግዜ ጋላፓጎስ"}
+        }
+        "meta:Guyana"{
+            ls{"ግዜ ጉያና"}
+        }
+        "meta:Indian_Ocean"{
+            ls{"ግዜ ህንዳዊ ውቅያኖስ"}
         }
         "meta:Indonesia_Central"{
-            ls{"Central Indonesia Time"}
+            ls{"ግዜ ማእከላይ ኢንዶነዥያ"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"Eastern Indonesia Time"}
+            ls{"ግዜ ምብራቓዊ ኢንዶነዥያ"}
         }
         "meta:Indonesia_Western"{
-            ls{"Western Indonesia Time"}
+            ls{"ግዜ ምዕራባዊ ኢንዶነዥያ"}
         }
         "meta:Malaysia"{
-            ls{"Malaysia Time"}
+            ls{"ግዜ ማለዥያ"}
+        }
+        "meta:Mauritius"{
+            ld{"ግዜ ክረምቲ ማውሪሸስ"}
+            lg{"ግዜ ማውሪሸስ"}
+            ls{"ምዱብ ግዜ ማውሪሸስ"}
+        }
+        "meta:Noronha"{
+            ld{"ግዜ ክረምቲ ፈርናንዶ ደ ኖሮንያ"}
+            lg{"ግዜ ፈርናንዶ ደ ኖሮንያ"}
+            ls{"ምዱብ ግዜ ፈርናንዶ ደ ኖሮንያ"}
+        }
+        "meta:Paraguay"{
+            ld{"ግዜ ክረምቲ ፓራጓይ"}
+            lg{"ግዜ ፓራጓይ"}
+            ls{"ምዱብ ግዜ ፓራጓይ"}
+        }
+        "meta:Peru"{
+            ld{"ግዜ ክረምቲ ፔሩ"}
+            lg{"ግዜ ፔሩ"}
+            ls{"ምዱብ ግዜ ፔሩ"}
+        }
+        "meta:Reunion"{
+            ls{"ግዜ ርዩንየን"}
+        }
+        "meta:Seychelles"{
+            ls{"ግዜ ሲሸልስ"}
         }
         "meta:Singapore"{
-            ls{"Singapore Standard Time"}
+            ls{"ግዜ ሲንጋፖር"}
+        }
+        "meta:South_Georgia"{
+            ls{"ግዜ ደቡብ ጆርጅያ"}
+        }
+        "meta:Suriname"{
+            ls{"ግዜ ሱሪናም"}
+        }
+        "meta:Uruguay"{
+            ld{"ግዜ ክረምቲ ኡራጓይ"}
+            lg{"ግዜ ኡራጓይ"}
+            ls{"ምዱብ ግዜ ኡራጓይ"}
+        }
+        "meta:Venezuela"{
+            ls{"ግዜ ቬኔዝዌላ"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
+        regionFormat{"ግዜ {0}"}
+        regionFormatDaylight{"ግዜ ክረምቲ {0}"}
+        regionFormatStandard{"ምዱብ ግዜ {0}"}
     }
 }

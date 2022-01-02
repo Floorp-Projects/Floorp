@@ -19,6 +19,10 @@ interface imgIEncoder : nsIAsyncInputStream
   // ----
   // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
+  // png-zlib-level=[0-9]  --  default: "3"
+  //     Overrides default from compression level for zlib.
+  // png-filter=[no_filters|none|sub|up|avg|paeth|fast|all]  --  default: "sub"
+  //     Overrides default filter.
   //
   //
   // APNG:

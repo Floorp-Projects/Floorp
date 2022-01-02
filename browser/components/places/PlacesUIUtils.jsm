@@ -287,6 +287,25 @@ var PlacesUIUtils = {
   },
 
   /**
+   * Obfuscates a place: URL to use it in xulstore without the risk of
+   leaking browsing information. Uses md5 to hash the query string.
+   *
+   * @param {URL} url
+   *        the URL for xulstore with place: key pairs.
+   * @returns {string} "place:[md5_hash]" hashed url
+   */
+
+  obfuscateUrlForXulStore(url) {
+    if (!url.startsWith("place:")) {
+      throw new Error("Method must be used to only obfuscate place: uris!");
+    }
+    let urlNoProtocol = url.substring(url.indexOf(":") + 1);
+    let hashedURL = md5Hash(urlNoProtocol);
+
+    return `place:${hashedURL}`;
+  },
+
+  /**
    * Shows the bookmark dialog corresponding to the specified info.
    *
    * @param {object} aInfo
@@ -1652,17 +1671,22 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.bookmarks.defaultLocation",
   "", // Avoid eagerly loading PlacesUtils.
   null,
-  prefValue => {
+  async prefValue => {
     if (!prefValue) {
       return PlacesUtils.bookmarks.toolbarGuid;
     }
     if (["toolbar", "menu", "unfiled"].includes(prefValue)) {
       return PlacesUtils.bookmarks[prefValue + "Guid"];
     }
-    return PlacesUtils.bookmarks
-      .fetch({ guid: prefValue })
-      .then(bm => bm.guid)
-      .catch(() => PlacesUtils.bookmarks.toolbarGuid);
+
+    try {
+      return await PlacesUtils.bookmarks
+        .fetch({ guid: prefValue })
+        .then(bm => bm.guid);
+    } catch (ex) {
+      // The guid may have an invalid format.
+      return PlacesUtils.bookmarks.toolbarGuid;
+    }
   }
 );
 
@@ -1855,4 +1879,31 @@ function getBrowserWindow(aWindow) {
       "navigator:browser"
     ? aWindow
     : BrowserWindowTracker.getTopWindow();
+}
+
+// Keep a hasher for repeated hashings
+let gCryptoHash = null;
+
+/**
+ * Run some text through md5 and return the base64 result.
+ * @param {string} data The string to hash.
+ * @returns {string} md5 hash of the input string.
+ */
+function md5Hash(data) {
+  // Lazily create a reusable hasher
+  if (gCryptoHash === null) {
+    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
+  }
+
+  gCryptoHash.init(gCryptoHash.MD5);
+
+  // Convert the data to a byte array for hashing
+  gCryptoHash.update(
+    data.split("").map(c => c.charCodeAt(0)),
+    data.length
+  );
+  // Request the has result as ASCII base64
+  return gCryptoHash.finish(true);
 }

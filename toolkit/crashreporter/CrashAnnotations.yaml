@@ -143,6 +143,17 @@ AvailableVirtualMemory:
   type: string
   ping: true
 
+BackgroundTaskMode:
+  description: >
+    True if the app was invoked in background task mode via `--backgroundtask ...`, false otherwise.
+  type: boolean
+
+BackgroundTaskName:
+  description: >
+    If the app was invoked in background task mode via `--backgroundtask <task name>`, the string "task name".
+  type: string
+  ping: true
+
 BlockedDllList:
   description: >
     Comma-separated list of blocked DLLS, Windows-only
@@ -346,6 +357,12 @@ GraphicsStartupTest:
   description: >
     Set to 1 by the graphics driver crash guard when it's activated.
   type: boolean
+
+HeadlessMode:
+  description: >
+    True if the app was invoked in headless mode via `--headless ...` or `--backgroundtask ...`, false otherwise.
+  type: boolean
+  ping: true
 
 PHCKind:
   description: >
@@ -957,6 +974,15 @@ WasmLibrarySandboxMallocFailed:
     Set to 1 if a rlbox wasm library sandbox ran out of memory, causing a
     malloc inside the sandbox to fail.
   type: boolean
+
+WindowsPackageFamilyName:
+  description: >
+    If running in a Windows package context, the package family name, per
+    https://docs.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefamilyname.
+
+    The package family name is only included when it is likely to have been produced by Mozilla: it
+    starts "Mozilla." or "MozillaCorporation.".
+  type: string
   ping: true
 
 WindowsErrorReporting:
@@ -973,6 +999,9 @@ Winsock_LSP:
 
 XPCOMSpinEventLoopStack:
   description: >
-    If we crash while some code is spinning manually the event
-    loop, we will see the stack of nested annotations here.
+    If we crash while some code is spinning manually the event loop on the
+    main thread, we will see the stack of nested annotations here.
+    If the crashing process was killed (e.g. due to an IPC error), this
+    annotation may refer to the parent process that killed it, look out for
+    the prefix ("default" means parent) and see bug 1741131 for details.
   type: string

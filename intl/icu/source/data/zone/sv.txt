@@ -1768,9 +1768,9 @@ sv{
             ls{"Niuetid"}
         }
         "meta:Norfolk"{
-            ld{"Norfolköns, sommartid"}
+            ld{"Norfolköns sommartid"}
             lg{"Norfolköns tid"}
-            ls{"Norfolköns, normaltid"}
+            ls{"Norfolköns normaltid"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha, sommartid"}
@@ -1953,6 +1953,9 @@ sv{
             ld{"Jekaterinburg, sommartid"}
             lg{"Jekaterinburgtid"}
             ls{"Jekaterinburg, normaltid"}
+        }
+        "meta:Yukon"{
+            ls{"Yukontid"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

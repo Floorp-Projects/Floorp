@@ -33,10 +33,10 @@ fn make_roundtrip(source: &str) -> String {
         }
     };
     let pretty = PrettyConfig::new()
-        .with_depth_limit(3)
-        .with_separate_tuple_members(true)
-        .with_enumerate_arrays(true)
-        .with_new_line("\n".into());
+        .depth_limit(3)
+        .separate_tuple_members(true)
+        .enumerate_arrays(true)
+        .new_line("\n".into());
     to_string_pretty(&config, pretty).expect("Serialization failed")
 }
 

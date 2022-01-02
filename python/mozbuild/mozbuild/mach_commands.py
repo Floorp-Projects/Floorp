@@ -571,7 +571,7 @@ def join_ensure_dir(dir1, dir2):
 @CommandArgumentGroup("Android")
 @CommandArgument(
     "--package",
-    default="org.mozilla.geckoview.test",
+    default="org.mozilla.geckoview.test_runner",
     group="Android",
     help="Package name of test app.",
 )
@@ -885,6 +885,11 @@ def _get_android_install_parser():
         action="store_true",
         help="Print verbose output when installing.",
     )
+    parser.add_argument(
+        "--aab",
+        action="store_true",
+        help="Install as AAB (Android App Bundle)",
+    )
     return parser
 
 
@@ -968,6 +973,12 @@ def _get_android_run_parser():
         "or /path/to/target/profile",
     )
     group.add_argument("--url", default=None, help="URL to open")
+    group.add_argument(
+        "--aab",
+        action="store_true",
+        default=False,
+        help="Install app ass App Bundle (AAB).",
+    )
     group.add_argument(
         "--no-install",
         action="store_true",
@@ -1227,6 +1238,7 @@ def _run_android(
     env=[],
     profile=None,
     url=None,
+    aab=False,
     no_install=None,
     no_wait=None,
     fail_if_running=None,
@@ -1247,8 +1259,8 @@ def _run_android(
 
     if app == "org.mozilla.geckoview_example":
         activity_name = "org.mozilla.geckoview_example.GeckoViewActivity"
-    elif app == "org.mozilla.geckoview.test":
-        activity_name = "org.mozilla.geckoview.test.TestRunnerActivity"
+    elif app == "org.mozilla.geckoview.test_runner":
+        activity_name = "org.mozilla.geckoview.test_runner.TestRunnerActivity"
     elif "fennec" in app or "firefox" in app:
         activity_name = "org.mozilla.gecko.BrowserApp"
     else:
@@ -1263,6 +1275,7 @@ def _run_android(
     verify_android_device(
         command_context,
         app=app,
+        aab=aab,
         debugger=debug,
         install=InstallIntent.NO if no_install else InstallIntent.YES,
     )
@@ -2086,8 +2099,7 @@ def repackage_msi(
 @CommandArgument(
     "--input",
     type=str,
-    required=True,
-    help="Package (ZIP) or directory to repackage.",
+    help="Package (ZIP) or directory to repackage. Defaults to $OBJDIR/dist/bin",
 )
 @CommandArgument(
     "--version",
@@ -2097,7 +2109,7 @@ def repackage_msi(
 )
 @CommandArgument(
     "--channel",
-    required=True,
+    type=str,
     choices=["official", "beta", "aurora", "nightly", "unofficial"],
     help="Release channel.",
 )
@@ -2112,8 +2124,8 @@ def repackage_msi(
 @CommandArgument(
     "--arch",
     type=str,
-    required=True,
-    help="The architecture you are building (Choices: 'x86', 'x86_64', 'aarch64').",
+    choices=["x86", "x86_64", "aarch64"],
+    help="The architecture you are building.",
 )
 @CommandArgument(
     "--vendor",
@@ -2190,6 +2202,65 @@ def repackage_msix(
     from mozbuild.repackaging.msix import repackage_msix
 
     command_context._set_log_level(verbose)
+
+    firefox_to_msix_channel = {
+        "release": "official",
+        "beta": "beta",
+        "aurora": "aurora",
+        "nightly": "nightly",
+    }
+
+    if not input:
+        if os.path.exists(command_context.bindir):
+            input = command_context.bindir
+        else:
+            command_context.log(
+                logging.ERROR,
+                "repackage-msix-no-input",
+                {},
+                "No build found in objdir, please run ./mach build or pass --input",
+            )
+            return 1
+
+    if not os.path.exists(input):
+        command_context.log(
+            logging.ERROR,
+            "repackage-msix-invalid-input",
+            {"input": input},
+            "Input file or directory for msix repackaging does not exist: {input}",
+        )
+        return 1
+
+    if not channel:
+        # Only try to guess the channel when this is clearly a local build.
+        if input.endswith("bin"):
+            channel = firefox_to_msix_channel.get(
+                command_context.defines.get("MOZ_UPDATE_CHANNEL"), "unofficial"
+            )
+        else:
+            command_context.log(
+                logging.ERROR,
+                "repackage-msix-invalid-channel",
+                {},
+                "Could not determine channel, please set --channel",
+            )
+            return 1
+
+    if not arch:
+        # Only try to guess the arch when this is clearly a local build.
+        if input.endswith("bin"):
+            if command_context.substs["TARGET_CPU"] in ("i686", "x86_64", "aarch64"):
+                arch = command_context.substs["TARGET_CPU"].replace("i686", "x86")
+
+        if not arch:
+            command_context.log(
+                logging.ERROR,
+                "repackage-msix-couldnt-detect-arch",
+                {},
+                "Could not automatically detect architecture for msix repackaging. "
+                "Please pass --arch",
+            )
+            return 1
 
     template = os.path.join(
         command_context.topsrcdir, "browser", "installer", "windows", "msix"
@@ -2429,45 +2500,6 @@ def package_l10n(command_context, verbose=False, locales=[]):
         )
 
     return 0
-
-
-@Command(
-    "create-mach-environment",
-    category="devenv",
-    description="Create the `mach` virtualenv.",
-)
-@CommandArgument(
-    "-f",
-    "--force",
-    action="store_true",
-    help=("Force re-creating the virtualenv even if it is already up-to-date."),
-)
-def create_mach_environment(command_context, force=False):
-    """Create the mach virtualenv."""
-    from mozboot.util import get_mach_virtualenv_root
-    from mozbuild.virtualenv import VirtualenvManager
-
-    virtualenv_path = get_mach_virtualenv_root()
-    if sys.executable.startswith(virtualenv_path):
-        print(
-            "You can only create a mach environment with the system "
-            "Python. Re-run this `mach` command with the system Python.",
-            file=sys.stderr,
-        )
-        return 1
-
-    manager = VirtualenvManager(
-        command_context.topsrcdir,
-        os.path.dirname(virtualenv_path),
-        "mach",
-        populate_local_paths=False,
-    )
-
-    if manager.up_to_date() and not force:
-        print("virtualenv at %s is already up to date." % virtualenv_path)
-    else:
-        manager.build()
-    print("Mach environment created.")
 
 
 def _prepend_debugger_args(args, debugger, debugger_args):

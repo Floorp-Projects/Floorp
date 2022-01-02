@@ -120,9 +120,10 @@ static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
 bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                            Span<const StyleFilter> aFilters,
                                            WrFiltersHolder& aWrFilters,
-                                           Maybe<nsRect>& aPostFilterClip) {
+                                           Maybe<nsRect>& aPostFilterClip,
+                                           bool& aInitialized) {
   bool status = BuildWebRenderFiltersImpl(aFilteredFrame, aFilters, aWrFilters,
-                                          aPostFilterClip);
+                                          aPostFilterClip, aInitialized);
   if (!status) {
     aFilteredFrame->PresContext()->Document()->SetUseCounter(
         eUseCounter_custom_WrFilterFallback);
@@ -134,7 +135,8 @@ bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
                                                Span<const StyleFilter> aFilters,
                                                WrFiltersHolder& aWrFilters,
-                                               Maybe<nsRect>& aPostFilterClip) {
+                                               Maybe<nsRect>& aPostFilterClip,
+                                               bool& aInitialized) {
   aWrFilters.filters.Clear();
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
@@ -157,7 +159,8 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
                           nullptr);
 
   if (!instance.IsInitialized()) {
-    return false;
+    aInitialized = false;
+    return true;
   }
 
   // If there are too many filters to render, then just pretend that we

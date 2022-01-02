@@ -7,7 +7,6 @@
  * Tests utility functions contained in `source-utils.js`
  */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const curl = require("devtools/client/shared/curl");
 const Curl = curl.Curl;
 const CurlUtils = curl.CurlUtils;

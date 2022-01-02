@@ -9,8 +9,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsfriendapi.h"
-
 #include "frontend/ParseNode.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 

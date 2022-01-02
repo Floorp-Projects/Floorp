@@ -14,7 +14,7 @@
 #include <map>
 #include <vector>
 
-#include <woff2/decode.h>
+#include "../RLBoxWOFF2Host.h"
 
 // The OpenType Font File
 // http://www.microsoft.com/typography/otspec/otff.htm
@@ -511,39 +511,9 @@ bool ProcessWOFF(ots::FontFile *header,
   return ProcessGeneric(header, font, woff_tag, output, data, length, tables, file);
 }
 
-bool ProcessWOFF2(ots::FontFile *header,
-                  ots::OTSStream *output,
-                  const uint8_t *data,
-                  size_t length,
-                  uint32_t index) {
-  size_t decompressed_size = woff2::ComputeWOFF2FinalSize(data, length);
-
-  if (decompressed_size < length) {
-    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 is less than compressed size");
-  }
-
-  if (decompressed_size == 0) {
-    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 is set to 0");
-  }
-  // decompressed font must be <= OTS_MAX_DECOMPRESSED_FILE_SIZE
-  if (decompressed_size > OTS_MAX_DECOMPRESSED_FILE_SIZE) {
-    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds %gMB",
-                               OTS_MAX_DECOMPRESSED_FILE_SIZE / (1024.0 * 1024.0));
-  }
-
-  std::string buf(decompressed_size, 0);
-  woff2::WOFF2StringOut out(&buf);
-  if (!woff2::ConvertWOFF2ToTTF(data, length, &out)) {
-    return OTS_FAILURE_MSG_HDR("Failed to convert WOFF 2.0 font to SFNT");
-  }
-  const uint8_t *decompressed = reinterpret_cast<const uint8_t*>(buf.data());
-
-  if (data[4] == 't' && data[5] == 't' && data[6] == 'c' && data[7] == 'f') {
-    return ProcessTTC(header, output, decompressed, out.Size(), index);
-  } else {
-    ots::Font font(header);
-    return ProcessTTF(header, &font, output, decompressed, out.Size());
-  }
+bool ProcessWOFF2(ots::FontFile* header, ots::OTSStream* output,
+                  const uint8_t* data, size_t length, uint32_t index) {
+  return RLBoxProcessWOFF2(header, output, data, length, index, ProcessTTC, ProcessTTF);
 }
 
 ots::TableAction GetTableAction(const ots::FontFile *header, uint32_t tag) {

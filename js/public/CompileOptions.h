@@ -85,6 +85,16 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   friend class JS_PUBLIC_API DecodeOptions;
 
  protected:
+  // non-POD options:
+
+  const char* filename_ = nullptr;
+  const char* introducerFilename_ = nullptr;
+  const char16_t* sourceMapURL_ = nullptr;
+
+  // POD options:
+  // WARNING: When adding new fields, don't forget to add them to
+  //          copyPODTransitiveOptions.
+
   /**
    * The Web Platform allows scripts to be loaded from arbitrary cross-origin
    * sources. This allows an attack by which a malicious website loads a
@@ -112,10 +122,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // The context has specified that source pragmas should be parsed.
   bool sourcePragmas_ = true;
 
-  const char* filename_ = nullptr;
-  const char* introducerFilename_ = nullptr;
-  const char16_t* sourceMapURL_ = nullptr;
-
   // Flag used to bypass the filename validation callback.
   // See also SetFilenameValidationCallback.
   bool skipFilenameValidation_ = false;
@@ -132,7 +138,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   friend class JS_PUBLIC_API InstantiateOptions;
 
  public:
-  // POD options.
   bool selfHostingMode = false;
   AsmJSOption asmJSOption = AsmJSOption::DisabledByAsmJSPref;
   bool throwOnAsmJSValidationFailureOption = false;
@@ -140,18 +145,15 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool discardSource = false;
   bool sourceIsLazy = false;
   bool allowHTMLComments = true;
-
   bool nonSyntacticScope = false;
+
   bool privateClassFields = false;
   bool privateClassMethods = false;
   bool topLevelAwait = true;
-
   bool classStaticBlocks = false;
+  bool useFdlibmForSinCosTan = false;
 
-  // True if off-thread parsing should use a parse GlobalObject in order to
-  // directly allocate to the GC from a helper thread. If false, transfer the
-  // CompilationStencil back to main thread before allocating GC objects.
-  bool useOffThreadParseGlobal = true;
+  bool importAssertions = false;
 
   // When decoding from XDR into a Stencil, directly reference data in the
   // buffer (where possible) instead of copying it. This is an optional
@@ -187,7 +189,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   uint32_t introductionOffset = 0;
   bool hasIntroductionInfo = false;
 
-  bool useFdlibmForSinCosTan = false;
+  // WARNING: When adding new fields, don't forget to add them to
+  //          copyPODTransitiveOptions.
 
  protected:
   TransitiveCompileOptions() = default;

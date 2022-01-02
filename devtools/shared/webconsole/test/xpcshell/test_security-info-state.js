@@ -5,8 +5,6 @@
 // Tests that security info parser gives correct general security state for
 // different cases.
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
     return require("devtools/shared/webconsole/network-helper");

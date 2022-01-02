@@ -22,8 +22,6 @@ bitflags::bitflags! {
         /// Adds support for image load and early depth tests
         const IMAGE_LOAD_STORE = 1 << 8;
         const CONSERVATIVE_DEPTH = 1 << 9;
-        /// Isn't supported in ES
-        const TEXTURE_1D = 1 << 10;
         /// Interpolation and auxiliary qualifiers. Perspective, Flat, and
         /// Centroid are available in all GLSL versions we support.
         const NOPERSPECTIVE_QUALIFIER = 1 << 11;
@@ -34,6 +32,7 @@ bitflags::bitflags! {
         const SAMPLE_VARIABLES = 1 << 15;
         /// Arrays with a dynamic length
         const DYNAMIC_ARRAY_SIZE = 1 << 16;
+        const MULTI_VIEW = 1 << 17;
     }
 }
 
@@ -91,9 +90,6 @@ impl FeaturesManager {
         check_feature!(IMAGE_LOAD_STORE, 130, 310);
         check_feature!(CONSERVATIVE_DEPTH, 130, 300);
         check_feature!(CONSERVATIVE_DEPTH, 130, 300);
-        // 1D textures are supported by all core versions and aren't supported by an es versions
-        // so use 0 that way the check will always be false and can be optimized away
-        check_feature!(TEXTURE_1D, 0);
         check_feature!(NOPERSPECTIVE_QUALIFIER, 130);
         check_feature!(SAMPLE_QUALIFIER, 400, 320);
         // gl_ClipDistance is supported by core versions > 1.3 and aren't supported by an es versions without extensions
@@ -101,6 +97,7 @@ impl FeaturesManager {
         check_feature!(CULL_DISTANCE, 450, 300);
         check_feature!(SAMPLE_VARIABLES, 400, 300);
         check_feature!(DYNAMIC_ARRAY_SIZE, 430, 310);
+        check_feature!(MULTI_VIEW, 140, 310);
 
         // Return an error if there are missing features
         if missing.is_empty() {
@@ -192,6 +189,16 @@ impl FeaturesManager {
         if self.0.contains(Features::SAMPLE_VARIABLES) && version.is_es() {
             // https://www.khronos.org/registry/OpenGL/extensions/OES/OES_sample_variables.txt
             writeln!(out, "#extension GL_OES_sample_variables : require")?;
+        }
+
+        if self.0.contains(Features::SAMPLE_VARIABLES) && version.is_es() {
+            // https://www.khronos.org/registry/OpenGL/extensions/OES/OES_sample_variables.txt
+            writeln!(out, "#extension GL_OES_sample_variables : require")?;
+        }
+
+        if self.0.contains(Features::MULTI_VIEW) {
+            // https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GL_EXT_multiview.txt
+            writeln!(out, "#extension GL_EXT_multiview : require")?;
         }
 
         Ok(())
@@ -286,8 +293,6 @@ impl<'a, W> Writer<'a, W> {
                 } => {
                     if arrayed && dim == ImageDimension::Cube {
                         self.features.request(Features::CUBE_TEXTURES_ARRAY)
-                    } else if dim == ImageDimension::D1 {
-                        self.features.request(Features::TEXTURE_1D)
                     }
 
                     match class {
@@ -371,6 +376,9 @@ impl<'a, W> Writer<'a, W> {
                             }
                             crate::BuiltIn::SampleIndex => {
                                 self.features.request(Features::SAMPLE_VARIABLES)
+                            }
+                            crate::BuiltIn::ViewIndex => {
+                                self.features.request(Features::MULTI_VIEW)
                             }
                             _ => {}
                         },

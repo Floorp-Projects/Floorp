@@ -35,7 +35,7 @@ async function aDownloadLaunchedWithAppIsSavedInFolder(downloadDir) {
 
   let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    TEST_PATH + "file_pdf_application_pdf.pdf"
+    TEST_PATH + "file_image_svgxml.svg"
   );
 
   let download = await downloadFinishedPromise;

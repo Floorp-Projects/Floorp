@@ -372,7 +372,7 @@ export interface PerformancePref {
    */
   UIBaseUrl: "devtools.performance.recording.ui-base-url";
   /**
-   * This pref allows tests to override the /from-addon in order to more easily
+   * This pref allows tests to override the /from-browser in order to more easily
    * test the profile injection mechanism.
    */
   UIBaseUrlPathPref: "devtools.performance.recording.ui-base-url-path";
@@ -421,6 +421,7 @@ export interface ScaleFunctions {
   fromFractionToValue: NumberScaler;
   fromValueToFraction: NumberScaler;
   fromFractionToSingleDigitValue: NumberScaler;
+  steps: number;
 }
 
 /**
@@ -452,26 +453,85 @@ export interface Presets {
   [presetName: string]: PresetDefinition;
 }
 
-export type MessageFromFrontend =
-  | {
-      type: "STATUS_QUERY";
-      requestId: number;
-    }
-  | {
-      type: "ENABLE_MENU_BUTTON";
-      requestId: number;
-    };
+// Should be kept in sync with the types in https://github.com/firefox-devtools/profiler/blob/main/src/app-logic/web-channel.js .
+// Compatibility is handled as follows:
+//  - The front-end needs to worry about compatibility and handle older browser versions.
+//  - The browser can require the latest front-end version and does not need to keep any legacy functionality for older front-end versions.
 
-export type MessageToFrontend =
-  | {
-      type: "STATUS_RESPONSE";
-      menuButtonIsEnabled: boolean;
-      requestId: number;
-    }
-  | {
-      type: "ENABLE_MENU_BUTTON_DONE";
-      requestId: number;
-    };
+type MessageFromFrontend = {
+  requestId: number;
+} & RequestFromFrontend;
+
+export type RequestFromFrontend =
+  | StatusQueryRequest
+  | EnableMenuButtonRequest
+  | GetProfileRequest
+  | GetSymbolTableRequest
+  | QuerySymbolicationApiRequest;
+
+type StatusQueryRequest = { type: "STATUS_QUERY" };
+type EnableMenuButtonRequest = { type: "ENABLE_MENU_BUTTON" };
+type GetProfileRequest = { type: "GET_PROFILE" };
+type GetSymbolTableRequest = {
+  type: "GET_SYMBOL_TABLE";
+  debugName: string;
+  breakpadId: string;
+};
+type QuerySymbolicationApiRequest = {
+  type: "QUERY_SYMBOLICATION_API";
+  path: string;
+  requestJson: string;
+};
+
+export type MessageToFrontend<R> =
+  | OutOfBandErrorMessageToFrontend
+  | ErrorResponseMessageToFrontend
+  | SuccessResponseMessageToFrontend<R>;
+
+type OutOfBandErrorMessageToFrontend = {
+  errno: number;
+  error: string;
+};
+
+type ErrorResponseMessageToFrontend = {
+  type: "ERROR_RESPONSE";
+  requestId: number;
+  error: string;
+};
+
+type SuccessResponseMessageToFrontend<R> = {
+  type: "SUCCESS_RESPONSE";
+  requestId: number;
+  response: R;
+};
+
+export type ResponseToFrontend =
+  | StatusQueryResponse
+  | EnableMenuButtonResponse
+  | GetProfileResponse
+  | GetSymbolTableResponse
+  | QuerySymbolicationApiResponse;
+
+type StatusQueryResponse = {
+  menuButtonIsEnabled: boolean;
+  // The version indicates which message types are supported by the browser.
+  // No version:
+  //   Shipped in Firefox 76.
+  //   Supports the following message types:
+  //    - STATUS_QUERY
+  //    - ENABLE_MENU_BUTTON
+  // Version 1:
+  //   Shipped in Firefox 93.
+  //   Adds support for the following message types:
+  //    - GET_PROFILE
+  //    - GET_SYMBOL_TABLE
+  //    - QUERY_SYMBOLICATION_API
+  version: number;
+};
+type EnableMenuButtonResponse = void;
+type GetProfileResponse = ArrayBuffer | MinimallyTypedGeckoProfile;
+type GetSymbolTableResponse = SymbolTableAsTuple;
+type QuerySymbolicationApiResponse = string;
 
 /**
  * This represents an event channel that can talk to a content page on the web.
@@ -484,7 +544,7 @@ export type MessageToFrontend =
 export class ProfilerWebChannel {
   constructor(id: string, url: MockedExports.nsIURI);
   send: (
-    message: MessageToFrontend,
+    message: MessageToFrontend<ResponseToFrontend>,
     target: MockedExports.WebChannelTarget
   ) => void;
   listen: (
@@ -495,6 +555,26 @@ export class ProfilerWebChannel {
     ) => void
   ) => void;
 }
+
+/**
+ * The per-tab information that is stored when a new profile is captured
+ * and a profiler tab is opened, to serve the correct profile to the tab
+ * that sends the WebChannel message.
+ */
+export type ProfilerBrowserInfo = {
+  profileCaptureResult: ProfileCaptureResult;
+  symbolicationService: SymbolicationService;
+};
+
+export type ProfileCaptureResult =
+  | {
+      type: "SUCCESS";
+      profile: MinimallyTypedGeckoProfile | ArrayBuffer;
+    }
+  | {
+      type: "ERROR";
+      error: Error;
+    };
 
 /**
  * Describes all of the profiling features that can be turned on and

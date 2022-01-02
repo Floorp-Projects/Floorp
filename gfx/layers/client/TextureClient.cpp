@@ -263,12 +263,10 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 
 #ifdef XP_WIN
   int32_t maxTextureSize = aKnowsCompositor->GetMaxTextureSize();
-  if ((layersBackend == LayersBackend::LAYERS_D3D11 ||
-       (layersBackend == LayersBackend::LAYERS_WR &&
-        !aKnowsCompositor->UsingSoftwareWebRender())) &&
+  if ((layersBackend == LayersBackend::LAYERS_WR &&
+       !aKnowsCompositor->UsingSoftwareWebRender()) &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
-       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT))) &&
+       moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
       aSize.width <= maxTextureSize && aSize.height <= maxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
@@ -276,9 +274,8 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #endif
 
 #ifdef MOZ_WAYLAND
-  if ((layersBackend == LayersBackend::LAYERS_OPENGL ||
-       (layersBackend == LayersBackend::LAYERS_WR &&
-        !aKnowsCompositor->UsingSoftwareWebRender())) &&
+  if ((layersBackend == LayersBackend::LAYERS_WR &&
+       !aKnowsCompositor->UsingSoftwareWebRender()) &&
       widget::GetDMABufDevice()->IsDMABufTexturesEnabled() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::DMABUF;
@@ -668,13 +665,6 @@ void TextureClient::Unlock() {
     if (!(mOpenMode & OpenMode::OPEN_ASYNC)) {
       if (mOpenMode & OpenMode::OPEN_WRITE) {
         mBorrowedDrawTarget->Flush();
-        if (mReadbackSink && !mData->ReadBack(mReadbackSink)) {
-          // Fallback implementation for reading back, because mData does not
-          // have a backend-specific implementation and returned false.
-          RefPtr<SourceSurface> snapshot = mBorrowedDrawTarget->Snapshot();
-          RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
-          mReadbackSink->ProcessReadback(dataSurf);
-        }
       }
 
       mBorrowedDrawTarget->DetachAllSnapshots();
@@ -1039,8 +1029,9 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
   }
 
   PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
-      desc, readLockDescriptor, aForwarder->GetCompositorBackendType(),
-      GetFlags(), mSerial, mExternalImageId, nullptr);
+      desc, std::move(readLockDescriptor),
+      aForwarder->GetCompositorBackendType(), GetFlags(), mSerial,
+      mExternalImageId, nullptr);
 
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
@@ -1105,9 +1096,10 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor) {
     mReadLock->Serialize(readLockDescriptor, GetAllocator()->GetParentPid());
   }
 
-  PTextureChild* actor = fwd->CreateTexture(
-      desc, readLockDescriptor, aKnowsCompositor->GetCompositorBackendType(),
-      GetFlags(), mSerial, mExternalImageId);
+  PTextureChild* actor =
+      fwd->CreateTexture(desc, std::move(readLockDescriptor),
+                         aKnowsCompositor->GetCompositorBackendType(),
+                         GetFlags(), mSerial, mExternalImageId);
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
                     << static_cast<int32_t>(
@@ -1137,11 +1129,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     KnowsCompositor* aAllocator, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
     BackendSelector aSelector, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
-  if (aAllocator->SupportsTextureDirectMapping() &&
-      std::max(aSize.width, aSize.height) <= aAllocator->GetMaxTextureSize()) {
-    aAllocFlags =
-        TextureAllocationFlags(aAllocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
-  }
   return TextureClient::CreateForDrawing(aAllocator->GetTextureForwarder(),
                                          aFormat, aSize, aAllocator, aSelector,
                                          aTextureFlags, aAllocFlags);
@@ -1204,12 +1191,9 @@ already_AddRefed<TextureClient> TextureClient::CreateFromSurface(
 
   int32_t maxTextureSize = aAllocator->GetMaxTextureSize();
 
-  if ((layersBackend == LayersBackend::LAYERS_D3D11 ||
-       layersBackend == LayersBackend::LAYERS_WR) &&
+  if (layersBackend == LayersBackend::LAYERS_WR &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
-       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        DeviceManagerDx::Get()->GetContentDevice())) &&
+       moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
       size.width <= maxTextureSize && size.height <= maxTextureSize) {
     data = D3D11TextureData::Create(aSurface, aAllocFlags);
   }
@@ -1245,19 +1229,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
     KnowsCompositor* aAllocator, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
     gfx::BackendType aMoz2DBackend, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
-  // If we exceed the max texture size for the GPU, then just fall back to no
-  // texture direct mapping. If it becomes a problem we can implement tiling
-  // logic inside DirectMapTextureSource to allow this.
-  bool supportsTextureDirectMapping =
-      aAllocator->SupportsTextureDirectMapping() &&
-      std::max(aSize.width, aSize.height) <= aAllocator->GetMaxTextureSize();
-  if (supportsTextureDirectMapping) {
-    aAllocFlags =
-        TextureAllocationFlags(aAllocFlags | ALLOC_ALLOW_DIRECT_MAPPING);
-  } else {
-    aAllocFlags =
-        TextureAllocationFlags(aAllocFlags & ~ALLOC_ALLOW_DIRECT_MAPPING);
-  }
   return CreateForRawBufferAccess(
       aAllocator->GetTextureForwarder(), aFormat, aSize, aMoz2DBackend,
       aAllocator->GetCompositorBackendType(), aTextureFlags, aAllocFlags);
@@ -1271,10 +1242,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
     TextureAllocationFlags aAllocFlags) {
   // also test the validity of aAllocator
   if (!aAllocator || !aAllocator->IPCOpen()) {
-    return nullptr;
-  }
-
-  if (aAllocFlags & ALLOC_DISALLOW_BUFFERTEXTURECLIENT) {
     return nullptr;
   }
 
@@ -1504,7 +1471,8 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock {
       : mSemaphore(CrossProcessSemaphore::Create("TextureReadLock", 1)),
         mShared(false) {}
   explicit CrossProcessSemaphoreReadLock(CrossProcessSemaphoreHandle aHandle)
-      : mSemaphore(CrossProcessSemaphore::Create(aHandle)), mShared(false) {}
+      : mSemaphore(CrossProcessSemaphore::Create(std::move(aHandle))),
+        mShared(false) {}
 
   bool ReadLock() override {
     if (!IsValid()) {
@@ -1537,7 +1505,7 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock {
 
 // static
 already_AddRefed<TextureReadLock> TextureReadLock::Deserialize(
-    const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator) {
+    ReadLockDescriptor&& aDescriptor, ISurfaceAllocator* aAllocator) {
   switch (aDescriptor.type()) {
     case ReadLockDescriptor::TShmemSection: {
       const ShmemSection& section = aDescriptor.get_ShmemSection();
@@ -1566,7 +1534,7 @@ already_AddRefed<TextureReadLock> TextureReadLock::Deserialize(
     }
     case ReadLockDescriptor::TCrossProcessSemaphoreDescriptor: {
       return MakeAndAddRef<CrossProcessSemaphoreReadLock>(
-          aDescriptor.get_CrossProcessSemaphoreDescriptor().sem());
+          std::move(aDescriptor.get_CrossProcessSemaphoreDescriptor().sem()));
     }
     case ReadLockDescriptor::Tnull_t: {
       return nullptr;
@@ -1700,7 +1668,7 @@ bool CrossProcessSemaphoreReadLock::Serialize(ReadLockDescriptor& aOutput,
                                               base::ProcessId aOther) {
   if (!mShared && IsValid()) {
     aOutput = ReadLockDescriptor(
-        CrossProcessSemaphoreDescriptor(mSemaphore->ShareToProcess(aOther)));
+        CrossProcessSemaphoreDescriptor(mSemaphore->CloneHandle()));
     mSemaphore->CloseHandle();
     mShared = true;
     return true;

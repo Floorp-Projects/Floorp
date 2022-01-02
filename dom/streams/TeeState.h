@@ -15,6 +15,9 @@
 #include "nsISupportsBase.h"
 
 namespace mozilla::dom {
+
+class ReadableStreamDefaultTeePullAlgorithm;
+
 // A closure capturing the free variables in the ReadableStreamTee family of
 // algorithms.
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
@@ -32,6 +35,9 @@ struct TeeState : public nsISupports {
 
   ReadableStreamDefaultReader* GetReader() const { return mReader; }
   void SetReader(ReadableStreamDefaultReader* aReader) { mReader = aReader; }
+
+  bool ReadAgain() const { return mReadAgain; }
+  void SetReadAgain(bool aReadAgain) { mReadAgain = aReadAgain; }
 
   bool Reading() const { return mReading; }
   void SetReading(bool aReading) { mReading = aReading; }
@@ -68,6 +74,11 @@ struct TeeState : public nsISupports {
     mCloneForBranch2 = aCloneForBranch2;
   }
 
+  void SetPullAlgorithm(ReadableStreamDefaultTeePullAlgorithm* aPullAlgorithm);
+  ReadableStreamDefaultTeePullAlgorithm* PullAlgorithm() {
+    return mPullAlgorithm;
+  }
+
  private:
   TeeState(JSContext* aCx, ReadableStream* aStream, bool aCloneForBranch2);
 
@@ -81,28 +92,34 @@ struct TeeState : public nsISupports {
   bool mReading = false;
 
   // Step 5.
-  bool mCanceled1 = false;
+  bool mReadAgain = false;
 
   // Step 6.
-  bool mCanceled2 = false;
+  bool mCanceled1 = false;
 
   // Step 7.
-  JS::Heap<JS::Value> mReason1;
+  bool mCanceled2 = false;
 
   // Step 8.
-  JS::Heap<JS::Value> mReason2;
+  JS::Heap<JS::Value> mReason1;
 
   // Step 9.
-  RefPtr<ReadableStream> mBranch1;
+  JS::Heap<JS::Value> mReason2;
 
   // Step 10.
-  RefPtr<ReadableStream> mBranch2;
+  RefPtr<ReadableStream> mBranch1;
 
   // Step 11.
+  RefPtr<ReadableStream> mBranch2;
+
+  // Step 12.
   RefPtr<Promise> mCancelPromise;
 
   // Implicit:
   bool mCloneForBranch2 = false;
+
+  // Used as part of the recursive ChunkSteps call in the read request
+  RefPtr<ReadableStreamDefaultTeePullAlgorithm> mPullAlgorithm;
 
   virtual ~TeeState() { mozilla::DropJSObjects(this); }
 };

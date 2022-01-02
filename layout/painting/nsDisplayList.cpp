@@ -119,6 +119,8 @@ using namespace layout;
 using namespace layers;
 using namespace image;
 
+LazyLogModule sDisplayListLog("displaylist");
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem) {
   for (nsDisplayItem* i : aItem->Frame()->DisplayItems()) {
@@ -691,6 +693,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
+  mIsForContent = XRE_IsContentProcess();
 }
 
 static PresShell* GetFocusedPresShell() {
@@ -737,6 +740,28 @@ void nsDisplayListBuilder::BeginFrame() {
       mCaretFrame = nullptr;
     }
   }
+}
+
+void nsDisplayListBuilder::AddEffectUpdate(dom::RemoteBrowser* aBrowser,
+                                           const dom::EffectsInfo& aUpdate) {
+  dom::EffectsInfo update = aUpdate;
+  // For printing we create one display item for each page that an iframe
+  // appears on, the proper visible rect is the union of all the visible rects
+  // we get from each display item.
+  nsPresContext* pc =
+      mReferenceFrame ? mReferenceFrame->PresContext() : nullptr;
+  if (pc && (pc->Type() != nsPresContext::eContext_Galley)) {
+    Maybe<dom::EffectsInfo> existing = mEffectsUpdates.MaybeGet(aBrowser);
+    if (existing.isSome()) {
+      // Only the visible rect should differ, the scales should match.
+      MOZ_ASSERT(existing->mScaleX == aUpdate.mScaleX &&
+                 existing->mScaleY == aUpdate.mScaleY &&
+                 existing->mTransformToAncestorScale ==
+                     aUpdate.mTransformToAncestorScale);
+      update.mVisibleRect = update.mVisibleRect.Union(existing->mVisibleRect);
+    }
+  }
+  mEffectsUpdates.InsertOrUpdate(aBrowser, update);
 }
 
 void nsDisplayListBuilder::EndFrame() {
@@ -2142,6 +2167,20 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   PresShell* presShell = presContext->PresShell();
   Document* document = presShell->GetDocument();
 
+  ScopeExit g([&]() {
+    // For layers-free mode, we check the invalidation state bits in the
+    // EndTransaction. So we clear the invalidation state bits after
+    // EndTransaction.
+    if (widgetTransaction ||
+        // SVG-as-an-image docs don't paint as part of the retained layer tree,
+        // but they still need the invalidation state bits cleared in order for
+        // invalidation for CSS/SMIL animation to work properly.
+        (document && document->IsBeingUsedAsImage())) {
+      DL_LOGD("Clearing invalidation state bits");
+      frame->ClearInvalidationStateBits();
+    }
+  });
+
   if (!renderer) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
@@ -2149,10 +2188,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     }
     bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(false);
     Paint(aBuilder, aCtx, presContext->AppUnitsPerDevPixel());
-
-    if (document && document->IsBeingUsedAsImage()) {
-      frame->ClearInvalidationStateBits();
-    }
 
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     return;
@@ -2197,17 +2232,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                                             aDisplayListBuildTime.valueOr(0.0));
     }
 
-    // For layers-free mode, we check the invalidation state bits in the
-    // EndTransaction. So we clear the invalidation state bits after
-    // EndTransaction.
-    if (widgetTransaction ||
-        // SVG-as-an-image docs don't paint as part of the retained layer tree,
-        // but they still need the invalidation state bits cleared in order for
-        // invalidation for CSS/SMIL animation to work properly.
-        (document && document->IsBeingUsedAsImage())) {
-      frame->ClearInvalidationStateBits();
-    }
-
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     if (document && widgetTransaction) {
       TriggerPendingAnimations(*document,
@@ -2236,14 +2260,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   fallback->EndTransactionWithList(aBuilder, this,
                                    presContext->AppUnitsPerDevPixel(),
                                    WindowRenderer::END_DEFAULT);
-
-  if (widgetTransaction ||
-      // SVG-as-an-image docs don't paint as part of the retained layer tree,
-      // but they still need the invalidation state bits cleared in order for
-      // invalidation for CSS/SMIL animation to work properly.
-      (document && document->IsBeingUsedAsImage())) {
-    frame->ClearInvalidationStateBits();
-  }
 
   aBuilder->SetIsCompositingCheap(temp);
 
@@ -2653,7 +2669,8 @@ bool nsDisplayContainer::CreateWebRenderCommands(
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
-      GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources);
+      GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources,
+      false);
   return true;
 }
 
@@ -4607,12 +4624,13 @@ nsRect nsDisplayWrapList::GetComponentAlphaBounds(
   return mListPtr->GetComponentAlphaBounds(aBuilder);
 }
 
-bool nsDisplayWrapList::CreateWebRenderCommands(
+bool nsDisplayWrapList::CreateWebRenderCommandsNewClipListOption(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
+    nsDisplayListBuilder* aDisplayListBuilder, bool aNewClipList) {
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
-      GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources);
+      GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources,
+      aNewClipList);
   return true;
 }
 
@@ -8134,8 +8152,8 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   aBuilder.SetInheritedOpacity(1.0f);
   const DisplayItemClipChain* oldClipChain = aBuilder.GetInheritedClipChain();
   aBuilder.SetInheritedClipChain(nullptr);
-  nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, *sc,
-                                                aManager, aDisplayListBuilder);
+  CreateWebRenderCommandsNewClipListOption(aBuilder, aResources, *sc, aManager,
+                                           aDisplayListBuilder, layer.isSome());
   aBuilder.SetInheritedOpacity(oldOpacity);
   aBuilder.SetInheritedClipChain(oldClipChain);
 
@@ -8235,11 +8253,17 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   auto filterChain = mFrame->StyleEffects()->mBackdropFilters.AsSpan();
+  bool initialized = true;
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
-      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                  wrFilters, filterClip)) {
+      !SVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, filterChain, wrFilters, filterClip, initialized)) {
     return false;
+  }
+
+  if (!initialized) {
+    // draw nothing
+    return true;
   }
 
   nsCSSRendering::ImageLayerClipState clip;
@@ -8346,12 +8370,18 @@ bool nsDisplayFilters::CreateWebRenderCommands(
 
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
+  bool initialized = true;
   auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
-      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                  wrFilters, filterClip)) {
+      !SVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, filterChain, wrFilters, filterClip, initialized)) {
     return false;
+  }
+
+  if (!initialized) {
+    // draw nothing
+    return true;
   }
 
   wr::WrStackingContextClip clip{};
@@ -8419,8 +8449,8 @@ bool nsDisplaySVGWrapper::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  return nsDisplayWrapList::CreateWebRenderCommands(
-      aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
+  return CreateWebRenderCommandsNewClipListOption(
+      aBuilder, aResources, aSc, aManager, aDisplayListBuilder, false);
 }
 
 nsDisplayForeignObject::nsDisplayForeignObject(nsDisplayListBuilder* aBuilder,
@@ -8446,8 +8476,8 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);
   aManager->CommandBuilder().mDoGrouping = false;
-  return nsDisplayWrapList::CreateWebRenderCommands(
-      aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
+  return CreateWebRenderCommandsNewClipListOption(
+      aBuilder, aResources, aSc, aManager, aDisplayListBuilder, false);
 }
 
 void nsDisplayLink::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {

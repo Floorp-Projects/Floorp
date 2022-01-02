@@ -273,42 +273,8 @@ struct IDCT1D<N, M, typename std::enable_if<(M > MaxLanes(FV<0>()))>::type> {
   }
 };
 
-// Computes the in-place NxN transposed-scaled-DCT (tsDCT) of block.
-// Requires that block is HWY_ALIGN'ed.
-//
-// See also DCTSlow, ComputeDCT
-template <size_t N>
-struct ComputeTransposedScaledDCT {
-  // scratch_space must be aligned, and should have space for N*N floats.
-  template <class From>
-  HWY_MAYBE_UNUSED void operator()(const From& from, float* JXL_RESTRICT to,
-                                   float* JXL_RESTRICT scratch_space) {
-    float* JXL_RESTRICT block = scratch_space;
-    DCT1D<N, N>()(from, DCTTo(to, N));
-    Transpose<N, N>::Run(DCTFrom(to, N), DCTTo(block, N));
-    DCT1D<N, N>()(DCTFrom(block, N), DCTTo(to, N));
-  }
-};
-
-// Computes the in-place NxN transposed-scaled-iDCT (tsIDCT)of block.
-// Requires that block is HWY_ALIGN'ed.
-//
-// See also IDCTSlow, ComputeIDCT.
-
-template <size_t N>
-struct ComputeTransposedScaledIDCT {
-  // scratch_space must be aligned, and should have space for N*N floats.
-  template <class To>
-  HWY_MAYBE_UNUSED void operator()(float* JXL_RESTRICT from, const To& to,
-                                   float* JXL_RESTRICT scratch_space) {
-    float* JXL_RESTRICT block = scratch_space;
-    IDCT1D<N, N>()(DCTFrom(from, N), DCTTo(block, N));
-    Transpose<N, N>::Run(DCTFrom(block, N), DCTTo(from, N));
-    IDCT1D<N, N>()(DCTFrom(from, N), to);
-  }
-};
-// Computes the non-transposed, scaled DCT of a block, that needs to be
-// HWY_ALIGN'ed. Used for rectangular blocks.
+// Computes the maybe-transposed, scaled DCT of a block, that needs to be
+// HWY_ALIGN'ed.
 template <size_t ROWS, size_t COLS>
 struct ComputeScaledDCT {
   // scratch_space must be aligned, and should have space for ROWS*COLS
@@ -329,8 +295,8 @@ struct ComputeScaledDCT {
     }
   }
 };
-// Computes the non-transposed, scaled DCT of a block, that needs to be
-// HWY_ALIGN'ed. Used for rectangular blocks.
+// Computes the maybe-transposed, scaled IDCT of a block, that needs to be
+// HWY_ALIGN'ed.
 template <size_t ROWS, size_t COLS>
 struct ComputeScaledIDCT {
   // scratch_space must be aligned, and should have space for ROWS*COLS

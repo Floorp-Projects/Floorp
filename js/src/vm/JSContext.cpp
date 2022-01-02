@@ -139,12 +139,6 @@ bool JSContext::init(ContextKind kind) {
       return false;
     }
 #endif
-
-  } else {
-    atomsZoneFreeLists_ = js_new<gc::FreeLists>();
-    if (!atomsZoneFreeLists_) {
-      return false;
-    }
   }
 
   isolate = irregexp::CreateIsolate(this);
@@ -696,8 +690,8 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
 void JSContext::recoverFromOutOfMemory() {
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (ParseTask* task = parseTask()) {
-      task->outOfMemory = false;
+    if (OffThreadFrontendErrors* errors = offThreadFrontendErrors()) {
+      errors->outOfMemory = false;
     }
   } else {
     if (isExceptionPending()) {
@@ -916,8 +910,8 @@ mozilla::GenericErrorResult<OOM> JSContext::alreadyReportedOOM() {
 #ifdef DEBUG
   if (isHelperThreadContext()) {
     // Keep in sync with addPendingOutOfMemory.
-    if (ParseTask* task = parseTask()) {
-      MOZ_ASSERT(task->outOfMemory);
+    if (OffThreadFrontendErrors* errors = offThreadFrontendErrors()) {
+      MOZ_ASSERT(errors->outOfMemory);
     }
   } else {
     MOZ_ASSERT(isThrowingOutOfMemory());
@@ -936,7 +930,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       nurserySuppressions_(this),
       options_(this, options),
       freeLists_(this, nullptr),
-      atomsZoneFreeLists_(this),
       defaultFreeOp_(this, runtime, true),
       freeUnusedMemory(false),
       measuringExecutionTime_(this, false),
@@ -1042,8 +1035,6 @@ JSContext::~JSContext() {
   if (isolate) {
     irregexp::DestroyIsolate(isolate.ref());
   }
-
-  js_delete(atomsZoneFreeLists_.ref());
 
   TlsContext.set(nullptr);
 }

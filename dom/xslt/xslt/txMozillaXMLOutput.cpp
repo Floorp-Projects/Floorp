@@ -34,6 +34,8 @@
 #include "nsINode.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
+#include "nsStringFlags.h"
+#include "nsStyleUtil.h"
 #include "nsIFrame.h"
 #include <algorithm>
 #include "nsTextNode.h"
@@ -664,7 +666,7 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString metacontent;
-    metacontent.Append(mOutputFormat.mMediaType);
+    CopyUTF8toUTF16(mOutputFormat.mMediaType, metacontent);
     metacontent.AppendLiteral("; charset=");
     metacontent.Append(mOutputFormat.mEncoding);
     rv = meta->SetAttr(kNameSpaceID_None, nsGkAtoms::content, metacontent,
@@ -777,9 +779,9 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   if (!mOutputFormat.mMediaType.IsEmpty()) {
     mDocument->SetContentType(mOutputFormat.mMediaType);
   } else if (mOutputFormat.mMethod == eHTMLOutput) {
-    mDocument->SetContentType(u"text/html"_ns);
+    mDocument->SetContentType("text/html"_ns);
   } else {
-    mDocument->SetContentType(u"application/xml"_ns);
+    mDocument->SetContentType("application/xml"_ns);
   }
 
   if (mOutputFormat.mMethod == eXMLOutput &&

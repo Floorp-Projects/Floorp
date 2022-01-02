@@ -121,8 +121,7 @@ bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {
   return updated;
 }
 
-void AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer) {
-}
+void AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer) {}
 
 bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
   if (mPendingAnimations) {
@@ -185,7 +184,7 @@ void AnimationInfo::EnumerateGenerationOnFrame(
       // in PuppetWidget::GetLayerManager queries the parent state, it results
       // the assertion in the function failure.
       if (widget->GetOwningBrowserChild() &&
-          !static_cast<widget::PuppetWidget*>(widget)->HasLayerManager()) {
+          !static_cast<widget::PuppetWidget*>(widget)->HasWindowRenderer()) {
         for (auto displayItem : LayerAnimationInfo::sDisplayItemTypes) {
           aCallback(Nothing(), displayItem);
         }

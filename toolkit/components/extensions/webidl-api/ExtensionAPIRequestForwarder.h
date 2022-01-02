@@ -186,6 +186,7 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   Maybe<UniquePtr<dom::StructuredCloneHolder>> mArgsHolder;
   Maybe<UniquePtr<dom::SerializedStackHolder>> mStackHolder;
   Maybe<dom::ClientInfo> mClientInfo;
+  uint64_t mSWDescriptorId;
 
   // Only set for addListener/removeListener API requests.
   RefPtr<ExtensionEventListener> mEventListener;
@@ -193,6 +194,60 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   // The outer request object is kept alive by the caller for the
   // entire life of the inner worker runnable.
   ExtensionAPIRequestForwarder* mOuterRequest;
+};
+
+class RequestInitWorkerRunnable : public dom::WorkerMainThreadRunnable {
+  Maybe<dom::ClientInfo> mClientInfo;
+
+ public:
+  RequestInitWorkerRunnable(dom::WorkerPrivate* aWorkerPrivate,
+                            Maybe<dom::ClientInfo>& aSWClientInfo);
+  bool MainThreadRun() override;
+};
+
+class NotifyWorkerLoadedRunnable : public Runnable {
+  uint64_t mSWDescriptorId;
+  nsCOMPtr<nsIURI> mSWBaseURI;
+
+ public:
+  explicit NotifyWorkerLoadedRunnable(const uint64_t aServiceWorkerDescriptorId,
+                                      const nsCOMPtr<nsIURI>& aWorkerBaseURI)
+      : Runnable("extensions::NotifyWorkerLoadedRunnable"),
+        mSWDescriptorId(aServiceWorkerDescriptorId),
+        mSWBaseURI(aWorkerBaseURI) {
+    MOZ_ASSERT(mSWDescriptorId > 0);
+    MOZ_ASSERT(mSWBaseURI);
+  }
+
+  NS_IMETHOD Run() override;
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyWorkerLoadedRunnable, Runnable)
+
+ private:
+  ~NotifyWorkerLoadedRunnable() = default;
+};
+
+class NotifyWorkerDestroyedRunnable : public Runnable {
+  uint64_t mSWDescriptorId;
+  nsCOMPtr<nsIURI> mSWBaseURI;
+
+ public:
+  explicit NotifyWorkerDestroyedRunnable(
+      const uint64_t aServiceWorkerDescriptorId,
+      const nsCOMPtr<nsIURI>& aWorkerBaseURI)
+      : Runnable("extensions::NotifyWorkerDestroyedRunnable"),
+        mSWDescriptorId(aServiceWorkerDescriptorId),
+        mSWBaseURI(aWorkerBaseURI) {
+    MOZ_ASSERT(mSWDescriptorId > 0);
+    MOZ_ASSERT(mSWBaseURI);
+  }
+
+  NS_IMETHOD Run() override;
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyWorkerDestroyedRunnable, Runnable)
+
+ private:
+  ~NotifyWorkerDestroyedRunnable() = default;
 };
 
 }  // namespace extensions

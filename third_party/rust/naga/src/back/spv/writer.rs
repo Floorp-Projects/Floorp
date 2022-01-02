@@ -6,12 +6,17 @@ use super::{
     PipelineOptions, ResultMember, Writer, WriterFlags, BITS_PER_BYTE,
 };
 use crate::{
-    arena::{Arena, Handle},
+    arena::{Handle, UniqueArena},
     proc::TypeResolution,
     valid::{FunctionInfo, ModuleInfo},
 };
 use spirv::Word;
 use std::collections::hash_map::Entry;
+
+struct FunctionInterface<'a> {
+    varying_ids: &'a mut Vec<Word>,
+    stage: crate::ShaderStage,
+}
 
 impl Function {
     fn to_words(&self, sink: &mut impl Extend<Word>) {
@@ -190,7 +195,7 @@ impl Writer {
 
     pub(super) fn get_pointer_id(
         &mut self,
-        arena: &Arena<crate::Type>,
+        arena: &UniqueArena<crate::Type>,
         handle: Handle<crate::Type>,
         class: spirv::StorageClass,
     ) -> Result<Word, Error> {
@@ -223,6 +228,35 @@ impl Writer {
         self.get_type_id(local_type.into())
     }
 
+    pub(super) fn get_float_type_id(&mut self) -> Word {
+        let local_type = LocalType::Value {
+            vector_size: None,
+            kind: crate::ScalarKind::Float,
+            width: 4,
+            pointer_class: None,
+        };
+        self.get_type_id(local_type.into())
+    }
+
+    pub(super) fn get_float_pointer_type_id(&mut self, class: spirv::StorageClass) -> Word {
+        let lookup_type = LookupType::Local(LocalType::Value {
+            vector_size: None,
+            kind: crate::ScalarKind::Float,
+            width: 4,
+            pointer_class: Some(class),
+        });
+        if let Some(&id) = self.lookup_type.get(&lookup_type) {
+            id
+        } else {
+            let id = self.id_gen.next();
+            let ty_id = self.get_float_type_id();
+            let instruction = Instruction::type_pointer(id, class, ty_id);
+            instruction.to_words(&mut self.logical_layout.declarations);
+            self.lookup_type.insert(lookup_type, id);
+            id
+        }
+    }
+
     pub(super) fn get_bool_type_id(&mut self) -> Word {
         let local_type = LocalType::Value {
             vector_size: None,
@@ -243,7 +277,7 @@ impl Writer {
         ir_function: &crate::Function,
         info: &FunctionInfo,
         ir_module: &crate::Module,
-        mut varying_ids: Option<&mut Vec<Word>>,
+        mut interface: Option<FunctionInterface>,
     ) -> Result<Word, Error> {
         let mut function = Function::default();
 
@@ -291,12 +325,13 @@ impl Writer {
                 )?,
                 false => self.get_type_id(LookupType::Handle(argument.ty)),
             };
-            if let Some(ref mut list) = varying_ids {
+
+            if let Some(ref mut iface) = interface {
                 let id = if let Some(ref binding) = argument.binding {
                     let name = argument.name.as_ref().map(AsRef::as_ref);
                     let varying_id =
                         self.write_varying(ir_module, class, name, argument.ty, binding)?;
-                    list.push(varying_id);
+                    iface.varying_ids.push(varying_id);
                     let id = self.id_gen.next();
                     prelude
                         .body
@@ -313,7 +348,7 @@ impl Writer {
                         let binding = member.binding.as_ref().unwrap();
                         let varying_id =
                             self.write_varying(ir_module, class, name, member.ty, binding)?;
-                        list.push(varying_id);
+                        iface.varying_ids.push(varying_id);
                         let id = self.id_gen.next();
                         prelude
                             .body
@@ -333,6 +368,11 @@ impl Writer {
             } else {
                 let argument_id = self.id_gen.next();
                 let instruction = Instruction::function_parameter(argument_type_id, argument_id);
+                if self.flags.contains(WriterFlags::DEBUG) {
+                    if let Some(ref name) = argument.name {
+                        self.debugs.push(Instruction::name(argument_id, name));
+                    }
+                }
                 function.parameters.push(FunctionArgument {
                     instruction,
                     handle_id: if handle_ty {
@@ -354,13 +394,16 @@ impl Writer {
 
         let return_type_id = match ir_function.result {
             Some(ref result) => {
-                if let Some(ref mut list) = varying_ids {
+                if let Some(ref mut iface) = interface {
+                    let mut has_point_size = false;
                     let class = spirv::StorageClass::Output;
                     if let Some(ref binding) = result.binding {
+                        has_point_size |=
+                            *binding == crate::Binding::BuiltIn(crate::BuiltIn::PointSize);
                         let type_id = self.get_type_id(LookupType::Handle(result.ty));
                         let varying_id =
                             self.write_varying(ir_module, class, None, result.ty, binding)?;
-                        list.push(varying_id);
+                        iface.varying_ids.push(varying_id);
                         ep_context.results.push(ResultMember {
                             id: varying_id,
                             type_id,
@@ -373,9 +416,11 @@ impl Writer {
                             let type_id = self.get_type_id(LookupType::Handle(member.ty));
                             let name = member.name.as_ref().map(AsRef::as_ref);
                             let binding = member.binding.as_ref().unwrap();
+                            has_point_size |=
+                                *binding == crate::Binding::BuiltIn(crate::BuiltIn::PointSize);
                             let varying_id =
                                 self.write_varying(ir_module, class, name, member.ty, binding)?;
-                            list.push(varying_id);
+                            iface.varying_ids.push(varying_id);
                             ep_context.results.push(ResultMember {
                                 id: varying_id,
                                 type_id,
@@ -384,6 +429,29 @@ impl Writer {
                         }
                     } else {
                         unreachable!("Missing result binding on an entry point");
+                    }
+
+                    if self.flags.contains(WriterFlags::FORCE_POINT_SIZE)
+                        && iface.stage == crate::ShaderStage::Vertex
+                        && !has_point_size
+                    {
+                        // add point size artificially
+                        let varying_id = self.id_gen.next();
+                        let pointer_type_id = self.get_float_pointer_type_id(class);
+                        Instruction::variable(pointer_type_id, varying_id, class, None)
+                            .to_words(&mut self.logical_layout.declarations);
+                        self.decorate(
+                            varying_id,
+                            spirv::Decoration::BuiltIn,
+                            &[spirv::BuiltIn::PointSize as u32],
+                        );
+                        iface.varying_ids.push(varying_id);
+
+                        let default_value_id =
+                            self.get_constant_scalar(crate::ScalarValue::Float(1.0), 4);
+                        prelude
+                            .body
+                            .push(Instruction::store(varying_id, default_value_id, None));
                     }
                     self.void_type
                 } else {
@@ -413,7 +481,7 @@ impl Writer {
             function_type,
         ));
 
-        if varying_ids.is_some() {
+        if interface.is_some() {
             function.entry_point_context = Some(ep_context);
         }
 
@@ -501,7 +569,10 @@ impl Writer {
             &entry_point.function,
             info,
             ir_module,
-            Some(&mut interface_ids),
+            Some(FunctionInterface {
+                varying_ids: &mut interface_ids,
+                stage: entry_point.stage,
+            }),
         )?;
 
         let exec_model = match entry_point.stage {
@@ -700,7 +771,7 @@ impl Writer {
 
     fn write_type_declaration_arena(
         &mut self,
-        arena: &Arena<crate::Type>,
+        arena: &UniqueArena<crate::Type>,
         handle: Handle<crate::Type>,
     ) -> Result<Word, Error> {
         let ty = &arena[handle];
@@ -938,7 +1009,7 @@ impl Writer {
                         &solo[..]
                     }
                     8 => {
-                        pair = [(val >> 32) as u32, val as u32];
+                        pair = [val as u32, (val >> 32) as u32];
                         &pair
                     }
                     _ => unreachable!(),
@@ -952,7 +1023,7 @@ impl Writer {
                         &solo[..]
                     }
                     8 => {
-                        pair = [(val >> 32) as u32, val as u32];
+                        pair = [val as u32, (val >> 32) as u32];
                         &pair
                     }
                     _ => unreachable!(),
@@ -967,7 +1038,7 @@ impl Writer {
                     }
                     8 => {
                         let bits = f64::to_bits(val);
-                        pair = [(bits >> 32) as u32, bits as u32];
+                        pair = [bits as u32, (bits >> 32) as u32];
                         &pair
                     }
                     _ => unreachable!(),
@@ -1092,6 +1163,10 @@ impl Writer {
                         } else {
                             BuiltIn::FragCoord
                         }
+                    }
+                    Bi::ViewIndex => {
+                        self.require_any("`view_index` built-in", &[spirv::Capability::MultiView])?;
+                        BuiltIn::ViewIndex
                     }
                     // vertex
                     Bi::BaseInstance => BuiltIn::BaseInstance,
@@ -1218,6 +1293,19 @@ impl Writer {
         mod_info: &ModuleInfo,
         ep_index: Option<usize>,
     ) -> Result<(), Error> {
+        fn has_view_index_check(
+            ir_module: &crate::Module,
+            binding: Option<&crate::Binding>,
+            ty: Handle<crate::Type>,
+        ) -> bool {
+            match ir_module.types[ty].inner {
+                crate::TypeInner::Struct { ref members, .. } => members.iter().any(|member| {
+                    has_view_index_check(ir_module, member.binding.as_ref(), member.ty)
+                }),
+                _ => binding == Some(&crate::Binding::BuiltIn(crate::BuiltIn::ViewIndex)),
+            }
+        }
+
         let has_storage_buffers =
             ir_module
                 .global_variables
@@ -1226,10 +1314,20 @@ impl Writer {
                     crate::StorageClass::Storage { .. } => true,
                     _ => false,
                 });
+        let has_view_index = ir_module
+            .entry_points
+            .iter()
+            .flat_map(|entry| entry.function.arguments.iter())
+            .any(|arg| has_view_index_check(ir_module, arg.binding.as_ref(), arg.ty));
+
         if self.physical_layout.version < 0x10300 && has_storage_buffers {
             // enable the storage buffer class on < SPV-1.3
             Instruction::extension("SPV_KHR_storage_buffer_storage_class")
                 .to_words(&mut self.logical_layout.extensions);
+        }
+        if has_view_index {
+            Instruction::extension("SPV_KHR_multiview")
+                .to_words(&mut self.logical_layout.extensions)
         }
         Instruction::type_void(self.void_type).to_words(&mut self.logical_layout.declarations);
         Instruction::ext_inst_import(self.gl450_ext_inst_id, "GLSL.std.450")

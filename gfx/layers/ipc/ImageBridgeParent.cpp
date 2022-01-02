@@ -289,10 +289,10 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvReleaseCompositable(
 }
 
 PTextureParent* ImageBridgeParent::AllocPTextureParent(
-    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const uint64_t& aSerial, const wr::MaybeExternalImageId& aExternalImageId) {
-  return TextureHost::CreateIPDLActor(this, aSharedData, aReadLock,
+  return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
                                       aLayersBackend, aFlags, aSerial,
                                       aExternalImageId);
 }
@@ -422,12 +422,6 @@ void ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
     MOZ_ASSERT(texture->GetFlags() & TextureFlags::RECYCLE);
 
     Maybe<FileDescriptor> fenceFd = Some(FileDescriptor());
-    auto* compositor = texture->GetProvider()
-                           ? texture->GetProvider()->AsCompositorOGL()
-                           : nullptr;
-    if (compositor) {
-      fenceFd = Some(compositor->GetReleaseFence());
-    }
 
     auto* wrTexture = texture->AsWebRenderTextureHost();
     if (wrTexture) {
@@ -476,13 +470,7 @@ void ImageBridgeParent::NotifyBufferNotUsedOfCompositorBridge(
   MOZ_ASSERT(aTexture->GetAndroidHardwareBuffer());
 
 #ifdef MOZ_WIDGET_ANDROID
-  auto* compositor = aTexture->GetProvider()
-                         ? aTexture->GetProvider()->AsCompositorOGL()
-                         : nullptr;
   Maybe<FileDescriptor> fenceFd = Some(FileDescriptor());
-  if (compositor) {
-    fenceFd = Some(compositor->GetReleaseFence());
-  }
 
   auto* wrTexture = aTexture->AsWebRenderTextureHost();
   if (wrTexture) {

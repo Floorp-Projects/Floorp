@@ -360,8 +360,7 @@ static NS_tchar* mstrtok(const NS_tchar* delims, NS_tchar** str) {
   return ret;
 }
 
-#if defined(TEST_UPDATER) || defined(MOZ_MAINTENANCE_SERVICE) || \
-    defined(XP_MACOSX)
+#if defined(TEST_UPDATER) || defined(XP_WIN) || defined(XP_MACOSX)
 static bool EnvHasValue(const char* name) {
   const char* val = getenv(name);
   return (val && *val);
@@ -2243,7 +2242,7 @@ static bool IsUpdateStatusPendingService() {
 }
 #endif
 
-#if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
+#if defined(XP_WIN)
 /*
  * Reads the secure update status file and sets isSucceeded to true if the
  * status is set to succeeded.

@@ -133,8 +133,8 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
+use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily};
 use style::values::computed::{self, Context, ToComputedValue};
-use style::values::computed::font::{FontFamilyList, FontFamily, GenericFontFamily};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -1751,7 +1751,9 @@ pub extern "C" fn Servo_StyleSet_RemoveUniqueEntriesFromAuthorStylesCache(
     document_set: &RawServoStyleSet,
 ) {
     let mut document_data = PerDocumentStyleData::from_ffi(document_set).borrow_mut();
-    document_data.stylist.remove_unique_author_data_cache_entries();
+    document_data
+        .stylist
+        .remove_unique_author_data_cache_entries();
 }
 
 #[no_mangle]
@@ -2335,11 +2337,9 @@ impl_basic_rule_funcs! { (Layer, LayerRule, RawServoLayerRule),
 #[no_mangle]
 pub extern "C" fn Servo_LayerRule_GetRules(rule: &RawServoLayerRule) -> Strong<ServoCssRules> {
     use style::stylesheets::layer_rule::LayerRuleKind;
-    read_locked_arc(rule, |rule: &LayerRule| {
-        match rule.kind {
-            LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
-            LayerRuleKind::Statement { .. } => Strong::null(),
-        }
+    read_locked_arc(rule, |rule: &LayerRule| match rule.kind {
+        LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
+        LayerRuleKind::Statement { .. } => Strong::null(),
     })
 }
 
@@ -2506,7 +2506,7 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
         let parser = SelectorParser {
             stylesheet_origin: contents.origin,
             namespaces: &namespaces,
-            url_data: Some(&url_data),
+            url_data: &url_data,
         };
 
         let mut parser_input = ParserInput::new(&value_str);
@@ -3753,9 +3753,9 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
         }
     }
 
-    let rule_node = data
-        .stylist
-        .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
+    let rule_node =
+        data.stylist
+            .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
 
     data.stylist
         .precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
@@ -4096,9 +4096,8 @@ macro_rules! println_stderr {
 fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
     println_stderr!("  Properties:");
     for p in properties.iter() {
-        let mut v = String::new();
-        cv.get_longhand_property_value(p, &mut CssWriter::new(&mut v))
-            .unwrap();
+        let mut v = nsCString::new();
+        cv.get_resolved_value(p, &mut v).unwrap();
         println_stderr!("    {:?}: {}", p, v);
     }
     println_stderr!("  Rules:");
@@ -4131,6 +4130,9 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     // rules in minimal-xul.css, but which makes no difference for the
     // anonymous content subtrees we cache style for.
     differing_properties.remove(LonghandId::XLang);
+    // Similarly, -x-lang can influence the font-family fallback we have for
+    // the initial font-family so remove it as well.
+    differing_properties.remove(LonghandId::FontFamily);
 
     // Ignore any difference in pref-controlled, inherited properties.  These
     // properties may or may not be set by the 'all' declaration in the
@@ -4163,7 +4165,7 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_BlockifiedDisplay(
     style: &ComputedValues,
-    is_root_element : bool,
+    is_root_element: bool,
 ) -> u16 {
     let display = style.get_box().clone_display();
     let blockified_display = display.equivalent_block_display(is_root_element);
@@ -4996,7 +4998,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
-    use style::values::specified::{BorderStyle, Clear, Display, Float, TextAlign, table::CaptionSide};
+    use style::values::specified::{
+        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign,
+    };
 
     fn get_from_computed<T>(value: u32) -> T
     where
@@ -5090,13 +5094,15 @@ pub extern "C" fn Servo_DeclarationBlock_SetMathDepthValue(
 pub extern "C" fn Servo_DeclarationBlock_SetCounterResetListItem(
     declarations: &RawServoDeclarationBlock,
     counter_value: i32,
+    is_reversed: bool,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::values::generics::counters::{CounterPair, CounterReset};
 
-    let prop = PropertyDeclaration::CounterReset(CounterSetOrReset::new(vec![CounterPair {
+    let prop = PropertyDeclaration::CounterReset(CounterReset::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
         value: style::values::specified::Integer::new(counter_value),
+        is_reversed,
     }]));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -5109,11 +5115,12 @@ pub extern "C" fn Servo_DeclarationBlock_SetCounterSetListItem(
     counter_value: i32,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::values::generics::counters::{CounterPair, CounterSet};
 
-    let prop = PropertyDeclaration::CounterSet(CounterSetOrReset::new(vec![CounterPair {
+    let prop = PropertyDeclaration::CounterSet(CounterSet::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
         value: style::values::specified::Integer::new(counter_value),
+        is_reversed: false,
     }]));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -6467,31 +6474,15 @@ pub unsafe extern "C" fn Servo_GetPropertyValue(
     value: &mut nsACString,
 ) {
     if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        style
-            .get_longhand_property_value(longhand, &mut CssWriter::new(value))
-            .unwrap();
+        style.get_resolved_value(longhand, value).unwrap();
         return;
     }
 
     let shorthand =
         ShorthandId::from_nscsspropertyid(prop).expect("Not a shorthand nor a longhand?");
     let mut block = PropertyDeclarationBlock::new();
-    // NOTE(emilio): We reuse the animation value machinery to avoid blowing up
-    // code size, but may need to come up with something different if ever care
-    // about supporting the cases that assert below. Fortunately we don't right
-    // now.
     for longhand in shorthand.longhands() {
-        debug_assert!(
-            !longhand.is_logical(),
-            "This won't quite do the right thing if we want to serialize \
-             logical shorthands"
-        );
-        let animated = AnimationValue::from_computed_values(longhand, style).expect(
-            "Somebody tried to serialize a shorthand with \
-             non-animatable properties, would need more code \
-             to do this",
-        );
-        block.push(animated.uncompute(), Importance::Normal);
+        block.push(style.resolved_declaration(longhand), Importance::Normal);
     }
     block.shorthand_to_css(shorthand, value).unwrap();
 }
@@ -6655,11 +6646,18 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SelectorList_Parse(
     selector_list: &nsACString,
+    is_chrome: bool,
 ) -> OwnedOrNull<RawServoSelectorList> {
     use style::selector_parser::SelectorParser;
 
+    let url_data = UrlExtraData::from_ptr_ref(if is_chrome {
+        &DUMMY_CHROME_URL_DATA
+    } else {
+        &DUMMY_URL_DATA
+    });
+
     let input = selector_list.as_str_unchecked();
-    let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input) {
+    let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input, url_data) {
         Ok(selector_list) => selector_list,
         Err(..) => return OwnedOrNull::null(),
     };
@@ -7186,15 +7184,12 @@ pub extern "C" fn Servo_FontFamily_ForSystemFont(name: &nsACString, out: &mut Fo
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_FontFamilyList_Normalize(list: &mut FontFamilyList) {
-    list.normalize()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_FontFamilyList_WithNames(names: &nsTArray<computed::font::SingleFontFamily>, out: &mut FontFamilyList) {
+pub extern "C" fn Servo_FontFamilyList_WithNames(
+    names: &nsTArray<computed::font::SingleFontFamily>,
+    out: &mut FontFamilyList,
+) {
     *out = FontFamilyList {
         list: style_traits::arc_slice::ArcSlice::from_iter(names.iter().cloned()),
-        fallback: GenericFontFamily::None,
     };
 }
 

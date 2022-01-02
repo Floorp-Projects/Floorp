@@ -22,6 +22,12 @@ add_task(async function() {
   uncaughtException();
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
+
+  const whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, `Paused on exception\nunreachable`);
+
   await resume(dbg);
 
   log("2.b Test throwing the same uncaught exception pauses again");

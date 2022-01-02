@@ -22,7 +22,7 @@ import requests
 import subprocess
 
 RE_BUG = re.compile("Bug (\d+)")
-RE_COMMITMSG = re.compile("Update (.+) to new version (.+) from")
+RE_COMMITMSG = re.compile("Update (.+) to (.+)")
 
 
 class Revision:
@@ -113,12 +113,35 @@ for r in revisions:
     i += 1
 
     if revision.author == "Updatebot <updatebot@mozilla.com>":
-        updatebot_revisions.append(revision)
         if not revision.bug:
-            raise Exception(
-                "Could not find a bug for revision %s (Description: %s)"
-                % (revision.node, revision.desc)
+            # Check to see if this is a ./mach try run, and if so exempt it.
+            is_try = (
+                os.environ.get("GECKO_HEAD_REPOSITORY") == "https://hg.mozilla.org/try"
             )
+
+            rev_detail = subprocess.check_output(
+                [
+                    "hg",
+                    "log",
+                    "--template",
+                    "{files}\n",
+                    "-r",
+                    revision.node,
+                ]
+            )
+            is_only_try_task = (
+                "try_task_config.json" == rev_detail.decode("utf-8").strip()
+            )
+
+            if is_try and is_only_try_task:
+                pass
+            else:
+                raise Exception(
+                    "Could not find a bug for revision %s (Description: %s)"
+                    % (revision.node, revision.desc)
+                )
+        else:
+            updatebot_revisions.append(revision)
 
 # ================================================================================================
 # Process each Updatebot revision

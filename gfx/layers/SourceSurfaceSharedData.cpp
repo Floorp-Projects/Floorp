@@ -30,9 +30,10 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace gfx {
 
-void SourceSurfaceSharedDataWrapper::Init(
-    const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
-    const SharedMemoryBasic::Handle& aHandle, base::ProcessId aCreatorPid) {
+void SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize, int32_t aStride,
+                                          SurfaceFormat aFormat,
+                                          SharedMemoryBasic::Handle aHandle,
+                                          base::ProcessId aCreatorPid) {
   MOZ_ASSERT(!mBuf);
   mSize = aSize;
   mStride = aStride;
@@ -41,7 +42,7 @@ void SourceSurfaceSharedDataWrapper::Init(
 
   size_t len = GetAlignedDataLength();
   mBuf = MakeAndAddRef<SharedMemoryBasic>();
-  if (!mBuf->SetHandle(aHandle, ipc::SharedMemory::RightsReadOnly)) {
+  if (!mBuf->SetHandle(std::move(aHandle), ipc::SharedMemory::RightsReadOnly)) {
     MOZ_CRASH("Invalid shared memory handle!");
   }
 
@@ -91,9 +92,14 @@ bool SourceSurfaceSharedDataWrapper::EnsureMapped(size_t aLength) {
   return true;
 }
 
-bool SourceSurfaceSharedDataWrapper::Map(MapType,
+bool SourceSurfaceSharedDataWrapper::Map(MapType aMapType,
                                          MappedSurface* aMappedSurface) {
   uint8_t* dataPtr;
+
+  if (aMapType != MapType::READ) {
+    // The data may be write-protected
+    return false;
+  }
 
   if (mHandleLock) {
     MutexAutoLock lock(*mHandleLock);
@@ -189,8 +195,8 @@ uint8_t* SourceSurfaceSharedData::GetDataInternal() const {
   return static_cast<uint8_t*>(mBuf->memory());
 }
 
-nsresult SourceSurfaceSharedData::ShareToProcess(
-    base::ProcessId aPid, SharedMemoryBasic::Handle& aHandle) {
+nsresult SourceSurfaceSharedData::CloneHandle(
+    SharedMemoryBasic::Handle& aHandle) {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mHandleCount > 0);
 
@@ -198,8 +204,8 @@ nsresult SourceSurfaceSharedData::ShareToProcess(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool shared = mBuf->ShareToProcess(aPid, &aHandle);
-  if (MOZ_UNLIKELY(!shared)) {
+  aHandle = mBuf->CloneHandle();
+  if (MOZ_UNLIKELY(!aHandle)) {
     return NS_ERROR_FAILURE;
   }
 

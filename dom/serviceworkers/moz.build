@@ -109,14 +109,17 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 MOCHITEST_MANIFESTS += [
+    "test/mochitest-dFPI.ini",
     "test/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome-dFPI.ini",
     "test/chrome.ini",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
+    "test/browser-dFPI.ini",
     "test/browser.ini",
     "test/isolated/multi-e10s-update/browser.ini",
 ]

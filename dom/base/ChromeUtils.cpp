@@ -193,7 +193,7 @@ void ChromeUtils::AddProfilerMarker(
     GlobalObject& aGlobal, const nsACString& aName,
     const ProfilerMarkerOptionsOrDouble& aOptions,
     const Optional<nsACString>& aText) {
-  if (!profiler_thread_is_being_profiled()) {
+  if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
   }
 
@@ -852,6 +852,8 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
       "In order for this static cast to be okay, "
       "WebIDLProcType must match ProcType exactly");
 
+  // These must match the similar ones in E10SUtils.jsm, RemoteTypes.h,
+  // ProcInfo.h and ChromeUtils.webidl
   switch (aType) {
     PROCTYPE_TO_WEBIDL_CASE(Web, Web);
     PROCTYPE_TO_WEBIDL_CASE(WebIsolated, WebIsolated);
@@ -860,6 +862,7 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
     PROCTYPE_TO_WEBIDL_CASE(PrivilegedAbout, Privilegedabout);
     PROCTYPE_TO_WEBIDL_CASE(PrivilegedMozilla, Privilegedmozilla);
     PROCTYPE_TO_WEBIDL_CASE(WebCOOPCOEP, WithCoopCoep);
+    PROCTYPE_TO_WEBIDL_CASE(WebServiceWorker, WebServiceWorker);
     PROCTYPE_TO_WEBIDL_CASE(WebLargeAllocation, WebLargeAllocation);
     PROCTYPE_TO_WEBIDL_CASE(Browser, Browser);
     PROCTYPE_TO_WEBIDL_CASE(IPDLUnitTest, IpdlUnitTest);
@@ -1018,6 +1021,8 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
       // `DEFAULT_REMOTE_TYPE` is a prefix of
       // `FISSION_WEB_REMOTE_TYPE`.
       type = mozilla::ProcType::WebIsolated;
+    } else if (StringBeginsWith(remoteType, SERVICEWORKER_REMOTE_TYPE)) {
+      type = mozilla::ProcType::WebServiceWorker;
     } else if (StringBeginsWith(remoteType,
                                 WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
       type = mozilla::ProcType::WebCOOPCOEP;

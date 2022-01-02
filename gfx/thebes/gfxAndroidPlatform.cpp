@@ -278,6 +278,9 @@ bool gfxAndroidPlatform::FontHintingEnabled() {
   //
   // XXX when gecko-android-java is used as an "app runtime", we may
   // want to re-enable hinting for non-browser processes there.
+  //
+  // If this value is changed, we must ensure that the argument passed
+  // to SkInitCairoFT() in GPUParent::RecvInit() is also updated.
   return false;
 #endif  //  MOZ_WIDGET_ANDROID
 

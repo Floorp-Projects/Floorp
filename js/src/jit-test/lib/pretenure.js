@@ -1,10 +1,12 @@
 // Functions shared by gc/pretenure-*.js tests
 
+const is64bit = getBuildConfiguration()['pointer-byte-size'] === 8;
+
 // Count of objects that will exceed the size of the nursery.
-const nurseryCount = 25000;
+const nurseryCount = is64bit ? 25000 : 50000;
 
 // Count of objects that will exceed the tenured heap collection threshold.
-const tenuredCount = 300000;
+const tenuredCount = is64bit ? 300000 : 600000;
 
 function setupPretenureTest() {
   // The test requires that baseline is enabled and is not bypassed with
@@ -24,7 +26,7 @@ function setupPretenureTest() {
   gcparam("maxNurseryBytes", 1024 * 1024);
 
   // Limit allocation threshold so we trigger major GCs sooner.
-  gcparam("allocationThreshold", 1024 * 1024);
+  gcparam("allocationThreshold", 1 /* MB */);
 
   // Disable incremental GC so there's at most one minor GC per major GC.
   gcparam("incrementalGCEnabled", false);

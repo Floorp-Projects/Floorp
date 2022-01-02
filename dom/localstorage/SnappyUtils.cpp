@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/fallible.h"
 #include "nsDebug.h"
 #include "nsString.h"
@@ -51,15 +52,20 @@ bool SnappyUncompress(const nsACString& aSource, nsACString& aDest) {
 
   const char* compressed = aSource.BeginReading();
 
-  size_t compressedLength = aSource.Length();
+  auto compressedLength = static_cast<size_t>(aSource.Length());
 
-  size_t uncompressedLength;
+  size_t uncompressedLength = 0u;
   if (!snappy::GetUncompressedLength(compressed, compressedLength,
                                      &uncompressedLength)) {
     return false;
   }
 
-  aDest.SetLength(uncompressedLength);
+  CheckedUint32 checkedLength(uncompressedLength);
+  if (!checkedLength.isValid()) {
+    return false;
+  }
+
+  aDest.SetLength(checkedLength.value());
 
   if (!snappy::RawUncompress(compressed, compressedLength,
                              aDest.BeginWriting())) {

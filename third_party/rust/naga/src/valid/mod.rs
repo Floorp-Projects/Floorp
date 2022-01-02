@@ -5,8 +5,11 @@ mod function;
 mod interface;
 mod r#type;
 
+#[cfg(feature = "validate")]
+use crate::arena::{Arena, UniqueArena};
+
 use crate::{
-    arena::{Arena, Handle},
+    arena::Handle,
     proc::{InvalidBaseType, Layouter},
     FastHashSet,
 };
@@ -16,6 +19,7 @@ use std::ops;
 //TODO: analyze the model at the same time as we validate it,
 // merge the corresponding matches over expressions and statements.
 
+use crate::span::{AddSpan as _, WithSpan};
 pub use analyzer::{ExpressionInfo, FunctionInfo, GlobalUse, Uniformity, UniformityRequirements};
 pub use compose::ComposeError;
 pub use expression::ExpressionError;
@@ -29,14 +33,19 @@ bitflags::bitflags! {
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
     pub struct ValidationFlags: u8 {
         /// Expressions.
+        #[cfg(feature = "validate")]
         const EXPRESSIONS = 0x1;
         /// Statements and blocks of them.
+        #[cfg(feature = "validate")]
         const BLOCKS = 0x2;
         /// Uniformity of control flow for operations that require it.
+        #[cfg(feature = "validate")]
         const CONTROL_FLOW_UNIFORMITY = 0x4;
         /// Host-shareable structure layouts.
+        #[cfg(feature = "validate")]
         const STRUCT_LAYOUTS = 0x8;
         /// Constants.
+        #[cfg(feature = "validate")]
         const CONSTANTS = 0x10;
     }
 }
@@ -97,6 +106,7 @@ pub struct Validator {
     layouter: Layouter,
     location_mask: BitSet,
     bind_group_masks: Vec<BitSet>,
+    #[allow(dead_code)]
     select_cases: FastHashSet<i32>,
     valid_expression_list: Vec<Handle<crate::Expression>>,
     valid_expression_set: BitSet,
@@ -158,6 +168,7 @@ pub enum ValidationError {
 }
 
 impl crate::TypeInner {
+    #[cfg(feature = "validate")]
     fn is_sized(&self) -> bool {
         match *self {
             Self::Scalar { .. }
@@ -176,6 +187,7 @@ impl crate::TypeInner {
     }
 
     /// Return the `ImageDimension` for which `self` is an appropriate coordinate.
+    #[cfg(feature = "validate")]
     fn image_storage_coordinates(&self) -> Option<crate::ImageDimension> {
         match *self {
             Self::Scalar {
@@ -213,11 +225,12 @@ impl Validator {
         }
     }
 
+    #[cfg(feature = "validate")]
     fn validate_constant(
         &self,
         handle: Handle<crate::Constant>,
         constants: &Arena<crate::Constant>,
-        types: &Arena<crate::Type>,
+        types: &UniqueArena<crate::Type>,
     ) -> Result<(), ConstantError> {
         let con = &constants[handle];
         match con.inner {
@@ -253,38 +266,57 @@ impl Validator {
     }
 
     /// Check the given module to be valid.
-    pub fn validate(&mut self, module: &crate::Module) -> Result<ModuleInfo, ValidationError> {
+    pub fn validate(
+        &mut self,
+        module: &crate::Module,
+    ) -> Result<ModuleInfo, WithSpan<ValidationError>> {
         self.reset_types(module.types.len());
-        self.layouter.update(&module.types, &module.constants)?;
+        self.layouter
+            .update(&module.types, &module.constants)
+            .map_err(|e| {
+                let InvalidBaseType(handle) = e;
+                ValidationError::from(e).with_span_handle(handle, &module.types)
+            })?;
 
+        #[cfg(feature = "validate")]
         if self.flags.contains(ValidationFlags::CONSTANTS) {
             for (handle, constant) in module.constants.iter() {
                 self.validate_constant(handle, &module.constants, &module.types)
-                    .map_err(|error| ValidationError::Constant {
-                        handle,
-                        name: constant.name.clone().unwrap_or_default(),
-                        error,
-                    })?;
+                    .map_err(|error| {
+                        ValidationError::Constant {
+                            handle,
+                            name: constant.name.clone().unwrap_or_default(),
+                            error,
+                        }
+                        .with_span_handle(handle, &module.constants)
+                    })?
             }
         }
 
         for (handle, ty) in module.types.iter() {
             let ty_info = self
                 .validate_type(handle, &module.types, &module.constants)
-                .map_err(|error| ValidationError::Type {
-                    handle,
-                    name: ty.name.clone().unwrap_or_default(),
-                    error,
+                .map_err(|error| {
+                    ValidationError::Type {
+                        handle,
+                        name: ty.name.clone().unwrap_or_default(),
+                        error,
+                    }
+                    .with_span_handle(handle, &module.types)
                 })?;
             self.types[handle.index()] = ty_info;
         }
 
+        #[cfg(feature = "validate")]
         for (var_handle, var) in module.global_variables.iter() {
             self.validate_global_var(var, &module.types)
-                .map_err(|error| ValidationError::GlobalVariable {
-                    handle: var_handle,
-                    name: var.name.clone().unwrap_or_default(),
-                    error,
+                .map_err(|error| {
+                    ValidationError::GlobalVariable {
+                        handle: var_handle,
+                        name: var.name.clone().unwrap_or_default(),
+                        error,
+                    }
+                    .with_span_handle(var_handle, &module.global_variables)
                 })?;
         }
 
@@ -297,11 +329,14 @@ impl Validator {
             match self.validate_function(fun, module, &mod_info) {
                 Ok(info) => mod_info.functions.push(info),
                 Err(error) => {
-                    return Err(ValidationError::Function {
-                        handle,
-                        name: fun.name.clone().unwrap_or_default(),
-                        error,
-                    })
+                    return Err(error.and_then(|error| {
+                        ValidationError::Function {
+                            handle,
+                            name: fun.name.clone().unwrap_or_default(),
+                            error,
+                        }
+                        .with_span_handle(handle, &module.functions)
+                    }))
                 }
             }
         }
@@ -313,17 +348,21 @@ impl Validator {
                     stage: ep.stage,
                     name: ep.name.clone(),
                     error: EntryPointError::Conflict,
-                });
+                }
+                .with_span()); // TODO: keep some EP span information?
             }
 
             match self.validate_entry_point(ep, module, &mod_info) {
                 Ok(info) => mod_info.entry_points.push(info),
                 Err(error) => {
-                    return Err(ValidationError::EntryPoint {
-                        stage: ep.stage,
-                        name: ep.name.clone(),
-                        error,
-                    })
+                    return Err(error.and_then(|inner| {
+                        ValidationError::EntryPoint {
+                            stage: ep.stage,
+                            name: ep.name.clone(),
+                            error: inner,
+                        }
+                        .with_span()
+                    }))
                 }
             }
         }

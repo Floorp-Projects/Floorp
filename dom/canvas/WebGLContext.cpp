@@ -1264,7 +1264,7 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
   if (!fb) {
     if (mWebGL.mDefaultFB_DrawBuffer0 == LOCAL_GL_NONE) {
       driverColorMask0 = 0;  // Is this well-optimized enough for depth-first
-                            // rendering?
+                             // rendering?
     } else {
       driverColorMask0 &= ~(uint8_t(mWebGL.mNeedsFakeNoAlpha) << 3);
     }

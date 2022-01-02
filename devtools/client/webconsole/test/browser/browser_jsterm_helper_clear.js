@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,Test <code>clear()</code> jsterm helper";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html>Test <code>clear()</code> jsterm helper";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

@@ -5,7 +5,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>Test editor toolbar";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html><p>Test editor toolbar";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.input.editor", false);

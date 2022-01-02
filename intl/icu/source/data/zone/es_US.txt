@@ -4,6 +4,9 @@
 es_US{
     %%Parent{"es_419"}
     zoneStrings{
+        "Africa:Djibouti"{
+            ec{"Yibutí"}
+        }
         "America:Fort_Nelson"{
             ec{"Fort Nelson"}
         }
@@ -14,7 +17,7 @@ es_US{
             ec{"St. Thomas"}
         }
         "Asia:Pyongyang"{
-            ec{"Piongyang"}
+            ec{"Pionyang"}
         }
         "Europe:Astrakhan"{
             ec{"Astrakhan"}

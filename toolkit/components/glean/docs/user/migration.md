@@ -133,7 +133,7 @@ Glean uses a [clever automatic bucketing algorithm][timing-distribution-metric] 
 
 So for a Histogram that records timing samples like this:
 
-```json
+```
   "GC_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
@@ -189,7 +189,7 @@ Glean uses a [clever automatic bucketing algorithm][memory-distribution-metric] 
 
 So for a Histogram that records memory samples like this:
 
-```json
+```
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
     "products": ["firefox", "thunderbird"],
@@ -254,7 +254,7 @@ we have a "catch all" metric type for you: [Custom Distribution][custom-distribu
 Sadly, you'll have to care about the bucketing algorithm and bucket ranges for this one.
 So for a Histogram with artisinal samples like:
 
-```json
+```
   "CHECKERBOARD_SEVERITY": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview_streaming"],
@@ -321,7 +321,7 @@ Simply enumerate the discrete categories as `labels` in the `labeled_counter`.
 
 For example, for a Histogram of kind `categorical` like:
 
-```json
+```
   "AVIF_DECODE_RESULT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],

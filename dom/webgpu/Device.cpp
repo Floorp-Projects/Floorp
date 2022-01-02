@@ -249,7 +249,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   }
   *aCanvasSize = size;
 
-  const layers::RGBDescriptor rgbDesc(size, aFormat, false);
+  const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
   mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
@@ -266,6 +266,10 @@ already_AddRefed<Texture> Device::InitSwapChain(
   desc.mSampleCount = 1;
   desc.mUsage = aDesc.mUsage | dom::GPUTextureUsage_Binding::COPY_SRC;
   return CreateTexture(desc);
+}
+
+bool Device::CheckNewWarning(const nsACString& aMessage) {
+  return mKnownWarnings.EnsureInserted(aMessage);
 }
 
 void Device::Destroy() {

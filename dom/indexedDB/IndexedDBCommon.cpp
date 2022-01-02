@@ -23,8 +23,8 @@ nsresult SnappyUncompressStructuredCloneData(
 
   QM_TRY(CollectEach(
       [&snappyInputStream = *snappyInputStream, &buffer] {
-        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(snappyInputStream, Read, buffer,
-                                           sizeof(buffer)));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(snappyInputStream, Read,
+                                                  buffer, sizeof(buffer)));
       },
       [&aStructuredCloneData,
        &buffer](const uint32_t& numRead) -> Result<Ok, nsresult> {

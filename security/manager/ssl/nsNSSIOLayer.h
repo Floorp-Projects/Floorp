@@ -189,7 +189,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
 
   nsCString mEsniTxt;
   nsCString mEchConfig;
-  nsCString mPeerId;
   bool mEarlyDataAccepted;
   bool mDenyClientCert;
   bool mFalseStartCallbackCalled;

@@ -34,26 +34,35 @@ function getCookieFromManager() {
   });
 }
 
-var c = document.cookie;
-is(document.cookie, 'abc=012©ABC\ufffdDEF', "document.cookie should be decoded as UTF-8");
+SpecialPowers.pushPrefEnv({
+  "set": [
+    // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+    ["network.cookie.sameSite.laxByDefault", false],
+  ]
+}, () => {
+  var c = document.cookie;
+  is(document.cookie, 'abc=012©ABC\ufffdDEF', "document.cookie should be decoded as UTF-8");
 
-var newCookie;
+  var newCookie;
 
-getCookieFromManager().then((cookie) => {
-  is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
-  newCookie = 'def=∼≩≭≧∯≳≲≣∽≸≸∺≸∠≯≮≥≲≲≯≲∽≡≬≥≲≴∨∱∩∾';
-  document.cookie = newCookie;
-  is(document.cookie, c + '; ' + newCookie, "document.cookie should be encoded as UTF-8");
+  getCookieFromManager().then((cookie) => {
+    is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
+    newCookie = 'def=∼≩≭≧∯≳≲≣∽≸≸∺≸∠≯≮≥≲≲≯≲∽≡≬≥≲≴∨∱∩∾';
+    document.cookie = newCookie;
+    is(document.cookie, c + '; ' + newCookie, "document.cookie should be encoded as UTF-8");
 
-  return getCookieFromManager();
-}).then((cookie) => {
-  is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
-  var date1 = new Date();
-  date1.setTime(0);
-  document.cookie = newCookie + 'def=;expires=' + date1.toGMTString();
-  gScript.destroy();
-  SimpleTest.finish();
+    return getCookieFromManager();
+  }).then((cookie) => {
+    is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
+    var date1 = new Date();
+    date1.setTime(0);
+    document.cookie = newCookie + 'def=;expires=' + date1.toGMTString();
+    gScript.destroy();
+    SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
+    SimpleTest.finish();
+  });
 });
+
 </script>
 </pre>
 </body>

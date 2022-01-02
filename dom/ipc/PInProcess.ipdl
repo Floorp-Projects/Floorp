@@ -20,7 +20,7 @@ namespace dom {
  * `mozilla::dom::InProcess{Parent, Child}::Singleton()` should be used to get
  * an instance of this actor.
  */
- [RefCounted] async protocol PInProcess
+[RefCounted] async protocol PInProcess
 {
   manages PExtensions;
   manages PWindowGlobal;

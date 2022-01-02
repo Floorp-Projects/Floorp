@@ -435,9 +435,9 @@ static const int kRequiredOpenFlags = O_CLOEXEC | O_NOCTTY;
 // for outdated kernel headers like Android's.
 #define O_SYNC_NEW 04010000
 static const int kAllowedOpenFlags =
-    O_APPEND | O_ASYNC | O_DIRECT | O_DIRECTORY | O_EXCL | O_LARGEFILE |
-    O_NOATIME | O_NOCTTY | O_NOFOLLOW | O_NONBLOCK | O_NDELAY | O_SYNC_NEW |
-    O_TRUNC | O_CLOEXEC | O_CREAT;
+    O_APPEND | O_DIRECT | O_DIRECTORY | O_EXCL | O_LARGEFILE | O_NOATIME |
+    O_NOCTTY | O_NOFOLLOW | O_NONBLOCK | O_NDELAY | O_SYNC_NEW | O_TRUNC |
+    O_CLOEXEC | O_CREAT;
 #undef O_SYNC_NEW
 
 static bool AllowOpen(int aReqFlags, int aPerms) {

@@ -664,8 +664,10 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
   if (!doc->GetChannel()) {
     // If we can't get the channel from the document, i.e. initial about:blank
     // page, we use the browsingContext of the document to check if it's in the
-    // third-party context.
-    return IsThirdPartyContext(doc->GetBrowsingContext());
+    // third-party context. If the browsing context is still not available, we
+    // will treat the window as third-party.
+    RefPtr<BrowsingContext> bc = doc->GetBrowsingContext();
+    return bc ? IsThirdPartyContext(bc) : true;
   }
 
   // We only care whether the channel is 3rd-party with respect to

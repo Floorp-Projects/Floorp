@@ -11,6 +11,7 @@ ur{
         acceleration{
             g-force{
                 dnam{"جی-فورس"}
+                gender{"feminine"}
                 one{"{0} جی-فورس"}
                 other{"{0} جی-فورس"}
             }
@@ -23,26 +24,31 @@ ur{
         angle{
             arc-minute{
                 dnam{"آرک منٹ"}
+                gender{"masculine"}
                 one{"{0} آرک منٹ"}
                 other{"{0} آرک منٹ"}
             }
             arc-second{
                 dnam{"آرک سیکنڈ"}
+                gender{"masculine"}
                 one{"{0} آرک سیکنڈ"}
                 other{"{0} آرک سیکنڈ"}
             }
             degree{
                 dnam{"ڈگری"}
+                gender{"masculine"}
                 one{"{0} ڈگری"}
                 other{"{0} ڈگری"}
             }
             radian{
                 dnam{"ریڈینس"}
+                gender{"feminine"}
                 one{"{0} ریڈین"}
                 other{"{0} ریڈینس"}
             }
             revolution{
                 dnam{"گردش"}
+                gender{"feminine"}
                 one{"{0} rev"}
                 other{"{0} گردش"}
             }
@@ -60,6 +66,7 @@ ur{
             }
             hectare{
                 dnam{"ہیکٹر"}
+                gender{"masculine"}
                 one{"{0} ہیکٹر"}
                 other{"{0} ہیکٹر"}
             }
@@ -139,9 +146,15 @@ ur{
                     _{
                         _{"مربع {0}"}
                     }
+                    feminine{
+                        _{"مربع {0}"}
+                    }
                 }
                 other{
                     _{
+                        _{"مربع {0}"}
+                    }
+                    feminine{
                         _{"مربع {0}"}
                     }
                 }
@@ -151,17 +164,29 @@ ur{
                     _{
                         _{"کیوبک {0}"}
                     }
+                    feminine{
+                        _{"کیوبک {0}"}
+                    }
                 }
                 other{
                     _{
+                        _{"کیوبک {0}"}
+                    }
+                    feminine{
                         _{"کیوبک {0}"}
                     }
                 }
             }
         }
         concentr{
+            item{
+                dnam{"آئٹمز"}
+                one{"{0} آئٹم"}
+                other{"{0} آئٹمز"}
+            }
             karat{
                 dnam{"قیراط"}
+                gender{"masculine"}
                 one{"{0} قیراط"}
                 other{"{0} قیراط"}
             }
@@ -177,26 +202,31 @@ ur{
             }
             mole{
                 dnam{"مولز"}
+                gender{"feminine"}
                 one{"{0} مول"}
                 other{"{0} مولز"}
             }
             percent{
                 dnam{"فیصد"}
+                gender{"feminine"}
                 one{"{0} فیصد"}
                 other{"{0} فیصد"}
             }
             permille{
                 dnam{"فی ہزار"}
+                gender{"feminine"}
                 one{"{0} فی ہزار"}
                 other{"{0} فی ہزار"}
             }
             permillion{
                 dnam{"فی ملین حصے"}
+                gender{"feminine"}
                 one{"{0} فی ملین حصے"}
                 other{"{0} فی ملین حصے"}
             }
             permyriad{
                 dnam{"پرمرئیڈ"}
+                gender{"feminine"}
                 one{"{0} پرمرئیڈ"}
                 other{"{0} پرمرئیڈ"}
             }
@@ -233,11 +263,13 @@ ur{
         digital{
             bit{
                 dnam{"بٹس"}
+                gender{"feminine"}
                 one{"{0} بٹ"}
                 other{"{0} بٹس"}
             }
             byte{
                 dnam{"بائٹ"}
+                gender{"feminine"}
                 one{"{0} بائٹ"}
                 other{"{0} بائٹس"}
             }
@@ -290,22 +322,29 @@ ur{
         duration{
             century{
                 dnam{"صدیاں"}
+                gender{"feminine"}
                 one{"{0} صدی"}
                 other{"{0} صدیاں"}
             }
             day{
                 dnam{"دن"}
+                gender{"masculine"}
                 one{"{0} دن"}
                 other{"{0} دن"}
                 per{"{0} فی دن"}
             }
+            day-person{
+                gender{"masculine"}
+            }
             decade{
                 dnam{"دہائیاں"}
+                gender{"feminine"}
                 one{"{0} دہائی"}
                 other{"{0} دہائیاں"}
             }
             hour{
                 dnam{"گھنٹے"}
+                gender{"masculine"}
                 one{"{0} گھنٹہ"}
                 other{"{0} گھنٹے"}
                 per{"{0} فی گھنٹہ"}
@@ -322,12 +361,14 @@ ur{
             }
             minute{
                 dnam{"منٹ"}
+                gender{"masculine"}
                 one{"{0} منٹ"}
                 other{"{0} منٹ"}
                 per{"{0} فی منٹ"}
             }
             month{
                 dnam{"مہینے"}
+                gender{"masculine"}
                 one{"{0} مہینہ"}
                 other{"{0} مہینے"}
                 per{"{0}/m"}
@@ -339,18 +380,21 @@ ur{
             }
             second{
                 dnam{"سیکنڈ"}
+                gender{"masculine"}
                 one{"{0} سیکنڈ"}
                 other{"{0} سیکنڈ"}
                 per{"{0} فی سیکنڈ"}
             }
             week{
                 dnam{"ہفتے"}
+                gender{"masculine"}
                 one{"{0} ہفتہ"}
                 other{"{0} ہفتے"}
                 per{"{0} فی ہفتہ"}
             }
             year{
                 dnam{"سال"}
+                gender{"masculine"}
                 one{"{0} سال"}
                 other{"{0} سال"}
                 per{"فی سال {0}"}
@@ -359,6 +403,7 @@ ur{
         electric{
             ampere{
                 dnam{"ایمپیئر"}
+                gender{"masculine"}
                 one{"{0} ایمپیئر"}
                 other{"{0} ایمپیئر"}
             }
@@ -369,11 +414,13 @@ ur{
             }
             ohm{
                 dnam{"اوہم"}
+                gender{"masculine"}
                 one{"{0} اوہم"}
                 other{"{0} اوہم"}
             }
             volt{
                 dnam{"وولٹ"}
+                gender{"masculine"}
                 one{"{0} وولٹ"}
                 other{"{0} وولٹ"}
             }
@@ -386,6 +433,7 @@ ur{
             }
             calorie{
                 dnam{"کیلوریز"}
+                gender{"feminine"}
                 one{"{0} کیلوری"}
                 other{"{0} کیلوریز"}
             }
@@ -401,6 +449,7 @@ ur{
             }
             joule{
                 dnam{"جول"}
+                gender{"feminine"}
                 one{"{0} جول"}
                 other{"{0} جول"}
             }
@@ -426,8 +475,14 @@ ur{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"کلو واٹ گھنٹے فی 100 کلومیٹر"}
+                one{"{0} کلو واٹ گھنٹہ فی 100 کلومیٹر"}
+                other{"{0} کلو واٹ گھنٹے فی 100 کلومیٹر"}
+            }
             newton{
                 dnam{"نیوٹنز"}
+                gender{"masculine"}
                 one{"{0} نیوٹن"}
                 other{"{0} نیوٹنز"}
             }
@@ -445,6 +500,7 @@ ur{
             }
             hertz{
                 dnam{"ہرٹز"}
+                gender{"masculine"}
                 one{"{0} ہرٹز"}
                 other{"{0} ہرٹز"}
             }
@@ -475,6 +531,7 @@ ur{
             }
             em{
                 dnam{"ٹائپوگرافک em"}
+                gender{"masculine"}
                 one{"{0} em"}
                 other{"{0} ems"}
             }
@@ -485,6 +542,7 @@ ur{
             }
             pixel{
                 dnam{"پکسلز"}
+                gender{"masculine"}
                 one{"{0} پکسل"}
                 other{"{0} پکسلز"}
             }
@@ -556,6 +614,7 @@ ur{
             }
             meter{
                 dnam{"میٹر"}
+                gender{"masculine"}
                 one{"{0} میٹر"}
                 other{"{0} میٹر"}
                 per{"{0} فی میٹر"}
@@ -572,6 +631,7 @@ ur{
             }
             mile-scandinavian{
                 dnam{"اسکینڈی نیویائی میل"}
+                gender{"masculine"}
                 one{"{0} اسکینڈی نیویائی میل"}
                 other{"{0} اسکینڈی نیویائی میل"}
             }
@@ -619,16 +679,19 @@ ur{
         light{
             candela{
                 dnam{"کنڈیلا"}
+                gender{"masculine"}
                 one{"{0} کنڈیلا"}
                 other{"{0} کنڈیلا"}
             }
             lumen{
                 dnam{"لیومِن"}
+                gender{"feminine"}
                 one{"{0} لیومِن"}
                 other{"{0} لیومِن"}
             }
             lux{
                 dnam{"lux"}
+                gender{"masculine"}
                 one{"{0} lux"}
                 other{"{0} lux"}
             }
@@ -641,6 +704,7 @@ ur{
         mass{
             carat{
                 dnam{"قیراط"}
+                gender{"masculine"}
                 one{"{0} قیراط"}
                 other{"{0} قیراط"}
             }
@@ -661,18 +725,21 @@ ur{
             }
             gram{
                 dnam{"گرام"}
+                gender{"masculine"}
                 one{"{0} گرام"}
                 other{"{0} گرام"}
                 per{"{0} فی گرام"}
             }
             kilogram{
                 dnam{"کلو گرام"}
+                gender{"masculine"}
                 one{"{0} کلو گرام"}
                 other{"{0} کلو گرام"}
                 per{"{0} فی کلو گرام"}
             }
             metric-ton{
                 dnam{"میٹرک ٹن"}
+                gender{"masculine"}
                 one{"{0} میٹرک ٹن"}
                 other{"{0} میٹرک ٹن"}
             }
@@ -698,10 +765,10 @@ ur{
                 other{"{0} ٹرائے اونس"}
             }
             pound{
-                dnam{"پاؤنڈ"}
-                one{"{0} پاؤنڈ"}
-                other{"{0} پاؤنڈ"}
-                per{"{0} فی پاؤنڈ"}
+                dnam{"پونڈ"}
+                one{"{0} پونڈ"}
+                other{"{0} پونڈ"}
+                per{"{0} فی پونڈ"}
             }
             solar-mass{
                 dnam{"شمسی کمیتیں"}
@@ -747,6 +814,7 @@ ur{
             }
             watt{
                 dnam{"واٹ"}
+                gender{"feminine"}
                 one{"{0} واٹ"}
                 other{"{0} واٹ"}
             }
@@ -754,11 +822,13 @@ ur{
         pressure{
             atmosphere{
                 dnam{"ماحول"}
+                gender{"masculine"}
                 one{"{0} ماحول"}
                 other{"{0} ماحول"}
             }
             bar{
                 dnam{"بارز"}
+                gender{"feminine"}
                 one{"{0} بار"}
                 other{"{0} بارز"}
             }
@@ -794,6 +864,7 @@ ur{
             }
             pascal{
                 dnam{"پاسکل"}
+                gender{"masculine"}
                 one{"{0} پاسکل"}
                 other{"{0} پاسکل"}
             }
@@ -828,6 +899,7 @@ ur{
         temperature{
             celsius{
                 dnam{"ڈگری سیلسیس"}
+                gender{"feminine"}
                 one{"{0} ڈگری سیلسیس"}
                 other{"{0} ڈگری سیلسیس"}
             }
@@ -838,11 +910,13 @@ ur{
             }
             generic{
                 dnam{"°"}
+                gender{"masculine"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             kelvin{
                 dnam{"کیلون"}
+                gender{"masculine"}
                 one{"{0} کیلون"}
                 other{"{0} کیلون"}
             }
@@ -924,6 +998,7 @@ ur{
             }
             cup-metric{
                 dnam{"میٹرک کپ"}
+                gender{"masculine"}
                 one{"{0} میٹرک کپ"}
                 other{"{0} میٹرک کپ"}
             }
@@ -986,6 +1061,7 @@ ur{
             }
             liter{
                 dnam{"لیٹر"}
+                gender{"masculine"}
                 one{"{0} لیٹر"}
                 other{"{0} لیٹر"}
                 per{"{0} فی لیٹر"}
@@ -1012,6 +1088,7 @@ ur{
             }
             pint-metric{
                 dnam{"میٹرک پائنٹ"}
+                gender{"masculine"}
                 one{"{0} میٹرک پائنٹ"}
                 other{"{0} میٹرک پائنٹ"}
             }
@@ -1046,8 +1123,8 @@ ur{
         }
         angle{
             arc-minute{
-                one{"{0} منٹ"}
-                other{"{0} منٹ"}
+                one{"{0}′"}
+                other{"{0}′"}
             }
             arc-second{
                 one{"{0}″"}
@@ -1057,19 +1134,29 @@ ur{
                 one{"{0} ڈگری"}
                 other{"{0} ڈگری"}
             }
+            radian{
+                dnam{"ریڈین"}
+            }
         }
         area{
             acre{
                 one{"{0} ایکڑ"}
                 other{"{0} ایکڑ"}
             }
+            dunam{
+                dnam{"دُنام"}
+            }
             hectare{
                 one{"{0} ہیکٹر"}
                 other{"{0} ہیکٹر"}
             }
             square-foot{
+                dnam{"ft²"}
                 one{"{0}ft²"}
                 other{"{0}ft²"}
+            }
+            square-inch{
+                dnam{"in²"}
             }
             square-kilometer{
                 one{"{0} km²"}
@@ -1080,8 +1167,12 @@ ur{
                 other{"{0} m²"}
             }
             square-mile{
+                dnam{"mi²"}
                 one{"{0}mi²"}
                 other{"{0}mi²"}
+            }
+            square-yard{
+                dnam{"yd²"}
             }
         }
         compound{
@@ -1115,6 +1206,10 @@ ur{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                one{"{0} آئٹم"}
+                other{"{0} آئٹمز"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1127,6 +1222,11 @@ ur{
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
             }
+            mile-per-gallon-imperial{
+                dnam{"mpg UK"}
+                one{"{0}m/gUK"}
+                other{"{0}m/gUK"}
+            }
         }
         coordinate{
             dnam{"ڈائریکشن"}
@@ -1134,6 +1234,12 @@ ur{
             north{"{0}N"}
             south{"{0}S"}
             west{"{0}W"}
+        }
+        digital{
+            byte{
+                one{"{0}B"}
+                other{"{0}B"}
+            }
         }
         duration{
             day{
@@ -1163,6 +1269,7 @@ ur{
                 dnam{"مہینہ"}
                 one{"{0} مہینہ"}
                 other{"{0} مہینے"}
+                per{"{0}/مہینہ"}
             }
             second{
                 dnam{"سیکنڈ"}
@@ -1174,11 +1281,49 @@ ur{
                 dnam{"ہفتہ"}
                 one{"{0} ہفتہ"}
                 other{"{0} ہفتے"}
+                per{"{0}/ہفتہ"}
             }
             year{
                 dnam{"سال"}
                 one{"{0} سال"}
                 other{"{0} سال"}
+                per{"{0}/سال"}
+            }
+        }
+        electric{
+            ampere{
+                dnam{"amp"}
+            }
+        }
+        energy{
+            joule{
+                dnam{"جول"}
+            }
+            kilowatt-hour{
+                dnam{"kWh"}
+            }
+        }
+        force{
+            pound-force{
+                dnam{"lbf"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            megapixel{
+                dnam{"MP"}
+            }
+            pixel{
+                dnam{"px"}
             }
         }
         length{
@@ -1193,11 +1338,17 @@ ur{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            fathom{
+                dnam{"فیدم"}
+            }
             foot{
                 dnam{"فیٹ"}
                 one{"{0}′"}
                 other{"{0}′"}
                 per{"{0} فی فیٹ"}
+            }
+            furlong{
+                dnam{"فرلانگ"}
             }
             inch{
                 dnam{"انچ"}
@@ -1212,6 +1363,7 @@ ur{
                 per{"{0} فی کلو میٹر"}
             }
             light-year{
+                dnam{"ly"}
                 one{"{0}ly"}
                 other{"{0}ly"}
             }
@@ -1232,8 +1384,12 @@ ur{
                 other{"{0} ملیمیٹر"}
             }
             picometer{
+                dnam{"pm"}
                 one{"{0}pm"}
                 other{"{0}pm"}
+            }
+            solar-radius{
+                dnam{"R☉"}
             }
             yard{
                 dnam{"گز"}
@@ -1242,6 +1398,16 @@ ur{
             }
         }
         mass{
+            dalton{
+                dnam{"ڈالٹن"}
+            }
+            earth-mass{
+                dnam{"زمینی کمیت"}
+            }
+            grain{
+                one{"{0}gr"}
+                other{"{0}gr"}
+            }
             gram{
                 dnam{"گرام"}
                 one{"{0} گرام"}
@@ -1261,8 +1427,12 @@ ur{
                 per{"{0}/oz"}
             }
             pound{
+                dnam{"lb"}
                 one{"{0} پونڈ"}
                 other{"{0} پونڈ"}
+            }
+            solar-mass{
+                dnam{"شمسی کمیت"}
             }
             stone{
                 dnam{"st"}
@@ -1335,6 +1505,7 @@ ur{
                 other{"{0}‎°"}
             }
             fahrenheit{
+                dnam{"°F"}
                 one{"{0}‎°F"}
                 other{"{0}‎°F"}
             }
@@ -1350,6 +1521,21 @@ ur{
             }
         }
         volume{
+            bushel{
+                dnam{"بُشل"}
+            }
+            centiliter{
+                dnam{"cL"}
+            }
+            cubic-centimeter{
+                dnam{"cm³"}
+            }
+            cubic-foot{
+                dnam{"ft³"}
+            }
+            cubic-inch{
+                dnam{"in³"}
+            }
             cubic-kilometer{
                 dnam{"km³"}
                 one{"{0}km³"}
@@ -1360,10 +1546,41 @@ ur{
                 one{"{0}mi³"}
                 other{"{0}mi³"}
             }
+            cubic-yard{
+                dnam{"yd³"}
+            }
+            deciliter{
+                dnam{"dL"}
+            }
+            dessert-spoon{
+                dnam{"dsp"}
+                one{"{0}dsp"}
+                other{"{0}dsp"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dsp Imp"}
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            dram{
+                dnam{"fl.dr."}
+                one{"{0}fl.dr."}
+                other{"{0}fl.dr."}
+            }
+            fluid-ounce-imperial{
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
             liter{
                 dnam{"لیٹر"}
                 one{"{0} لیٹر"}
                 other{"{0} لیٹر"}
+            }
+            pint-metric{
+                dnam{"pt"}
+            }
+            quart{
+                dnam{"qt"}
             }
         }
     }
@@ -1495,6 +1712,11 @@ ur{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"آئٹم"}
+                one{"{0} آئٹم"}
+                other{"{0} آئٹمز"}
+            }
             karat{
                 dnam{"قیراط"}
                 one{"{0} kt"}
@@ -1790,6 +2012,16 @@ ur{
                 one{"{0} ڈاٹ"}
                 other{"{0} ڈاٹ"}
             }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
             megapixel{
                 dnam{"میگا پکسلز"}
             }
@@ -1992,7 +2224,7 @@ ur{
                 other{"{0} oz t"}
             }
             pound{
-                dnam{"پاؤنڈ"}
+                dnam{"پونڈ"}
                 one{"{0} lb"}
                 other{"{0} lb"}
                 per{"{0}/lb"}

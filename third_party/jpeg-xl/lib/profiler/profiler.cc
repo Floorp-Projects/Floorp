@@ -432,7 +432,7 @@ void ThreadSpecific::ComputeOverhead() {
     std::sort(samples, samples + kNumSamples);
     self_overhead = samples[kNumSamples / 2];
 #if PROFILER_PRINT_OVERHEAD
-    printf("Overhead: %" PRIuS "\n", self_overhead);
+    printf("Overhead: %" PRIu64 "\n", static_cast<uint64_t>(self_overhead));
 #endif
     results_->SetSelfOverhead(self_overhead);
   }
@@ -468,7 +468,8 @@ void ThreadSpecific::ComputeOverhead() {
   std::sort(samples, samples + kNumSamples);
   const uint64_t child_overhead = samples[9 * kNumSamples / 10];
 #if PROFILER_PRINT_OVERHEAD
-  printf("Child overhead: %" PRIuS "\n", child_overhead);
+  printf("Child overhead: %" PRIu64 "\n",
+         static_cast<uint64_t>(child_overhead));
 #endif
   results_->SetChildOverhead(child_overhead);
 }

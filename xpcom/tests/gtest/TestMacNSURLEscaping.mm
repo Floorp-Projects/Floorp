@@ -59,10 +59,9 @@ TEST(NSURLEscaping, NSURLEscapingTests)
 
   // Pairs of URLs of the form (un-encoded, expected encoded result) to verify.
   nsTArray<std::pair<nsCString, nsCString>> pairs{
-      {
-          // '#' in ref
-         "https://chat.mozilla.org/#/room/#macdev:mozilla.org"_ns,
-         "https://chat.mozilla.org/#/room/%23macdev:mozilla.org"_ns},
+      {// '#' in ref
+       "https://chat.mozilla.org/#/room/#macdev:mozilla.org"_ns,
+       "https://chat.mozilla.org/#/room/%23macdev:mozilla.org"_ns},
       {
           // '"' in ref
           "https://example.com/path#ref_with_#_and\""_ns,

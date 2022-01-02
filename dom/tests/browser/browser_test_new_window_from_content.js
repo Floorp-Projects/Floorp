@@ -36,7 +36,7 @@
 */
 
 const kContentDoc =
-  "http://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
+  "https://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
 const kNewWindowPrefKey = "browser.link.open_newwindow";
 const kNewWindowRestrictionPrefKey = "browser.link.open_newwindow.restriction";
 const kSameTab = "same tab";

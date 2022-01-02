@@ -57,12 +57,10 @@ class SharedPreferenceDeserializer final {
                                    uint64_t aPrefMapHandle, uint64_t aPrefsLen,
                                    uint64_t aPrefMapSize);
 
-  const base::SharedMemoryHandle& GetPrefsHandle() const;
   const FileDescriptor& GetPrefMapHandle() const;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SharedPreferenceDeserializer);
-  Maybe<base::SharedMemoryHandle> mPrefsHandle;
   Maybe<FileDescriptor> mPrefMapHandle;
   Maybe<size_t> mPrefsLen;
   Maybe<size_t> mPrefMapSize;

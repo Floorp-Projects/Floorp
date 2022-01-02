@@ -9,6 +9,10 @@
 %{ C++
 #include "nsMargin.h"
 #include "nsTArray.h"
+
+namespace mozilla {
+struct PrintSettingsInitializer;
+}
 %}
 
 /**
@@ -203,6 +207,13 @@ interface nsIPrintSettings : nsISupports
   void assign(in nsIPrintSettings aPS);
 
   /**
+   * Returns true if the settings will result in an equivalent preview and
+   * therefore print. The printer name is ignored and it allows for a small
+   * delta in sizes to allow for rounding differences.
+   */
+  bool equivalentTo(in nsIPrintSettings aPrintSettings);
+
+  /**
    * Data Members
    */
   [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
@@ -267,7 +278,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
   attribute boolean printSilent;         /* print without putting up the dialog */
-  attribute boolean shrinkToFit;         /* shrinks content to fit on page      */
+  [infallible] attribute boolean shrinkToFit; /* shrinks content to fit on page */
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
@@ -359,14 +370,15 @@ interface nsIPrintSettings : nsISupports
   attribute Array<long> pageRanges;
 
 %{C++
+  /**
+   * Get a PrintSettingsInitializer populated with the relevant current settings.
+   */
+  virtual mozilla::PrintSettingsInitializer GetSettingsInitializer() = 0;
+
   static bool IsPageSkipped(int32_t aPageNum, const nsTArray<int32_t>& aRanges);
 %}
 };
 
 %{ C++
-namespace mozilla {
-struct PrintSettingsInitializer;
-}
-
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(const mozilla::PrintSettingsInitializer&);
 %}

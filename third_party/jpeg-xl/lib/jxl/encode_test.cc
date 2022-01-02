@@ -56,9 +56,6 @@ TEST(EncodeTest, AddJPEGAfterCloseTest) {
   const std::string jpeg_path =
       "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
-  jxl::CodecInOut orig_io;
-  ASSERT_TRUE(
-      SetFromBytes(jxl::Span<const uint8_t>(orig), &orig_io, /*pool=*/nullptr));
 
   JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
 
@@ -234,7 +231,8 @@ TEST(EncodeTest, OptionsTest) {
     JxlEncoderPtr enc = JxlEncoderMake(nullptr);
     EXPECT_NE(nullptr, enc.get());
     JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
-    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetEffort(options, 5));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_EFFORT, 5));
     VerifyFrameEncoding(enc.get(), options);
     EXPECT_EQ(jxl::SpeedTier::kHare, enc->last_used_cparams.speed_tier);
   }
@@ -244,9 +242,11 @@ TEST(EncodeTest, OptionsTest) {
     EXPECT_NE(nullptr, enc.get());
     JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
     // Lower than currently supported values
-    EXPECT_EQ(JXL_ENC_ERROR, JxlEncoderOptionsSetEffort(options, 0));
+    EXPECT_EQ(JXL_ENC_ERROR,
+              JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_EFFORT, 0));
     // Higher than currently supported values
-    EXPECT_EQ(JXL_ENC_ERROR, JxlEncoderOptionsSetEffort(options, 10));
+    EXPECT_EQ(JXL_ENC_ERROR,
+              JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_EFFORT, 10));
   }
 
   {
@@ -278,9 +278,98 @@ TEST(EncodeTest, OptionsTest) {
     JxlEncoderPtr enc = JxlEncoderMake(nullptr);
     EXPECT_NE(nullptr, enc.get());
     JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
-    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetDecodingSpeed(options, 2));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_DECODING_SPEED, 2));
     VerifyFrameEncoding(enc.get(), options);
     EXPECT_EQ(2u, enc->last_used_cparams.decoding_speed_tier);
+  }
+
+  {
+    JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+    EXPECT_NE(nullptr, enc.get());
+    JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+    EXPECT_EQ(JXL_ENC_ERROR, JxlEncoderOptionsSetInteger(
+                                 options, JXL_ENC_OPTION_GROUP_ORDER, 100));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_GROUP_ORDER, 1));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_GROUP_ORDER_CENTER_X, 5));
+    VerifyFrameEncoding(enc.get(), options);
+    EXPECT_EQ(true, enc->last_used_cparams.centerfirst);
+    EXPECT_EQ(5, enc->last_used_cparams.center_x);
+  }
+
+  {
+    JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+    EXPECT_NE(nullptr, enc.get());
+    JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_RESPONSIVE, 0));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_PROGRESSIVE_AC, 1));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(options,
+                                          JXL_ENC_OPTION_QPROGRESSIVE_AC, -1));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_PROGRESSIVE_DC, 2));
+    VerifyFrameEncoding(enc.get(), options);
+    EXPECT_EQ(false, enc->last_used_cparams.responsive);
+    EXPECT_EQ(true, enc->last_used_cparams.progressive_mode);
+    EXPECT_EQ(2, enc->last_used_cparams.progressive_dc);
+  }
+
+  {
+    JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+    EXPECT_NE(nullptr, enc.get());
+    JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_PHOTON_NOISE, 1777));
+    VerifyFrameEncoding(enc.get(), options);
+    EXPECT_EQ(1777.0f, enc->last_used_cparams.photon_noise_iso);
+  }
+
+  {
+    JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+    EXPECT_NE(nullptr, enc.get());
+    JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+    EXPECT_EQ(
+        JXL_ENC_SUCCESS,
+        JxlEncoderOptionsSetInteger(
+            options, JXL_ENC_OPTION_CHANNEL_COLORS_PRE_TRANSFORM_PERCENT, 55));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_CHANNEL_COLORS_PERCENT, 25));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_PALETTE_COLORS, 70000));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   options, JXL_ENC_OPTION_LOSSY_PALETTE, 1));
+    VerifyFrameEncoding(enc.get(), options);
+    EXPECT_EQ(55.0f,
+              enc->last_used_cparams.channel_colors_pre_transform_percent);
+    EXPECT_EQ(25.0f, enc->last_used_cparams.channel_colors_percent);
+    EXPECT_EQ(70000, enc->last_used_cparams.palette_colors);
+    EXPECT_EQ(true, enc->last_used_cparams.lossy_palette);
+  }
+
+  {
+    JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+    EXPECT_NE(nullptr, enc.get());
+    JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_MODULAR_COLOR_SPACE, 30));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_MODULAR_GROUP_SIZE, 2));
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(
+                  options, JXL_ENC_OPTION_MODULAR_PREDICTOR, 14));
+    VerifyFrameEncoding(enc.get(), options);
+    EXPECT_EQ(30, enc->last_used_cparams.colorspace);
+    EXPECT_EQ(2, enc->last_used_cparams.modular_group_size_shift);
+    EXPECT_EQ(jxl::Predictor::Best, enc->last_used_cparams.options.predictor);
   }
 }
 
@@ -466,18 +555,68 @@ TEST(EncodeTest, SingleFrameBoundedJXLCTest) {
   EXPECT_EQ(true, container.boxes[0].data_size_given);
 }
 
+TEST(EncodeTest, CodestreamLevelTest) {
+  size_t xsize = 64;
+  size_t ysize = 64;
+  JxlPixelFormat pixel_format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
+  std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
+
+  jxl::CodecInOut input_io =
+      jxl::test::SomeTestImageToCodecInOut(pixels, 4, xsize, ysize);
+
+  JxlBasicInfo basic_info;
+  jxl::test::JxlBasicInfoSetFromPixelFormat(&basic_info, &pixel_format);
+  basic_info.xsize = xsize;
+  basic_info.ysize = ysize;
+  basic_info.uses_original_profile = false;
+
+  JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
+  JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
+
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
+  JxlColorEncoding color_encoding;
+  JxlColorEncodingSetToSRGB(&color_encoding,
+                            /*is_gray=*/pixel_format.num_channels < 3);
+  EXPECT_EQ(JXL_ENC_SUCCESS,
+            JxlEncoderSetColorEncoding(enc.get(), &color_encoding));
+  EXPECT_EQ(JXL_ENC_SUCCESS,
+            JxlEncoderAddImageFrame(options, &pixel_format, pixels.data(),
+                                    pixels.size()));
+  JxlEncoderCloseInput(enc.get());
+
+  std::vector<uint8_t> compressed = std::vector<uint8_t>(64);
+  uint8_t* next_out = compressed.data();
+  size_t avail_out = compressed.size() - (next_out - compressed.data());
+  JxlEncoderStatus process_result = JXL_ENC_NEED_MORE_OUTPUT;
+  while (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
+    process_result = JxlEncoderProcessOutput(enc.get(), &next_out, &avail_out);
+    if (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
+      size_t offset = next_out - compressed.data();
+      compressed.resize(compressed.size() * 2);
+      next_out = compressed.data() + offset;
+      avail_out = compressed.size() - offset;
+    }
+  }
+  compressed.resize(next_out - compressed.data());
+  EXPECT_EQ(JXL_ENC_SUCCESS, process_result);
+
+  Container container = {};
+  jxl::Span<const uint8_t> encoded_span =
+      jxl::Span<const uint8_t>(compressed.data(), compressed.size());
+  EXPECT_TRUE(container.Decode(&encoded_span));
+  EXPECT_EQ(0u, encoded_span.size());
+  EXPECT_EQ(0, memcmp("jxll", container.boxes[0].type, 4));
+}
+
 TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   const std::string jpeg_path =
       "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
-  jxl::CodecInOut orig_io;
-  ASSERT_TRUE(
-      SetFromBytes(jxl::Span<const uint8_t>(orig), &orig_io, /*pool=*/nullptr));
 
   JxlEncoderPtr enc = JxlEncoderMake(nullptr);
   JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), NULL);
 
-  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderUseContainer(enc.get(), JXL_TRUE));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderStoreJPEGMetadata(enc.get(), JXL_TRUE));
   EXPECT_EQ(JXL_ENC_SUCCESS,
             JxlEncoderAddJPEGFrame(options, orig.data(), orig.size()));
@@ -528,6 +667,42 @@ TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   EXPECT_EQ(0, memcmp(decoded_jpeg_bytes.data(), orig.data(), orig.size()));
 }
 
+// This test is commented out until JxlEncoderAddBox is implemented, and is a
+// prototype of JxlEncoderAddBox usage, not a finished test implementation.
+#if 0
+TEST(EncodeTest, BoxTest) {
+  JxlEncoderPtr enc = JxlEncoderMake(nullptr);
+  EXPECT_NE(nullptr, enc.get());
+
+  // TODO(lode): create a test image, initialize encoder and options, prepare
+  // next_out and avail_out, and handle status and output buffer after the
+  // JxlEncoderProcessOutput calls below.
+
+  // Add an early metadata box
+  JxlEncoderAddBox("Exif", exif_data, exif_size);
+
+  // Write to output
+  status = JxlEncoderProcessOutput(enc.get(), &next_out, &avail_out);
+
+  // Add image frame
+  EXPECT_EQ(JXL_ENC_ERROR,
+            JxlEncoderAddImageFrame(options, &pixel_format, pixels.data(),
+                                    pixels.size()));
+  // Indicate this is the last frame
+  JxlEncoderCloseInput(enc.get());
+
+  // Write to output
+  status = JxlEncoderProcessOutput(enc.get(), &next_out, &avail_out);
+
+  // Add a late metadata box
+  JxlEncoderAddBox("XML ", xml_data, xml_size);
+
+  // Write to output
+  status = JxlEncoderProcessOutput(enc.get(), &next_out, &avail_out);
+}
+#endif
+
+#if JPEGXL_ENABLE_JPEG  // Loading .jpg files requires libjpeg support.
 TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGFrameTest)) {
   for (int skip_basic_info = 0; skip_basic_info < 2; skip_basic_info++) {
     for (int skip_color_encoding = 0; skip_color_encoding < 2;
@@ -592,3 +767,4 @@ TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGFrameTest)) {
     }
   }
 }
+#endif  // JPEGXL_ENABLE_JPEG

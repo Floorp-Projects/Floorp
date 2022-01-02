@@ -517,9 +517,12 @@ partial interface Document {
    * Deep-clones the provided element and inserts it into the CanvasFrame.
    * Returns an AnonymousContent instance that can be used to manipulate the
    * inserted element.
+   *
+   * If aForce is true, tries to update layout to be able to insert the element
+   * synchronously.
    */
   [ChromeOnly, NewObject, Throws]
-  AnonymousContent insertAnonymousContent(Element aElement);
+  AnonymousContent insertAnonymousContent(Element aElement, optional boolean aForce = false);
 
   /**
    * Removes the element inserted into the CanvasFrame given an AnonymousContent
@@ -548,7 +551,7 @@ partial interface Document {
 // third party.
 partial interface Document {
   [Func="Document::CallerCanAccessPrivilegeSSA", Throws]
-  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin);
+  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
 };
 
 enum DocumentAutoplayPolicy {

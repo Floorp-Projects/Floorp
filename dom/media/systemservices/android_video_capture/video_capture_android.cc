@@ -12,9 +12,9 @@
 
 #include "device_info_android.h"
 #include "modules/utility/include/helpers_android.h"
-#include "rtc_base/criticalsection.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/time_utils.h"
 
 #include "AndroidBridge.h"
 
@@ -143,7 +143,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
 void VideoCaptureAndroid::OnIncomingFrame(rtc::scoped_refptr<I420Buffer> buffer,
                                           int32_t degrees,
                                           int64_t captureTime) {
-  rtc::CritScope cs(&_apiCs);
+  MutexLock lock(&api_lock_);
 
   VideoRotation rotation =
       (degrees <= 45 || degrees > 315)    ? kVideoRotation_0
@@ -167,7 +167,7 @@ VideoCaptureAndroid::VideoCaptureAndroid()
 
 int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
   const int nameLength = strlen(deviceUniqueIdUTF8);
-  if (nameLength >= kVideoCaptureUniqueNameSize) return -1;
+  if (nameLength >= kVideoCaptureUniqueNameLength) return -1;
 
   // Store the device name
   RTC_LOG(LS_INFO) << "VideoCaptureAndroid::Init: " << deviceUniqueIdUTF8;
@@ -196,29 +196,31 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
 
 int32_t VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
-  _apiCs.Enter();
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
-
-  if (_deviceInfo.GetBestMatchedCapability(_deviceUniqueId, capability,
-                                           _captureCapability) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "s: GetBestMatchedCapability failed: "
-                      << capability.width << "x" << capability.height;
-    // Manual exit of critical section
-    _apiCs.Leave();
-    return -1;
-  }
-
-  int width = _captureCapability.width;
-  int height = _captureCapability.height;
+  int width = 0;
+  int height = 0;
   int min_mfps = 0;
   int max_mfps = 0;
-  _deviceInfo.GetMFpsRange(_deviceUniqueId, _captureCapability.maxFPS,
-                           &min_mfps, &max_mfps);
+  {
+    MutexLock lock(&api_lock_);
 
-  // Exit critical section to avoid blocking camera thread inside
-  // onIncomingFrame() call.
-  _apiCs.Leave();
+    if (_deviceInfo.GetBestMatchedCapability(_deviceUniqueId, capability,
+                                             _captureCapability) < 0) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << "s: GetBestMatchedCapability failed: "
+                        << capability.width << "x" << capability.height;
+      return -1;
+    }
+
+    width = _captureCapability.width;
+    height = _captureCapability.height;
+    _deviceInfo.GetMFpsRange(_deviceUniqueId, _captureCapability.maxFPS,
+                             &min_mfps, &max_mfps);
+
+    // Exit critical section to avoid blocking camera thread inside
+    // onIncomingFrame() call.
+  }
 
   jmethodID j_start =
       env->GetMethodID(g_java_capturer_class, "startCapture", "(IIIIJ)Z");
@@ -227,7 +229,7 @@ int32_t VideoCaptureAndroid::StartCapture(
   bool started = env->CallBooleanMethod(_jCapturer, j_start, width, height,
                                         min_mfps, max_mfps, j_this);
   if (started) {
-    rtc::CritScope cs(&_apiCs);
+    MutexLock lock(&api_lock_);
     _requestedCapability = capability;
     _captureStarted = true;
   }
@@ -235,16 +237,17 @@ int32_t VideoCaptureAndroid::StartCapture(
 }
 
 int32_t VideoCaptureAndroid::StopCapture() {
-  _apiCs.Enter();
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
+  {
+    MutexLock lock(&api_lock_);
 
-  memset(&_requestedCapability, 0, sizeof(_requestedCapability));
-  memset(&_captureCapability, 0, sizeof(_captureCapability));
-  _captureStarted = false;
-  // Exit critical section to avoid blocking camera thread inside
-  // onIncomingFrame() call.
-  _apiCs.Leave();
+    memset(&_requestedCapability, 0, sizeof(_requestedCapability));
+    memset(&_captureCapability, 0, sizeof(_captureCapability));
+    _captureStarted = false;
+    // Exit critical section to avoid blocking camera thread inside
+    // onIncomingFrame() call.
+  }
 
   // try to stop the capturer.
   jmethodID j_stop =
@@ -253,12 +256,12 @@ int32_t VideoCaptureAndroid::StopCapture() {
 }
 
 bool VideoCaptureAndroid::CaptureStarted() {
-  rtc::CritScope cs(&_apiCs);
+  MutexLock lock(&api_lock_);
   return _captureStarted;
 }
 
 int32_t VideoCaptureAndroid::CaptureSettings(VideoCaptureCapability& settings) {
-  rtc::CritScope cs(&_apiCs);
+  MutexLock lock(&api_lock_);
   settings = _requestedCapability;
   return 0;
 }

@@ -44,11 +44,11 @@ class RemoteWorkerControllerParent final : public PRemoteWorkerControllerParent,
   ~RemoteWorkerControllerParent();
 
   PFetchEventOpParent* AllocPFetchEventOpParent(
-      const ServiceWorkerFetchEventOpArgs& aArgs);
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs);
 
   mozilla::ipc::IPCResult RecvPFetchEventOpConstructor(
       PFetchEventOpParent* aActor,
-      const ServiceWorkerFetchEventOpArgs& aArgs) override;
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs) override;
 
   bool DeallocPFetchEventOpParent(PFetchEventOpParent* aActor);
 
@@ -66,6 +66,10 @@ class RemoteWorkerControllerParent final : public PRemoteWorkerControllerParent,
   void CreationSucceeded() override;
 
   void ErrorReceived(const ErrorValue& aValue) override;
+
+  void LockNotified(bool aCreated) final {
+    // no-op for service workers
+  }
 
   void Terminated() override;
 

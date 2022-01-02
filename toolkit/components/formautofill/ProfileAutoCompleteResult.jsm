@@ -194,6 +194,15 @@ class ProfileAutoCompleteResult {
   }
 
   /**
+   * Returns true if the value at the given index is removable
+   * @param   {number}  index The index of the result to remove
+   * @returns {boolean} True if the value is removable
+   */
+  isRemovableAt(index) {
+    return true;
+  }
+
+  /**
    * Removes a result from the resultset
    * @param {number} index The index of the result to remove
    */

@@ -1,5 +1,5 @@
 FROM $DOCKER_IMAGE_PARENT
-MAINTAINER Simon Fraser <sfraser@mozilla.com>
+MAINTAINER Julien Cristau <jcristau@mozilla.com>
 
 ADD setup.sh /setup/setup.sh
 

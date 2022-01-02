@@ -8,14 +8,14 @@ AC_PREREQ(2.61)
 AC_INIT
 AC_CONFIG_SRCDIR([pr/include/nspr.h])
 
-AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
+AC_CONFIG_AUX_DIR(build/autoconf)
 AC_CANONICAL_TARGET
 
 dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=32
+MOD_MINOR_VERSION=33
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=

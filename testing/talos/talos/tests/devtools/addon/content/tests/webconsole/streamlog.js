@@ -42,8 +42,7 @@ module.exports = async function() {
                               new Array(100).join(" DAMP? DAMP! "));
           content.requestAnimationFrame(log);
         } else {
-          let avgTime = (content.performance.now() - startTime) / ${TOTAL_MESSAGES};
-          sendSyncMessage("done", Math.round(avgTime));
+          sendSyncMessage("done", (content.performance.now() - startTime));
         }
       }
       log();

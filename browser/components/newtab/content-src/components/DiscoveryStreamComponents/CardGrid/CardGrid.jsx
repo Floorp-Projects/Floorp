@@ -29,12 +29,21 @@ export class CardGrid extends React.PureComponent {
     this.setState({ moreLoaded: true });
   }
 
+  get showLoadMore() {
+    const { loadMoreEnabled, data, loadMoreThreshold } = this.props;
+    return (
+      loadMoreEnabled &&
+      data.recommendations.length > loadMoreThreshold &&
+      !this.state.moreLoaded
+    );
+  }
+
   renderCards() {
     let { items } = this.props;
-    const { loadMoreEnabled, lastCardMessageEnabled } = this.props;
+    const { lastCardMessageEnabled, loadMoreThreshold } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
-    if (loadMoreEnabled && !this.state.moreLoaded) {
-      items = 12;
+    if (this.showLoadMore) {
+      items = loadMoreThreshold;
       // We don't want to show this until after load more has been clicked.
       showLastCardMessage = false;
     }
@@ -125,7 +134,6 @@ export class CardGrid extends React.PureComponent {
 
     // Handle the case where a user has dismissed all recommendations
     const isEmpty = data.recommendations.length === 0;
-    const { loadMoreEnabled } = this.props;
 
     return (
       <div>
@@ -150,7 +158,7 @@ export class CardGrid extends React.PureComponent {
         ) : (
           this.renderCards()
         )}
-        {loadMoreEnabled && !this.state.moreLoaded && (
+        {this.showLoadMore && (
           <button
             className="ASRouterButton primary ds-card-grid-load-more-button"
             onClick={this.loadMoreClicked}
@@ -168,4 +176,5 @@ CardGrid.defaultProps = {
   enable_video_playheads: false,
   lastCardMessageEnabled: false,
   saveToPocketCard: false,
+  loadMoreThreshold: 12,
 };

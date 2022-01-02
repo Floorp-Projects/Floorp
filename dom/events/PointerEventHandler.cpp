@@ -666,7 +666,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       if (aEvent->mMessage == eTouchStart) {
         // We already did hit test for touchstart in PresShell. We should
         // dispatch pointerdown to the same target as touchstart.
-        nsCOMPtr<nsIContent> content = do_QueryInterface(touch->mTarget);
+        nsCOMPtr<nsIContent> content =
+            nsIContent::FromEventTargetOrNull(touch->mTarget);
         if (!content) {
           continue;
         }

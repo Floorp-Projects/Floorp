@@ -53,6 +53,8 @@ nsILoadContext* BrowserHost::GetLoadContext() const {
   return loadContext;
 }
 
+bool BrowserHost::CanRecv() const { return mRoot && mRoot->CanRecv(); }
+
 a11y::DocAccessibleParent* BrowserHost::GetTopLevelDocAccessible() const {
   return mRoot->GetTopLevelDocAccessible();
 }

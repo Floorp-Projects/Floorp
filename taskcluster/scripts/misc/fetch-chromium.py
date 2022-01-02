@@ -86,7 +86,7 @@ def unzip(zippath, target):
 
 
 def fetch_chromium_revision(platform):
-    """Get the revision of the latest chromium build. """
+    """Get the revision of the latest chromium build."""
     chromium_platform = CHROMIUM_INFO[platform]["platform"]
     revision_url = LAST_CHANGE_URL.format(chromium_platform)
 
@@ -102,7 +102,7 @@ def fetch_chromium_revision(platform):
 
 
 def fetch_chromium_build(platform, revision, zippath):
-    """Download a chromium build for a given revision, or the latest. """
+    """Download a chromium build for a given revision, or the latest."""
     if not revision:
         revision = fetch_chromium_revision(platform)
 

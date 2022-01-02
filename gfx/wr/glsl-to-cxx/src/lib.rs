@@ -2603,24 +2603,9 @@ fn define_texel_fetch_ptr(
     offsets: &hir::TexelFetchOffsets,
 ) {
     show_indent(state);
-    let ptr_type = if let hir::SymDecl::Global(_, _, ty, _) = &sampler_sym.decl {
-        if symbol_run_class(&base_sym.decl, state.vector_mask) == hir::RunClass::Scalar {
-            match ty.kind {
-                hir::TypeKind::Sampler2D
-                | hir::TypeKind::Sampler2DRect => "vec4_scalar*",
-                hir::TypeKind::ISampler2D => "ivec4_scalar*",
-                _ => panic!(),
-            }
-        } else {
-            "I32"
-        }
-    } else {
-        panic!();
-    };
     write!(
         state,
-        "{} {}_{}_fetch = texelFetchPtr({}, {}, {}, {}, {}, {});\n",
-        ptr_type,
+        "auto {}_{}_fetch = texelFetchPtr({}, {}, {}, {}, {}, {});\n",
         sampler_sym.name,
         base_sym.name,
         sampler_sym.name,
