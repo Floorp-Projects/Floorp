@@ -50,6 +50,7 @@ import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.tips.TipManager
+import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
@@ -299,7 +300,7 @@ class UrlInputFragment :
                 storage = requireComponents.topSitesStorage,
                 config = {
                     TopSitesConfig(
-                        totalSites = 4,
+                        totalSites = TOP_SITES_MAX_LIMIT,
                         frecencyConfig = null
                     )
                 }
