@@ -5328,6 +5328,10 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       auto printKind = aForWindowDotPrint == IsForWindowDotPrint::Yes
                            ? PrintKind::WindowDotPrint
                            : PrintKind::InternalPrint;
+      // For PrintKind::WindowDotPrint, this call will not only make the parent
+      // process create a CanonicalBrowsingContext for the returned `bc`, but
+      // it will also make the parent process initiate the print/print preview.
+      // See the handling of OPEN_PRINT_BROWSER in browser.js.
       aError = OpenInternal(u""_ns, u""_ns, u""_ns,
                             false,             // aDialog
                             false,             // aContentModal
@@ -5398,20 +5402,21 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     return nullptr;
   }
 
-  if (aIsPreview == IsPreview::Yes) {
-    // When using the new print preview UI from window.print() this would be
-    // wasted work (and use probably-incorrect settings). So skip it, the
-    // preview UI will take care of calling PrintPreview again.
-    if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+  // For window.print(), we postpone making these calls until the round-trip to
+  // the parent process (triggered by the OpenInternal call above) calls us
+  // again. Only a call from the parent can provide a valid nsPrintSettings
+  // object and RemotePrintJobChild object.
+  if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+    if (aIsPreview == IsPreview::Yes) {
       aError = webBrowserPrint->PrintPreview(ps, aListener,
                                              std::move(aPrintPreviewCallback));
       if (aError.Failed()) {
         return nullptr;
       }
+    } else {
+      // Historically we've eaten this error.
+      webBrowserPrint->Print(ps, aListener);
     }
-  } else {
-    // Historically we've eaten this error.
-    webBrowserPrint->Print(ps, aListener);
   }
 
   // When using window.print() with the new UI, we usually want to block until
