@@ -253,10 +253,24 @@ var PrintUtils = {
    */
   startPrintWindow(aBrowsingContext, aOptions) {
     const printInitiationTime = Date.now();
-    let openWindowInfo, printSelectionOnly, printFrameOnly;
-    if (aOptions) {
-      ({ openWindowInfo, printSelectionOnly, printFrameOnly } = aOptions);
-    }
+
+    let { openWindowInfo, printSelectionOnly, printFrameOnly } = aOptions || {};
+
+    // If openWindowInfo is passed, a content process has created a new
+    // BrowsingContext for a static clone that was created for printing. That
+    // can happen in the following cases:
+    //
+    //   - window.print() was called in a content window, or:
+    //   - silent printing is enabled and this function was previously invoked
+    //     and called BrowsingContext.print(), and we're now being called back
+    //     by the content process.
+    //
+    // In the latter case the BrowsingContext only needs to be inserted into
+    // the document tree; the print in the content process is already underway.
+    // In the former case we also need to obtain a valid nsIPrintSettings
+    // object and pass that to the content process so that it can start the
+    // print.
+
     if (
       PRINT_TAB_MODAL &&
       !PRINT_ALWAYS_SILENT &&
@@ -285,6 +299,23 @@ var PrintUtils = {
       return browser;
     }
 
+    async function makePrintSettingsMaybeEnsuringToFileName() {
+      let settings = PrintUtils.getPrintSettings();
+      if (settings.printToFile && !settings.toFileName) {
+        // TODO(bug 1748004): We should consider generating the file name
+        // from the document's title as we do in print.js's pickFileName
+        // (including using DownloadPaths.sanitize!).
+        // For now, the following is for consistency with the behavior
+        // prior to bug 1669149 part 3.
+        let dest = await OS.File.getCurrentDirectory();
+        if (!dest) {
+          dest = OS.Constants.Path.homeDir;
+        }
+        settings.toFileName = OS.Path.join(dest || "", "mozilla.pdf");
+      }
+      return settings;
+    }
+
     if (openWindowInfo) {
       let printPreview = new PrintPreview({
         sourceBrowsingContext: aBrowsingContext,
@@ -292,14 +323,30 @@ var PrintUtils = {
       });
       let browser = printPreview.createPreviewBrowser("source");
       document.documentElement.append(browser);
-      // Legacy print dialog or silent printing, the content process will print
-      // in this <browser>.
+
+      if (openWindowInfo.isForWindowDotPrint) {
+        makePrintSettingsMaybeEnsuringToFileName().then(settings => {
+          // We must be sure that we return to the event loop before calling
+          // BrowsingContext.print(). If we fail to do that, in the child
+          // process we will re-enter nsGlobalWindowOuter::Print under the event
+          // loop that's spun under its OpenInternal call. Printing would then
+          // fail since the outer nsGlobalWindowOuter::Print call wouldn't yet
+          // have created the static clone.
+          setTimeout(() => {
+            // At some point we should handle the Promise that this returns (at
+            // least report rejection to telemetry).
+            browser.browsingContext.print(settings);
+          }, 0);
+        });
+      }
+
       return browser;
     }
 
-    let settings = this.getPrintSettings();
-    settings.printSelectionOnly = printSelectionOnly;
-    this.printWindow(aBrowsingContext, settings);
+    makePrintSettingsMaybeEnsuringToFileName().then(settings => {
+      settings.printSelectionOnly = printSelectionOnly;
+      PrintUtils.printWindow(aBrowsingContext, settings);
+    });
     return null;
   },
 
