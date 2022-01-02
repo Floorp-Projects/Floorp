@@ -64,7 +64,7 @@
     <string name="recently_saved_show_all">Εμφάνιση όλων</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Κουμπί εμφάνισης όλων των αποθηκευμένων σελιδοδεικτών</string>
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Κουμπί εμφάνισης όλων των αποθηκευμένων σελιδοδεικτών</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Το %1$s αναπτύσσεται από τη Mozilla.</string>
@@ -145,8 +145,6 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Εμφάνιση όλων</string>
 
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Κουμπί «Εμφάνιση όλων των πρόσφατων καρτελών»</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Η αναζήτησή σας για «%1$s»</string>
@@ -170,7 +168,7 @@
     <string name="recently_visited_menu_item_remove">Αφαίρεση</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Κουμπί «Εμφάνιση όλων των προηγούμενων εξερευνήσεων»</string>
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Κουμπί «Εμφάνιση όλων των προηγούμενων εξερευνήσεων»</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1036,6 +1034,8 @@
     <string name="preference_phone_feature_notification">Ειδοποιήσεις</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Μόνιμη αποθήκευση</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookies μεταξύ ιστοτόπων</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Περιεχόμενο με έλεγχο DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
