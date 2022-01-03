@@ -61,11 +61,15 @@ class InputObserver : public webrtc::VideoInputFeedBack {
   RefPtr<CamerasParent> mParent;
 };
 
+class DeliverFrameRunnable;
+
 class CamerasParent final : public PCamerasParent,
                             public nsIAsyncShutdownBlocker {
   NS_DECL_THREADSAFE_ISUPPORTS
 
  public:
+  friend DeliverFrameRunnable;
+
   static already_AddRefed<CamerasParent> Create();
 
   // Messages received form the child. These run on the IPC/PBackground thread.
@@ -98,6 +102,8 @@ class CamerasParent final : public PCamerasParent,
     return mPBackgroundEventTarget;
   };
   bool IsShuttingDown() {
+    // the first 2 are pBackground only, the last is atomic
+    MOZ_ASSERT(GetCurrentSerialEventTarget() == mPBackgroundEventTarget);
     return !mChildIsAlive || mDestroyed || !mWebRTCAlive;
   };
   ShmemBuffer GetBuffer(size_t aSize);
@@ -133,9 +139,11 @@ class CamerasParent final : public PCamerasParent,
   // sEngines will be accessed by VideoCapture thread only
   // sNumOfCamerasParent, sNumOfOpenCamerasParentEngines, and
   // sVideoCaptureThread will be accessed by main thread / PBackground thread /
-  // VideoCapture thread sNumOfCamerasParent and sThreadMonitor create & delete
-  // are protected by sMutex sNumOfOpenCamerasParentEngines and
-  // sVideoCaptureThread are protected by sThreadMonitor
+  // VideoCapture thread
+  // sNumOfCamerasParent and sThreadMonitor create & delete are protected by
+  // sMutex
+  // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by
+  // sThreadMonitor
   static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;

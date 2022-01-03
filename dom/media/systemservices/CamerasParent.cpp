@@ -159,6 +159,9 @@ class DeliverFrameRunnable : public mozilla::Runnable {
         mResult(0){};
 
   NS_IMETHOD Run() override {
+    // runs on BackgroundEventTarget
+    MOZ_ASSERT(GetCurrentSerialEventTarget() ==
+               mParent->mPBackgroundEventTarget);
     if (mParent->IsShuttingDown()) {
       // Communication channel is being torn down
       mResult = 0;
@@ -379,6 +382,7 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
 }
 
 void CamerasParent::CloseEngines() {
+  sThreadMonitor->AssertCurrentThreadOwns();
   LOG("%s", __PRETTY_FUNCTION__);
   if (!mWebRTCAlive) {
     return;

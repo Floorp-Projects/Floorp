@@ -141,6 +141,10 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyNumberOfCapabilities(
 // Takes a "failed" value and a reference to the output variable
 // as parameters, will return the right one depending on whether
 // dispatching succeeded.
+//
+// The LockAndDispatch object in the caller must stay alive until after any
+// reply data has been retreived (mReplyInteger, etc) so that the data is
+// protected by the ReplyMonitor/RequestMutex
 template <class T = int>
 class LockAndDispatch {
  public:
@@ -192,6 +196,7 @@ class LockAndDispatch {
 bool CamerasChild::DispatchToParent(nsIRunnable* aRunnable,
                                     MonitorAutoLock& aMonitor) {
   CamerasSingleton::Mutex().AssertCurrentThreadOwns();
+  mReplyMonitor.AssertCurrentThreadOwns();
   CamerasSingleton::Thread()->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   // We can't see if the send worked, so we need to be able to bail
   // out on shutdown (when it failed and we won't get a reply).
