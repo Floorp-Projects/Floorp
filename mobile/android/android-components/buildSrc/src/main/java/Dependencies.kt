@@ -58,7 +58,7 @@ object Versions {
         const val paging = "2.1.2"
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
-        const val lifecycle = "2.2.0"
+        const val lifecycle = "2.4.0"
         const val media = "1.2.0"
         const val navigation = "2.4.0-alpha04"
         const val work = "2.7.1"
