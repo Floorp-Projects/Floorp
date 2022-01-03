@@ -5848,10 +5848,15 @@ ProfilingStack* profiler_register_thread(const char* aName,
 
 /* static */
 void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
-  // Make sure we have a nsThread wrapper for the current thread, and that NSPR
-  // knows its name.
-  (void)NS_GetCurrentThread();
-  NS_SetCurrentThreadName(aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
+  // Set the thread name (except for the main thread, which is controlled
+  // elsewhere, and influences the process name on some systems like Linux).
+  if (!aOnThreadRef.UnlockedConstReaderCRef().Info().IsMainThread()) {
+    // Make sure we have a nsThread wrapper for the current thread, and that
+    // NSPR knows its name.
+    (void)NS_GetCurrentThread();
+    NS_SetCurrentThreadName(
+        aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
+  }
 
   PSAutoLock lock;
 

@@ -16,6 +16,10 @@
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+#include "nsIThread.h"
+#include "nsThreadUtils.h"
+#include "prthread.h"
+
 #include "gtest/gtest.h"
 
 #include <thread>
@@ -655,6 +659,31 @@ static const char* GetThreadName() {
       nullptr);
 }
 
+// Get the thread name, as registered in the PRThread, nullptr on failure.
+static const char* GetPRThreadName() {
+  nsIThread* nsThread = NS_GetCurrentThread();
+  if (!nsThread) {
+    return nullptr;
+  }
+  PRThread* prThread = nullptr;
+  if (NS_FAILED(nsThread->GetPRThread(&prThread))) {
+    return nullptr;
+  }
+  if (!prThread) {
+    return nullptr;
+  }
+  return PR_GetThreadName(prThread);
+}
+
+TEST(GeckoProfiler, ThreadRegistration_MainThreadName)
+{
+  EXPECT_TRUE(profiler::ThreadRegistration::IsRegistered());
+  EXPECT_STREQ(GetThreadName(), "GeckoMain");
+
+  // Check that the real thread name (outside the profiler) is *not* GeckoMain.
+  EXPECT_STRNE(GetPRThreadName(), "GeckoMain");
+}
+
 TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
 {
   using TR = profiler::ThreadRegistration;
@@ -680,6 +709,7 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR rt{"Test thread #1", &onStackChar};
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #1");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #1");
     }
     ASSERT_FALSE(TR::IsRegistered());
 
@@ -688,6 +718,7 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR::RegisterThread("Test thread #2", &onStackChar);
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #2");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #2");
 
       TR::UnregisterThread();
       ASSERT_FALSE(TR::IsRegistered());
@@ -702,17 +733,21 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR rt2{"Test thread #3", &onStackChar};
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #3");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #3");
 
       {
         TR rt3{"Test thread #4", &onStackChar};
         ASSERT_TRUE(TR::IsRegistered());
         EXPECT_STREQ(GetThreadName(), "Test thread #3")
             << "Nested registration shouldn't change the name";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #3")
+            << "Nested registration shouldn't change the PRThread name";
       }
       ASSERT_TRUE(TR::IsRegistered())
       << "Thread should still be registered after nested un-registration";
       EXPECT_STREQ(GetThreadName(), "Test thread #3")
           << "Thread should still be registered after nested un-registration";
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #3");
     }
     ASSERT_FALSE(TR::IsRegistered());
 
@@ -721,18 +756,22 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR::RegisterThread("Test thread #5", &onStackChar);
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #5");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #5");
 
       {
         TR::RegisterThread("Test thread #6", &onStackChar);
         ASSERT_TRUE(TR::IsRegistered());
         EXPECT_STREQ(GetThreadName(), "Test thread #5")
             << "Nested registration shouldn't change the name";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #5")
+            << "Nested registration shouldn't change the PRThread name";
 
         TR::UnregisterThread();
         ASSERT_TRUE(TR::IsRegistered())
         << "Thread should still be registered after nested un-registration";
         EXPECT_STREQ(GetThreadName(), "Test thread #5")
             << "Thread should still be registered after nested un-registration";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #5");
       }
 
       TR::UnregisterThread();
@@ -744,18 +783,22 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR rt2{"Test thread #7", &onStackChar};
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #7");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #7");
 
       {
         TR::RegisterThread("Test thread #8", &onStackChar);
         ASSERT_TRUE(TR::IsRegistered());
         EXPECT_STREQ(GetThreadName(), "Test thread #7")
             << "Nested registration shouldn't change the name";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #7")
+            << "Nested registration shouldn't change the PRThread name";
 
         TR::UnregisterThread();
         ASSERT_TRUE(TR::IsRegistered())
         << "Thread should still be registered after nested un-registration";
         EXPECT_STREQ(GetThreadName(), "Test thread #7")
             << "Thread should still be registered after nested un-registration";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #7");
       }
     }
     ASSERT_FALSE(TR::IsRegistered());
@@ -765,17 +808,21 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR::RegisterThread("Test thread #9", &onStackChar);
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #9");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #9");
 
       {
         TR rt3{"Test thread #10", &onStackChar};
         ASSERT_TRUE(TR::IsRegistered());
         EXPECT_STREQ(GetThreadName(), "Test thread #9")
             << "Nested registration shouldn't change the name";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #9")
+            << "Nested registration shouldn't change the PRThread name";
       }
       ASSERT_TRUE(TR::IsRegistered())
       << "Thread should still be registered after nested un-registration";
       EXPECT_STREQ(GetThreadName(), "Test thread #9")
           << "Thread should still be registered after nested un-registration";
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #9");
 
       TR::UnregisterThread();
       ASSERT_FALSE(TR::IsRegistered());
@@ -786,6 +833,7 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR rt2{"Test thread #11", &onStackChar};
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #11");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #11");
 
       TR::UnregisterThread();
       ASSERT_TRUE(TR::IsRegistered())
@@ -794,6 +842,7 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       EXPECT_STREQ(GetThreadName(), "Test thread #11")
           << "On-stack thread should still be registered after off-stack "
              "un-registration";
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #11");
     }
     ASSERT_FALSE(TR::IsRegistered());
 
@@ -803,12 +852,15 @@ TEST(GeckoProfiler, ThreadRegistration_NestedRegistrations)
       TR::RegisterThread("Test thread #12", &onStackChar);
       ASSERT_TRUE(TR::IsRegistered());
       EXPECT_STREQ(GetThreadName(), "Test thread #12");
+      EXPECT_STREQ(GetPRThreadName(), "Test thread #12");
 
       {
         TR rt3{"Test thread #13", &onStackChar};
         ASSERT_TRUE(TR::IsRegistered());
         EXPECT_STREQ(GetThreadName(), "Test thread #12")
             << "Nested registration shouldn't change the name";
+        EXPECT_STREQ(GetPRThreadName(), "Test thread #12")
+            << "Nested registration shouldn't change the PRThread name";
 
         // Note that we unregister the root registration, while nested `rt3` is
         // still alive.
