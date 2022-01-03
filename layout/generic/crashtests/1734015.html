@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+      * {
+          all: initial;
+      }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const selection = document.getSelection()
+      const option = document.getElementById("id_0")
+      selection.setPosition(option)
+      selection.modify("move", "backward", "line")
+    })
+  </script>
+</head>
+<select>
+  <option id="id_0"></option>
+</select>
+</html>
