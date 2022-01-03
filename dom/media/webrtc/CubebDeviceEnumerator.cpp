@@ -219,23 +219,28 @@ static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
 RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
     CubebDeviceEnumerator::Side aSide) {
   MOZ_ASSERT(aSide == Side::INPUT || aSide == Side::OUTPUT);
-  MutexAutoLock lock(mMutex);
 
-  RefPtr<AudioDeviceSet> devices;
+  RefPtr<const AudioDeviceSet>* devicesCache;
   bool manualInvalidation = true;
 
   if (aSide == Side::INPUT) {
-    devices = std::move(mInputDevices);
+    devicesCache = &mInputDevices;
     manualInvalidation = mManualInputInvalidation;
   } else {
     MOZ_ASSERT(aSide == Side::OUTPUT);
-    devices = std::move(mOutputDevices);
+    devicesCache = &mOutputDevices;
     manualInvalidation = mManualOutputInvalidation;
   }
 
   cubeb* context = GetCubebContext();
   if (!context) {
     return new AudioDeviceSet();
+  }
+  if (!manualInvalidation) {
+    MutexAutoLock lock(mMutex);
+    if (*devicesCache) {
+      return *devicesCache;
+    }
   }
 
 #ifdef ANDROID
@@ -252,33 +257,24 @@ RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
     channels = 2;
     name = u"Default audio output device"_ns;
   }
-
-  if (!devices || manualInvalidation) {
-    devices = new AudioDeviceSet();
-    // Bug 1473346: enumerating devices is not supported on Android in cubeb,
-    // simply state that there is a single sink, that it is the default, and has
-    // a single channel. All the other values are made up and are not to be
-    // used.
-    // Bug 1660391: we can't use fluent here yet to get localized strings, so
-    // those are hard-coded en_US strings for now.
-    RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
-        nullptr, name, u""_ns, u""_ns, type, CUBEB_DEVICE_STATE_ENABLED,
-        CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
-        channels, 44100, 44100, 44100, 441, 128);
-    devices->AppendElement(std::move(info));
-  }
+  RefPtr devices = new AudioDeviceSet();
+  // Bug 1473346: enumerating devices is not supported on Android in cubeb,
+  // simply state that there is a single sink, that it is the default, and has
+  // a single channel. All the other values are made up and are not to be used.
+  // Bug 1660391: we can't use fluent here yet to get localized strings, so
+  // those are hard-coded en_US strings for now.
+  RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
+      nullptr, name, u""_ns, u""_ns, type, CUBEB_DEVICE_STATE_ENABLED,
+      CUBEB_DEVICE_PREF_ALL, CUBEB_DEVICE_FMT_ALL, CUBEB_DEVICE_FMT_S16NE,
+      channels, 44100, 44100, 44100, 441, 128);
+  devices->AppendElement(std::move(info));
 #else
-  if (!devices || manualInvalidation) {
-    MutexAutoUnlock unlock(mMutex);
-    devices = GetDeviceCollection((aSide == Side::INPUT) ? CubebUtils::Input
-                                                         : CubebUtils::Output);
-  }
+  RefPtr devices = GetDeviceCollection(
+      (aSide == Side::INPUT) ? CubebUtils::Input : CubebUtils::Output);
 #endif
-
-  if (aSide == Side::INPUT) {
-    mInputDevices = devices;
-  } else {
-    mOutputDevices = devices;
+  {
+    MutexAutoLock lock(mMutex);
+    *devicesCache = devices;
   }
   return devices;
 }
