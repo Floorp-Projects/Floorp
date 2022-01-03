@@ -70,8 +70,8 @@ class CubebDeviceEnumerator final {
   RefPtr<const AudioDeviceSet> EnumerateAudioDevices(Side aSide);
   // Synchronize access to mInputDevices and mOutputDevices;
   Mutex mMutex;
-  RefPtr<AudioDeviceSet> mInputDevices;
-  RefPtr<AudioDeviceSet> mOutputDevices;
+  RefPtr<const AudioDeviceSet> mInputDevices;
+  RefPtr<const AudioDeviceSet> mOutputDevices;
   // If mManual*Invalidation is true, then it is necessary to query the device
   // list each time instead of relying on automatic invalidation of the cache by
   // cubeb itself. Set in the constructor and then can be access on any thread.
