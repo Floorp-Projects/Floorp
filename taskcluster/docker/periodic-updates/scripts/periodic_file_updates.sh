@@ -440,7 +440,7 @@ function push_repo {
   do
     echo "Removing old request $diff"
     # There is no 'arc abandon', see bug 1452082
-    echo '{"transactions": [{"type":"abandon"}], "objectIdentifier": "'"${diff}"'"}' | arc call-conduit differential.revision.edit
+    echo '{"transactions": [{"type":"abandon", "value": true}], "objectIdentifier": "'"${diff}"'"}' | arc call-conduit differential.revision.edit
   done
 
   $ARC diff --verbatim --reviewers "${REVIEWERS}"
