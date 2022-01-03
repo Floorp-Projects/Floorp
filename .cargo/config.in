@@ -50,7 +50,7 @@ rev = "c51b63595a27a6ef45161012323e0261475c10c9"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "23a37b0881b20f923f952b3c0648f2cd4a6acc9f"
+rev = "a1a6ba41f0c610ebe751639f25f037474ca52941"
 
 [source."https://github.com/kvark/dummy-web"]
 git = "https://github.com/kvark/dummy-web"
