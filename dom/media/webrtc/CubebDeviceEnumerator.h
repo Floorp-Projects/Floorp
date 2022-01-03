@@ -32,7 +32,6 @@ class CubebDeviceEnumerator final {
   // From a device name, return the info for this device, if it's a valid name,
   // or nullptr otherwise.
   // This method is safe to call from any thread.
-  already_AddRefed<AudioDeviceInfo> DeviceInfoFromName(const nsString& aName);
   enum class Side {
     INPUT,
     OUTPUT,

@@ -288,15 +288,6 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 }
 
 already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
-    const nsString& aName) {
-  RefPtr<AudioDeviceInfo> other = DeviceInfoFromName(aName, Side::INPUT);
-  if (other) {
-    return other.forget();
-  }
-  return DeviceInfoFromName(aName, Side::OUTPUT);
-}
-
-already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
     const nsString& aName, Side aSide) {
   MutexAutoLock lock(mMutex);
 
