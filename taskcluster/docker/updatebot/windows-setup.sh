@@ -20,9 +20,12 @@ MOZ_FETCHES_PATH="$PWD"
 #########################################################
 # Install dependencies
 
+# Move depot_tools
+cd "$MOZ_FETCHES_DIR"
+mv depot_tools.git depot_tools
+
 # Git is at /c/Program Files/Git/cmd/git.exe
 #  It's in PATH for this script (confusingly) but not in PATH so we need to add it
-which git
 export PATH="/c/Program Files/Git/cmd:$PATH"
 
 # php & arcanist
@@ -40,10 +43,6 @@ cd "$MOZ_FETCHES_DIR"
 
 export PATH="$MOZ_FETCHES_PATH/php-win:$PATH"
 export PATH="$MOZ_FETCHES_PATH/arcanist.git/bin:$PATH"
-
-
-
-ls "$MOZ_FETCHES_PATH/arcanist.git/bin"
 
 # get Updatebot
 cd "$MOZ_FETCHES_DIR"
