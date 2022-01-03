@@ -75,6 +75,11 @@ function observer(subject, topic, state) {
 
 function onExamineResponse(subject) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+  // If message was already read or is not related to "example.com",
+  // don't examine it.
+  if (!channel.URI.spec.includes("example.com") || readMessage) {
+    return;
+  }
   info("onExamineResponse with " + channel.URI.spec);
   if (channel.URI.spec.includes("reset")) {
     try {
