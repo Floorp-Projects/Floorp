@@ -324,7 +324,7 @@ class BrowsertimeRunner(NodeRunner):
         msg = msg.replace("{", "{{").replace("}", "}}")
         level = level.lower()
         if "error" in level:
-            self.error("Mozperftest failed to run: ", msg)
+            self.error("Mozperftest failed to run: {}".format(msg), msg)
         elif "warning" in level:
             self.warning(msg)
         else:
