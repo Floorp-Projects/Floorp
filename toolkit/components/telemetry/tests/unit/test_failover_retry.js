@@ -10,6 +10,13 @@ const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
 // Trigger a proper telemetry init.
