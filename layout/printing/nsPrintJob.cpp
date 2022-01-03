@@ -728,18 +728,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         // No dialog service available
         rv = NS_ERROR_NOT_IMPLEMENTED;
       }
-    } else if (printSilently && !printingViaParent) {
-      // The condition above is only so contorted in order to enter this block
-      // under the exact same circumstances as we used to, in order to
-      // minimize risk for this change which may be getting late Beta uplift.
-      // Frankly calling SetupSilentPrinting should not be necessary any more
-      // since nsDeviceContextSpecGTK::EndDocument does what we need using a
-      // Runnable instead of spinning an event loop in a risk place like here.
-      // Additionally we should never need to do this when setting up print
-      // preview, we would only need it for printing.
-
-      // Call any code that requires a run of the event loop.
-      rv = printData->mPrintSettings->SetupSilentPrinting();
     }
     // Check explicitly for abort because it's expected
     if (rv == NS_ERROR_ABORT) return rv;
