@@ -6,6 +6,7 @@
 
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "nsCUPSShim.h"
 #include "nsPrinterCUPS.h"
 #include "nsString.h"
@@ -89,19 +90,42 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
     return {};
   }
 
+  auto FreeDestsAndClear = [](nsTArray<PrinterInfo>& aArray) {
+    for (auto& info : aArray) {
+      CupsShim().cupsFreeDests(1, static_cast<cups_dest_t*>(info.mCupsHandle));
+    }
+    aArray.Clear();
+  };
+
   nsTArray<PrinterInfo> printerInfoList;
-  if (!CupsShim().cupsEnumDests(
+  if (CupsShim().cupsEnumDests(
           CUPS_DEST_FLAGS_NONE,
-          0 /* timeout, 0 timeout shouldn't be a problem since we are masking
-               CUPS_PRINTER_DISCOVERED */
-          ,
+          int(StaticPrefs::print_cups_enum_dests_timeout_ms()),
+          nullptr /* cancel* */, CUPS_PRINTER_LOCAL,
+          CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER, &CupsDestCallback,
+          &printerInfoList)) {
+    return printerInfoList;
+  }
+
+  // An error occurred - retry with CUPS_PRINTER_DISCOVERED masked out (since
+  // it looks like there are a lot of error cases for that in cupsEnumDests):
+  FreeDestsAndClear(printerInfoList);
+  if (CupsShim().cupsEnumDests(
+          CUPS_DEST_FLAGS_NONE,
+          0 /* 0 timeout should be okay when masking CUPS_PRINTER_DISCOVERED */,
           nullptr /* cancel* */, CUPS_PRINTER_LOCAL,
           CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER | CUPS_PRINTER_DISCOVERED,
           &CupsDestCallback, &printerInfoList)) {
-    return {};
+    return printerInfoList;
   }
 
-  return printerInfoList;
+  // Another error occurred. Maybe printerInfoList could be partially
+  // populated, so perhaps we could return it without clearing it in the hope
+  // that there are some usable dests. However, presuambly CUPS doesn't
+  // guarantee that any dests that it added are complete and safe to use when
+  // an error occurs?
+  FreeDestsAndClear(printerInfoList);
+  return {};
 }
 
 RefPtr<nsIPrinter> nsPrinterListCUPS::CreatePrinter(PrinterInfo aInfo) const {
