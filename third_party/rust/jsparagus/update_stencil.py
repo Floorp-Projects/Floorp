@@ -80,6 +80,11 @@ def extract_opcodes(paths):
     with open(paths['Opcodes.h'], 'r') as f:
         for line in f:
             line = line.strip()
+
+            if line.startswith('IF_RECORD_TUPLE('):
+                # Ignore Record and Tuple opcodes
+                continue
+
             if line.startswith('MACRO(') and ',' in line:
                 line = line[5:]
                 if line.endswith(' \\'):
@@ -593,11 +598,24 @@ def generate_emit_methods(out_f, opcodes, types):
         """))
 
 
-def update_emitter(path, types):
+def get_filtered_opcodes():
     sys.path.append(vm_dir)
     from jsopcode import get_opcodes
 
     _, opcodes = get_opcodes(args.PATH_TO_MOZILLA_CENTRAL)
+
+    filtered_opcodes = {}
+    for op, opcode in opcodes.items():
+        if opcode.type_name in ['Record literals', 'Tuple literals']:
+            continue
+
+        filtered_opcodes[op] = opcode
+
+    return filtered_opcodes
+
+
+def update_emitter(path, types):
+    opcodes = get_filtered_opcodes()
 
     tmppath = f'{path}.tmp'
 
@@ -630,10 +648,7 @@ def update_emitter(path, types):
 
 
 def update_function(path, types, flags):
-    sys.path.append(vm_dir)
-    from jsopcode import get_opcodes
-
-    _, opcodes = get_opcodes(args.PATH_TO_MOZILLA_CENTRAL)
+    opcodes = get_filtered_opcodes()
 
     tmppath = f'{path}.tmp'
 
