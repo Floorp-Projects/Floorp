@@ -96,6 +96,8 @@
 #include "nsPIDOMWindow.h"
 #include "ExternalHelperAppChild.h"
 
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
+
 #ifdef XP_WIN
 #  include "nsWindowsHelpers.h"
 #endif
@@ -1741,6 +1743,17 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   // Now get the URI
   if (aChannel) {
     aChannel->GetURI(getter_AddRefs(mSourceUrl));
+    // HTTPS-Only/HTTPS-FirstMode tries to upgrade connections to https. Once
+    // the download is in progress we set that flag so that timeout counter
+    // measures do not kick in.
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    if (nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin) ||
+        nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin)) {
+      uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+      httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_DOWNLOAD_IN_PROGRESS;
+      loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+    }
   }
 
   if (!mForceSave && StaticPrefs::browser_download_enable_spam_prevention() &&

@@ -680,6 +680,10 @@ static void LogHTTPSOnlyInfo(nsILoadInfo* aLoadInfo) {
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("    - HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS"));
   }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DOWNLOAD_IN_PROGRESS) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_DOWNLOAD_IN_PROGRESS"));
+  }
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE) {
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("    - HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE"));
