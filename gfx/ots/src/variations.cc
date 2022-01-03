@@ -206,7 +206,7 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
           return OTS_FAILURE_MSG("Failed to read tuple coordinate");
         }
         if (coordinate < -0x4000 || coordinate > 0x4000) {
-          return OTS_FAILURE_MSG("Invalid tuple coordinate");
+          return OTS_FAILURE_MSG("Tuple coordinate not in the range [-1.0, 1.0]: %g", coordinate / 16384.);
         }
       }
     }
@@ -219,7 +219,7 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
           return OTS_FAILURE_MSG("Failed to read tuple coordinate");
         }
         if (coordinate < -0x4000 || coordinate > 0x4000) {
-          return OTS_FAILURE_MSG("Invalid tuple coordinate");
+          return OTS_FAILURE_MSG("Tuple coordinate not in the range [-1.0, 1.0]: %g", coordinate / 16384.);
         }
         startTuple.push_back(coordinate);
       }
@@ -231,7 +231,7 @@ bool ParseVariationData(const Font* font, const uint8_t* data, size_t length,
           return OTS_FAILURE_MSG("Failed to read tuple coordinate");
         }
         if (coordinate < -0x4000 || coordinate > 0x4000) {
-          return OTS_FAILURE_MSG("Invalid tuple coordinate");
+          return OTS_FAILURE_MSG("Tuple coordinate not in the range [-1.0, 1.0]: %g", coordinate / 16384.);
         }
         endTuple.push_back(coordinate);
       }
