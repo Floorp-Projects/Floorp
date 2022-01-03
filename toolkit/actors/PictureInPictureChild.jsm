@@ -54,6 +54,8 @@ const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
+const TOGGLE_VISIBILITY_THRESHOLD_PREF =
+  "media.videocontrols.picture-in-picture.video-toggle.visibility-threshold";
 
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
@@ -239,6 +241,11 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let state = this.weakDocStates.get(this.document);
 
+    let visibilityThresholdPref = Services.prefs.getFloatPref(
+      TOGGLE_VISIBILITY_THRESHOLD_PREF,
+      "0.9"
+    );
+
     if (!state) {
       state = {
         // A reference to the IntersectionObserver that's monitoring for videos
@@ -270,7 +277,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         // this is false.
         isTrackingVideos: false,
         togglePolicy: TOGGLE_POLICIES.DEFAULT,
-        toggleVisibilityThreshold: 1.0,
+        toggleVisibilityThreshold: visibilityThresholdPref,
         // The documentURI that has been checked with toggle policies and
         // visibility thresholds for this document. Note that the documentURI
         // might change for a document via the history API, so we remember
@@ -875,6 +882,11 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         ? PictureInPictureToggleChild.getSiteOverrides()
         : gSiteOverrides;
 
+      let visibilityThresholdPref = Services.prefs.getFloatPref(
+        TOGGLE_VISIBILITY_THRESHOLD_PREF,
+        "0.9"
+      );
+
       // Do we have any toggle overrides? If so, try to apply them.
       for (let [override, { policy, visibilityThreshold }] of siteOverrides) {
         if (
@@ -882,7 +894,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
           override.matches(this.document.documentURI)
         ) {
           state.togglePolicy = policy || TOGGLE_POLICIES.DEFAULT;
-          state.toggleVisibilityThreshold = visibilityThreshold || 1.0;
+          state.toggleVisibilityThreshold =
+            visibilityThreshold || visibilityThresholdPref;
           break;
         }
       }
