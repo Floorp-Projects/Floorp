@@ -155,7 +155,11 @@
       "login": false,
       "name": "buzzfeed",
       "test_url": "https://www.buzzfeed.com/",
-      "secondary_url": "https://www.buzzfeed.com/quizzes"
+      "secondary_url": "https://www.buzzfeed.com/quizzes",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      ]
     },
     {
       "login": false,
@@ -169,18 +173,30 @@
         "media.autoplay.block-webaudio": true,
         "media.allowed-to-play.enabled": false,
         "media.block-autoplay-until-in-foreground": true
-      }
+      },
+      "test_cmds":  [
+        ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
+        ["click.byXpathAndWait", "/html/body/div[13]/div[2]/div/section/div[17]/button[2]"]
+      ]
     },
     {
       "login": false,
       "name": "ebay",
       "test_url": "https://www.ebay.com/",
-      "secondary_url": "https://www.ebay.com/deals"
+      "secondary_url": "https://www.ebay.com/deals",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[5]/div[1]/div[2]/div[2]/div[2]/a"],
+        ["click.byXpathAndWait", "/html/body/div[4]/div/div[2]/section[3]/section/button"]
+      ]
     },
     {
       "login": false,
       "name": "espn",
-      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words"
+      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
+        ["click.byXpathAndWait", "/html/body/div[10]/div[2]/div[3]/div[1]/button"]
+      ]
     },
     {
       "login": false,
@@ -192,17 +208,29 @@
       "login": false,
       "name": "facebook",
       "test_url": "https://www.facebook.com",
-      "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark"
+      "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"],
+        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"]
+      ]
     },
     {
       "login": false,
       "name": "fandom",
-      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase"
+      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[1]"],
+        ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[2]"]
+      ]
     },
     {
       "login": true,
       "name": "google",
-      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
+      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[3]/div[3]/span/div/div/div/div[3]/button[1]/div"],
+        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      ]
     },
     {
       "login": false,
@@ -218,7 +246,10 @@
     {
       "login": true,
       "name": "google-mail",
-      "test_url": "https://mail.google.com/"
+      "test_url": "https://mail.google.com/",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div/div/span[2]/a[2]"]
+      ]
     },
     {
       "login": false,
@@ -236,7 +267,11 @@
       "login": false,
       "name": "imgur",
       "test_url": "https://imgur.com/gallery/m5tYJL6",
-      "inject_deterministic": false
+      "inject_deterministic": false,
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      ]
     },
     {
       "login": true,
@@ -253,7 +288,14 @@
       "login": false,
       "name": "microsoft",
       "test_url": "https://www.microsoft.com/en-us/",
-      "secondary_url": "https://support.microsoft.com/en-us"
+      "secondary_url": "https://support.microsoft.com/en-us",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div/div[2]/button[2]"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[2]/div/div/div[2]/label"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[3]/div/div/div[2]/label"],
+        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[4]/div/div/div[2]/label"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/button[1]"]
+      ]
     },
     {
       "login": true,
@@ -265,7 +307,11 @@
       "login": false,
       "name": "nytimes",
       "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html",
-      "secondary_url": "https://www.nytimes.com/section/opinion/columnists"
+      "secondary_url": "https://www.nytimes.com/section/opinion/columnists",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div/div/div[2]/div/div[2]/div/div/div[1]/div[3]/div[3]/a"],
+        ["click.byXpathAndWait", "//*[@id='opt-out-of-new-york-times-nonessential-trackers']"]
+      ]
     },
     {
       "login": true,
@@ -293,7 +339,10 @@
       "login": false,
       "name": "reddit",
       "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/",
-      "secondary_url": "https://www.reddit.com/r/technology/"
+      "secondary_url": "https://www.reddit.com/r/technology/",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[3]/div[1]/section/div/section/section/form[1]/button"]
+      ]
     },
     {
       "login": true,
@@ -304,7 +353,11 @@
     {
       "login": false,
       "name": "twitch",
-      "test_url": "https://www.twitch.tv/videos/326804629"
+      "test_url": "https://www.twitch.tv/videos/326804629",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[1]/div/div/div[3]/div/button/div/div/div"],
+        ["click.byXpathAndWait", "/html/body/div[3]/div/div/div/div/div/div[1]/div[2]/div/button/div/div"]
+      ]
     },
     {
       "login": true,
@@ -314,7 +367,11 @@
     {
       "login": false,
       "name": "wikia",
-      "test_url": "https://marvel.fandom.com/wiki/Black_Panther"
+      "test_url": "https://marvel.fandom.com/wiki/Black_Panther",
+      "test_cmds":  [
+        ["click.byXpathAndWait", "/html/body/div[6]/div/div/div[2]/div[1]"],
+        ["click.byXpathAndWait", "/html/body/div[7]/div/div/div[2]/div[2]"]
+      ]
     },
     {
       "login": false,
@@ -331,12 +388,20 @@
       "login": false,
       "name": "youtube",
       "test_url": "https://www.youtube.com",
-      "secondary_url": "https://www.youtube.com/watch?v=JrdEMERq8MA"
+      "secondary_url": "https://www.youtube.com/watch?v=JrdEMERq8MA",
+      "test_cmds ":  [
+        ["click.byXpathAndWait", "/html/body/ytd-app/ytd-consent-bump-v2-lightbox/tp-yt-paper-dialog/div[4]/div[2]/div[5]/div[2]/ytd-button-renderer[1]/a"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[3]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[4]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
+        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      ]
     },
     {
       "login": false,
       "name": "cnn-nav",
       "test_url": "https://www.cnn.com/",
+      "type": "interactive",
       "test_cmds":  [
         ["measure.start", "landing"],
         ["navigate", "https://www.cnn.com"],
@@ -352,6 +417,7 @@
       "login": false,
       "name": "reddit-billgates-ama",
       "test_url": "https://www.reddit.com/",
+      "type": "interactive",
       "test_cmds":  [
         ["measure.start", "billg-ama"],
         ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"],
@@ -367,6 +433,7 @@
       "login": false,
       "name": "reddit-billgates-post",
       "test_url": "https://www.reddit.com/user/thisisbillgates/",
+      "type": "interactive",
       "test_cmds":  [
         ["measure.start", "billg"],
         ["navigate", "https://www.reddit.com/user/thisisbillgates/"],
@@ -394,6 +461,7 @@
       "login": false,
       "name": "facebook-nav",
       "test_url": "https://www.facebook.com/",
+      "type": "interactive",
       "test_cmds":  [
         ["navigate", "https://www.facebook.com/login"],
         ["wait.byTime", 30000],
