@@ -85,6 +85,7 @@ jobs:
             taskcluster-proxy: true
             env:
                 TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/vc++-2019-runtime.manifest"
+                MSYSTEM: "MINGW64"
         run:
             using: run-task
             cwd: '{checkout}'
