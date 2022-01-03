@@ -17,17 +17,6 @@ static constexpr gchar kCupsDuplexNone[] = "None";
 static constexpr gchar kCupsDuplexNoTumble[] = "DuplexNoTumble";
 static constexpr gchar kCupsDuplexTumble[] = "DuplexTumble";
 
-static gboolean ref_printer(GtkPrinter* aPrinter, gpointer aData) {
-  ((nsPrintSettingsGTK*)aData)->SetGtkPrinter(aPrinter);
-  return TRUE;
-}
-
-static gboolean printer_enumerator(GtkPrinter* aPrinter, gpointer aData) {
-  if (gtk_printer_is_default(aPrinter)) return ref_printer(aPrinter, aData);
-
-  return FALSE;  // Keep 'em coming...
-}
-
 static GtkPaperSize* moz_gtk_paper_size_copy_to_new_custom(
     GtkPaperSize* oldPaperSize) {
   // We make a "custom-ified" copy of the paper size so it can be changed later.
@@ -595,21 +584,6 @@ nsPrintSettingsGTK::GetEffectivePageSize(double* aWidth, double* aHeight) {
     *aWidth = *aHeight;
     *aHeight = temp;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrintSettingsGTK::SetupSilentPrinting() {
-  // We have to get a printer here, rather than when the print settings are
-  // constructed. This is because when we request sync, GTK makes us wait in the
-  // *event loop* while waiting for the enumeration to finish. We must do this
-  // when event loop runs are expected.
-  gtk_enumerate_printers(printer_enumerator, this, nullptr, TRUE);
-
-  // XXX If no default printer set, get the first one.
-  if (!GTK_IS_PRINTER(mGTKPrinter))
-    gtk_enumerate_printers(ref_printer, this, nullptr, TRUE);
-
   return NS_OK;
 }
 
