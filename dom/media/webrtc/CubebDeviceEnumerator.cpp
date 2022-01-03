@@ -115,16 +115,12 @@ CubebDeviceEnumerator::~CubebDeviceEnumerator() {
 
 RefPtr<const AudioDeviceSet>
 CubebDeviceEnumerator::EnumerateAudioInputDevices() {
-  MutexAutoLock lock(mMutex);
-  EnumerateAudioDevices(Side::INPUT);
-  return mInputDevices;
+  return EnumerateAudioDevices(Side::INPUT);
 }
 
 RefPtr<const AudioDeviceSet>
 CubebDeviceEnumerator::EnumerateAudioOutputDevices() {
-  MutexAutoLock lock(mMutex);
-  EnumerateAudioDevices(Side::OUTPUT);
-  return mOutputDevices;
+  return EnumerateAudioDevices(Side::OUTPUT);
 }
 
 #ifndef ANDROID
@@ -220,10 +216,10 @@ static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
 }
 #endif  // non ANDROID
 
-void CubebDeviceEnumerator::EnumerateAudioDevices(
+RefPtr<const AudioDeviceSet> CubebDeviceEnumerator::EnumerateAudioDevices(
     CubebDeviceEnumerator::Side aSide) {
-  mMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aSide == Side::INPUT || aSide == Side::OUTPUT);
+  MutexAutoLock lock(mMutex);
 
   RefPtr<AudioDeviceSet> devices;
   bool manualInvalidation = true;
@@ -239,7 +235,7 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 
   cubeb* context = GetCubebContext();
   if (!context) {
-    return;
+    return new AudioDeviceSet();
   }
 
 #ifdef ANDROID
@@ -280,25 +276,17 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 #endif
 
   if (aSide == Side::INPUT) {
-    mInputDevices = std::move(devices);
+    mInputDevices = devices;
   } else {
-    mOutputDevices = std::move(devices);
+    mOutputDevices = devices;
   }
+  return devices;
 }
 
 already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
     const nsString& aName, Side aSide) {
-  MutexAutoLock lock(mMutex);
-
-  nsTArray<RefPtr<AudioDeviceInfo>>& devices =
-      (aSide == Side::INPUT) ? *mInputDevices : *mOutputDevices;
-  bool manualInvalidation = (aSide == Side::INPUT) ? mManualInputInvalidation
-                                                   : mManualOutputInvalidation;
-
-  if (devices.IsEmpty() || manualInvalidation) {
-    EnumerateAudioDevices(aSide);
-  }
-  for (RefPtr<AudioDeviceInfo>& device : devices) {
+  RefPtr devices = EnumerateAudioDevices(aSide);
+  for (const RefPtr<AudioDeviceInfo>& device : *devices) {
     if (device->Name().Equals(aName)) {
       RefPtr<AudioDeviceInfo> other = device;
       return other.forget();
@@ -309,17 +297,8 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
 }
 
 RefPtr<AudioDeviceInfo> CubebDeviceEnumerator::DefaultDevice(Side aSide) {
-  MutexAutoLock lock(mMutex);
-
-  nsTArray<RefPtr<AudioDeviceInfo>>& devices =
-      (aSide == Side::INPUT) ? *mInputDevices : *mOutputDevices;
-  bool manualInvalidation = (aSide == Side::INPUT) ? mManualInputInvalidation
-                                                   : mManualOutputInvalidation;
-
-  if (devices.IsEmpty() || manualInvalidation) {
-    EnumerateAudioDevices(aSide);
-  }
-  for (RefPtr<AudioDeviceInfo>& device : devices) {
+  RefPtr devices = EnumerateAudioDevices(aSide);
+  for (const RefPtr<AudioDeviceInfo>& device : *devices) {
     if (device->Preferred()) {
       RefPtr<AudioDeviceInfo> other = device;
       return other.forget();
