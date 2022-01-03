@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import * as timings from "./timings";
 import { prefs, asyncStore, features } from "./prefs";
 import { getDocument } from "./editor/source-documents";
 
@@ -72,7 +71,6 @@ export function setupHelper(obj) {
     prefs,
     asyncStore,
     features,
-    timings,
     getCM,
     helpers: {
       findSource: url => findSource(dbg, url),
