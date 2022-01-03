@@ -86,6 +86,12 @@ jobs:
             env:
                 TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/updatebot.manifest"
                 MSYSTEM: "MINGW64"
+# begin _GENERATE_DEPOT_TOOLS_BINARIES_
+#            artifacts:
+#                - type: directory
+#                  name: public/depot_tools.zip
+#                  path: build\src\obj-build\depot_tools
+# end _GENERATE_DEPOT_TOOLS_BINARIES_
         run:
             using: run-task
             cwd: '{checkout}'
