@@ -186,25 +186,16 @@ TEST(CubebDeviceEnumerator, DeviceInfoFromName)
       RefPtr<CubebDeviceEnumerator> enumerator =
           CubebDeviceEnumerator::GetInstance();
 
-      RefPtr<AudioDeviceInfo> devInfo =
-          enumerator->DeviceInfoFromName(NS_ConvertUTF8toUTF16(device_name));
-      EXPECT_TRUE(devInfo) << "the device exist";
-      EXPECT_EQ(devInfo->Name(), NS_ConvertUTF8toUTF16(device_name))
-          << "verify the device";
-
       EnumeratorSide side = (deviceType == CUBEB_DEVICE_TYPE_INPUT)
                                 ? EnumeratorSide::INPUT
                                 : EnumeratorSide::OUTPUT;
-      devInfo = enumerator->DeviceInfoFromName(
+      RefPtr<AudioDeviceInfo> devInfo = enumerator->DeviceInfoFromName(
           NS_ConvertUTF8toUTF16(device_name), side);
       EXPECT_TRUE(devInfo) << "the device exist";
       EXPECT_EQ(devInfo->Name(), NS_ConvertUTF8toUTF16(device_name))
           << "verify the device";
 
       mock->RemoveDevice(id_2);
-      devInfo =
-          enumerator->DeviceInfoFromName(NS_ConvertUTF8toUTF16(device_name));
-      EXPECT_FALSE(devInfo) << "the device does not exist any more";
 
       devInfo = enumerator->DeviceInfoFromName(
           NS_ConvertUTF8toUTF16(device_name), side);
