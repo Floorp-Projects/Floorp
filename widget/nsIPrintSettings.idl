@@ -335,16 +335,6 @@ interface nsIPrintSettings : nsISupports
   [noscript, notxpcom, nostdcall] nsNativeIntMargin GetEdgeInTwips();
 
   /**
-   * We call this function so that anything that requires a run of the event loop
-   * can do so safely. The print dialog runs the event loop but in silent printing
-   * that doesn't happen.
-   *
-   * Either this or ShowPrintDialog (but not both) MUST be called by the print engine
-   * before printing, otherwise printing can fail on some platforms.
-   */
-  [noscript] void SetupSilentPrinting();
-
-  /**
    * Sets/Gets the "unwriteable margin" for the page format.  This defines
    * the boundary from which we'll measure the EdgeInTwips and MarginInTwips
    * attributes, to place the headers and content, respectively.
