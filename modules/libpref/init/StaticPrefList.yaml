@@ -8121,6 +8121,16 @@
   value: false
 #endif
 
+# Whether cubeb sandbox (AudioIPC) is v2
+- name: media.cubeb.sandbox_v2
+  type: bool
+  mirror: always
+#if defined(XP_MACOSX)
+  value: true
+#else
+  value: false
+#endif
+
 # Whether or not to pass AUDCLNT_STREAMOPTIONS_RAW when initializing audio
 # streams when using WASAPI.
 # 0 - don't use RAW streams
