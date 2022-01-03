@@ -265,15 +265,15 @@ static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
-constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
-    wasm::FrameWithTls::callerTLSOffset() + ShadowStackSpace;
-constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
-    wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
+constexpr uint32_t WasmCallerTlsOffsetBeforeCall =
+    wasm::FrameWithTls::callerTlsOffsetWithoutFrame();
+constexpr uint32_t WasmCalleeTlsOffsetBeforeCall =
+    wasm::FrameWithTls::calleeTlsOffsetWithoutFrame();
 
-constexpr uint32_t WasmCallerTLSOffsetAfterCall =
-    WasmCallerTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
-constexpr uint32_t WasmCalleeTLSOffsetAfterCall =
-    WasmCalleeTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+constexpr uint32_t WasmCallerTlsOffsetAfterCall =
+    WasmCallerTlsOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+constexpr uint32_t WasmCalleeTlsOffsetAfterCall =
+    WasmCalleeTlsOffsetBeforeCall + SizeOfReturnAddressAfterCall;
 
 // Allocation sites may be passed to GC thing allocation methods either via a
 // register (for baseline compilation) or an enum indicating one of the
@@ -5477,11 +5477,6 @@ static inline size_t StackDecrementForCall(uint32_t alignment,
 // Helper for generatePreBarrier.
 inline DynFn JitPreWriteBarrier(MIRType type);
 }  // namespace jit
-
-namespace wasm {
-const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp);
-TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp);
-}  // namespace wasm
 
 }  // namespace js
 
