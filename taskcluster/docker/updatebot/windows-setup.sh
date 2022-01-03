@@ -35,6 +35,7 @@ cp "$GECKO_PATH/taskcluster/docker/updatebot/windows-php.ini" "$MOZ_FETCHES_DIR/
 
 cd "$MOZ_FETCHES_DIR/arcanist.git"
 patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_windows_stream.patch"
+patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_patch_size.patch"
 cd "$MOZ_FETCHES_DIR"
 
 export PATH="$MOZ_FETCHES_PATH/php-win:$PATH"
