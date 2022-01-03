@@ -986,11 +986,8 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
   nsCOMPtr<nsIChannel> origChannel = mDocumentLoadListener->GetChannel();
   nsCOMPtr<nsILoadInfo> origLoadInfo = origChannel->LoadInfo();
   uint32_t origHttpsOnlyStatus = origLoadInfo->GetHttpsOnlyStatus();
-  uint32_t topLevelLoadInProgress =
-      origHttpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS;
-  uint32_t downloadInProgress =
-      origHttpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DOWNLOAD_IN_PROGRESS;
-  if (topLevelLoadInProgress || downloadInProgress) {
+  if ((origHttpsOnlyStatus &
+       nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS)) {
     return NS_OK;
   }
 
