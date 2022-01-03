@@ -7132,7 +7132,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-12-22T15:14:14Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-12-30T15:13:57Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8870,9 +8870,6 @@ live
 
 // living : 2015-07-30 Lifestyle Domain Holdings, Inc.
 living
-
-// lixil : 2015-03-19 LIXIL Group Corporation
-lixil
 
 // llc : 2017-12-14 Afilias Limited
 llc
