@@ -599,6 +599,21 @@ nsPrintSettingsGTK::GetEffectivePageSize(double* aWidth, double* aHeight) {
 }
 
 NS_IMETHODIMP
+nsPrintSettingsGTK::SetupSilentPrinting() {
+  // We have to get a printer here, rather than when the print settings are
+  // constructed. This is because when we request sync, GTK makes us wait in the
+  // *event loop* while waiting for the enumeration to finish. We must do this
+  // when event loop runs are expected.
+  gtk_enumerate_printers(printer_enumerator, this, nullptr, TRUE);
+
+  // XXX If no default printer set, get the first one.
+  if (!GTK_IS_PRINTER(mGTKPrinter))
+    gtk_enumerate_printers(ref_printer, this, nullptr, TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPrintSettingsGTK::GetPageRanges(nsTArray<int32_t>& aPages) {
   GtkPrintPages gtkRange = gtk_print_settings_get_print_pages(mPrintSettings);
   if (gtkRange != GTK_PRINT_PAGES_RANGES) {
