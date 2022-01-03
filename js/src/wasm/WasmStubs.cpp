@@ -820,7 +820,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.loadWasmPinnedRegsFromTls();
 
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
@@ -1279,7 +1279,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   masm.loadWasmPinnedRegsFromTls();
 
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
@@ -1601,7 +1601,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   // Load tls; from now on, WasmTlsReg is live.
   masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
   masm.loadWasmPinnedRegsFromTls();
 
   // Actual call.
@@ -2677,10 +2677,10 @@ bool wasm::GenerateIndirectStub(MacroAssembler& masm,
 
   // Preserve caller's TLS and callee's TLS.
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCallerTLSOffsetAfterCall));
+                Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall));
   masm.movePtr(WasmTableCallScratchReg0, WasmTlsReg);
   masm.storePtr(WasmTableCallScratchReg0,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetAfterCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetAfterCall));
   masm.loadWasmPinnedRegsFromTls();
   masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
 
@@ -2699,7 +2699,7 @@ bool wasm::GenerateIndirectStub(MacroAssembler& masm,
   // Restore the caller state and return.
   PopFrame(masm);
   masm.subPtr(Imm32(wasm::TrampolineFpTag), FramePointer);
-  masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTLSOffsetAfterCall),
+  masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall),
                WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
   masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
