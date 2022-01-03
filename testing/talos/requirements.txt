@@ -11,3 +11,4 @@ psutil>=3.1.1
 simplejson>=2.1.1
 requests>=2.9.1
 wptserve>=3.0
+manifestparser>=2.1.0
