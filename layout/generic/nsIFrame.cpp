@@ -8794,7 +8794,9 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
     blockFrame = newBlock;
     nsAutoLineIterator iter = blockFrame->GetLineIterator();
     int32_t thisLine = iter->FindLineContaining(lineFrame);
-    MOZ_ASSERT(thisLine >= 0, "Failed to find line!");
+    if (NS_WARN_IF(thisLine < 0)) {
+      return NS_ERROR_FAILURE;
+    }
 
     int edgeCase = 0;  // no edge case. this should look at thisLine
 
