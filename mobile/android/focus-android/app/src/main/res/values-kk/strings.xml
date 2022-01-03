@@ -637,6 +637,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Кеңейтілген</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Сайт рұқсаттары</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Автоойнату</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Аудио мен видеоны рұқсат ету</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Тек аудионы бұғаттау</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Ұсынылатын</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Аудио мен видеоны бұғаттау</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Зерттеулер</string>
 
@@ -775,8 +793,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Тек-HTTPS режимі</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS %1$s және сіз кіретін веб-сайттар арасында қауіпсіз, шифрленген байланысты ұсынады. Веб-сайттардың көбі HTTPS қолдайды, тек-HTTPS режимі іске қосылған болса, %1$s барлық байланыстарды HTTPS-ке дейін жаңартады.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Қауіпсіздікті арттыру үшін сайттарға HTTPS арқылы автоматты түрде қосылу әрекетін жасайды. HTTPS байланысы сіз кіретін веб-сайттарға дейін қауіпсіз, шифрленген байланысты қамтамасыз етеді.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Ережеден бөлек</string>
@@ -840,8 +859,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Өшіру</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Атын өзгерту</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Атын өзгерту</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Жарлық атауы</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -859,6 +883,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Құрылғы темасына сүйену</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Сіз сұраған сайт HTTPS хаттамасын қолдамайды</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Бастапұы баптаулар бойынша, %1$s қауіпсіздікті арттыру үшін HTTPS арқылы байланысуға әрекеттенеді. Бұл параметрді өзгерту немесе қосымша ақпарат алу үшін Параметрлер &gt; Жекелік және қауіпсіздік &gt; Қауіпсіздік тармағына өтіңіз.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

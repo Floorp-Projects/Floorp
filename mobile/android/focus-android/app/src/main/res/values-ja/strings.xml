@@ -19,10 +19,10 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">閲覧履歴が消去されました。</string>
-    <string name="feedback_erase2">ブラウジング履歴を消去しました</string>
+    <string name="feedback_erase2">閲覧履歴を消去しました</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
-    <string name="feedback_erase_custom_tab">タブのブラウジング履歴が消去されました。</string>
+    <string name="feedback_erase_custom_tab">タブの閲覧履歴が消去されました。</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">%1$s を検索</string>
@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">詳細</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">サイトの許可設定</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">自動再生</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">音声と動画を許可</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">音声のみブロック</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">おすすめ</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">音声と動画をブロック</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">調査</string>
 
@@ -778,8 +796,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS-Only モード</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS は %1$s とあなたが訪れるウェブサイトとの間に、暗号化された安全な接続を提供します。多くのウェブサイトは HTTPS に対応しており、HTTPS-Only モードを有効にすると %1$s はすべての接続を HTTPS に切り替えます。</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">セキュリティ強化のため、自動的に HTTPS を使用してサイトへの接続を試みます。HTTPS 接続はあなたが訪れるウェブサイトへの安全な暗号化された接続を提供します。</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外</string>
@@ -843,8 +862,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">削除</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">タイトル変更</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">タイトル変更</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">ショートカット名</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -862,6 +886,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">端末のテーマに従う</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">要求されたサイトは HTTPS に対応していません</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">セキュリティ強化のため、%1$s は既定で HTTPS を使用した接続を試みます。この設定の変更または詳細を確認するには、[設定] &gt; [プライバシーとセキュリティ] &gt; [セキュリティ] を開いてください。</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -18,7 +18,7 @@
     <string name="teaser">مرور ناشناس خودکار.\nمرور کنید. پاک کنید. تکرار کنید.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">تاریخچه مرور شما حذف شد.</string>
+    <string name="feedback_erase">تاریخچهٔ مرور شما پاک شد.</string>
     <string name="feedback_erase2">تاریخچهٔ مرور، پاک شد</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
@@ -143,12 +143,12 @@
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
-    <string name="preference_search_summary">تنظیم پیش‌فرض، پرکردن خودکار</string>
+    <string name="preference_search_summary">تنظیم پیش‌فرض، تکمیل خودکار</string>
 
     <!-- Preference category description for settings screen for settings related to Mozilla -->
     <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_mozilla_summary">درباره‌ی %1$s، راهنما</string>
+    <string name="preference_mozilla_summary">دربارهٔ %1$s، راهنما</string>
 
     <!-- Preference category for ad blocking and enhanced tracking protection settings -->
     <string name="preference_category_tracking_protection3">محافظت پیشرفته در برابر ردیابی</string>
@@ -157,13 +157,13 @@
     <string name="preference_category_web_content">محتوای وب</string>
 
     <!-- Preference category: stealth settings for while switching apps -->
-    <string name="preference_category_switching_apps">تعوض برنامه‌ها</string>
+    <string name="preference_category_switching_apps">تعویض برنامه‌ها</string>
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">عمومی</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">مرور،‌ زبانه‌ها و زبان پیش فرض</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">مرورگر پیش‌فرض، زبان</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">گردآوری داده و موارد استفاده</string>
@@ -174,7 +174,7 @@
     <string name="preference_show_search_suggestions">دریافت پیشنهادات جست‌وجو</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">%1$sچیزهایی رو که شما در نوار آدرس وارد می‌کنید برای موتور جست‌وجوی شما ارسال خواهد کرد</string>
+    <string name="preference_show_search_suggestions_summary">%1$s چیزی که شما در نوار آدرس وارد می‌کنید را برای موتور جست‌وجو شما ارسال خواهد کرد</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">پیش‌فرض</string>
@@ -189,19 +189,21 @@
     <string name="preference_state_off">خاموش</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
-    <string name="preference_subitem_autocomplete">تکمیل خودکار URL</string>
+    <string name="preference_subitem_autocomplete">تکمیل خودکار نشانی</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">برای سایت‌های برتر</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">فعال‌ سازی برای پرکردن خودکار بیشتر از 450 URLs محبوب در نوار آدرس.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">فعال کردن %s برای تکمیل خودکار بیش از ۴۵۰ URL محبوب در نوار آدرس.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
-    <string name="preference_switch_autocomplete_user_list">برای وب‌ سایت هایی که شما اضافه می‌کنید</string>
+    <string name="preference_switch_autocomplete_user_list">برای سایت‌هایی که شما اضافه می‌کنید</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">فعال سازی برای کامل کردن خودکار بیش از 450 URLs محبوب در نوار آدرس.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">فعال کردن %s برای تکمیل خودکار URLهای محبوب شما.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">مدیریت سایت‌ها</string>
@@ -210,7 +212,7 @@
     <string name="preference_autocomplete_subitem_manage_sites">مدیریت سایت‌ها</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
-    <string name="preference_autocomplete_action_add">+ اضافه کردن نشانی سفارشی</string>
+    <string name="preference_autocomplete_action_add">+ افزودن نشانی سفارشی</string>
 
     <!-- Explanation text above the list of custom autocomplete URLs. -->
     <string name="preference_autocomplete_explanation_text">فهرست تکمیل خودکار شما:</string>
@@ -219,13 +221,13 @@
     <string name="preference_autocomplete_action_add2">افزودن آدرس اینترنتی</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
-    <string name="preference_autocomplete_title_add">اضافه کردن نشانی سفارشی</string>
+    <string name="preference_autocomplete_title_add">افزودن نشانی سفارشی</string>
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
-    <string name="custom_autocomplete_quick_add">اضافه کردن نشانی سفارشی</string>
+    <string name="custom_autocomplete_quick_add">افزودن نشانی سفارشی</string>
 
     <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
-    <string name="add_custom_autocomplete_label">اضافه کردن پیوند به پرکردن خودکار</string>
+    <string name="add_custom_autocomplete_label">افزودن پیوند به تکمیل خودکار</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">کوکی‌ها و داده‌های پایگاه</string>
@@ -234,16 +236,16 @@
     <string name="preference_category_data_choices">انتخاب‌های داده</string>
 
     <!-- Title of the screen for removing custom autocomplete URLs. -->
-    <string name="preference_autocomplete_title_remove">حذف نشانی سفارشی</string>
+    <string name="preference_autocomplete_title_remove">حذف نشانی‌های سفارشی</string>
 
     <!-- A link to SUMO at autocomplete settings. -->
-    <string name="preference_autocomplete_learn_more">اطلاعات بیشتر</string>
+    <string name="preference_autocomplete_learn_more">بیشتر بدانید</string>
 
     <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
-    <string name="preference_autocomplete_custom_summary">اضافه و مدیریت کردنِ تکمیل خودکار نشانی‌های سفارشی.</string>
+    <string name="preference_autocomplete_custom_summary">افزودن و مدیریت تکمیل خودکار نشانی‌های سفارشی.</string>
 
     <!-- Label for the "custom autocomplete URL" input field -->
-    <string name="preference_autocomplete_add_title">نشانی برای اضافه کردن</string>
+    <string name="preference_autocomplete_add_title">نشانی برای افزودن</string>
 
     <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
     <string name="preference_autocomplete_add_hint">جای‌گذاری یا ورود نشانی</string>
@@ -271,7 +273,7 @@
          is using the system default language. -->
     <string name="preference_language_systemdefault">پیش‌فرض سیستم</string>
 
-    <string name="preference_category_privacy">حریم‌خصوصی</string>
+    <string name="preference_category_privacy">حریم خصوصی</string>
     <string name="preference_privacy_block_ads">مسدود کردن ردیاب‌های تبلیغاتی</string>
     <string name="preference_privacy_block_ads_summary">برخی از تبلیغ‌ها بازدیدهای سایت را دنبال می‌کنند، حتّی اگر شما روی تبلیغ‌ها کلیک نکنید</string>
     <string name="preference_privacy_block_analytics">مسدود کردن ردیاب‌های آماری</string>
@@ -285,8 +287,9 @@
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">خیر، متشکرم</string>
-    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">مسدود کردن دنبال کنندگان شخص ثالث کوکی‌ها</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">فقط مسدود کردن کوکی‌های ردیابی شخص ثالث</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">فقط مسدود کردن کوکی‌های شخص ثالث</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">مسدود کردن کوکی‌های بین‌پایگاهی</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">بله، لطفاً</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -629,8 +632,32 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">ابزارهای توسعه دهنده</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">باز کردن پیوندها در برنامه‌ها</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">پیشرفته</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">مطالعات</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">فایرفاکس ممکن است هر از گاهی افزونه‌ای تحقیقی نصب و اجرا کند.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">بیشتر بدانید</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">برنامه برای اعمال تغییرات بسته می‌شود</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">حذف</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">فعال</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">تکمیل شد</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">اشکال زدایی از طریق USB/Wi-Fi</string>
@@ -741,11 +768,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">تعویض بلافاصله پیوند در زبانه‌های جدید</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">مرورگر امن</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">مرورگر امن</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">مسدود سازی خطرات بالقوه و سایت‌های فریبنده</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">مسدود کردن گزارش های فریبنده و حملات سایت‌ها،‌ بدافزارهای سایت‌ها و نرم افزارهای ناخواسته سایت‌ها.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">حالت فقط HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
+    <string name="preference_https_only_summary">HTTPS یک اتصال امن و رمزگذاری شده بین %1$s و وب‌سایتهایی که بازدید می‌کنید، ارائه می‌دهد. اکثر وب‌سایت‌ها از HTTPS پشتیبانی می‌کنند و چنانچه حالت فقط HTTPS فعال باشد، %1$s تمام اتصال‌ها را به HTTPS ارتقا می‌دهد.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">استثناعات</string>
@@ -809,7 +841,28 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">حذف</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">تغییر نام</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">وقتی شما تاریخچه %1$s را پاک می‌کنید، تصاویر ذخیره یا هم‌رسانی شده &lt;b&gt;پاک نخواهند شد&lt;/b&gt;</string>
+
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">تم</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">روشن</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">تاریک</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">تنظیم شده توسط ذخیره کننده باتری</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">پیروی از تم دستگاه</string>
+
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">بستن زبانه</string>
 </resources>

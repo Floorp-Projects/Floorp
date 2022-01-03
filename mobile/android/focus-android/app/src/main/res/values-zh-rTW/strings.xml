@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">網站權限</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">自動播放</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">允許自動播放影音內容</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">僅封鎖音訊</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">推薦</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">封鎖影音內容</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">使用者研究</string>
 
@@ -786,8 +804,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">純 HTTPS 模式</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS 讓 %1$s 與要造訪的網站間能夠有安全而加密過的連線。大部分的網站都支援 HTTPS，開啟純 HTTPS 模式後，%1$s 就會將所有的連線都升級為 HTTPS 連線。</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">自動嘗試使用 HTTPS 連線到網站以增加安全性。HTTPS 可在您與網站之間建立安全、加密過的連線。</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外網站</string>
@@ -851,8 +870,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">移除</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">重新命名</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">重新命名</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">捷徑名稱</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -870,6 +894,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">依照裝置佈景主題顯示</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">您要開啟的網站不支援 HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">預設情況下，為了增加安全性，%1$s 會嘗試使用 HTTPS 通訊協定進行連線。可到「設定 &gt; 隱私權與安全性 &gt; 安全性」來了解更多資訊或更改此設定。</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

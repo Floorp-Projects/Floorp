@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Speciális</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Oldalengedélyek</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatikus lejátszás</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Hang és videó engedélyezése</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Csak a hang blokkolása</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Ajánlott</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Hang és videó blokkolása</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Tanulmányok</string>
 
@@ -779,8 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Csak HTTPS mód</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">A HTTPS biztonságos, titkosított kapcsolatot biztosít a %1$s és a meglátogatott webhelyek között. A legtöbb webhely támogatja a HTTPS-t, és ha a Csak HTTPS mód engedélyezve van, akkor a %1$s HTTPS-re frissíti az összes kapcsolatot.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Automatikusan HTTPS-sel próbál kapcsolódni a webhelyekhez a nagyobb biztonság érdekében. A HTTPS-kapcsolatok biztonságos, titkosított kapcsolatot biztosítanak a felkeresett webhelyekkel.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Kivételek</string>
@@ -844,8 +863,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Eltávolítás</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Átnevezés</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Átnevezés</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Parancsikon neve</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -863,6 +887,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Az eszköz témájának követése</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">A kért webhely nem támogatja a HTTPS-t</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Alapértelmezés szerint a %1$s HTTPS használatával próbál csatlakozni a nagyobb biztonság érdekében. A beállítás módosításához vagy további információért ugorjon a Beállítások &gt; Adatvédelem és biztonság &gt; Biztonság menüponthoz.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

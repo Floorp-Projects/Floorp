@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Uwch</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Caniatâd gwefan</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Awtochwarae</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Caniatáu sain a fideo</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Rhwystro sain yn unig</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Cymeradwy</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Rhwystro sain a fideo</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Astudiaethau</string>
 
@@ -780,9 +798,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modd HTTPS-yn-Unig</string>
-
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">Mae HTTPS yn darparu cysylltiad diogel, wedi’i amgryptio rhwng %1$s a’r gwefannau rydych chi’n ymweld â nhw. Mae’r mwyafrif o wefannau yn cefnogi HTTPS, ac os yw Modd HTTPS-yn-Unig wedi’i alluogi, yna bydd %1$s yn uwchraddio’r holl gysylltiadau â HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Eithriadau</string>

@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Rozšěrjene</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Sydłowe prawa</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Awtomatiske wothraće</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Awdio a widejo dowolić</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Jenož awdio blokować</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Doporučene</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Awdio a widejo blokować</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Studije</string>
 
@@ -779,8 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modus Jenož-HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS wěsty, zaklučowany zwisk mjez %1$s a websydłami skići, kotrež wopytujeće. Najwjace websydłow HTTPS podpěruje, a jeli modus Jenož-HTTPS je zmóžnjeny, %1$s budźe wšě zwiski na HTTPS aktualizować.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Pospytuje awtomatisce, z pomocu HTTPS za zwyšenu wěstotu ze sydłami zwjazać. HTTPS-zwiski wěsty, zaklučowany zwisk z websydłami k dispoziciji stajeja, kotrež wopytujeće.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Wuwzaća</string>
@@ -845,8 +864,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Wotstronić</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Přemjenować</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Přemjenować</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Mjeno zwjazanja</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -864,6 +888,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Na gratowu drastu dźiwać</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Wot was požadane sydło HTTPS njepodpěruje</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Po standardźe %1$s pospytuje, z pomocu HTTPS za zwyšenu wěstotu zwjazać. Zo byšće tute nastajenje změnił abo wjace zhonił, dźiće k Nastajenja &gt; Priwatnosć a wěstota &gt; Wěstota.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

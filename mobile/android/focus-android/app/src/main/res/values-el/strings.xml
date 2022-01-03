@@ -791,8 +791,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Λειτουργία «Μόνο HTTPS»</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">Το HTTPS παρέχει μια ασφαλή, κρυπτογραφημένη σύνδεση μεταξύ του %1$s και των ιστοτόπων που επισκέπτεστε. Οι περισσότεροι ιστότοποι υποστηρίζουν HTTPS και αν είναι ενεργή η λειτουργία «Μόνο HTTPS», τότε το %1$s θα αναβαθμίζει όλες τις συνδέσεις σε HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Εξαιρέσεις</string>
@@ -854,6 +852,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Αφαίρεση</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Μετονομασία</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Μετονομασία</string>
 

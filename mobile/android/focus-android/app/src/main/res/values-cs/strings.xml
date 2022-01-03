@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -289,6 +289,7 @@
     <string name="preference_privacy_should_block_cookies_no_option2">Ne, díky</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokovat pouze sledovací cookies třetích stran</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokovat pouze cookies třetích stran</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blokovat cross-site cookies</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ano, prosím</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -637,6 +638,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Rozšířené</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Oprávnění serverů</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatické přehrávání</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Povolit zvuk i video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokovat automatické přehrávání zvuků</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Doporučené</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokovat automatické přehrávání zvuků i videí</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Studie</string>
 
@@ -766,11 +785,17 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <string name="preference_open_new_tab">Přepnout ihned na odkaz v novém panelu</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Bezpečné prohlížení</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Bezpečné prohlížení</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokovat potenciálně nebezpečné a klamavé stránky</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Blokuje hlášené klamavé a útočné stránky, stránky s malwarem a stránky s nevyžádaným obsahem.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Režim „pouze HTTPS“</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Automaticky navazovat bezpečné spojení k webovým serverů pomocí protokolu HTTPS. Díky HTTPS je navštěvovaná stránka přenášena zabezpečeně pomocí šifrování.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Výjimky</string>
@@ -835,8 +860,13 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odebrat</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Přejmenovat</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Přejmenovat</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Název zkratky</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -854,6 +884,11 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Podle nastavení zařízení</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Požadovaný web nepodporuje HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Ve výchozím nastavení navazuje %1$s bezpečné spojení pomocí protokolu HTTPS. Pro více informací nebo změnu tohoto nastavení přejděte do Nastavení &gt; Soukromí a zabezpečení &gt; Zabezpečení.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
