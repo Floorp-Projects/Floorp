@@ -464,17 +464,25 @@ interface nsILoadInfo : nsISupports
    */
   const unsigned long HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS = (1 << 4);
 
-  /**
-   * This flag indicates that the request should not be logged to the
-   * console.
+   /**
+   * This flag can only ever be set on downloads. It indicates
+   * that the download https connection succeeded. This flag is mostly
+   * used to counter time-outs which allows to cancel the channel
+   * if the https load has not started.
    */
-  const unsigned long HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE = (1 << 5);
+  const unsigned long HTTPS_ONLY_DOWNLOAD_IN_PROGRESS = (1 << 5);
 
   /**
    * This flag indicates that the request should not be logged to the
    * console.
    */
-  const unsigned long HTTPS_ONLY_UPGRADED_HTTPS_FIRST = (1 << 6);
+  const unsigned long HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE = (1 << 6);
+
+  /**
+   * This flag indicates that the request should not be logged to the
+   * console.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_HTTPS_FIRST = (1 << 7);
 
   /**
    * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
