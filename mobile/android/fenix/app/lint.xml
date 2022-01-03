@@ -14,7 +14,7 @@
     <issue id="PluralsCandidate" severity="ignore" />
     <issue id="StringFormatCount" severity="ignore" />
     <issue id="TypographyEllipsis" severity="ignore" />
-    <issue id="ExtraTranslation" severity="warning" />
+    <issue id="ExtraTranslation" severity="ignore" />
 
     <!-- Lints that are disabled by default -->
     <issue id="ConvertToWebp" severity="warning" />
