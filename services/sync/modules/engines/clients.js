@@ -237,7 +237,24 @@ ClientEngine.prototype = {
       return this.localName;
     }
     let client = this._store._remoteClients[id];
-    return client ? client.name : "";
+    if (!client) {
+      return "";
+    }
+    // Sometimes the sync clients don't always correctly update the device name
+    // However FxA always does, so try to pull the name from there first
+    let fxaDevice = this.fxAccounts.device.recentDeviceList.find(
+      device => device.id === client.fxaDeviceId
+    );
+
+    // should be very rare, but could happen if we have yet to fetch devices,
+    // or the client recently disconnected
+    if (!fxaDevice) {
+      this.log.warn(
+        "Couldn't find associated FxA device, falling back to client name"
+      );
+      return client.name;
+    }
+    return fxaDevice.name;
   },
 
   getClientFxaDeviceId(id) {
