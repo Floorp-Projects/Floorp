@@ -287,32 +287,6 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
   }
 }
 
-already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromID(
-    CubebUtils::AudioDeviceID aID) {
-  MutexAutoLock lock(mMutex);
-
-  if (mInputDevices.IsEmpty() || mManualInputInvalidation) {
-    EnumerateAudioDevices(Side::INPUT);
-  }
-  for (RefPtr<AudioDeviceInfo>& device : mInputDevices) {
-    if (device->DeviceID() == aID) {
-      RefPtr<AudioDeviceInfo> other = device;
-      return other.forget();
-    }
-  }
-
-  if (mOutputDevices.IsEmpty() || mManualOutputInvalidation) {
-    EnumerateAudioDevices(Side::OUTPUT);
-  }
-  for (RefPtr<AudioDeviceInfo>& device : mOutputDevices) {
-    if (device->DeviceID() == aID) {
-      RefPtr<AudioDeviceInfo> other = device;
-      return other.forget();
-    }
-  }
-  return nullptr;
-}
-
 already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
     const nsString& aName) {
   RefPtr<AudioDeviceInfo> other = DeviceInfoFromName(aName, Side::INPUT);
