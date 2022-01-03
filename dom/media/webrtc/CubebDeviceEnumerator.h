@@ -67,7 +67,7 @@ class CubebDeviceEnumerator final {
   // Invalidates the cached audio input device list, can be called on any
   // thread.
   void AudioDeviceListChanged(Side aSide);
-  void EnumerateAudioDevices(Side aSide);
+  RefPtr<const AudioDeviceSet> EnumerateAudioDevices(Side aSide);
   // Synchronize access to mInputDevices and mOutputDevices;
   Mutex mMutex;
   RefPtr<AudioDeviceSet> mInputDevices;
