@@ -1059,10 +1059,13 @@ async function performAdd(store) {
   is(rowId, value, `Row '${rowId}' was successfully added.`);
 }
 
+// Cell css selector that can be used to count or select cells.
+// The selector is restricted to a single column to avoid counting duplicates.
+const CELL_SELECTOR =
+  "#storage-table .table-widget-wrapper:first-child .table-widget-cell";
+
 function checkCellLength(len) {
-  const cells = gPanelWindow.document.querySelectorAll(
-    "#name .table-widget-cell"
-  );
+  const cells = gPanelWindow.document.querySelectorAll(CELL_SELECTOR);
   const msg = `Table should initially display ${len} items`;
 
   is(cells.length, len, msg);
@@ -1071,7 +1074,7 @@ function checkCellLength(len) {
 async function scroll() {
   const $ = id => gPanelWindow.document.querySelector(id);
   const table = $("#storage-table .table-widget-body");
-  const cell = $("#name .table-widget-cell");
+  const cell = $(CELL_SELECTOR);
   const cellHeight = cell.getBoundingClientRect().height;
 
   const onStoresUpdate = gUI.once("store-objects-updated");
