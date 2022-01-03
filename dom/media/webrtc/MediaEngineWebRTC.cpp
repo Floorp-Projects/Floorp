@@ -212,6 +212,10 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
   DebugOnly<bool> preferredDeviceFound = false;
 #endif
   for (const auto& deviceInfo : devices) {
+    LOG(("Cubeb device: type 0x%x, state 0x%x, name %s, id %p",
+         deviceInfo->Type(), deviceInfo->State(),
+         NS_ConvertUTF16toUTF8(deviceInfo->Name()).get(),
+         deviceInfo->DeviceID()));
     if (deviceInfo->State() == CUBEB_DEVICE_STATE_ENABLED) {
       MOZ_ASSERT(deviceInfo->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
       nsString uuid(deviceInfo->Name());
