@@ -25,3 +25,9 @@ arcanist:
         type: git
         repo: https://github.com/phacility/arcanist.git
         revision: a028291f8e5e79b6446ad67ed8b0be9c5ec8f029
+depot_tools:
+    description: Google's depot_tools package
+    fetch:
+        type: git
+        repo: https://chromium.googlesource.com/chromium/tools/depot_tools.git
+        revision: 7b3351443198f4e7d068999b169385b55a43679a
