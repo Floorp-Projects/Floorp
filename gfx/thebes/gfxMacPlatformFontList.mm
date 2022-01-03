@@ -390,13 +390,13 @@ CGFontRef MacOSFontEntry::CreateOrCopyFontRef() {
     ::CGFontRetain(mFontRef);
     return mFontRef;
   }
+
+  CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName, mName);
+
   // Create a new CGFont; caller will own the only reference to it.
   NSString* psname = GetNSStringForString(NS_ConvertUTF8toUTF16(mName));
   CGFontRef ref = CGFontCreateWithFontName(CFStringRef(psname));
   if (!ref) {
-    CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
-                                                        psname);
-
     // This happens on macOS 10.12 for font entry names that start with
     // .AppleSystemUIFont. For those fonts, we need to go through NSFont
     // to get the correct CGFontRef.
