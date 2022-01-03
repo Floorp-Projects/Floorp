@@ -682,6 +682,12 @@ nsIntMargin nsPrintSettings::GetUnwriteableMarginInTwips() {
 }
 
 /** ---------------------------------------------------
+ * Stub - platform-specific implementations can use this function.
+ */
+NS_IMETHODIMP
+nsPrintSettings::SetupSilentPrinting() { return NS_OK; }
+
+/** ---------------------------------------------------
  *  See documentation in nsPrintSettingsService.h
  */
 NS_IMETHODIMP
