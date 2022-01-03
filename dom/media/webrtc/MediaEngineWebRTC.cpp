@@ -25,6 +25,7 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
 namespace mozilla {
 
+using AudioDeviceSet = CubebDeviceEnumerator::AudioDeviceSet;
 using camera::CamerasChild;
 using camera::GetChildAndCall;
 using dom::MediaSourceEnum;
@@ -160,25 +161,25 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
-  nsTArray<RefPtr<AudioDeviceInfo>> devices;
-  GetEnumerator()->EnumerateAudioInputDevices(devices);
+  RefPtr<const AudioDeviceSet> devices =
+      GetEnumerator()->EnumerateAudioInputDevices();
 
   DebugOnly<bool> foundPreferredDevice = false;
 
-  for (uint32_t i = 0; i < devices.Length(); i++) {
+  for (const auto& deviceInfo : *devices) {
 #ifndef ANDROID
-    MOZ_ASSERT(devices[i]->DeviceID());
+    MOZ_ASSERT(deviceInfo->DeviceID());
 #endif
-    LOG(("Cubeb device %u: type 0x%x, state 0x%x, name %s, id %p", i,
-         devices[i]->Type(), devices[i]->State(),
-         NS_ConvertUTF16toUTF8(devices[i]->Name()).get(),
-         devices[i]->DeviceID()));
+    LOG(("Cubeb device: type 0x%x, state 0x%x, name %s, id %p",
+         deviceInfo->Type(), deviceInfo->State(),
+         NS_ConvertUTF16toUTF8(deviceInfo->Name()).get(),
+         deviceInfo->DeviceID()));
 
-    if (devices[i]->State() == CUBEB_DEVICE_STATE_ENABLED) {
-      MOZ_ASSERT(devices[i]->Type() == CUBEB_DEVICE_TYPE_INPUT);
+    if (deviceInfo->State() == CUBEB_DEVICE_STATE_ENABLED) {
+      MOZ_ASSERT(deviceInfo->Type() == CUBEB_DEVICE_TYPE_INPUT);
       // Lie and provide the name as UUID
-      RefPtr device = new MediaDevice(this, devices[i], devices[i]->Name());
-      if (devices[i]->Preferred()) {
+      RefPtr device = new MediaDevice(this, deviceInfo, deviceInfo->Name());
+      if (deviceInfo->Preferred()) {
 #ifdef DEBUG
         if (!foundPreferredDevice) {
           foundPreferredDevice = true;
@@ -205,13 +206,13 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
-  nsTArray<RefPtr<AudioDeviceInfo>> devices;
-  GetEnumerator()->EnumerateAudioOutputDevices(devices);
+  RefPtr<const AudioDeviceSet> devices =
+      GetEnumerator()->EnumerateAudioOutputDevices();
 
 #ifndef XP_WIN
   DebugOnly<bool> preferredDeviceFound = false;
 #endif
-  for (const auto& deviceInfo : devices) {
+  for (const auto& deviceInfo : *devices) {
     LOG(("Cubeb device: type 0x%x, state 0x%x, name %s, id %p",
          deviceInfo->Type(), deviceInfo->State(),
          NS_ConvertUTF16toUTF8(deviceInfo->Name()).get(),
