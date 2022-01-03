@@ -10813,7 +10813,8 @@
       "ftyp_qt",
       "ftyp_iso",
       "ftyp_mmp4",
-      "ftyp_avif"
+      "ftyp_avif",
+      "ftyp_crx"
     ],
     "description": "ISOBMFF brand pattern used to identify MP4 in media sniffer",
     "bug_numbers": [1725190]
