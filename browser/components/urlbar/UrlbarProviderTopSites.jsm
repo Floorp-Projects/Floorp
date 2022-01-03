@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This module exports a provider returning the user's newtab Top Sites.
+ */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = ["UrlbarProviderTopSites"];
@@ -30,9 +34,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // The scalar category of TopSites impression for Contextual Services
 const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites.impression";
 
-/**
- * This module exports a provider returning the user's newtab Top Sites.
- */
+// These prefs must be true for the provider to return results. They are assumed
+// to be booleans. We check `system.topsites` because if it is disabled we would
+// get stale or empty top sites data.
+const TOP_SITES_ENABLED_PREFS = [
+  "browser.urlbar.suggest.topsites",
+  "browser.newtabpage.activity-stream.feeds.system.topsites",
+];
 
 /**
  * A provider that returns the Top Sites shown on about:newtab.
@@ -40,6 +48,13 @@ const SCALAR_CATEGORY_TOPSITES = "contextual.services.topsites.impression";
 class ProviderTopSites extends UrlbarProvider {
   constructor() {
     super();
+
+    this._topSitesListeners = [];
+    let callListeners = () => this._callTopSitesListeners();
+    Services.obs.addObserver(callListeners, "newtab-top-sites-changed");
+    for (let pref of TOP_SITES_ENABLED_PREFS) {
+      Services.prefs.addObserver(pref, callListeners);
+    }
   }
 
   get PRIORITY() {
@@ -95,21 +110,17 @@ class ProviderTopSites extends UrlbarProvider {
    *       is done searching AND returning results.
    */
   async startQuery(queryContext, addCallback) {
-    // If system.topsites is disabled, we would get stale or empty Top Sites
-    // data. We check this condition here instead of in isActive because we
-    // still want this provider to be restricting even if this is not true. If
-    // it wasn't restricting, we would show the results from UrlbarProviderPlaces's
-    // empty search behaviour. We aren't interested in those since they are very
-    // similar to Top Sites and thus might be confusing, especially since users
-    // can configure Top Sites but cannot configure the default empty search
-    // results. See bug 1623666.
-    if (
-      !UrlbarPrefs.get("suggest.topsites") ||
-      !Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.feeds.system.topsites",
-        false
-      )
-    ) {
+    // Bail if Top Sites are not enabled. We check this condition here instead
+    // of in isActive because we still want this provider to be restricting even
+    // if this is not true. If it wasn't restricting, we would show the results
+    // from UrlbarProviderPlaces's empty search behaviour. We aren't interested
+    // in those since they are very similar to Top Sites and thus might be
+    // confusing, especially since users can configure Top Sites but cannot
+    // configure the default empty search results. See bug 1623666.
+    let enabled = TOP_SITES_ENABLED_PREFS.every(p =>
+      Services.prefs.getBoolPref(p, false)
+    );
+    if (!enabled) {
       return;
     }
 
@@ -328,6 +339,33 @@ class ProviderTopSites extends UrlbarProvider {
     }
 
     this.sponsoredSites = null;
+  }
+
+  /**
+   * Adds a listener function that will be called when the top sites change or
+   * they are enabled/disabled. This class will hold a weak reference to the
+   * listener, so you do not need to unregister it, but you or someone else must
+   * keep a strong reference to it to keep it from being immediately garbage
+   * collected.
+   *
+   * @param {function} callback
+   *   The listener function. This class will hold a weak reference to it.
+   */
+  addTopSitesListener(callback) {
+    this._topSitesListeners.push(Cu.getWeakReference(callback));
+  }
+
+  _callTopSitesListeners() {
+    for (let i = 0; i < this._topSitesListeners.length; ) {
+      let listener = this._topSitesListeners[i].get();
+      if (!listener) {
+        // The listener has been GC'ed, so remove it from our list.
+        this._topSitesListeners.splice(i, 1);
+      } else {
+        listener();
+        ++i;
+      }
+    }
   }
 }
 

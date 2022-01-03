@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -509,6 +510,12 @@ class UrlbarView {
       this.input.getAttribute("pageproxystate") == "valid"
     ) {
       if (!this.isOpen && ["mousedown", "command"].includes(event.type)) {
+        // Try to reuse the cached top-sites context. If it's not cached, then
+        // there will be a gap of time between when the input is focused and
+        // when the view opens that can be perceived as flicker.
+        if (!this.input.searchMode && this._queryContextCache.topSitesContext) {
+          this.onQueryResults(this._queryContextCache.topSitesContext);
+        }
         this.input.startQuery(queryOptions);
         if (suppressFocusBorder) {
           this.input.toggleAttribute("suppress-focus-border", true);
@@ -2485,19 +2492,53 @@ class QueryContextCache {
    * @param {number} size The number of entries to keep in the cache.
    */
   constructor(size) {
-    this.size = size;
+    this._size = size;
     this._cache = [];
+
+    // We store the top-sites context separately since it will often be needed
+    // and therefore shouldn't be evicted except when the top sites change.
+    this._topSitesContext = null;
+    this._topSitesListener = () => (this._topSitesContext = null);
+    UrlbarProviderTopSites.addTopSitesListener(this._topSitesListener);
+  }
+
+  /**
+   * @returns {number} The number of entries to keep in the cache.
+   */
+  get size() {
+    return this._size;
+  }
+
+  /**
+   * @returns {UrlbarQueryContext} The cached top-sites context or null if none.
+   */
+  get topSitesContext() {
+    return this._topSitesContext;
   }
 
   /**
    * Adds a new entry to the cache.
    * @param {UrlbarQueryContext} queryContext The UrlbarQueryContext to add.
-   * @note QueryContexts without a searchString or without results are ignored
-   *       and not added.
+   * @note QueryContexts without results are ignored and not added. Contexts
+   *       with an empty searchString that are not the top-sites context are
+   *       also ignored.
    */
   put(queryContext) {
+    if (!queryContext.results.length) {
+      return;
+    }
+
     let searchString = queryContext.searchString;
-    if (!searchString || !queryContext.results.length) {
+    if (!searchString) {
+      // Cache the context if it's the top-sites context. An empty search string
+      // doesn't necessarily imply top sites since there are other queries that
+      // use it too, like search mode. If the first result is from the top-sites
+      // provider, assume the context is top sites.
+      if (
+        queryContext.results?.[0]?.providerName == UrlbarProviderTopSites.name
+      ) {
+        this._topSitesContext = queryContext;
+      }
       return;
     }
 
