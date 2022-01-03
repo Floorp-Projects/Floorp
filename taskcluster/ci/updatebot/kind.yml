@@ -84,14 +84,7 @@ jobs:
             max-run-time: 3600
             taskcluster-proxy: true
             env:
-                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/updatebot.manifest"
-                MSYSTEM: "MINGW64"
-# begin _GENERATE_DEPOT_TOOLS_BINARIES_
-#            artifacts:
-#                - type: directory
-#                  name: public/depot_tools.zip
-#                  path: build\src\obj-build\depot_tools
-# end _GENERATE_DEPOT_TOOLS_BINARIES_
+                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/vc++-2019-runtime.manifest"
         run:
             using: run-task
             cwd: '{checkout}'
@@ -110,4 +103,3 @@ jobs:
                 - cloud-sql-proxy-1.25.0
                 - php-windows-7.4.24
                 - arcanist
-                - depot_tools
