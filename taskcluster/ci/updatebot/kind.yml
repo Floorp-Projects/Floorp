@@ -84,7 +84,7 @@ jobs:
             max-run-time: 3600
             taskcluster-proxy: true
             env:
-                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/vc++-2019-runtime.manifest"
+                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/updatebot.manifest"
                 MSYSTEM: "MINGW64"
         run:
             using: run-task
@@ -104,3 +104,4 @@ jobs:
                 - cloud-sql-proxy-1.25.0
                 - php-windows-7.4.24
                 - arcanist
+                - depot_tools
