@@ -799,7 +799,7 @@ talos-xperf:
     run-on-projects:
         by-test-platform:
             windows.*-32-shippable(?:-qr)?/.*: []
-            windows10-64-shippable-qr/.*: [mozilla-beta, trunk]
+            windows10-64.*-shippable-qr/.*: [mozilla-beta, trunk]
             default: []
     mozharness:
         extra-options:
@@ -808,7 +808,7 @@ talos-xperf:
             by-test-platform:
                 windows.*:
                     - talos/windows_vm_config.py
-    python-3: false
+    python-3: true
 
 talos-realworld-webextensions:
     description: Talos tests with realworld WebExtensions
