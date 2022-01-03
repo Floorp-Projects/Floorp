@@ -5,13 +5,13 @@
 extern crate geckoservo;
 
 extern crate app_services_logger;
-#[cfg(all(feature = "cubeb-remoting", target_os = "macos"))]
+#[cfg(feature = "cubeb-remoting")]
 extern crate audioipc2_client;
-#[cfg(all(feature = "cubeb-remoting", target_os = "macos"))]
+#[cfg(feature = "cubeb-remoting")]
 extern crate audioipc2_server;
-#[cfg(all(feature = "cubeb-remoting", not(target_os = "macos")))]
+#[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_client;
-#[cfg(all(feature = "cubeb-remoting", not(target_os = "macos")))]
+#[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_server;
 extern crate authenticator;
 #[cfg(feature = "bitsdownload")]
