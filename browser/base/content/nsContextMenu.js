@@ -139,6 +139,7 @@ class nsContextMenu {
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
         linkText: this.linkTextStr,
         linkUrl: this.linkURL,
+        linkURI: this.linkURI,
         selectionText: this.isTextSelected
           ? this.selectionInfo.fullText
           : undefined,
@@ -380,9 +381,7 @@ class nsContextMenu {
       this.selectionInfo.linkURL
     ) {
       this.linkURL = this.selectionInfo.linkURL;
-      try {
-        this.linkURI = makeURI(this.linkURL);
-      } catch (ex) {}
+      this.linkURI = this.getLinkURI();
 
       this.linkTextStr = this.selectionInfo.linkText;
       this.onPlainTextLink = true;
