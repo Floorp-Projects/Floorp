@@ -7132,7 +7132,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-12-04T15:13:28Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-12-30T15:13:57Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7527,7 +7527,7 @@ bosch
 // bostik : 2015-05-28 Bostik SA
 bostik
 
-// boston : 2015-12-10 Boston TLD Management, LLC
+// boston : 2015-12-10 Registry Services, LLC
 boston
 
 // bot : 2014-12-18 Amazon Registry Services, Inc.
@@ -8871,9 +8871,6 @@ live
 // living : 2015-07-30 Lifestyle Domain Holdings, Inc.
 living
 
-// lixil : 2015-03-19 LIXIL Group Corporation
-lixil
-
 // llc : 2017-12-14 Afilias Limited
 llc
 
@@ -9012,7 +9009,7 @@ menu
 // merckmsd : 2016-07-14 MSD Registry Holdings, Inc.
 merckmsd
 
-// miami : 2013-12-19 Minds + Machines Group Limited
+// miami : 2013-12-19 Registry Services, LLC
 miami
 
 // microsoft : 2014-12-18 Microsoft Corporation
