@@ -110,8 +110,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  explicit nsNativeThemeWin(
-      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingWin);
+  nsNativeThemeWin();
 
  protected:
   mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);

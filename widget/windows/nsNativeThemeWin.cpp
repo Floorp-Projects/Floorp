@@ -54,9 +54,8 @@ extern mozilla::LazyLogModule gWindowsLog;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
-nsNativeThemeWin::nsNativeThemeWin(
-    mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingWin)
-    : nsNativeBasicTheme(std::move(aScrollbarDrawingWin)),
+nsNativeThemeWin::nsNativeThemeWin()
+    : nsNativeBasicTheme(DefaultPlatformScrollbarStyle()),
       mProgressDeterminateTimeStamp(TimeStamp::Now()),
       mProgressIndeterminateTimeStamp(TimeStamp::Now()),
       mBorderCacheValid(),
@@ -4120,7 +4119,7 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    inst = new nsNativeThemeWin(MakeUnique<ScrollbarDrawingWin>());
+    inst = new nsNativeThemeWin();
     ClearOnShutdown(&inst);
   }
 
