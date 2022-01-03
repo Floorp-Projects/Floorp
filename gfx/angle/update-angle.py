@@ -174,7 +174,7 @@ except subprocess.CalledProcessError:
     exit(1)
 
 p = run_checked(
-    "py",
+    "python3",
     "scripts/export_targets.py",
     str(OUT_DIR),
     *ROOTS,
