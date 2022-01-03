@@ -1,0 +1,29 @@
+[
+  {
+    "version": "vcruntime140.dll from Microsoft Visual C++ Redistributable for Visual Studio 2019 ver 14.29.30133.0",
+    "size": 97160,
+    "visibility": "internal",
+    "digest": "aa6afd6bea27f554e3646152d8c4f96f7bcaaa4933f8b7c04346e410f93f23cfa6d29362fd5d51ccbb8b6223e094cd89e351f072ad0517553703f5bf9de28778",
+    "algorithm": "sha512",
+    "filename": "vcruntime140.dll",
+    "unpack": false
+  },
+  {
+    "version": "Visual Studio Community 2019, Windows SDK 10.0.19041.0, and a few system dlls Lobotmized for Angle Update",
+    "filename": "vs-sdk-and-windir-shim.zip",
+    "size": 463564917,
+    "algorithm": "sha512",
+    "digest": "20d93b0014ca44a666ca2b5cc570127f24378454889ff0a036df72213cd18140185d2c2e61df40bf1e4c0d9d2dc83a7796af9d2a13252de3c85faad068291945",
+    "visibility": "internal",
+    "unpack": true
+  },
+  {
+    "version": "Windows binaries for depot_tools retrieved with depot_tools revision 7b3351443198f4e7d068999b169385b55a43679a",
+    "filename": "depot_tools-preloaded-binaries-7b3351443198f4e7d068999b169385b55a43679a.zip",
+    "size": 315032144,
+    "algorithm": "sha512",
+    "digest": "5f5071b05739dcb1b94fe94c1992d18b818bef05b8c47dd139941f0ac26e02a5b50b4efa5ba515a8227aead28ccd1b2dee563a553c42df369cfbb97051054b4d",
+    "visibility": "internal",
+    "unpack": true
+  }
+]
