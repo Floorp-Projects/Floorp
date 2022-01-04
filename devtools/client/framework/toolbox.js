@@ -693,11 +693,6 @@ Toolbox.prototype = {
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
     if (targetFront.isTopLevel) {
-      if (isTargetSwitching) {
-        // Notify gDevTools that the toolbox will be hooked to another target.
-        this.emit("switch-target", targetFront);
-      }
-
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       if (!targetFront.targetForm.ignoreSubFrames) {
