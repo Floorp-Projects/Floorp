@@ -139,6 +139,10 @@ class VendorManifest(MozbuildObject):
             from mozbuild.vendor.host_googlesource import GoogleSourceHost
 
             return GoogleSourceHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "angle":
+            from mozbuild.vendor.host_angle import AngleHost
+
+            return AngleHost(self.manifest)
         else:
             raise Exception(
                 "Unknown source host: " + self.manifest["vendoring"]["source-hosting"]
