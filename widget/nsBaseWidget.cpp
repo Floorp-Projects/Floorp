@@ -41,6 +41,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/TouchActionHelper.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -842,21 +843,13 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
     mAPZC->SetKeyboardMap(map);
   }
 
-  RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
-
   ContentReceivedInputBlockCallback callback(
-      [treeManager](uint64_t aInputBlockId, bool aPreventDefault) {
+      [treeManager = RefPtr{mAPZC.get()}](uint64_t aInputBlockId,
+                                          bool aPreventDefault) {
         MOZ_ASSERT(NS_IsMainThread());
         treeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
       });
   mAPZEventState = new APZEventState(this, std::move(callback));
-
-  mSetAllowedTouchBehaviorCallback =
-      [treeManager](uint64_t aInputBlockId,
-                    const nsTArray<TouchBehaviorFlags>& aFlags) {
-        MOZ_ASSERT(NS_IsMainThread());
-        treeManager->SetAllowedTouchBehavior(aInputBlockId, aFlags);
-      };
 
   mRootContentController = CreateRootContentController();
   if (mRootContentController) {
@@ -940,15 +933,17 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
       if (touchEvent->mMessage == eTouchStart) {
+        auto& originalEvent = *original->AsTouchEvent();
         if (StaticPrefs::layout_css_touch_action_enabled()) {
-          allowedTouchBehaviors =
-              APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
-                  this, GetDocument(), *(original->AsTouchEvent()),
-                  inputBlockId, mSetAllowedTouchBehaviorCallback);
+          MOZ_ASSERT(NS_IsMainThread());
+          allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
+              this, GetDocument(), originalEvent);
+          if (!allowedTouchBehaviors.IsEmpty()) {
+            mAPZC->SetAllowedTouchBehavior(inputBlockId, allowedTouchBehaviors);
+          }
         }
         postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-            this, GetDocument(), *(original->AsTouchEvent()), rootLayersId,
-            inputBlockId);
+            this, GetDocument(), originalEvent, rootLayersId, inputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, targetGuid, inputBlockId,
                                         aApzResult.GetStatus(), status,
@@ -956,7 +951,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsWheelEvent()), rootLayersId,
+          this, GetDocument(), *original->AsWheelEvent(), rootLayersId,
           inputBlockId);
       if (wheelEvent->mCanTriggerSwipe) {
         ReportSwipeStarted(inputBlockId, wheelEvent->TriggersSwipe());
@@ -965,7 +960,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       MOZ_ASSERT(mouseEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsMouseEvent()), rootLayersId,
+          this, GetDocument(), *original->AsMouseEvent(), rootLayersId,
           inputBlockId);
       mAPZEventState->ProcessMouseEvent(*mouseEvent, inputBlockId);
     }

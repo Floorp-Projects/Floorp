@@ -2233,6 +2233,7 @@ class nsIFrame : public nsQueryFrame {
   void DisassociateImage(const mozilla::StyleImage&);
 
   mozilla::StyleImageRendering UsedImageRendering() const;
+  mozilla::StyleTouchAction UsedTouchAction() const;
 
   enum class AllowCustomCursorImage {
     No,
