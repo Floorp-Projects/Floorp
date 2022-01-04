@@ -16,7 +16,6 @@
     "revert-llvmorg-14-init-3651-g85ba583eba19.patch",
     "revert-llvmorg-14-init-3650-g50d7ecc560b2.patch",
     "revert-llvmorg-13-init-8182-gc2297544c047.patch",
-    "revert-llvmorg-13-init-4019-ga478b0a199f4.patch",
-    "revert-llvmorg-12-init-7827-g2a078c307204.patch"
+    "revert-llvmorg-13-init-4019-ga478b0a199f4.patch"
   ]
 }
