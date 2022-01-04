@@ -21,6 +21,7 @@ class ReadableStreamDefaultTeePullAlgorithm;
 // A closure capturing the free variables in the ReadableStreamTee family of
 // algorithms.
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 struct TeeState : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TeeState)
@@ -42,6 +43,17 @@ struct TeeState : public nsISupports {
 
   bool ReadAgain() const { return mReadAgain; }
   void SetReadAgain(bool aReadAgain) { mReadAgain = aReadAgain; }
+
+  // ReadableByteStreamTee uses ReadAgainForBranch{1,2};
+  bool ReadAgainForBranch1() const { return ReadAgain(); }
+  void SetReadAgainForBranch1(bool aReadAgainForBranch1) {
+    SetReadAgain(aReadAgainForBranch1);
+  }
+
+  bool ReadAgainForBranch2() const { return mReadAgainForBranch2; }
+  void SetReadAgainForBranch2(bool aReadAgainForBranch2) {
+    mReadAgainForBranch2 = aReadAgainForBranch2;
+  }
 
   bool Reading() const { return mReading; }
   void SetReading(bool aReading) { mReading = aReading; }
@@ -89,14 +101,18 @@ struct TeeState : public nsISupports {
   // Implicit:
   RefPtr<ReadableStream> mStream;
 
-  // Step 3.
+  // Step 3. (Step Numbering is based on ReadableStreamDefaultTee)
   RefPtr<ReadableStreamGenericReader> mReader;
 
   // Step 4.
   bool mReading = false;
 
   // Step 5.
+  // (Aliased to readAgainForBranch1, for the purpose of ReadableByteStreamTee)
   bool mReadAgain = false;
+
+  // ReadableByteStreamTee
+  bool mReadAgainForBranch2 = false;
 
   // Step 6.
   bool mCanceled1 = false;
