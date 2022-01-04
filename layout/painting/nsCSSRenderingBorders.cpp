@@ -3633,9 +3633,6 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       drawResult = img->GetImageProvider(aManager->LayerManager(), decodeSize,
                                          svgContext, region, flags,
                                          getter_AddRefs(provider));
-      if (!provider) {
-        break;
-      }
 
       Maybe<wr::ImageKey> key =
           aManager->CommandBuilder().CreateImageProviderKey(

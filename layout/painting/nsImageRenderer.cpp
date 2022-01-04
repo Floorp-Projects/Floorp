@@ -626,10 +626,6 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       drawResult = mImageContainer->GetImageProvider(
           aManager->LayerManager(), decodeSize, svgContext, region,
           containerFlags, getter_AddRefs(provider));
-      if (!provider) {
-        NS_WARNING("Failed to get image container");
-        break;
-      }
 
       Maybe<wr::ImageKey> key =
           aManager->CommandBuilder().CreateImageProviderKey(
