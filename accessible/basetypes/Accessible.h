@@ -173,6 +173,11 @@ class Accessible {
 
   virtual void TakeFocus() const = 0;
 
+  /**
+   * Return tag name of associated DOM node.
+   */
+  virtual nsAtom* TagName() const = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

@@ -849,6 +849,8 @@ class LocalAccessible : public nsISupports, public Accessible {
   already_AddRefed<AccAttributes> BundleFieldsForCache(
       uint64_t aCacheDomain, CacheUpdateType aUpdateType);
 
+  virtual nsAtom* TagName() const override;
+
  protected:
   virtual ~LocalAccessible();
 
