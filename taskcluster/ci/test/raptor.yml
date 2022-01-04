@@ -55,7 +55,6 @@ job-defaults:
                         default:
                             - linux64-chromium
                 default: []
-    python-3: true
     variants: [fission]
 
 raptor-youtube-playback-v9-power-firefox:

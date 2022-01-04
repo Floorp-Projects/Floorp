@@ -275,8 +275,6 @@ test_description_schema = Schema(
         # A list of artifacts to install from 'fetch' tasks. Validation deferred
         # to 'job' transforms.
         Optional("fetches"): object,
-        # Opt-in to Python 3 support
-        Optional("python-3"): bool,
         # Raptor / browsertime specific keys, defer validation to 'raptor.py'
         # transform.
         Optional("raptor"): object,

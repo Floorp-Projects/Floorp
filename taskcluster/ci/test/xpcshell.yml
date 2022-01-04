@@ -8,7 +8,6 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             default: null
-    python-3: true
     mozharness:
         script:
             by-test-platform:

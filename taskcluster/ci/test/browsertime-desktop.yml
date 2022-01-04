@@ -35,7 +35,6 @@ job-defaults:
         extra-options:
             - --browsertime
             - --conditioned-profile=settled
-    python-3: true
 
 browsertime-tp6:
     <<: &tp6-defaults
