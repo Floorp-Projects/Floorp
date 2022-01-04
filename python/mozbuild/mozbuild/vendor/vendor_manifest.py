@@ -65,36 +65,65 @@ class VendorManifest(MozbuildObject):
             print("%s %s" % (ref, timestamp))
             return
 
-        self.fetch_and_unpack(ref)
+        def perform_step(step):
+            return step not in self.manifest["vendoring"].get(
+                "skip-vendoring-steps", []
+            )
 
-        self.log(logging.INFO, "vendor", {}, "Removing unnecessary files.")
-        self.clean_upstream()
+        if perform_step("fetch"):
+            self.fetch_and_unpack(ref)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping fetching upstream source.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
-        self.update_yaml(yaml_file, ref, timestamp)
+        if perform_step("exclude"):
+            self.log(logging.INFO, "vendor", {}, "Removing unnecessary files.")
+            self.clean_upstream()
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping removing excluded files.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating files")
-        self.update_files(ref, yaml_file)
+        if perform_step("update-moz-yaml"):
+            self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
+            self.update_yaml(yaml_file, ref, timestamp)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping updating the moz.yaml file.")
 
-        self.log(
-            logging.INFO, "vendor", {}, "Registering changes with version control."
-        )
-        self.repository.add_remove_files(
-            self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
-        )
+        if perform_step("update-actions"):
+            self.log(logging.INFO, "vendor", {}, "Updating files")
+            self.update_files(ref, yaml_file)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping running the update actions.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
-        self.update_moz_build(
-            self.manifest["vendoring"]["vendor-directory"],
-            os.path.dirname(yaml_file),
-            add_to_exports,
-        )
+        if perform_step("hg-add"):
+            self.log(
+                logging.INFO, "vendor", {}, "Registering changes with version control."
+            )
+            self.repository.add_remove_files(
+                self.manifest["vendoring"]["vendor-directory"],
+                os.path.dirname(yaml_file),
+            )
+        else:
+            self.log(
+                logging.INFO,
+                "vendor",
+                {},
+                "Skipping registering changes with version control.",
+            )
+
+        if perform_step("update-moz-build"):
+            self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
+            self.update_moz_build(
+                self.manifest["vendoring"]["vendor-directory"],
+                os.path.dirname(yaml_file),
+                add_to_exports,
+            )
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping update of moz.build files")
 
         self.log(
             logging.INFO,
             "done",
             {"revision": revision},
-            "Update to version '{revision}' ready to commit.",
+            "Update to version '{revision}' completed.",
         )
 
     def get_source_host(self):
