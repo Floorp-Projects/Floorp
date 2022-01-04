@@ -49,7 +49,7 @@ def check_run(args):
             sys.stdout.write(line.decode())
             sys.stdout.flush()
         r = p.wait()
-        if r != 0:
+        if r != 0 and os.environ.get("UPLOAD_DIR"):
             cmake_output_re = re.compile(b'See also "(.*/CMakeOutput.log)"')
             cmake_error_re = re.compile(b'See also "(.*/CMakeError.log)"')
 
@@ -62,16 +62,13 @@ def check_run(args):
             output_match = find_first_match(cmake_output_re)
             error_match = find_first_match(cmake_error_re)
 
-            def dump_file(log):
-                with open(log, "r", errors="replace") as f:
-                    print("\nContents of", log, "follow\n", file=sys.stderr)
-                    for line in f:
-                        print(line, file=sys.stderr)
-
+            upload_dir = os.environ["UPLOAD_DIR"].encode("utf-8")
+            if output_match or error_match:
+                mkdir_p(upload_dir)
             if output_match:
-                dump_file(output_match.group(1))
+                shutil.copy2(output_match.group(1), upload_dir)
             if error_match:
-                dump_file(error_match.group(1))
+                shutil.copy2(error_match.group(1), upload_dir)
     else:
         r = subprocess.call(args)
     assert r == 0
