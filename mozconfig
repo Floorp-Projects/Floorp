@@ -1,6 +1,0 @@
-# Automatically download and use compiled C++components:  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
-
-
-ac_add_options --with-branding=browser/branding/official
-ac_add_options --with-l10n-base=C:/l10n-central
-ac_add_options --with-wasi-sysroot=C:/wasi-sysroot
