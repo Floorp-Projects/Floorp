@@ -529,7 +529,7 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Queries interaction times from the database.
+   * Queries the place id from moz_places for a given url
    *
    * @param {string} url
    *   url to query the place_id of
@@ -557,10 +557,13 @@ const Snapshots = new (class Snapshots {
   /**
    * Queries snapshots that were browsed within an hour of visiting the given context url
    *
+   *   For example, if a user visited Site A two days ago, we would generate a list of snapshots that were visited within an hour of that visit.
+   *   Site A may have also been visited four days ago, we would like to see what websites were browsed then.
+   *
    * @param {string} context_url
    *   the url that we're collection snapshots whose interactions overlapped
    * @returns {Snapshot[]}
-   *   Returns array of overlapping snapshots in order of descending last interaction time.
+   *   Returns array of overlapping snapshots in order of descending overlappingVisitScore (Calculated as 1.0 to 0.0, as the overlap gap goes to snapshot_overlap_limit)
    */
   async queryOverlapping(context_url) {
     await this.#ensureVersionUpdates();
@@ -576,7 +579,7 @@ const Snapshots = new (class Snapshots {
     let rows = await db.executeCached(
       `SELECT h.url AS url, h.title AS title, o.overlappingVisitScore, created_at, removed_at,
       document_type, first_interaction_at, last_interaction_at,
-      user_persisted, description, site_name, preview_image_url, group_concat(e.data, ",") AS page_data,
+      user_persisted, description, site_name, preview_image_url, group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
       h.visit_count
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
@@ -613,6 +616,54 @@ const Snapshots = new (class Snapshots {
     return rows.map(row =>
       this.#translateRow(row, { includeOverlappingVisitScore: true })
     );
+  }
+
+  /**
+   * Queries snapshots which have interactions sharing a common referrer with the context url
+   *
+   * @param {string} context_url
+   *   the url that we're collecting snapshots for
+   * @param {string} referrer_url
+   *   the referrer of the url we're collecting snapshots for (may be empty)
+   * @returns {Snapshot[]}
+   *   Returns array of snapshots with the common referrer
+   */
+  async queryCommonReferrer(context_url, referrer_url) {
+    await this.#ensureVersionUpdates();
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let context_place_id = await this.queryPlaceIdFromUrl(context_url);
+    if (context_place_id == -1) {
+      return [];
+    }
+
+    let context_referrer_id = await this.queryPlaceIdFromUrl(referrer_url);
+    if (context_referrer_id == -1) {
+      return [];
+    }
+
+    let rows = await db.executeCached(
+      `
+      SELECT h.id, h.url AS url, h.title AS title, s.created_at,
+        removed_at, s.document_type, first_interaction_at, last_interaction_at, user_persisted,
+        description, site_name, preview_image_url, h.visit_count,
+        group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
+      FROM moz_places_metadata_snapshots s
+      JOIN moz_places h
+      ON h.id = s.place_id
+      LEFT JOIN moz_places_metadata_snapshots_extra e
+      ON e.place_id = s.place_id
+      WHERE s.place_id != :context_place_id AND s.place_id IN (SELECT DISTINCT place_id FROM moz_places_metadata WHERE referrer_place_id = :context_referrer_id)
+      GROUP BY s.place_id
+    `,
+      { context_referrer_id, context_place_id }
+    );
+
+    return rows.map(row => {
+      let snapshot = this.#translateRow(row);
+      snapshot.commonReferrerScore = 1.0;
+      return snapshot;
+    });
   }
 
   /**
