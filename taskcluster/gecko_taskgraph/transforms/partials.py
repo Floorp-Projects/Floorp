@@ -6,7 +6,10 @@ Transform the partials task into an actual task description.
 """
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    release_level,
+)
 from gecko_taskgraph.util.partials import get_builds
 from gecko_taskgraph.util.platforms import architecture
 from gecko_taskgraph.util.taskcluster import get_artifact_prefix
@@ -141,7 +144,7 @@ def make_task_description(config, jobs):
                 "MAR_CHANNEL_ID": attributes["mar-channel-id"],
             },
         }
-        if config.params.release_level() == "staging":
+        if release_level(config.params["project"]) == "staging":
             worker["env"]["FUNSIZE_ALLOW_STAGING_PREFIXES"] = "true"
 
         task = {

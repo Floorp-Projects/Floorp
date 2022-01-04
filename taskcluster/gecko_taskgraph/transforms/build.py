@@ -8,7 +8,7 @@ kind.
 
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import RELEASE_PROJECTS, is_try
+from gecko_taskgraph.util.attributes import RELEASE_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.schema import resolve_keyed_by
 from gecko_taskgraph.util.treeherder import add_suffix
 from gecko_taskgraph.util.workertypes import worker_type_implementation
@@ -190,7 +190,7 @@ def resolve_keys(config, jobs):
             job,
             "use-sccache",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()},
+            **{"release-level": release_level(config.params["project"])},
         )
         yield job
 
