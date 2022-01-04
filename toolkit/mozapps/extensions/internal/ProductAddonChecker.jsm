@@ -4,9 +4,7 @@
 
 "use strict";
 
-/* exported ProductAddonChecker */
-
-var EXPORTED_SYMBOLS = ["ProductAddonChecker"];
+var EXPORTED_SYMBOLS = ["ProductAddonChecker", "ProductAddonCheckerTestUtils"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -20,12 +18,6 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
 });
-
-// This exists so that tests can override the ServiceRequest behaviour for
-// downloading the addon update XML file.
-var CreateServiceRequest = function() {
-  return new ServiceRequest();
-};
 
 // This will inherit settings from the "addons" logger.
 var logger = Log.repository.getLogger("addons.productaddons");
@@ -212,7 +204,7 @@ function downloadXMLWithRequest(
   allowedCerts = null
 ) {
   return new Promise((resolve, reject) => {
-    let request = CreateServiceRequest();
+    let request = new ServiceRequest();
     // This is here to let unit test code override the ServiceRequest.
     if (request.wrappedJSObject) {
       request = request.wrappedJSObject;
@@ -565,7 +557,27 @@ const ProductAddonChecker = {
       throw e;
     }
   },
+};
 
-  // For test use only.
+// For test use only.
+const ProductAddonCheckerTestUtils = {
   computeHash,
+
+  /**
+   * Used to override ServiceRequest calls with a mock request.
+   * @param mockRequest The mocked ServiceRequest object.
+   * @param callback Method called with the overridden ServiceRequest. The override
+   *        is undone after the callback returns.
+   */
+  async overrideServiceRequest(mockRequest, callback) {
+    let originalServiceRequest = ServiceRequest;
+    ServiceRequest = function() {
+      return mockRequest;
+    };
+    try {
+      return await callback();
+    } finally {
+      ServiceRequest = originalServiceRequest;
+    }
+  },
 };
