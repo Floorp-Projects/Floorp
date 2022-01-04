@@ -10,7 +10,13 @@ def pkg_config(prefixes):
     return tuple("{}pkg-config".format(p) for p in (prefixes or ()) + ("",))
 
 
-pkg_config = check_prog("PKG_CONFIG", pkg_config, allow_missing=True)
+pkg_config = check_prog(
+    "PKG_CONFIG",
+    pkg_config,
+    allow_missing=True,
+    when=compile_environment
+    & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "Android")),
+)
 
 
 @depends_if(pkg_config)
