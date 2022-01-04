@@ -698,7 +698,8 @@ already_AddRefed<PromiseWorkerProxy> PromiseWorkerProxy::Create(
 
   if (NS_WARN_IF(!workerRef)) {
     // Probably the worker is terminating. We cannot complete the operation
-    // and we have to release all the resources.
+    // and we have to release all the resources.  CleanUp releases the extra
+    // ref, too
     proxy->CleanUp();
     return nullptr;
   }
@@ -787,8 +788,10 @@ void PromiseWorkerProxy::CleanUp() {
       return;
     }
 
-    MOZ_ASSERT(mWorkerRef);
-    mWorkerRef->Private()->AssertIsOnWorkerThread();
+    // We can be called if we failed to get a WorkerRef
+    if (mWorkerRef) {
+      mWorkerRef->Private()->AssertIsOnWorkerThread();
+    }
 
     // Release the Promise and remove the PromiseWorkerProxy from the holders of
     // the worker thread since the Promise has been resolved/rejected or the
