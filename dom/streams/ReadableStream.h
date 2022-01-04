@@ -79,6 +79,13 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
     mStoredError = aStoredError;
   }
 
+  UnderlyingSourceErrorCallbackHelper* GetErrorAlgorithm() const {
+    return mErrorAlgorithm;
+  }
+  void SetErrorAlgorithm(UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm) {
+    mErrorAlgorithm = aErrorAlgorithm;
+  }
+
  public:
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
@@ -109,6 +116,9 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
   JS::Heap<JS::Value> mStoredError;
+
+  // Optional Callback for erroring a stream.
+  RefPtr<UnderlyingSourceErrorCallbackHelper> mErrorAlgorithm;
 };
 
 extern bool IsReadableStreamLocked(ReadableStream* aStream);

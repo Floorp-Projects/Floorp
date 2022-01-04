@@ -65,12 +65,14 @@ namespace dom {
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader,
+                                  mErrorAlgorithm)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mStoredError.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader,
+                                    mErrorAlgorithm)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStream)
@@ -502,6 +504,12 @@ void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
     }
     // Step 9.3
     byobReader->ReadIntoRequests().clear();
+  }
+
+  // Not in Specification: Allow notifying native underlying sources that a
+  // stream has been errored.
+  if (aStream->GetErrorAlgorithm()) {
+    aStream->GetErrorAlgorithm()->Call();
   }
 }
 
