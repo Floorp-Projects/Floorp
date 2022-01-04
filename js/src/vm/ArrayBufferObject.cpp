@@ -1824,6 +1824,22 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   return true;
 }
 
+JS_PUBLIC_API bool JS::HasDefinedArrayBufferDetachKey(JSContext* cx,
+                                                      HandleObject obj,
+                                                      bool* isDefined) {
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
+  if (!unwrappedBuffer) {
+    return false;
+  }
+
+  if (unwrappedBuffer->isWasm() || unwrappedBuffer->isPreparedForAsmJS()) {
+    *isDefined = true;
+  }
+
+  return true;
+}
+
 JS_PUBLIC_API bool JS::IsDetachedArrayBufferObject(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {

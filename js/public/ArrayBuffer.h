@@ -250,6 +250,12 @@ extern JS_PUBLIC_API uint8_t* GetArrayBufferData(JSObject* obj,
 extern JS_PUBLIC_API bool DetachArrayBuffer(JSContext* cx,
                                             Handle<JSObject*> obj);
 
+// Indicates if an object has a defined [[ArrayBufferDetachKey]] internal slot,
+// which indicates an ArrayBuffer cannot be detached
+extern JS_PUBLIC_API bool HasDefinedArrayBufferDetachKey(JSContext* cx,
+                                                         Handle<JSObject*> obj,
+                                                         bool* isDefined);
+
 /**
  * Steal the contents of the given ArrayBuffer. The ArrayBuffer has its length
  * set to 0 and its contents array cleared. The caller takes ownership of the
