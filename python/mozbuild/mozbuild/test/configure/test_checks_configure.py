@@ -721,6 +721,11 @@ class TestChecksConfigure(unittest.TestCase):
                 target = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
+                # Skip bootstrapping.
+                @template
+                def check_prog(*args, **kwargs):
+                    del kwargs["bootstrap"]
+                    return check_prog(*args, **kwargs)
                 include('%(topsrcdir)s/build/moz.configure/pkg.configure')
             """
                     % {"topsrcdir": topsrcdir}
