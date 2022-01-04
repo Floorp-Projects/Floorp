@@ -4,42 +4,122 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsILoadGroup.h"
+#include "nsILoadInfo.h"
+#include "nsIPrincipal.h"
+#include "nsICookieJarSettings.h"
+#include "nsNetUtil.h"
+#include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
-#include "nsXULAppAPI.h"
+#include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla::dom {
 
+// FetchInstance
+
 FetchService::FetchInstance::FetchInstance(SafeRefPtr<InternalRequest> aRequest)
     : mRequest(std::move(aRequest)) {}
+
+FetchService::FetchInstance::~FetchInstance() = default;
 
 nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  // TODO:
-  // In this method, the needed information for instancing a FetchDriver will
-  // be created and saved into member variables, which means principal
-  // LoadGroup, cookieJarSettings, performanceStorage.
-  // This will be implemented in the next patch.
+  // Setup principal form InternalRequest
+  const mozilla::UniquePtr<mozilla::ipc::PrincipalInfo>& principalInfo =
+      mRequest->GetPrincipalInfo();
+  MOZ_ASSERT(principalInfo);
+  auto principalOrErr = PrincipalInfoToPrincipal(*principalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return principalOrErr.unwrapErr();
+  }
+  mPrincipal = principalOrErr.unwrap();
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Get needed information for FetchDriver from passed-in channel.
+  if (aChannel) {
+    nsresult rv;
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    MOZ_ASSERT(loadInfo);
+
+    // Principal in the InternalRequest should be the same with the triggering
+    // principal in the LoadInfo
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    rv = loadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (!mPrincipal->Equals(triggeringPrincipal)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // Get loadGroup from channel
+    rv = aChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (!mLoadGroup) {
+      rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), mPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    // Get CookieJarSettings from channel
+    rv = loadInfo->GetCookieJarSettings(getter_AddRefs(mCookieJarSettings));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Get PerformanceStorage from channel
+    mPerformanceStorage = loadInfo->GetPerformanceStorage();
+  } else {
+    // TODO:
+    // Get information from InternalRequest and PFetch IPC parameters.
+    // This will be implemented in bug 1351231.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_OK;
 }
-
-FetchService::FetchInstance::~FetchInstance() = default;
 
 RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  // TODO:
-  // After FetchInstance is initialized in proper, this method will instances a
-  // FetchDriver and call FetchDriver::Fetch() to start an asynchronous
-  // fetching. Once the fetching starts, this method returns a
-  // FetchServiceResponsePromise to its caller. This would be implemented in
-  // following patches.
+  MOZ_ASSERT(mPrincipal);
+  MOZ_ASSERT(mLoadGroup);
+
+  nsresult rv;
+
+  // Create a FetchDriver instance
+  RefPtr<FetchDriver> fetch = MakeRefPtr<FetchDriver>(
+      mRequest.clonePtr(),         // Fetch Request
+      mPrincipal,                  // Principal
+      mLoadGroup,                  // LoadGroup
+      GetMainThreadEventTarget(),  // MainThreadEventTarget
+      mCookieJarSettings,          // CookieJarSettings
+      mPerformanceStorage,         // PerformanceStorage
+      false                        // IsTrackingFetch
+  );
+
+  // Call FetchDriver::Fetch to start fetching.
+  // Pass AbortSignalImpl as nullptr since we no need support AbortSignalImpl
+  // with FetchService. AbortSignalImpl related information should be passed
+  // through PFetch or InterceptedHttpChannel, then call
+  // FetchService::CancelFetch() to abort the running fetch.
+  rv = fetch->Fetch(nullptr, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return FetchServiceResponsePromise::CreateAndResolve(
+        InternalResponse::NetworkError(rv), __func__);
+  }
+
   return mResponsePromiseHolder.Ensure(__func__);
 }
 
@@ -56,7 +136,6 @@ void FetchService::FetchInstance::OnResponseAvailableInternal(
   // Remove the FetchInstance from FetchInstanceTable
   RefPtr<FetchServiceResponsePromise> responsePromise =
       mResponsePromiseHolder.Ensure(__func__);
-
   RefPtr<FetchService> fetchService = FetchService::GetInstance();
   MOZ_ASSERT(fetchService);
   auto entry = fetchService->mFetchInstanceTable.Lookup(responsePromise);
@@ -73,6 +152,8 @@ void FetchService::FetchInstance::OnResponseAvailableInternal(
 bool FetchService::FetchInstance::NeedOnDataAvailable() { return false; }
 void FetchService::FetchInstance::OnDataAvailable() {}
 void FetchService::FetchInstance::FlushConsoleReport() {}
+
+// FetchService
 
 StaticRefPtr<FetchService> gInstance;
 
