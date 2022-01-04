@@ -5,10 +5,13 @@
 #ifndef AccGroupInfo_h_
 #define AccGroupInfo_h_
 
-#include "LocalAccessible-inl.h"
+#include "nsISupportsImpl.h"
+#include "Role.h"
 
 namespace mozilla {
 namespace a11y {
+
+class LocalAccessible;
 
 /**
  * Calculate and store group information.
@@ -16,6 +19,10 @@ namespace a11y {
 class AccGroupInfo {
  public:
   MOZ_COUNTED_DTOR(AccGroupInfo)
+
+  AccGroupInfo() = default;
+  AccGroupInfo(AccGroupInfo&&) = default;
+  AccGroupInfo& operator=(AccGroupInfo&&) = default;
 
   /**
    * Return 1-based position in the group.
@@ -41,28 +48,7 @@ class AccGroupInfo {
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(const LocalAccessible* aAccessible) {
-    mozilla::a11y::role role = aAccessible->Role();
-    if (role != mozilla::a11y::roles::ROW &&
-        role != mozilla::a11y::roles::OUTLINEITEM &&
-        role != mozilla::a11y::roles::OPTION &&
-        role != mozilla::a11y::roles::LISTITEM &&
-        role != mozilla::a11y::roles::MENUITEM &&
-        role != mozilla::a11y::roles::COMBOBOX_OPTION &&
-        role != mozilla::a11y::roles::RICH_OPTION &&
-        role != mozilla::a11y::roles::CHECK_RICH_OPTION &&
-        role != mozilla::a11y::roles::PARENT_MENUITEM &&
-        role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
-        role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
-        role != mozilla::a11y::roles::RADIOBUTTON &&
-        role != mozilla::a11y::roles::PAGETAB &&
-        role != mozilla::a11y::roles::COMMENT) {
-      return nullptr;
-    }
-
-    AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
-    return info;
-  }
+  static AccGroupInfo* CreateGroupInfo(const LocalAccessible* aAccessible);
 
   /**
    * Return a first item for the given container.
@@ -85,7 +71,6 @@ class AccGroupInfo {
   AccGroupInfo(const LocalAccessible* aItem, a11y::role aRole);
 
  private:
-  AccGroupInfo() = delete;
   AccGroupInfo(const AccGroupInfo&) = delete;
   AccGroupInfo& operator=(const AccGroupInfo&) = delete;
 
