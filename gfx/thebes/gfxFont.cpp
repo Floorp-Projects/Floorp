@@ -2970,7 +2970,7 @@ bool gfxFont::ShapeFragmentWithoutWordCache(DrawTarget* aDrawTarget,
 
       // in the 8-bit case, there are no multi-char clusters,
       // so we don't need to do this check
-      if constexpr (sizeof(T) == sizeof(char16_t)) {
+      if (sizeof(T) == sizeof(char16_t)) {
         uint32_t i;
         for (i = 0; i < BACKTRACK_LIMIT; ++i) {
           if (aTextRun->IsClusterStart(aOffset + fragLen - i)) {
@@ -3151,7 +3151,7 @@ bool gfxFont::SplitAndInitTextRun(
             gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES |
             gfx::ShapedTextFlags::TEXT_USE_MATH_SCRIPT |
             gfx::ShapedTextFlags::TEXT_ORIENT_MASK);
-  if constexpr (sizeof(T) == sizeof(uint8_t)) {
+  if (sizeof(T) == sizeof(uint8_t)) {
     flags |= gfx::ShapedTextFlags::TEXT_IS_8BIT;
   }
 
@@ -3197,7 +3197,7 @@ bool gfxFont::SplitAndInitTextRun(
       // in the 8-bit version of this method, TEXT_IS_8BIT was
       // already set as part of |flags|, so no need for a per-word
       // adjustment here
-      if constexpr (sizeof(T) == sizeof(char16_t)) {
+      if (sizeof(T) == sizeof(char16_t)) {
         if (wordIs8Bit) {
           wordFlags |= gfx::ShapedTextFlags::TEXT_IS_8BIT;
         }
