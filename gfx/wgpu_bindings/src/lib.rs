@@ -111,6 +111,7 @@ enum DeviceAction<'a> {
         id::CommandEncoderId,
         wgt::CommandEncoderDescriptor<wgc::Label<'a>>,
     ),
+    Error(String),
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
