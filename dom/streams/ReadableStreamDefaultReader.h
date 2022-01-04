@@ -40,6 +40,10 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   ~ReadableStreamDefaultReader();
 
  public:
+  bool IsDefault() override { return true; }
+  bool IsBYOB() override { return false; }
+  ReadableStreamDefaultReader* asDefault() override { return this; }
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 

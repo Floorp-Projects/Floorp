@@ -24,6 +24,10 @@ class ReadableStreamGenericReader : public nsISupports {
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
+  virtual bool IsDefault() = 0;
+  virtual bool IsBYOB() = 0;
+  virtual ReadableStreamDefaultReader* asDefault() = 0;
+
   Promise* ClosedPromise() { return mClosedPromise; }
   void SetClosedPromise(already_AddRefed<Promise>&& aClosedPromise) {
     mClosedPromise = aClosedPromise;
