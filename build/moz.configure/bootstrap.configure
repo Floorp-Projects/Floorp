@@ -116,17 +116,17 @@ def bootstrap_path(path, **kwargs):
         "--enable-bootstrap",
         toolchains_base_dir,
         bootstrap_toolchain_tasks,
-        shell,
         build_environment,
         dependable(path),
         when=when,
     )
     @imports("os")
     @imports("subprocess")
+    @imports("sys")
     @imports(_from="mozbuild.util", _import="ensureParentDir")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
-    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, shell, build_env, path):
+    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, build_env, path):
         path_parts = path.split("/")
 
         def try_bootstrap(exists):
@@ -169,7 +169,7 @@ def bootstrap_path(path, **kwargs):
             os.makedirs(toolchains_base_dir, exist_ok=True)
             subprocess.run(
                 [
-                    shell,
+                    sys.executable,
                     os.path.join(build_env.topsrcdir, "mach"),
                     "--log-no-times",
                     "artifact",
