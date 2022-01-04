@@ -12,7 +12,7 @@
         android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="text"
+        android:inputType="textUri"
         android:singleLine="true"
         android:hint="@string/mozac_feature_autofill_search_hint"
         android:importantForAutofill="no" />
