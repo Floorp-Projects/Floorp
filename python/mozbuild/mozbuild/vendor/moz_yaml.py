@@ -146,12 +146,23 @@ vendoring:
   url: source url (generally repository clone url)
 
   # Type of hosting for the upstream repository
-  # Valid values are 'gitlab', 'github'
+  # Valid values are 'gitlab', 'github', googlesource
   source-hosting: gitlab
 
   # Base directory of the location where the source files will live in-tree.
   # If omitted, will default to the location the moz.yaml file is in.
   vendor-directory: third_party/directory
+
+  # Allows skipping certain steps of the vendoring process.
+  # Most useful if e.g. vendoring upstream is complicated and should be done by a script
+  # The valid steps that can be skipped are listed below
+  skip-vendoring-steps:
+    - fetch
+    - exclude
+    - update-moz-yaml
+    - update-actions
+    - hg-add
+    - update-moz-build
 
   # List of patch files to apply after vendoring. Applied in the order
   # specified, and alphabetically if globbing is used. Patches must apply
@@ -392,6 +403,7 @@ def _schema_1():
                     Length(min=1),
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
+                "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),
                 "keep": Unique([str]),
