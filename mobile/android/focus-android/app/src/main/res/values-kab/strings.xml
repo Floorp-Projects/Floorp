@@ -800,6 +800,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Askar HTTPS-Only</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Ineεruḍen n tuqqna s wudem awurman ɣer yismal s useqdec n HTTPS i wugar n tɣellist. Tuqqniwin n HTTPS yettmuddu tuqqna taɣellsant, tawgelhant i yismal web wuɣur trezzuḍ.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Tisuraf</string>
     <!-- Description for the exceptions preference screen-->
@@ -889,6 +892,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">Asmel i tebɣiḍ ur issefrak ara HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">S wudem amezwer, %1$s yineεruḍen i tuqqna s useqdec n HTTPS i wugar n tɣellist. I usnifel n uɣewwar-a neɣ i wugar n telɣut, ddu ɣer Iɣewwaren &gt; Tabaḍnit &amp; Taɣellist &gt; Taɣellist.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

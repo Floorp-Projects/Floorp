@@ -794,6 +794,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modo solo HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Intenta automáticamente conectarse usando HTTPS para aumentar la seguridad. Las conexiones HTTPS proporcionan una conexión segura y cifrada a los sitios web que visitas.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Excepciones</string>
     <!-- Description for the exceptions preference screen-->
@@ -883,6 +886,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">El sitio que solicitaste no soporta HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Por defecto, %1$s intenta conectarse mediante HTTPS para aumentar la seguridad. Para cambiar esta configuración u obtener más información, ve a Ajustes &gt; Privacidad y seguridad &gt; Seguridad.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

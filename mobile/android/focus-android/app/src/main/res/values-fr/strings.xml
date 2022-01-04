@@ -642,6 +642,21 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avancé</string>
 
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Lire automatiquement des éléments multimédia</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Autoriser l’audio et la vidéo</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Bloquer l’audio uniquement</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Recommandé</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Bloquer l’audio et la vidéo</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Études</string>
 
@@ -779,8 +794,6 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mode HTTPS uniquement</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS procure une connexion sûre et chiffrée entre %1$s et les sites web sur lesquels vous vous rendez. La plupart des sites web prennent en charge HTTPS. Si le mode HTTPS uniquement est activé, %1$s surclasse alors toutes les connexions en HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
@@ -844,8 +857,13 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Supprimer</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Renommer</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Renommer</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Nom du raccourci</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
