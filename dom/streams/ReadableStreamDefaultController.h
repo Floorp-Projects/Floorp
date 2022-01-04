@@ -34,6 +34,7 @@ struct UnderlyingSource;
 class UnderlyingSourceCancelCallbackHelper;
 class UnderlyingSourcePullCallbackHelper;
 class UnderlyingSourceStartCallbackHelper;
+class ReadableStreamGenericReader;
 
 class ReadableStreamDefaultController final : public ReadableStreamController,
                                               public nsWrapperCache {
@@ -160,7 +161,7 @@ extern void ReadableStreamDefaultControllerClose(
     ErrorResult& aRv);
 
 extern void ReadableStreamDefaultReaderRead(JSContext* aCx,
-                                            ReadableStreamDefaultReader* reader,
+                                            ReadableStreamGenericReader* reader,
                                             ReadRequest* aRequest,
                                             ErrorResult& aRv);
 

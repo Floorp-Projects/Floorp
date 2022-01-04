@@ -26,6 +26,7 @@ namespace dom {
 
 class Promise;
 class ReadableStreamDefaultReader;
+class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
 
 class ReadableStream final : public nsISupports, public nsWrapperCache {
@@ -58,8 +59,10 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   bool Disturbed() const { return mDisturbed; }
   void SetDisturbed(bool aDisturbed) { mDisturbed = aDisturbed; }
 
-  ReadableStreamDefaultReader* GetReader() { return mReader; }
-  void SetReader(ReadableStreamDefaultReader* aReader);
+  ReadableStreamGenericReader* GetReader() { return mReader; }
+  void SetReader(ReadableStreamGenericReader* aReader);
+
+  ReadableStreamDefaultReader* GetDefaultReader();
 
   ReaderState State() const { return mState; }
   void SetState(const ReaderState& aState) { mState = aState; }
@@ -97,7 +100,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
  private:
   RefPtr<ReadableStreamController> mController;
   bool mDisturbed = false;
-  RefPtr<ReadableStreamDefaultReader> mReader;
+  RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
   JS::Heap<JS::Value> mStoredError;
 };
@@ -133,20 +136,7 @@ inline bool ReadableStreamHasBYOBReader(ReadableStream* aStream) {
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-has-default-reader
-inline bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
-  // Step 1.
-  ReadableStreamDefaultReader* reader = aStream->GetReader();
-
-  // Step 2.
-  if (!reader) {
-    return false;
-  }
-
-  // Step 3. Trivially true until we implement ReadableStreamBYOBReader.
-  return true;
-
-  // Step 4. Unreachable until above.
-}
+extern bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 
 }  // namespace dom
 }  // namespace mozilla
