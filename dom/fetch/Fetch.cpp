@@ -367,6 +367,13 @@ class WorkerFetchResolver final : public FetchDriverObserver {
   virtual void FlushConsoleReport() override;
 };
 
+void FetchDriverObserver::OnResponseAvailable(
+    SafeRefPtr<InternalResponse> aResponse) {
+  MOZ_ASSERT(!mGotResponseAvailable);
+  mGotResponseAvailable = true;
+  OnResponseAvailableInternal(std::move(aResponse));
+}
+
 class MainThreadFetchResolver final : public FetchDriverObserver {
   RefPtr<Promise> mPromise;
   RefPtr<Response> mResponse;

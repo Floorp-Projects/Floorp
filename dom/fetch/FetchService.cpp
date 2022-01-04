@@ -12,10 +12,6 @@
 
 namespace mozilla::dom {
 
-/**
- * FetchInstance is an internal representation for each Fetch created by
- * FetchService.
- */
 FetchService::FetchInstance::FetchInstance(SafeRefPtr<InternalRequest> aRequest)
     : mRequest(std::move(aRequest)) {}
 
@@ -46,6 +42,37 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   // following patches.
   return mResponsePromiseHolder.Ensure(__func__);
 }
+
+void FetchService::FetchInstance::OnResponseEnd(
+    FetchDriverObserver::EndReason aReason) {
+  if (aReason == eAborted) {
+    mResponsePromiseHolder.ResolveIfExists(
+        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+  }
+}
+
+void FetchService::FetchInstance::OnResponseAvailableInternal(
+    SafeRefPtr<InternalResponse> aResponse) {
+  // Remove the FetchInstance from FetchInstanceTable
+  RefPtr<FetchServiceResponsePromise> responsePromise =
+      mResponsePromiseHolder.Ensure(__func__);
+
+  RefPtr<FetchService> fetchService = FetchService::GetInstance();
+  MOZ_ASSERT(fetchService);
+  auto entry = fetchService->mFetchInstanceTable.Lookup(responsePromise);
+  MOZ_ASSERT(entry);
+  entry.Remove();
+
+  // Resolve the FetchServiceResponsePromise
+  mResponsePromiseHolder.ResolveIfExists(std::move(aResponse), __func__);
+}
+
+// TODO:
+// Following methods would not be used for navigation preload, but would be used
+// with PFetch. They will be implemented in bug 1351231.
+bool FetchService::FetchInstance::NeedOnDataAvailable() { return false; }
+void FetchService::FetchInstance::OnDataAvailable() {}
+void FetchService::FetchInstance::FlushConsoleReport() {}
 
 StaticRefPtr<FetchService> gInstance;
 
