@@ -261,6 +261,8 @@ pub struct RenderBundleEncoderDescriptor<'a> {
     color_formats: *const wgt::TextureFormat,
     color_formats_length: usize,
     depth_stencil_format: Option<&'a wgt::TextureFormat>,
+    depth_read_only: bool,
+    stencil_read_only: bool,
     sample_count: u32,
 }
 
@@ -616,6 +618,7 @@ pub extern "C" fn wgpu_client_create_command_encoder(
 pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     device_id: id::DeviceId,
     desc: &RenderBundleEncoderDescriptor,
+    bb: &mut ByteBuf,
 ) -> *mut wgc::command::RenderBundleEncoder {
     let descriptor = wgc::command::RenderBundleEncoderDescriptor {
         label: cow_label(&desc.label),
@@ -624,15 +627,20 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
             .depth_stencil_format
             .map(|&format| wgt::RenderBundleDepthStencil {
                 format,
-                depth_read_only: false, //TODO: add to `RenderBundleEncoderDescriptor`
-                stencil_read_only: false,
+                depth_read_only: desc.depth_read_only,
+                stencil_read_only: desc.stencil_read_only,
             }),
         sample_count: desc.sample_count,
         multiview: None,
     };
     match wgc::command::RenderBundleEncoder::new(&descriptor, device_id, None) {
         Ok(encoder) => Box::into_raw(Box::new(encoder)),
-        Err(e) => panic!("Error in Device::create_render_bundle_encoder: {}", e),
+        Err(e) => {
+            let message = format!("Error in Device::create_render_bundle_encoder: {}", e);
+            let action = DeviceAction::Error(message);
+            *bb = make_byte_buf(&action);
+            ptr::null_mut()
+        }
     }
 }
 
