@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     "TestBufferReader.cpp",
     "TestDataMutex.cpp",
     "TestDecoderBenchmark.cpp",
+    "TestDeviceInputTrack.cpp",
     "TestDriftCompensation.cpp",
     "TestDynamicResampler.cpp",
     "TestGMPUtils.cpp",
