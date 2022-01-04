@@ -35,4 +35,12 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Czy zezwolić witrynie „%1$s” na przechowywanie danych na urządzeniu?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">Czy zezwolić witrynie „%1$s” na odtwarzanie treści chronionych przez DRM?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">Czy zezwolić witrynie „%1$s” na używanie swoich ciasteczek na witrynie „%2$s”?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">Możesz zablokować dostęp, jeśli nie jest jasne, dlaczego witryna „%s” potrzebuje tych danych.</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">Więcej informacji</string>
 </resources>

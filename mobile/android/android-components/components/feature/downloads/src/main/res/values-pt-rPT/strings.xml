@@ -45,6 +45,12 @@
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">A permissão de acesso a ficheiros e media é necessária para transferir ficheiros. Aceda às configurações do Android, toque em permissões e toque em permitir.</string>
 
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Cancelar transferências privadas?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Se fechar todos os separadores Privados agora, %1$s transferências serão canceladas. Tem a certeza de que pretende sair da navegação privada?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">Cancelar transferências</string>
-    </resources>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Manter a navegação privada</string>
+</resources>
