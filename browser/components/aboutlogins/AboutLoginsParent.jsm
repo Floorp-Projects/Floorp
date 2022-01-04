@@ -490,6 +490,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       let summary;
       try {
         summary = await LoginCSVImport.importFromCSV(path);
+        await AboutLogins._reloadAllLogins();
       } catch (e) {
         Cu.reportError(e);
         this.sendAsyncMessage(
@@ -560,9 +561,7 @@ var AboutLogins = {
 
     if (topic == "passwordmgr-crypto-login") {
       this.removeNotifications(MASTER_PASSWORD_NOTIFICATION_ID);
-      let logins = await this.getAllLogins();
-      this.messageSubscribers("AboutLogins:AllLogins", logins);
-      await this._sendAllLoginRelatedObjects(logins);
+      await this._reloadAllLogins();
       return;
     }
 
@@ -679,6 +678,12 @@ var AboutLogins = {
       } catch (ex) {}
     }
     return vanillaFavicons;
+  },
+
+  async _reloadAllLogins() {
+    let logins = await this.getAllLogins();
+    this.messageSubscribers("AboutLogins:AllLogins", logins);
+    await this._sendAllLoginRelatedObjects(logins);
   },
 
   showMasterPasswordLoginNotifications() {
