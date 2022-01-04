@@ -204,7 +204,7 @@ NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
 MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultReaderRead(JSContext* aCx,
-                                     ReadableStreamDefaultReader* aReader,
+                                     ReadableStreamGenericReader* aReader,
                                      ReadRequest* aRequest, ErrorResult& aRv) {
   // Step 1.
   ReadableStream* stream = aReader->GetStream();
