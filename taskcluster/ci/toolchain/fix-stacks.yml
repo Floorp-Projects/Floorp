@@ -27,7 +27,7 @@ linux64-fix-stacks:
         toolchain:
             - linux64-binutils
             - linux64-clang-13
-            - linux64-rust-1.47
+            - linux64-rust-1.57
             - sysroot-x86_64-linux-gnu
 
 macosx64-fix-stacks:
@@ -40,7 +40,7 @@ macosx64-fix-stacks:
         toolchain:
             - linux64-cctools-port-clang-13
             - linux64-clang-13
-            - linux64-rust-macos-1.47
+            - linux64-rust-macos-1.57
             - macosx64-sdk-11.0
 
 macosx64-aarch64-fix-stacks:
@@ -53,7 +53,7 @@ macosx64-aarch64-fix-stacks:
         toolchain:
             - linux64-cctools-port-clang-13
             - linux64-clang-13
-            - linux64-rust-macos-1.49
+            - linux64-rust-macos-1.57
             - macosx64-sdk-11.0
 
 win32-fix-stacks:
@@ -72,4 +72,4 @@ win32-fix-stacks:
         toolchain:
             - linux64-clang-13
             - linux64-liblowercase
-            - linux64-rust-windows-1.47
+            - linux64-rust-windows-1.57
