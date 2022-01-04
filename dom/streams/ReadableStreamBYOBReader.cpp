@@ -275,5 +275,22 @@ void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
   ReadableStreamReaderGenericRelease(this, aRv);
 }
 
+// https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
+already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
+    JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv) {
+  // Step 1. Let reader be a new ReadableStreamBYOBReader.
+  RefPtr<ReadableStreamBYOBReader> reader =
+      new ReadableStreamBYOBReader(aStream->GetParentObject());
+
+  // Step 2. Perform ? SetUpReadableStreamBYOBReader(reader, stream).
+  SetUpReadableStreamBYOBReader(aCx, reader, *aStream, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 3. Return reader.
+  return reader.forget();
+}
+
 }  // namespace dom
 }  // namespace mozilla

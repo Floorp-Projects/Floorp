@@ -30,6 +30,7 @@ struct ReadIntoRequest : public nsISupports,
 
   // An algorithm taking a chunk or undefined, called when no chunks are
   // available because the stream is closed
+  MOZ_CAN_RUN_SCRIPT
   virtual void CloseSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                           ErrorResult& errorResult) = 0;
 

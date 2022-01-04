@@ -156,6 +156,12 @@ inline bool ReadableStreamHasBYOBReader(ReadableStream* aStream) {
 // https://streams.spec.whatwg.org/#readable-stream-has-default-reader
 extern bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 
+extern already_AddRefed<ReadableStream> CreateReadableByteStream(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm, ErrorResult& aRv);
+
 }  // namespace dom
 }  // namespace mozilla
 
