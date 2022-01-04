@@ -377,8 +377,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
     chunk->mBufferFormat = AUDIO_FORMAT_S16;
     chunk->mPrincipalHandle = aPrincipalHandle;
   }
-  void AppendSegment(const AudioSegment* aSegment,
-                     const PrincipalHandle& aPrincipalHandle) {
+  void AppendSegment(const AudioSegment* aSegment) {
     MOZ_ASSERT(aSegment);
 
     for (const AudioChunk& c : aSegment->mChunks) {
@@ -386,7 +385,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
       chunk->mBuffer = c.mBuffer;
       chunk->mChannelData = c.mChannelData;
       chunk->mBufferFormat = c.mBufferFormat;
-      chunk->mPrincipalHandle = aPrincipalHandle;
+      chunk->mPrincipalHandle = c.mPrincipalHandle;
     }
   }
   template <typename T>

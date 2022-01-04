@@ -420,14 +420,15 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
   }
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack] {
+      __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack,
+                 principal = mPrincipal] {
         if (track->IsDestroyed()) {
           return;
         }
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             track, inputProcessing, StartStopMessage::Start));
-        track->OpenAudioInput(deviceID, inputProcessing);
+        track->OpenAudioInput(deviceID, inputProcessing, principal);
       }));
 
   ApplySettings(mCurrentPrefs);
@@ -701,7 +702,7 @@ void AudioInputProcessing::Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
         "(Graph %p, Driver %p) AudioInputProcessing %p Forwarding %" PRId64
         " frames of input data to output directly (PassThrough)",
         aGraph, aGraph->CurrentDriver(), this, aInput->GetDuration());
-    aOutput->AppendSegment(aInput, mPrincipal);
+    aOutput->AppendSegment(aInput);
     return;
   }
 
@@ -851,6 +852,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   MOZ_ASSERT(mPacketizerInput->mPacketSize ==
              GetPacketSize(aGraph->GraphRate()));
 
+  const PrincipalHandle principal = GetCheckedPrincipal(aSegment);
   // The WriteToInterleavedBuffer will do upmix or downmix if the channel-count
   // in aSegment's chunks is different from mPacketizerInput->mChannels
   // WriteToInterleavedBuffer could be avoided once Bug 1729041 is done.
@@ -1000,7 +1002,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     RefPtr<SharedBuffer> other = buffer;
     mSegment.AppendFrames(other.forget(), processedOutputChannelPointersConst,
                           static_cast<int32_t>(mPacketizerInput->mPacketSize),
-                          mPrincipal);
+                          principal);
   }
 }
 
@@ -1100,6 +1102,34 @@ void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraphImpl* aGraph) {
   mPacketizerInput = Nothing();
 }
 
+PrincipalHandle AudioInputProcessing::GetCheckedPrincipal(
+    const AudioSegment& aSegment) {
+  MOZ_ASSERT(!aSegment.IsEmpty());
+
+  if (aSegment.IsNull()) {
+    return PRINCIPAL_HANDLE_NONE;
+  }
+
+  Maybe<PrincipalHandle> principal;
+  for (AudioSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
+       iter.Next()) {
+    const AudioChunk& chunk = *iter;
+    if (!chunk.IsNull()) {
+      if (!principal) {
+        principal.emplace(chunk.mPrincipalHandle);
+        continue;
+      }
+      if (*principal != chunk.mPrincipalHandle) {
+        MOZ_DIAGNOSTIC_ASSERT(
+            false, "All non null data should have the same PrincipalHandle");
+      }
+    }
+  }
+  MOZ_DIAGNOSTIC_ASSERT(principal);
+  MOZ_DIAGNOSTIC_ASSERT(*principal == mPrincipal);
+  return principal.valueOr(mPrincipal);  // Avoid crashing in release
+}
+
 void AudioInputTrack::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
   CloseAudioInput();
@@ -1170,8 +1200,7 @@ void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     } else {
       MOZ_ASSERT(mInputs.Length() == 1);
       AudioSegment data;
-      GetInputSourceData(data, mInputProcessing->GetPrincipalHandle(),
-                         mInputs[0], aFrom, aTo);
+      GetInputSourceData(data, mInputs[0], aFrom, aTo);
       mInputProcessing->Process(GraphImpl(), aFrom, aTo, &data,
                                 GetData<AudioSegment>());
     }
@@ -1184,7 +1213,6 @@ void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 }
 
 void AudioInputTrack::GetInputSourceData(AudioSegment& aOutput,
-                                         const PrincipalHandle& aPrincipal,
                                          const MediaInputPort* aPort,
                                          GraphTime aFrom, GraphTime aTo) const {
   MOZ_ASSERT(mGraph->OnGraphThread());
@@ -1230,13 +1258,7 @@ void AudioInputTrack::GetInputSourceData(AudioSegment& aOutput,
           source->GraphTimeToTrackTimeWithBlocking(interval.mStart);
       TrackTime end = source->GraphTimeToTrackTimeWithBlocking(interval.mEnd);
       MOZ_ASSERT(source->GetData<AudioSegment>()->GetDuration() >= end);
-
-      AudioSegment data;
-      data.AppendSlice(*source->GetData<AudioSegment>(), start, end);
-
-      // Replace the principal
-      aOutput.AppendSegment(&data, aPrincipal);
-
+      aOutput.AppendSlice(*source->GetData<AudioSegment>(), start, end);
       LOG_FRAME("(Graph %p, Driver %p) AudioInputTrack %p Getting %" PRId64
                 " ticks of real data from input port source %p",
                 mGraph, mGraph->CurrentDriver(), this, end - start, source);
@@ -1251,18 +1273,20 @@ void AudioInputTrack::SetInputProcessingImpl(
 }
 
 nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
-                                         AudioDataListener* aListener) {
+                                         AudioDataListener* aListener,
+                                         const PrincipalHandle& aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   MOZ_ASSERT(!mInputListener);
   MOZ_ASSERT(mDeviceId.isNothing());
   mInputListener = aListener;
-  ProcessedMediaTrack* input = GraphImpl()->GetDeviceTrack(aId);
+  NativeInputTrack* input =
+      GraphImpl()->GetOrCreateDeviceTrack(aId, aPrincipal);
   MOZ_ASSERT(input);
   LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input, this);
   mPort = AllocateInputPort(input);
   mDeviceId.emplace(aId);
-  return GraphImpl()->OpenAudioInput(aId, aListener);
+  return GraphImpl()->OpenAudioInput(aId, mInputListener.get());
 }
 
 void AudioInputTrack::CloseAudioInput() {
