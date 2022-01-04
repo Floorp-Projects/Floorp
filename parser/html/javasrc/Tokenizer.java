@@ -1498,7 +1498,7 @@ public class Tokenizer implements Locator, Locator2 {
             // but not doing that without profiling. In C++ with jemalloc,
             // the corresponding method should do math to round up here
             // to avoid slop.
-            char[] newBuf = new char[worstCase];
+            char[] newBuf = new char[Math.max(worstCase, (strBuf.length*5)/4)];
             System.arraycopy(strBuf, 0, newBuf, 0, strBufLen);
             strBuf = newBuf;
         }
@@ -3182,7 +3182,7 @@ public class Tokenizer implements Locator, Locator2 {
                                 cstart = pos + 1;
                                 state = transition(state, Tokenizer.DATA, reconsume, pos);
                                 // Since a CDATA section starts with a less-than sign, it
-                                // is participates in the suspension-after-current-token
+                                // participates in the suspension-after-current-token
                                 // behavior. (The suspension can be requested when the
                                 // less-than sign has been seen but we don't yet know the
                                 // resulting token type.) Therefore, we need to deal with
@@ -6200,13 +6200,13 @@ public class Tokenizer implements Locator, Locator2 {
                             // parsing in Java or in Gecko.
                             // Since XML View Source doesn't use the
                             // suspension-after-current-token facility, its extension
-                            // to processing instruction states is strictly unnecessary
+                            // to processing-instruction states is strictly unnecessary
                             // at the moment. However, if these states ever were to be
                             // used together with the suspension-after-current-token
                             // facility, these states would need to participate, since
                             // suspension could be requested when only less-than has been
                             // seen and we don't yet know if we end up here. Handling
-                            // the currently unnecessary case in order to avoid leaving
+                            // the currently-unnecessary case in order to avoid leaving
                             // a trap for future modification.
                             suspendIfRequestedAfterCurrentNonTextToken();
                             if (shouldSuspend) {
@@ -6981,7 +6981,7 @@ public class Tokenizer implements Locator, Locator2 {
     /**
      * If a previous call to <code>suspendAfterCurrentTokenIfNotInText()</code>
      * happened in a non-text context, this method turns that deferred suspension
-     * request into an immediately pending suspension request.
+     * request into an immediately-pending suspension request.
      */
     private void suspendIfRequestedAfterCurrentNonTextToken() {
         if (suspendAfterCurrentNonTextToken) {
