@@ -250,7 +250,8 @@ sm-arm64-sim-cranelift-linux64/debug:
         tier: 3
     run:
         spidermonkey-variant: arm64-cranelift-sim
-    run-on-projects: ['mozilla-central']
+    # Disable by default but allow try pushes to explicitly request.
+    run-on-projects: []
     fetches:
         toolchain:
             - linux64-clang
