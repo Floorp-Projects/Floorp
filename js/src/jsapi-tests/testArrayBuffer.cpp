@@ -5,13 +5,17 @@
 #include "builtin/TestingFunctions.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject,NewArrayBuffer{,WithContents},StealArrayBufferContents}
+#include "js/ArrayBufferMaybeShared.h"
 #include "js/CallAndConstruct.h"
 #include "js/Exception.h"
 #include "js/experimental/TypedData.h"  // JS_New{Int32,Uint8}ArrayWithBuffer
 #include "js/friend/ErrorMessages.h"    // JSMSG_*
 #include "js/MemoryFunctions.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement, JS_GetProperty, JS_SetElement
+#include "js/Realm.h"
 #include "jsapi-tests/tests.h"
+
+#include "vm/Realm-inl.h"
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal) {
   static const unsigned NUM_TEST_BUFFERS = 2;
@@ -301,3 +305,145 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
   return true;
 }
 END_TEST(testArrayBuffer_serializeExternal)
+
+BEGIN_TEST(testArrayBuffer_copyData) {
+  ExternalData data1("One two three four");
+  JS::RootedObject buffer1(cx, JS::NewExternalArrayBuffer(
+                                   cx, data1.len(), data1.contents(), nullptr));
+
+  CHECK(buffer1);
+
+  ExternalData data2("Six");
+  JS::RootedObject buffer2(cx, JS::NewExternalArrayBuffer(
+                                   cx, data2.len(), data2.contents(), nullptr));
+
+  CHECK(buffer2);
+
+  // Check we can't copy from a larger to a smaller buffer.
+  CHECK(!JS::ArrayBufferCopyData(cx, buffer2, 0, buffer1, 0, data1.len()));
+
+  // Verify expected exception is thrown.
+  {
+    JS::ExceptionStack exnStack(cx);
+    CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
+
+    JS::ErrorReportBuilder report(cx);
+    CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
+
+    CHECK_EQUAL(report.report()->errorNumber,
+                static_cast<unsigned int>(JSMSG_ARRAYBUFFER_COPY_RANGE));
+  }
+
+  CHECK(JS::ArrayBufferCopyData(
+      cx, buffer1, 0, buffer2, 0,
+      data2.len() - 1 /* don't copy null terminator */));
+
+  {
+    size_t len;
+    bool isShared;
+    uint8_t* bufferData;
+    JS::GetArrayBufferLengthAndData(buffer1, &len, &isShared, &bufferData);
+
+    ExternalData expected1("Six two three four");
+
+    fprintf(stderr, "expected %s actual %s\n", expected1.asString(),
+            bufferData);
+
+    CHECK_EQUAL(len, expected1.len());
+    CHECK_EQUAL(memcmp(expected1.contents(), bufferData, expected1.len()), 0);
+  }
+
+  return true;
+}
+END_TEST(testArrayBuffer_copyData)
+
+BEGIN_TEST(testArrayBuffer_copyDataAcrossGlobals) {
+  JS::RootedObject otherGlobal(cx, createGlobal(nullptr));
+  if (!otherGlobal) {
+    return false;
+  }
+
+  ExternalData data1("One two three four");
+  JS::RootedObject buffer1(cx);
+  {
+    js::AutoRealm realm(cx, otherGlobal);
+    buffer1 =
+        JS::NewExternalArrayBuffer(cx, data1.len(), data1.contents(), nullptr);
+  }
+  CHECK(buffer1);
+  CHECK(JS_WrapObject(cx, &buffer1));
+
+  ExternalData data2("Six");
+  JS::RootedObject buffer2(cx, JS::NewExternalArrayBuffer(
+                                   cx, data2.len(), data2.contents(), nullptr));
+
+  CHECK(buffer2);
+
+  // Check we can't copy from a larger to a smaller buffer.
+  CHECK(!JS::ArrayBufferCopyData(cx, buffer2, 0, buffer1, 0, data1.len()));
+
+  // Verify expected exception is thrown.
+  {
+    JS::ExceptionStack exnStack(cx);
+    CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
+
+    JS::ErrorReportBuilder report(cx);
+    CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
+
+    CHECK_EQUAL(report.report()->errorNumber,
+                static_cast<unsigned int>(JSMSG_ARRAYBUFFER_COPY_RANGE));
+  }
+
+  CHECK(JS::ArrayBufferCopyData(
+      cx, buffer1, 0, buffer2, 0,
+      data2.len() - 1 /* don't copy null terminator */));
+
+  {
+    JS::RootedObject unwrappedBuffer1(
+        cx, JS::UnwrapArrayBufferMaybeShared(buffer1));
+    CHECK(unwrappedBuffer1);
+
+    size_t len;
+    bool isShared;
+    uint8_t* bufferData;
+    JS::GetArrayBufferLengthAndData(unwrappedBuffer1, &len, &isShared,
+                                    &bufferData);
+
+    ExternalData expected1("Six two three four");
+
+    fprintf(stderr, "expected %s actual %s\n", expected1.asString(),
+            bufferData);
+
+    CHECK_EQUAL(len, expected1.len());
+    CHECK_EQUAL(memcmp(expected1.contents(), bufferData, expected1.len()), 0);
+  }
+
+  return true;
+}
+END_TEST(testArrayBuffer_copyDataAcrossGlobals)
+
+BEGIN_TEST(testArrayBuffer_ArrayBufferClone) {
+  ExternalData data("One two three four");
+  JS::RootedObject externalBuffer(
+      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(), nullptr));
+
+  CHECK(externalBuffer);
+
+  size_t lengthToCopy = 3;
+  JS::RootedObject clonedBuffer(
+      cx, JS::ArrayBufferClone(cx, externalBuffer, 4, lengthToCopy));
+  CHECK(clonedBuffer);
+
+  size_t len;
+  bool isShared;
+  uint8_t* bufferData;
+  JS::GetArrayBufferLengthAndData(clonedBuffer, &len, &isShared, &bufferData);
+
+  CHECK_EQUAL(len, lengthToCopy);
+
+  ExternalData expectedData("two");
+  CHECK_EQUAL(memcmp(expectedData.contents(), bufferData, len), 0);
+
+  return true;
+}
+END_TEST(testArrayBuffer_ArrayBufferClone)
