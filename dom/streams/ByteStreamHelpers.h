@@ -22,6 +22,8 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject);
 bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
                             ErrorResult& aRv);
 
+JSObject* CloneAsUint8Array(JS::HandleObject O, ErrorResult& aRv);
+
 }  // namespace dom
 }  // namespace mozilla
 
