@@ -100,8 +100,8 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
             )
             self.device.push(local_file, remote_file)
 
-    def build_environment(self, enable_webrender=False):
-        env = self.build_core_environment({}, enable_webrender)
+    def build_environment(self):
+        env = self.build_core_environment({})
         env["LD_LIBRARY_PATH"] = self.remote_bin_dir
         env["TMPDIR"] = self.remote_tmp_dir
         env["HOME"] = self.remote_home_dir
@@ -268,7 +268,6 @@ def run_test_harness(options, args):
         progs,
         options.xre_path,
         options.symbols_path,
-        enable_webrender=options.enable_webrender,
     )
     return result
 

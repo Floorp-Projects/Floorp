@@ -238,10 +238,8 @@ class JUnitTestRunner(MochitestDesktop):
         env["R_LOG_VERBOSE"] = "1"
         env["R_LOG_LEVEL"] = "6"
         env["R_LOG_DESTINATION"] = "stderr"
-        if self.options.enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-        else:
-            env["MOZ_WEBRENDER"] = "0"
+        # webrender needs gfx.webrender.all=true, gtest doesn't use prefs
+        env["MOZ_WEBRENDER"] = "1"
         # FIXME: When android switches to using Fission by default,
         # MOZ_FORCE_DISABLE_FISSION will need to be configured correctly.
         if self.options.enable_fission:
@@ -573,13 +571,6 @@ class JunitArgumentParser(argparse.ArgumentParser):
             dest="coverage_output_dir",
             default=None,
             help="If collecting code coverage, save the report file in this dir.",
-        )
-        self.add_argument(
-            "--enable-webrender",
-            action="store_true",
-            dest="enable_webrender",
-            default=False,
-            help="Enable the WebRender compositor in Gecko.",
         )
         self.add_argument(
             "--enable-fission",

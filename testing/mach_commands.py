@@ -472,13 +472,6 @@ def test(command_context, what, extra_args, **log_args):
     "cppunittest", category="testing", description="Run cpp unit tests (C++ tests)."
 )
 @CommandArgument(
-    "--enable-webrender",
-    action="store_true",
-    default=False,
-    dest="enable_webrender",
-    help="Enable the WebRender compositor in Gecko.",
-)
-@CommandArgument(
     "test_files",
     nargs="*",
     metavar="N",

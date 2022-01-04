@@ -210,15 +210,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 },
             ],
             [
-                ["--enable-webrender"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_webrender",
-                    "default": False,
-                    "help": "Enable the WebRender compositor in Gecko.",
-                },
-            ],
-            [
                 ["--threads"],
                 {
                     "action": "store",
@@ -615,9 +606,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c["headless"]:
                 base_cmd.append("--headless")
-
-            if c["enable_webrender"]:
-                base_cmd.append("--enable-webrender")
 
             if c.get("threads"):
                 base_cmd.extend(["--threads", c["threads"]])
