@@ -21,7 +21,6 @@ from voluptuous import (
 )
 
 from . import GECKO
-from .util.attributes import release_level
 
 logger = logging.getLogger(__name__)
 
@@ -236,14 +235,6 @@ class Parameters(ReadOnlyDict):
 
         endpoint = "file" if pretty else "raw-file"
         return f"{repo}/{endpoint}/{rev}/{path}"
-
-    def release_level(self):
-        """
-        Whether this is a staging release or not.
-
-        :return str: One of "production" or "staging".
-        """
-        return release_level(self["project"])
 
     def __str__(self):
         return f"Parameters(id={self.id}) (from {self.format_spec(self.spec)})"

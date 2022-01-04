@@ -18,7 +18,7 @@ from copy import deepcopy
 import attr
 
 from mozbuild.util import memoize
-from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try
+from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.treeherder import split_symbol
 from gecko_taskgraph.transforms.base import TransformSequence
@@ -1080,7 +1080,7 @@ def build_balrog_payload(config, task, task_def):
                     task["description"],
                     **{
                         "release-type": config.params["release_type"],
-                        "release-level": config.params.release_level(),
+                        "release-level": release_level(config.params["project"]),
                         "beta-number": beta_number,
                     },
                 )
@@ -1773,7 +1773,7 @@ def build_task(config, tasks):
                 config.graph_config,
                 task["worker-type"],
                 level=level,
-                release_level=config.params.release_level(),
+                release_level=release_level(config.params["project"]),
             )
         task["worker-type"] = "/".join([provisioner_id, worker_type])
         project = config.params["project"]
