@@ -16,7 +16,6 @@ add_task(async function() {
   info("Test expand/collapse small JSON started");
 
   await addJsonViewTab(TEST_JSON_URL);
-  const browser = gBrowser.selectedBrowser;
 
   /* Initial sanity check */
   const countBefore = await getElementCount(".treeRow");
@@ -24,7 +23,7 @@ add_task(async function() {
 
   /* Test the "Collapse All" button */
   let selector = ".jsonPanelBox .toolbar button.collapse";
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
+  await clickJsonNode(selector);
   let countAfter = await getElementCount(".treeRow");
   is(countAfter, 3, "There must be three rows");
 
@@ -35,7 +34,7 @@ add_task(async function() {
     jsonViewStrings.GetStringFromName("jsonViewer.ExpandAll"),
     "Expand button doesn't warn that the action will be slow"
   );
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
+  await clickJsonNode(selector);
   countAfter = await getElementCount(".treeRow");
   is(countAfter, 6, "There must be six expanded rows");
 });
