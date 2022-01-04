@@ -7,11 +7,12 @@
 #define _mozilla_dom_FetchService_h
 
 #include "nsIChannel.h"
+#include "nsTHashMap.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/SafeRefPtr.h"
-#include "nsTHashMap.h"
 
 namespace mozilla::dom {
 
@@ -62,12 +63,7 @@ class FetchService final {
    * fetch->Initialize();
    * RefPtr<FetchServiceResponsePromise> fetch->Fetch();
    */
-  // TODO:
-  // FetchInstance should inherit FetchDriverObserver.
-  // Will be implemented in following patches.
-  class FetchInstance final {
-    NS_INLINE_DECL_REFCOUNTING(FetchInstance);
-
+  class FetchInstance final : public FetchDriverObserver {
    public:
     explicit FetchInstance(SafeRefPtr<InternalRequest> aRequest);
 
@@ -81,6 +77,14 @@ class FetchService final {
     nsresult Initialize(nsIChannel* aChannel = nullptr);
 
     RefPtr<FetchServiceResponsePromise> Fetch();
+
+    /* FetchDriverObserver interface */
+    void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
+    void OnResponseAvailableInternal(
+        SafeRefPtr<InternalResponse> aResponse) override;
+    bool NeedOnDataAvailable() override;
+    void OnDataAvailable() override;
+    void FlushConsoleReport() override;
 
    private:
     ~FetchInstance();
