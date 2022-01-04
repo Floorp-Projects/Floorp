@@ -101,17 +101,6 @@ base_schema = Schema(
 )
 
 
-def extend_parameters_schema(schema):
-    """
-    Extend the schema for parameters to include per-project configuration.
-
-    This should be called by the `gecko_taskgraph.register` function in the
-    graph-configuration.
-    """
-    global base_schema
-    base_schema = base_schema.extend(schema)
-
-
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""
 
