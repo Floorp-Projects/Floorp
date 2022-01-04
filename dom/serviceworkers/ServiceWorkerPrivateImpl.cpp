@@ -925,7 +925,7 @@ ServiceWorkerPrivateImpl::SetupNavigationPreload(
     // Fail to get the request's body, stop navigation preload by returning
     // nullptr.
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
+      return FetchService::NetworkErrorResponse(rv);
     }
     preloadRequest->SetBody(uploadStream, ipcRequest.bodySize());
   }
@@ -944,11 +944,15 @@ ServiceWorkerPrivateImpl::SetupNavigationPreload(
       aRegistration->GetNavigationPreloadState().headerValue(), err);
   preloadRequest->Headers()->SetGuard(headersGuard, err);
 
-  // TODO:
   // Step 3. Perform fetch through FetchService with the cloned request
   if (!err.Failed()) {
+    nsCOMPtr<nsIChannel> underlyingChannel;
+    MOZ_ALWAYS_SUCCEEDS(
+        aChannel->GetChannel(getter_AddRefs(underlyingChannel)));
+    RefPtr<FetchService> fetchService = FetchService::GetInstance();
+    return fetchService->Fetch(std::move(preloadRequest), underlyingChannel);
   }
-  return nullptr;
+  return FetchService::NetworkErrorResponse(NS_ERROR_UNEXPECTED);
 }
 
 nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
@@ -979,8 +983,10 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
   bool preloadNavigation = isNonSubresourceRequest &&
                            request.method().LowerCaseEqualsASCII("get") &&
                            aRegistration->GetNavigationPreloadState().enabled();
+
+  RefPtr<FetchServiceResponsePromise> preloadResponsePromise;
   if (preloadNavigation) {
-    SetupNavigationPreload(aChannel, aRegistration);
+    preloadResponsePromise = SetupNavigationPreload(aChannel, aRegistration);
   }
 
   ParentToParentServiceWorkerFetchEventOpArgs args(
@@ -994,9 +1000,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
     UniquePtr<PendingFunctionalEvent> pendingEvent =
         MakeUnique<PendingFetchEvent>(this, std::move(aRegistration),
                                       std::move(args), std::move(aChannel),
-                                      // The FetchServiceResponsePromise from
-                                      // FetchService
-                                      nullptr);
+                                      std::move(preloadResponsePromise));
 
     mPendingFunctionalEvents.AppendElement(std::move(pendingEvent));
 
@@ -1007,9 +1011,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
 
   return SendFetchEventInternal(std::move(aRegistration), std::move(args),
                                 std::move(aChannel),
-                                // The FetchServiceResponsePromise from
-                                // FetchService
-                                nullptr);
+                                std::move(preloadResponsePromise));
 }
 
 nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
