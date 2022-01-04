@@ -6,6 +6,7 @@ import json
 from pipes import quote as shell_quote
 
 from gecko_taskgraph.transforms.base import TransformSequence
+from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import get_release_config
 from gecko_taskgraph.util.schema import resolve_keyed_by
 
@@ -70,7 +71,7 @@ def handle_keyed_by(config, jobs):
                 item_name=job["name"],
                 **{
                     "project": config.params["project"],
-                    "release-level": config.params.release_level(),
+                    "release-level": release_level(config.params["project"]),
                     "release-type": config.params["release_type"],
                 },
             )

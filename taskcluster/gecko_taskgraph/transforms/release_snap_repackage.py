@@ -4,6 +4,7 @@
 
 
 from gecko_taskgraph.transforms.base import TransformSequence
+from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import get_release_config
 from gecko_taskgraph.util.schema import resolve_keyed_by
 
@@ -29,7 +30,10 @@ def format(config, tasks):
         env = task.get("worker", {}).get("env", {})
         for k in env.keys():
             resolve_keyed_by(
-                env, k, "snap envs", **{"release-level": config.params.release_level()}
+                env,
+                k,
+                "snap envs",
+                **{"release-level": release_level(config.params["project"])}
             )
             task["worker"]["env"][k] = env[k].format(**format_params)
 

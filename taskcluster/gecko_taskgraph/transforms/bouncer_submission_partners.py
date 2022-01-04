@@ -15,6 +15,7 @@ from gecko_taskgraph.transforms.bouncer_submission import (
     _craft_ftp_product,
     _craft_filename_product,
 )
+from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.partners import (
     check_if_partners_enabled,
     get_partners_to_be_published,
@@ -68,13 +69,13 @@ def make_task_worker(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": release_level(config.params["project"])}
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": release_level(config.params["project"])}
         )
         resolve_keyed_by(
             job,
