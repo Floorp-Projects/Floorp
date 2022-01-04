@@ -229,7 +229,7 @@ void ReadableStreamDefaultReaderRead(JSContext* aCx,
     }
 
     case ReadableStream::ReaderState::Readable: {
-      RefPtr<ReadableStreamDefaultController> controller(stream->Controller());
+      RefPtr<ReadableStreamController> controller(stream->Controller());
       MOZ_ASSERT(controller);
       controller->PullSteps(aCx, aRequest, aRv);
       return;

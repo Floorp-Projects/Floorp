@@ -8,9 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Streams")
 
 EXPORTS.mozilla.dom += [
+    "ByteStreamHelpers.h",
     "CountQueuingStrategy.h",
     "QueueWithSizes.h",
+    "ReadableByteStreamController.h",
     "ReadableStream.h",
+    "ReadableStreamBYOBRequest.h",
+    "ReadableStreamController.h",
     "ReadableStreamDefaultController.h",
     "ReadableStreamDefaultReader.h",
     "ReadableStreamGenericReader.h",
@@ -26,8 +30,11 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "ByteStreamHelpers.cpp",
     "CountQueuingStrategy.cpp",
+    "ReadableByteStreamController.cpp",
     "ReadableStream.cpp",
+    "ReadableStreamBYOBRequest.cpp",
     "ReadableStreamDefaultController.cpp",
     "ReadableStreamDefaultReader.cpp",
     "ReadableStreamTee.cpp",

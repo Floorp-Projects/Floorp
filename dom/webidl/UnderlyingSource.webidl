@@ -7,8 +7,7 @@ dictionary UnderlyingSource {
   [EnforceRange] unsigned long long autoAllocateChunkSize;
 };
 
-// Until ReadableByteStreamController is implemented, this typedef is only a subset.
-typedef ReadableStreamDefaultController ReadableStreamController;
+typedef (ReadableStreamDefaultController or ReadableByteStreamController) ReadableStreamController;
 
 callback UnderlyingSourceStartCallback = any (ReadableStreamController controller);
 callback UnderlyingSourcePullCallback = Promise<void> (ReadableStreamController controller);
