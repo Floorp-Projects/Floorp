@@ -682,7 +682,13 @@ class TestChecksConfigure(unittest.TestCase):
         mock_pkg_config_version = "0.10.0"
         mock_pkg_config_path = mozpath.abspath("/usr/bin/pkg-config")
 
+        seen_flags = set()
+
         def mock_pkg_config(_, args):
+            if "--dont-define-prefix" in args:
+                args = list(args)
+                seen_flags.add(args.pop(args.index("--dont-define-prefix")))
+                args = tuple(args)
             if args[0:2] == ("--errors-to-stdout", "--print-errors"):
                 assert len(args) == 3
                 package = args[2]
@@ -711,8 +717,6 @@ class TestChecksConfigure(unittest.TestCase):
                 return 1, "Unknown option --about", ""
             self.fail("Unexpected arguments to mock_pkg_config: %s" % (args,))
 
-        seen_flags = set()
-
         def mock_pkgconf(_, args):
             if args[0] == "--shared":
                 seen_flags.add(args[0])
@@ -721,7 +725,7 @@ class TestChecksConfigure(unittest.TestCase):
                 return 0, "pkgconf {}".format(mock_pkg_config_version), ""
             return mock_pkg_config(_, args)
 
-        def get_result(cmd, args=[], extra_paths=None):
+        def get_result(cmd, args=[], bootstrapped_sysroot=False, extra_paths=None):
             return self.get_result(
                 textwrap.dedent(
                     """\
@@ -729,7 +733,7 @@ class TestChecksConfigure(unittest.TestCase):
                 compile_environment = depends(when='--enable-compile-environment')(lambda: True)
                 toolchain_prefix = depends(when=True)(lambda: None)
                 target_multiarch_dir = depends(when=True)(lambda: None)
-                target_sysroot = depends(when=True)(lambda: None)
+                target_sysroot = depends(when=True)(lambda: %(sysroot)s)
                 target = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
@@ -740,7 +744,12 @@ class TestChecksConfigure(unittest.TestCase):
                     return check_prog(*args, **kwargs)
                 include('%(topsrcdir)s/build/moz.configure/pkg.configure')
             """
-                    % {"topsrcdir": topsrcdir}
+                    % {
+                        "topsrcdir": topsrcdir,
+                        "sysroot": "namespace(bootstrapped=True)"
+                        if bootstrapped_sysroot
+                        else "None",
+                    }
                 )
                 + cmd,
                 args=args,
@@ -764,14 +773,20 @@ class TestChecksConfigure(unittest.TestCase):
             ),
         )
 
-        for pkg_config, version, is_pkgconf in (
-            (mock_pkg_config, "0.10.0", False),
-            (mock_pkgconf, "1.6.0", True),
-            (mock_pkgconf, "1.8.0", True),
+        for pkg_config, version, bootstrapped_sysroot, is_pkgconf in (
+            (mock_pkg_config, "0.10.0", False, False),
+            (mock_pkg_config, "0.30.0", False, False),
+            (mock_pkg_config, "0.30.0", True, False),
+            (mock_pkgconf, "1.1.0", True, True),
+            (mock_pkgconf, "1.6.0", False, True),
+            (mock_pkgconf, "1.8.0", False, True),
+            (mock_pkgconf, "1.8.0", True, True),
         ):
+            seen_flags = set()
             mock_pkg_config_version = version
             config, output, status = get_result(
                 "pkg_check_modules('MOZ_VALID', 'valid')",
+                bootstrapped_sysroot=bootstrapped_sysroot,
                 extra_paths={mock_pkg_config_path: pkg_config},
             )
             self.assertEqual(status, 0)
@@ -801,8 +816,12 @@ class TestChecksConfigure(unittest.TestCase):
                     "MOZ_VALID_LIBS": ("-lvalid",),
                 },
             )
-            if version == "1.8.0":
+            if version == "1.8.0" and bootstrapped_sysroot:
+                self.assertEqual(seen_flags, set(["--shared", "--dont-define-prefix"]))
+            elif version == "1.8.0":
                 self.assertEqual(seen_flags, set(["--shared"]))
+            elif version in ("1.6.0", "0.30.0") and bootstrapped_sysroot:
+                self.assertEqual(seen_flags, set(["--dont-define-prefix"]))
             else:
                 self.assertEqual(seen_flags, set())
 

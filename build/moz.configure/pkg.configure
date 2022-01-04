@@ -32,14 +32,23 @@ def is_pkgconf(pkg_config):
     return "pkgconf " in check_cmd_output(pkg_config, "--about", onerror=lambda: "")
 
 
-@depends(is_pkgconf, pkg_config_version)
-def pkg_config_base_flags(is_pkgconf, pkg_config_version):
+@depends(is_pkgconf, pkg_config_version, target_sysroot.bootstrapped)
+def pkg_config_base_flags(is_pkgconf, pkg_config_version, target_sysroot_bootstrapped):
     # pkgconf 1.7.4 changed the default on Windows to use --static, but
     # that doesn't work for us.
     # Note: the --shared flag is not available before pkgconf 1.7
     flags = []
     if is_pkgconf and pkg_config_version >= "1.7.4":
         flags.append("--shared")
+    # When pkg-config is in /usr things work fine by default, but when
+    # it is not, it defines prefix to be something else than /usr, which
+    # won't match what the .pc files actually say, and won't work in
+    # sysroots.
+    if target_sysroot_bootstrapped and (
+        (is_pkgconf and pkg_config_version >= "1.2.0")
+        or (not is_pkgconf and pkg_config_version >= "0.29.0")
+    ):
+        flags.append("--dont-define-prefix")
     return tuple(flags)
 
 
