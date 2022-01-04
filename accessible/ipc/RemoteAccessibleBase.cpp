@@ -528,6 +528,46 @@ void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
 }
 
 template <class Derived>
+AccGroupInfo* RemoteAccessibleBase<Derived>::GetGroupInfo() const {
+  if (!mCachedFields) {
+    return nullptr;
+  }
+
+  if (auto groupInfo = mCachedFields->GetAttribute<UniquePtr<AccGroupInfo>>(
+          nsGkAtoms::group)) {
+    return groupInfo->get();
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
+AccGroupInfo* RemoteAccessibleBase<Derived>::GetOrCreateGroupInfo() {
+  AccGroupInfo* groupInfo = GetGroupInfo();
+  if (groupInfo) {
+    return groupInfo;
+  }
+
+  groupInfo = AccGroupInfo::CreateGroupInfo(this);
+  if (groupInfo) {
+    if (!mCachedFields) {
+      mCachedFields = new AccAttributes();
+    }
+
+    mCachedFields->SetAttribute(nsGkAtoms::group, groupInfo);
+  }
+
+  return groupInfo;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
+  if (mCachedFields) {
+    mCachedFields->Remove(nsGkAtoms::group);
+  }
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }
