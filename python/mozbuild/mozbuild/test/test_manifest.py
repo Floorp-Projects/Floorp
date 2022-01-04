@@ -888,6 +888,60 @@ bugzilla:
   product: Core
   component: Graphics""".strip(),
                 ),
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  update-actions:
+    - action: run-script
+      cwd: '{cwd}'
+      script: 'script.py'
+      args: ['hi']
+      pattern: 'hi'
+""".strip(),
+                ),
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  update-actions:
+    - action: run-script
+      cwd: '{cwd}'
+      args: ['hi']
+""".strip(),
+                ),
             ]
         )
 

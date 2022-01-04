@@ -429,6 +429,7 @@ def _schema_1():
                             "with": All(str, Length(min=1)),
                             "file": All(str, Length(min=1)),
                             "script": All(str, Length(min=1)),
+                            "args": All([All(str, Length(min=1))]),
                             "cwd": All(str, Length(min=1)),
                             "path": All(str, Length(min=1)),
                         }
@@ -540,9 +541,13 @@ class UpdateActions(object):
                         "delete-path action must (only) specify the 'path' key"
                     )
             elif v["action"] == "run-script":
-                if "script" not in v or "cwd" not in v or len(v.keys()) != 3:
+                if "script" not in v or "cwd" not in v:
                     raise Invalid(
-                        "run-script action must (only) specify 'script' and 'cwd' keys"
+                        "run-script action must specify 'script' and 'cwd' keys"
+                    )
+                if set(v.keys()) - set(["args", "cwd", "script", "action"]) != set():
+                    raise Invalid(
+                        "run-script action may only specify 'script', 'cwd', and 'args' keys"
                     )
             else:
                 # This check occurs before the validator above, so the above is
