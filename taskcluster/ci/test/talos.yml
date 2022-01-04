@@ -24,7 +24,6 @@ job-defaults:
                 default:
                     - talos/linux_config.py
     test-manifest-loader: null  # don't load tests in the taskgraph
-    python-3: true
 
 talos-bcv:
     description: Talos basic compositor video
@@ -808,7 +807,6 @@ talos-xperf:
             by-test-platform:
                 windows.*:
                     - talos/windows_vm_config.py
-    python-3: true
 
 talos-realworld-webextensions:
     description: Talos tests with realworld WebExtensions

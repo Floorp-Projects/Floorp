@@ -10,7 +10,6 @@ job-defaults:
             android-em-7.*: geckoview-test_runner.apk
             android-hw-.*: geckoview-test_runner.apk
             default: null
-    python-3: true
     tier:
         by-variant:
             fission: 2

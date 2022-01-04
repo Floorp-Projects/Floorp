@@ -58,7 +58,6 @@ job-defaults:
             - --conditioned-profile=settled
     optimization:
         skip-unless-backstop: null
-    python-3: true
     limit-platforms:
         by-app:
             chrome-m:
