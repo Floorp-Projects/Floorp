@@ -9,13 +9,16 @@ const TEST_PATH =
 const TOPIC = "browsing-context-attached";
 
 async function observeAttached(callback) {
-  let attached = [];
-  function observer(subject, topic) {
+  let attached = new Map();
+
+  function observer(subject, topic, data) {
     is(topic, TOPIC, "observing correct topic");
     ok(subject instanceof BrowsingContext, "subject to be a BrowsingContext");
-    info(`*** bc id: ${subject.id}`);
-    attached.push(subject);
+    is(typeof data, "string", "data to be a String");
+    info(`*** bc id=${subject.id}, why=${data}`);
+    attached.set(subject.id, { browsingContext: subject, why: data });
   }
+
   Services.obs.addObserver(observer, TOPIC);
   try {
     await callback();
@@ -33,12 +36,23 @@ add_task(async function toplevelForNewWindow() {
   });
 
   ok(
-    attached.includes(win.browsingContext),
+    attached.has(win.browsingContext.id),
     "got notification for window's chrome browsing context"
   );
+  is(
+    attached.get(win.browsingContext.id).why,
+    "attach",
+    "expected reason for chrome browsing context"
+  );
+
   ok(
-    attached.includes(win.gBrowser.selectedBrowser.browsingContext),
+    attached.has(win.gBrowser.selectedBrowser.browsingContext.id),
     "got notification for toplevel browsing context"
+  );
+  is(
+    attached.get(win.gBrowser.selectedBrowser.browsingContext.id).why,
+    "attach",
+    "expected reason for toplevel browsing context"
   );
 
   await BrowserTestUtils.closeWindow(win);
@@ -52,12 +66,17 @@ add_task(async function toplevelForNewTab() {
   });
 
   ok(
-    !attached.includes(window.browsingContext),
+    !attached.has(window.browsingContext.id),
     "no notification for the current window's chrome browsing context"
   );
   ok(
-    attached.includes(tab.linkedBrowser.browsingContext),
+    attached.has(tab.linkedBrowser.browsingContext.id),
     "got notification for toplevel browsing context"
+  );
+  is(
+    attached.get(tab.linkedBrowser.browsingContext.id).why,
+    "attach",
+    "expected reason for toplevel browsing context"
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -77,16 +96,21 @@ add_task(async function subframe() {
   });
 
   ok(
-    !attached.includes(window.browsingContext),
+    !attached.has(window.browsingContext.id),
     "no notification for the current window's chrome browsing context"
   );
   ok(
-    !attached.includes(tab.linkedBrowser.browsingContext),
+    !attached.has(tab.linkedBrowser.browsingContext.id),
     "no notification for toplevel browsing context"
   );
   ok(
-    attached.includes(browsingContext),
+    attached.has(browsingContext.id),
     "got notification for frame's browsing context"
+  );
+  is(
+    attached.get(browsingContext.id).why,
+    "attach",
+    "expected reason for frame's browsing context"
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -101,8 +125,13 @@ add_task(async function toplevelReplacedBy() {
 
   const firstContext = tab.linkedBrowser.browsingContext;
   ok(
-    attached.includes(firstContext),
+    attached.has(firstContext.id),
     "got notification for initial toplevel browsing context"
+  );
+  is(
+    attached.get(firstContext.id).why,
+    "attach",
+    "expected reason for initial toplevel browsing context"
   );
 
   attached = await observeAttached(async () => {
@@ -110,10 +139,15 @@ add_task(async function toplevelReplacedBy() {
   });
   const secondContext = tab.linkedBrowser.browsingContext;
   ok(
-    attached.includes(secondContext),
+    attached.has(secondContext.id),
     "got notification for replaced toplevel browsing context"
   );
   isnot(secondContext, firstContext, "browsing context to be replaced");
+  is(
+    attached.get(secondContext.id).why,
+    "replace",
+    "expected reason for replaced toplevel browsing context"
+  );
   is(
     secondContext.browserId,
     firstContext.browserId,
@@ -125,10 +159,15 @@ add_task(async function toplevelReplacedBy() {
   });
   const thirdContext = tab.linkedBrowser.browsingContext;
   ok(
-    attached.includes(thirdContext),
+    attached.has(thirdContext.id),
     "got notification for replaced toplevel browsing context"
   );
   isnot(thirdContext, secondContext, "browsing context to be replaced");
+  is(
+    attached.get(thirdContext.id).why,
+    "replace",
+    "expected reason for replaced toplevel browsing context"
+  );
   is(
     thirdContext.browserId,
     secondContext.browserId,
