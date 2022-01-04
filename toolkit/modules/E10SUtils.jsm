@@ -44,16 +44,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
 );
-// Preference containing the list (comma separated) of origins that will
-// have ServiceWorkers isolated in special processes
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "serviceWorkerIsolationList",
-  "browser.tabs.remote.serviceWorkerIsolationList",
-  "",
-  false,
-  val => val.split(",")
-);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "serializationHelper",
@@ -247,10 +237,7 @@ function validatedWebRemoteType(
 
     if (
       aIsWorker &&
-      aWorkerType === Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SERVICE &&
-      serviceWorkerIsolationList.some(function(val) {
-        return targetPrincipal.siteOriginNoSuffix == val;
-      })
+      aWorkerType === Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SERVICE
     ) {
       return `${SERVICEWORKER_REMOTE_TYPE}=${targetPrincipal.siteOrigin}`;
     }
