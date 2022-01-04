@@ -40,15 +40,6 @@ telemetry_tests_config_options = (
             },
         ],
         [
-            ["--enable-webrender"],
-            {
-                "action": "store_true",
-                "dest": "enable_webrender",
-                "default": False,
-                "help": "Enable the WebRender compositor in Gecko.",
-            },
-        ],
-        [
             ["--dry-run"],
             {
                 "dest": "dry_run",
@@ -200,9 +191,6 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             # Enable tracing output to log transmission protocol
             "-vv",
         ]
-
-        if self.config["enable_webrender"]:
-            cmd.extend(["--enable-webrender"])
 
         cmd.extend(["--setpref={}".format(p) for p in self.config["extra_prefs"]])
 

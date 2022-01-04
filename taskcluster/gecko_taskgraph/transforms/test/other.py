@@ -938,22 +938,17 @@ def enable_webrender(config, tasks):
     enabled.
     """
     for task in tasks:
-        if task.get("webrender"):
-            extra_options = task["mozharness"].setdefault("extra-options", [])
-            extra_options.append("--enable-webrender")
-            # We only want to 'setpref' on tests that have a profile
-            if not task["attributes"]["unittest_category"] in [
-                "cppunittest",
-                "geckoview-junit",
-                "gtest",
-                "jittest",
-                "raptor",
-            ]:
-                extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
-
-            # run webrender variants on the projects specified on webrender-run-on-projects
-            if task.get("webrender-run-on-projects") is not None:
-                task["run-on-projects"] = task["webrender-run-on-projects"]
+        # TODO: this was all conditionally in enable_webrender- do we still need this?
+        extra_options = task["mozharness"].setdefault("extra-options", [])
+        # We only want to 'setpref' on tests that have a profile
+        if not task["attributes"]["unittest_category"] in [
+            "cppunittest",
+            "geckoview-junit",
+            "gtest",
+            "jittest",
+            "raptor",
+        ]:
+            extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
 
         yield task
 
