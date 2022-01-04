@@ -10,14 +10,7 @@ def pkg_config(prefixes):
     return tuple("{}pkg-config".format(p) for p in (prefixes or ()) + ("",))
 
 
-pkg_config = check_prog(
-    "PKG_CONFIG",
-    pkg_config,
-    bootstrap="pkgconf",
-    allow_missing=True,
-    when=compile_environment
-    & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "Android")),
-)
+pkg_config = check_prog("PKG_CONFIG", pkg_config, allow_missing=True)
 
 
 @depends_if(pkg_config)
@@ -26,41 +19,14 @@ def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, "--version").rstrip())
 
 
-@depends_if(pkg_config)
-@checking("whether pkg-config is pkgconf")
-def is_pkgconf(pkg_config):
-    return "pkgconf " in check_cmd_output(pkg_config, "--about", onerror=lambda: "")
-
-
-@depends(is_pkgconf, pkg_config_version, target_sysroot.bootstrapped)
-def pkg_config_base_flags(is_pkgconf, pkg_config_version, target_sysroot_bootstrapped):
-    # pkgconf 1.7.4 changed the default on Windows to use --static, but
-    # that doesn't work for us.
-    # Note: the --shared flag is not available before pkgconf 1.7
-    flags = []
-    if is_pkgconf and pkg_config_version >= "1.7.4":
-        flags.append("--shared")
-    # When pkg-config is in /usr things work fine by default, but when
-    # it is not, it defines prefix to be something else than /usr, which
-    # won't match what the .pc files actually say, and won't work in
-    # sysroots.
-    if target_sysroot_bootstrapped and (
-        (is_pkgconf and pkg_config_version >= "1.2.0")
-        or (not is_pkgconf and pkg_config_version >= "0.29.0")
-    ):
-        flags.append("--dont-define-prefix")
-    return tuple(flags)
-
-
 @depends(target, target_sysroot.path, target_multiarch_dir, when=pkg_config)
 @imports(_from="os", _import="environ")
-@imports(_from="os", _import="pathsep")
 def pkg_config_vars(target, sysroot_path, multiarch_dir):
     if sysroot_path and target.kernel != "Darwin":
         return namespace(
             PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
-            PKG_CONFIG_LIBDIR=pathsep.join(
+            PKG_CONFIG_LIBDIR=":".join(
                 os.path.join(sysroot_path, d)
                 for d in (
                     "usr/lib/pkgconfig",
@@ -165,13 +131,10 @@ def pkg_check_modules(
         if not allow_missing:
             sys.exit(1)
 
-    @depends(
-        pkg_config, pkg_config_env, package_desc, pkg_config_base_flags, when=package
-    )
+    @depends(pkg_config, pkg_config_env, package_desc, when=package)
     @checking("%s_CFLAGS" % var, callback=lambda t: " ".join(t))
-    def pkg_cflags(pkg_config, env, package_desc, base_flags):
-        args = list(base_flags) + ["--cflags", package_desc]
-        flags = check_cmd_output(pkg_config, *args, env=env)
+    def pkg_cflags(pkg_config, env, package_desc):
+        flags = check_cmd_output(pkg_config, "--cflags", package_desc, env=env)
         return tuple(flags.split())
 
     if cflags_only:
@@ -182,17 +145,10 @@ def pkg_check_modules(
 
     else:
 
-        @depends(
-            pkg_config,
-            pkg_config_env,
-            package_desc,
-            pkg_config_base_flags,
-            when=package,
-        )
+        @depends(pkg_config, pkg_config_env, package_desc, when=package)
         @checking("%s_LIBS" % var, callback=lambda t: " ".join(t))
-        def pkg_libs(pkg_config, env, package_desc, base_flags):
-            args = list(base_flags) + ["--libs", package_desc]
-            libs = check_cmd_output(pkg_config, *args, env=env)
+        def pkg_libs(pkg_config, env, package_desc):
+            libs = check_cmd_output(pkg_config, "--libs", package_desc, env=env)
             # Remove evil flags like -Wl,--export-dynamic
             return tuple(libs.replace("-Wl,--export-dynamic", "").split())
 
