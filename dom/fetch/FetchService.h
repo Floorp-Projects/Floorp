@@ -14,6 +14,11 @@
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/SafeRefPtr.h"
 
+class nsILoadGroup;
+class nsIPrincipal;
+class nsICookieJarSettings;
+class PerformanceStorage;
+
 namespace mozilla::dom {
 
 class InternalRequest;
@@ -90,6 +95,11 @@ class FetchService final {
     ~FetchInstance();
 
     SafeRefPtr<InternalRequest> mRequest;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
+    nsCOMPtr<nsILoadGroup> mLoadGroup;
+    nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
+    RefPtr<PerformanceStorage> mPerformanceStorage;
+
     MozPromiseHolder<FetchServiceResponsePromise> mResponsePromiseHolder;
   };
 
