@@ -455,7 +455,7 @@ The impression ping payload contains the following:
   used to link to a client_id.
 :is_clicked:
   Whether or not the user also clicked the suggestion.
-:matched_keywords:
+:matched_keywords (**Removed from Firefox 97**):
   The matched keywords that lead to the suggestion. This is only included when
   the user has opted in to data collection and the suggestion is provided by
   remote settings.
@@ -469,7 +469,7 @@ The impression ping payload contains the following:
   suggestions provided by Merino.
 :scenario:
   The user's Suggest scenario, either "offline" or "online".
-:search_query:
+:search_query (**Removed from Firefox 97**):
   The exact search query typed by the user. This is only included when the user
   has opted in to data collection and the suggestion is provided by remote
   settings.
@@ -501,12 +501,17 @@ Changelog
       [Bug 1736117_, 1735976_]
     - ``request_id`` is added to the payload. [Bug 1736117_]
 
+  Firefox 97.0
+    - Stop sending ``search_query`` and ``matched_keywords`` in the custom
+      impression ping for Firefox Suggest. [Bug 1748348_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
 .. _1729576: https://bugzilla.mozilla.org/show_bug.cgi?id=1729576
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
+.. _1748348: https://bugzilla.mozilla.org/show_bug.cgi?id=1748348
 
 Nimbus Exposure Event
 ---------------------
