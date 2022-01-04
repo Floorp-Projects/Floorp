@@ -170,14 +170,13 @@ const SnapshotScorer = new (class SnapshotScorer {
   }
 
   /**
-   * Not currently used.
+   * Calculate points based on whether the snapshot has interactions which share a common referrer with the context url
    *
    * @param {Snapshot} snapshot
    * @returns {number}
    */
   _scoreInNavigation(snapshot) {
-    // In Navigation is not currently implemented.
-    return 0;
+    return snapshot.commonReferrerScore ?? 0;
   }
 
   /**

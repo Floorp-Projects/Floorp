@@ -47,6 +47,7 @@ async function addInteractions(interactions) {
       scrollingDistance: interaction.scrollingDistance ?? 0,
       created_at: interaction.created_at || Date.now(),
       updated_at: interaction.updated_at || Date.now(),
+      referrer: interaction.referrer || "",
     });
   }
   await Interactions.store.flush();
@@ -242,6 +243,13 @@ function assertSnapshot(actual, expected) {
       "Should not have a removed at time"
     );
   }
+  if (expected.commonReferrerScoreEqualTo != null) {
+    Assert.equal(
+      actual.commonReferrerScore,
+      expected.commonReferrerScoreEqualTo,
+      "Should have a commonReferrerScore equal to the expected score"
+    );
+  }
 }
 
 /**
@@ -279,18 +287,36 @@ async function assertSnapshots(expected, options) {
 }
 
 /**
- * Asserts that the snapshots in the database match the expected values.
+ * Queries overlapping snapshots from the database and asserts their expected values.
  *
  * @param {Snapshot[]} expected
  *   The expected snapshots.
  * @param {object} context
  *   @see SnapshotSelector.#context.
  */
-async function assertSnapshotsWithContext(expected, context) {
+async function assertOverlappingSnapshots(expected, context) {
   let snapshots = await Snapshots.queryOverlapping(context.url);
 
   await assertSnapshotList(snapshots, expected);
 }
+
+/**
+ * Queries common referrer snapshots from the database and asserts their expected values.
+ *
+ * @param {Snapshot[]} expected
+ *   The expected snapshots.
+ * @param {object} context
+ *   @see SnapshotSelector.#context.
+ */
+async function assertCommonReferrerSnapshots(expected, context) {
+  let snapshots = await Snapshots.queryCommonReferrer(
+    context.url,
+    context.referrerUrl
+  );
+
+  await assertSnapshotList(snapshots, expected);
+}
+
 /**
  * Clears all data from the snapshots and metadata tables.
  */
