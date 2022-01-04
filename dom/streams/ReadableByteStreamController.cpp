@@ -14,6 +14,7 @@
 #include "js/friend/ErrorMessages.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -27,6 +28,7 @@
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
@@ -489,6 +491,7 @@ JSObject* ReadableByteStreamControllerConvertPullIntoDescriptor(
     JSContext* aCx, PullIntoDescriptor* pullIntoDescriptor, ErrorResult& aRv);
 
 // https://streams.spec.whatwg.org/#readable-stream-fulfill-read-into-request
+MOZ_CAN_RUN_SCRIPT
 void ReadableStreamFulfillReadIntoRequest(JSContext* aCx,
                                           ReadableStream* aStream,
                                           JS::HandleValue aChunk, bool done,
@@ -519,6 +522,7 @@ void ReadableStreamFulfillReadIntoRequest(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-commit-pull-into-descriptor
+MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerCommitPullIntoDescriptor(
     JSContext* aCx, ReadableStream* aStream,
     PullIntoDescriptor* pullIntoDescriptor, ErrorResult& aRv) {
@@ -565,6 +569,7 @@ void ReadableByteStreamControllerCommitPullIntoDescriptor(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-process-pull-into-descriptors-using-queue
+MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv) {
@@ -579,7 +584,7 @@ void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
     }
 
     // Step 2.2. Let pullIntoDescriptor be controller.[[pendingPullIntos]][0].
-    PullIntoDescriptor* pullIntoDescriptor =
+    RefPtr<PullIntoDescriptor> pullIntoDescriptor =
         aController->PendingPullIntos().getFirst();
 
     // Step 2.3. If
@@ -600,8 +605,9 @@ void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
       // Step 2.3.2. Perform
       // !ReadableByteStreamControllerCommitPullIntoDescriptor(controller.[[stream]],
       //         pullIntoDescriptor).
+      RefPtr<ReadableStream> stream(aController->Stream());
       ReadableByteStreamControllerCommitPullIntoDescriptor(
-          aCx, aController->Stream(), pullIntoDescriptor, aRv);
+          aCx, stream, pullIntoDescriptor, aRv);
       if (aRv.Failed()) {
         return;
       }
@@ -1012,6 +1018,7 @@ JSObject* ReadableByteStreamControllerConvertPullIntoDescriptor(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-in-closed-state
+MOZ_CAN_RUN_SCRIPT
 static void ReadableByteStreamControllerRespondInClosedState(
     JSContext* aCx, ReadableByteStreamController* aController,
     RefPtr<PullIntoDescriptor>& aFirstDescriptor, ErrorResult& aRv) {
@@ -1019,7 +1026,7 @@ static void ReadableByteStreamControllerRespondInClosedState(
   MOZ_ASSERT(aFirstDescriptor->BytesFilled() == 0);
 
   // Step 2.
-  ReadableStream* stream = aController->Stream();
+  RefPtr<ReadableStream> stream = aController->Stream();
 
   // Step 3.
   if (ReadableStreamHasBYOBReader(stream)) {
@@ -1619,6 +1626,140 @@ void ReadableByteStreamControllerPullInto(
   // Step 16, Perform
   // !ReadableByteStreamControllerCallPullIfNeeded(controller).
   ReadableByteStreamControllerCallPullIfNeeded(aCx, aController, aRv);
+}
+
+class ByteStreamStartPromiseNativeHandler final : public PromiseNativeHandler {
+  ~ByteStreamStartPromiseNativeHandler() = default;
+
+  RefPtr<ReadableByteStreamController> mController;
+
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(ByteStreamStartPromiseNativeHandler)
+
+  explicit ByteStreamStartPromiseNativeHandler(
+      ReadableByteStreamController* aController)
+      : PromiseNativeHandler(), mController(aController) {}
+
+  MOZ_CAN_RUN_SCRIPT
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    MOZ_ASSERT(mController);
+
+    // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
+    //
+    // Step 16.1
+    mController->SetStarted(true);
+
+    // Step 16.2
+    mController->SetPulling(false);
+
+    // Step 16.3
+    mController->SetPullAgain(false);
+
+    // Step 16.4:
+    ErrorResult rv;
+    RefPtr<ReadableByteStreamController> stackController = mController;
+    ReadableByteStreamControllerCallPullIfNeeded(aCx, stackController, rv);
+    (void)rv.MaybeSetPendingException(aCx, "StartPromise Resolve Error");
+  }
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
+    // Step 17.1
+    ErrorResult rv;
+    ReadableByteStreamControllerError(mController, aValue, rv);
+    (void)rv.MaybeSetPendingException(aCx, "StartPromise Rejected Error");
+  }
+};
+
+// Cycle collection methods for promise handler
+NS_IMPL_CYCLE_COLLECTION(ByteStreamStartPromiseNativeHandler, mController)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ByteStreamStartPromiseNativeHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ByteStreamStartPromiseNativeHandler)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamStartPromiseNativeHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
+MOZ_CAN_RUN_SCRIPT
+void SetUpReadableByteStreamController(
+    JSContext* aCx, ReadableStream* aStream,
+    ReadableByteStreamController* aController,
+    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
+    double aHighWaterMark, Maybe<uint64_t> aAutoAllocateChunkSize,
+    ErrorResult& aRv) {
+  // Step 1. Assert: stream.[[controller]] is undefined.
+  MOZ_ASSERT(!aStream->Controller());
+
+  // Step 2. If autoAllocateChunkSize is not undefined,
+  if (aAutoAllocateChunkSize) {
+    // Step 2.1. Assert: ! IsInteger(autoAllocateChunkSize) is true. Implicit
+    // Step 2.2. Assert: autoAllocateChunkSize is positive.
+    MOZ_ASSERT(*aAutoAllocateChunkSize >= 0);
+  }
+
+  // Step 3. Set controller.[[stream]] to stream.
+  aController->SetStream(aStream);
+
+  // Step 4. Set controller.[[pullAgain]] and controller.[[pulling]] to false.
+  aController->SetPullAgain(false);
+  aController->SetPulling(false);
+
+  // Step 5. Set controller.[[byobRequest]] to null.
+  aController->SetByobRequest(nullptr);
+
+  // Step 6. Perform !ResetQueue(controller).
+  ResetQueue(aController);
+
+  // Step 7. Set controller.[[closeRequested]] and controller.[[started]] to
+  // false.
+  aController->SetCloseRequested(false);
+  aController->SetStarted(false);
+
+  // Step 8. Set controller.[[strategyHWM]] to highWaterMark.
+  aController->SetStrategyHWM(aHighWaterMark);
+
+  // Step 9. Set controller.[[pullAlgorithm]] to pullAlgorithm.
+  aController->SetPullAlgorithm(aPullAlgorithm);
+
+  // Step 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+  aController->SetCancelAlgorithm(aCancelAlgorithm);
+
+  // Step 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
+  aController->SetAutoAllocateChunkSize(aAutoAllocateChunkSize);
+
+  // Step 12. Set controller.[[pendingPullIntos]] to a new empty list.
+  aController->PendingPullIntos().clear();
+
+  // Step 13. Set stream.[[controller]] to controller.
+  aStream->SetController(aController);
+
+  // Step 14. Let startResult be the result of performing startAlgorithm.
+  // Default algorithm returns undefined.
+  JS::RootedValue startResult(aCx, JS::UndefinedValue());
+  if (aStartAlgorithm) {
+    // Strong Refs:
+    RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm(aStartAlgorithm);
+    RefPtr<ReadableStreamController> controller(aController);
+
+    startAlgorithm->StartCallback(aCx, *controller, &startResult, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  // Let startPromise be a promise resolved with startResult.
+  RefPtr<Promise> startPromise = Promise::Create(GetIncumbentGlobal(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  startPromise->MaybeResolve(startResult);
+
+  // Step 16+17
+  startPromise->AppendNativeHandler(
+      new ByteStreamStartPromiseNativeHandler(aController));
 }
 
 }  // namespace dom

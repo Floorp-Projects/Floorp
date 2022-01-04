@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ReadableStream.h"
 #include "js/Array.h"
+#include "js/Exception.h"
 #include "js/PropertyAndElement.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -16,13 +17,16 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/BindingCallContext.h"
+#include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
+#include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/ReadRequest.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 #include "mozilla/dom/ReadableStreamBinding.h"
+#include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableStreamTee.h"
@@ -30,6 +34,7 @@
 #include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
+#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/dom/Promise-inl.h"
@@ -341,7 +346,8 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 
   // Step 6.
   if (reader && reader->IsBYOB()) {
-    for (auto* readIntoRequest : reader->AsBYOB()->ReadIntoRequests()) {
+    for (RefPtr<ReadIntoRequest> readIntoRequest :
+         reader->AsBYOB()->ReadIntoRequests()) {
       readIntoRequest->CloseSteps(aCx, JS::UndefinedHandleValue, aRv);
       if (aRv.Failed()) {
         return nullptr;
@@ -777,7 +783,7 @@ static void ReadableStreamTee(JSContext* aCx, ReadableStream* aStream,
   // Step 2. Implicit.
   // Step 3.
   if (aStream->Controller()->IsByte()) {
-    aRv.ThrowTypeError("Cannot yet tee a byte stream controller");
+    ReadableByteStreamTee(aCx, aStream, aResult, aRv);
     return;
   }
   // Step 4.
@@ -804,6 +810,36 @@ void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
   // Step 3. Append readRequest to stream.[[reader]].[[readIntoRequests]].
   aStream->GetReader()->AsBYOB()->ReadIntoRequests().insertBack(
       aReadIntoRequest);
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-createreadablebytestream
+MOZ_CAN_RUN_SCRIPT
+already_AddRefed<ReadableStream> CreateReadableByteStream(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm, ErrorResult& aRv) {
+  // Step 1. Let stream be a new ReadableStream.
+  RefPtr<ReadableStream> stream = new ReadableStream(aGlobal);
+
+  // Perform ! InitializeReadableStream(stream).
+  InitializeReadableStream(stream);
+
+  // Let controller be a new ReadableByteStreamController.
+  RefPtr<ReadableByteStreamController> controller =
+      new ReadableByteStreamController(aGlobal);
+
+  // Perform ? SetUpReadableByteStreamController(stream, controller,
+  // startAlgorithm, pullAlgorithm, cancelAlgorithm, 0, undefined).
+  SetUpReadableByteStreamController(aCx, stream, controller, aStartAlgorithm,
+                                    aPullAlgorithm, aCancelAlgorithm, 0,
+                                    mozilla::Nothing(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Return stream.
+  return stream.forget();
 }
 
 }  // namespace dom

@@ -91,6 +91,7 @@ class ReadableByteStreamController final : public ReadableStreamController,
   void ClearPendingPullIntos();
 
   ReadableStream* Stream() const { return mStream; }
+  void SetStream(ReadableStream* aStream) { mStream = aStream; }
 
   double QueueTotalSize() const { return mQueueTotalSize; }
   void SetQueueTotalSize(double aQueueTotalSize) {
@@ -346,6 +347,31 @@ extern void ReadableByteStreamControllerRespondWithNewView(
 extern void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
+    ErrorResult& aRv);
+
+extern void ReadableByteStreamControllerError(
+    ReadableByteStreamController* aController, JS::HandleValue aValue,
+    ErrorResult& aRv);
+
+extern void ReadableByteStreamControllerEnqueue(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    JS::HandleObject aChunk, ErrorResult& aRv);
+
+extern already_AddRefed<ReadableStreamBYOBRequest>
+ReadableByteStreamControllerGetBYOBRequest(
+    JSContext* aCx, ReadableByteStreamController* aController);
+
+extern void ReadableByteStreamControllerClose(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    ErrorResult& aRv);
+
+extern void SetUpReadableByteStreamController(
+    JSContext* aCx, ReadableStream* aStream,
+    ReadableByteStreamController* aController,
+    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
+    double aHighWaterMark, Maybe<uint64_t> aAutoAllocateChunkSize,
     ErrorResult& aRv);
 
 }  // namespace mozilla::dom

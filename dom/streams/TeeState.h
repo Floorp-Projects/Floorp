@@ -64,11 +64,25 @@ struct TeeState : public nsISupports {
   bool Canceled2() const { return mCanceled2; }
   void SetCanceled2(bool aCanceled2) { mCanceled2 = aCanceled2; }
 
+  void SetCanceled(size_t aStreamIndex, bool aCanceled) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    aStreamIndex == 1 ? SetCanceled1(aCanceled) : SetCanceled2(aCanceled);
+  }
+  bool Canceled(size_t aStreamIndex) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    return aStreamIndex == 1 ? Canceled1() : Canceled2();
+  }
+
   JS::Value Reason1() const { return mReason1; }
   void SetReason1(JS::HandleValue aReason1) { mReason1 = aReason1; }
 
   JS::Value Reason2() const { return mReason2; }
   void SetReason2(JS::HandleValue aReason2) { mReason2 = aReason2; }
+
+  void SetReason(size_t aStreamIndex, JS::HandleValue aReason) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    aStreamIndex == 1 ? SetReason1(aReason) : SetReason2(aReason);
+  }
 
   ReadableStream* Branch1() const { return mBranch1; }
   void SetBranch1(already_AddRefed<ReadableStream> aBranch1) {
@@ -93,6 +107,22 @@ struct TeeState : public nsISupports {
   void SetPullAlgorithm(ReadableStreamDefaultTeePullAlgorithm* aPullAlgorithm);
   ReadableStreamDefaultTeePullAlgorithm* PullAlgorithm() {
     return mPullAlgorithm;
+  }
+
+  // Some code is better served by using an index into various internal slots to
+  // avoid duplication: Here we provide alternative accessors for that case.
+  ReadableStream* Branch(size_t index) const {
+    MOZ_ASSERT(index == 1 || index == 2);
+    return index == 1 ? Branch1() : Branch2();
+  }
+
+  void SetReadAgainForBranch(size_t index, bool value) {
+    MOZ_ASSERT(index == 1 || index == 2);
+    if (index == 1) {
+      SetReadAgainForBranch1(value);
+      return;
+    }
+    SetReadAgainForBranch2(value);
   }
 
  private:
