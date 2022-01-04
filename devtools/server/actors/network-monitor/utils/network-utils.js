@@ -106,8 +106,8 @@ exports.getChannelBrowsingContextID = function(channel) {
  * @returns {number}
  */
 exports.getChannelInnerWindowId = function(channel) {
-  if (channel.loadInfo.innerWindowId) {
-    return channel.loadInfo.innerWindowId;
+  if (channel.loadInfo.innerWindowID) {
+    return channel.loadInfo.innerWindowID;
   }
   // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
   // We fallback on top frame element, which works, but will be wrong for WebSocket
