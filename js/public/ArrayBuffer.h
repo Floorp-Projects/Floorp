@@ -268,16 +268,32 @@ extern JS_PUBLIC_API void SetLargeArrayBuffersEnabled(bool enable);
 /**
  * Copy data from one array buffer to another.
  *
- * Both fromBuffer and toBuffer must be ArrayBufferObjectMaybeShared.
+ * Both fromBuffer and toBuffer must be (possibly wrapped)
+ * ArrayBufferObjectMaybeShared.
+ *
+ * This method may throw if the sizes don't match, or if unwrapping fails.
  *
  * The API for this is modelled on CopyDataBlockBytes from the spec:
  * https://tc39.es/ecma262/#sec-copydatablockbytes
  */
-extern JS_PUBLIC_API void ArrayBufferCopyData(JSContext* cx,
-                                              Handle<JSObject*> toBlock,
-                                              size_t toIndex,
-                                              Handle<JSObject*> fromBlock,
-                                              size_t fromIndex, size_t count);
+[[nodiscard]] extern JS_PUBLIC_API bool ArrayBufferCopyData(
+    JSContext* cx, Handle<JSObject*> toBlock, size_t toIndex,
+    Handle<JSObject*> fromBlock, size_t fromIndex, size_t count);
+
+/**
+ * Copy data from one array buffer to another.
+ *
+ * srcBuffer must be a (possibly wrapped) ArrayBufferObjectMaybeShared.
+ *
+ * This method may throw if unwrapping or allocation fails.
+ *
+ * The API for this is modelled on CloneArrayBuffer from the spec:
+ * https://tc39.es/ecma262/#sec-clonearraybuffer
+ */
+extern JS_PUBLIC_API JSObject* ArrayBufferClone(JSContext* cx,
+                                                Handle<JSObject*> srcBuffer,
+                                                size_t srcByteOffset,
+                                                size_t srcLength);
 
 }  // namespace JS
 
