@@ -312,12 +312,6 @@ def create_parser(mach_interface=False):
         " Currently only supported in production.",
     )
     add_arg(
-        "--enable-webrender",
-        action="store_true",
-        default=False,
-        help="Enable the WebRender compositor in Gecko.",
-    )
-    add_arg(
         "--enable-fission",
         action="store_true",
         default=False,

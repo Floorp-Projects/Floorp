@@ -93,7 +93,6 @@ class Perftest(object):
         post_startup_delay=POST_DELAY_DEFAULT,
         interrupt_handler=None,
         e10s=True,
-        enable_webrender=False,
         results_handler_class=RaptorResultsHandler,
         device_name=None,
         disable_perf_tuning=False,
@@ -136,7 +135,6 @@ class Perftest(object):
             "is_release_build": is_release_build,
             "enable_control_server_wait": memory_test or cpu_test,
             "e10s": e10s,
-            "enable_webrender": enable_webrender,
             "device_name": device_name,
             "enable_fission": extra_prefs.get("fission.autostart", False),
             "disable_perf_tuning": disable_perf_tuning,
@@ -203,11 +201,6 @@ class Perftest(object):
                 self.post_startup_delay = min(post_startup_delay, POST_DELAY_DEBUG)
             else:
                 self.post_startup_delay = post_startup_delay
-
-        if self.config["enable_webrender"]:
-            self.config["environment"]["MOZ_WEBRENDER"] = "1"
-        else:
-            self.config["environment"]["MOZ_WEBRENDER"] = "0"
 
         LOG.info("Post startup delay set to %d ms" % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
@@ -720,8 +713,6 @@ class PerftestDesktop(Perftest):
 
     def __init__(self, *args, **kwargs):
         super(PerftestDesktop, self).__init__(*args, **kwargs)
-        if self.config["enable_webrender"]:
-            self.config["environment"]["MOZ_ACCELERATED"] = "1"
 
     def setup_chrome_args(self, test):
         """Sets up chrome/chromium cmd-line arguments.

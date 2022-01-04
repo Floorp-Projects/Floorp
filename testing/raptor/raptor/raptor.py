@@ -139,7 +139,6 @@ def main(args=sys.argv[1:]):
             activity=args.activity,
             intent=args.intent,
             interrupt_handler=SignalHandler(),
-            enable_webrender=args.enable_webrender,
             extra_prefs=args.extra_prefs or {},
             environment=args.environment or {},
             device_name=args.device_name,

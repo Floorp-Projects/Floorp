@@ -56,13 +56,7 @@ def run_gtest_desktop(context, args):
     import rungtests
 
     tester = rungtests.GTests()
-    return tester.run_gtest(
-        prog,
-        xre_path,
-        cwd,
-        utility_path=utility_path,
-        enable_webrender=args.enable_webrender,
-    )
+    return tester.run_gtest(prog, xre_path, cwd, utility_path=utility_path)
 
 
 def run_gtest_android(context, args):
@@ -97,7 +91,6 @@ def run_gtest_android(context, args):
         args.remote_test_root,
         libxul_path,
         args.symbols_path,
-        args.enable_webrender,
     )
 
 
