@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace a11y {
 
-class LocalAccessible;
+class Accessible;
 
 /**
  * Calculate and store group information.
@@ -38,7 +38,7 @@ class AccGroupInfo {
    * Return a direct or logical parent of the accessible that this group info is
    * created for.
    */
-  LocalAccessible* ConceptualParent() const { return mParent; }
+  Accessible* ConceptualParent() const { return mParent; }
 
   /**
    * Update group information.
@@ -48,27 +48,26 @@ class AccGroupInfo {
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(const LocalAccessible* aAccessible);
+  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible);
 
   /**
    * Return a first item for the given container.
    */
-  static LocalAccessible* FirstItemOf(const LocalAccessible* aContainer);
+  static Accessible* FirstItemOf(const Accessible* aContainer);
 
   /**
    * Return total number of items in container, and if it is has nested
    * collections.
    */
-  static uint32_t TotalItemCount(LocalAccessible* aContainer,
-                                 bool* aIsHierarchical);
+  static uint32_t TotalItemCount(Accessible* aContainer, bool* aIsHierarchical);
 
   /**
    * Return next item of the same group to the given item.
    */
-  static LocalAccessible* NextItemTo(LocalAccessible* aItem);
+  static Accessible* NextItemTo(Accessible* aItem);
 
  protected:
-  AccGroupInfo(const LocalAccessible* aItem, a11y::role aRole);
+  AccGroupInfo(const Accessible* aItem, a11y::role aRole);
 
  private:
   AccGroupInfo(const AccGroupInfo&) = delete;
@@ -98,12 +97,12 @@ class AccGroupInfo {
    * Return ARIA level value or the default one if ARIA is missed for the
    * given accessible.
    */
-  static int32_t GetARIAOrDefaultLevel(const LocalAccessible* aAccessible);
+  static int32_t GetARIAOrDefaultLevel(const Accessible* aAccessible);
 
   uint32_t mPosInSet;
   uint32_t mSetSize;
-  LocalAccessible* mParent;
-  const LocalAccessible* mItem;
+  Accessible* mParent;
+  const Accessible* mItem;
   a11y::role mRole;
 };
 

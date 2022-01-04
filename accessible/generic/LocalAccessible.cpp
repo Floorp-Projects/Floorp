@@ -1978,11 +1978,12 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
                            roleMapEntry->role == roles::LISTITEM ||
                            roleMapEntry->role == roles::ROW)) {
-        LocalAccessible* parent = const_cast<LocalAccessible*>(this)
-                                      ->GetOrCreateGroupInfo()
-                                      ->ConceptualParent();
+        Accessible* parent = const_cast<LocalAccessible*>(this)
+                                 ->GetOrCreateGroupInfo()
+                                 ->ConceptualParent();
         if (parent) {
-          rel.AppendTarget(parent);
+          MOZ_ASSERT(parent->IsLocal());
+          rel.AppendTarget(parent->AsLocal());
         }
       }
 
