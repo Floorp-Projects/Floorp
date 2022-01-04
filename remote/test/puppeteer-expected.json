@@ -302,10 +302,19 @@
   "ElementHandle specs ElementHandle.click should throw for <br> elements (elementhandle.spec.ts)": [
     "PASS"
   ],
+  "ElementHandle specs Element.waitForSelector should wait correctly with waitForSelector on an element (elementhandle.spec.ts)": [
+    "PASS"
+  ],
   "ElementHandle specs ElementHandle.hover should work (elementhandle.spec.ts)": [
     "PASS"
   ],
   "ElementHandle specs ElementHandle.isIntersectingViewport should work (elementhandle.spec.ts)": [
+    "PASS"
+  ],
+  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold (elementhandle.spec.ts)": [
+    "PASS"
+  ],
+  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold of 1 (elementhandle.spec.ts)": [
     "PASS"
   ],
   "ElementHandle specs Custom queries should register and unregister (elementhandle.spec.ts)": [
@@ -321,6 +330,9 @@
     "PASS"
   ],
   "ElementHandle specs Custom queries should wait correctly with waitForSelector (elementhandle.spec.ts)": [
+    "PASS"
+  ],
+  "ElementHandle specs Custom queries should wait correctly with waitForSelector on an element (elementhandle.spec.ts)": [
     "PASS"
   ],
   "ElementHandle specs Custom queries should wait correctly with waitFor (elementhandle.spec.ts)": [
@@ -381,6 +393,9 @@
     "PASS"
   ],
   "Emulation Page.emulateNetworkConditions should change navigator.connection.effectiveType (emulation.spec.ts)": [
+    "FAIL"
+  ],
+  "Emulation Page.emulateCPUThrottling should change the CPU throttling rate successfully (emulation.spec.ts)": [
     "FAIL"
   ],
   "Evaluation specs Page.evaluate should work (evaluation.spec.ts)": [
@@ -600,6 +615,9 @@
     "PASS"
   ],
   "Frame specs Frame.evaluate should throw for detached frames (frame.spec.ts)": [
+    "TIMEOUT"
+  ],
+  "Frame specs Frame.evaluate allows readonly array to be an argument (frame.spec.ts)": [
     "PASS"
   ],
   "Frame specs Frame Management should handle nested frames (frame.spec.ts)": [
@@ -633,7 +651,7 @@
     "PASS"
   ],
   "Frame specs Frame Management should report different frame instance when frame re-attaches (frame.spec.ts)": [
-    "PASS"
+    "FAIL"
   ],
   "Frame specs Frame Management should support url fragment (frame.spec.ts)": [
     "PASS"
@@ -734,10 +752,10 @@
   "JSHandle Page.evaluateHandle should use the same JS wrappers (jshandle.spec.ts)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should work with primitives (jshandle.spec.ts)": [
+  "JSHandle JSHandle.getProperty should work (jshandle.spec.ts)": [
     "PASS"
   ],
-  "JSHandle JSHandle.getProperty should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.getProperty should return a JSHandle even if the property does not exist (jshandle.spec.ts)": [
     "PASS"
   ],
   "JSHandle JSHandle.jsonValue should work (jshandle.spec.ts)": [
@@ -778,6 +796,15 @@
   ],
   "JSHandle JSHandle.toString should work with different subtypes (jshandle.spec.ts)": [
     "PASS"
+  ],
+  "JSHandle JSHandle.clickablePoint should work (jshandle.spec.ts)": [
+    "PASS"
+  ],
+  "JSHandle JSHandle.clickablePoint should work for iframes (jshandle.spec.ts)": [
+    "PASS"
+  ],
+  "JSHandle JSHandle.click should work (jshandle.spec.ts)": [
+    "FAIL"
   ],
   "Keyboard should type into a textarea (keyboard.spec.ts)": [
     "PASS"
@@ -857,10 +884,10 @@
   "Launcher specs Puppeteer Puppeteer.launch userDataDir option (launcher.spec.ts)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.ts)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.ts)":[
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.ts)": [
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore state (launcher.spec.ts)": [
@@ -887,6 +914,9 @@
   "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.ts)": [
     "PASS"
   ],
+  "Launcher specs Puppeteer Puppeteer.launch should pass the timeout parameter to browser.waitForTarget (launcher.spec.ts)": [
+    "PASS"
+  ],
   "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.ts)": [
     "PASS"
   ],
@@ -894,6 +924,12 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should take fullPage screenshots when defaultViewport is null (launcher.spec.ts)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should set the debugging port (launcher.spec.ts)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should not allow setting debuggingPort and pipe (launcher.spec.ts)": [
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should launch Chrome properly with --no-startup-window and waitForInitialPage=false (launcher.spec.ts)": [
@@ -918,10 +954,10 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should support targetFilter option (launcher.spec.ts)": [
-    "PASS"
+    "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser (launcher.spec.ts)": [
-    "PASS"
+    "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously (launcher.spec.ts)": [
     "FAIL"
@@ -931,6 +967,9 @@
   ],
   "Launcher specs Puppeteer Puppeteer.executablePath should work (launcher.spec.ts)": [
     "SKIP"
+  ],
+  "Launcher specs Puppeteer Puppeteer.executablePath returns executablePath for channel (launcher.spec.ts)": [
+    "PASS"
   ],
   "Launcher specs Browser target events should work (launcher.spec.ts)": [
     "FAIL"
@@ -1101,13 +1140,13 @@
     "TIMEOUT"
   ],
   "navigation Frame.goto should return matching responses (navigation.spec.ts)": [
-    "TIMEOUT"
+    "FAIL"
   ],
   "navigation Frame.waitForNavigation should work (navigation.spec.ts)": [
     "FAIL"
   ],
   "navigation Frame.waitForNavigation should fail when frame detaches (navigation.spec.ts)": [
-    "PASS"
+    "TIMEOUT"
   ],
   "navigation Page.reload should work (navigation.spec.ts)": [
     "PASS"
@@ -1135,6 +1174,9 @@
   ],
   "network Response.headers should work (network.spec.ts)": [
     "PASS"
+  ],
+  "network Request.initiator shoud return the initiator (network.spec.ts)": [
+    "FAIL"
   ],
   "network Response.fromCache should return |false| for non-cached content (network.spec.ts)": [
     "PASS"
@@ -1170,12 +1212,18 @@
     "TIMEOUT"
   ],
   "network Response.buffer should work (network.spec.ts)": [
-    "TIMEOUT"
+    "FAIL", "TIMEOUT"
   ],
   "network Response.buffer should work with compression (network.spec.ts)": [
+    "FAIL", "TIMEOUT"
+  ],
+  "network Response.buffer should throw if the response does not have a body (network.spec.ts)": [
     "TIMEOUT"
   ],
   "network Response.statusText should work (network.spec.ts)": [
+    "PASS"
+  ],
+  "network Response.statusText handles missing status text (network.spec.ts)": [
     "PASS"
   ],
   "network Network Events Page.Events.Request (network.spec.ts)": [
@@ -1206,7 +1254,7 @@
     "FAIL"
   ],
   "network Request.isNavigationRequest should work when navigating to image (network.spec.ts)": [
-    "PASS"
+    "SKIP"
   ],
   "network Page.setExtraHTTPHeaders should work (network.spec.ts)": [
     "FAIL"
@@ -1226,6 +1274,17 @@
   "network Page.authenticate should not disable caching (network.spec.ts)": [
     "FAIL"
   ],
+  "network raw network headers Same-origin set-cookie navigation (network.spec.ts)": [
+    "PASS"
+  ],
+  "network raw network headers Same-origin set-cookie subresource (network.spec.ts)": [
+    "PASS",
+    "FAIL"
+  ],
+  "network raw network headers Cross-origin set-cookie (network.spec.ts)": [
+    "PASS",
+    "FAIL"
+  ],
   "Page Page.close should reject all promises when page is closed (page.spec.ts)": [
     "PASS"
   ],
@@ -1233,7 +1292,7 @@
     "PASS"
   ],
   "Page Page.close should run beforeunload if asked for (page.spec.ts)": [
-    "TIMEOUT"
+    "FAIL"
   ],
   "Page Page.close should *not* run beforeunload by default (page.spec.ts)": [
     "TIMEOUT"
@@ -1248,6 +1307,9 @@
     "PASS"
   ],
   "Page removing and adding event handlers should correctly fire event handlers as they are added and then removed (page.spec.ts)": [
+    "FAIL"
+  ],
+  "Page removing and adding event handlers should correctly added and removed request events (page.spec.ts)": [
     "FAIL"
   ],
   "Page Page.Events.error should throw when page crashes (page.spec.ts)": [
@@ -1290,6 +1352,9 @@
     "FAIL"
   ],
   "Page BrowserContext.overridePermissions should isolate permissions between browser contexts (page.spec.ts)": [
+    "FAIL"
+  ],
+  "Page BrowserContext.overridePermissions should grant persistent-storage (page.spec.ts)": [
     "FAIL"
   ],
   "Page Page.setGeolocation should work (page.spec.ts)": [
@@ -1379,6 +1444,18 @@
   "Page Page.waitForResponse should work with no timeout (page.spec.ts)": [
     "PASS"
   ],
+  "Page Page.waitForNetworkIdle should work (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page Page.waitForNetworkIdle should respect timeout (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page Page.waitForNetworkIdle should respect idleTime (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page Page.waitForNetworkIdle should work with no timeout (page.spec.ts)": [
+    "PASS"
+  ],
   "Page Page.exposeFunction should work (page.spec.ts)": [
     "FAIL"
   ],
@@ -1406,6 +1483,9 @@
   "Page Page.exposeFunction should work with complex objects (page.spec.ts)": [
     "FAIL"
   ],
+  "Page Page.exposeFunction should fallback to default export when passed a module object (page.spec.ts)": [
+    "FAIL"
+  ],
   "Page Page.Events.PageError should fire (page.spec.ts)": [
     "PASS"
   ],
@@ -1417,6 +1497,9 @@
   ],
   "Page Page.setUserAgent should emulate device user-agent (page.spec.ts)": [
     "PASS"
+  ],
+  "Page Page.setUserAgent should work with additional userAgentMetdata (page.spec.ts)": [
+    "FAIL"
   ],
   "Page Page.setContent should work (page.spec.ts)": [
     "PASS"
@@ -1490,6 +1573,9 @@
   "Page Page.addScriptTag should work with content (page.spec.ts)": [
     "PASS"
   ],
+  "Page Page.addScriptTag should add id when provided (page.spec.ts)": [
+    "PASS"
+  ],
   "Page Page.addScriptTag should throw when added with content to the CSP page (page.spec.ts)": [
     "SKIP"
   ],
@@ -1534,6 +1620,12 @@
   ],
   "Page printing to PDF can print to PDF and save to file (page.spec.ts)": [
     "PASS"
+  ],
+  "Page printing to PDF can print to PDF and stream the result (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page printing to PDF should respect timeout (page.spec.ts)": [
+    "SKIP"
   ],
   "Page Page.title should return the page title (page.spec.ts)": [
     "PASS"
@@ -1590,6 +1682,9 @@
     "PASS"
   ],
   "Page Page.browserContext should return the correct browser context instance (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page Page.client should return the client instance (page.spec.ts)": [
     "PASS"
   ],
   "querySelector Page.$eval should work (queryselector.spec.ts)": [
@@ -1700,6 +1795,147 @@
   "querySelector QueryAll $$eval should handle many elements (queryselector.spec.ts)": [
     "PASS"
   ],
+  "request interception Page.setRequestInterception should cooperatively respond by priority (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should cooperatively continue by priority (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should cooperatively abort by priority (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should intercept (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work when POST is redirected with 302 (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work when header manipulation headers with redirect (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to remove headers (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should contain referer header (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should properly return navigation response when URL has cookies (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should stop intercepting (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should show custom HTTP headers (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirect inside sync XHR (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with custom referer headers (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to access the error reason (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable with custom error codes (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should send referer (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should fail navigation when aborting main resource (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects for subresources (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to abort redirects (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with equal requests (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to dataURL and fire dataURL requests (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with badly encoded server (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server - 2 (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should throw if interception is not enabled (requestinterception-experimental.spec.ts)": [
+    "PASS"
+  ],
+  "request interception Page.setRequestInterception should work with file URLs (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not cache if cache disabled (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should cache if cache enabled (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should load fonts if cache enabled (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should work (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend HTTP headers (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should redirect in a way non-observable to page (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend method (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend post data (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend both post data and method on navigation (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should be able to access the response (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work with status code 422 (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should redirect (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should allow mocking binary responses (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should stringify intercepted request response headers (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should indicate already-handled if an intercept has been handled (requestinterception-experimental.spec.ts)": [
+    "FAIL"
+  ],
   "request interception Page.setRequestInterception should intercept (requestinterception.spec.ts)": [
     "FAIL"
   ],
@@ -1808,6 +2044,9 @@
   "request interception Request.continue should amend both post data and method on navigation (requestinterception.spec.ts)": [
     "FAIL"
   ],
+  "request interception Request.continue should fail if the header value is invalid (requestinterception.spec.ts)": [
+    "FAIL"
+  ],
   "request interception Request.respond should work (requestinterception.spec.ts)": [
     "FAIL"
   ],
@@ -1821,6 +2060,9 @@
     "FAIL"
   ],
   "request interception Request.respond should stringify intercepted request response headers (requestinterception.spec.ts)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should fail if the header value is invalid (requestinterception.spec.ts)": [
     "FAIL"
   ],
   "Screenshots Page.screenshot should work (screenshot.spec.ts)": [
@@ -1846,6 +2088,9 @@
   ],
   "Screenshots Page.screenshot should render white background on jpeg file (screenshot.spec.ts)": [
     "FAIL"
+  ],
+  "Screenshots Page.screenshot should work with webp (screenshot.spec.ts)": [
+    "PASS"
   ],
   "Screenshots Page.screenshot should work with odd clip size on Retina displays (screenshot.spec.ts)": [
     "PASS"
@@ -1932,6 +2177,9 @@
     "PASS"
   ],
   "waittask specs Page.waitFor should wait for an xpath (waittask.spec.ts)": [
+    "PASS"
+  ],
+  "waittask specs Page.waitFor should allow you to select an element with parenthesis-starting xpath (waittask.spec.ts)": [
     "PASS"
   ],
   "waittask specs Page.waitFor should not allow you to select an element with single slash xpath (waittask.spec.ts)": [
@@ -2037,7 +2285,7 @@
     "PASS"
   ],
   "waittask specs Frame.waitForSelector should throw when frame is detached (waittask.spec.ts)": [
-    "PASS"
+    "TIMEOUT"
   ],
   "waittask specs Frame.waitForSelector should survive cross-process navigation (waittask.spec.ts)": [
     "PASS"
@@ -2085,7 +2333,7 @@
     "PASS"
   ],
   "waittask specs Frame.waitForXPath should throw when frame is detached (waittask.spec.ts)": [
-    "PASS"
+    "TIMEOUT"
   ],
   "waittask specs Frame.waitForXPath hidden should wait for display: none (waittask.spec.ts)": [
     "PASS"
