@@ -135,6 +135,68 @@ add_task(async function testCanceledRequest() {
   );
 });
 
+add_task(async function testIframeRequest() {
+  info(`Tests for NETWORK_EVENT resources with an iframe`);
+
+  // Do a XHR request that we cancel against a slow loading page
+  const iframeRequestUrl =
+    "https://example.org/document-builder.sjs?html=iframe-request";
+  const iframeHtml = `iframe<script>fetch("${iframeRequestUrl}")</script>`;
+  const iframeUrl =
+    "https://example.org/document-builder.sjs?html=" +
+    encodeURIComponent(iframeHtml);
+  const html = `top-document<iframe src="${iframeUrl}"></iframe>`;
+  const pageUrl =
+    "https://example.org/document-builder.sjs?html=" + encodeURIComponent(html);
+
+  const expectedAvailable = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+      // The top level navigation request relates to the previous top level target.
+      // Unfortunately, it is hard to test because it is racy.
+      // The target front might be destroyed and `targetFront.url` will be null.
+      // Or not just yet and be equal to "about:blank".
+    },
+    {
+      url: iframeUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      targetFrontUrl: pageUrl,
+    },
+    {
+      url: iframeRequestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      targetFrontUrl: iframeUrl,
+    },
+  ];
+  const expectedUpdated = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: iframeUrl,
+      method: "GET",
+      isNavigationRequest: false,
+    },
+    {
+      url: iframeRequestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+    },
+  ];
+
+  await assertNetworkResourcesOnPage(
+    pageUrl,
+    expectedAvailable,
+    expectedUpdated
+  );
+});
+
 async function assertNetworkResourcesOnPage(
   url,
   expectedAvailable,
@@ -214,7 +276,25 @@ function assertResources(actual, expected) {
     ResourceCommand.TYPES.NETWORK_EVENT,
     "The resource type is correct"
   );
+  is(
+    typeof actual.innerWindowId,
+    "number",
+    "All requests have an innerWindowId attribute"
+  );
+  ok(
+    actual.targetFront.isTargetFront,
+    "All requests have a targetFront attribute"
+  );
+
   for (const name in expected) {
-    is(actual[name], expected[name], `The '${name}' attribute is correct`);
+    if (name == "targetFrontUrl") {
+      is(
+        actual.targetFront.url,
+        expected[name],
+        "The request matches the right target front"
+      );
+    } else {
+      is(actual[name], expected[name], `The '${name}' attribute is correct`);
+    }
   }
 }
