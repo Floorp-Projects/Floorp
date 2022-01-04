@@ -21,7 +21,20 @@ add_task(async function() {
 
   info("Starting test... ");
 
-  let har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
+  await testSimpleReload({ tab, monitor, toolbox });
+  await testResponseBodyLimits({ tab, monitor, toolbox });
+  await testManyReloads({ tab, monitor, toolbox });
+  await testClearedRequests({ tab, monitor, toolbox });
+
+  // Do not use teardown(monitor) as testClearedRequests register broken requests
+  // which never complete and would block on waitForAllNetworkUpdateEvents
+  await closeTabAndToolbox();
+});
+
+async function testSimpleReload({ tab, monitor, toolbox }) {
+  info("Test with a simple page reload");
+
+  const har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
 
   // Check out HAR log
   isnot(har.log, null, "The HAR log must exist");
@@ -36,15 +49,20 @@ add_task(async function() {
   ok("onContentLoad" in page.pageTimings, "There must be onContentLoad time");
   ok("onLoad" in page.pageTimings, "There must be onLoad time");
 
-  let entry = har.log.entries[0];
+  const entry = har.log.entries[0];
   assertNavigationRequestEntry(entry);
-  isnot(entry.response.content.text, undefined, "Check response body");
-  isnot(entry.timings, undefined, "Check timings");
 
+  info("We get the response content and timings when doing a simple reload");
+  isnot(entry.response.content.text, undefined, "Check response body");
+  is(entry.response.content.text.length, 465, "Response body is complete");
+  isnot(entry.timings, undefined, "Check timings");
+}
+
+async function testResponseBodyLimits({ tab, monitor, toolbox }) {
   info("Test response body limit (non zero).");
   await pushPref("devtools.netmonitor.responseBodyLimit", 10);
-  har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
-  entry = har.log.entries[0];
+  let har = await reloadAndCopyAllAsHar({ tab, monitor, toolbox });
+  let entry = har.log.entries[0];
   is(entry.response.content.text.length, 10, "Response body must be truncated");
 
   info("Test response body limit (zero).");
@@ -56,8 +74,10 @@ add_task(async function() {
     465,
     "Response body must not be truncated"
   );
+}
 
-  har = await reloadAndCopyAllAsHar({
+async function testManyReloads({ tab, monitor, toolbox }) {
+  const har = await reloadAndCopyAllAsHar({
     tab,
     monitor,
     toolbox,
@@ -68,7 +88,7 @@ add_task(async function() {
     "Assert the first navigation request which has been cancelled by the second reload"
   );
   // Requests may come out of order, so try to find the bogus cancelled request
-  entry = har.log.entries.find(e => e.response.status == 0);
+  let entry = har.log.entries.find(e => e.response.status == 0);
   ok(entry, "Found the cancelled request");
   is(entry.request.method, "GET", "Method is set");
   is(entry.request.url, SIMPLE_URL, "URL is set");
@@ -81,9 +101,70 @@ add_task(async function() {
 
   entry = har.log.entries.find(e => e.response.status != 0);
   assertNavigationRequestEntry(entry);
+}
 
-  return teardown(monitor);
-});
+async function testClearedRequests({ tab, monitor, toolbox }) {
+  info("Navigate to an empty page");
+  const topDocumentURL =
+    "https://example.org/document-builder.sjs?html=empty-document";
+  const iframeURL =
+    "https://example.org/document-builder.sjs?html=" +
+    encodeURIComponent(
+      `iframe<script>fetch("/document-builder.sjs?html=iframe-request")</script>`
+    );
+  await navigateTo(topDocumentURL);
+
+  info("Create an iframe doing a request and remove the iframe.");
+  info(
+    "Doing this, should notify a network request that is destroyed on the server side"
+  );
+  const onNetworkEvents = waitForNetworkEvents(monitor, 2);
+  await SpecialPowers.spawn(tab.linkedBrowser, [iframeURL], async function(
+    _iframeURL
+  ) {
+    const iframe = content.document.createElement("iframe");
+    iframe.setAttribute("src", _iframeURL);
+    content.document.body.appendChild(iframe);
+  });
+  // Wait for the two request to be processed (iframe doc + fetch requests)
+  // before removing the iframe so that the netmonitor is able to fetch
+  // all lazy data without throwing
+  await onNetworkEvents;
+
+  info("Remove the iframe so that lazy request data are freed");
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    content.document.querySelector("iframe").remove();
+  });
+
+  const { connector, store, windowRequire } = monitor.panelWin;
+  const { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
+  // HAR will try to re-fetch lazy data and may throw on the iframe fetch request.
+  // This subtest is meants to verify we aren't throwing here and HAR export
+  // works fine, even if some requests can't be fetched.
+  await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
+
+  const jsonString = SpecialPowers.getClipboardData("text/unicode");
+  const har = JSON.parse(jsonString);
+  is(har.log.entries.length, 2, "There must be two requests");
+  is(
+    har.log.entries[0].request.url,
+    topDocumentURL,
+    "First request is for the top level document"
+  );
+  is(
+    har.log.entries[1].request.url,
+    iframeURL,
+    "Second request is for the iframe"
+  );
+  info(
+    "The fetch request doesn't appear in HAR export, because its lazy data is freed and we completely ignore the request."
+  );
+}
 
 function assertNavigationRequestEntry(entry) {
   info("Assert that the entry relates to the navigation request");
@@ -118,17 +199,14 @@ async function reloadAndCopyAllAsHar({
   reloadTwice = false,
 }) {
   const { connector, store, windowRequire } = monitor.panelWin;
-  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { HarMenuUtils } = windowRequire(
     "devtools/client/netmonitor/src/har/har-menu-utils"
   );
-  const { getSortedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index"
-  );
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  const wait = waitForNetworkEvents(monitor, 1);
+  const onNetworkEvent = waitForNetworkEvents(monitor, 1);
   const {
     onDomCompleteResource,
   } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
@@ -139,7 +217,7 @@ async function reloadAndCopyAllAsHar({
   await reloadBrowser();
 
   info("Waiting for network events");
-  await wait;
+  await onNetworkEvent;
   info("Waiting for DOCUMENT_EVENT dom-complete resource");
   await onDomCompleteResource;
 
