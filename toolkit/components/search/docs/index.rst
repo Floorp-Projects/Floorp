@@ -25,4 +25,5 @@ Contents
    SearchEngineConfiguration
    SearchConfigurationSchema
    DefaultSearchEngines
+   Preferences
    Telemetry
