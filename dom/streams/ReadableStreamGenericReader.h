@@ -8,11 +8,15 @@
 #define mozilla_dom_ReadableStreamGenericReader_h
 
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
+#include "nsISupports.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace dom {
 
+class ReadableStream;
+class ReadableStreamDefaultReader;
 class ReadableStreamBYOBReader;
 
 // Base class for internal slots of readable stream readers
@@ -45,6 +49,13 @@ class ReadableStreamGenericReader : public nsISupports {
     SetStream(stream.forget());
   }
 
+  // IDL Methods
+  already_AddRefed<Promise> Closed() const;
+
+  already_AddRefed<Promise> Cancel(JSContext* aCx,
+                                   JS::Handle<JS::Value> aReason,
+                                   ErrorResult& aRv);
+
  protected:
   virtual ~ReadableStreamGenericReader() = default;
 
@@ -52,6 +63,14 @@ class ReadableStreamGenericReader : public nsISupports {
   RefPtr<Promise> mClosedPromise;
   RefPtr<ReadableStream> mStream;
 };
+
+bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
+                                           ReadableStreamGenericReader* aReader,
+                                           ReadableStream* aStream,
+                                           ErrorResult& aRv);
+
+void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
+                                        ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla
