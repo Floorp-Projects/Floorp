@@ -394,7 +394,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   /* Called on the main thread when AudioInputTrack requests audio data from an
    * input device aID. */
-  ProcessedMediaTrack* GetDeviceTrack(CubebUtils::AudioDeviceID aID);
+  NativeInputTrack* GetOrCreateDeviceTrack(
+      CubebUtils::AudioDeviceID aID, const PrincipalHandle& aPrincipalHandle);
 
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
