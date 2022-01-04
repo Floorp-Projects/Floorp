@@ -182,6 +182,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual already_AddRefed<AccAttributes> Attributes() override;
 
+  virtual nsAtom* TagName() const override;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const override;

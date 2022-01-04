@@ -489,6 +489,18 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
 }
 
 template <class Derived>
+nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
+  if (mCachedFields) {
+    if (auto tag =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+      return *tag;
+    }
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }

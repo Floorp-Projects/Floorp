@@ -3363,6 +3363,11 @@ int32_t LocalAccessible::GetLevelInternal() {
   return level;
 }
 
+nsAtom* LocalAccessible::TagName() const {
+  return mContent && mContent->IsElement() ? mContent->NodeInfo()->NameAtom()
+                                           : nullptr;
+}
+
 void LocalAccessible::StaticAsserts() const {
   static_assert(
       eLastStateFlag <= (1 << kStateFlagsBits) - 1,
