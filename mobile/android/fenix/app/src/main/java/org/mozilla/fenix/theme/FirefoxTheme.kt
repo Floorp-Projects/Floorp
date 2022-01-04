@@ -65,7 +65,6 @@ private val darkColorPalette = FirefoxColors(
     textSecondary = PhotonColors.LightGrey40,
     textDisabled = PhotonColors.LightGrey05A40,
     textWarning = PhotonColors.Red40,
-    textLink = PhotonColors.Violet40,
     textAccent = PhotonColors.Violet40,
     textInverted = PhotonColors.White,
     iconPrimary = PhotonColors.LightGrey05,
@@ -114,8 +113,7 @@ private val lightColorPalette = FirefoxColors(
     textSecondary = PhotonColors.DarkGrey05,
     textDisabled = PhotonColors.DarkGrey90A40,
     textWarning = PhotonColors.Red80,
-    textLink = PhotonColors.Violet70,
-    textAccent = PhotonColors.Violet90,
+    textAccent = PhotonColors.Violet70,
     textInverted = PhotonColors.White,
     iconPrimary = PhotonColors.DarkGrey90,
     iconSecondary = PhotonColors.DarkGrey05,
@@ -168,7 +166,6 @@ class FirefoxColors(
     textSecondary: Color,
     textDisabled: Color,
     textWarning: Color,
-    textLink: Color,
     textAccent: Color,
     textInverted: Color,
     iconPrimary: Color,
@@ -268,10 +265,7 @@ class FirefoxColors(
     // Warning text
     var textWarning by mutableStateOf(textWarning)
         private set
-    // Text link
-    var textLink by mutableStateOf(textLink)
-        private set
-    // Small heading
+    // Small heading, Text link
     var textAccent by mutableStateOf(textAccent)
         private set
     // Text Inverted/On Color
@@ -359,7 +353,6 @@ class FirefoxColors(
         textSecondary = other.textSecondary
         textDisabled = other.textDisabled
         textWarning = other.textWarning
-        textLink = other.textLink
         textAccent = other.textAccent
         textInverted = other.textInverted
         iconPrimary = other.iconPrimary
@@ -408,7 +401,6 @@ class FirefoxColors(
         textSecondary = textSecondary,
         textDisabled = textDisabled,
         textWarning = textWarning,
-        textLink = textLink,
         textAccent = textAccent,
         textInverted = textInverted,
         iconPrimary = iconPrimary,

@@ -36,7 +36,7 @@
         android:maxLines="1"
         android:nestedScrollingEnabled="false"
         android:text="@string/recent_tabs_show_all"
-        android:textColor="@color/fx_mobile_text_color_action"
+        android:textColor="@color/fx_mobile_text_color_accent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/header" />
 
