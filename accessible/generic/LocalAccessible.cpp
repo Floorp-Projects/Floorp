@@ -2016,7 +2016,12 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
                            roleMapEntry->role == roles::LISTITEM ||
                            roleMapEntry->role == roles::ROW)) {
-        rel.AppendTarget(GetGroupInfo()->ConceptualParent());
+        LocalAccessible* parent = const_cast<LocalAccessible*>(this)
+                                      ->GetOrCreateGroupInfo()
+                                      ->ConceptualParent();
+        if (parent) {
+          rel.AppendTarget(parent);
+        }
       }
 
       // If this is an OOP iframe document, we can't support NODE_CHILD_OF
@@ -3127,10 +3132,18 @@ uint32_t LocalAccessible::GetActionRule() const {
 }
 
 AccGroupInfo* LocalAccessible::GetGroupInfo() const {
+  if (mBits.groupInfo && !(mStateFlags & eGroupInfoDirty)) {
+    return mBits.groupInfo;
+  }
+
+  return nullptr;
+}
+
+AccGroupInfo* LocalAccessible::GetOrCreateGroupInfo() {
   if (IsProxy()) MOZ_CRASH("This should never be called on proxy wrappers");
 
   if (mBits.groupInfo) {
-    if (HasDirtyGroupInfo()) {
+    if (mStateFlags & eGroupInfoDirty) {
       mBits.groupInfo->Update();
       mStateFlags &= ~eGroupInfoDirty;
     }
@@ -3311,7 +3324,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
 void LocalAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
                                                  int32_t* aSetSize) {
-  AccGroupInfo* groupInfo = GetGroupInfo();
+  AccGroupInfo* groupInfo = GetOrCreateGroupInfo();
   if (groupInfo) {
     *aPosInSet = groupInfo->PosInSet();
     *aSetSize = groupInfo->SetSize();

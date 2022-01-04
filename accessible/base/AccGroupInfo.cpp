@@ -45,11 +45,11 @@ void AccGroupInfo::Update() {
     if (BaseRole(siblingRole) != mRole) {
       continue;
     }
-    bool siblingHasGroupInfo =
-        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+
+    AccGroupInfo* siblingGroupInfo = sibling->GetGroupInfo();
     // Skip invisible siblings.
     // If the sibling has calculated group info, that means it's visible.
-    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+    if (!siblingGroupInfo && sibling->State() & states::INVISIBLE) {
       continue;
     }
 
@@ -68,10 +68,10 @@ void AccGroupInfo::Update() {
 
     // If the previous item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (siblingHasGroupInfo) {
-      mPosInSet += sibling->mBits.groupInfo->mPosInSet;
-      mParent = sibling->mBits.groupInfo->mParent;
-      mSetSize = sibling->mBits.groupInfo->mSetSize;
+    if (siblingGroupInfo) {
+      mPosInSet += siblingGroupInfo->mPosInSet;
+      mParent = siblingGroupInfo->mParent;
+      mSetSize = siblingGroupInfo->mSetSize;
       return;
     }
 
@@ -92,11 +92,10 @@ void AccGroupInfo::Update() {
     if (BaseRole(siblingRole) != mRole) {
       continue;
     }
-    bool siblingHasGroupInfo =
-        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+    AccGroupInfo* siblingGroupInfo = sibling->GetGroupInfo();
     // Skip invisible siblings.
     // If the sibling has calculated group info, that means it's visible.
-    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+    if (!siblingGroupInfo && sibling->State() & states::INVISIBLE) {
       continue;
     }
 
@@ -109,9 +108,9 @@ void AccGroupInfo::Update() {
 
     // If the next item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (siblingHasGroupInfo) {
-      mParent = sibling->mBits.groupInfo->mParent;
-      mSetSize = sibling->mBits.groupInfo->mSetSize;
+    if (siblingGroupInfo) {
+      mParent = siblingGroupInfo->mParent;
+      mSetSize = siblingGroupInfo->mSetSize;
       return;
     }
 
@@ -183,7 +182,7 @@ LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
     }
 
     if (item) {
-      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      AccGroupInfo* itemGroupInfo = item->GetOrCreateGroupInfo();
       if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
       }
@@ -200,7 +199,7 @@ LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
        containerRole == roles::OUTLINEITEM)) {
     item = item->LocalFirstChild();
     if (item) {
-      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      AccGroupInfo* itemGroupInfo = item->GetOrCreateGroupInfo();
       if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
       }
@@ -293,7 +292,7 @@ LocalAccessible* AccGroupInfo::NextItemTo(LocalAccessible* aItem) {
   uint32_t childCount = parent->ChildCount();
   for (uint32_t idx = aItem->IndexInParent() + 1; idx < childCount; idx++) {
     LocalAccessible* nextItem = parent->LocalChildAt(idx);
-    AccGroupInfo* nextGroupInfo = nextItem->GetGroupInfo();
+    AccGroupInfo* nextGroupInfo = nextItem->GetOrCreateGroupInfo();
     if (nextGroupInfo &&
         nextGroupInfo->ConceptualParent() == groupInfo->ConceptualParent()) {
       return nextItem;

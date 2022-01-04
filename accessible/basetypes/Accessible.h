@@ -19,6 +19,7 @@ namespace mozilla {
 namespace a11y {
 
 class AccAttributes;
+class AccGroupInfo;
 class HyperTextAccessibleBase;
 class LocalAccessible;
 class RemoteAccessible;
@@ -300,6 +301,16 @@ class Accessible {
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const = 0;
 
+  /**
+   * Return group info if there is an up-to-date version.
+   */
+  virtual AccGroupInfo* GetGroupInfo() const { return nullptr; }
+
+  /**
+   * Return group info or create and update.
+   */
+  virtual AccGroupInfo* GetOrCreateGroupInfo() { return nullptr; }
+
   /*
    * Return calculated group level based on accessible hierarchy.
    *
@@ -320,6 +331,7 @@ class Accessible {
   uint8_t mRoleMapEntryIndex;
 
   friend class DocAccessibleChildBase;
+  friend class AccGroupInfo;
 };
 
 }  // namespace a11y
