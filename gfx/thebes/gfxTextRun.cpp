@@ -2514,7 +2514,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
       if (newCh != origCh) {
         if (!transformedString) {
           transformedString = MakeUnique<char16_t[]>(aLength);
-          if (sizeof(T) == sizeof(char16_t)) {
+          if constexpr (sizeof(T) == sizeof(char16_t)) {
             memcpy(transformedString.get(), aString, i * sizeof(char16_t));
           } else {
             for (uint32_t j = 0; j < i; ++j) {
@@ -2815,7 +2815,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
 
         // for 16-bit textruns only, check for surrogate pairs and
         // special Unicode spaces; omit these checks in 8-bit runs
-        if (sizeof(T) == sizeof(char16_t)) {
+        if constexpr (sizeof(T) == sizeof(char16_t)) {
           if (index + 1 < aLength &&
               NS_IS_SURROGATE_PAIR(ch, aString[index + 1])) {
             uint32_t usv = SURROGATE_TO_UCS4(ch, aString[index + 1]);
@@ -3394,7 +3394,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
 
   uint32_t prevCh = 0;
   uint32_t nextCh = aString[0];
-  if (sizeof(T) == sizeof(char16_t)) {
+  if constexpr (sizeof(T) == sizeof(char16_t)) {
     if (aLength > 1 && NS_IS_SURROGATE_PAIR(nextCh, aString[1])) {
       nextCh = SURROGATE_TO_UCS4(nextCh, aString[1]);
     }
@@ -3420,7 +3420,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
     // Get next char (if any) so that FindFontForChar can look ahead
     // for a possible variation selector.
 
-    if (sizeof(T) == sizeof(char16_t)) {
+    if constexpr (sizeof(T) == sizeof(char16_t)) {
       // In 16-bit case only, check for surrogate pairs.
       if (ch > 0xffffu) {
         i++;
