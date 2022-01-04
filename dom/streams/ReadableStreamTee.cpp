@@ -54,7 +54,7 @@ already_AddRefed<Promise> ReadableStreamDefaultTeePullAlgorithm::PullCallback(
       new ReadableStreamDefaultTeeReadRequest(mTeeState);
 
   // Step 13.4:
-  RefPtr<ReadableStreamDefaultReader> reader(mTeeState->GetReader());
+  RefPtr<ReadableStreamGenericReader> reader(mTeeState->GetReader());
   ReadableStreamDefaultReaderRead(aCx, reader, readRequest, aRv);
   if (aRv.Failed()) {
     return nullptr;

@@ -562,7 +562,7 @@ void ReadableByteStreamControllerEnqueue(
             ReaderType::Default);
 
         // Step 10.2.2.2:
-        ReadableByteStreamControllerShiftPendingPullInto(aController);
+        (void)ReadableByteStreamControllerShiftPendingPullInto(aController);
       }
 
       // Step 10.2.3

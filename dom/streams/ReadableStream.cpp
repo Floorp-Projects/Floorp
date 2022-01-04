@@ -78,8 +78,25 @@ JSObject* ReadableStream::WrapObject(JSContext* aCx,
   return ReadableStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void ReadableStream::SetReader(ReadableStreamDefaultReader* aReader) {
+ReadableStreamDefaultReader* ReadableStream::GetDefaultReader() {
+  return mReader->AsDefault();
+}
+
+void ReadableStream::SetReader(ReadableStreamGenericReader* aReader) {
   mReader = aReader;
+}
+
+bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
+  // Step 1.
+  ReadableStreamGenericReader* reader = aStream->GetReader();
+
+  // Step 2.
+  if (!reader) {
+    return false;
+  }
+
+  // Step 3+4:
+  return reader->IsDefault();
 }
 
 // Streams Spec: 4.2.4: https://streams.spec.whatwg.org/#rs-prototype
@@ -230,7 +247,7 @@ void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
 
   // Step 3.
 
-  ReadableStreamDefaultReader* reader = aStream->GetReader();
+  ReadableStreamGenericReader* reader = aStream->GetReader();
   // Step 4.
   if (!reader) {
     return;
@@ -239,19 +256,21 @@ void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
   // Step 5.
   reader->ClosedPromise()->MaybeResolveWithUndefined();
 
-  // Step 6 (impliclitly true for now)
-
-  // Step 6.1
-  for (ReadRequest* readRequest : reader->ReadRequests()) {
-    // Step 6.1.1.
-    readRequest->CloseSteps(aCx, aRv);
-    if (aRv.Failed()) {
-      return;
+  // Step 6.
+  if (reader->IsDefault()) {
+    // Step 6.1
+    ReadableStreamDefaultReader* defaultReader = reader->AsDefault();
+    for (ReadRequest* readRequest : defaultReader->ReadRequests()) {
+      // Step 6.1.1.
+      readRequest->CloseSteps(aCx, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
     }
-  }
 
-  // Step 6.2
-  reader->ReadRequests().clear();
+    // Step 6.2
+    defaultReader->ReadRequests().clear();
+  }
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-cancel
@@ -291,8 +310,14 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
     return nullptr;
   }
 
-  // Step 5. Only consumed in Step 6, so skipped for now.
-  // Step 6. Implicitly skipped until BYOBReaders exist
+  // Step 5.
+  ReadableStreamGenericReader* reader = aStream->GetReader();
+
+  // Step 6.
+  if (reader && reader->IsBYOB()) {
+    MOZ_CRASH(
+        "NYI: Implement read into request clearing when BYOB readers exist");
+  }
 
   // Step 7.
   RefPtr<ReadableStreamController> controller(aStream->Controller());
@@ -388,7 +413,7 @@ double ReadableStreamGetNumReadRequests(ReadableStream* aStream) {
   MOZ_ASSERT(ReadableStreamHasDefaultReader(aStream));
 
   // Step 2.
-  return double(aStream->GetReader()->ReadRequests().length());
+  return double(aStream->GetDefaultReader()->ReadRequests().length());
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-error
@@ -404,7 +429,7 @@ void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
   aStream->SetStoredError(aValue);
 
   // Step 4.
-  ReadableStreamDefaultReader* reader = aStream->GetReader();
+  ReadableStreamGenericReader* reader = aStream->GetReader();
 
   // Step 5.
   if (!reader) {
@@ -419,19 +444,22 @@ void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
 
   // Step 8. Implicit in the fact that we don't yet support
   //         ReadableStreamBYOBReader
-
-  // Step 8.1:
-  for (ReadRequest* readRequest : reader->ReadRequests()) {
-    readRequest->ErrorSteps(aCx, aValue, aRv);
-    if (aRv.Failed()) {
-      return;
+  if (reader->IsDefault()) {
+    // Step 8.1:
+    ReadableStreamDefaultReader* defaultReader = reader->AsDefault();
+    for (ReadRequest* readRequest : defaultReader->ReadRequests()) {
+      readRequest->ErrorSteps(aCx, aValue, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
     }
+    // Step 8.2
+    defaultReader->ReadRequests().clear();
+  } else {
+    MOZ_ASSERT(reader->IsBYOB());
+    // Step 9: Unreachable until we implement ReadableStreamBYOBReader.
+    MOZ_CRASH("BYOBReader not yet implemented");
   }
-
-  // Step 8.2
-  reader->ReadRequests().clear();
-
-  // Step 9: Unreachable until we implement ReadableStreamBYOBReader.
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-close
@@ -442,7 +470,7 @@ void ReadableStreamFulfillReadRequest(JSContext* aCx, ReadableStream* aStream,
   MOZ_ASSERT(ReadableStreamHasDefaultReader(aStream));
 
   // Step 2.
-  ReadableStreamDefaultReader* reader = aStream->GetReader();
+  ReadableStreamDefaultReader* reader = aStream->GetDefaultReader();
 
   // Step 3.
   MOZ_ASSERT(!reader->ReadRequests().isEmpty());
@@ -462,20 +490,22 @@ void ReadableStreamFulfillReadRequest(JSContext* aCx, ReadableStream* aStream,
   readRequest->ChunkSteps(aCx, aChunk, aRv);
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-add-read-request
 void ReadableStreamAddReadRequest(ReadableStream* aStream,
                                   ReadRequest* aReadRequest) {
-  // Step 1. Implicit until BYOB readers exist
+  // Step 1.
+  MOZ_ASSERT(aStream->GetReader()->IsDefault());
   // Step 2.
   MOZ_ASSERT(aStream->State() == ReadableStream::ReaderState::Readable);
   // Step 3.
-  aStream->GetReader()->ReadRequests().insertBack(aReadRequest);
+  aStream->GetDefaultReader()->ReadRequests().insertBack(aReadRequest);
 }
 
 class ReadableStreamDefaultTeeCancelAlgorithm final
     : public UnderlyingSourceCancelCallbackHelper {
   RefPtr<TeeState> mTeeState;
-  // Since cancel1algorithm and cancel2algorithm only differ in which tee state
-  // members to manipulate, we common up the implementation and select
+  // Since cancel1algorithm and cancel2algorithm only differ in which tee
+  // state members to manipulate, we common up the implementation and select
   // dynamically.
   bool mIsCancel1 = true;
 

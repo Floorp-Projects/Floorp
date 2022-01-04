@@ -33,8 +33,12 @@ struct TeeState : public nsISupports {
   ReadableStream* GetStream() const { return mStream; }
   void SetStream(ReadableStream* aStream) { mStream = aStream; }
 
-  ReadableStreamDefaultReader* GetReader() const { return mReader; }
-  void SetReader(ReadableStreamDefaultReader* aReader) { mReader = aReader; }
+  ReadableStreamGenericReader* GetReader() const { return mReader; }
+  void SetReader(ReadableStreamGenericReader* aReader) { mReader = aReader; }
+
+  ReadableStreamDefaultReader* GetDefaultReader() const {
+    return mReader->AsDefault();
+  }
 
   bool ReadAgain() const { return mReadAgain; }
   void SetReadAgain(bool aReadAgain) { mReadAgain = aReadAgain; }
@@ -86,7 +90,7 @@ struct TeeState : public nsISupports {
   RefPtr<ReadableStream> mStream;
 
   // Step 3.
-  RefPtr<ReadableStreamDefaultReader> mReader;
+  RefPtr<ReadableStreamGenericReader> mReader;
 
   // Step 4.
   bool mReading = false;
