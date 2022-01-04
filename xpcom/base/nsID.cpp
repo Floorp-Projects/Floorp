@@ -25,8 +25,7 @@
   }
   int len = static_cast<int>(aLength);
 
-  // Only try to use NSS on the main thread.
-  if (!NS_IsMainThread() || !NSS_IsInitialized()) {
+  if (!NSS_IsInitialized()) {
     return false;
   }
 
