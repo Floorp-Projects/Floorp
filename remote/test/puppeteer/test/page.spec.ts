@@ -1693,7 +1693,10 @@ describe('Page', function () {
       expect(size).toBeGreaterThan(0);
     });
 
-    it('should respect timeout', async () => {
+    // This test should be skipped in mozilla-central (Firefox).
+    // It intermittently makes the whole test suite fail.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1748255
+    itFailsFirefox('should respect timeout', async () => {
       const { isHeadless, page, server, puppeteer } = getTestState();
       if (!isHeadless) return;
 
