@@ -347,6 +347,8 @@ class WorkerPrivate final : public RelativeTimeline {
   }
 
   JSContext* GetJSContext() const {
+    // mJSContext is only modified on the worker thread, so workerthread code
+    // can safely read it without a lock
     AssertIsOnWorkerThread();
     return mJSContext;
   }
@@ -1191,9 +1193,14 @@ class WorkerPrivate final : public RelativeTimeline {
   workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
   workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
-  // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;
   RefPtr<WorkerThread> mThread;
+  // Touched on multiple threads, protected with mMutex. Only modified on the
+  // worker thread
+  // mThread is only modified on the Worker thread, before calling DoRunLoop
+  // mPRThread is only modified on another thread in ScheduleWorker(), and is
+  // constant for the duration of DoRunLoop.  Static mutex analysis doesn't help
+  // here
   PRThread* mPRThread;
 
   // Accessed from main thread
