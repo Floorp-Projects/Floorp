@@ -3293,6 +3293,8 @@ bool BaseCompiler::emitEnd() {
     return false;
   }
 
+  // Every label case is responsible to pop the control item at the appropriate
+  // time for the label case
   switch (kind) {
     case LabelKind::Body:
       if (!endBlock(type)) {
@@ -3314,20 +3316,24 @@ bool BaseCompiler::emitEnd() {
       if (!endBlock(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
     case LabelKind::Loop:
       // The end of a loop isn't a branch target, so we can just leave its
       // results on the expression stack to be consumed by the outer block.
+      iter_.popEnd();
       break;
     case LabelKind::Then:
       if (!endIfThen(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
     case LabelKind::Else:
       if (!endIfThenElse(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
@@ -3336,11 +3342,10 @@ bool BaseCompiler::emitEnd() {
       if (!endTryCatch(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
 #endif
   }
-
-  iter_.popEnd();
 
   return true;
 }
