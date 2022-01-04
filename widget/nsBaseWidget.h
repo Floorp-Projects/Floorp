@@ -144,8 +144,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
-  typedef mozilla::layers::SetAllowedTouchBehaviorCallback
-      SetAllowedTouchBehaviorCallback;
   typedef mozilla::CSSIntRect CSSIntRect;
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenRotation ScreenRotation;
@@ -673,7 +671,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   RefPtr<IAPZCTreeManager> mAPZC;
   RefPtr<GeckoContentController> mRootContentController;
   RefPtr<APZEventState> mAPZEventState;
-  SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   RefPtr<WidgetShutdownObserver> mShutdownObserver;
   RefPtr<LocalesChangedObserver> mLocalesChangedObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;

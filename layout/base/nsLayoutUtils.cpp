@@ -8956,30 +8956,6 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
 }
 
 /* static */
-StyleTouchAction nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
-  if (!aFrame) {
-    return StyleTouchAction::AUTO;
-  }
-
-  // The touch-action CSS property applies to: all elements except:
-  // non-replaced inline elements, table rows, row groups, table columns, and
-  // column groups
-  bool isNonReplacedInlineElement =
-      aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
-  if (isNonReplacedInlineElement) {
-    return StyleTouchAction::AUTO;
-  }
-
-  const nsStyleDisplay* disp = aFrame->StyleDisplay();
-  bool isTableElement = disp->IsInternalTableStyleExceptCell();
-  if (isTableElement) {
-    return StyleTouchAction::AUTO;
-  }
-
-  return disp->mTouchAction;
-}
-
-/* static */
 void nsLayoutUtils::TransformToAncestorAndCombineRegions(
     const nsRegion& aRegion, nsIFrame* aFrame, const nsIFrame* aAncestorFrame,
     nsRegion* aPreciseTargetDest, nsRegion* aImpreciseTargetDest,

@@ -170,8 +170,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   using CoalescedMouseData = mozilla::dom::CoalescedMouseData;
   using CoalescedWheelData = mozilla::dom::CoalescedWheelData;
   using APZEventState = mozilla::layers::APZEventState;
-  using SetAllowedTouchBehaviorCallback =
-      mozilla::layers::SetAllowedTouchBehaviorCallback;
   using TouchBehaviorFlags = mozilla::layers::TouchBehaviorFlags;
 
   friend class PBrowserChild;
@@ -608,9 +606,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
       const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
 
-  void SetAllowedTouchBehavior(
-      uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aFlags) const;
-
   bool UpdateFrame(const layers::RepaintRequest& aRequest);
   bool NotifyAPZStateChange(
       const ViewID& aViewId,
@@ -816,7 +811,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   RefPtr<VsyncMainChild> mVsyncChild;
 
   RefPtr<APZEventState> mAPZEventState;
-  SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
 
   // Position of client area relative to the outer window
   LayoutDeviceIntPoint mClientOffset;
