@@ -14,7 +14,6 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -41,10 +40,9 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHigh
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentVisitsControllerTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private val selectOrAddTabUseCase: SelectOrAddUseCase = mockk(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)

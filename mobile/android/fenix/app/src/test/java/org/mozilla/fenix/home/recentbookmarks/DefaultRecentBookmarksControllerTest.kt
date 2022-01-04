@@ -12,13 +12,11 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,10 +32,8 @@ import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksC
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultRecentBookmarksControllerTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxUnitFun = true)
@@ -61,11 +57,6 @@ class DefaultRecentBookmarksControllerTest {
                 navController = navController
             )
         )
-    }
-
-    @After
-    fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

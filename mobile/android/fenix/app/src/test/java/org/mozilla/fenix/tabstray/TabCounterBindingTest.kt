@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -21,7 +20,7 @@ class TabCounterBindingTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `WHEN normalTabs changes THEN update counter`() {

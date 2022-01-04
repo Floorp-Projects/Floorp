@@ -9,7 +9,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.CreditCardNumber
@@ -32,13 +31,12 @@ class DefaultCreditCardEditorControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
-    private val testCoroutineScope = TestCoroutineScope()
-    private val testDispatcher = TestCoroutineDispatcher()
-
     private lateinit var controller: DefaultCreditCardEditorController
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val testCoroutineScope = TestCoroutineScope(testDispatcher)
 
     @Before
     fun setup() {
@@ -56,7 +54,6 @@ class DefaultCreditCardEditorControllerTest {
     @After
     fun cleanUp() {
         testCoroutineScope.cleanupTestCoroutines()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

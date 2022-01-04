@@ -19,7 +19,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
@@ -63,20 +62,20 @@ class ShareControllerTest {
         TabData("title1", "url1")
     )
     private val textToShare = "${shareData[0].url}\n\n${shareData[1].url}"
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val testCoroutineScope = TestCoroutineScope()
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
     private val recentAppStorage = mockk<RecentAppsStorage>(relaxed = true)
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val testCoroutineScope = TestCoroutineScope(testDispatcher)
     private val controller = DefaultShareController(
         context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
         recentAppStorage, testCoroutineScope, testDispatcher, dismiss
     )
-
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setUp() {

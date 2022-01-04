@@ -15,7 +15,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
@@ -29,7 +28,7 @@ class SecureTabsTrayBindingTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val settings: Settings = mockk(relaxed = true)
     private val fragment: Fragment = mockk(relaxed = true)

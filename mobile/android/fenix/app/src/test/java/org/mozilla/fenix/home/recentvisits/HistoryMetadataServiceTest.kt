@@ -8,7 +8,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -27,10 +26,9 @@ class HistoryMetadataServiceTest {
     private lateinit var service: HistoryMetadataService
     private lateinit var storage: HistoryMetadataStorage
 
-    val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {

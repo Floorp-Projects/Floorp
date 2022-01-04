@@ -11,7 +11,6 @@ import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -37,10 +36,8 @@ class PwaOnboardingObserverTest {
     private lateinit var settings: Settings
     private lateinit var webAppUseCases: WebAppUseCases
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setUp() {

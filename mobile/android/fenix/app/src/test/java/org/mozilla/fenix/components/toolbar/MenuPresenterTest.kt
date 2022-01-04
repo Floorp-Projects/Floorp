@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -27,10 +26,8 @@ class MenuPresenterTest {
     private lateinit var menuPresenter: MenuPresenter
     private lateinit var menuToolbar: BrowserToolbar
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {

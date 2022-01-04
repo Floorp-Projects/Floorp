@@ -8,7 +8,6 @@ import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -22,7 +21,7 @@ class CloseOnLastTabBindingTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `WHEN the binding starts THEN do nothing`() {

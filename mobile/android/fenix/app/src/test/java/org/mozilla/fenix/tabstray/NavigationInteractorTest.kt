@@ -7,15 +7,14 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
-import io.mockk.coVerify
+import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
@@ -53,10 +52,9 @@ class NavigationInteractorTest {
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {

@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertNotSame
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction.TrackerBlockedAction
@@ -23,7 +22,6 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,10 +31,8 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class TrackingProtectionPanelDialogFragmentTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
     private lateinit var lifecycleOwner: MockedLifecycleOwner
     private lateinit var fragment: TrackingProtectionPanelDialogFragment
     private lateinit var store: BrowserStore
@@ -50,11 +46,6 @@ class TrackingProtectionPanelDialogFragmentTest {
         every { fragment.view } returns mockk(relaxed = true)
         every { fragment.lifecycle } returns lifecycleOwner.lifecycle
         every { fragment.activity } returns mockk(relaxed = true)
-    }
-
-    @After
-    fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -132,6 +123,7 @@ class TrackingProtectionPanelDialogFragmentTest {
             fragment.updateTrackers(tab)
         }
     }
+
     private fun addAndSelectTab(tab: TabSessionState) {
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()

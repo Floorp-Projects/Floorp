@@ -10,7 +10,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.EncryptedLogin
@@ -32,16 +31,15 @@ import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SavedLoginsStorageControllerTest {
-    val testDispatcher = TestCoroutineDispatcher()
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val ioDispatcher = coroutinesTestRule.testDispatcher
+    private val scope = TestCoroutineScope(ioDispatcher)
 
     private val passwordsStorage: SyncableLoginsStorage = mockk(relaxed = true)
     private lateinit var controller: SavedLoginsStorageController
     private val navController: NavController = mockk(relaxed = true)
     private val loginsFragmentStore: LoginsFragmentStore = mockk(relaxed = true)
-    private val scope = TestCoroutineScope()
-    private val ioDispatcher = TestCoroutineDispatcher()
     private val loginMock: Login = mockk(relaxed = true)
 
     @Before
@@ -64,8 +62,6 @@ class SavedLoginsStorageControllerTest {
     @After
     fun cleanUp() {
         scope.cleanupTestCoroutines()
-        ioDispatcher.cleanupTestCoroutines()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

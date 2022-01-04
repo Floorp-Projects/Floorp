@@ -7,7 +7,6 @@ package org.mozilla.fenix.telemetry
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -43,10 +42,9 @@ class TelemetryMiddlewareTest {
     private lateinit var settings: Settings
     private lateinit var telemetryMiddleware: TelemetryMiddleware
     private lateinit var metrics: MetricController
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @get:Rule
     val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())

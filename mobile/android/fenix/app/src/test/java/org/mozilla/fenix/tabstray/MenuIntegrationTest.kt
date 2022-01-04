@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -19,7 +18,7 @@ class MenuIntegrationTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val captureMiddleware = CaptureActionsMiddleware<TabsTrayState, TabsTrayAction>()
     private val tabsTrayStore = TabsTrayStore(middlewares = listOf(captureMiddleware))

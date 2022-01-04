@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
@@ -21,7 +20,7 @@ class SwipeToDeleteBindingTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `WHEN started THEN update the swipeable state`() {

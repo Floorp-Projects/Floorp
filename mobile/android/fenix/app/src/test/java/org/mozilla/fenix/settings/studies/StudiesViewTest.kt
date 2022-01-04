@@ -15,7 +15,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.test.mock
@@ -46,12 +45,11 @@ class StudiesViewTest {
     @RelaxedMockK
     private lateinit var settings: Settings
 
-    private val testCoroutineScope = TestCoroutineScope()
-    private val testDispatcher = TestCoroutineDispatcher()
     private lateinit var view: StudiesView
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testCoroutineScope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
 
     @Before
     fun setup() {
@@ -73,7 +71,6 @@ class StudiesViewTest {
     @After
     fun cleanUp() {
         testCoroutineScope.cleanupTestCoroutines()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

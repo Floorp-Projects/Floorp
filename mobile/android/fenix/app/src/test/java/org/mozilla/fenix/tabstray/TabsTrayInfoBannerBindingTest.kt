@@ -11,7 +11,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -36,7 +35,7 @@ class TabsTrayInfoBannerBindingTest {
     private lateinit var settings: Settings
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setUp() {

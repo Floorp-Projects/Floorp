@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.syncedtabs
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
@@ -18,7 +17,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 class SyncButtonBindingTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `WHEN syncing state is true THEN invoke callback`() {

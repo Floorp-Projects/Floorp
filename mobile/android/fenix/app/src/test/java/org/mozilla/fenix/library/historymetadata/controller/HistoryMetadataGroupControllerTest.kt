@@ -9,7 +9,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -38,11 +37,10 @@ import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentSto
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryMetadataGroupControllerTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-    private val scope = TestCoroutineScope()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val scope = TestCoroutineScope(testDispatcher)
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)

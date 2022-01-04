@@ -14,7 +14,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.TabListAction
@@ -27,7 +26,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
@@ -44,7 +42,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.utils.Settings
-import java.lang.Exception
 
 @RunWith(FenixRobolectricTestRunner::class)
 class BrowserFragmentTest {
@@ -60,10 +57,8 @@ class BrowserFragmentTest {
     private lateinit var navController: NavController
     private lateinit var onboarding: FenixOnboarding
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     fun setup() {
@@ -93,11 +88,6 @@ class BrowserFragmentTest {
         testTab = createTab(url = "https://mozilla.org")
         store = BrowserStore()
         every { context.components.core.store } returns store
-    }
-
-    @After
-    fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

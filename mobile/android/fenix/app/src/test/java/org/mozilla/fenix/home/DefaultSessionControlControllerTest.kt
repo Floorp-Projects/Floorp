@@ -15,7 +15,6 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
@@ -65,10 +64,8 @@ import mozilla.components.feature.tab.collections.Tab as ComponentTab
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val fragmentStore: HomeFragmentStore = mockk(relaxed = true)
@@ -144,7 +141,6 @@ class DefaultSessionControlControllerTest {
     @After
     fun cleanUp() {
         scope.cleanupTestCoroutines()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test

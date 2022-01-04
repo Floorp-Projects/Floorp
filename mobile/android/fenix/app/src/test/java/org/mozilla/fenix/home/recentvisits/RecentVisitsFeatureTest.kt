@@ -12,7 +12,6 @@ import io.mockk.slot
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.DocumentType
@@ -46,10 +45,10 @@ class RecentVisitsFeatureTest {
 
     private val middleware = CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>()
     private val homeStore = HomeFragmentStore(middlewares = listOf(middleware))
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {

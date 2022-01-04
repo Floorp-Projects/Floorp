@@ -11,7 +11,6 @@ import io.mockk.verify
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope.coroutineContext
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.action.EngineAction
@@ -22,7 +21,6 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -31,10 +29,8 @@ import org.mozilla.fenix.components.PermissionStorage
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultDeleteBrowsingDataControllerTest {
 
-    val testDispatcher = TestCoroutineDispatcher()
-
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+    val coroutinesTestRule = MainCoroutineRule()
 
     private var removeAllTabs: TabsUseCases.RemoveAllTabsUseCase = mockk(relaxed = true)
     private var removeAllDownloads: DownloadsUseCases.RemoveAllDownloadsUseCase = mockk(relaxed = true)
@@ -58,11 +54,6 @@ class DefaultDeleteBrowsingDataControllerTest {
             engine = engine,
             coroutineContext = coroutineContext
         )
-    }
-
-    @After
-    fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
