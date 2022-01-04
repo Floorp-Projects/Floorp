@@ -295,8 +295,9 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
   // Step 6. Implicitly skipped until BYOBReaders exist
 
   // Step 7.
+  RefPtr<ReadableStreamController> controller(aStream->Controller());
   RefPtr<Promise> sourceCancelPromise =
-      aStream->Controller()->CancelSteps(aCx, aError, aRv);
+      controller->CancelSteps(aCx, aError, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -380,24 +381,6 @@ bool IsReadableStreamLocked(ReadableStream* aStream) {
   // Step 1 + 2.
   return aStream->Locked();
 }
-
-#ifdef DEBUG  // Only used in asserts until later
-// https://streams.spec.whatwg.org/#readable-stream-has-default-reader
-static bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
-  // Step 1.
-  ReadableStreamDefaultReader* reader = aStream->GetReader();
-
-  // Step 2.
-  if (!reader) {
-    return false;
-  }
-
-  // Step 3. Trivially true until we implement ReadableStreamBYOBReader.
-  return true;
-
-  // Step 4. Unreachable until above.
-}
-#endif
 
 // https://streams.spec.whatwg.org/#readable-stream-get-num-read-requests
 double ReadableStreamGetNumReadRequests(ReadableStream* aStream) {
@@ -612,7 +595,7 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
     // Step 19.1.
     ErrorResult rv;
     ReadableStreamDefaultControllerError(
-        aCx, mTeeState->Branch1()->Controller(), aReason, rv);
+        aCx, mTeeState->Branch1()->DefaultController(), aReason, rv);
     if (rv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultTee Error During Promise Rejection")) {
       return;
@@ -620,7 +603,7 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
 
     // Step 19.2
     ReadableStreamDefaultControllerError(
-        aCx, mTeeState->Branch2()->Controller(), aReason, rv);
+        aCx, mTeeState->Branch2()->DefaultController(), aReason, rv);
     if (rv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultTee Error During Promise Rejection")) {
       return;
