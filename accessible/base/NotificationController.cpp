@@ -280,12 +280,19 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
 }
 
 void NotificationController::DropMutationEvent(AccTreeMutationEvent* aEvent) {
-  // unset the event bits since the event isn't being fired any more.
   if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_REORDER) {
-    aEvent->GetAccessible()->SetReorderEventTarget(false);
+    // We don't fully drop reorder events, we just change them to inner reorder
+    // events.
+    AccReorderEvent* reorderEvent = downcast_accEvent(aEvent);
+
+    MOZ_ASSERT(reorderEvent);
+    reorderEvent->SetInner();
+    return;
   } else if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
+    // unset the event bits since the event isn't being fired any more.
     aEvent->GetAccessible()->SetShowEventTarget(false);
   } else {
+    // unset the event bits since the event isn't being fired any more.
     aEvent->GetAccessible()->SetHideEventTarget(false);
 
     AccHideEvent* hideEvent = downcast_accEvent(aEvent);
@@ -390,7 +397,7 @@ void NotificationController::CoalesceMutationEvents() {
 
         parent = parent->LocalParent();
       }
-    } else {
+    } else if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
       MOZ_ASSERT(eventType == nsIAccessibleEvent::EVENT_HIDE,
                  "mutation event list has an invalid event");
 
@@ -578,21 +585,32 @@ void NotificationController::ProcessMutationEvents() {
   }
 
   // Now we can fire the reorder events after all the show and hide events.
-  for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
-       event = event->NextEvent()) {
-    if (event->GetEventType() != nsIAccessibleEvent::EVENT_REORDER) {
-      continue;
-    }
+  for (const uint32_t reorderType : {nsIAccessibleEvent::EVENT_INNER_REORDER,
+                                     nsIAccessibleEvent::EVENT_REORDER}) {
+    for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
+         event = event->NextEvent()) {
+      if (event->GetEventType() != reorderType) {
+        continue;
+      }
 
-    nsEventShell::FireEvent(event);
-    if (!mDocument) {
-      return;
-    }
+      if (event->GetAccessible()->IsDefunct()) {
+        // An inner reorder target may have been hidden itself and no
+        // longer bound to the document.
+        MOZ_ASSERT(reorderType == nsIAccessibleEvent::EVENT_INNER_REORDER,
+                   "An 'outer' reorder target should not be defunct");
+        continue;
+      }
 
-    LocalAccessible* target = event->GetAccessible();
-    target->Document()->MaybeNotifyOfValueChange(target);
-    if (!mDocument) {
-      return;
+      nsEventShell::FireEvent(event);
+      if (!mDocument) {
+        return;
+      }
+
+      LocalAccessible* target = event->GetAccessible();
+      target->Document()->MaybeNotifyOfValueChange(target);
+      if (!mDocument) {
+        return;
+      }
     }
   }
 }
@@ -1004,6 +1022,7 @@ NotificationController::EventMap::GetEventType(AccTreeMutationEvent* aEvent) {
     case nsIAccessibleEvent::EVENT_HIDE:
       return HideEvent;
     case nsIAccessibleEvent::EVENT_REORDER:
+    case nsIAccessibleEvent::EVENT_INNER_REORDER:
       return ReorderEvent;
     default:
       MOZ_ASSERT_UNREACHABLE("event has invalid type");
