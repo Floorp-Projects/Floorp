@@ -7,6 +7,7 @@
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "js/ArrayBuffer.h"
 #include "js/RootingAPI.h"
+#include "js/experimental/TypedData.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {
@@ -61,6 +62,45 @@ bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   // Step 5.
   return true;
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-cloneasuint8array
+JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject,
+                            ErrorResult& aRv) {
+  // Step 1. Assert: Type(O) is Object. Implicit.
+  // Step 2. Assert: O has an [[ViewedArrayBuffer]] internal slot.
+  MOZ_ASSERT(JS_IsArrayBufferViewObject(aObject));
+
+  // Step 3. Assert: !IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false.
+  bool isShared;
+  JS::RootedObject viewedArrayBuffer(
+      aCx, JS_GetArrayBufferViewBuffer(aCx, aObject, &isShared));
+  if (!viewedArrayBuffer) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+  MOZ_ASSERT(!JS::IsDetachedArrayBufferObject(viewedArrayBuffer));
+
+  // Step 4. Let buffer be ?CloneArrayBuffer(O.[[ViewedArrayBuffer]],
+  //         O.[[ByteOffset]], O.[[ByteLength]], %ArrayBuffer%).
+  JS::RootedObject buffer(aCx, JS::CopyArrayBuffer(aCx, aObject));
+  if (!buffer) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  // Step 5. Let array be ! Construct(%Uint8Array%, « buffer »).
+  size_t length = JS_GetTypedArrayLength(aObject);
+  size_t byteOffset = JS_GetTypedArrayByteOffset(aObject);
+  JS::RootedObject array(aCx, JS_NewUint8ArrayWithBuffer(
+                                  aCx, buffer, byteOffset, (int64_t)length));
+  if (!array) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  // Step 6. Return array.
+  return array;
 }
 
 }  // namespace dom
