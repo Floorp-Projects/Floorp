@@ -136,6 +136,10 @@ nsStaticAtom* RemoteAccessible::ARIARoleAtom() const {
 }
 
 GroupPos RemoteAccessible::GroupPosition() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
+  }
+
   GroupPos groupPos;
   Unused << mDoc->SendGroupPosition(mID, &groupPos.level, &groupPos.setSize,
                                     &groupPos.posInSet);

@@ -484,7 +484,23 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
             mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
       attributes->SetAttribute(nsGkAtoms::tag, *tag);
     }
+
+    GroupPos groupPos = GroupPosition();
+    nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level, groupPos.setSize,
+                                groupPos.posInSet);
+
+    bool hierarchical = false;
+    uint32_t itemCount = AccGroupInfo::TotalItemCount(this, &hierarchical);
+    if (itemCount) {
+      attributes->SetAttribute(nsGkAtoms::child_item_count,
+                              static_cast<int32_t>(itemCount));
+    }
+
+    if (hierarchical) {
+      attributes->SetAttribute(nsGkAtoms::tree, true);
+    }
   }
+
   return attributes.forget();
 }
 
