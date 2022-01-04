@@ -30,7 +30,6 @@ job-defaults:
                     default: 2
             default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
-    python-3: true
 
 
 awsy:

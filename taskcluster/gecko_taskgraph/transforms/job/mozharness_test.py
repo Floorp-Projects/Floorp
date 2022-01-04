@@ -150,8 +150,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         }
     )
 
-    if test.get("python-3"):
-        env["PYTHON"] = "python3"
+    env["PYTHON"] = "python3"
 
     # Legacy linux64 tests rely on compiz.
     if test.get("docker-image", {}).get("in-tree") == "desktop1604-test":
@@ -369,22 +368,18 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             "artifact-reference": "<decision/public/tests-by-manifest.json.gz>"
         }
 
-    py_3 = test.get("python-3", False)
-
     if is_windows:
-        py_binary = "c:\\mozilla-build\\{python}\\{python}.exe".format(
-            python="python3" if py_3 else "python"
-        )
+        py_binary = "c:\\mozilla-build\\{python}\\{python}.exe".format(python="python3")
         mh_command = [
             py_binary,
             "-u",
             "mozharness\\scripts\\" + normpath(mozharness["script"]),
         ]
     elif is_bitbar:
-        py_binary = "python3" if py_3 else "python"
+        py_binary = "python3"
         mh_command = ["bash", f"./{bitbar_script}"]
     elif is_macosx:
-        py_binary = "/usr/local/bin/{}".format("python3" if py_3 else "python2")
+        py_binary = "/usr/local/bin/{}".format("python3")
         mh_command = [
             py_binary,
             "-u",
@@ -392,7 +387,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         ]
     else:
         # is_linux
-        py_binary = "/usr/bin/{}".format("python3" if py_3 else "python2")
+        py_binary = "/usr/bin/{}".format("python3")
         mh_command = [
             # Using /usr/bin/python2.7 rather than python2.7 because
             # /usr/local/bin/python2.7 is broken on the mac workers.
@@ -402,8 +397,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             "mozharness/scripts/" + mozharness["script"],
         ]
 
-    if py_3:
-        env["PYTHON"] = py_binary
+    env["PYTHON"] = py_binary
 
     for mh_config in mozharness["config"]:
         cfg_path = "mozharness/configs/" + mh_config
