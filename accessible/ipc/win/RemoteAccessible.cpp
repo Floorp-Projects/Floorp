@@ -859,5 +859,14 @@ Accessible* RemoteAccessible::ChildAtPoint(
   return proxy;
 }
 
+GroupPos RemoteAccessible::GroupPosition() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
+  }
+
+  // This is only supported when cache is enabled.
+  return GroupPos();
+}
+
 }  // namespace a11y
 }  // namespace mozilla
