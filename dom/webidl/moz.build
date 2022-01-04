@@ -1007,6 +1007,7 @@ if CONFIG["MOZ_DOM_STREAMS"]:
         "QueuingStrategy.webidl",
         "ReadableByteStreamController.webidl",
         "ReadableStream.webidl",
+        "ReadableStreamBYOBReader.webidl",
         "ReadableStreamBYOBRequest.webidl",
         "ReadableStreamDefaultController.webidl",
         "ReadableStreamDefaultReader.webidl",

@@ -58,12 +58,6 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
 
   void ReleaseLock(ErrorResult& aRv);
 
-  already_AddRefed<Promise> Closed() const;
-
-  already_AddRefed<Promise> Cancel(JSContext* aCx,
-                                   JS::Handle<JS::Value> aReason,
-                                   ErrorResult& aRv);
-
   LinkedList<RefPtr<ReadRequest>>& ReadRequests() { return mReadRequests; }
 
  private:
