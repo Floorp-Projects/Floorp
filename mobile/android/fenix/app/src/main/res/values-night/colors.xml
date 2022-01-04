@@ -15,7 +15,7 @@
     <!-- App Bar Top (edit), Header (edit) -->
     <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Selected tab -->
-    <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet40A12</color>
+    <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet50A32</color>
     <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
     <color name="fx_mobile_layer_color_scrim_start">@color/photonInk80A96</color>
     <color name="fx_mobile_layer_color_scrim_end">@color/photonDarkGrey90A96</color>
