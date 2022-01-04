@@ -94,6 +94,12 @@ class AccGroupInfo {
    */
   static bool ShouldReportRelations(a11y::role aRole, a11y::role aParentRole);
 
+  /**
+   * Return ARIA level value or the default one if ARIA is missed for the
+   * given accessible.
+   */
+  static int32_t GetARIAOrDefaultLevel(const LocalAccessible* aAccessible);
+
   uint32_t mPosInSet;
   uint32_t mSetSize;
   LocalAccessible* mParent;

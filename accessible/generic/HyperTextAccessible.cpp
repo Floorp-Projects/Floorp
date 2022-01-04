@@ -1239,13 +1239,6 @@ already_AddRefed<AccAttributes> HyperTextAccessible::DefaultTextAttributes() {
   return attributes.forget();
 }
 
-int32_t HyperTextAccessible::GetLevelInternal() {
-  if (auto* heading = dom::HTMLHeadingElement::FromNode(mContent)) {
-    return heading->AccessibilityLevel();
-  }
-  return AccessibleWrap::GetLevelInternal();
-}
-
 void HyperTextAccessible::SetMathMLXMLRoles(AccAttributes* aAttributes) {
   // Add MathML xmlroles based on the position inside the parent.
   LocalAccessible* parent = LocalParent();

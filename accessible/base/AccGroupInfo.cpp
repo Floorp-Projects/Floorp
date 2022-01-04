@@ -31,7 +31,7 @@ void AccGroupInfo::Update() {
     return;
   }
 
-  int32_t level = nsAccUtils::GetARIAOrDefaultLevel(mItem);
+  int32_t level = GetARIAOrDefaultLevel(mItem);
 
   // Compute position in set.
   mPosInSet = 1;
@@ -57,7 +57,7 @@ void AccGroupInfo::Update() {
     // level is lesser than this one then group is ended, if the sibling level
     // is greater than this one then the group is split by some child elements
     // (group will be continued).
-    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level) {
       mParent = sibling;
       break;
@@ -101,7 +101,7 @@ void AccGroupInfo::Update() {
     }
 
     // and check if it's hierarchical flatten structure.
-    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level) break;
 
     // Skip subset.
@@ -313,4 +313,14 @@ bool AccGroupInfo::ShouldReportRelations(role aRole, role aParentRole) {
   if (aParentRole == roles::LIST && aRole == roles::LISTITEM) return true;
 
   return false;
+}
+
+int32_t AccGroupInfo::GetARIAOrDefaultLevel(
+    const LocalAccessible* aAccessible) {
+  int32_t level = 0;
+  aAccessible->ARIAGroupPosition(&level, nullptr, nullptr);
+
+  if (level != 0) return level;
+
+  return aAccessible->GetLevel(true);
 }

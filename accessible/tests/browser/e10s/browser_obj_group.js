@@ -21,6 +21,15 @@ addAccessibleTask(
   <select size="4">
     <option id="opt1">option1</option>
     <option id="opt2">option2</option>
+  </select>
+
+  <select size="4">
+    <optgroup id="select2_optgroup" label="group">
+      <option id="select2_opt1">option1</option>
+      <option id="select2_opt2">option2</option>
+    </optgroup>
+    <option id="select2_opt3">option3</option>
+    <option id="select2_opt4">option4</option>
   </select>`,
   async function(browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
@@ -39,6 +48,13 @@ addAccessibleTask(
     // HTML select
     testGroupAttrs(getAcc("opt1"), 1, 2);
     testGroupAttrs(getAcc("opt2"), 2, 2);
+
+    // ////////////////////////////////////////////////////////////////////////
+    // HTML select with optgroup
+    testGroupAttrs(getAcc("select2_opt3"), 1, 2, 1);
+    testGroupAttrs(getAcc("select2_opt4"), 2, 2, 1);
+    testGroupAttrs(getAcc("select2_opt1"), 1, 2, 2);
+    testGroupAttrs(getAcc("select2_opt2"), 2, 2, 2);
   }
 );
 
