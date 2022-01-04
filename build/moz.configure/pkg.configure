@@ -28,12 +28,13 @@ def pkg_config_version(pkg_config):
 
 @depends(target, target_sysroot.path, target_multiarch_dir, when=pkg_config)
 @imports(_from="os", _import="environ")
+@imports(_from="os", _import="pathsep")
 def pkg_config_vars(target, sysroot_path, multiarch_dir):
     if sysroot_path and target.kernel != "Darwin":
         return namespace(
             PKG_CONFIG_PATH="",
             PKG_CONFIG_SYSROOT_DIR=sysroot_path,
-            PKG_CONFIG_LIBDIR=":".join(
+            PKG_CONFIG_LIBDIR=pathsep.join(
                 os.path.join(sysroot_path, d)
                 for d in (
                     "usr/lib/pkgconfig",
