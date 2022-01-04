@@ -2176,13 +2176,11 @@ bool nsDisplayImage::CreateWebRenderCommands(
     frame->mPrevImage = frame->mImage;
   }
 
-  // If the image container is empty, we don't want to fallback. Any other
+  // If the image provider is null, we don't want to fallback. Any other
   // failure will be due to resource constraints and fallback is unlikely to
   // help us. Hence we can ignore the return value from PushImage.
-  if (provider) {
-    aManager->CommandBuilder().PushImageProvider(
-        this, provider, drawResult, aBuilder, aResources, destRect, destRect);
-  }
+  aManager->CommandBuilder().PushImageProvider(
+      this, provider, drawResult, aBuilder, aResources, destRect, destRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
   return true;
