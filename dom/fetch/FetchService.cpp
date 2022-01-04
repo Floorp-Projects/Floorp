@@ -99,7 +99,7 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   nsresult rv;
 
   // Create a FetchDriver instance
-  RefPtr<FetchDriver> fetch = MakeRefPtr<FetchDriver>(
+  mFetchDriver = MakeRefPtr<FetchDriver>(
       mRequest.clonePtr(),         // Fetch Request
       mPrincipal,                  // Principal
       mLoadGroup,                  // LoadGroup
@@ -114,13 +114,22 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   // with FetchService. AbortSignalImpl related information should be passed
   // through PFetch or InterceptedHttpChannel, then call
   // FetchService::CancelFetch() to abort the running fetch.
-  rv = fetch->Fetch(nullptr, this);
+  rv = mFetchDriver->Fetch(nullptr, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return FetchServiceResponsePromise::CreateAndResolve(
         InternalResponse::NetworkError(rv), __func__);
   }
 
   return mResponsePromiseHolder.Ensure(__func__);
+}
+
+void FetchService::FetchInstance::Cancel() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mFetchDriver) {
+    mFetchDriver->RunAbortAlgorithm();
+  }
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -226,7 +235,7 @@ void FetchService::CancelFetch(
 
   auto entry = mFetchInstanceTable.Lookup(aResponsePromise);
   if (entry) {
-    // TODO: Need to call FetchDriver::RunAbortAlgorithm();
+    entry.Data()->Cancel();
     entry.Remove();
   }
 }
