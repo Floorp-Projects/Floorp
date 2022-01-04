@@ -46,8 +46,12 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Slot Getter/Setters:
  public:
-  ReadableStreamDefaultController* Controller() { return mController; }
-  void SetController(ReadableStreamDefaultController* aController) {
+  ReadableStreamController* Controller() { return mController; }
+  ReadableStreamDefaultController* DefaultController() {
+    MOZ_ASSERT(mController && mController->IsDefault());
+    return mController->AsDefault();
+  }
+  void SetController(ReadableStreamController* aController) {
     mController = aController;
   }
 
@@ -91,7 +95,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   // Internal Slots:
  private:
-  RefPtr<ReadableStreamDefaultController> mController;
+  RefPtr<ReadableStreamController> mController;
   bool mDisturbed = false;
   RefPtr<ReadableStreamDefaultReader> mReader;
   ReaderState mState = ReaderState::Readable;
@@ -122,6 +126,27 @@ extern already_AddRefed<Promise> ReadableStreamCancel(
 extern already_AddRefed<ReadableStreamDefaultReader>
 AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
                                    ErrorResult& aRv);
+
+// Note: These need to be updated once BYOBReaders appear.
+inline bool ReadableStreamHasBYOBReader(ReadableStream* aStream) {
+  return false;
+}
+
+// https://streams.spec.whatwg.org/#readable-stream-has-default-reader
+inline bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
+  // Step 1.
+  ReadableStreamDefaultReader* reader = aStream->GetReader();
+
+  // Step 2.
+  if (!reader) {
+    return false;
+  }
+
+  // Step 3. Trivially true until we implement ReadableStreamBYOBReader.
+  return true;
+
+  // Step 4. Unreachable until above.
+}
 
 }  // namespace dom
 }  // namespace mozilla

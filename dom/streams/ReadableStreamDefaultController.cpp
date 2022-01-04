@@ -12,6 +12,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
@@ -22,24 +23,33 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamController)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamController)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 // Note: Using the individual macros vs NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE
 // because I need to specificy a manual implementation of
 // NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mCancelAlgorithm,
-                                  mStrategySizeAlgorithm, mPullAlgorithm,
-                                  mStream)
-  tmp->mQueue.clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelAlgorithm, mStrategySizeAlgorithm,
+                                  mPullAlgorithm, mStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStreamDefaultController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mCancelAlgorithm,
-                                    mStrategySizeAlgorithm, mPullAlgorithm,
-                                    mStream)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
+    ReadableStreamDefaultController, ReadableStreamController)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCancelAlgorithm, mStrategySizeAlgorithm,
+                                    mPullAlgorithm, mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStreamDefaultController)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultController,
+                                               ReadableStreamController)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
   // Trace the associated queue.
   for (const auto& queueEntry : tmp->mQueue) {
@@ -47,16 +57,18 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStreamDefaultController)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamDefaultController)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamDefaultController)
+NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultController,
+                         ReadableStreamController)
+NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultController,
+                          ReadableStreamController)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultController)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
-    nsISupports* aGlobal)
-    : mGlobal(do_QueryInterface(aGlobal)) {
+    nsIGlobalObject* aGlobal)
+    : ReadableStreamController(aGlobal) {
   // Add |MOZ_COUNT_CTOR(ReadableStreamDefaultController);| for a non-refcounted
   // object.
 }

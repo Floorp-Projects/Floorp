@@ -118,8 +118,10 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
       // Step 4.
       if (!mTeeState->Canceled1()) {
         IgnoredErrorResult rv;
+        // Since we controlled the creation of the two stream branches, we know
+        // they both have default controllers.
         RefPtr<ReadableStreamDefaultController> controller(
-            mTeeState->Branch1()->Controller());
+            mTeeState->Branch1()->DefaultController());
         ReadableStreamDefaultControllerEnqueue(cx, controller, chunk1, rv);
         (void)NS_WARN_IF(rv.Failed());
       }
@@ -128,7 +130,7 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
       if (!mTeeState->Canceled2()) {
         IgnoredErrorResult rv;
         RefPtr<ReadableStreamDefaultController> controller(
-            mTeeState->Branch2()->Controller());
+            mTeeState->Branch2()->DefaultController());
         ReadableStreamDefaultControllerEnqueue(cx, controller, chunk2, rv);
         (void)NS_WARN_IF(rv.Failed());
       }
@@ -175,7 +177,7 @@ void ReadableStreamDefaultTeeReadRequest::CloseSteps(JSContext* aCx,
   // Step 2.
   if (!mTeeState->Canceled1()) {
     ReadableStreamDefaultControllerClose(
-        aCx, mTeeState->Branch1()->Controller(), aRv);
+        aCx, mTeeState->Branch1()->DefaultController(), aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -184,7 +186,7 @@ void ReadableStreamDefaultTeeReadRequest::CloseSteps(JSContext* aCx,
   // Step 3.
   if (!mTeeState->Canceled2()) {
     ReadableStreamDefaultControllerClose(
-        aCx, mTeeState->Branch2()->Controller(), aRv);
+        aCx, mTeeState->Branch2()->DefaultController(), aRv);
     if (aRv.Failed()) {
       return;
     }

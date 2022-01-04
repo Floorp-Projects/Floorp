@@ -36,7 +36,7 @@ class ReadableStreamDefaultTeePullAlgorithm final
 
   MOZ_CAN_RUN_SCRIPT
   virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamDefaultController& aController,
+      JSContext* aCx, ReadableStreamController& aController,
       ErrorResult& aRv) override {
     nsCOMPtr<nsIGlobalObject> global(aController.GetParentObject());
     return PullCallback(aCx, global, aRv);
