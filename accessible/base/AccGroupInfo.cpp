@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccGroupInfo.h"
+#include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "TableAccessible.h"
 
-#include "Role.h"
 #include "States.h"
 
 using namespace mozilla::a11y;
@@ -145,6 +145,30 @@ void AccGroupInfo::Update() {
     LocalAccessible* grandParent = parent->LocalParent();
     if (grandParent && grandParent->Role() == mRole) mParent = grandParent;
   }
+}
+
+AccGroupInfo* AccGroupInfo::CreateGroupInfo(
+    const LocalAccessible* aAccessible) {
+  mozilla::a11y::role role = aAccessible->Role();
+  if (role != mozilla::a11y::roles::ROW &&
+      role != mozilla::a11y::roles::OUTLINEITEM &&
+      role != mozilla::a11y::roles::OPTION &&
+      role != mozilla::a11y::roles::LISTITEM &&
+      role != mozilla::a11y::roles::MENUITEM &&
+      role != mozilla::a11y::roles::COMBOBOX_OPTION &&
+      role != mozilla::a11y::roles::RICH_OPTION &&
+      role != mozilla::a11y::roles::CHECK_RICH_OPTION &&
+      role != mozilla::a11y::roles::PARENT_MENUITEM &&
+      role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
+      role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
+      role != mozilla::a11y::roles::RADIOBUTTON &&
+      role != mozilla::a11y::roles::PAGETAB &&
+      role != mozilla::a11y::roles::COMMENT) {
+    return nullptr;
+  }
+
+  AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
+  return info;
 }
 
 LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
