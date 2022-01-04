@@ -141,6 +141,12 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
       ServiceWorkerPushEventOpArgs&& aArgs);
 
+  // Setup the navigation preload by the intercepted channel and the
+  // RegistrationInfo.
+  RefPtr<FetchServiceResponsePromise> SetupNavigationPreload(
+      nsCOMPtr<nsIInterceptedChannel>& aChannel,
+      const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration);
+
   nsresult SendFetchEventInternal(
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
       ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
