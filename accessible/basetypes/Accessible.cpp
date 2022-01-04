@@ -80,6 +80,35 @@ uint32_t Accessible::StartOffset() {
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
+GroupPos Accessible::GroupPosition() {
+  GroupPos groupPos;
+
+  // Get group position from ARIA attributes.
+  ARIAGroupPosition(&groupPos.level, &groupPos.setSize, &groupPos.posInSet);
+
+  // If ARIA is missed and the accessible is visible then calculate group
+  // position from hierarchy.
+  if (State() & states::INVISIBLE) return groupPos;
+
+  // Calculate group level if ARIA is missed.
+  if (groupPos.level == 0) {
+    groupPos.level = GetLevel(false);
+  }
+
+  // Calculate position in group and group size if ARIA is missed.
+  if (groupPos.posInSet == 0 || groupPos.setSize == 0) {
+    int32_t posInSet = 0, setSize = 0;
+    GetPositionAndSetSize(&posInSet, &setSize);
+    if (posInSet != 0 && setSize != 0) {
+      if (groupPos.posInSet == 0) groupPos.posInSet = posInSet;
+
+      if (groupPos.setSize == 0) groupPos.setSize = setSize;
+    }
+  }
+
+  return groupPos;
+}
+
 int32_t Accessible::GetLevel(bool aFast) const {
   int32_t level = 0;
   if (!Parent()) return level;
