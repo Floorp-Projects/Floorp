@@ -13,6 +13,12 @@ This tutorial is intended for Firefox engineers already familiar with the previo
 localization systems offered by Gecko - `DTD`_ and  `StringBundle`_ - and assumes
 prior experience with those systems.
 
+For a more hands-on tutorial of understanding Fluent from the ground up, try
+following the `Fluent DOMLocalization Tutorial`__, which provides some background on
+how Fluent works and walks you through creating a basic web project from scratch that
+uses Fluent for localization.
+
+__ https://projectfluent.org/dom-l10n-documentation/
 
 Using Fluent in Gecko
 =====================
@@ -34,6 +40,15 @@ __ https://phabricator.services.mozilla.com/tag/fluent-reviewers/
 Guidelines for the review process are available `here`__.
 
 __ ./fluent_review.html
+
+To lighten the burden on reviewers, please take a moment to review some
+best practices before submitting your patch for review.
+
+-  `ProjectFluent Good Practices for Developers`_
+-  `Mozilla Localization Best Practices For Developers`_
+
+.. _ProjectFluent Good Practices for Developers: https://github.com/projectfluent/fluent/wiki/Good-Practices-for-Developers
+.. _Mozilla Localization Best Practices For Developers: https://mozilla-l10n.github.io/documentation/localization/dev_best_practices.html
 
 Major Benefits
 ==============
@@ -642,6 +657,13 @@ The inner structure of Fluent in Gecko is out of scope of this tutorial, but
 since the class and file names may show up during debugging or profiling,
 below is a list of major components, each with a corresponding file in `/intl/l10n`
 modules in Gecko.
+
+For more hands-on experience with some of the concepts below, try
+following the `Fluent DOMLocalization Tutorial`__, which provides some
+background on how Fluent works and walks you through creating a basic
+web project from scratch that uses Fluent for localization.
+
+__ https://projectfluent.org/dom-l10n-documentation/overview.html
 
 FluentBundle
 --------------
