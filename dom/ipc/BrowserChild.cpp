@@ -2074,8 +2074,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateEpoch(const uint32_t& aEpoch) {
-  mSessionStoreListener->SetEpoch(aEpoch);
-
+  if (mSessionStoreListener) {
+    mSessionStoreListener->SetEpoch(aEpoch);
+  }
   return IPC_OK();
 }
 
