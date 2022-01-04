@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ReadableByteStreamController_h
 #define mozilla_dom_ReadableByteStreamController_h
 
+#include <cstddef>
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -32,6 +33,7 @@ enum ReaderType { Default, BYOB };
 
 struct PullIntoDescriptor;
 struct ReadableByteStreamQueueEntry;
+struct ReadIntoRequest;
 
 class ReadableByteStreamController final : public ReadableStreamController,
                                            public nsWrapperCache {
@@ -200,7 +202,7 @@ struct ReadableByteStreamQueueEntry
   friend class ReadableByteStreamController::cycleCollection;
 
   ReadableByteStreamQueueEntry(JS::Handle<JSObject*> aBuffer,
-                               uint64_t aByteOffset, uint64_t aByteLength)
+                               size_t aByteOffset, size_t aByteLength)
       : LinkedListElement<RefPtr<ReadableByteStreamQueueEntry>>(),
         mBuffer(aBuffer),
         mByteOffset(aByteOffset),
@@ -209,11 +211,11 @@ struct ReadableByteStreamQueueEntry
   JSObject* Buffer() const { return mBuffer; }
   void SetBuffer(JS::Handle<JSObject*> aBuffer) { mBuffer = aBuffer; }
 
-  uint64_t ByteOffset() const { return mByteOffset; }
-  void SetByteOffset(uint64_t aByteOffset) { mByteOffset = aByteOffset; }
+  size_t ByteOffset() const { return mByteOffset; }
+  void SetByteOffset(size_t aByteOffset) { mByteOffset = aByteOffset; }
 
-  uint64_t ByteLength() const { return mByteLength; }
-  void SetByteLength(uint64_t aByteLength) { mByteLength = aByteLength; }
+  size_t ByteLength() const { return mByteLength; }
+  void SetByteLength(size_t aByteLength) { mByteLength = aByteLength; }
 
   void ClearBuffer() { mBuffer = nullptr; }
 
@@ -227,11 +229,11 @@ struct ReadableByteStreamQueueEntry
 
   // A nonnegative integer number giving the byte offset derived from the view
   // originally supplied by the underlying byte source
-  uint64_t mByteOffset = 0;
+  size_t mByteOffset = 0;
 
   // A nonnegative integer number giving the byte length derived from the view
   // originally supplied by the underlying byte source
-  uint64_t mByteLength = 0;
+  size_t mByteLength = 0;
 
   ~ReadableByteStreamQueueEntry() = default;
 };
@@ -247,6 +249,22 @@ struct PullIntoDescriptor final
     JS_FOR_EACH_TYPED_ARRAY(DEFINE_TYPED_CONSTRUCTOR_ENUM_NAMES)
 #undef DEFINE_TYPED_CONSTRUCTOR_ENUM_NAMES
   };
+
+  static Constructor constructorFromScalar(JS::Scalar::Type type) {
+    switch (type) {
+#define REMAP_PULL_INTO_DESCRIPTOR_TYPE(ExternalT, NativeT, Name) \
+  case JS::Scalar::Name:                                          \
+    return Constructor::Name;
+      JS_FOR_EACH_TYPED_ARRAY(REMAP_PULL_INTO_DESCRIPTOR_TYPE)
+#undef REMAP
+
+      case JS::Scalar::Int64:
+      case JS::Scalar::Simd128:
+      case JS::Scalar::MaxTypedArrayViewType:
+        break;
+    }
+    MOZ_CRASH("Unexpected Scalar::Type");
+  }
 
   friend class ReadableByteStreamController::cycleCollection;
 
@@ -324,6 +342,11 @@ extern void ReadableByteStreamControllerRespondInternal(
 extern void ReadableByteStreamControllerRespondWithNewView(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aView, ErrorResult& aRv);
+
+extern void ReadableByteStreamControllerPullInto(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
+    ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 

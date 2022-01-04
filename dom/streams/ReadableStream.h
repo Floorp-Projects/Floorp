@@ -25,9 +25,16 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
+class ReadableStreamGenericReader;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
+struct ReadIntoRequest;
+
+using ReadableStreamReader =
+    ReadableStreamDefaultReaderOrReadableStreamBYOBReader;
+using OwningReadableStreamReader =
+    OwningReadableStreamDefaultReaderOrReadableStreamBYOBReader;
 
 class ReadableStream final : public nsISupports, public nsWrapperCache {
  public:
@@ -89,9 +96,8 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Cancel(JSContext* cx, JS::Handle<JS::Value> aReason,
                                    ErrorResult& aRv);
 
-  already_AddRefed<ReadableStreamDefaultReader> GetReader(
-      JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
-      ErrorResult& aRv);
+  void GetReader(JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
+                 OwningReadableStreamReader& resultReader, ErrorResult& aRv);
 
   void Tee(JSContext* aCx, nsTArray<RefPtr<ReadableStream>>& aResult,
            ErrorResult& aRv);
@@ -121,6 +127,8 @@ extern void ReadableStreamFulfillReadRequest(JSContext* aCx,
 
 extern void ReadableStreamAddReadRequest(ReadableStream* aStream,
                                          ReadRequest* aReadRequest);
+extern void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
+                                             ReadIntoRequest* aReadIntoRequest);
 
 extern already_AddRefed<Promise> ReadableStreamCancel(
     JSContext* aCx, ReadableStream* aStream, JS::Handle<JS::Value> aError,
