@@ -51,7 +51,6 @@ class HyperTextAccessible : public AccessibleWrap,
 
   // LocalAccessible
   virtual nsAtom* LandmarkRole() const override;
-  virtual int32_t GetLevelInternal() override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;

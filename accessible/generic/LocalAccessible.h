@@ -272,11 +272,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual LocalAccessible* FocusedChild();
 
   /**
-   * Return calculated group level based on accessible hierarchy.
-   */
-  virtual int32_t GetLevelInternal();
-
-  /**
    * Calculate position in group and group size ('posinset' and 'setsize') based
    * on accessible hierarchy.
    *
