@@ -29,7 +29,8 @@ void ScopedFfiBundleTraits::release(ffi::WGPURenderBundleEncoder* raw) {
 }
 
 ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
-    RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc) {
+    RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc,
+    WebGPUChild* const aBridge) {
   ffi::WGPURenderBundleEncoderDescriptor desc = {};
   desc.sample_count = aDesc.mSampleCount;
 
@@ -56,14 +57,24 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   desc.color_formats = colorFormats.data();
   desc.color_formats_length = colorFormats.size();
 
-  return ffi::wgpu_device_create_render_bundle_encoder(aDeviceId, &desc);
+  ipc::ByteBuf failureAction;
+  auto* bundle = ffi::wgpu_device_create_render_bundle_encoder(
+      aDeviceId, &desc, ToFFI(&failureAction));
+  // report an error only if the operation failed
+  if (!bundle &&
+      !aBridge->SendDeviceAction(aDeviceId, std::move(failureAction))) {
+    MOZ_CRASH("IPC failure");
+  }
+  return bundle;
 }
 
 RenderBundleEncoder::RenderBundleEncoder(
     Device* const aParent, WebGPUChild* const aBridge,
     const dom::GPURenderBundleEncoderDescriptor& aDesc)
     : ChildOf(aParent),
-      mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc)) {}
+      mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc, aBridge)) {
+  mValid = mEncoder.get() != nullptr;
+}
 
 RenderBundleEncoder::~RenderBundleEncoder() { Cleanup(); }
 

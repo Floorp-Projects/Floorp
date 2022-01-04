@@ -28,6 +28,10 @@ impl ErrorBuffer {
             e = source.source();
         }
 
+        self.init_str(string);
+    }
+
+    fn init_str(&mut self, string: String) {
         assert_ne!(self.capacity, 0);
         let length = if string.len() >= self.capacity {
             log::warn!(
@@ -338,6 +342,9 @@ impl GlobalExt for Global {
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
+            }
+            DeviceAction::Error(message) => {
+                error_buf.init_str(message);
             }
         }
     }
