@@ -557,7 +557,6 @@ module.exports = {
         "toolkit/components/featuregates/test/unit/test_FeatureGate.js",
         "toolkit/components/normandy/test/browser/browser_actions_ShowHeartbeatAction.js",
         "toolkit/modules/subprocess/test/xpcshell/test_subprocess.js",
-        "toolkit/modules/tests/xpcshell/test_GMPInstallManager.js",
         "toolkit/mozapps/extensions/internal/AddonTestUtils.jsm",
         "toolkit/mozapps/extensions/test/browser/browser_gmpProvider.js",
         "toolkit/mozapps/extensions/test/xpcshell/head_addons.js",
