@@ -26,7 +26,7 @@
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Controls -->
-    <color name="fx_mobile_action_color_primary" tools:ignore="UnusedResources">@color/photonViolet60</color>
+    <color name="fx_mobile_action_color_primary" tools:ignore="UnusedResources">@color/photonViolet70</color>
     <!-- Secondary button, Chip -->
     <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey50</color>
     <!-- Checkbox default, Radio button default -->
