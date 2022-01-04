@@ -337,14 +337,19 @@ class VendorManifest(MozbuildObject):
                 mozfile.remove(path)
             elif update["action"] == "run-script":
                 script = get_full_path(update["script"], support_cwd=True)
-                run_dir = get_full_path(update["cwd"])
+                run_dir = get_full_path(update["cwd"], support_cwd=True)
                 self.log(
                     logging.INFO,
                     "vendor",
                     {"script": script, "run_dir": run_dir},
                     "Performing run-script action script: {script} working dir: {run_dir}",
                 )
-                self.run_process(args=[script], cwd=run_dir, log_name=script)
+                self.run_process(
+                    args=[script],
+                    cwd=run_dir,
+                    log_name=script,
+                    require_unix_environment=True,
+                )
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
 
