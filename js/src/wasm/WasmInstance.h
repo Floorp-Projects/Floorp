@@ -303,6 +303,10 @@ bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
                       Maybe<char*> stackResultsLoc, MutableHandleValue rval,
                       CoercionLevel level = CoercionLevel::Spec);
 
+// Report an error to `cx` and mark it as a 'trap' so that it cannot be caught
+// by wasm exception handlers.
+void ReportTrapError(JSContext* cx, unsigned errorNumber);
+
 }  // namespace wasm
 }  // namespace js
 
