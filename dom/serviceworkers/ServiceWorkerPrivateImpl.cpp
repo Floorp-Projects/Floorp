@@ -898,6 +898,59 @@ nsresult MaybeStoreStreamForBackgroundThread(nsIInterceptedChannel* aChannel,
 
 }  // anonymous namespace
 
+RefPtr<FetchServiceResponsePromise>
+ServiceWorkerPrivateImpl::SetupNavigationPreload(
+    nsCOMPtr<nsIInterceptedChannel>& aChannel,
+    const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  AssertIsOnMainThread();
+
+  // create IPC request from the intercepted channel.
+  auto result = GetIPCInternalRequest(aChannel);
+  if (result.isErr()) {
+    return nullptr;
+  }
+  IPCInternalRequest ipcRequest = result.unwrap();
+
+  // Step 1. Clone the request for preload
+  // Create the InternalResponse from the created IPCRequest.
+  SafeRefPtr<InternalRequest> preloadRequest =
+      MakeSafeRefPtr<InternalRequest>(ipcRequest);
+  // Copy the request body from uploadChannel
+  nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(aChannel);
+  if (uploadChannel) {
+    nsCOMPtr<nsIInputStream> uploadStream;
+    nsresult rv = uploadChannel->CloneUploadStream(
+        &ipcRequest.bodySize(), getter_AddRefs(uploadStream));
+    // Fail to get the request's body, stop navigation preload by returning
+    // nullptr.
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+    preloadRequest->SetBody(uploadStream, ipcRequest.bodySize());
+  }
+
+  // Set SkipServiceWorker for the navigation preload request
+  preloadRequest->SetSkipServiceWorker();
+
+  // Step 2. Append Service-Worker-Navigation-Preload header with
+  //         registration->GetNavigationPreloadState().headerValue() on
+  //         request's header list.
+  IgnoredErrorResult err;
+  auto headersGuard = preloadRequest->Headers()->Guard();
+  preloadRequest->Headers()->SetGuard(HeadersGuardEnum::None, err);
+  preloadRequest->Headers()->Append(
+      "Service-Worker-Navigation-Preload"_ns,
+      aRegistration->GetNavigationPreloadState().headerValue(), err);
+  preloadRequest->Headers()->SetGuard(headersGuard, err);
+
+  // TODO:
+  // Step 3. Perform fetch through FetchService with the cloned request
+  if (!err.Failed()) {
+  }
+  return nullptr;
+}
+
 nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
     RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
     nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
@@ -927,19 +980,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
                            request.method().LowerCaseEqualsASCII("get") &&
                            aRegistration->GetNavigationPreloadState().enabled();
   if (preloadNavigation) {
-    // TODO: Need to trigger navigation preloading through FetchService
-    // 1. Clone the request for preload
-    // 2. Append Service-Worker-Navigation-Preload header with
-    //    registration->GetNavigationPreloadState().headerValue() on request's
-    //    header list.
-    // 3. Passing aChannel and cloned request to FetchService to perform fetch
-    //    with BypassServiceWorker flag
-    //
-    // Here we assume FetchService provides an interface as following to perform
-    // asynchronous fetch in the main thread of the parent process .
-    //
-    // RefPtr<FetchServiceResponsePromise> Fetch(
-    //     SafeRefPtr<InternalRequest>&&, nsCOMPtr<nsIInterceptedChannel>);
+    SetupNavigationPreload(aChannel, aRegistration);
   }
 
   ParentToParentServiceWorkerFetchEventOpArgs args(
