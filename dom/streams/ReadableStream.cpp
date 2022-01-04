@@ -593,7 +593,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeeCancelAlgorithm)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
-// Step 18.
+// Step 19.
 class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
   ~ReadableStreamTeeClosePromiseHandler() = default;
   RefPtr<TeeState> mTeeState;
@@ -609,7 +609,7 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
   }
   void RejectedCallback(JSContext* aCx,
                         JS::Handle<JS::Value> aReason) override {
-    // Step 18.1.
+    // Step 19.1.
     ErrorResult rv;
     ReadableStreamDefaultControllerError(
         aCx, mTeeState->Branch1()->Controller(), aReason, rv);
@@ -618,7 +618,7 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
       return;
     }
 
-    // Step 18.2
+    // Step 19.2
     ReadableStreamDefaultControllerError(
         aCx, mTeeState->Branch2()->Controller(), aReason, rv);
     if (rv.MaybeSetPendingException(
@@ -626,7 +626,7 @@ class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
       return;
     }
 
-    // Step 18.3
+    // Step 19.3
     if (!mTeeState->Canceled1() || !mTeeState->Canceled2()) {
       mTeeState->CancelPromise()->MaybeResolveWithUndefined();
     }
@@ -650,33 +650,33 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 1. Implicit.
   // Step 2. Implicit.
 
-  // Steps 3-11 are contained in the construction of Tee State.
+  // Steps 3-12 are contained in the construction of Tee State.
   RefPtr<TeeState> teeState =
       TeeState::Create(aCx, aStream, aCloneForBranch2, aRv);
   if (aRv.Failed()) {
     return;
   }
 
-  // Step 12:
+  // Step 13:
   RefPtr<ReadableStreamDefaultTeePullAlgorithm> pullAlgorithm =
       new ReadableStreamDefaultTeePullAlgorithm(teeState);
 
   // Link pull algorithm into tee state for use in readRequest
   teeState->SetPullAlgorithm(pullAlgorithm);
 
-  // Step 13.
+  // Step 14.
   RefPtr<UnderlyingSourceCancelCallbackHelper> cancel1Algorithm =
       new ReadableStreamDefaultTeeCancelAlgorithm(teeState, true);
 
-  // Step 14.
+  // Step 15.
   RefPtr<UnderlyingSourceCancelCallbackHelper> cancel2Algorithm =
       new ReadableStreamDefaultTeeCancelAlgorithm(teeState, false);
 
-  // Step 15. Consumers are aware that they should return undefined
+  // Step 16. Consumers are aware that they should return undefined
   //          in the default case for this algorithm.
   RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm;
 
-  // Step 16.
+  // Step 17.
   nsCOMPtr<nsIGlobalObject> global(
       do_AddRef(teeState->GetStream()->GetParentObject()));
   teeState->SetBranch1(CreateReadableStream(aCx, global, startAlgorithm,
@@ -686,7 +686,7 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
     return;
   }
 
-  // Step 17.
+  // Step 18.
   teeState->SetBranch2(CreateReadableStream(aCx, global, startAlgorithm,
                                             pullAlgorithm, cancel2Algorithm,
                                             mozilla::Nothing(), nullptr, aRv));
@@ -694,11 +694,11 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
     return;
   }
 
-  // Step 18.
+  // Step 19.
   teeState->GetReader()->ClosedPromise()->AppendNativeHandler(
       new ReadableStreamTeeClosePromiseHandler(teeState));
 
-  // Step 19.
+  // Step 20.
   aResult.AppendElement(teeState->Branch1());
   aResult.AppendElement(teeState->Branch2());
 }
