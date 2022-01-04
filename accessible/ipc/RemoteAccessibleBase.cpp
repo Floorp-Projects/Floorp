@@ -501,6 +501,33 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
+    int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
+  if (!mCachedFields) {
+    return;
+  }
+
+  if (aLevel) {
+    if (auto level =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_level)) {
+      *aLevel = *level;
+    }
+  }
+  if (aSetSize) {
+    if (auto setsize =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_setsize)) {
+      *aSetSize = *setsize;
+    }
+  }
+  if (aPosInSet) {
+    if (auto posinset =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_posinset)) {
+      *aPosInSet = *posinset;
+    }
+  }
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }

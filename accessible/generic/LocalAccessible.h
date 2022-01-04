@@ -1034,6 +1034,9 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   AccGroupInfo* GetGroupInfo() const;
 
+  virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
+                                 int32_t* aPosInSet) const override;
+
   /**
    * Push fields to cache.
    * aCacheDomain - describes which fields to bundle and ultimately send

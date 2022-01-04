@@ -291,6 +291,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   void SetParent(Derived* aParent);
   Maybe<nsRect> RetrieveCachedBounds() const;
 
+  virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
+                                 int32_t* aPosInSet) const override;
+
  private:
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;

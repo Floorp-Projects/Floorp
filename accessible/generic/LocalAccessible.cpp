@@ -1445,6 +1445,13 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
     return;
   }
+
+  if (aAttribute == nsGkAtoms::aria_level ||
+      aAttribute == nsGkAtoms::aria_setsize ||
+      aAttribute == nsGkAtoms::aria_posinset) {
+    SendCache(CacheDomain::GroupInfo, CacheUpdateType::Update);
+    return;
+  }
 }
 
 GroupPos LocalAccessible::GroupPosition() {
@@ -1452,11 +1459,7 @@ GroupPos LocalAccessible::GroupPosition() {
   if (!HasOwnContent()) return groupPos;
 
   // Get group position from ARIA attributes.
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level, &groupPos.level);
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize,
-                           &groupPos.setSize);
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset,
-                           &groupPos.posInSet);
+  ARIAGroupPosition(&groupPos.level, &groupPos.setSize, &groupPos.posInSet);
 
   // If ARIA is missed and the accessible is visible then calculate group
   // position from hierarchy.
@@ -1487,6 +1490,23 @@ GroupPos LocalAccessible::GroupPosition() {
   }
 
   return groupPos;
+}
+
+void LocalAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
+                                        int32_t* aPosInSet) const {
+  if (!mContent) {
+    return;
+  }
+
+  if (aLevel) {
+    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level, aLevel);
+  }
+  if (aSetSize) {
+    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize, aSetSize);
+  }
+  if (aPosInSet) {
+    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset, aPosInSet);
+  }
 }
 
 uint64_t LocalAccessible::State() {
@@ -3264,6 +3284,18 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // Exclude states which must be calculated by RemoteAccessible.
     state &= ~kRemoteCalculatedStates;
     fields->SetAttribute(nsGkAtoms::state, state);
+  }
+
+  if (aCacheDomain & CacheDomain::GroupInfo) {
+    for (nsAtom* attr : {nsGkAtoms::aria_level, nsGkAtoms::aria_setsize,
+                         nsGkAtoms::aria_posinset}) {
+      int32_t value = 0;
+      if (nsCoreUtils::GetUIntAttr(mContent, attr, &value)) {
+        fields->SetAttribute(attr, value);
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(attr, DeleteEntry());
+      }
+    }
   }
 
   if (aUpdateType == CacheUpdateType::Initial) {
