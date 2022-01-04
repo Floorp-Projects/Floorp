@@ -68,19 +68,6 @@ void TreeSize(const char* aTitle, const char* aMsgText, LocalAccessible* aRoot);
 };  // namespace logging
 #endif
 
-/**
- * Group position (level, position in set and set size).
- */
-struct GroupPos {
-  GroupPos() : level(0), posInSet(0), setSize(0) {}
-  GroupPos(int32_t aLevel, int32_t aPosInSet, int32_t aSetSize)
-      : level(aLevel), posInSet(aPosInSet), setSize(aSetSize) {}
-
-  int32_t level;
-  int32_t posInSet;
-  int32_t setSize;
-};
-
 typedef nsRefPtrHashtable<nsPtrHashKey<const void>, LocalAccessible>
     AccessibleHashtable;
 
@@ -243,11 +230,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual bool NativelyUnavailable() const;
 
   virtual already_AddRefed<AccAttributes> Attributes() override;
-
-  /**
-   * Return group position (level, position in set and set size).
-   */
-  virtual mozilla::a11y::GroupPos GroupPosition();
 
   /**
    * Return direct or deepest child at the given point.
