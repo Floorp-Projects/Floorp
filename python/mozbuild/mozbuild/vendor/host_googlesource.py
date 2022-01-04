@@ -28,9 +28,6 @@ class GoogleSourceHost(BaseHost):
             info = json.loads(req.text[4:])
         return (info["commit"], info["committer"]["time"])
 
-    def upstream_tag(self):
-        pass
-
     def upstream_snapshot(self, revision):
         return "/".join(
             [self.manifest["vendoring"]["url"], "+archive", revision + ".tar.gz"]
