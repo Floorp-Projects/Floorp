@@ -45,10 +45,12 @@ namespace mozilla {
   TRACK_GRAPH_LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
 
 /* static */
-NativeInputTrack* NativeInputTrack::Create(MediaTrackGraphImpl* aGraph) {
+NativeInputTrack* NativeInputTrack::Create(
+    MediaTrackGraphImpl* aGraph, const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NativeInputTrack* track = new NativeInputTrack(aGraph->GraphRate());
+  NativeInputTrack* track =
+      new NativeInputTrack(aGraph->GraphRate(), aPrincipalHandle);
   LOG("Create NativeInputTrack %p in MTG %p", track, aGraph);
   aGraph->AddTrack(track);
   return track;
@@ -155,7 +157,7 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
     mInputChannels = aChannels;
   }
   mPendingData.AppendFromInterleavedBuffer(aBuffer, aFrames, aChannels,
-                                           PRINCIPAL_HANDLE_NONE);
+                                           mPrincipalHandle);
 }
 
 void NativeInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) {
