@@ -1481,7 +1481,7 @@ GroupPos LocalAccessible::GroupPosition() {
   // Calculate position in group and group size if ARIA is missed.
   if (groupPos.posInSet == 0 || groupPos.setSize == 0) {
     int32_t posInSet = 0, setSize = 0;
-    GetPositionAndSizeInternal(&posInSet, &setSize);
+    GetPositionAndSetSize(&posInSet, &setSize);
     if (posInSet != 0 && setSize != 0) {
       if (groupPos.posInSet == 0) groupPos.posInSet = posInSet;
 
@@ -3320,15 +3320,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   return fields.forget();
-}
-
-void LocalAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                                 int32_t* aSetSize) {
-  AccGroupInfo* groupInfo = GetOrCreateGroupInfo();
-  if (groupInfo) {
-    *aPosInSet = groupInfo->PosInSet();
-    *aSetSize = groupInfo->SetSize();
-  }
 }
 
 nsAtom* LocalAccessible::TagName() const {

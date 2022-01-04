@@ -272,16 +272,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual LocalAccessible* FocusedChild();
 
   /**
-   * Calculate position in group and group size ('posinset' and 'setsize') based
-   * on accessible hierarchy.
-   *
-   * @param  aPosInSet  [out] accessible position in the group
-   * @param  aSetSize   [out] the group size
-   */
-  virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                          int32_t* aSetSize);
-
-  /**
    * Get the relation of the given type.
    */
   virtual Relation RelationByType(RelationType aType) const;
