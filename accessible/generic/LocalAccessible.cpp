@@ -1454,44 +1454,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   }
 }
 
-GroupPos LocalAccessible::GroupPosition() {
-  GroupPos groupPos;
-  if (!HasOwnContent()) return groupPos;
-
-  // Get group position from ARIA attributes.
-  ARIAGroupPosition(&groupPos.level, &groupPos.setSize, &groupPos.posInSet);
-
-  // If ARIA is missed and the accessible is visible then calculate group
-  // position from hierarchy.
-  if (State() & states::INVISIBLE) return groupPos;
-
-  // Calculate group level if ARIA is missed.
-  if (groupPos.level == 0) {
-    int32_t level = GetLevel(false);
-    if (level != 0) {
-      groupPos.level = level;
-    } else {
-      const nsRoleMapEntry* role = this->ARIARoleMap();
-      if (role && role->Is(nsGkAtoms::heading)) {
-        groupPos.level = 2;
-      }
-    }
-  }
-
-  // Calculate position in group and group size if ARIA is missed.
-  if (groupPos.posInSet == 0 || groupPos.setSize == 0) {
-    int32_t posInSet = 0, setSize = 0;
-    GetPositionAndSetSize(&posInSet, &setSize);
-    if (posInSet != 0 && setSize != 0) {
-      if (groupPos.posInSet == 0) groupPos.posInSet = posInSet;
-
-      if (groupPos.setSize == 0) groupPos.setSize = setSize;
-    }
-  }
-
-  return groupPos;
-}
-
 void LocalAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                         int32_t* aPosInSet) const {
   if (!mContent) {

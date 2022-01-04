@@ -65,7 +65,7 @@ nsAtom* LandmarkRole() const;
 
 nsStaticAtom* ARIARoleAtom() const;
 
-mozilla::a11y::GroupPos GroupPosition();
+virtual mozilla::a11y::GroupPos GroupPosition() override;
 void ScrollTo(uint32_t aScrollType);
 void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 
