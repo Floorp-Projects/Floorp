@@ -84,5 +84,4 @@ void TeeState::SetPullAlgorithm(
     ReadableStreamDefaultTeePullAlgorithm* aPullAlgorithm) {
   mPullAlgorithm = aPullAlgorithm;
 }
-
 }  // namespace mozilla::dom

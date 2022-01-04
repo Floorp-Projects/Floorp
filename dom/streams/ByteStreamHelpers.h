@@ -22,7 +22,10 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject);
 bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
                             ErrorResult& aRv);
 
-JSObject* CloneAsUint8Array(JS::HandleObject O, ErrorResult& aRv);
+// If this returns null, it will leave a pending exception on aCx which
+// must be handled by the caller (in the spec this is always the case
+// currently).
+JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject O);
 
 }  // namespace dom
 }  // namespace mozilla
