@@ -271,7 +271,7 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"src": src, "dst": dst},
-                    "Performing copy-file action src: {src} dst: {dst}",
+                    "action: copy-file src: {src} dst: {dst}",
                 )
 
                 with open(src) as f:
@@ -319,7 +319,7 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"file": file},
-                    "Performing replace-in-file action file: {file}",
+                    "action: replace-in-file file: {file}",
                 )
 
                 with open(file) as f:
@@ -336,20 +336,28 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"path": path},
-                    "Performing delete-path action path: {path}",
+                    "action: delete-path path: {path}",
                 )
                 mozfile.remove(path)
             elif update["action"] == "run-script":
                 script = get_full_path(update["script"], support_cwd=True)
                 run_dir = get_full_path(update["cwd"], support_cwd=True)
+
+                args = []
+                for a in update.get("args", []):
+                    if a == "{revision}":
+                        args.append(revision)
+                    else:
+                        args.append(a)
+
                 self.log(
                     logging.INFO,
                     "vendor",
-                    {"script": script, "run_dir": run_dir},
-                    "Performing run-script action script: {script} working dir: {run_dir}",
+                    {"script": script, "run_dir": run_dir, "args": args},
+                    "action: run-script script: {script} working dir: {run_dir} args: {args}",
                 )
                 self.run_process(
-                    args=[script],
+                    args=[script] + args,
                     cwd=run_dir,
                     log_name=script,
                     require_unix_environment=True,
