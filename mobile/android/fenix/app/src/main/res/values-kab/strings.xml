@@ -22,7 +22,7 @@
     <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 yiccer i yeldin. Sit akken ad tbeddleḍ iccer.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 yiccer i yeldin. Sit akken ad tbeddleḍ iccer.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s waccaren yeldin. Sit akken ad tettbeddileḍ gar waccaren.</string>
 
@@ -42,21 +42,17 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Sekles iccaren ittufernen ɣer tegrumma</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">%1$s ittufren</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">%1$s ittufren</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s ur ittufren ara</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">%1$s ur ittufren ara</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Iffeɣ seg uskar n uget-afran</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Iffeɣ seg uskar n uget-afran</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Ikcem ɣer uskar n uget-afran, fren iccaren akken ad teskelseḍ ɣer tegrumma</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Ikcem ɣer uskar n uget-afran, fren iccaren akken ad teskelseḍ ɣer tegrumma</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Iţufren</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Yettwasekles melmi kan</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Yettwacreḍ melmi kan</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Ticraḍ n yisebtar n melmi kan</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -64,14 +60,16 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Sken kullec</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Taqeffalt teskanay-d meṛṛa ticraḍ n yisebtar yettwaskelsen</string>
+    <string name="recently_saved_show_all_content_description_2">Sken akk ticraḍ n yisebtar yettwaskelsen</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Taqeffalt teskanay-d meṛṛa ticraḍ n yisebtar yettwaskelsen</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s d afares n Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Aql-ak deg tɣimit n usfaylu uslig</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Aql-ak deg tɣimit n usfaylu uslig</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s iseffeḍ amazray-ik n unadi d tunigin seg waccaren n tunigin tusligin mi ara tent-tmeḍleḍ neɣ mi ara teffɣeḍ seg usnas. Ɣas wama aya ur yettarra ara d udrig deg yismal web neɣ deg usaǧǧaw-ik n unekcum Internet, aya ad k-yeǧǧ ad tḥarzeḍ tabaḍnit n urmud-ik srid i wid yesseqdacen ibenk-ik.</string>
@@ -79,7 +77,7 @@
 Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
      </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Kkes tɣimit</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Kkes tɣimit</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -145,7 +143,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="recent_tabs_show_all">Sken kullec</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Sken tqeffalt n meṛṛa accaren n melmi kan</string>
+    <string name="recent_tabs_show_all_content_description_2">Sken tqeffalt n meṛṛa accaren n melmi kan</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Sken akk accaren n melmi kan</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Anadi-inek•inem i \&quot;%1$s\&quot;</string>
@@ -160,10 +160,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Isniram yezrin</string>
-
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Yemmẓer melmi kan</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -173,11 +169,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="recently_visited_menu_item_remove">Kkes</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Sken taqeffalt n usnirem iɛeddan</string>
+    <string name="past_explorations_show_all_content_description_2">Sken akk asnirem iεeddan</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Sken taqeffalt n usnirem iɛeddan</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Ldi icarren</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Ldi icarren</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Ɣer deffir</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -189,11 +187,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Creḍ asebter-agi</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Beddel tacreḍt n usebter</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Beddel tacreḍt n usebter</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Izegrar</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Isiɣzaf</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Isiɣzaf</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ulac izegrar da</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -217,13 +215,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Nadi deg usebter</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Iccer uslig</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Iccer uslig</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Sekles ɣer tegrumma</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bḍu</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Bḍu d…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Bḍu d…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Ldi di %1$s</string>
@@ -240,7 +238,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Ldi deg usnas</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Arwes</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Arwes</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Sagen timeẓri n tɣuri</string>
@@ -260,13 +258,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Ur izmir ara ad yeqqen. Azenziɣ n tensa URL ur yettwassen ara.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Ur izmir ara ad yeqqen. Azenziɣ n tensa URL ur yettwassen ara.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Fren tutlayt</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Nadi</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Nadi</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Ḍfer tutlay n ibnek</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -280,7 +278,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Iɣewwaṛen n umsedday n unadi</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Tikkelt-agi, nadi s:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Tikkelt-agi, nadi s:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Ččaṛ sef tkatut ɣef afus</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -337,7 +335,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for the settings page-->
     <string name="settings">Iɣewwaṛen</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Iɣewwaren igejdanen</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Iɣewwaren igejdanen</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Amatu</string>
     <!-- Preference category for all links about Fenix -->
@@ -349,26 +347,26 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Afeggag n tansa</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Tallalt</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Tallalt</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Mudd tazmilt deg Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Efk-d tikti-k</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Efk-d tikti-k</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Ɣef %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Izerfan-inek/m</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Izerfan-inek/m</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Awalen uffiren</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Awalen uffiren</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Tikarḍiwin n usmad akked tansiwin</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Tikarḍiwin n usmad akked tansiwin</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Sbadu-t d iminig amezwer</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Talqayt</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Tabaḍnit</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Tabaḍnit</string>
 
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Tabaḍnit  &amp; taɣellist</string>
@@ -395,13 +393,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Amiḍan</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Qqen</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Qqen</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Afeggag n yifecka</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Asentel</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Asebter agejdan</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Asebter agejdan</string>
     <!-- Preference for gestures based actions -->
@@ -421,9 +417,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Alqaḍ n yisefka</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Tasertit n tbaḍnit</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Tasertit n tbaḍnit</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Ifecka n tneflit</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Ifecka n tneflit</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Taseɣtayt tanmeggagt s USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -476,10 +472,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Uɣal ɣer deffir</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Yettwasekles melmi kan</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Yettwacreḍ melmi kan</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Ticraḍ n yisebtar n melmi kan</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -546,22 +538,22 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Iccaren yettwarmesen</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Iccaren yettwarmesen</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Iccaren yettwarmesen</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Iccer si %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Ammesten mgal asfuɣel</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Ammesten mgal asfuɣel</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Ammesten mgal asfuɣel</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Ammesten mgal asfuɣel</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Sewḥel agbur akked iskripten i k-yeṭṭafaṛen srid</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Sewḥel agbur akked iskripten i k-yeṭṭafaṛen srid</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Tisuraf</string>
 
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Ammesten mgal aḍfaṛ yensa i yismal-a web</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Ammesten mgal aḍfaṛ yensa i yismal-a web</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Rmed deg ismal meṛṛa</string>
     <!-- Text displayed when there are no exceptions -->
@@ -570,7 +562,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="exceptions_empty_message_learn_more_link">Issin ugar</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Tilisɣelt</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Tilisɣelt</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Isefka itiknikanen akked useqdec</string>
     <!-- Preference description for usage and technical data collection -->
@@ -578,7 +570,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Isefka n uzenzi</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Bḍu isefka ɣef timahilin i tseqdaceḍ deg %1$s s Leanplum, Imzenzi-nneɣ n izirazen.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Bḍu isefka ɣef timahilin i tseqdaceḍ deg %1$s s Leanplum, Imzenzi-nneɣ n izirazen.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Ibeṭṭu isefka n useqdec azadur akked Adjust, amsenzi-nneɣ n ssuq  n uziraz</string>
     <!-- Title for studies preferences -->
@@ -586,16 +578,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Sireg Mozilla ad tesbedded sakin ad tseddu studies</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Tisermiyin</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Tisermiyin</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Ad yeǧǧ Mozilla ad tesbedd daɣen ad telqeḍ isefka n tmahilin tirmitanin</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Ad yeǧǧ Mozilla ad tesbedd daɣen ad telqeḍ isefka n tmahilin tirmitanin</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Amassaɣay n uɣelluy</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Amassaɣay n uɣelluy</string>
 
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Ameẓlu n usideg Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Ameẓlu n usideg Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Aneqqis n tezmert %s</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">Aneqqis n tezmert %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -603,7 +595,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Ḍumm-d tangalt n uciddi seg Firefox i uselkim</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Qqen</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Qqen</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Kcem akken ad talseḍ tuqqna</string>
 
@@ -614,9 +606,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Snirem tangalt QR i yettwaseknen deg <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Ldi takamiṛat</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Ldi takamiṛat</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Sefsex</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Sefsex</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -647,9 +639,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Tiɣimiyen</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Tiɣimiyen</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Tuṭṭfiwin n ugdil</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Tuṭṭfiwin n ugdil</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Isidar</string>
     <!-- Option in library to open Bookmarks page -->
@@ -667,15 +659,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Iccer amaynut</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Af deg usebter</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Af deg usebter</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Tabdart n tɣuṛi</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Tabdart n tɣuṛi</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Nadi</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Nadi</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Iɣewwaṛen</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Umuɣ n yiferdisen n uzray</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Umuɣ n yiferdisen n uzray</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Mdel</string>
 
@@ -727,20 +719,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Amdal awurman n waccaren yeldin</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Bdu seg ugilal agejdan</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Agdil n twaledyawt</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Seld rebεa n yisragen</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Asebter agejdan</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Yal tikkelt</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Iccer aneggaru</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Urǧin</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Asebter agejdan seld ukkuẓ n yisragen n warurlud</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -784,7 +768,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Iccaren yeldin</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Tiɣimit tusligt</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Tiɣimit tusligt</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Iccaren usligen</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -798,9 +782,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Ldi acarren</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Ldi acarren</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Sekles ɣer tagrumma</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Sekles ɣer tagrumma</string>
     <!-- Text shown in the menu for the collection selector -->
     <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Fren</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -816,11 +800,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Mdel akk iccaren</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Iccer amaynut</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Iccer amaynut</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Uɣal s axxam</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Uɣal s axxam</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Sken/ffer askar n waccaren</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Sken/ffer askar n waccaren</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Ticreḍt n usebter</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -840,25 +824,25 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Ldi umuɣ n yiccaren</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Mdel akk iccaren</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Mdel akk iccaren</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Bḍu iccaren</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Bḍu iccaren</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Sekles iccaren ɣer tegrumma</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Umuɣ n yiccaren</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Bḍu iccer</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Bḍu iccer</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Kkes</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Kkes</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Sekles</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Sekles</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Bḍu</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Bḍu</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Tugna n tɣimit tamirant</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Tugna n tɣimit tamirant</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Sekles ɣer tegrumma</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Sekles ɣer tegrumma</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Kkes tagrumma</string>
     <!-- Text for the menu button to rename a collection -->
@@ -879,10 +863,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="pwa_site_controls_title_private">%1$s (askar uslig)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Sekles</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Wayeḍ</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Sekles</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Accaren wiyaḍ</string>
@@ -891,21 +872,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Kkes amazray</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Tebɣiḍ ad tsefḍeḍ amazray-inek/m?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Tebɣiḍ ad tsefḍeḍ amazray-inek/m?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Amazray yettwakkes</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s yettwakkes</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Sfeḍ</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Nɣel</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Bḍu</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Ldi-t deg yiccer amaynut</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Ldi deg iccer uslig</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Sfeḍ</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Kkes</string>
     <!-- History multi select title in app bar
@@ -913,13 +886,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="history_multi_select_title">%1$d yettwafren (ttwafernen)</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Kkes %1$d iferdisen</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Kkes %1$d iferdisen</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Ass-a</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Iḍelli</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">24 isragen ineggura</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">24 isragen ineggura</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 n wussan ineggura</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -943,7 +916,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Ldi</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Ldi</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -954,7 +927,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Suref-aɣ. %1$s ur izmir ara ad isali asebter-nni.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Tzemreḍ ad tɛerḍeḍ ad terret neɣ ad tmedleḍ iccer-a ddaw-a.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Tzemreḍ ad tɛerḍeḍ ad terret neɣ ad tmedleḍ iccer-a ddaw-a.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Azen aneqqis n uɣelluy i Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -963,24 +936,24 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_crash_restore">Err-d iccer</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Iɣewwaṛen n tɣimit</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Iɣewwaṛen n tɣimit</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Bḍu tiɣimit</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Bḍu tiɣimit</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Umuɣ n ticraḍ n isebtar</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Umuɣ n ticraḍ n isebtar</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Beddel tacreḍt n usebter</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Fren akaram</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Fren akaram</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Tebɣiḍ ad tekseḍ akaram-agi?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ad ikkes iferdisen ittwafernen.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s4 yettwakkes</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">%1$s4 yettwakkes</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Rnu akaram</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -990,7 +963,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Ẓreg</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Fren</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Fren</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Nɣel</string>
 
@@ -1041,7 +1014,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Tisirag</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Tisirag</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Ddu ɣer iɣewwaṛen</string>
 
@@ -1052,7 +1025,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Ihul</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Sefrek tisirag n usmel</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Sefrek tisirag n usmel</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Sfeḍ tisirag</string>
     <!-- Button label for clearing a site permission-->
@@ -1071,6 +1044,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_phone_feature_notification">Alɣu</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Aklas imezgi</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Inagan n tuqqna gar yismal</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Agbur yettwaḥerzen s DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1160,14 +1135,14 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Azen daɣen Bḍu</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Azen daɣen Bḍu</string>
     <!-- Share screen header -->
     <string name="share_header_2">Bḍu</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Bḍu</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Bḍu aseɣwen</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Bḍu aseɣwen</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Azen ɣer yibenk</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1204,17 +1179,17 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Tiɣimit n tunigin tusligt</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Tiɣimit n tunigin tusligt</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Kkes iccaren usligen</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Kkes iccaren usligen</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Mdel iccaren usligen</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Ldi</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Ldi</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Kkes sakin ldi</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Kkes sakin ldi</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Ixxdem-it</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Ixxdem-it</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Talzuzit</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1230,19 +1205,19 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Ittwabeddel isem n tegrumma</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Ittwakkes iccer</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Ittwakkes iccer</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Ttwaksen iccaren</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Ttwaksen iccaren</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Iccer imdel</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Medlen iccaren</string>
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Accaren medlen!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Accaren medlen!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Ticraḍ n yisebtar ttwakelsent!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Sken</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Sken</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Rnu ɣer ismal ifazen!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1250,16 +1225,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Medlen iccaren usligen</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Ttwaksen iccaren usligen</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Ttwaksen iccaren usligen</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UƔAL</string>
 
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Asmel yettwakkes</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Asmel yettwakkes</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Sefsex</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Sefsex</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Sentem</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Sentem</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Sireg %1$s ad yeldi %2$s</string>
@@ -1279,8 +1254,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="delete_tab_and_collection_dialog_title">Kkes %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Kkes</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Sefsex</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Askar n ugdil ačaran yermed</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1309,10 +1282,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d n tansiwin</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Amazray</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Amazray</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Isebtar %d</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">Isebtar %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Inagan n tuqqna</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1331,7 +1304,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Kkes isefka n tunigin mi ara tefɣeḍ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Ad yekkes s wudem awurman isefka n tunigin ticki tferneḍ &quot;Ffeɣ&quot; seg umuɣ agejdan</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Ad yekkes s wudem awurman isefka n tunigin ticki tferneḍ &quot;Ffeɣ&quot; seg umuɣ agejdan</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Ad yekkes s wudem awurman isefka n tunigin ticki tferneḍ &quot;Ffeɣ&quot; seg umuɣ agejdan</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1382,14 +1355,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ansuf ɣer %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Tesεiḍ yakan amiḍan?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Wali amaynut</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Tesεiḍ asteqsi ɣef %s ittwasinflen? Tebɣiḍ ad tezreḍ acu ibeddlen?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Awi-d tiririyen da</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Tesεiḍ yakan amiḍan?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Mtawi Firefox gar yibenkan</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1405,7 +1371,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Jerred</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Qqim beṛṛa n tuqqna</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Qqim beṛṛa n tuqqna</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Amtawi yermed</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1419,7 +1385,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Yerked gar tbaḍnit akked temlellit. ISebtar ad d-alin s wudem amagnu.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Uḥriṣ (yelha)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Uḥriṣ (yelha)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Uḥris</string>
     <!-- text for strict blocking option button description -->
@@ -1428,15 +1394,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_toolbar_placement_header_1">Fren adig n ufeggag-ik·im n yifecka</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Eǧǧ afeggag n yifecka ɣef wafus. Eǧǧ-it ddaw neɣ err-it d asawen.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Tunigin tusligin</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Ldi iccer uslig tikkelt: Senned tignit %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Ldi iccaren usligen yal tikkelt: Leqqem iɣewwaṛen n iminig.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Ldi iɣewwaren</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Tabaḍnit inek/m</string>
 
@@ -1445,9 +1402,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_privacy_notice_description2">Nfeṣṣel %si w akken ad nerr gar ifassen-ik·im ayen i tbeṭṭuḍ srid aked wayen tbeṭṭuḍ yid-neɣ.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Ɣer tasertit-nneɣ n tbaḍnit</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Mdel</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Bdu tunigin</string>
@@ -1487,7 +1441,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Ulac amiḍan? <u>Rnu yiwen</u> i umtaw n Firefox gar yibenkan.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox ad iseḥbes amtawi d umiḍan-inek, acukan ur ittekkes ara isefka-inek n tunigin seg uselkim-a.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox ad iseḥbes amtawi d umiḍan-inek, acukan ur ittekkes ara isefka-inek n tunigin seg uselkim-a.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s ad iseḥbes amtawi d umiḍan-inek, acukan ur ittekkes ara isefka-inek n tunigin seg uselkim-a.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1545,7 +1499,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Deg waccaren usligen kan</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Deg iccaren udmawanen kan</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Deg iccaren udmawanen kan</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Ikripṭuminaren</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1577,8 +1531,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="etp_tracking_content_title">Agbur n uḍfaṛ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ad isewḥel adellel, tividyutin akked ugbur-nniḍen i d-yekka beṛṛa n usmel, win i igebren tangalt n uḍfaṛ. Izmer ad iḥaz kra n tmahilin n usmel.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Yal mi ara yili urti d ajenjaṛ, %s isewḥel ineḍfaren ɣef usmel. Sit i wugar n talɣut.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ammesten yermed i usmel-a</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1589,9 +1541,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Inig ar deffir</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Izerfan-ik</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Izerfan-ik</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Timkerḍiyin n uɣbalu yeldin i nseqdac</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Timkerḍiyin n uɣbalu yeldin i nseqdac</string>
 
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">D acu i d maynut deg %s</string>
@@ -1630,9 +1582,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="about_debug_menu_toast_done">Umuɣ n tseɣtit irmed</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 n yiccer</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 n yiccer</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d n yiccaren</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d n yiccaren</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1666,8 +1618,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_passwords_save_logins_ask_to_save">Suter asekles</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Urǧin sekles</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Taččart tawurmant</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Ččar s wudem awurman %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -1686,9 +1636,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Mtawi inekcam gqr yibenkan</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Ales tuqqna</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Ales tuqqna</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Qqen ɣer Sync</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Qqen ɣer Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Inekcam yettwakelsen</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1706,9 +1656,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Nadi inekcam</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">S ugemmay</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">S ugemmay</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Ttwasqedcen melmi kan</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Ttwasqedcen melmi kan</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Asmel web</string>
     <!-- The header for the username for a login -->
@@ -1716,25 +1666,25 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Awal uffir</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Ales asekcem n tengalt-ik PIN</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Ales asekcem n tengalt-ik PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Serreḥ akken ad tsekneḍ inekcam-ik yettwaskelsen</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Serreḥ akken ad tsekneḍ inekcam-ik yettwaskelsen</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Tuqqna-agi mačč d taɣelsant. Inekcam yettwagren dagi zemren ad ttwakkren.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Tuqqna-agi mačč d taɣelsant. Inekcam yettwagren dagi zemren ad ttwakkren.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Issin ugar</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Issin ugar</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Tebɣiḍ %s ad isekles anekcam-a?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Tebɣiḍ %s ad isekles anekcam-a?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Sekles</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Sekles</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Ur seklas ara</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Ur seklas ara</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Awal uffir yettwanɣel ɣef affus</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Isem n useqdac yenɣel ɣef afus</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Asmel yenɣel ɣef aus</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Asmel yenɣel ɣef aus</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Nɣel awal uffir</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1746,7 +1696,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Sfeḍ asenneftaɣ</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Nɣel asmel</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Nɣel asmel</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Ldi asmel deg iminig</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1809,7 +1759,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Isem ɣef tkarḍa</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Mefferisemn tkarḍa</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Mefferisemn tkarḍa</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Kkes takarḍa</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1865,17 +1815,17 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Beddel aḍris n unadi “%s”. Amedya: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Issin ugar</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Issin ugar</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Talqayt ɣef umsedday n unadi udmawan</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Aseɣwen issin ugar</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Aseɣwen issin ugar</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Sekcem isem n umsedday n unadi</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Amsedday n unadi s yisem “%s” yella yakan.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Amsedday n unadi s yisem “%s” yella yakan.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Sekcem aḍris n unadi</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1917,10 +1867,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="quick_settings_sheet_secure_connection_2">Tuqqna d taɣellsant</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Tuqqna d taraɣellsant</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Tuqqna taɣelsant</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Tuqqna taraɣelsant</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Sfeḍ inagan n tuqna akked isefka n usmel</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[D ttidet tebɣiḍ ad tsefḍeḍ akk inagan n tuqqna d yisefka i usmel <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Tebɣiḍ ad tekkseḍ tisirag meṛṛa i yismal meṛṛa?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1930,7 +1880,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Ulac tisuraf n ismal</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Imagraden ifazen</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Imagraden ifazen</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Tebɣiḍ ad tekseḍ Ticraḍ-a n iccaren?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1957,7 +1907,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Sekles isenfaln unekcum.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Sefsax isenfal</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Sefsax isenfal</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Ẓreg</string>
     <!--  The page title for adding new login. -->
@@ -1978,8 +1928,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Tansa n Web ilaq ad yili deg- s \“https://\“ or \“http://\“</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Tansa n Web ilaq ad yili deg-s &quot;https://&quot; neɣ &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -2013,10 +1961,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Ismal d-yufraren deg tirza</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Sken ismal yemmeẓren s waṭas</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Sken-d ismal ittwarzan aṭas</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Isem</string>
@@ -2092,8 +2036,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="privacy_content_close_button_content_description">Mdel</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Tiqsiḍin i ijebbden lwelha</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Tiqsiḍin i ijebbden lwelha</string>
     <!-- Header text for a section on the home screen. -->

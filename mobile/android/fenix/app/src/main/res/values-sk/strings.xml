@@ -22,10 +22,10 @@
     <string name="no_private_tabs_description">Vaše súkromné karty budú zobrazené tu.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 otvorená karta. Ťuknutím prepnete karty.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">Otvorené karty: 1. Ťuknutím prepnete karty.</string>
 
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">1 otvorených kariet. Ťuknutím prepnete karty.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Otvorené karty: %1$s. Ťuknutím prepnete karty.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Počet vybraných položiek: %1$d</string>
@@ -58,7 +58,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Zobraziť všetko</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Tlačidlo Zobraziť všetky uložené záložky</string>
+    <string name="recently_saved_show_all_content_description_2">Zobraziť všetky uložené záložky</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Tlačidlo Zobraziť všetky uložené záložky</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s vyvíja Mozilla.</string>
@@ -139,7 +141,9 @@
     <string name="recent_tabs_show_all">Zobraziť všetko</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Tlačidlo Zobraziť všetky posledné karty</string>
+    <string name="recent_tabs_show_all_content_description_2">Tlačidlo Zobraziť všetky nedávne karty</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Zobraziť všetky nedávne karty</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Vaše hľadanie výrazu \&quot;%1$s\&quot;</string>
@@ -163,7 +167,9 @@
     <string name="recently_visited_menu_item_remove">Odstrániť</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Tlačidlo Zobraziť všetky minulé prieskumy</string>
+    <string name="past_explorations_show_all_content_description_2">Zobraziť všetky minulé prieskumy</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Tlačidlo Zobraziť všetky minulé prieskumy</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -365,7 +371,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Súkromie a bezpečnosť</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Povolenia stránok</string>
+    <string name="preferences_site_permissions">Oprávnenia stránok</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Súkromné prehliadanie</string>
     <!-- Preference for opening links in a private tab-->
@@ -1012,7 +1018,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Odporúčané</string>
     <!-- button that allows editing site permissions settings -->
-    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Spravovať povolenia stránok</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Spravovať oprávnenia stránok</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Odstrániť povolenia</string>
     <!-- Button label for clearing a site permission-->
@@ -1031,6 +1037,8 @@
     <string name="preference_phone_feature_notification">Upozornenia</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Trvalé úložisko</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookies tretích strán</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Obsah chránený pomocou DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1281,7 +1289,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Uvolní priestor v zariadení</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">Povolenia stránok</string>
+    <string name="preferences_delete_browsing_data_site_permissions">Oprávnenia stránok</string>
     <!-- Title for the downloads item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_downloads">Stiahnuté súbory</string>
     <!-- Text for the button to delete browsing data -->
