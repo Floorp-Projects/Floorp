@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class ReadableStreamBYOBReader;
+
 // Base class for internal slots of readable stream readers
 class ReadableStreamGenericReader : public nsISupports {
  public:
@@ -26,7 +28,8 @@ class ReadableStreamGenericReader : public nsISupports {
 
   virtual bool IsDefault() = 0;
   virtual bool IsBYOB() = 0;
-  virtual ReadableStreamDefaultReader* asDefault() = 0;
+  virtual ReadableStreamDefaultReader* AsDefault() = 0;
+  virtual ReadableStreamBYOBReader* AsBYOB() = 0;
 
   Promise* ClosedPromise() { return mClosedPromise; }
   void SetClosedPromise(already_AddRefed<Promise>&& aClosedPromise) {
