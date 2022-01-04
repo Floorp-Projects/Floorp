@@ -83,6 +83,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
   bool mWasSent = false;
   MozPromiseRequestHolder<FetchServiceResponsePromise>
       mPreloadResponseReadyPromiseRequestHolder;
+  RefPtr<FetchServiceResponsePromise> mPreloadResponseReadyPromise;
 };
 
 }  // namespace dom

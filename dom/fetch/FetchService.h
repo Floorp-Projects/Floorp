@@ -83,6 +83,8 @@ class FetchService final {
 
     RefPtr<FetchServiceResponsePromise> Fetch();
 
+    void Cancel();
+
     /* FetchDriverObserver interface */
     void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
     void OnResponseAvailableInternal(
@@ -99,6 +101,7 @@ class FetchService final {
     nsCOMPtr<nsILoadGroup> mLoadGroup;
     nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
     RefPtr<PerformanceStorage> mPerformanceStorage;
+    RefPtr<FetchDriver> mFetchDriver;
 
     MozPromiseHolder<FetchServiceResponsePromise> mResponsePromiseHolder;
   };
