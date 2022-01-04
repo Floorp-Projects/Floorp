@@ -11100,10 +11100,13 @@ bool PresShell::UsesMobileViewportSizing() const {
  */
 void PresShell::UpdateImageLockingState() {
   // We're locked if we're both thawed and active.
-  bool locked = !mFrozen && mIsActive;
+  const bool locked = !mFrozen && mIsActive;
+  auto* tracker = mDocument->ImageTracker();
+  if (locked == tracker->GetLockingState()) {
+    return;
+  }
 
-  mDocument->ImageTracker()->SetLockingState(locked);
-
+  tracker->SetLockingState(locked);
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
