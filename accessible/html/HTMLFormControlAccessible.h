@@ -31,9 +31,11 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
 
   // LocalAccessible
   virtual uint64_t NativeState() const override;
-  virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                          int32_t* aSetSize) override;
   virtual Relation RelationByType(RelationType aType) const override;
+
+ protected:
+  virtual void GetPositionAndSetSize(int32_t* aPosInSet,
+                                     int32_t* aSetSize) override;
 
  private:
   Relation ComputeGroupAttributes(int32_t* aPosInSet, int32_t* aSetSize) const;

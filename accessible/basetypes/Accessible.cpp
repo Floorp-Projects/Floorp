@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Accessible.h"
+#include "AccGroupInfo.h"
 #include "ARIAMap.h"
 #include "States.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
@@ -209,4 +210,12 @@ int32_t Accessible::GetLevel(bool aFast) const {
   }
 
   return level;
+}
+
+void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
+  auto groupInfo = GetOrCreateGroupInfo();
+  if (groupInfo) {
+    *aPosInSet = groupInfo->PosInSet();
+    *aSetSize = groupInfo->SetSize();
+  }
 }

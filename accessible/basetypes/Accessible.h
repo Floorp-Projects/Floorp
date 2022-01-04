@@ -319,6 +319,15 @@ class Accessible {
    */
   virtual int32_t GetLevel(bool aFast) const;
 
+  /**
+   * Calculate position in group and group size ('posinset' and 'setsize') based
+   * on accessible hierarchy.
+   *
+   * @param  aPosInSet  [out] accessible position in the group
+   * @param  aSetSize   [out] the group size
+   */
+  virtual void GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize);
+
  private:
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 18;
