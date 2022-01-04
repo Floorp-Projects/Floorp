@@ -78,8 +78,8 @@ NS_IMPL_ISUPPORTS_INHERITED(GeckoMediaPluginServiceParent,
                             nsIAsyncShutdownBlocker)
 
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
-    : mShuttingDown(false),
-      mScannedPluginOnDisk(false),
+    : mScannedPluginOnDisk(false),
+      mShuttingDown(false),
       mWaitingForPluginsSyncShutdown(false),
       mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor"),
       mInitPromise(&mInitPromiseMonitor),
@@ -293,10 +293,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
 
   } else if (!strcmp(NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, aTopic)) {
 #ifdef DEBUG
-    {
-      MutexAutoLock lock(mMutex);
-      MOZ_ASSERT(mShuttingDown);
-    }
+    MOZ_ASSERT(mShuttingDown);
 #endif
     ShutdownGMPThread();
   } else if (!strcmp(NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, aTopic)) {
@@ -1773,19 +1770,21 @@ bool GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService) {
   RefPtr<GeckoMediaPluginServiceParent> gmp =
       GeckoMediaPluginServiceParent::GetSingleton();
 
-  MutexAutoLock lock(gmp->mMutex);
   if (gmp->mShuttingDown) {
     // Shutdown is initiated. There is no point creating a new actor.
     return false;
   }
 
   nsCOMPtr<nsIThread> gmpThread;
-  nsresult rv = gmp->GetThreadLocked(getter_AddRefs(gmpThread));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  RefPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
+  RefPtr<GMPServiceParent> serviceParent;
+  {
+    MutexAutoLock lock(gmp->mMutex);
+    nsresult rv = gmp->GetThreadLocked(getter_AddRefs(gmpThread));
+    NS_ENSURE_SUCCESS(rv, false);
+    serviceParent = new GMPServiceParent(gmp);
+  }
   bool ok;
-  rv = gmpThread->Dispatch(
+  nsresult rv = gmpThread->Dispatch(
       new OpenPGMPServiceParent(std::move(serviceParent),
                                 std::move(aGMPService), &ok),
       NS_DISPATCH_SYNC);
