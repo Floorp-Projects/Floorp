@@ -1467,7 +1467,7 @@ GroupPos LocalAccessible::GroupPosition() {
 
   // Calculate group level if ARIA is missed.
   if (groupPos.level == 0) {
-    int32_t level = GetLevelInternal();
+    int32_t level = GetLevel(false);
     if (level != 0) {
       groupPos.level = level;
     } else {
@@ -3316,83 +3316,6 @@ void LocalAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
     *aPosInSet = groupInfo->PosInSet();
     *aSetSize = groupInfo->SetSize();
   }
-}
-
-int32_t LocalAccessible::GetLevelInternal() {
-  int32_t level = nsAccUtils::GetDefaultLevel(this);
-
-  if (!IsBoundToParent()) return level;
-
-  roles::Role role = Role();
-  if (role == roles::OUTLINEITEM) {
-    // Always expose 'level' attribute for 'outlineitem' accessible. The number
-    // of nested 'grouping' accessibles containing 'outlineitem' accessible is
-    // its level.
-    level = 1;
-
-    LocalAccessible* parent = this;
-    while ((parent = parent->LocalParent())) {
-      roles::Role parentRole = parent->Role();
-
-      if (parentRole == roles::OUTLINE) break;
-      if (parentRole == roles::GROUPING) ++level;
-    }
-
-  } else if (role == roles::LISTITEM) {
-    // Expose 'level' attribute on nested lists. We support two hierarchies:
-    // a) list -> listitem -> list -> listitem (nested list is a last child
-    //   of listitem of the parent list);
-    // b) list -> listitem -> group -> listitem (nested listitems are contained
-    //   by group that is a last child of the parent listitem).
-
-    // Calculate 'level' attribute based on number of parent listitems.
-    level = 0;
-    LocalAccessible* parent = this;
-    while ((parent = parent->LocalParent())) {
-      roles::Role parentRole = parent->Role();
-
-      if (parentRole == roles::LISTITEM) {
-        ++level;
-      } else if (parentRole != roles::LIST && parentRole != roles::GROUPING) {
-        break;
-      }
-    }
-
-    if (level == 0) {
-      // If this listitem is on top of nested lists then expose 'level'
-      // attribute.
-      parent = LocalParent();
-      uint32_t siblingCount = parent->ChildCount();
-      for (uint32_t siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
-        LocalAccessible* sibling = parent->LocalChildAt(siblingIdx);
-
-        LocalAccessible* siblingChild = sibling->LocalLastChild();
-        if (siblingChild) {
-          roles::Role lastChildRole = siblingChild->Role();
-          if (lastChildRole == roles::LIST ||
-              lastChildRole == roles::GROUPING) {
-            return 1;
-          }
-        }
-      }
-    } else {
-      ++level;  // level is 1-index based
-    }
-  } else if (role == roles::COMMENT) {
-    // For comments, count the ancestor elements with the same role to get the
-    // level.
-    level = 1;
-
-    LocalAccessible* parent = this;
-    while ((parent = parent->LocalParent())) {
-      roles::Role parentRole = parent->Role();
-      if (parentRole == roles::COMMENT) {
-        ++level;
-      }
-    }
-  }
-
-  return level;
 }
 
 nsAtom* LocalAccessible::TagName() const {

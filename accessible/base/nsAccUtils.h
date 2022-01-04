@@ -38,17 +38,6 @@ class nsAccUtils {
                                int32_t aSetSize, int32_t aPosInSet);
 
   /**
-   * Get default value of the level for the given accessible.
-   */
-  static int32_t GetDefaultLevel(const LocalAccessible* aAcc);
-
-  /**
-   * Return ARIA level value or the default one if ARIA is missed for the
-   * given accessible.
-   */
-  static int32_t GetARIAOrDefaultLevel(const LocalAccessible* aAccessible);
-
-  /**
    * Compute group level for nsIDOMXULContainerItemElement node.
    */
   static int32_t GetLevelForXULContainerItem(nsIContent* aContent);
