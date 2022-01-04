@@ -771,6 +771,11 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
     CreateChildSHistory();
   }
 
+  // Why the context is being attached. This will always be "attach" in the
+  // content process, but may be "replace" if it's known the context being
+  // replaced in the parent process.
+  const char16_t* why = u"attach";
+
   if (XRE_IsContentProcess() && !aFromIPC) {
     // Send attach to our parent if we need to.
     ContentChild::GetSingleton()->SendCreateBrowsingContext(
@@ -797,6 +802,10 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       }
     });
 
+    if (IsTop() && IsContent() && Canonical()->GetWebProgress()) {
+      why = u"replace";
+    }
+
     // We want to create a BrowsingContextWebProgress for all content
     // BrowsingContexts.
     if (IsContent() && !Canonical()->mWebProgress) {
@@ -806,7 +815,7 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
 
   if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
     obs->NotifyWhenScriptSafe(ToSupports(this), "browsing-context-attached",
-                              nullptr);
+                              why);
   }
 
   if (XRE_IsParentProcess()) {
