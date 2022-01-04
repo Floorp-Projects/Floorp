@@ -216,13 +216,6 @@ class Parameters(ReadOnlyDict):
         except KeyError:
             raise KeyError(f"taskgraph parameter {k!r} not found")
 
-    def is_try(self):
-        """
-        Determine whether this graph is being built on a try project or for
-        `mach try fuzzy`.
-        """
-        return "try" in self["project"] or self["try_mode"] == "try_select"
-
     def file_url(self, path, pretty=False):
         """
         Determine the VCS URL for viewing a file in the tree, suitable for

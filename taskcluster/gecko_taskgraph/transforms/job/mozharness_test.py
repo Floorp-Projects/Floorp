@@ -14,6 +14,7 @@ from gecko_taskgraph.transforms.job import (
     configure_taskdesc_for_run,
     run_job_using,
 )
+from gecko_taskgraph.util.attributes import is_try
 from gecko_taskgraph.util.schema import Schema
 from gecko_taskgraph.util.taskcluster import get_artifact_path
 from gecko_taskgraph.transforms.test import test_description_schema, normpath
@@ -178,7 +179,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     if "actions" in mozharness:
         env["MOZHARNESS_ACTIONS"] = " ".join(mozharness["actions"])
 
-    if config.params.is_try():
+    if is_try(config.params):
         env["TRY_COMMIT_MSG"] = config.params["message"]
 
     # handle some of the mozharness-specific options
@@ -423,7 +424,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         mh_command.append("--total-chunk={}".format(test["chunks"]))
         mh_command.append("--this-chunk={}".format(test["this-chunk"]))
 
-    if config.params.is_try():
+    if is_try(config.params):
         env["TRY_COMMIT_MSG"] = config.params["message"]
 
     worker["mounts"] = [

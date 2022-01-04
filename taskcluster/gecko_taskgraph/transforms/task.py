@@ -18,7 +18,7 @@ from copy import deepcopy
 import attr
 
 from mozbuild.util import memoize
-from gecko_taskgraph.util.attributes import TRUNK_PROJECTS
+from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.treeherder import split_symbol
 from gecko_taskgraph.transforms.base import TransformSequence
@@ -577,7 +577,7 @@ def build_docker_worker_payload(config, task, task_def):
         else:
             suffix = cache_version
 
-        skip_untrusted = config.params.is_try() or level == 1
+        skip_untrusted = is_try(config.params) or level == 1
 
         for cache in worker["caches"]:
             # Some caches aren't enabled in environments where we can't
@@ -1826,12 +1826,12 @@ def build_task(config, tasks):
             )
 
         if "expires-after" in task:
-            if config.params.is_try():
+            if is_try(config.params):
                 delta = value_of(task["expires-after"])
                 if delta.days >= 28:
                     task["expires-after"] = "28 days"
         else:
-            task["expires-after"] = "28 days" if config.params.is_try() else "1 year"
+            task["expires-after"] = "28 days" if is_try(config.params) else "1 year"
 
         if "deadline-after" not in task:
             task["deadline-after"] = "1 day"
