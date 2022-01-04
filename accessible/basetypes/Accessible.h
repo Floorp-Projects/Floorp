@@ -322,12 +322,12 @@ class Accessible {
   /**
    * Return group info if there is an up-to-date version.
    */
-  virtual AccGroupInfo* GetGroupInfo() const { return nullptr; }
+  virtual AccGroupInfo* GetGroupInfo() const = 0;
 
   /**
    * Return group info or create and update.
    */
-  virtual AccGroupInfo* GetOrCreateGroupInfo() { return nullptr; }
+  virtual AccGroupInfo* GetOrCreateGroupInfo() = 0;
 
   /*
    * Return calculated group level based on accessible hierarchy.

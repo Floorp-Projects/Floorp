@@ -267,6 +267,17 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
   if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
     mFocus = aID;
   }
+
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
+        aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
+      for (RemoteAccessible* child = proxy->RemoteFirstChild(); child;
+           child = child->RemoteNextSibling()) {
+        child->InvalidateGroupInfo();
+      }
+    }
+  }
+
   ProxyEvent(proxy, aEventType);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
