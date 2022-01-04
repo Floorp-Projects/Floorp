@@ -10,14 +10,12 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import mozilla.components.concept.menu.MenuController
@@ -26,6 +24,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentSavedLoginsBinding
 import org.mozilla.fenix.ext.components
@@ -43,7 +42,7 @@ import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.view.SavedLoginsListView
 
 @SuppressWarnings("TooManyFunctions")
-class SavedLoginsFragment : Fragment() {
+class SavedLoginsFragment : SecureFragment() {
     private lateinit var savedLoginsStore: LoginsFragmentStore
     private lateinit var savedLoginsListView: SavedLoginsListView
     private lateinit var savedLoginsInteractor: SavedLoginsInteractor
@@ -56,10 +55,6 @@ class SavedLoginsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        activity?.window?.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE
-        )
         initToolbar()
     }
 
