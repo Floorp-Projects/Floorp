@@ -727,13 +727,6 @@ var AboutLogins = {
         continue;
       }
 
-      // Configure the notification bar
-      let doc = browser.ownerDocument;
-      let messageFragment = doc.createDocumentFragment();
-      let message = doc.createElement("span");
-      doc.l10n.setAttributes(message, messageId);
-      messageFragment.appendChild(message);
-
       let buttons = [];
       for (let i = 0; i < buttonIds.length; i++) {
         buttons[i] = {
@@ -748,7 +741,7 @@ var AboutLogins = {
       notification = notificationBox.appendNotification(
         id,
         {
-          label: messageFragment,
+          label: { "l10n-id": messageId },
           image: iconURL,
           priority: notificationBox[priority],
         },
