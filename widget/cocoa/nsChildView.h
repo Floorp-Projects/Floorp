@@ -347,9 +347,6 @@ class nsChildView final : public nsBaseWidget {
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override { return false; }
 
-  static bool ConvertStatus(nsEventStatus aStatus) {
-    return aStatus == nsEventStatus_eConsumeNoDefault;
-  }
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
 
   virtual bool WidgetTypeSupportsAcceleration() override;
@@ -413,9 +410,6 @@ class nsChildView final : public nsBaseWidget {
                                                      uint32_t aModifierFlags) override;
 
   // Mac specific methods
-
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event);
-
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);
   bool PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT, const LayoutDeviceIntRegion& aRegion,

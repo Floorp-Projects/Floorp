@@ -312,6 +312,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       mozilla::WidgetInputEvent* aEvent) override;
   void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) override;
 
+  bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event) override;
+
   void SetConfirmedTargetAPZC(
       uint64_t aInputBlockId,
       const nsTArray<ScrollableLayerGuid>& aTargets) const override;
@@ -636,6 +638,10 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
    */
   void DispatchPanGestureInput(mozilla::PanGestureInput& aInput);
   void DispatchPinchGestureInput(mozilla::PinchGestureInput& aInput);
+
+  static bool ConvertStatus(nsEventStatus aStatus) {
+    return aStatus == nsEventStatus_eConsumeNoDefault;
+  }
 
  protected:
   // Returns whether compositing should use an external surface size.
