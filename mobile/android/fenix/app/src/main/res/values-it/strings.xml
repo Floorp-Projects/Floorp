@@ -59,7 +59,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Visualizza tutti</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Pulsante per visualizzare tutti i segnalibri salvati</string>
+    <string name="recently_saved_show_all_content_description_2">Visualizza tutti i segnalibri salvati</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Pulsante per visualizzare tutti i segnalibri salvati</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s è sviluppato da Mozilla.</string>
@@ -138,7 +140,9 @@
     <string name="recent_tabs_show_all">Visualizza tutte</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Pulsante per mostrare tutte le schede recenti</string>
+    <string name="recent_tabs_show_all_content_description_2">Pulsante per mostrare tutte le schede recenti</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Visualizza tutte le schede recenti</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">La tua ricerca per “%1$s”</string>
@@ -162,7 +166,7 @@
     <string name="recently_visited_menu_item_remove">Rimuovi</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Pulsante per mostrare tutti gli argomenti già esplorati</string>
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Pulsante per mostrare tutti gli argomenti già esplorati</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1043,6 +1047,8 @@
     <string name="preference_phone_feature_notification">Notifica</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Archiviazione permanente</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookie intersito</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Contenuti protetti da DRM</string>
     <!-- Label that indicates that a permission must be asked always -->

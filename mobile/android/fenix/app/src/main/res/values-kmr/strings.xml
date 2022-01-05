@@ -57,7 +57,9 @@
     <string name="recently_saved_show_all">Gişî nîşan bide</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Bişkoka bijareyên tomarbûyî nîşan bide</string>
+    <string name="recently_saved_show_all_content_description_2">Hemû hilpekînên tomarkirî nîşan bide</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Bişkoka bijareyên tomarbûyî nîşan bide</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s berhemeke Mozillayê ye.</string>
@@ -140,7 +142,9 @@
     <string name="recent_tabs_show_all">Gişî nîşan bide</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Bişkoka hemû hilpekînên dawiyê nîşan bide</string>
+    <string name="recent_tabs_show_all_content_description_2">Bişkoka hemû hilpekînên kevn nîşan bide</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Hemû hilpekînên kevn nîşan bide</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Lêgerîna te ya ji bo \&quot;%1$s\&quot;</string>
@@ -163,7 +167,9 @@
     <string name="recently_visited_menu_item_remove">Rake</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Bişkonên hemû hilpekînên keşfê yên berê nîşan bide</string>
+    <string name="past_explorations_show_all_content_description_2">Hemî gerên berê nîşan bide</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Bişkonên hemû hilpekînên keşfê yên berê nîşan bide</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -386,6 +392,8 @@
     <string name="preferences_toolbar">Darikê amûran</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Rûkar</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Serûpel</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Hereketên tiliyan</string>
     <!-- Preference for settings related to visual options -->
@@ -455,9 +463,14 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">vegere</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Bijareyên dawiyê</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Seredanên dawî</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Lêgerînên dawiyê</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -682,6 +695,10 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grîd</string>
 
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Komên lêgerînê</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Malperên têkildar bi hev re kom bikin</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Hilpekînan bigire</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -693,6 +710,18 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Piştî mehekê</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Hilpekînên vekirî bixweber bigire</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ekrana destpêkê</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Serûpel</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Hilpekîna dawiyê</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Serûpelê piştî çar saetan neçalak</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Manûelê bigire</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -701,6 +730,12 @@
     <string name="close_tabs_after_one_week_summary">Piştî hefteyekê bigire</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Piştî mehekê bigire</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Hilpekînên kevn veguheze neçalakê</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Hilpekînên ku te du hefte venekirine dikevin beşa hilpekînên neçalak.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -818,6 +853,9 @@
     <string name="pwa_site_controls_title_private">%1$s (Moda Veşartî)</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Tomar bike</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Hilpekînên din</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -993,6 +1031,8 @@
     <string name="preference_phone_feature_notification">Danezan</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Bîrgeha mayinde</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Çerezên navmalperî</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Naveroka DRM kontrolkirî</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1188,6 +1228,10 @@
     <string name="qr_scanner_dialog_positive">BIHÊLE</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">NEHÊLE</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Navnîşana webê nederbasdar e.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">BAŞ E</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Tu bi rastî jî dixwazî koleksiyana %1$s’ê were jêbirin?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1498,6 +1542,9 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Kûkiyên ji aliyê beralîkirinên malperên tên naskirin ve hatine bicîkirin paqij dike.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Astengiya hin şopgerên li jêrê hatine nîşankirin, ji ber peywendiya te ya bi wan re, qismî hatiye rakirin *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Zêdetir bizane</string>
 
@@ -1560,6 +1607,8 @@
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Di %1$s de bixweber dagire</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Navên bikarhêneriyê û şîfreyên malperan di dema bikaranîna %1$s`ê de tomar bike.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Di sepanên din de bixweber dagire</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
@@ -1800,6 +1849,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Girêdan ewle ye</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Girêdan ne ewle ye</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Çerezan û daneyên malperan paqij bike</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Tu ji dil dixwazî hemû çerez û daneyên malpera <b>%s</b>ê jê bibî?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Tu ji dil dixwazî hemû destûrên li ser hemû malperan jê bibî?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1886,7 +1939,9 @@
     <string name="top_sites_max_limit_content_2">Ji bo malpereke din a sereke lê zêde bikî, yekê jê bibe. Li malperê bitikîne û li ser bihêle, piştre rakirinê hilbijêre.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Baş e</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Malperên herî zêde hatine vekirin</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nav</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Navê malpera favorî</string>
@@ -1898,10 +1953,50 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Hilpekînên neçalak</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Hemû hilpekînên neçalak bigire</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Hilpekîn %s rojan li virê dimînin. Paşê hilpekînên bixweber tên girtin.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 roj</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 hefte</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Bila piştî mehekê bixweber bên girtin?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox dikare hilpekînên ku te mehekê venekirine bigire.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">GIRTINA BIXWEBER VEKE</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Girtina bixweber çalak bû</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Alîkariya pêşxistina Firefoxê bike</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Alîkariya pêşxistina Firefoxê bike</string>
+
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content">Te çima hilpekînên nelaçak neçalak kirin?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">Min jê fêm nekir</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">Ez dixwazim hilpekînên kevn bixwe bigirim</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources"> Maweya duhefteyî gelekî dirêj e</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Maweya duhefteyî gelekî dirêj e</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Maweya duhefteyî gelekî kin e</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Maweya duhefteyî gelekî kin e</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">Bişîne</string>
+
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">Bigire</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Bila lînkên ji malperan, e-posteyan û peyaman xweber di Firefoxê de bên vekirin.</string>
@@ -1918,4 +2013,17 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Bigire</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Gotarên didin fikirandin</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Gotarên li gorî sernavan</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Zêdetir keşf bike</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Bi piştgiriya Pocketê.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Beşeke ji malbata Firefoxê. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Agahiyên zêdetir</string>
+</resources>

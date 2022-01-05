@@ -64,6 +64,8 @@
     <string name="recently_saved_show_all">Εμφάνιση όλων</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Εμφάνιση όλων των αποθηκευμένων σελιδοδεικτών</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Κουμπί εμφάνισης όλων των αποθηκευμένων σελιδοδεικτών</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
@@ -145,6 +147,10 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Εμφάνιση όλων</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Κουμπί «Εμφάνιση όλων των πρόσφατων καρτελών»</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Εμφάνιση όλων των πρόσφατων καρτελών</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Η αναζήτησή σας για «%1$s»</string>
@@ -167,6 +173,8 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Αφαίρεση</string>
 
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Εμφάνιση όλων των προηγούμενων εξερευνήσεων</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Κουμπί «Εμφάνιση όλων των προηγούμενων εξερευνήσεων»</string>
 
