@@ -32,6 +32,7 @@ class PickleIterator {
   friend class Pickle;
 
   mozilla::BufferList<InfallibleAllocPolicy>::IterImpl iter_;
+  mozilla::TimeStamp start_;
 
   template <typename T>
   void CopyInto(T* dest);
