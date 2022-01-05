@@ -334,9 +334,7 @@
   nsLiteralCString(                                                        \
       "CREATE TABLE IF NOT EXISTS moz_places_metadata_snapshots_groups ( " \
       "  id INTEGER PRIMARY KEY, "                                         \
-      "  title TEXT NOT NULL, "                                            \
-      "  builder TEXT NOT NULL, "                                          \
-      "  builder_data TEXT "                                               \
+      "  title TEXT NOT NULL "                                             \
       ")")
 
 #define CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS                        \
