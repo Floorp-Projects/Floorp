@@ -52,8 +52,10 @@ namespace {
 class MainAsCurrent : public TaskQueueWrapper {
  public:
   MainAsCurrent()
-      : TaskQueueWrapper(MakeRefPtr<TaskQueue>(
-            do_AddRef(GetMainThreadEventTarget()), "MainAsCurrentTaskQueue")),
+      : TaskQueueWrapper(
+            MakeRefPtr<TaskQueue>(do_AddRef(GetMainThreadEventTarget()),
+                                  "MainAsCurrentTaskQueue"),
+            "MainAsCurrent"_ns),
         mSetter(this) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
   }
