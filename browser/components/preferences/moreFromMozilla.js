@@ -40,7 +40,6 @@ var gMoreFromMozillaPane = {
       utm_source: "about-prefs",
       utm_campaign: "morefrommozilla",
       utm_medium: "firefox-desktop",
-      entrypoint_experiment: "morefrommozilla-experiment-1846",
     };
     // UTM content param used in analytics to record
     // UI template used to open URL
@@ -61,7 +60,6 @@ var gMoreFromMozillaPane = {
         "utm_content",
         `${utm_content[option]}${hasEmail ? "-email" : ""}`
       );
-      pageUrl.searchParams.set("entrypoint_variation", `treatment-${option}`);
     }
     return pageUrl.toString();
   },
