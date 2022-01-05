@@ -12,6 +12,11 @@ if [[ -z "${MOZ_AUTOMATION}" ]]; then
 	exit 1
 fi
 
+if [ "$#" -ne 1 ]; then
+    echo "Usage: auto-update-angle.sh upstream-tag"
+    exit 1
+fi
+
 export DEPOT_TOOLS_WIN_TOOLCHAIN=0
 export GYP_MSVS_OVERRIDE_PATH="$MOZ_FETCHES_DIR/VS"
 export GYP_MSVS_VERSION=2019
@@ -53,7 +58,7 @@ popd
 cd "$MOZ_FETCHES_DIR"
 git clone https://chromium.googlesource.com/angle/angle
 cd angle
-git checkout origin/chromium/4638
+git checkout "origin/$1"
 
 python3 scripts/bootstrap.py
 
