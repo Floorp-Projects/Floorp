@@ -66,6 +66,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TimeStamp.h"
 
@@ -794,6 +795,17 @@ void nsWindow::SendAnAPZEvent(InputData& aEvent) {
     return;
   }
 
+  if (mSwipeTracker && aEvent.mInputType == PANGESTURE_INPUT) {
+    // Give the swipe tracker a first pass at the event. If a new pan gesture
+    // has been started since the beginning of the swipe, the swipe tracker
+    // will know to ignore the event.
+    nsEventStatus status =
+        mSwipeTracker->ProcessEvent(aEvent.AsPanGestureInput());
+    if (status == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+  }
+
   APZEventResult result;
   if (mAPZC) {
     result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
@@ -808,6 +820,16 @@ void nsWindow::SendAnAPZEvent(InputData& aEvent) {
   if (aEvent.mInputType == PANGESTURE_INPUT) {
     PanGestureInput& panInput = aEvent.AsPanGestureInput();
     WidgetWheelEvent event = panInput.ToWidgetEvent(this);
+    bool canTriggerSwipe = SwipeTracker::CanTriggerSwipe(panInput);
+    if (!mAPZC) {
+      if (MayStartSwipeForNonAPZ(panInput, CanTriggerSwipe{canTriggerSwipe})) {
+        return;
+      }
+    } else {
+      event = MayStartSwipeForAPZ(panInput, result,
+                                  CanTriggerSwipe{canTriggerSwipe});
+    }
+
     ProcessUntransformedAPZEvent(&event, result);
 
     return;

@@ -8,6 +8,7 @@
 #include "WinModifierKeyState.h"
 #include "InputData.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VsyncDispatcher.h"
 
@@ -532,6 +533,12 @@ void DManipEventHandler::SendPanCommon(nsWindow* aWindow, Phase aPhase,
                         aPosition,
                         ScreenPoint(aDeltaX, aDeltaY),
                         aMods};
+
+  // This `SendPanCommon` gets called only if the Windows setting, "Drag two
+  // fingers to scroll" option, is enabled (or it gets called in tests), so we
+  // don't need to explicitly check whether the option is enabled or not here.
+  event.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
+      SwipeTracker::CanTriggerSwipe(event);
 
   aWindow->SendAnAPZEvent(event);
 }

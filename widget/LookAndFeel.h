@@ -214,8 +214,7 @@ class LookAndFeel {
      */
     TooltipDelay,
     /*
-     * A Boolean value to determine whether Mac OS X Lion style swipe animations
-     * should be used.
+     * A Boolean value to determine whether swipe animations should be used.
      */
     SwipeAnimationEnabled,
 
