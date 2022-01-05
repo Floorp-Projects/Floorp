@@ -798,6 +798,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modo solo HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Automaticamente tentativa de connecter se a sitos per HTTPS pro major securitate. Le connexiones HTTPS forni un connexion cryptate secur al sitos web que tu visita.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptiones</string>
     <!-- Description for the exceptions preference screen-->
@@ -885,6 +888,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Sequer le thema del apparato</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Le sito que tu ha requirite non supporta HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">De ordinario, %1$s tentativa de connecter se per HTTPS pro major securitate. Pro cambiar iste parametro o pro saper plus, vade a Parametros &gt; Confidentialitate &amp; Securitate &gt; Securitate.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

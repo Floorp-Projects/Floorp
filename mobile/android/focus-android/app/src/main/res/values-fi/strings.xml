@@ -655,6 +655,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Käynnissä</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Valmistuneet</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Etävianjäljitys USB:n/Wi-Fi:n välityksellä</string>
 

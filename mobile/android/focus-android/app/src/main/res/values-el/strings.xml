@@ -644,6 +644,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Για προχωρημένους</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Άδειες ιστοτόπων</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Αυτόματη αναπαραγωγή</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Αποδοχή ήχου και βίντεο</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Φραγή ήχου μόνο</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Προτείνεται</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Φραγή ήχου και βίντεο</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Μελέτες</string>
 
@@ -792,6 +810,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Λειτουργία «Μόνο HTTPS»</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Αυτόματη προσπάθεια για σύνδεση σε ιστοτόπους μέσω HTTPS για αυξημένη ασφάλεια. Οι συνδέσεις HTTPS παρέχουν μια ασφαλή, κρυπτογραφημένη σύνδεση με τους ιστοτόπους που επισκέπτεστε.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Εξαιρέσεις</string>
     <!-- Description for the exceptions preference screen-->
@@ -857,6 +878,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Μετονομασία</string>
 
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Όνομα συντόμευσης</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">&lt;b&gt;Δεν&lt;/b&gt; διαγράφονται αποθηκευμένες και κοινόχρηστες εικόνες κατά την απαλοιφή ιστορικού του %1$s</string>
@@ -873,6 +897,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Χρήση θέματος συσκευής</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Ο ζητούμενος ιστότοπος δεν υποστηρίζει HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Από προεπιλογή, το %1$s επιχειρεί να συνδεθεί μέσω HTTPS για αυξημένη ασφάλεια. Για να αλλάξετε αυτήν τη ρύθμιση ή για να μάθετε περισσότερα, μεταβείτε στις Ρυθμίσεις &gt; Απόρρητο &amp; ασφάλεια &gt; Ασφάλεια.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

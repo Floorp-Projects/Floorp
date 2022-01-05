@@ -642,6 +642,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avanceret</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Websteds-indstillinger</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatisk afspilning</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Tillad lyd og video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Bloker kun lyd</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Anbefalet</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Bloker lyd og video</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Undersøgelser</string>
 
@@ -780,8 +798,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Tilstanden Kun-HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS sørger for en sikker, krypteret forbindelse mellem %1$s og de websteder, du besøger. De fleste websteder understøtter HTTPS, og hvis kun-HTTPS er slået til, så opgraderer %1$s alle forbindelser til HTTPS.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Forsøger automatisk at oprette forbindelse til websteder ved at bruge HTTPS for at gøre forbindelsen mere sikker. HTTPS sørger for at forbindelsen til besøgte websteder er sikker og krypteret. </string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Undtagelser</string>
@@ -846,8 +865,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fjern</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Omdøb</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Omdøb</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Genvejsnavn</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -865,6 +889,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Samme som enhedens tema</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Det anmodede websted understøtter ikke HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">%1$s forsøger som standard at oprette forbindelse via HTTPS for at øge sikkerhedsniveauet. Hvis du vil ændre denne indstilling eller vide mere om HTTPS, så skal du gå til Indstillinger &gt; Privatliv og sikkerhed &gt; Sikkerhed.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

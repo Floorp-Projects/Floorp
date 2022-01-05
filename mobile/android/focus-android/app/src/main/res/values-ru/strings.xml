@@ -642,6 +642,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Дополнительно</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Разрешения для сайтов</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Автовоспроизведение</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Разрешить аудио и видео</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Блокировать только аудио</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Рекомендуется</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Блокировать аудио и видео</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Исследования</string>
 
@@ -780,8 +798,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Режим «Только HTTPS»</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS обеспечивает безопасное и зашифрованное соединение между %1$s и веб-сайтами, которые вы посещаете. Большинство веб-сайтов поддерживают HTTPS, и если включён режим «Только HTTPS», то %1$s переключит все соединения на HTTPS.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Автоматически пытаться соединяться с сайтами с использованием HTTPS для повышения безопасности. HTTPS-соединения обеспечивают защищённый, зашифрованный обмен данными с посещаемыми вами веб-сайтами.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Исключения</string>
@@ -845,8 +864,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Удалить</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Переименовать</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Переименовать</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Название ярлыка</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -864,6 +888,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Использовать тему устройства</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Запрошенный вами сайт не поддерживает HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">По умолчанию %1$s пытается соединиться по протоколу HTTPS для повышения безопасности. Чтобы изменить этот параметр или узнать больше, перейдите в «Параметры» &gt; «Приватность и защита» &gt; «Защита».</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
