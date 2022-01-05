@@ -28,9 +28,23 @@ struct AutoRegisterProfiler {
 };
 #endif  // __cplusplus
 
-void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
-                                   const char** arg_names,
-                                   const unsigned char* arg_types,
-                                   const unsigned long long* arg_values);
+void uprofiler_simple_event_marker(const char* name, const char* category,
+                                   char phase);
+
+#ifdef __cplusplus
+class AutoTrace {
+ public:
+  AutoTrace(const char* name, const char* category)
+      : name(name), category(category) {
+    uprofiler_simple_event_marker(name, category, 'B');
+  }
+  ~AutoTrace() { uprofiler_simple_event_marker(name, category, 'E'); }
+
+ private:
+  const char* name;
+  const char* category;
+};
+
+#endif
 
 #endif  // MICRO_GECKO_PROFILER

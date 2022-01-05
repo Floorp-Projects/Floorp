@@ -6,8 +6,6 @@
 
 #include "DelayedRunnable.h"
 
-#include "mozilla/ProfilerRunnable.h"
-
 namespace mozilla {
 
 DelayedRunnable::DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
@@ -67,7 +65,6 @@ NS_IMETHODIMP DelayedRunnable::Notify(nsITimer* aTimer) {
 
 nsresult DelayedRunnable::DoRun() {
   nsCOMPtr<nsIRunnable> r = std::move(mWrappedRunnable);
-  AUTO_PROFILE_FOLLOWING_RUNNABLE(r);
   return r->Run();
 }
 
