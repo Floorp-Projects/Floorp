@@ -39,6 +39,6 @@ partial interface IDBDatabase {
     [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
     readonly    attribute StorageType        storage;
 
-    [Exposed=Window, Throws, UseCounter]
+    [Exposed=Window, Throws, Deprecated="IDBDatabaseCreateMutableFile"]
     IDBRequest createMutableFile (DOMString name, optional DOMString type);
 };
