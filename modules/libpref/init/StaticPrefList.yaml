@@ -12449,6 +12449,36 @@
   mirror: once
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#
+# Whether to use gtk portal for the file picker.
+#  - 0: never
+#  - 1: always
+#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)
+- name: widget.use-xdg-desktop-portal.file-picker
+  type: int32_t
+  value: 2
+  mirror: always
+
+# Whether to use gtk portal for the mime handler.
+#  - 0: never
+#  - 1: always
+#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)
+- name: widget.use-xdg-desktop-portal.mime-handler
+  type: int32_t
+  value: 2
+  mirror: always
+
+# Whether to use gtk portal for the print dialog.
+#  - 0: never
+#  - 1: always
+#  - 2: auto (for now only true for flatpak, since it needs work, see bug 1688720).
+- name: widget.use-xdg-desktop-portal.print
+  type: int32_t
+  value: 2
+  mirror: always
+#endif
+
 #ifdef XP_WIN
 # WindowsUIUtils::Share to wait for user action on Windows share dialog
 # `true` means the promise resolves when user completes or cancels the share

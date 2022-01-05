@@ -275,7 +275,9 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
 
 void nsDeviceContextSpecGTK::StartPrintJob() {
   // When using flatpak, we have to call the Print method of the portal
-  if (widget::ShouldUsePortal()) {
+  //
+  // FIXME: This code doesn't seem to be working alright, see bug 1688720.
+  if (widget::ShouldUsePortal(widget::PortalKind::Print)) {
     GError* error = nullptr;
     GDBusProxy* dbusProxy = g_dbus_proxy_new_for_bus_sync(
         G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
@@ -291,6 +293,7 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
     int fd = open(mSpoolName.get(), O_RDONLY | O_CLOEXEC);
     if (fd == -1) {
       NS_WARNING("Failed to open spool file.");
+      g_object_unref(dbusProxy);
       return;
     }
     static auto s_g_unix_fd_list_new = reinterpret_cast<GUnixFDList* (*)(void)>(
@@ -306,10 +309,9 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
     close(fd);
 
     // We'll pass empty options as long as we don't have token from PreparePrint
-    // dbus call (which we don't use). This unfortunatelly lead to showing
-    // gtk print dialog and also the duplex or printer specific settings
-    // is not honored, so this needs to be fixed when the portal provides
-    // more options.
+    // dbus call (which we don't use). This unfortunately leads to showing gtk
+    // print dialog and also the duplex or printer specific settings is not
+    // honored, so this needs to be fixed when the portal provides more options.
     GVariantBuilder opt_builder;
     g_variant_builder_init(&opt_builder, G_VARIANT_TYPE_VARDICT);
 
@@ -411,7 +413,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     destFile->SetPermissions(0666 & ~(mask));
 
     // Notify flatpak printing portal that file is completely written
-    if (widget::ShouldUsePortal()) {
+    if (widget::ShouldUsePortal(widget::PortalKind::Print)) {
       // Use the name of the file for printing to match with
       // nsFlatpakPrintPortal
       nsCOMPtr<nsIObserverService> os =
