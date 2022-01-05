@@ -243,14 +243,11 @@ bool XMLDocument::SuppressParserErrorConsoleMessages() {
   return mSuppressParserErrorConsoleMessages;
 }
 
-nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
-                                        nsIChannel* aChannel,
-                                        nsILoadGroup* aLoadGroup,
-                                        nsISupports* aContainer,
-                                        nsIStreamListener** aDocListener,
-                                        bool aReset, nsIContentSink* aSink) {
-  nsresult rv = Document::StartDocumentLoad(
-      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
+nsresult XMLDocument::StartDocumentLoad(
+    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
+    nsISupports* aContainer, nsIStreamListener** aDocListener, bool aReset) {
+  nsresult rv = Document::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                            aContainer, aDocListener, aReset);
   if (NS_FAILED(rv)) return rv;
 
   int32_t charsetSource = kCharsetFromDocTypeDefault;
@@ -268,18 +265,14 @@ nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIXMLContentSink> sink;
 
-  if (aSink) {
-    sink = do_QueryInterface(aSink);
-  } else {
-    nsCOMPtr<nsIDocShell> docShell;
-    if (aContainer) {
-      docShell = do_QueryInterface(aContainer);
-      NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-    }
-    rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
-                              aChannel);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocShell> docShell;
+  if (aContainer) {
+    docShell = do_QueryInterface(aContainer);
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   }
+  rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
+                            aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the parser as the stream listener for the document loader...
   rv = CallQueryInterface(mParser, aDocListener);

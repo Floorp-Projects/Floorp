@@ -33,8 +33,7 @@ class ImageDocument final : public MediaDocument,
   nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup, nsISupports* aContainer,
                              nsIStreamListener** aDocListener,
-                             bool aReset = true,
-                             nsIContentSink* aSink = nullptr) override;
+                             bool aReset = true) override;
 
   void SetScriptGlobalObject(nsIScriptGlobalObject*) override;
   void Destroy() override;
