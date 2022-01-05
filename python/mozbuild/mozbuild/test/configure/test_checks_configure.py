@@ -707,7 +707,19 @@ class TestChecksConfigure(unittest.TestCase):
                 return 0, "-l%s" % args[1], ""
             if args[0] == "--version":
                 return 0, mock_pkg_config_version, ""
+            if args[0] == "--about":
+                return 1, "Unknown option --about", ""
             self.fail("Unexpected arguments to mock_pkg_config: %s" % (args,))
+
+        seen_flags = set()
+
+        def mock_pkgconf(_, args):
+            if args[0] == "--shared":
+                seen_flags.add(args[0])
+                args = args[1:]
+            if args[0] == "--about":
+                return 0, "pkgconf {}".format(mock_pkg_config_version), ""
+            return mock_pkg_config(_, args)
 
         def get_result(cmd, args=[], extra_paths=None):
             return self.get_result(
@@ -752,31 +764,47 @@ class TestChecksConfigure(unittest.TestCase):
             ),
         )
 
-        config, output, status = get_result(
-            "pkg_check_modules('MOZ_VALID', 'valid')", extra_paths=extra_paths
-        )
-        self.assertEqual(status, 0)
-        self.assertEqual(
-            output,
-            textwrap.dedent(
-                """\
-            checking for pkg_config... %s
-            checking for pkg-config version... %s
-            checking for valid... yes
-            checking MOZ_VALID_CFLAGS... -I/usr/include/valid
-            checking MOZ_VALID_LIBS... -lvalid
-        """
-                % (mock_pkg_config_path, mock_pkg_config_version)
-            ),
-        )
-        self.assertEqual(
-            config,
-            {
-                "PKG_CONFIG": mock_pkg_config_path,
-                "MOZ_VALID_CFLAGS": ("-I/usr/include/valid",),
-                "MOZ_VALID_LIBS": ("-lvalid",),
-            },
-        )
+        for pkg_config, version, is_pkgconf in (
+            (mock_pkg_config, "0.10.0", False),
+            (mock_pkgconf, "1.6.0", True),
+            (mock_pkgconf, "1.8.0", True),
+        ):
+            mock_pkg_config_version = version
+            config, output, status = get_result(
+                "pkg_check_modules('MOZ_VALID', 'valid')",
+                extra_paths={mock_pkg_config_path: pkg_config},
+            )
+            self.assertEqual(status, 0)
+            self.assertEqual(
+                output,
+                textwrap.dedent(
+                    """\
+                checking for pkg_config... %s
+                checking for pkg-config version... %s
+                checking whether pkg-config is pkgconf... %s
+                checking for valid... yes
+                checking MOZ_VALID_CFLAGS... -I/usr/include/valid
+                checking MOZ_VALID_LIBS... -lvalid
+            """
+                    % (
+                        mock_pkg_config_path,
+                        mock_pkg_config_version,
+                        "yes" if is_pkgconf else "no",
+                    )
+                ),
+            )
+            self.assertEqual(
+                config,
+                {
+                    "PKG_CONFIG": mock_pkg_config_path,
+                    "MOZ_VALID_CFLAGS": ("-I/usr/include/valid",),
+                    "MOZ_VALID_LIBS": ("-lvalid",),
+                },
+            )
+            if version == "1.8.0":
+                self.assertEqual(seen_flags, set(["--shared"]))
+            else:
+                self.assertEqual(seen_flags, set())
 
         config, output, status = get_result(
             "pkg_check_modules('MOZ_UKNOWN', 'unknown')", extra_paths=extra_paths
@@ -788,6 +816,7 @@ class TestChecksConfigure(unittest.TestCase):
                 """\
             checking for pkg_config... %s
             checking for pkg-config version... %s
+            checking whether pkg-config is pkgconf... no
             checking for unknown... no
             ERROR: Package unknown was not found in the pkg-config search path.
             ERROR: Perhaps you should add the directory containing `unknown.pc'
@@ -809,6 +838,7 @@ class TestChecksConfigure(unittest.TestCase):
                 """\
             checking for pkg_config... %s
             checking for pkg-config version... %s
+            checking whether pkg-config is pkgconf... no
             checking for new > 1.1... no
             ERROR: Requested 'new > 1.1' but version of new is 1.1
         """
@@ -836,6 +866,7 @@ class TestChecksConfigure(unittest.TestCase):
                 """\
             checking for pkg_config... %s
             checking for pkg-config version... %s
+            checking whether pkg-config is pkgconf... no
             checking for new > 1.1... no
             WARNING: Requested 'new > 1.1' but version of new is 1.1
             Module not found.
@@ -855,6 +886,8 @@ class TestChecksConfigure(unittest.TestCase):
         def mock_old_pkg_config(_, args):
             if args[0] == "--version":
                 return 0, "0.8.10", ""
+            if args[0] == "--about":
+                return 1, "Unknown option --about", ""
             self.fail("Unexpected arguments to mock_old_pkg_config: %s" % args)
 
         extra_paths = {mock_pkg_config_path: mock_old_pkg_config}
@@ -869,6 +902,7 @@ class TestChecksConfigure(unittest.TestCase):
                 """\
             checking for pkg_config... %s
             checking for pkg-config version... 0.8.10
+            checking whether pkg-config is pkgconf... no
             ERROR: *** Your version of pkg-config is too old. You need version 0.9.0 or newer.
         """
                 % mock_pkg_config_path
