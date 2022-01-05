@@ -20,12 +20,20 @@ class AngleHost(BaseHost):
             if row["os"] == "win64":
                 for version in row["versions"]:
                     if version["channel"] == "beta":
+                        branch = "chromium/" + version["true_branch"]
+
+                        if revision != "HEAD" and revision != branch:
+                            raise Exception(
+                                "Passing a --revision for Angle that is not HEAD "
+                                + "or the true branch is not supported."
+                            )
+
                         return (
-                            "chromium/" + version["true_branch"],
+                            branch,
                             version["current_reldate"],
                         )
 
         raise Exception("Could not find win64 beta version in the JSON response")
 
     def upstream_snapshot(self, revision):
-        raise Exception("Should not be called")
+        raise Exception("Not supported for Angle")
