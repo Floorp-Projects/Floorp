@@ -173,8 +173,8 @@ public:
   }
   void arena_free(void* ptr);
 
-  static const int CHUNK_SIZE = 4096;
   std::vector<std::unique_ptr<uint8_t[]>> arena;
+  int current_chunk_size = 0;
   int current_chunk_offset = 0;
   int outstanding_arena_allocations = 0;
 };
