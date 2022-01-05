@@ -2260,7 +2260,7 @@ void TSFTextStore::DispatchEvent(WidgetGUIEvent& aEvent) {
   if (!aEvent.AsQueryContentEvent()) {
     mDeferNotifyingTSF = true;
   }
-  mWidget->DispatchWindowEvent(&aEvent);
+  mWidget->DispatchWindowEvent(aEvent);
 }
 
 void TSFTextStore::FlushPendingActions() {

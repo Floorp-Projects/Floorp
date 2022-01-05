@@ -1141,6 +1141,12 @@ void nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
   }
 }
 
+bool nsBaseWidget::DispatchWindowEvent(WidgetGUIEvent& event) {
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+  return ConvertStatus(status);
+}
+
 Document* nsBaseWidget::GetDocument() const {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
