@@ -1894,8 +1894,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
   MOZ_ASSERT_IF(GetEditAction() == EditAction::eDrop, aDroppedAt.IsSet());
 
   ErrorResult error;
-  RefPtr<DOMStringList> types =
-      aDataTransfer->MozTypesAt(aIndex, CallerType::System, error);
+  RefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, error);
   if (error.Failed()) {
     NS_WARNING("DataTransfer::MozTypesAt() failed");
     return error.StealNSResult();
