@@ -315,13 +315,10 @@ index 7e843c3e76624..5b7e847304f50 100644
  }
 +
 +void* HashMgr::arena_alloc(int num_bytes) {
-+  if (num_bytes > CHUNK_SIZE) {
-+    assert(false);
-+    return nullptr;
-+  }
-+
-+  if (arena.empty() || (CHUNK_SIZE - current_chunk_offset < num_bytes)) {
-+    arena.push_back(std::make_unique<uint8_t[]>(CHUNK_SIZE));
++  static const int MIN_CHUNK_SIZE = 4096;
++  if (arena.empty() || (current_chunk_size - current_chunk_offset < num_bytes)) {
++    current_chunk_size = std::max(MIN_CHUNK_SIZE, num_bytes);
++    arena.push_back(std::make_unique<uint8_t[]>(current_chunk_size));
 +    current_chunk_offset = 0;
 +  }
 +
@@ -379,8 +376,8 @@ index b6eadddecc5b9..9cb447a978cf2 100644
 +  }
 +  void arena_free(void* ptr);
 +
-+  static const int CHUNK_SIZE = 4096;
 +  std::vector<std::unique_ptr<uint8_t[]>> arena;
++  int current_chunk_size = 0;
 +  int current_chunk_offset = 0;
 +  int outstanding_arena_allocations = 0;
  };
