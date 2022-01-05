@@ -7562,16 +7562,6 @@
   mirror: always
   rust: true
 
-# W3C touch-action css property (related to touch and pointer events)
-# Note that we turn this on even on platforms/configurations where touch
-# events are not supported (e.g. OS X, or Windows with e10s disabled). For
-# those platforms we don't handle touch events anyway so it's conceptually
-# a no-op.
-- name: layout.css.touch_action.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
