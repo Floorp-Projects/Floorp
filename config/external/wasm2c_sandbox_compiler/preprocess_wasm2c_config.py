@@ -40,6 +40,9 @@ replaced_variables = """
 // - HAVE_UNISTD_H
 
 #ifdef _WIN32
+  // Ignore whatever is set in mozilla-config.h wrt alloca because it is
+  // wrong when cross-compiling on Windows.
+  #undef HAVE_ALLOCA_H
   /* Whether ssize_t is defined by stddef.h */
   #define HAVE_SSIZE_T 0
   /* Whether strcasecmp is defined by strings.h */
