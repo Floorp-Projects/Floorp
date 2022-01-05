@@ -8,6 +8,7 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/ProfilerRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "VideoUtils.h"
 
@@ -25,8 +26,8 @@ namespace mozilla {
  */
 class TaskQueueWrapper : public webrtc::TaskQueueBase {
  public:
-  explicit TaskQueueWrapper(RefPtr<TaskQueue> aTaskQueue)
-      : mTaskQueue(std::move(aTaskQueue)) {}
+  TaskQueueWrapper(RefPtr<TaskQueue> aTaskQueue, nsCString aName)
+      : mTaskQueue(std::move(aTaskQueue)), mName(std::move(aName)) {}
   ~TaskQueueWrapper() = default;
 
   void Delete() override {
@@ -44,18 +45,22 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
 
   already_AddRefed<Runnable> CreateTaskRunner(
       std::unique_ptr<webrtc::QueuedTask> aTask) {
-    return NS_NewRunnableFunction("TaskQueueWrapper::CreateTaskRunner",
-                                  [this, task = std::move(aTask)]() mutable {
-                                    CurrentTaskQueueSetter current(this);
-                                    auto hasShutdown = mHasShutdown.Lock();
-                                    if (*hasShutdown) {
-                                      return;
-                                    }
-                                    bool toDelete = task->Run();
-                                    if (!toDelete) {
-                                      task.release();
-                                    }
-                                  });
+    return NS_NewRunnableFunction(
+        "TaskQueueWrapper::CreateTaskRunner",
+        [this, task = std::move(aTask),
+         name = nsPrintfCString("TQ %s: webrtc::QueuedTask",
+                                mName.get())]() mutable {
+          CurrentTaskQueueSetter current(this);
+          auto hasShutdown = mHasShutdown.Lock();
+          if (*hasShutdown) {
+            return;
+          }
+          AUTO_PROFILE_FOLLOWING_RUNNABLE(name);
+          bool toDelete = task->Run();
+          if (!toDelete) {
+            task.release();
+          }
+        });
   }
 
   already_AddRefed<Runnable> CreateTaskRunner(nsCOMPtr<nsIRunnable> aRunnable) {
@@ -67,6 +72,7 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
           if (*hasShutdown) {
             return;
           }
+          AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable);
           runnable->Run();
         });
   }
@@ -88,6 +94,7 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
   }
 
   const RefPtr<TaskQueue> mTaskQueue;
+  const nsCString mName;
 
   // This is a recursive mutex because a TaskRunner holding this mutex while
   // running its runnable may end up running other - tail dispatched - runnables
@@ -119,7 +126,7 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
     nsCString name(aName.data(), aName.size());
     auto taskQueue = MakeRefPtr<TaskQueue>(GetMediaThreadPool(aThreadType),
                                            name.get(), aSupportTailDispatch);
-    return MakeUnique<TaskQueueWrapper>(std::move(taskQueue));
+    return MakeUnique<TaskQueueWrapper>(std::move(taskQueue), std::move(name));
   }
 
   std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
