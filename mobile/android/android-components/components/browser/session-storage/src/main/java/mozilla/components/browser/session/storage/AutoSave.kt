@@ -6,9 +6,10 @@ package mozilla.components.browser.session.storage
 
 import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -160,11 +161,10 @@ private class AutoSavePeriodically(
     private val scheduler: ScheduledExecutorService,
     private val interval: Long,
     private val unit: TimeUnit
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
     private var scheduledFuture: ScheduledFuture<*>? = null
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun start() {
+    override fun onStart(owner: LifecycleOwner) {
         scheduledFuture = scheduler.scheduleAtFixedRate(
             {
                 autoSave.logger.info("Save: Periodic")
@@ -176,8 +176,7 @@ private class AutoSavePeriodically(
         )
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun stop() {
+    override fun onStop(owner: LifecycleOwner) {
         scheduledFuture?.cancel(false)
     }
 }
@@ -187,9 +186,8 @@ private class AutoSavePeriodically(
  */
 private class AutoSaveBackground(
     private val autoSave: AutoSave
-) : LifecycleObserver {
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun stop() {
+) : DefaultLifecycleObserver {
+    override fun onStop(owner: LifecycleOwner) {
         autoSave.logger.info("Save: Background")
 
         autoSave.triggerSave(delaySave = false)

@@ -6,9 +6,8 @@ package mozilla.components.feature.pwa.feature
 
 import android.app.Activity
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -26,12 +25,11 @@ class WebAppActivityFeature(
     private val activity: Activity,
     private val icons: BrowserIcons,
     private val manifest: WebAppManifest
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
 
     private val scope = MainScope()
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         if (manifest.display == WebAppManifest.DisplayMode.FULLSCREEN) {
             activity.enterToImmersiveMode()
         }
@@ -43,8 +41,7 @@ class WebAppActivityFeature(
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         scope.cancel()
     }
 

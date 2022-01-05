@@ -49,13 +49,13 @@ class WebAppActivityFeatureTest {
             startUrl = "https://mozilla.com",
             display = WebAppManifest.DisplayMode.STANDALONE
         )
-        WebAppActivityFeature(activity, icons, basicManifest).onResume()
+        WebAppActivityFeature(activity, icons, basicManifest).onResume(mock())
         verify(window, never()).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val fullscreenManifest = basicManifest.copy(
             display = WebAppManifest.DisplayMode.FULLSCREEN
         )
-        WebAppActivityFeature(activity, icons, fullscreenManifest).onResume()
+        WebAppActivityFeature(activity, icons, fullscreenManifest).onResume(mock())
         verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -67,7 +67,7 @@ class WebAppActivityFeatureTest {
             orientation = WebAppManifest.Orientation.LANDSCAPE
         )
 
-        WebAppActivityFeature(activity, icons, manifest).onResume()
+        WebAppActivityFeature(activity, icons, manifest).onResume(mock())
 
         verify(activity).requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
     }
@@ -82,7 +82,7 @@ class WebAppActivityFeatureTest {
         val icon = Icon(mock(), source = Icon.Source.GENERATOR)
         `when`(icons.loadIcon(any())).thenReturn(CompletableDeferred(icon))
 
-        WebAppActivityFeature(activity, icons, manifest).onResume()
+        WebAppActivityFeature(activity, icons, manifest).onResume(mock())
 
         verify(activity).setTaskDescription(any())
     }

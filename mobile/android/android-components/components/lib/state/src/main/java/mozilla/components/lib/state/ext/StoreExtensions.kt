@@ -6,10 +6,9 @@ package mozilla.components.lib.state.ext
 
 import android.view.View
 import androidx.annotation.MainThread
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -156,9 +155,8 @@ fun <S : State, A : Action> Store<S, A>.flow(
 ): Flow<S> {
 
     var destroyed = owner?.lifecycle?.currentState == Lifecycle.State.DESTROYED
-    val ownerDestroyedObserver = object : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun onDestroy() {
+    val ownerDestroyedObserver = object : DefaultLifecycleObserver {
+        override fun onDestroy(owner: LifecycleOwner) {
             destroyed = true
         }
     }
@@ -229,19 +227,16 @@ fun <S : State, A : Action> Store<S, A>.flowScoped(
 private class SubscriptionLifecycleBinding<S : State, A : Action>(
     private val owner: LifecycleOwner,
     private val subscription: Store.Subscription<S, A>
-) : LifecycleObserver, Store.Subscription.Binding {
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart() {
+) : DefaultLifecycleObserver, Store.Subscription.Binding {
+    override fun onStart(owner: LifecycleOwner) {
         subscription.resume()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
+    override fun onStop(owner: LifecycleOwner) {
         subscription.pause()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         subscription.unsubscribe()
     }
 

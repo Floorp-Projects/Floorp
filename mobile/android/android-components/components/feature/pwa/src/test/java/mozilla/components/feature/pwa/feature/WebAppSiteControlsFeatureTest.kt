@@ -45,7 +45,7 @@ class WebAppSiteControlsFeatureTest {
         doNothing().`when`(context).unregisterReceiver(any())
 
         val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
-        feature.onPause()
+        feature.onPause(mock())
 
         verify(context).unregisterReceiver(feature)
     }
@@ -99,7 +99,7 @@ class WebAppSiteControlsFeatureTest {
         )
 
         val feature = WebAppSiteControlsFeature(testContext, store, "session-id", manifest, icons = icons)
-        feature.onCreate()
+        feature.onCreate(mock())
 
         verify(icons).loadIcon(
             IconRequest(

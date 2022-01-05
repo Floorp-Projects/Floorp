@@ -19,10 +19,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.BADGE_ICON_NONE
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.launch
@@ -48,7 +46,7 @@ class WebAppSiteControlsFeature(
     private val manifest: WebAppManifest? = null,
     private val controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.Default(),
     private val icons: BrowserIcons? = null
-) : BroadcastReceiver(), LifecycleObserver {
+) : BroadcastReceiver(), DefaultLifecycleObserver {
 
     constructor(
         applicationContext: Context,
@@ -72,8 +70,7 @@ class WebAppSiteControlsFeature(
     /**
      * Starts loading the [notificationIcon] on create.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
+    override fun onCreate(owner: LifecycleOwner) {
         if (SDK_INT >= Build.VERSION_CODES.M && manifest != null && icons != null) {
             val request = manifest.toMonochromeIconRequest()
             if (request.resources.isNotEmpty()) {
@@ -87,8 +84,7 @@ class WebAppSiteControlsFeature(
      * shown as long as the lifecycle is in the foreground. Registers this class as a broadcast
      * receiver to receive events from the notification and call [SiteControlsBuilder.onReceiveBroadcast].
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume(owner: LifecycleOwner) {
+    override fun onResume(owner: LifecycleOwner) {
         val filter = controlsBuilder.getFilter()
         applicationContext.registerReceiver(this, filter)
 
@@ -107,8 +103,7 @@ class WebAppSiteControlsFeature(
     /**
      * Cancels the site controls notification and unregisters the broadcast receiver.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
         applicationContext.unregisterReceiver(this)
 
         NotificationManagerCompat.from(applicationContext)
@@ -118,8 +113,7 @@ class WebAppSiteControlsFeature(
     /**
      * Cancels the [notificationIcon] loading job on destroy.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         notificationIcon?.cancel()
     }
 
