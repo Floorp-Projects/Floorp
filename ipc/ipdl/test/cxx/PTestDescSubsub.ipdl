@@ -8,7 +8,7 @@ intr protocol PTestDescSubsub {
     manager PTestDescSub;
 
 child:
-    intr __delete__();
+    [LegacyIntr] intr __delete__();
 };
 
 }

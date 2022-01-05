@@ -6,7 +6,7 @@ namespace _ipdltest {
 intr protocol PTestFailedCtor {
     manages PTestFailedCtorSub; 
 child:
-    intr PTestFailedCtorSub();
+    [LegacyIntr] intr PTestFailedCtorSub();
     async __delete__();
 };
 

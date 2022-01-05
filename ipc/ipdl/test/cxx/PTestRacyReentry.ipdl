@@ -6,14 +6,14 @@ namespace _ipdltest {
 intr protocol PTestRacyReentry {
 
 parent:
-    intr E();
+    [LegacyIntr] intr E();
     async __delete__();
 
 child:
     async Start();
 
     async N();
-    intr H();
+    [LegacyIntr] intr H();
 };
 
 

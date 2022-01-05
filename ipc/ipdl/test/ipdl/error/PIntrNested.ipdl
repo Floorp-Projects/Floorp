@@ -2,5 +2,5 @@
 
 intr protocol PIntrNested {
 child:
-  [Nested=inside_sync] intr Msg();
+  [Nested=inside_sync, LegacyIntr] intr Msg();
 };

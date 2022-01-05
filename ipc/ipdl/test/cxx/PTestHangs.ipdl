@@ -4,14 +4,14 @@ namespace _ipdltest {
 
 intr protocol PTestHangs {
 both:
-    intr StackFrame();
+    [LegacyIntr] intr StackFrame();
 
 parent:
     async Nonce();
 
 child:
     async Start();
-    intr Hang();
+    [LegacyIntr] intr Hang();
     async __delete__();
 };
 
