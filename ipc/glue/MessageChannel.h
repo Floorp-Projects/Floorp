@@ -364,8 +364,8 @@ class MessageChannel : HasResultCodes {
  private:
   void PostErrorNotifyTask();
   void OnNotifyMaybeChannelError();
-  void ReportConnectionError(const char* aChannelName,
-                             Message* aMsg = nullptr) const;
+  void ReportConnectionError(const char* aFunctionName,
+                             const uint32_t aMsgTyp) const;
   void ReportMessageRouteError(const char* channelName) const;
   bool MaybeHandleError(Result code, const Message& aMsg,
                         const char* channelName);
