@@ -649,7 +649,7 @@ bool TouchBlockState::HasAllowedTouchBehaviors() const {
 void TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther) {
   TBS_LOG("%p copying properties from %p\n", this, &aOther);
   MOZ_ASSERT(aOther.mAllowedTouchBehaviorSet ||
-              aOther.IsContentResponseTimerExpired());
+             aOther.IsContentResponseTimerExpired());
   SetAllowedTouchBehaviors(aOther.mAllowedTouchBehaviors);
   mTransformToApzc = aOther.mTransformToApzc;
 }
