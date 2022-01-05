@@ -298,6 +298,8 @@ class Accessible {
     return mType == eHTMLTextFieldType || mType == eHTMLTextPasswordFieldType;
   }
 
+  bool IsDateTimeField() const { return mType == eHTMLDateTimeFieldType; }
+
   virtual bool HasNumericValue() const = 0;
 
   // Remote/Local types
