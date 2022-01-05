@@ -49,7 +49,7 @@ TEST(TestAudioInputProcessing, Buffering)
   const TrackRate rate = 8000;  // So packet size is 80
   const uint32_t channels = 1;
   auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
-  auto aip = MakeRefPtr<AudioInputProcessing>(channels, PRINCIPAL_HANDLE_NONE);
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
 
   const size_t frames = 72;
 
@@ -206,7 +206,7 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   const TrackRate rate = 48000;  // so # of output frames from packetizer is 480
   const uint32_t channels = 2;
   auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
-  auto aip = MakeRefPtr<AudioInputProcessing>(channels, PRINCIPAL_HANDLE_NONE);
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
   AudioGenerator<AudioDataValue> generator(channels, rate);
 
   RefPtr<nsIPrincipal> dummy_principal =
