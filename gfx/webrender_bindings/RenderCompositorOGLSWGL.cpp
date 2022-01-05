@@ -103,7 +103,7 @@ RenderCompositorOGLSWGL::RenderCompositorOGLSWGL(
 
 RenderCompositorOGLSWGL::~RenderCompositorOGLSWGL() {
   LOG("RRenderCompositorOGLSWGL::~RenderCompositorOGLSWGL()");
-#ifdef OZ_WIDGET_ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)GetGLContext());
   DestroyEGLSurface();
 #endif
