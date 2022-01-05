@@ -469,6 +469,36 @@ async function synthesizeNativePanGestureEvent(
   return true;
 }
 
+// Sends a native touchpad pan event.
+// NOTE: This works only on Windows.
+// You can specify nsIDOMWindowUtils.PHASE_BEGIN, PHASE_UPDATE and PHASE_END
+// for |aPhase|.
+async function promiseNativeTouchpadPan(
+  aTarget,
+  aX,
+  aY,
+  aDeltaX,
+  aDeltaY,
+  aPhase
+) {
+  if (getPlatform() != "windows") {
+    throw new Error(
+      `promiseNativeTouchpadPan doesn't work on ${getPlatform()}`
+    );
+  }
+
+  let pt = await coordinatesRelativeToScreen({
+    offsetX: aX,
+    offsetY: aY,
+    target: aTarget,
+  });
+
+  const utils = utilsForTarget(aTarget);
+  utils.sendNativeTouchpadPan(aPhase, pt.x, pt.y, aDeltaX, aDeltaY, 0);
+
+  return promiseFrame();
+}
+
 // Synthesizes a native pan gesture event and resolve the returned promise once the
 // request has been successfully made to the OS.
 function promiseNativePanGestureEventAndWaitForObserver(
