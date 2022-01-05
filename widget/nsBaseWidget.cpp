@@ -2114,6 +2114,94 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
   return result;
 }
 
+WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
+    const PanGestureInput& aPanInput, const APZEventResult& aApzResult,
+    CanTriggerSwipe aCanTriggerSwipe) {
+  WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+  if (aCanTriggerSwipe == CanTriggerSwipe::Yes &&
+      aPanInput.mOverscrollBehaviorAllowsSwipe) {
+    SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
+    event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+    if (swipeInfo.wantsSwipe) {
+      if (aApzResult.GetStatus() == nsEventStatus_eIgnore) {
+        // APZ has determined and that scrolling horizontally in the
+        // requested direction is impossible, so it didn't do any
+        // scrolling for the event.
+        // We know now that MayStartSwipe wants a swipe, so we can start
+        // the swipe now.
+        TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+      } else {
+        // We don't know whether this event can start a swipe, so we need
+        // to queue up events and wait for a call to ReportSwipeStarted.
+        // APZ might already have started scrolling in response to the
+        // event if it knew that it's the right thing to do. In that case
+        // we'll still get a call to ReportSwipeStarted, and we will
+        // discard the queued events at that point.
+        mSwipeEventQueue = MakeUnique<SwipeEventQueue>(
+            swipeInfo.allowedDirections, aApzResult.mInputBlockId);
+      }
+    }
+  }
+
+  if (mSwipeEventQueue &&
+      mSwipeEventQueue->inputBlockId == aApzResult.mInputBlockId) {
+    mSwipeEventQueue->queuedEvents.AppendElement(aPanInput);
+  }
+
+  return event;
+}
+
+bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput,
+                                          CanTriggerSwipe aCanTriggerSwipe) {
+  if (aPanInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
+      aPanInput.mType == PanGestureInput::PANGESTURE_START) {
+    mCurrentPanGestureBelongsToSwipe = false;
+  }
+  if (mCurrentPanGestureBelongsToSwipe) {
+    // Ignore this event. It's a momentum event from a scroll gesture
+    // that was processed as a swipe, and the swipe animation has
+    // already finished (so mSwipeTracker is already null).
+    MOZ_ASSERT(aPanInput.IsMomentum(),
+               "If the fingers are still on the touchpad, we should still have "
+               "a SwipeTracker, "
+               "and it should have consumed this event.");
+    return true;
+  }
+
+  if (aCanTriggerSwipe == CanTriggerSwipe::No) {
+    return false;
+  }
+
+  SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
+
+  // We're in the non-APZ case here, but we still want to know whether
+  // the event was routed to a child process, so we use InputAPZContext
+  // to get that piece of information.
+  ScrollableLayerGuid guid;
+  InputAPZContext context(guid, 0, nsEventStatus_eIgnore);
+
+  WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+  event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+  if (swipeInfo.wantsSwipe) {
+    if (context.WasRoutedToChildProcess()) {
+      // We don't know whether this event can start a swipe, so we need
+      // to queue up events and wait for a call to ReportSwipeStarted.
+      mSwipeEventQueue =
+          MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, 0);
+    } else if (event.TriggersSwipe()) {
+      TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+    }
+  }
+
+  if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == 0) {
+    mSwipeEventQueue->queuedEvents.AppendElement(aPanInput);
+  }
+
+  return true;
+}
+
 const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
   TextEventDispatcher* dispatcher = GetTextEventDispatcher();
   return dispatcher->IMENotificationRequestsRef();
