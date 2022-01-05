@@ -10,6 +10,7 @@
 #include "mozilla/DelayedRunnable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"  // We initialize the MozPromise logging in this file.
+#include "mozilla/ProfilerRunnable.h"
 #include "mozilla/StateWatching.h"  // We initialize the StateWatching logging in this file.
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskDispatcher.h"
@@ -208,6 +209,7 @@ class XPCOMThreadWrapper final : public AbstractThread,
       MOZ_ASSERT(mThread == AbstractThread::GetCurrent());
       MOZ_ASSERT(mThread->IsCurrentThreadIn());
       SerialEventTargetGuard guard(mThread);
+      AUTO_PROFILE_FOLLOWING_RUNNABLE(mRunnable);
       return mRunnable->Run();
     }
 
