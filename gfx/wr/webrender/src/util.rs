@@ -1450,11 +1450,14 @@ impl<T: MallocSizeOf> MallocSizeOf for PrimaryArc<T> {
 /// modifications:
 ///
 /// * Removed `xMajor` parameter.
+/// * All arithmetics is done with double precision.
 pub fn scale_factors<Src, Dst>(
     mat: &Transform3D<f32, Src, Dst>
 ) -> (f32, f32) {
+    let m11 = mat.m11 as f64;
+    let m12 = mat.m12 as f64;
     // Determinant is just of the 2D component.
-    let det = mat.m11 * mat.m22 - mat.m12 * mat.m21;
+    let det = m11 * mat.m22 as f64 - m12 * mat.m21 as f64;
     if det == 0.0 {
         return (0.0, 0.0);
     }
@@ -1462,10 +1465,23 @@ pub fn scale_factors<Src, Dst>(
     // ignore mirroring
     let det = det.abs();
 
-    let major = (mat.m11 * mat.m11 + mat.m12 * mat.m12).sqrt();
+    let major = (m11 * m11 + m12 * m12).sqrt();
     let minor = if major != 0.0 { det / major } else { 0.0 };
 
-    (major, minor)
+    (major as f32, minor as f32)
+}
+
+#[test]
+fn scale_factors_large() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1748499
+    let mat = Transform3D::<f32, (), ()>::new(
+        1.6534229920333123e27, 3.673100922561787e27, 0.0, 0.0,
+        -3.673100922561787e27, 1.6534229920333123e27, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        -828140552192.0, -1771307401216.0, 0.0, 1.0,
+    );
+    let (major, minor) = scale_factors(&mat);
+    assert!(major.is_normal() && minor.is_normal());
 }
 
 /// Clamp scaling factor to a power of two.
