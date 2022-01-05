@@ -180,7 +180,14 @@ const presets = {
   media: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["js", "leaf", "stackwalk", "cpu", "audiocallbacktracing"],
+    features: [
+      "js",
+      "leaf",
+      "stackwalk",
+      "cpu",
+      "audiocallbacktracing",
+      "ipcmessages",
+    ],
     threads: [
       "cubeb",
       "audio",
