@@ -261,20 +261,7 @@ EncodedFrame* FrameBuffer::GetNextFrame() {
             }
             return frame.second.frame != nullptr;
           });
-      if (discarded_packets > 0) {
-        const auto& pis = frame_it->second.frame->PacketInfos();
-        TRACE_EVENT2("webrtc",
-                     "FrameBuffer::GetNextFrame Discarding Old Packets",
-                     "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                     frame_it->first.picture_id);
-        stats_callback_->OnDiscardedPackets(discarded_packets);
-      }
       if (dropped_frames > 0) {
-        const auto& pis = frame_it->second.frame->PacketInfos();
-        TRACE_EVENT2("webrtc",
-                     "FrameBuffer::GetNextFrame Dropping Old Frames",
-                     "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                     frame_it->first.picture_id);
         stats_callback_->OnDroppedFrames(dropped_frames);
       }
     }
@@ -451,16 +438,11 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
 
   MutexLock lock(&mutex_);
 
-  const auto& pis = frame->PacketInfos();
   const VideoLayerFrameId& id = frame->id;
   int64_t last_continuous_picture_id =
       !last_continuous_frame_ ? -1 : last_continuous_frame_->picture_id;
 
   if (!ValidReferences(*frame)) {
-    TRACE_EVENT2("webrtc",
-                 "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
-                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                 id.picture_id);
     RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
                         << id.picture_id << ":"
                         << static_cast<int>(id.spatial_layer)
@@ -470,10 +452,6 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
 
   if (frames_.size() >= kMaxFramesBuffered) {
     if (frame->is_keyframe()) {
-      TRACE_EVENT2("webrtc",
-                   "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
-                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                   id.picture_id);
       RTC_LOG(LS_WARNING) << "Inserting keyframe (picture_id:spatial_id) ("
                           << id.picture_id << ":"
                           << static_cast<int>(id.spatial_layer)
@@ -481,10 +459,6 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
                              " buffer and inserting the frame.";
       ClearFramesAndHistory();
     } else {
-      TRACE_EVENT2("webrtc",
-                   "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
-                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                   id.picture_id);
       RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
                           << id.picture_id << ":"
                           << static_cast<int>(id.spatial_layer)
@@ -505,19 +479,11 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
       // reconfiguration or some other reason. Even though this is not according
       // to spec we can still continue to decode from this frame if it is a
       // keyframe.
-      TRACE_EVENT2("webrtc",
-                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
-                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                   id.picture_id);
       RTC_LOG(LS_WARNING)
           << "A jump in picture id was detected, clearing buffer.";
       ClearFramesAndHistory();
       last_continuous_picture_id = -1;
     } else {
-      TRACE_EVENT2("webrtc",
-                   "FrameBuffer::InsertFrame Frame dropped (Out of order)",
-                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                   id.picture_id);
       RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
                           << id.picture_id << ":"
                           << static_cast<int>(id.spatial_layer)
@@ -534,10 +500,6 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
   // when the picture id make large jumps mid stream.
   if (!frames_.empty() && id < frames_.begin()->first &&
       frames_.rbegin()->first < id) {
-    TRACE_EVENT2("webrtc",
-                 "FrameBuffer::InsertFrame Frames dropped (PicId big-jump)",
-                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                 id.picture_id);
     RTC_LOG(LS_WARNING)
         << "A jump in picture id was detected, clearing buffer.";
     ClearFramesAndHistory();
@@ -557,10 +519,6 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
     timing_->IncomingTimestamp(frame->Timestamp(), frame->ReceivedTime());
 
   if (stats_callback_ && IsCompleteSuperFrame(*frame)) {
-    TRACE_EVENT2("webrtc",
-                 "FrameBuffer::InsertFrame Frame Complete",
-                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
-                 id.picture_id);
     stats_callback_->OnCompleteFrame(frame->is_keyframe(), frame->size(),
                                      frame->contentType());
   }
