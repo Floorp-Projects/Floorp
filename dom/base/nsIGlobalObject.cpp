@@ -134,6 +134,9 @@ void nsIGlobalObject::UnlinkObjectsInGlobal() {
 
   mReportRecords.Clear();
   mReportingObservers.Clear();
+#ifdef MOZ_DOM_STREAMS
+  mCountQueuingStrategySizeFunction = nullptr;
+#endif
 }
 
 void nsIGlobalObject::TraverseObjectsInGlobal(
@@ -149,6 +152,9 @@ void nsIGlobalObject::TraverseObjectsInGlobal(
   nsIGlobalObject* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportRecords)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportingObservers)
+#ifdef MOZ_DOM_STREAMS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCountQueuingStrategySizeFunction)
+#endif
 }
 
 void nsIGlobalObject::AddEventTargetObject(DOMEventTargetHelper* aObject) {
@@ -348,6 +354,18 @@ void nsIGlobalObject::RemoveReportRecords() {
     observer->ForgetReports();
   }
 }
+
+#ifdef MOZ_DOM_STREAMS
+already_AddRefed<mozilla::dom::Function>
+nsIGlobalObject::GetCountQueuingStrategySizeFunction() {
+  return do_AddRef(mCountQueuingStrategySizeFunction);
+}
+
+void nsIGlobalObject::SetCountQueuingStrategySizeFunction(
+    mozilla::dom::Function* aFunction) {
+  mCountQueuingStrategySizeFunction = aFunction;
+}
+#endif
 
 bool nsIGlobalObject::ShouldResistFingerprinting() const {
   return nsContentUtils::ShouldResistFingerprinting();

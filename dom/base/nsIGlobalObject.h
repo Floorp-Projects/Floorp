@@ -37,6 +37,7 @@ enum class StorageAccess;
 namespace dom {
 class VoidFunction;
 class DebuggerNotificationManager;
+class Function;
 class Report;
 class ReportBody;
 class ReportingObserver;
@@ -212,6 +213,14 @@ class nsIGlobalObject : public nsISupports,
 
   void RemoveReportRecords();
 
+#ifdef MOZ_DOM_STREAMS
+  // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
+  // This function is set once by CountQueuingStrategy::GetSize.
+  already_AddRefed<mozilla::dom::Function>
+  GetCountQueuingStrategySizeFunction();
+  void SetCountQueuingStrategySizeFunction(mozilla::dom::Function* aFunction);
+#endif
+
   /**
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
    * https://w3c.github.io/fingerprinting-guidance/
@@ -240,6 +249,11 @@ class nsIGlobalObject : public nsISupports,
   // List of Report objects for ReportingObservers.
   nsTArray<RefPtr<mozilla::dom::ReportingObserver>> mReportingObservers;
   nsTArray<RefPtr<mozilla::dom::Report>> mReportRecords;
+
+#ifdef MOZ_DOM_STREAMS
+  // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
+  RefPtr<mozilla::dom::Function> mCountQueuingStrategySizeFunction;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIGlobalObject, NS_IGLOBALOBJECT_IID)
