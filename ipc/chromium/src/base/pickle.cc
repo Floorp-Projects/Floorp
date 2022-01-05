@@ -86,7 +86,7 @@ struct Copier<T, size, true> {
 }  // anonymous namespace
 
 PickleIterator::PickleIterator(const Pickle& pickle)
-    : iter_(pickle.buffers_.Iter()), start_(mozilla::TimeStamp::Now()) {
+    : iter_(pickle.buffers_.Iter()) {
   iter_.Advance(pickle.buffers_, pickle.header_size_);
 }
 
@@ -458,17 +458,6 @@ bool Pickle::WriteSentinel(uint32_t sentinel) { return WriteUInt32(sentinel); }
 void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
   // FIXME: Deal with the footer somehow...
   // DCHECK(iter.iter_.Done());
-
-  if (NS_IsMainThread() && ipcMsgType != 0) {
-    uint32_t latencyMs =
-        round((mozilla::TimeStamp::Now() - iter.start_).ToMilliseconds());
-    if (latencyMs >= kMinTelemetryIPCReadLatencyMs) {
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::IPC_READ_MAIN_THREAD_LATENCY_MS,
-          nsDependentCString(IPC::StringFromIPCMessageType(ipcMsgType)),
-          latencyMs);
-    }
-  }
 }
 
 void Pickle::Truncate(PickleIterator* iter) {
