@@ -115,6 +115,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
                            uint32_t aLength, nsIInputStream** _retval);
 
     NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
     // These are mandatory.
     NS_FORWARD_NSIINPUTSTREAM(mStream->)
@@ -122,27 +123,34 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     NS_FORWARD_NSITELLABLESTREAM(mSeekableStream->)
     NS_FORWARD_NSICLONEABLEINPUTSTREAM(mCloneableInputStream->)
 
-    // This is optional. We use a conditional QI to keep it from being called
-    // if the underlying stream doesn't support it.
-    NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(mSerializableInputStream->)
-
    private:
     ~DataOwnerAdapter() = default;
 
-    DataOwnerAdapter(DataOwner* aDataOwner, nsIInputStream* aStream)
+    DataOwnerAdapter(DataOwner* aDataOwner, nsIInputStream* aStream,
+                     uint32_t aLength)
         : mDataOwner(aDataOwner),
           mStream(aStream),
           mSeekableStream(do_QueryInterface(aStream)),
           mSerializableInputStream(do_QueryInterface(aStream)),
-          mCloneableInputStream(do_QueryInterface(aStream)) {
-      MOZ_ASSERT(mSeekableStream, "Somebody gave us the wrong stream!");
+          mCloneableInputStream(do_QueryInterface(aStream)),
+          mLength(aLength) {
+      MOZ_ASSERT(
+          mSeekableStream && mSerializableInputStream && mCloneableInputStream,
+          "Somebody gave us the wrong stream!");
     }
+
+    template <typename M>
+    void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
+                           FileDescriptorArray& aFileDescriptors,
+                           bool aDelayedStart, uint32_t aMaxSize,
+                           uint32_t* aSizeUsed, M* aManager);
 
     RefPtr<DataOwner> mDataOwner;
     nsCOMPtr<nsIInputStream> mStream;
     nsCOMPtr<nsISeekableStream> mSeekableStream;
     nsCOMPtr<nsIIPCSerializableInputStream> mSerializableInputStream;
     nsCOMPtr<nsICloneableInputStream> mCloneableInputStream;
+    uint32_t mLength;
   };
 
  private:
