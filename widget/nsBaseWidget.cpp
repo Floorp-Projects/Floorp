@@ -162,7 +162,8 @@ nsBaseWidget::nsBaseWidget()
       mUseAttachedEvents(false),
       mIMEHasFocus(false),
       mIMEHasQuit(false),
-      mIsFullyOccluded(false) {
+      mIsFullyOccluded(false),
+      mCurrentPanGestureBelongsToSwipe(false) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
