@@ -340,7 +340,9 @@ template <a11y::role R>
 class HTMLDateTimeAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLDateTimeAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : HyperTextAccessibleWrap(aContent, aDoc) {}
+      : HyperTextAccessibleWrap(aContent, aDoc) {
+    mType = eHTMLDateTimeFieldType;
+  }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLDateTimeAccessible,
                                        HyperTextAccessibleWrap)
