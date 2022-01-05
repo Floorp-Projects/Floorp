@@ -67,7 +67,7 @@ class FrameHistory {
   };
 
   template <typename T>
-  static T FramesToUs(uint32_t frames, int rate) {
+  static T FramesToUs(uint32_t frames, uint32_t rate) {
     return static_cast<T>(frames) * USECS_PER_S / rate;
   }
 
@@ -107,7 +107,7 @@ class FrameHistory {
     MOZ_ASSERT(frames >= mBaseOffset);
     while (true) {
       if (mChunks.IsEmpty()) {
-        return mBasePosition;
+        return static_cast<int64_t>(mBasePosition);
       }
       const Chunk& c = mChunks[0];
       if (frames <= mBaseOffset + c.totalFrames) {
@@ -238,7 +238,7 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aPreservesPitch == true) {
+  if (aPreservesPitch) {
     mTimeStretcher->setTempo(mAudioClock.GetPlaybackRate());
     mTimeStretcher->setRate(1.0f);
   } else {
@@ -352,8 +352,9 @@ void AudioStream::SetVolume(double aVolume) {
     }
   }
 
-  if (cubeb_stream_set_volume(mCubebStream.get(),
-                              aVolume * CubebUtils::GetVolumeScale()) !=
+  if (cubeb_stream_set_volume(
+          mCubebStream.get(),
+          static_cast<float>(aVolume * CubebUtils::GetVolumeScale())) !=
       CUBEB_OK) {
     LOGE("Could not change volume on cubeb stream.");
   }
@@ -487,7 +488,7 @@ int64_t AudioStream::GetPositionInFramesUnlocked() {
   if (InvokeCubeb(cubeb_stream_get_position, &position) != CUBEB_OK) {
     return -1;
   }
-  return std::min<uint64_t>(position, INT64_MAX);
+  return static_cast<int64_t>(std::min<uint64_t>(position, INT64_MAX));
 }
 
 bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
@@ -497,11 +498,7 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
     return false;
   }
 
-  if (aChunk->Channels() > 8) {
-    return false;
-  }
-
-  return true;
+  return aChunk->Channels() > 8;
 }
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
@@ -511,7 +508,7 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
   // Flush the timestretcher pipeline, if we were playing using a playback rate
   // other than 1.0.
   if (mTimeStretcher && mTimeStretcher->numSamples()) {
-    auto timeStretcher = mTimeStretcher;
+    auto* timeStretcher = mTimeStretcher;
     aWriter.Write(
         [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
           return timeStretcher->receiveSamples(aPtr, aFrames);
@@ -581,7 +578,7 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
     }
   }
 
-  auto timeStretcher = mTimeStretcher;
+  auto* timeStretcher = mTimeStretcher;
   aWriter.Write(
       [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
         return timeStretcher->receiveSamples(aPtr, aFrames);
