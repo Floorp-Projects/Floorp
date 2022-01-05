@@ -14,7 +14,7 @@ include "GMPMessageUtils.h";
 namespace mozilla {
 namespace gmp {
 
-[RefCounted] intr protocol PGMPVideoDecoder
+[RefCounted] sync protocol PGMPVideoDecoder
 {
   manager PGMPContent;
 child:
@@ -41,9 +41,7 @@ parent:
   async Error(GMPErr aErr);
   async Shutdown();
   async ParentShmemForPool(Shmem aEncodedBuffer);
-  // MUST be intr - if sync and we create a new Shmem, when the returned
-  // Shmem is received in the Child it will fail to Deserialize
-  intr NeedShmem(uint32_t aFrameBufferSize) returns (Shmem aMem);
+  sync NeedShmem(uint32_t aFrameBufferSize) returns (Shmem aMem);
 };
 
 } // namespace gmp
