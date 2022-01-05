@@ -2751,20 +2751,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // otherwise a scroll to one side of the page can have a swipe tacked on
   // to it.
   NSEventPhase eventPhase = [anEvent phase];
-  if ([anEvent type] != NSEventTypeScrollWheel || eventPhase != NSEventPhaseBegan ||
-      ![anEvent hasPreciseScrollingDeltas]) {
-    return false;
-  }
-
-  // Only initiate horizontal tracking for events whose horizontal element is
-  // at least eight times larger than its vertical element. This minimizes
-  // performance problems with vertical scrolls (by minimizing the possibility
-  // that they'll be misinterpreted as horizontal swipes), while still
-  // tolerating a small vertical element to a true horizontal swipe.  The number
-  // '8' was arrived at by trial and error.
-  CGFloat deltaX = [anEvent scrollingDeltaX];
-  CGFloat deltaY = [anEvent scrollingDeltaY];
-  return std::abs(deltaX) > std::abs(deltaY) * 8;
+  return [anEvent type] == NSEventTypeScrollWheel && eventPhase == NSEventPhaseBegan &&
+         [anEvent hasPreciseScrollingDeltas];
 }
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC {
@@ -3271,7 +3259,9 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
       }
     }
 
-    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
+    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent] &&
+                           SwipeTracker::CanTriggerSwipe(panEvent);
+    ;
     panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {

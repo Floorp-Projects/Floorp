@@ -214,4 +214,20 @@ bool SwipeTracker::SendSwipeEvent(EventMessage aMsg, uint32_t aDirection,
   return mWidget.DispatchWindowEvent(geckoEvent);
 }
 
+// static
+bool SwipeTracker::CanTriggerSwipe(const PanGestureInput& aPanInput) {
+  if (aPanInput.mType != PanGestureInput::PANGESTURE_START) {
+    return false;
+  }
+
+  // Only initiate horizontal tracking for events whose horizontal element is
+  // at least eight times larger than its vertical element. This minimizes
+  // performance problems with vertical scrolls (by minimizing the possibility
+  // that they'll be misinterpreted as horizontal swipes), while still
+  // tolerating a small vertical element to a true horizontal swipe.  The number
+  // '8' was arrived at by trial and error.
+  return std::abs(aPanInput.mPanDisplacement.x) >
+         std::abs(aPanInput.mPanDisplacement.y) * 8;
+}
+
 }  // namespace mozilla
