@@ -499,6 +499,11 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     if (hierarchical) {
       attributes->SetAttribute(nsGkAtoms::tree, true);
     }
+
+    if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
+            nsGkAtoms::textInputType)) {
+      attributes->SetAttribute(nsGkAtoms::textInputType, *inputType);
+    }
   }
 
   return attributes.forget();

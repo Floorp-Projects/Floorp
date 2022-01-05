@@ -290,15 +290,16 @@ already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
 
   // Expose type for text input elements as it gives some useful context,
   // especially for mobile.
-  nsString type;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                                     type)) {
-    if (!ARIARoleMap() && type.EqualsLiteral("search")) {
-      attributes->SetAttribute(nsGkAtoms::xmlroles, nsGkAtoms::searchbox);
+  if (const nsAttrValue* attr =
+          mContent->AsElement()->GetParsedAttr(nsGkAtoms::type)) {
+    RefPtr<nsAtom> inputType = attr->GetAsAtom();
+    if (inputType) {
+      if (!ARIARoleMap() && inputType == nsGkAtoms::search) {
+        attributes->SetAttribute(nsGkAtoms::xmlroles, nsGkAtoms::searchbox);
+      }
+      attributes->SetAttribute(nsGkAtoms::textInputType, inputType);
     }
-    attributes->SetAttribute(nsGkAtoms::textInputType, std::move(type));
   }
-
   // If this element  has the placeholder attribute set,
   // and if that is not identical to the name, expose it as an object attribute.
   nsString placeholderText;

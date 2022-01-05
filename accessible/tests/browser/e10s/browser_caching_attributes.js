@@ -162,3 +162,44 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of the text-input-type attribute.
+ */
+addAccessibleTask(
+  `
+  <input id="default">
+  <input id="email" type="email">
+  <input id="password" type="password">
+  <input id="text" type="text">
+  <input id="date" type="date">
+  <input id="time" type="time">
+  <input id="checkbox" type="checkbox">
+  <input id="radio" type="radio">
+  `,
+  async function(browser, docAcc) {
+    function testInputType(id, inputType) {
+      if (inputType == undefined) {
+        testAbsentAttrs(findAccessibleChildByID(docAcc, id), {
+          "text-input-type": "",
+        });
+      } else {
+        testAttrs(
+          findAccessibleChildByID(docAcc, id),
+          { "text-input-type": inputType },
+          true
+        );
+      }
+    }
+
+    testInputType("default");
+    testInputType("email", "email");
+    testInputType("password", "password");
+    testInputType("text", "text");
+    testInputType("date", "date");
+    testInputType("time", "time");
+    testInputType("checkbox");
+    testInputType("radio");
+  },
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
+);
