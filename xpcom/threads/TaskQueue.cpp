@@ -7,7 +7,6 @@
 #include "mozilla/TaskQueue.h"
 
 #include "mozilla/DelayedRunnable.h"
-#include "mozilla/ProfilerRunnable.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -202,7 +201,6 @@ nsresult TaskQueue::Runner::Run() {
     {
       LogRunnable::Run log(event.event);
 
-      AUTO_PROFILE_FOLLOWING_RUNNABLE(event.event);
       event.event->Run();
 
       // Drop the reference to event. The event will hold a reference to the
