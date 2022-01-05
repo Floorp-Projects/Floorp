@@ -56,8 +56,7 @@ class nsHTMLDocument : public mozilla::dom::Document {
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener** aDocListener,
-                                     bool aReset = true,
-                                     nsIContentSink* aSink = nullptr) override;
+                                     bool aReset = true) override;
 
  protected:
   virtual bool UseWidthDeviceWidthFallbackViewport() const override;
