@@ -1826,27 +1826,6 @@ nsChildView::SwipeInfo nsChildView::SendMayStartSwipe(
   return result;
 }
 
-void nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
-                                          uint32_t aAllowedDirections) {
-  // If a swipe is currently being tracked kill it -- it's been interrupted
-  // by another gesture event.
-  if (mSwipeTracker) {
-    mSwipeTracker->CancelSwipe(aSwipeStartEvent.mTimeStamp);
-    mSwipeTracker->Destroy();
-    mSwipeTracker = nullptr;
-  }
-
-  uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
-                           ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
-                           : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
-
-  mSwipeTracker = new SwipeTracker(*this, aSwipeStartEvent, aAllowedDirections, direction);
-
-  if (!mAPZC) {
-    mCurrentPanGestureBelongsToSwipe = true;
-  }
-}
-
 void nsChildView::UpdateBoundsFromView() {
   auto oldSize = mBounds.Size();
   mBounds = CocoaPointsToDevPixels([mView frame]);
@@ -1912,19 +1891,6 @@ void nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegio
     // setNeedsDisplay calls above.
     [[mView window] setMovableByWindowBackground:NO];
     [[mView window] setMovableByWindowBackground:YES];
-  }
-}
-
-void nsChildView::ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {
-  if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == aInputBlockId) {
-    if (aStartSwipe) {
-      PanGestureInput& startEvent = mSwipeEventQueue->queuedEvents[0];
-      TrackScrollEventAsSwipe(startEvent, mSwipeEventQueue->allowedDirections);
-      for (size_t i = 1; i < mSwipeEventQueue->queuedEvents.Length(); i++) {
-        mSwipeTracker->ProcessEvent(mSwipeEventQueue->queuedEvents[i]);
-      }
-    }
-    mSwipeEventQueue = nullptr;
   }
 }
 

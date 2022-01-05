@@ -327,6 +327,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   bool AsyncPanZoomEnabled() const override;
 
   void SwipeFinished() override;
+  void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
+  void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
+                               uint32_t aAllowedDirections);
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
