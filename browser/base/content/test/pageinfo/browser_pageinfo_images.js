@@ -25,6 +25,21 @@ add_task(async function test_all_images_mentioned() {
         "Number of images listed: " + imageRowsNum + ", should be 7"
       );
 
+      // Check that select all works
+      imageTree.focus();
+      ok(
+        !pageInfo.document.getElementById("cmd_copy").hasAttribute("disabled"),
+        "copy is enabled"
+      );
+      ok(
+        !pageInfo.document
+          .getElementById("cmd_selectAll")
+          .hasAttribute("disabled"),
+        "select all is enabled"
+      );
+      pageInfo.goDoCommand("cmd_selectAll");
+      is(imageTree.view.selection.count, 7, "all rows selected");
+
       pageInfo.close();
     }
   );
