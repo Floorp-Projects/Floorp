@@ -39,6 +39,7 @@ class CompositorVsyncDispatcher;
 class LiveResizeListener;
 class FallbackRenderer;
 class SwipeTracker;
+struct SwipeEventQueue;
 
 #ifdef ACCESSIBILITY
 namespace a11y {
@@ -684,6 +685,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   RefPtr<LocalesChangedObserver> mLocalesChangedObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
+  mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
   Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;

@@ -211,19 +211,6 @@ static inline void FlipCocoaScreenCoordinate(NSPoint& inPoint) {
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
 
-namespace mozilla {
-
-struct SwipeEventQueue {
-  SwipeEventQueue(uint32_t aAllowedDirections, uint64_t aInputBlockId)
-      : allowedDirections(aAllowedDirections), inputBlockId(aInputBlockId) {}
-
-  nsTArray<PanGestureInput> queuedEvents;
-  uint32_t allowedDirections;
-  uint64_t inputBlockId;
-};
-
-}  // namespace mozilla
-
 #pragma mark -
 
 nsChildView::nsChildView()
