@@ -356,28 +356,51 @@ impl Connection {
     // Connections are always interested in READABLE.  clear_readable is only
     // called when the connection is in the process of shutting down.
     fn clear_readable(&mut self, registry: &Registry) -> Result<()> {
-        self.interest.and_then(|i| i.remove(Interest::READABLE));
-        self.update_registration(registry)
+        self.update_registration(
+            registry,
+            self.interest.and_then(|i| i.remove(Interest::READABLE)),
+        )
     }
 
     // Connections toggle WRITABLE based on the state of the `outbound` buffer.
     fn set_writable(&mut self, registry: &Registry) -> Result<()> {
-        self.interest
-            .map_or_else(|| Interest::WRITABLE, |i| i.add(Interest::WRITABLE));
-        self.update_registration(registry)
+        self.update_registration(
+            registry,
+            Some(
+                self.interest
+                    .map_or_else(|| Interest::WRITABLE, |i| i.add(Interest::WRITABLE)),
+            ),
+        )
     }
 
     fn clear_writable(&mut self, registry: &Registry) -> Result<()> {
-        self.interest.and_then(|i| i.remove(Interest::WRITABLE));
-        self.update_registration(registry)
+        self.update_registration(
+            registry,
+            self.interest.and_then(|i| i.remove(Interest::WRITABLE)),
+        )
     }
 
     // Update connection registration with the current readiness event interests.
-    fn update_registration(&mut self, registry: &Registry) -> Result<()> {
-        if let Some(interest) = self.interest {
-            registry.reregister(&mut self.io, self.token, interest)?;
-        } else {
-            registry.deregister(&mut self.io)?;
+    fn update_registration(
+        &mut self,
+        registry: &Registry,
+        new_interest: Option<Interest>,
+    ) -> Result<()> {
+        // Note: Updating registration always triggers a writable event with NamedPipes, so
+        // it's important to skip updating registration when the set of interests hasn't changed.
+        if new_interest != self.interest {
+            trace!(
+                "{:?}: updating readiness registration old={:?} new={:?}",
+                self.token,
+                self.interest,
+                new_interest
+            );
+            self.interest = new_interest;
+            if let Some(interest) = self.interest {
+                registry.reregister(&mut self.io, self.token, interest)?;
+            } else {
+                registry.deregister(&mut self.io)?;
+            }
         }
         Ok(())
     }
@@ -405,8 +428,7 @@ impl Connection {
             self.outbound.is_empty()
         );
         let done = done && self.outbound.is_empty();
-        // If driver is done, stop reading.  We may have more outbound to flush.
-        // XXX: This used to happen for recv done, now checks outbound too.
+        // If driver is done and outbound is clear, unregister connection.
         if done {
             trace!("{:?}: driver done, clearing read interest", self.token);
             self.clear_readable(registry)?;
@@ -500,7 +522,11 @@ impl Connection {
                     trace!("{:?}: send bytes: {}", self.token, n);
                 }
                 Err(ref e) if would_block(e) => {
-                    trace!("{:?}: send would_block: {:?}", self.token, e);
+                    trace!(
+                        "{:?}: send would_block: {:?}, setting write interest",
+                        self.token,
+                        e
+                    );
                     // Register for write events.
                     self.set_writable(registry)?;
                     break;
@@ -517,9 +543,6 @@ impl Connection {
             trace!("{:?}: post-send: outbound {:?}", self.token, self.outbound);
         }
         // Outbound buffer flushed, clear registration for WRITABLE.
-        // Note that Windows NamedPipes will cause an additional WRITABLE notification after a write, even if
-        // we're no longer registered for WRITABLE.  Any user of Poll is expected to handle spurious events,
-        // so this is fine.
         if self.outbound.is_empty() {
             trace!("{:?}: outbound empty, clearing write interest", self.token);
             self.clear_writable(registry)?;
