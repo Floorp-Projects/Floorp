@@ -1399,13 +1399,10 @@ const std::vector<replentry>& HashMgr::get_reptable() const {
 }
 
 void* HashMgr::arena_alloc(int num_bytes) {
-  if (num_bytes > CHUNK_SIZE) {
-    assert(false);
-    return nullptr;
-  }
-
-  if (arena.empty() || (CHUNK_SIZE - current_chunk_offset < num_bytes)) {
-    arena.push_back(std::make_unique<uint8_t[]>(CHUNK_SIZE));
+  static const int MIN_CHUNK_SIZE = 4096;
+  if (arena.empty() || (current_chunk_size - current_chunk_offset < num_bytes)) {
+    current_chunk_size = std::max(MIN_CHUNK_SIZE, num_bytes);
+    arena.push_back(std::make_unique<uint8_t[]>(current_chunk_size));
     current_chunk_offset = 0;
   }
 
