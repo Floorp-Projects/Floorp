@@ -38,6 +38,7 @@ namespace mozilla {
 class CompositorVsyncDispatcher;
 class LiveResizeListener;
 class FallbackRenderer;
+class SwipeTracker;
 
 #ifdef ACCESSIBILITY
 namespace a11y {
@@ -323,6 +324,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
 
   bool AsyncPanZoomEnabled() const override;
+
+  void SwipeFinished() override;
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
@@ -680,6 +683,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   RefPtr<WidgetShutdownObserver> mShutdownObserver;
   RefPtr<LocalesChangedObserver> mLocalesChangedObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;
+  RefPtr<mozilla::SwipeTracker> mSwipeTracker;
   Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
