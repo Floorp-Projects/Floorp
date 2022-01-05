@@ -545,6 +545,16 @@ class nsWindow final : public nsBaseWidget {
   // The cursor cache
   static GdkCursor* gsGtkCursorCache[eCursorCount];
 
+  // If true, draw our own window titlebar.
+  //
+  // Needs to be atomic because GetTitlebarRect() gets called from non-main
+  // threads.
+  //
+  // FIXME(emilio): GetTitlebarRect() reads other things that TSAN doesn't
+  // catch because mDrawInTitlebar is false on automation ~always. We should
+  // probably make GetTitlebarRect() simpler / properly thread-safe.
+  mozilla::Atomic<bool, mozilla::Relaxed> mDrawInTitlebar{false};
+
   // Has this widget been destroyed yet?
   bool mIsDestroyed : 1;
   // Does WindowResized need to be called on listeners?
@@ -578,8 +588,6 @@ class nsWindow final : public nsBaseWidget {
   bool mPanInProgress : 1;
   // Use dedicated GdkWindow for mContainer
   bool mDrawToContainer : 1;
-  // If true, draw our own window titlebar.
-  bool mDrawInTitlebar : 1;
   // Draw titlebar with :backdrop css state (inactive/unfocused).
   bool mTitlebarBackdropState : 1;
   // It's PictureInPicture window.
