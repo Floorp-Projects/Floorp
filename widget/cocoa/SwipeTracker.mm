@@ -100,7 +100,7 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
     return mEventsHaveStartedNewGesture ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
   }
 
-  double delta = -aEvent.mPanDisplacement.x / mWidget.BackingScaleFactor() / kWholePagePixelSize;
+  double delta = -aEvent.mPanDisplacement.x / mWidget.GetDefaultScaleInternal() / kWholePagePixelSize;
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, aEvent.mTimeStamp);
 
