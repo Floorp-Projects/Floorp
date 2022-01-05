@@ -1225,12 +1225,7 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (currentSchemaVersion < 62) {
-        rv = MigrateV62Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 97 uses schema version 62
+      // Firefox 97 uses schema version 61
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1327,8 +1322,6 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     rv = mMainConn->ExecuteSimpleSQL(
         CREATE_IDX_MOZ_PLACES_METADATA_PLACECREATED);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_METADATA_REFERRER);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_places_metadata_search_queries
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
@@ -1337,16 +1330,10 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     // moz_places_metadata_snapshots
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_PINNNED);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_places_metadata_snapshots_extra
     rv =
         mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(
-        CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA_TYPE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_places_metadata_snapshots_groups
@@ -2376,32 +2363,6 @@ nsresult Database::MigrateV61Up() {
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PREVIEWS_TOMBSTONES);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  return NS_OK;
-}
-
-nsresult Database::MigrateV62Up() {
-  // Add previews tombstones table if necessary.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mMainConn->CreateStatement(
-      "SELECT builder FROM moz_places_metadata_snapshots_groups"_ns,
-      getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(
-        "ALTER TABLE moz_places "
-        "ADD COLUMN builder TEXT NOT NULL "
-        "ADD COLUMN builder_data TEXT "_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_METADATA_REFERRER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_PINNNED);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA_TYPE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
