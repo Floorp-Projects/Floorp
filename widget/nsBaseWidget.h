@@ -330,6 +330,11 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
   void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
                                uint32_t aAllowedDirections);
+  struct SwipeInfo {
+    bool wantsSwipe;
+    uint32_t allowedDirections;
+  };
+  SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();

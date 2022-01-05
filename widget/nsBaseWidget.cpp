@@ -2088,6 +2088,32 @@ void nsBaseWidget::TrackScrollEventAsSwipe(
   }
 }
 
+nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
+    const mozilla::PanGestureInput& aSwipeStartEvent) {
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  uint32_t direction =
+      (aSwipeStartEvent.mPanDisplacement.x > 0.0)
+          ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
+          : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
+
+  // We're ready to start the animation. Tell Gecko about it, and at the same
+  // time ask it if it really wants to start an animation for this event.
+  // This event also reports back the directions that we can swipe in.
+  LayoutDeviceIntPoint position = RoundedToInt(aSwipeStartEvent.mPanStartPoint *
+                                               ScreenToLayoutDeviceScale(1));
+  WidgetSimpleGestureEvent geckoEvent = SwipeTracker::CreateSwipeGestureEvent(
+      eSwipeGestureMayStart, this, position, aSwipeStartEvent.mTimeStamp);
+  geckoEvent.mDirection = direction;
+  geckoEvent.mDelta = 0.0;
+  geckoEvent.mAllowedDirections = 0;
+  bool shouldStartSwipe =
+      DispatchWindowEvent(geckoEvent);  // event cancelled == swipe should start
+
+  SwipeInfo result = {shouldStartSwipe, geckoEvent.mAllowedDirections};
+  return result;
+}
+
 const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
   TextEventDispatcher* dispatcher = GetTextEventDispatcher();
   return dispatcher->IMENotificationRequestsRef();
