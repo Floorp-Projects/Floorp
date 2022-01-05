@@ -465,8 +465,8 @@ makecab:
     description: makecab source code
     fetch:
         type: git
-        repo: https://github.com/luser/rust-makecab/
-        revision: 7eb27ba11b8909a1e2c01b63510e1f1c989912c8
+        repo: https://github.com/glandium/rust-makecab/
+        revision: 73a4605b97123bf7221533c671f27f234d974b02
 
 nodejs-10-linux64:
     description: nodejs 10 for x64 linux
