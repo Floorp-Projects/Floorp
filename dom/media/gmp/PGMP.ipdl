@@ -13,8 +13,8 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 namespace mozilla {
 namespace gmp {
 
-[NeedsOtherPid]
-intr protocol PGMP
+[NeedsOtherPid, NestedUpTo=inside_sync]
+sync protocol PGMP
 {
   manages PGMPTimer;
   manages PGMPStorage;
@@ -28,7 +28,7 @@ parent:
 
 child:
   async CrashPluginNow();
-  intr StartPlugin(nsString adapter);
+  [Nested=inside_sync] sync StartPlugin(nsString adapter);
   async ProvideStorageId(nsCString storageId);
   async PreloadLibs(nsCString libs);
   async CloseActive();

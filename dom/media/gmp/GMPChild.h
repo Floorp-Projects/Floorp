@@ -47,7 +47,7 @@ class GMPChild : public PGMPChild {
 
   mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId);
 
-  mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter);
+  mozilla::ipc::IPCResult RecvStartPlugin(const nsString& aAdapter);
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs);
 
   PGMPTimerChild* AllocPGMPTimerChild();
