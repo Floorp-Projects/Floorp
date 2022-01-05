@@ -543,7 +543,7 @@
 //                    const unsigned char* arg_types,
 //                    const unsigned long long* arg_values,
 //                    unsigned char flags)
-#define TRACE_EVENT_API_ADD_TRACE_EVENT webrtc::EventTracer::AddTraceEvent
+#define TRACE_EVENT_API_ADD_TRACE_EVENT MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -566,33 +566,64 @@
 // Implementation detail: internal macro to create static category.
 #define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category) \
     INTERNAL_TRACE_EVENT_INFO_TYPE INTERNAL_TRACE_EVENT_UID(catstatic) = \
-        TRACE_EVENT_API_GET_CATEGORY_ENABLED(category);
+        reinterpret_cast<const unsigned char*>(category);
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
 #define INTERNAL_TRACE_EVENT_ADD(phase, category, name, flags, ...) \
-  MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
+    do { \
+      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+      if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+        webrtc::trace_event_internal::AddTraceEvent(          \
+            phase, INTERNAL_TRACE_EVENT_UID(catstatic), name, \
+            webrtc::trace_event_internal::kNoEventId, flags, ##__VA_ARGS__); \
+      } \
+    } while (0)
 
 // Implementation detail: internal macro to create static category and add begin
 // event if the category is enabled. Also adds the end event when the scope
 // ends.
 #define INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, ...) \
-  MOZ_INTERNAL_UPROFILER_AUTO_TRACE(category, name)
+    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+    webrtc::trace_event_internal::TraceEndOnScopeClose  \
+        INTERNAL_TRACE_EVENT_UID(profileScope); \
+    if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+      webrtc::trace_event_internal::AddTraceEvent(      \
+          TRACE_EVENT_PHASE_BEGIN, \
+          INTERNAL_TRACE_EVENT_UID(catstatic), \
+          name, webrtc::trace_event_internal::kNoEventId,       \
+          TRACE_EVENT_FLAG_NONE, ##__VA_ARGS__); \
+      INTERNAL_TRACE_EVENT_UID(profileScope).Initialize( \
+          INTERNAL_TRACE_EVENT_UID(catstatic), name); \
+    }
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
 #define INTERNAL_TRACE_EVENT_ADD_WITH_ID(phase, category, name, id, flags, \
                                          ...)                              \
-  MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
+    do { \
+      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+      if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+        unsigned char trace_event_flags = flags | TRACE_EVENT_FLAG_HAS_ID; \
+        webrtc::trace_event_internal::TraceID trace_event_trace_id( \
+            id, &trace_event_flags); \
+        webrtc::trace_event_internal::AddTraceEvent( \
+            phase, INTERNAL_TRACE_EVENT_UID(catstatic), \
+            name, trace_event_trace_id.data(), trace_event_flags, \
+            ##__VA_ARGS__); \
+      } \
+    } while (0)
 
 #ifdef MOZ_GECKO_PROFILER
-#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase) \
-  uprofiler_simple_event_marker(name, category, phase);
-#define MOZ_INTERNAL_UPROFILER_AUTO_TRACE(category, name) \
-  AutoTrace INTERNAL_TRACE_EVENT_UID(trace)(name, category);
+#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(phase, category_enabled, name, id, \
+                                            num_args, arg_names, arg_types,    \
+                                            arg_values, flags)                 \
+  uprofiler_simple_event_marker(name, phase, num_args, arg_names, arg_types,   \
+                                arg_values);
 #else
-#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
-#define MOZ_INTERNAL_UPROFILER_AUTO_TRACE(name, category)
+#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(phase, category_enabled, name, id, \
+                                            num_args, arg_names, arg_types,    \
+                                            arg_values, flags)
 #endif
 
 // Notes regarding the following definitions:
