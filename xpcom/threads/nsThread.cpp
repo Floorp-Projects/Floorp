@@ -428,19 +428,31 @@ void nsThread::ThreadFunc(void* aArg) {
   MOZ_ASSERT(context->mTerminatingThread == self);
   nsCOMPtr<nsIRunnable> event =
       do_QueryObject(new nsThreadShutdownAckEvent(context));
-  nsresult dispatch_ack_rv;
   if (context->mIsMainThreadJoining) {
-    dispatch_ack_rv =
+    DebugOnly<nsresult> dispatch_ack_rv =
         SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+#ifdef DEBUG
+    // On the main thread, dispatch may fail if this thread is part of a
+    // `nsIThreadPool` which was shut down using `ShutdownWithTimeout`, and
+    // that shutdown attempt timed out. In that case, the main thread may have
+    // already completed thread shutdown before this dispatch attempt,
+    // allowing it to fail. At that point, it is impossible for us to join
+    // this thread anymore, so give up and warn instead.
+    if (NS_FAILED(dispatch_ack_rv)) {
+      NS_WARNING(
+          "Thread shudown ack dispatch failed, the main thread may no longer "
+          "be waiting.");
+    }
+#endif
   } else {
-    dispatch_ack_rv =
+    nsresult dispatch_ack_rv =
         context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    // We do not expect this to ever happen, but If we cannot dispatch
+    // the ack event, someone probably blocks waiting on us and will
+    // crash with a hang later anyways. The best we can do is to tell
+    // the world what happened right here.
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
   }
-  // We do not expect this to ever happen, but If we cannot dispatch
-  // the ack event, someone probably blocks waiting on us and will
-  // crash with a hang later anyways. The best we can do is to tell
-  // the world what happened right here.
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
