@@ -3279,6 +3279,18 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // initial cache push.
     if (mContent->IsElement()) {
       fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
+
+      if (IsTextField() || IsDateTimeField()) {
+        // Cache text input types. Accessible is recreated if this changes,
+        // so it is considered immutable.
+        if (const nsAttrValue* attr =
+                mContent->AsElement()->GetParsedAttr(nsGkAtoms::type)) {
+          RefPtr<nsAtom> inputType = attr->GetAsAtom();
+          if (inputType) {
+            fields->SetAttribute(nsGkAtoms::textInputType, inputType);
+          }
+        }
+      }
     }
   }
 
