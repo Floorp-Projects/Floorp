@@ -388,18 +388,19 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
   return returnResult.unwrap().forget();
 }
 
+// https://streams.spec.whatwg.org/#rs-cancel
 MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
                                                  JS::Handle<JS::Value> aReason,
                                                  ErrorResult& aRv) {
+  // Step 1. If ! IsReadableStreamLocked(this) is true,
+  // return a promise rejected with a TypeError exception.
   if (Locked()) {
-    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Canceled Locked Stream");
-    return promise.forget();
+    aRv.ThrowTypeError("Cannot cancel a stream locked by a reader.");
+    return nullptr;
   }
+
+  // Step 2. Return ! ReadableStreamCancel(this, reason).
   RefPtr<ReadableStream> thisRefPtr = this;
   return ReadableStreamCancel(aCx, thisRefPtr, aReason, aRv);
 }
