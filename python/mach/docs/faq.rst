@@ -33,31 +33,18 @@ when the command is invoked with:
 How do I profile a slow command?
 --------------------------------
 
-To diagnose bottlenecks, you can collect a performance profile:
+You can run a command and capture a profile as the ``mach`` process
+loads and invokes the command with:
 
 .. code-block:: shell
 
-    ./mach --profile-command SLOW-COMMAND ARGS ...
+   ./mach --profile-command SLOW-COMMAND ARGS ...
 
-Then, you can visualize ``mach_profile_SLOW-COMMAND.cProfile`` using
-`snakeviz <https://jiffyclub.github.io/snakeviz/>`__:
-
-.. code-block:: shell
-
-    # If you don't have snakeviz installed yet:
-    python3 -m pip install snakeviz
-    python3 -m snakeviz mach_profile_SLOW-COMMAND.cProfile
-
-How do I profile ``mach`` itself?
----------------------------------
-
-Since ``--profile-command`` only profiles commands, you'll need to invoke ``cProfile``
-directly to profile ``mach`` itself:
-
-.. code-block:: shell
-
-    python3 -m cProfile -o mach.cProfile ./mach ...
-    python3 -m snakeviz mach.cProfile
+Look for a ``mach_profile_SLOW-COMMAND.cProfile`` file.  You can
+visualize using `snakeviz <https://jiffyclub.github.io/snakeviz/>`__.
+Instructions on how to install and use ``snakeviz`` are printed to the
+console, since it can be tricky to target the correct Python virtual
+environment.
 
 Is ``mach`` a build system?
 ---------------------------
