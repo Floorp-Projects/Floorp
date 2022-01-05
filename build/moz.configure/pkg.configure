@@ -26,6 +26,23 @@ def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, "--version").rstrip())
 
 
+@depends_if(pkg_config)
+@checking("whether pkg-config is pkgconf")
+def is_pkgconf(pkg_config):
+    return "pkgconf " in check_cmd_output(pkg_config, "--about", onerror=lambda: "")
+
+
+@depends(is_pkgconf, pkg_config_version, when=pkg_config)
+def pkg_config_base_flags(is_pkgconf, pkg_config_version):
+    # pkgconf 1.7.4 changed the default on Windows to use --static, but
+    # that doesn't work for us.
+    # Note: the --shared flag is not available before pkgconf 1.7
+    flags = []
+    if is_pkgconf and pkg_config_version >= "1.7.4":
+        flags.append("--shared")
+    return tuple(flags)
+
+
 @depends(target, target_sysroot.path, target_multiarch_dir, when=pkg_config)
 @imports(_from="os", _import="environ")
 @imports(_from="os", _import="pathsep")
@@ -139,10 +156,13 @@ def pkg_check_modules(
         if not allow_missing:
             sys.exit(1)
 
-    @depends(pkg_config, pkg_config_env, package_desc, when=package)
+    @depends(
+        pkg_config, pkg_config_env, package_desc, pkg_config_base_flags, when=package
+    )
     @checking("%s_CFLAGS" % var, callback=lambda t: " ".join(t))
-    def pkg_cflags(pkg_config, env, package_desc):
-        flags = check_cmd_output(pkg_config, "--cflags", package_desc, env=env)
+    def pkg_cflags(pkg_config, env, package_desc, base_flags):
+        args = list(base_flags) + ["--cflags", package_desc]
+        flags = check_cmd_output(pkg_config, *args, env=env)
         return tuple(flags.split())
 
     if cflags_only:
@@ -153,10 +173,17 @@ def pkg_check_modules(
 
     else:
 
-        @depends(pkg_config, pkg_config_env, package_desc, when=package)
+        @depends(
+            pkg_config,
+            pkg_config_env,
+            package_desc,
+            pkg_config_base_flags,
+            when=package,
+        )
         @checking("%s_LIBS" % var, callback=lambda t: " ".join(t))
-        def pkg_libs(pkg_config, env, package_desc):
-            libs = check_cmd_output(pkg_config, "--libs", package_desc, env=env)
+        def pkg_libs(pkg_config, env, package_desc, base_flags):
+            args = list(base_flags) + ["--libs", package_desc]
+            libs = check_cmd_output(pkg_config, *args, env=env)
             # Remove evil flags like -Wl,--export-dynamic
             return tuple(libs.replace("-Wl,--export-dynamic", "").split())
 
