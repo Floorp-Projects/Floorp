@@ -9,9 +9,12 @@
 #include "AudioGenerator.h"
 #include "MediaEngineWebRTCAudio.h"
 #include "MediaTrackGraphImpl.h"
+#include "PrincipalHandle.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "nsContentUtils.h"
 #include "nsTArray.h"
 
 using namespace mozilla;
@@ -192,6 +195,105 @@ TEST(TestAudioInputProcessing, Buffering)
     EXPECT_EQ(input.GetDuration(), nextTime - processedTime);
     EXPECT_EQ(output.GetDuration(), processedTime);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
+  }
+
+  aip->Stop(graph);
+  graph->Destroy();
+}
+
+TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
+{
+  const TrackRate rate = 48000;  // so # of output frames from packetizer is 480
+  const uint32_t channels = 2;
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels, PRINCIPAL_HANDLE_NONE);
+  AudioGenerator<AudioDataValue> generator(channels, rate);
+
+  RefPtr<nsIPrincipal> dummy_principal =
+      NullPrincipal::CreateWithoutOriginAttributes();
+  const PrincipalHandle principal1 = MakePrincipalHandle(dummy_principal.get());
+  const PrincipalHandle principal2 =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
+  // Total 3840 frames. It's easier to test with frames of multiples of 480.
+  nsTArray<std::pair<TrackTime, PrincipalHandle>> framesWithPrincipal = {
+      {100, principal1},
+      {200, PRINCIPAL_HANDLE_NONE},
+      {300, principal2},
+      {400, principal1},
+      {200, PRINCIPAL_HANDLE_NONE},
+      {480, principal1},
+      {480, principal2},
+      {480, PRINCIPAL_HANDLE_NONE},
+      {500, principal2},
+      {400, principal1},
+      {300, principal1}};
+
+  // Generate 3840 frames of data with different principals.
+  AudioSegment input;
+  {
+    for (const auto& [duration, principal] : framesWithPrincipal) {
+      AudioSegment data;
+      generator.Generate(data, duration);
+      for (AudioSegment::ChunkIterator it(data); !it.IsEnded(); it.Next()) {
+        it->mPrincipalHandle = principal;
+      }
+
+      input.AppendFrom(&data);
+    }
+  }
+
+  auto verifyPrincipals = [&](const AudioSegment& data) {
+    TrackTime start = 0;
+    for (const auto& [duration, principal] : framesWithPrincipal) {
+      const TrackTime end = start + duration;
+
+      AudioSegment slice;
+      slice.AppendSlice(data, start, end);
+      start = end;
+
+      for (AudioSegment::ChunkIterator it(slice); !it.IsEnded(); it.Next()) {
+        EXPECT_EQ(it->mPrincipalHandle, principal);
+      }
+    }
+  };
+
+  // Check the principals in audio-processing mode.
+  EXPECT_EQ(aip->PassThrough(graph), false);
+  aip->Start(graph);
+  {
+    EXPECT_EQ(aip->NumBufferedFrames(graph), 480);
+    AudioSegment output;
+    {
+      // Trim the prebuffering silence.
+
+      AudioSegment data;
+      aip->Process(graph, 0, 3840, &input, &data);
+      EXPECT_EQ(input.GetDuration(), 3840);
+      EXPECT_EQ(data.GetDuration(), 3840);
+
+      AudioSegment dummy;
+      dummy.AppendNullData(480);
+      aip->Process(graph, 0, 480, &dummy, &data);
+      EXPECT_EQ(dummy.GetDuration(), 480);
+      EXPECT_EQ(data.GetDuration(), 480 + 3840);
+
+      // Ignore the pre-buffering data
+      output.AppendSlice(data, 480, 480 + 3840);
+    }
+
+    verifyPrincipals(output);
+  }
+
+  // Check the principals in pass-through mode.
+  aip->SetPassThrough(graph, true);
+  {
+    AudioSegment output;
+    aip->Process(graph, 0, 3840, &input, &output);
+    EXPECT_EQ(input.GetDuration(), 3840);
+    EXPECT_EQ(output.GetDuration(), 3840);
+
+    verifyPrincipals(output);
   }
 
   aip->Stop(graph);
