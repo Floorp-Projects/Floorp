@@ -140,7 +140,7 @@ with Files("browser-fullZoom.js"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("browser-gestureSupport.js"):
-    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+    BUG_COMPONENT = ("Core", "Widget")
 
 with Files("browser-pageActions.js"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
