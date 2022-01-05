@@ -885,7 +885,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg) {
 
   MonitorAutoLock lock(*mMonitor);
   if (!Connected()) {
-    ReportConnectionError("MessageChannel", aMsg.get());
+    ReportConnectionError("Send", aMsg->type());
     return false;
   }
 
@@ -993,7 +993,7 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
 
   MonitorAutoLock lock(*mMonitor);
   if (!Connected()) {
-    ReportConnectionError("MessageChannel", msg.get());
+    ReportConnectionError("SendBuildIDsMatchMessage", msg->type());
     return false;
   }
 
@@ -1397,7 +1397,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
       "not allowed to send messages while dispatching urgent messages");
 
   if (!Connected()) {
-    ReportConnectionError("MessageChannel::SendAndWait", aMsg.get());
+    ReportConnectionError("SendAndWait", aMsg->type());
     mLastSendError = SyncSendError::NotConnectedBeforeSend;
     return false;
   }
@@ -1424,8 +1424,9 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
 
   IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
 
-  // aMsg will be destroyed soon, but name() is not owned by aMsg.
+  // aMsg will be destroyed soon, let's keep its type.
   const char* msgName = aMsg->name();
+  const msgid_t msgType = aMsg->type();
 
   AddProfilerMarker(*aMsg, MessageDirection::eSending);
   SendMessageToLink(std::move(aMsg));
@@ -1437,7 +1438,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
       break;
     }
     if (!Connected()) {
-      ReportConnectionError("MessageChannel::Send");
+      ReportConnectionError("Send", msgType);
       mLastSendError = SyncSendError::DisconnectedDuringSend;
       return false;
     }
@@ -1454,7 +1455,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
     }
 
     if (!Connected()) {
-      ReportConnectionError("MessageChannel::SendAndWait");
+      ReportConnectionError("SendAndWait", msgType);
       mLastSendError = SyncSendError::DisconnectedDuringSend;
       return false;
     }
@@ -1548,7 +1549,7 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
 
   MonitorAutoLock lock(*mMonitor);
   if (!Connected()) {
-    ReportConnectionError("MessageChannel::Call", aMsg.get());
+    ReportConnectionError("Call", aMsg->type());
     return false;
   }
 
@@ -1566,6 +1567,9 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
 
   AddProfilerMarker(*aMsg, MessageDirection::eSending);
 
+  // keep the error relevant information
+  msgid_t msgType = aMsg->type();
+
   mLink->SendMessage(std::move(aMsg));
 
   while (true) {
@@ -1575,7 +1579,7 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
     // trying another loop iteration will be futile because
     // channel state will have been cleared
     if (!Connected()) {
-      ReportConnectionError("MessageChannel::Call");
+      ReportConnectionError("Call_Loop", msgType);
       return false;
     }
 
@@ -1637,9 +1641,12 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
 
     // If the message is not Interrupt, we can dispatch it as normal.
     if (!recvd.is_interrupt()) {
+      // keep the error relevant information
+      msgid_t msgType = recvd.type();
+
       DispatchMessage(std::move(recvd));
       if (!Connected()) {
-        ReportConnectionError("MessageChannel::DispatchMessage");
+        ReportConnectionError("Call_DispatchMessage", msgType);
         return false;
       }
       continue;
@@ -1691,6 +1698,10 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
     // Dispatch an Interrupt in-call. Snapshot the current stack depth while we
     // own the monitor.
     size_t stackDepth = InterruptStackDepth();
+
+    // keep the error relevant information
+    msgid_t recvdType = recvd.type();
+
     {
       MonitorAutoUnlock unlock(*mMonitor);
 
@@ -1700,7 +1711,7 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
       DispatchInterruptMessage(listenerProxy, std::move(recvd), stackDepth);
     }
     if (!Connected()) {
-      ReportConnectionError("MessageChannel::DispatchInterruptMessage");
+      ReportConnectionError("Call_DispatchInterruptMessage", recvdType);
       return false;
     }
   }
@@ -1730,9 +1741,12 @@ bool MessageChannel::ProcessPendingRequest(Message&& aUrgent) {
   IPC_LOG("Process pending: seqno=%d, xid=%d", aUrgent.seqno(),
           aUrgent.transaction_id());
 
+  // keep the error relevant information
+  msgid_t msgType = aUrgent.type();
+
   DispatchMessage(std::move(aUrgent));
   if (!Connected()) {
-    ReportConnectionError("MessageChannel::ProcessPendingRequest");
+    ReportConnectionError("ProcessPendingRequest", msgType);
     return false;
   }
 
@@ -1776,7 +1790,7 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
   Message& msg = aTask.Msg();
 
   if (!Connected()) {
-    ReportConnectionError("RunMessage");
+    ReportConnectionError("RunMessage", msg.type());
     return;
   }
 
@@ -2282,13 +2296,8 @@ void MessageChannel::SetReplyTimeoutMs(int32_t aTimeoutMs) {
       (aTimeoutMs <= 0) ? kNoTimeout : (int32_t)ceil((double)aTimeoutMs / 2.0);
 }
 
-void MessageChannel::ReportMessageRouteError(const char* channelName) const {
-  PrintErrorMessage(mSide, channelName, "Need a route");
-  mListener->ProcessingError(MsgRouteError, "MsgRouteError");
-}
-
-void MessageChannel::ReportConnectionError(const char* aChannelName,
-                                           Message* aMsg) const {
+void MessageChannel::ReportConnectionError(const char* aFunctionName,
+                                           const uint32_t aMsgType) const {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
@@ -2312,18 +2321,18 @@ void MessageChannel::ReportConnectionError(const char* aChannelName,
       MOZ_CRASH("unreached");
   }
 
-  if (aMsg) {
-    char reason[512];
-    SprintfLiteral(reason, "(msgtype=0x%X,name=%s) %s", aMsg->type(),
-                   aMsg->name(), errorMsg);
-
-    PrintErrorMessage(mSide, aChannelName, reason);
-  } else {
-    PrintErrorMessage(mSide, aChannelName, errorMsg);
-  }
+  char reason[512];
+  SprintfLiteral(reason, "%s(msgname=%s) %s", aFunctionName,
+                 IPC::StringFromIPCMessageType(aMsgType), errorMsg);
+  PrintErrorMessage(mSide, mName, reason);
 
   MonitorAutoUnlock unlock(*mMonitor);
   mListener->ProcessingError(MsgDropped, errorMsg);
+}
+
+void MessageChannel::ReportMessageRouteError(const char* channelName) const {
+  PrintErrorMessage(mSide, channelName, "Need a route");
+  mListener->ProcessingError(MsgRouteError, "MsgRouteError");
 }
 
 bool MessageChannel::MaybeHandleError(Result code, const Message& aMsg,
