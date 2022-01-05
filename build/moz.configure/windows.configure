@@ -31,13 +31,13 @@ def valid_windows_version(value):
 option(env="WINDOWSSDKDIR", nargs=1, help="Directory containing the Windows SDK")
 
 
-@depends("WINDOWSSDKDIR", host, c_compiler)
-def windows_sdk_dir(value, host, compiler):
+@depends("WINDOWSSDKDIR", c_compiler, host_c_compiler)
+def windows_sdk_dir(value, compiler, host_compiler):
     if value:
         return value
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if host.kernel != "WINNT" or compiler.type != "clang-cl":
+    if compiler.type != "clang-cl" and host_compiler.type != "clang-cl":
         return ()
 
     return set(
@@ -108,16 +108,18 @@ def valid_windows_sdk_dir_result(value):
         return "0x%04x in %s" % (value.version, quote(value.path))
 
 
-@depends(c_compiler, windows_sdk_dir, valid_windows_version, "WINDOWSSDKDIR")
+@depends(
+    c_compiler, host_c_compiler, windows_sdk_dir, valid_windows_version, "WINDOWSSDKDIR"
+)
 @checking("for Windows SDK", valid_windows_sdk_dir_result)
 @imports(_from="__builtin__", _import="Exception")
 @imports(_from="textwrap", _import="dedent")
 def valid_windows_sdk_dir(
-    compiler, windows_sdk_dir, target_version, windows_sdk_dir_env
+    compiler, host_compiler, windows_sdk_dir, target_version, windows_sdk_dir_env
 ):
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if compiler.type != "clang-cl":
+    if compiler.type != "clang-cl" and host_compiler.type != "clang-cl":
         return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
@@ -191,14 +193,14 @@ def valid_ucrt_sdk_dir_result(value):
         return "%s in %s" % (value.version, quote(value.path))
 
 
-@depends(windows_sdk_dir, "WINDOWSSDKDIR", c_compiler)
+@depends(windows_sdk_dir, "WINDOWSSDKDIR", c_compiler, host_c_compiler)
 @checking("for Universal CRT SDK", valid_ucrt_sdk_dir_result)
 @imports("os")
 @imports(_import="mozpack.path", _as="mozpath")
-def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
+def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler, host_compiler):
     # Ideally, we'd actually check for host/target ABI being MSVC, but
     # that's waiting for bug 1617793.
-    if compiler.type != "clang-cl":
+    if compiler.type != "clang-cl" and host_compiler.type != "clang-cl":
         return None
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
