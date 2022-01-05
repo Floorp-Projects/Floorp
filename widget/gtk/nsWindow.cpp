@@ -640,7 +640,7 @@ void nsWindow::Destroy() {
   OnDestroy();
 }
 
-nsIWidget* nsWindow::GetParent(void) { return mParent; }
+nsIWidget* nsWindow::GetParent() { return mParent; }
 
 float nsWindow::GetDPI() {
   float dpi = 96.0f;
