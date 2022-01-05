@@ -94,6 +94,15 @@ class SwipeTracker final : public nsARefreshObserver {
   bool mRegisteredWithRefreshDriver;
 };
 
+struct SwipeEventQueue {
+  SwipeEventQueue(uint32_t aAllowedDirections, uint64_t aInputBlockId)
+      : allowedDirections(aAllowedDirections), inputBlockId(aInputBlockId) {}
+
+  nsTArray<PanGestureInput> queuedEvents;
+  uint32_t allowedDirections;
+  uint64_t inputBlockId;
+};
+
 }  // namespace mozilla
 
 #endif  // SwipeTracker_h
