@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
@@ -54,11 +55,13 @@ class Session extends Module {
     // For now just subscribe the events to all available top-level
     // browsing contexts.
     const allEvents = events
-      .map(event => Array.from(obtainEvents(event)))
+      .map(event => Array.from(this.#obtainEvents(event)))
       .flat();
     await Promise.allSettled(
       allEvents.map(event => {
         const [moduleName] = event.split(".");
+        this.#assertModuleSupportsEvent(moduleName, event);
+
         return this.messageHandler.handleCommand({
           moduleName,
           commandName: "_subscribeEvent",
@@ -103,11 +106,13 @@ class Session extends Module {
     // For now just unsubscribe the events from all available top-level
     // browsing contexts.
     const allEvents = events
-      .map(event => Array.from(obtainEvents(event)))
+      .map(event => Array.from(this.#obtainEvents(event)))
       .flat();
     await Promise.allSettled(
       allEvents.map(event => {
         const [moduleName] = event.split(".");
+        this.#assertModuleSupportsEvent(moduleName, event);
+
         return this.messageHandler.handleCommand({
           moduleName,
           commandName: "_unsubscribeEvent",
@@ -121,39 +126,71 @@ class Session extends Module {
       })
     );
   }
-}
 
-/**
- * Obtain a set of events based on the given event name.
- *
- * Could contain a period for a
- *     specific event, or just the module name for all events.
- *
- * @param {String} event
- *     Name of the event to process.
- *
- * @returns {Set<String>}
- *     A Set with the expanded events in the form of `<module>.<event>`.
- *
- * @throws {InvalidArgumentError}
- *     If <var>event</var> does not reference a valid event.
- */
-function obtainEvents(event) {
-  const events = new Set();
-
-  // Check if a period is present that splits the event name into the module,
-  // and the actual event. Hereby only care about the first found instance.
-  const index = event.indexOf(".");
-  if (index >= 0) {
-    // TODO: Throw invalid argument error if event doesn't exist
-    events.add(event);
-  } else {
-    // Interpret the name as module, and register all its available events
-    // TODO: Throw invalid argument error if not a valid module name
-    // TODO: Append all available events from the module
+  #assertModuleSupportsEventSubscription(moduleName) {
+    const rootModuleClass = this.#getRootModuleClass(moduleName);
+    const supportsEvents = rootModuleClass?.supportsCommand("_subscribeEvent");
+    if (!supportsEvents) {
+      throw new error.InvalidArgumentError(
+        `Module ${moduleName} does not support event subscriptions`
+      );
+    }
   }
 
-  return events;
+  #assertModuleSupportsEvent(moduleName, event) {
+    const rootModuleClass = this.#getRootModuleClass(moduleName);
+    const supportsEvent = rootModuleClass?.supportsEvent(event);
+    if (!supportsEvent) {
+      throw new error.InvalidArgumentError(
+        `Module ${moduleName} does not support event ${event}`
+      );
+    }
+  }
+
+  #getRootModuleClass(moduleName) {
+    // Modules which support event subscriptions should have a root module
+    // defining supported events.
+    const rootDestination = { type: RootMessageHandler.type };
+    const moduleClasses = this.messageHandler.getAllModuleClasses(
+      moduleName,
+      rootDestination
+    );
+
+    return moduleClasses[0];
+  }
+
+  /**
+   * Obtain a set of events based on the given event name.
+   *
+   * Could contain a period for a
+   *     specific event, or just the module name for all events.
+   *
+   * @param {String} event
+   *     Name of the event to process.
+   *
+   * @returns {Set<String>}
+   *     A Set with the expanded events in the form of `<module>.<event>`.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>event</var> does not reference a valid event.
+   */
+  #obtainEvents(event) {
+    const events = new Set();
+
+    // Check if a period is present that splits the event name into the module,
+    // and the actual event. Hereby only care about the first found instance.
+    const index = event.indexOf(".");
+    if (index >= 0) {
+      // TODO: Throw invalid argument error if event doesn't exist
+      events.add(event);
+    } else {
+      // Interpret the name as module, and register all its available events
+      this.#assertModuleSupportsEventSubscription(event);
+      // TODO: Append all available events from the module
+    }
+
+    return events;
+  }
 }
 
 // To export the class as lower-case
