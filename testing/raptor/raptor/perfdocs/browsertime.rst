@@ -25,8 +25,9 @@ Setup
 
 Note that if you are running Raptor-Browsertime then it will get installed automatically and also updates itself.
 
-- Run ``./mach browsertime --setup``
-- To check your setup, run ``./mach browsertime --check``, which will output something like:
+- ``./mach browsertime --clobber --setup --install-vismet-reqs``
+
+This will automatically check your setup, which will output something like this:
 
 ::
 
@@ -36,29 +37,55 @@ Note that if you are running Raptor-Browsertime then it will get installed autom
     Pillow:   OK
     SSIM:     OK
 
-- If ``ffmpeg`` is listed as FAIL, you might want to try this:
+- To manually check your setup, run ``./mach browsertime --check``
 
-::
+Known Issues
+^^^^^^^^^^^^
 
-    cd ~/.mozbuild/browsertime/ffmpeg-4.1.1-macos64-static/bin
-    chmod +x ffmpeg ffplay ffprobe
+**If you aren't running visual metrics, then failures in** ``Pillow`` **and** ``SSIM`` **can be ignored.**
 
-Now, try re-running ``./mach browsertime --check``, with ``ffmpeg`` hopefully fixed
+`Bug 1735410: [meta] browsertime visual metrics dependencies not installing correctly <https://bugzilla.mozilla.org/show_bug.cgi?id=1735410>`_
 
-* For other issues, see if ``./mach browsertime --setup --clobber`` fixes it, or deleting the ``~/.mozbuild/browsertime`` folder and running the aforementioned command.
+Currently there are issues on all platforms installing browsertime vismet dependencies. There is a fix for Linux (`Bug 1746208 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746208>`__) but not on Windows (`Bug 1746206 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746206>`__) or OSX (`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__)
 
-* If you aren't running visual metrics, then failures in ``Pillow`` and ``SSIM`` can be ignored.
+Linux
+"""""
+`Bug 1746208 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746208>`__ **(resolved)**
 
-If ``convert`` and ``compare`` are also ``FAIL`` bugs which might further help are `Bug 1559168 <https://bugzilla.mozilla.org/show_bug.cgi?id=1559168>`_, `Bug 1559727 <https://bugzilla.mozilla.org/show_bug.cgi?id=1559168>`_, and `Bug 1574964 <https://bugzilla.mozilla.org/show_bug.cgi?id=1574964>`_, for starters. If none of the bugs are related to the issue, please file a bug ``Testing :: Raptor``.
+If ``ffmpeg`` is listed as FAIL, try `downloading ffmpeg manually <https://ffmpeg.org/>`_ and adding it to your PATH
 
-* If you plan on running Browsertime on Android, your Android device must already be set up (see more below in the Android section)
+OSX
+"""
+
+`Bug 1746207 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746207>`__ **(unresolved)**
+
+**Current Status**: ``convert`` and ``compare`` fail to install. Rebuilding Firefox and running browsertime setup has not shown to resolve this issue.
+
+Windows
+"""""""
+
+`Bug 1746206 <https://bugzilla.mozilla.org/show_bug.cgi?id=1746206>`__ **(unresolved)**
+
+If the ImageMagick URL returns a 404 during setup, please `file a bug like this <https://bugzilla.mozilla.org/show_bug.cgi?id=1735540>_` to have the URL updated.
+
+**Current Status**: ``convert``, ``compare``, and ``ffmpeg`` fail to install. Neither adding ``ffmpeg`` to the PATH, nor rebuilding Firefox have shown to resolve this issue.
+
+
+-  For other issues, try deleting the ``~/.mozbuild/browsertime`` folder and re-running the browsertime setup command.
+
+- If you plan on running Browsertime on Android, your Android device must already be set up (see more below in the :ref: `Running on Android` section)
+
+- **If you encounter any issues not mentioned here, please** `file a bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Raptor>`_ **in the** ``Testing::Raptor`` **component.**
+
 
 Running on Firefox Desktop
 --------------------------
 
 Page-load tests
 ---------------
-There are two ways to run performance tests through browsertime listed below. **Note that ``./mach browsertime`` should not be used when debugging performance issues with profiles as it does not do symbolication.**
+There are two ways to run performance tests through browsertime listed below.
+
+**Note that** ``./mach browsertime`` **should not be used when debugging performance issues with profiles as it does not do symbolication.**
 
 * Raptor-Browsertime (recommended):
 
@@ -83,6 +110,7 @@ Benchmark tests
 Running on Android
 ------------------
 Running on Raptor-Browsertime (recommended):
+
 * Running on Fenix
 
 ::
@@ -96,6 +124,7 @@ Running on Raptor-Browsertime (recommended):
   ./mach raptor --browsertime -t amazon --app geckoview --binary org.mozilla.geckoview_example
 
 Running on vanilla Browsertime:
+
 * Running on Fenix/Firefox Preview
 
 ::
@@ -120,7 +149,8 @@ There are two ways of doing this:
 
   ./mach browsertime https://www.sitespeed.io -b chrome --chrome.chromedriverPath <PATH/TO/VERSIONED/CHROMEDRIVER>
 
-2. Upgrade the ChromeDriver version in ``tools/browsertime/package-lock.json `` (see https://www.npmjs.com/package/@sitespeed.io/chromedriver for versions).
+2. Upgrade the ChromeDriver version in ``tools/browsertime/package-lock.json`` (see https://www.npmjs.com/package/@sitespeed.io/chromedriver for versions).
+
 Run ``npm install``.
 
 Launch vanilla Browsertime as follows:
