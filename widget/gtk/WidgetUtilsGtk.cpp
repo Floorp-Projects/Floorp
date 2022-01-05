@@ -5,6 +5,7 @@
 
 #include "WidgetUtilsGtk.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
@@ -81,6 +82,27 @@ bool GdkIsX11Display() {
                                  ? GdkIsX11Display(gdk_display_get_default())
                                  : false;
   return isX11Display;
+}
+
+bool IsRunningUnderFlatpak() {
+  // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
+  static bool sRunning = [] {
+    return g_file_test("/.flatpak-info", G_FILE_TEST_EXISTS);
+  }();
+  return sRunning;
+}
+
+bool ShouldUsePortal() {
+  static bool sFlatpakPortalEnv = [] {
+    if (IsRunningUnderFlatpak()) {
+      return true;
+    }
+    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
+    return portalEnvString && atoi(portalEnvString) != 0;
+  }();
+  return Preferences::HasUserValue("widget.use-xdg-desktop-portal")
+             ? Preferences::GetBool("widget.use-xdg-desktop-portal", false)
+             : sFlatpakPortalEnv;
 }
 
 nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {

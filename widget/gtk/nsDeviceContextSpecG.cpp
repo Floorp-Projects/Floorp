@@ -8,6 +8,7 @@
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
+#include "mozilla/WidgetUtilsGtk.h"
 
 #include "plstr.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -274,16 +275,13 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
 
 void nsDeviceContextSpecGTK::StartPrintJob() {
   // When using flatpak, we have to call the Print method of the portal
-  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-  bool shouldUsePortal;
-  giovfs->ShouldUseFlatpakPortal(&shouldUsePortal);
-  if (shouldUsePortal) {
+  if (widget::ShouldUsePortal()) {
     GError* error = nullptr;
     GDBusProxy* dbusProxy = g_dbus_proxy_new_for_bus_sync(
         G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
         "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
         "org.freedesktop.portal.Print", nullptr, &error);
-    if (dbusProxy == nullptr) {
+    if (!dbusProxy) {
       NS_WARNING(
           nsPrintfCString("Unable to create dbus proxy: %s", error->message)
               .get());
@@ -413,19 +411,14 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     destFile->SetPermissions(0666 & ~(mask));
 
     // Notify flatpak printing portal that file is completely written
-    nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-    bool shouldUsePortal;
-    if (giovfs) {
-      giovfs->ShouldUseFlatpakPortal(&shouldUsePortal);
-      if (shouldUsePortal) {
-        // Use the name of the file for printing to match with
-        // nsFlatpakPrintPortal
-        nsCOMPtr<nsIObserverService> os =
-            mozilla::services::GetObserverService();
-        // Pass filename to be sure that observer process the right data
-        os->NotifyObservers(nullptr, "print-to-file-finished",
-                            targetPath.get());
-      }
+    if (widget::ShouldUsePortal()) {
+      // Use the name of the file for printing to match with
+      // nsFlatpakPrintPortal
+      nsCOMPtr<nsIObserverService> os =
+          mozilla::services::GetObserverService();
+      // Pass filename to be sure that observer process the right data
+      os->NotifyObservers(nullptr, "print-to-file-finished",
+                          targetPath.get());
     }
   }
   return NS_OK;
