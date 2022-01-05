@@ -7,7 +7,7 @@
     android:id="@+id/selected_mask"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/tab_tray_selected_mask_normal_theme"
+    android:background="@color/fx_mobile_layer_color_accent_nonopaque"
     android:visibility="gone"
     tools:visibility="visible">
 

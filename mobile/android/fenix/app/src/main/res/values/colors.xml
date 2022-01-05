@@ -15,7 +15,7 @@
     <!-- App Bar Top (edit), Header (edit) -->
     <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>
     <!-- Selected tab -->
-    <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet70A12</color>
+    <color name="fx_mobile_layer_color_accent_nonopaque">@color/photonViolet70A12</color>
     <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
     <color name="fx_mobile_layer_color_scrim_start">@color/photonDarkGrey90A96</color>
     <color name="fx_mobile_layer_color_scrim_end">@color/photonDarkGrey30A96</color>
@@ -253,7 +253,6 @@
     <color name="tab_tray_heading_icon_menu_normal_theme">@color/accent_normal_theme</color>
     <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonLightGrey60</color>
-    <color name="tab_tray_selected_mask_normal_theme">@color/photonViolet70A12</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_normal_theme</color>
