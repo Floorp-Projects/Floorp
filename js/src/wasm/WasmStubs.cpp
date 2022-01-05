@@ -2925,6 +2925,42 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   return FinishOffsets(masm, offsets);
 }
 
+static void ClobberWasmRegsForLongJmp(MacroAssembler& masm, Register jumpReg) {
+  // Get the set of all registers that are allocatable in wasm functions
+  AllocatableGeneralRegisterSet gprs(GeneralRegisterSet::All());
+  RegisterAllocator::takeWasmRegisters(gprs);
+  // Remove the TLS register from this set as landing pads require it to be
+  // valid
+  gprs.take(WasmTlsReg);
+  // Remove a specified register that will be used for the longjmp
+  gprs.take(jumpReg);
+  // Set all of these registers to zero
+  for (GeneralRegisterIterator iter(gprs.asLiveSet()); iter.more(); ++iter) {
+    Register reg = *iter;
+    masm.xorPtr(reg, reg);
+  }
+
+  // Get the set of all floating point registers that are allocatable in wasm
+  // functions
+  AllocatableFloatRegisterSet fprs(FloatRegisterSet::All());
+  // Set all of these registers to NaN. We attempt for this to be a signalling
+  // NaN, but the bit format for signalling NaNs are implementation defined
+  // and so this is just best effort.
+  Maybe<FloatRegister> regNaN;
+  for (FloatRegisterIterator iter(fprs.asLiveSet()); iter.more(); ++iter) {
+    FloatRegister reg = *iter;
+    if (!reg.isDouble()) {
+      continue;
+    }
+    if (regNaN) {
+      masm.moveDouble(*regNaN, reg);
+      continue;
+    }
+    masm.loadConstantDouble(std::numeric_limits<double>::signaling_NaN(), reg);
+    regNaN = Some(reg);
+  }
+}
+
 // Generate a stub that restores the stack pointer to what it was on entry to
 // the wasm activation, sets the return register to 'false' and then executes a
 // return which will return from this wasm activation to the caller. This stub
@@ -3006,6 +3042,7 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   masm.loadStackPtr(
       Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
   MoveSPForJitABI(masm);
+  ClobberWasmRegsForLongJmp(masm, scratch1);
   masm.jump(scratch1);
 
   // No catch handler was found, so we will just return out.
