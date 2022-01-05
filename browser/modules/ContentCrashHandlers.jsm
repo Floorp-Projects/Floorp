@@ -401,12 +401,6 @@ var TabCrashHandler = {
       }
     };
 
-    let doc = browser.ownerDocument;
-    let messageFragment = doc.createDocumentFragment();
-    let message = doc.createElement("span");
-    message.setAttribute("data-l10n-id", "crashed-subframe-message");
-    messageFragment.appendChild(message);
-
     let buttons = [
       {
         "l10n-id": "crashed-subframe-learnmore-link",
@@ -428,7 +422,7 @@ var TabCrashHandler = {
     notification = notificationBox.appendNotification(
       value,
       {
-        label: messageFragment,
+        label: { "l10n-id": "crashed-subframe-message" },
         image: TABCRASHED_ICON_URI,
         priority: notificationBox.PRIORITY_INFO_MEDIUM,
         eventCallback: eventName => {
