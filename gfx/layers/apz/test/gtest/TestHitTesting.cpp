@@ -161,8 +161,6 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
 }
 
 TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
-  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
-
   // The main purpose of this test is to verify that touch-start events (or
   // anything that starts a new input block) don't ever get untransformed. This
   // should always hold because the APZ code should flush repaints when we start
@@ -343,9 +341,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
 
   uint64_t blockId =
       TouchDown(manager, ScreenIntPoint(100, 100), mcc->Time()).mInputBlockId;
-  if (StaticPrefs::layout_css_touch_action_enabled()) {
-    SetDefaultAllowedTouchBehavior(manager, blockId);
-  }
+  SetDefaultAllowedTouchBehavior(manager, blockId);
   mcc->AdvanceByMillis(100);
 
   layers[0]->SetVisibleRegion(LayerIntRegion(LayerIntRect(0, 50, 200, 150)));

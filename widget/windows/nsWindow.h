@@ -120,7 +120,6 @@ class nsWindow final : public nsWindowBase {
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
                          LayoutDeviceIntPoint* aPoint = nullptr) override;
   virtual WidgetEventTime CurrentMessageWidgetEventTime() const override;
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) override;
   virtual bool DispatchKeyboardEvent(
       mozilla::WidgetKeyboardEvent* aEvent) override;
   virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) override;
@@ -270,8 +269,6 @@ class nsWindow final : public nsWindowBase {
                                   uint16_t aInputSource,
                                   WinPointerInfo* aPointerInfo = nullptr,
                                   bool aIgnoreAPZ = false);
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
-                                   nsEventStatus& aStatus);
   void DispatchPendingEvents();
   void DispatchCustomEvent(const nsString& eventName);
 
@@ -457,8 +454,6 @@ class nsWindow final : public nsWindowBase {
   static bool EventIsInsideWindow(
       nsWindow* aWindow,
       mozilla::Maybe<POINT> aEventPoint = mozilla::Nothing());
-  // Convert nsEventStatus value to a windows boolean
-  static bool ConvertStatus(nsEventStatus aStatus);
   static void PostSleepWakeNotification(const bool aIsSleepMode);
   int32_t ClientMarginHitTestPoint(int32_t mx, int32_t my);
   void SetWindowButtonRect(WindowButtonType aButtonType,

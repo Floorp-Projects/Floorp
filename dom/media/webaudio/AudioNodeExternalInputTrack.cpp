@@ -30,7 +30,7 @@ AudioNodeExternalInputTrack::Create(MediaTrackGraph* aGraph,
                                     AudioNodeEngine* aEngine) {
   AudioContext* ctx = aEngine->NodeMainThread()->Context();
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
+  MOZ_ASSERT(aGraph == ctx->Graph());
 
   RefPtr<AudioNodeExternalInputTrack> track =
       new AudioNodeExternalInputTrack(aEngine, aGraph->GraphRate());

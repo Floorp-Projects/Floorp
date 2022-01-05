@@ -1579,7 +1579,7 @@ void IMMHandler::DispatchEvent(nsWindow* aWindow, WidgetGUIEvent& aEvent) {
     return;
   }
 
-  aWindow->DispatchWindowEvent(&aEvent);
+  aWindow->DispatchWindowEvent(aEvent);
 }
 
 void IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,

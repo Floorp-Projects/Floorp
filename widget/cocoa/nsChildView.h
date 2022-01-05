@@ -46,8 +46,6 @@ class GLPresenter;
 namespace mozilla {
 class InputData;
 class PanGestureInput;
-class SwipeTracker;
-struct SwipeEventQueue;
 class VibrancyManager;
 namespace layers {
 class GLManager;
@@ -347,9 +345,6 @@ class nsChildView final : public nsBaseWidget {
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override { return false; }
 
-  static bool ConvertStatus(nsEventStatus aStatus) {
-    return aStatus == nsEventStatus_eConsumeNoDefault;
-  }
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
 
   virtual bool WidgetTypeSupportsAcceleration() override;
@@ -413,9 +408,6 @@ class nsChildView final : public nsBaseWidget {
                                                      uint32_t aModifierFlags) override;
 
   // Mac specific methods
-
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event);
-
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);
   bool PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT, const LayoutDeviceIntRegion& aRegion,
@@ -440,8 +432,6 @@ class nsChildView final : public nsBaseWidget {
 
   virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
   LayoutDeviceIntRegion GetNonDraggableRegion() { return mNonDraggableRegion.Region(); }
-
-  virtual void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
 
   virtual void LookUpDictionary(const nsAString& aText,
                                 const nsTArray<mozilla::FontRange>& aFontRangeArray,
@@ -491,8 +481,6 @@ class nsChildView final : public nsBaseWidget {
                                 LayoutDeviceIntPoint aScreenPosition,
                                 mozilla::Modifiers aModifiers);
 
-  void SwipeFinished();
-
   // Called when the main thread enters a phase during which visual changes
   // are imminent and any layer updates on the compositor thread would interfere
   // with visual atomicity.
@@ -535,15 +523,6 @@ class nsChildView final : public nsBaseWidget {
   mozilla::VibrancyManager& EnsureVibrancyManager();
 
   nsIWidget* GetWidgetForListenerEvents();
-
-  struct SwipeInfo {
-    bool wantsSwipe;
-    uint32_t allowedDirections;
-  };
-
-  SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
-  void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
-                               uint32_t aAllowedDirections);
 
  protected:
   ChildView* mView;  // my parallel cocoa view, [STRONG]
@@ -589,18 +568,8 @@ class nsChildView final : public nsBaseWidget {
   LayoutDeviceIntRegion mContentLayerInvalidRegion;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
-  RefPtr<mozilla::SwipeTracker> mSwipeTracker;
-  mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
   RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
-
-  // This flag is only used when APZ is off. It indicates that the current pan
-  // gesture was processed as a swipe. Sometimes the swipe animation can finish
-  // before momentum events of the pan gesture have stopped firing, so this
-  // flag tells us that we shouldn't allow the remaining events to cause
-  // scrolling. It is reset to false once a new gesture starts (as indicated by
-  // a PANGESTURE_(MAY)START event).
-  bool mCurrentPanGestureBelongsToSwipe;
 
   static uint32_t sLastInputEventCount;
 

@@ -1303,7 +1303,7 @@ bool MouseScrollHandler::Device::Elantech::HandleKeyMessage(
       // nullptr as an argument to indicate using the coordinate from the last
       // available window message.
       InitEvent(aWidget, appCommandEvent, nullptr);
-      aWidget->DispatchWindowEvent(&appCommandEvent);
+      aWidget->DispatchWindowEvent(appCommandEvent);
     } else {
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,
               ("MouseScroll::Device::Elantech::HandleKeyMessage(): Consumed"));

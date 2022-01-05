@@ -18,6 +18,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -105,7 +106,6 @@
 #include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
-#include "SwipeTracker.h"
 #include "VibrancyManager.h"
 #include "nsNativeThemeCocoa.h"
 #include "nsIDOMWindowUtils.h"
@@ -211,19 +211,6 @@ static inline void FlipCocoaScreenCoordinate(NSPoint& inPoint) {
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
 
-namespace mozilla {
-
-struct SwipeEventQueue {
-  SwipeEventQueue(uint32_t aAllowedDirections, uint64_t aInputBlockId)
-      : allowedDirections(aAllowedDirections), inputBlockId(aInputBlockId) {}
-
-  nsTArray<PanGestureInput> queuedEvents;
-  uint32_t allowedDirections;
-  uint64_t inputBlockId;
-};
-
-}  // namespace mozilla
-
 #pragma mark -
 
 nsChildView::nsChildView()
@@ -235,15 +222,9 @@ nsChildView::nsChildView()
       mBackingScaleFactor(0.0),
       mVisible(false),
       mDrawing(false),
-      mIsDispatchPaint(false),
-      mCurrentPanGestureBelongsToSwipe{false} {}
+      mIsDispatchPaint(false) {}
 
 nsChildView::~nsChildView() {
-  if (mSwipeTracker) {
-    mSwipeTracker->Destroy();
-    mSwipeTracker = nullptr;
-  }
-
   // Notify the children that we're gone.  childView->ResetParent() can change
   // our list of children while it's being iterated, so the way we iterate the
   // list must allow for this.
@@ -1298,12 +1279,6 @@ nsresult nsChildView::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatu
   return NS_OK;
 }
 
-bool nsChildView::DispatchWindowEvent(WidgetGUIEvent& event) {
-  nsEventStatus status;
-  DispatchEvent(&event, status);
-  return ConvertStatus(status);
-}
-
 nsIWidget* nsChildView::GetWidgetForListenerEvents() {
   // If there is no listener, use the parent popup's listener if that exists.
   if (!mWidgetListener && mParentWidget && mParentWidget->WindowType() == eWindowType_popup) {
@@ -1827,53 +1802,6 @@ mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
   return *mVibrancyManager;
 }
 
-nsChildView::SwipeInfo nsChildView::SendMayStartSwipe(
-    const mozilla::PanGestureInput& aSwipeStartEvent) {
-  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-  uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
-                           ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
-                           : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
-
-  // We're ready to start the animation. Tell Gecko about it, and at the same
-  // time ask it if it really wants to start an animation for this event.
-  // This event also reports back the directions that we can swipe in.
-  LayoutDeviceIntPoint position =
-      RoundedToInt(aSwipeStartEvent.mPanStartPoint * ScreenToLayoutDeviceScale(1));
-  WidgetSimpleGestureEvent geckoEvent = SwipeTracker::CreateSwipeGestureEvent(
-      eSwipeGestureMayStart, this, position, aSwipeStartEvent.mTimeStamp);
-  geckoEvent.mDirection = direction;
-  geckoEvent.mDelta = 0.0;
-  geckoEvent.mAllowedDirections = 0;
-  bool shouldStartSwipe = DispatchWindowEvent(geckoEvent);  // event cancelled == swipe should start
-
-  SwipeInfo result = {shouldStartSwipe, geckoEvent.mAllowedDirections};
-  return result;
-}
-
-void nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
-                                          uint32_t aAllowedDirections) {
-  // If a swipe is currently being tracked kill it -- it's been interrupted
-  // by another gesture event.
-  if (mSwipeTracker) {
-    mSwipeTracker->CancelSwipe(aSwipeStartEvent.mTimeStamp);
-    mSwipeTracker->Destroy();
-    mSwipeTracker = nullptr;
-  }
-
-  uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
-                           ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
-                           : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
-
-  mSwipeTracker = new SwipeTracker(*this, aSwipeStartEvent, aAllowedDirections, direction);
-
-  if (!mAPZC) {
-    mCurrentPanGestureBelongsToSwipe = true;
-  }
-}
-
-void nsChildView::SwipeFinished() { mSwipeTracker = nullptr; }
-
 void nsChildView::UpdateBoundsFromView() {
   auto oldSize = mBounds.Size();
   mBounds = CocoaPointsToDevPixels([mView frame]);
@@ -1942,19 +1870,6 @@ void nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegio
   }
 }
 
-void nsChildView::ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {
-  if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == aInputBlockId) {
-    if (aStartSwipe) {
-      PanGestureInput& startEvent = mSwipeEventQueue->queuedEvents[0];
-      TrackScrollEventAsSwipe(startEvent, mSwipeEventQueue->allowedDirections);
-      for (size_t i = 1; i < mSwipeEventQueue->queuedEvents.Length(); i++) {
-        mSwipeTracker->ProcessEvent(mSwipeEventQueue->queuedEvents[i]);
-      }
-    }
-    mSwipeEventQueue = nullptr;
-  }
-}
-
 nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
   APZEventResult result;
 
@@ -2004,36 +1919,8 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
           return;
         }
 
-        PanGestureInput& panInput = aEvent.AsPanGestureInput();
-
-        event = panInput.ToWidgetEvent(this);
-        if (aCanTriggerSwipe && panInput.mOverscrollBehaviorAllowsSwipe) {
-          SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
-          event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
-          if (swipeInfo.wantsSwipe) {
-            if (result.GetStatus() == nsEventStatus_eIgnore) {
-              // APZ has determined and that scrolling horizontally in the
-              // requested direction is impossible, so it didn't do any
-              // scrolling for the event.
-              // We know now that MayStartSwipe wants a swipe, so we can start
-              // the swipe now.
-              TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
-            } else {
-              // We don't know whether this event can start a swipe, so we need
-              // to queue up events and wait for a call to ReportSwipeStarted.
-              // APZ might already have started scrolling in response to the
-              // event if it knew that it's the right thing to do. In that case
-              // we'll still get a call to ReportSwipeStarted, and we will
-              // discard the queued events at that point.
-              mSwipeEventQueue =
-                  MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, result.mInputBlockId);
-            }
-          }
-        }
-
-        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == result.mInputBlockId) {
-          mSwipeEventQueue->queuedEvents.AppendElement(panInput);
-        }
+        event = MayStartSwipeForAPZ(aEvent.AsPanGestureInput(), result,
+                                    CanTriggerSwipe{aCanTriggerSwipe});
         break;
       }
       case SCROLLWHEEL_INPUT: {
@@ -2062,48 +1949,10 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
   nsEventStatus status;
   switch (aEvent.mInputType) {
     case PANGESTURE_INPUT: {
-      PanGestureInput panInput = aEvent.AsPanGestureInput();
-      if (panInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
-          panInput.mType == PanGestureInput::PANGESTURE_START) {
-        mCurrentPanGestureBelongsToSwipe = false;
-      }
-      if (mCurrentPanGestureBelongsToSwipe) {
-        // Ignore this event. It's a momentum event from a scroll gesture
-        // that was processed as a swipe, and the swipe animation has
-        // already finished (so mSwipeTracker is already null).
-        MOZ_ASSERT(panInput.IsMomentum(),
-                   "If the fingers are still on the touchpad, we should still have a SwipeTracker, "
-                   "and it should have consumed this event.");
+      if (MayStartSwipeForNonAPZ(aEvent.AsPanGestureInput(), CanTriggerSwipe{aCanTriggerSwipe})) {
         return;
       }
-
-      event = panInput.ToWidgetEvent(this);
-      if (aCanTriggerSwipe) {
-        SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
-
-        // We're in the non-APZ case here, but we still want to know whether
-        // the event was routed to a child process, so we use InputAPZContext
-        // to get that piece of information.
-        ScrollableLayerGuid guid;
-        InputAPZContext context(guid, 0, nsEventStatus_eIgnore);
-
-        event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
-        DispatchEvent(&event, status);
-        if (swipeInfo.wantsSwipe) {
-          if (context.WasRoutedToChildProcess()) {
-            // We don't know whether this event can start a swipe, so we need
-            // to queue up events and wait for a call to ReportSwipeStarted.
-            mSwipeEventQueue = MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, 0);
-          } else if (event.TriggersSwipe()) {
-            TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
-          }
-        }
-
-        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == 0) {
-          mSwipeEventQueue->queuedEvents.AppendElement(panInput);
-        }
-        return;
-      }
+      event = aEvent.AsPanGestureInput().ToWidgetEvent(this);
       break;
     }
     case SCROLLWHEEL_INPUT: {
@@ -2902,20 +2751,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // otherwise a scroll to one side of the page can have a swipe tacked on
   // to it.
   NSEventPhase eventPhase = [anEvent phase];
-  if ([anEvent type] != NSEventTypeScrollWheel || eventPhase != NSEventPhaseBegan ||
-      ![anEvent hasPreciseScrollingDeltas]) {
-    return false;
-  }
-
-  // Only initiate horizontal tracking for events whose horizontal element is
-  // at least eight times larger than its vertical element. This minimizes
-  // performance problems with vertical scrolls (by minimizing the possibility
-  // that they'll be misinterpreted as horizontal swipes), while still
-  // tolerating a small vertical element to a true horizontal swipe.  The number
-  // '8' was arrived at by trial and error.
-  CGFloat deltaX = [anEvent scrollingDeltaX];
-  CGFloat deltaY = [anEvent scrollingDeltaY];
-  return std::abs(deltaX) > std::abs(deltaY) * 8;
+  return [anEvent type] == NSEventTypeScrollWheel && eventPhase == NSEventPhaseBegan &&
+         [anEvent hasPreciseScrollingDeltas];
 }
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC {
@@ -3422,7 +3259,9 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
       }
     }
 
-    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
+    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent] &&
+                           SwipeTracker::CanTriggerSwipe(panEvent);
+    ;
     panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {

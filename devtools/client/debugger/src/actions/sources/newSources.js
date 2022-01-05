@@ -7,8 +7,6 @@
  * @module actions/sources
  */
 
-import { flatten } from "lodash";
-
 import { insertSourceActors } from "../../actions/source-actors";
 import { makeSourceId } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
@@ -54,7 +52,7 @@ function loadSourceMaps(cx, sources) {
 
       await sourceQueue.flush();
 
-      return flatten(sourceList);
+      return sourceList.flat();
     } catch (error) {
       if (!(error instanceof ContextError)) {
         throw error;
