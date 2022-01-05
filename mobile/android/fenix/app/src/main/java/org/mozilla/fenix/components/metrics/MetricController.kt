@@ -228,7 +228,7 @@ internal class ReleaseMetricController(
 
             null
         }
-        Component.BROWSER_AWESOMEBAR == component && ComposeAwesomeBarFacts.Items.PROVIDER_DURATION == item -> {
+        Component.COMPOSE_AWESOMEBAR == component && ComposeAwesomeBarFacts.Items.PROVIDER_DURATION == item -> {
             metadata?.get(ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
                 require(providerTiming is Pair<*, *>) { "Expected providerTiming to be a Pair" }
                 when (val provider = providerTiming.first as AwesomeBar.SuggestionProvider) {
