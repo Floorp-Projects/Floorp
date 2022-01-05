@@ -80,7 +80,7 @@ partial interface DataTransfer {
    * at the specified index. If the index is not in the range from 0 to
    * itemCount - 1, an empty string list is returned.
    */
-  [Throws, NeedsCallerType, ChromeOnly]
+  [Throws, ChromeOnly]
   DOMStringList mozTypesAt(unsigned long index);
 
   /**
@@ -97,7 +97,7 @@ partial interface DataTransfer {
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws, NeedsSubjectPrincipal, ChromeOnly]
+  [Throws, ChromeOnly]
   void mozClearDataAt(DOMString format, unsigned long index);
 
   /*
@@ -121,7 +121,7 @@ partial interface DataTransfer {
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater than itemCount
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws, NeedsSubjectPrincipal, ChromeOnly]
+  [Throws, ChromeOnly]
   void mozSetDataAt(DOMString format, any data, unsigned long index);
 
   /**
@@ -133,7 +133,7 @@ partial interface DataTransfer {
    * @returns the data of the given format, or null if it doesn't exist.
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    */
-  [Throws, NeedsSubjectPrincipal, ChromeOnly]
+  [Throws, ChromeOnly]
   any mozGetDataAt(DOMString format, unsigned long index);
 
   /**
