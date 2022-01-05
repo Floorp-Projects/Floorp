@@ -139,6 +139,10 @@ async function testFrameCrash(numTabs) {
       1,
       "Notification " + count + " should have only one link."
     );
+    let msgs = notification.messageText.querySelectorAll(
+      "span[data-l10n-id='crashed-subframe-message']"
+    );
+    is(msgs.length, 1, "Notification " + count + " should have one crash msg.");
   }
 
   // Press the ignore button on the visible notification.
