@@ -109,8 +109,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 // All communication is done via message passing using MTG ControlMessages
 class AudioInputProcessing : public AudioDataListener {
  public:
-  AudioInputProcessing(uint32_t aMaxChannelCount,
-                       const PrincipalHandle& aPrincipalHandle);
+  explicit AudioInputProcessing(uint32_t aMaxChannelCount);
   void Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
@@ -199,9 +198,6 @@ class AudioInputProcessing : public AudioDataListener {
   AlignedFloatBuffer mInputDownmixBuffer;
   // Stores data waiting to be pulled.
   AudioSegment mSegment;
-  // Principal for the data that flows through this class. Only used to check
-  // that the input track provides the right principal.
-  const PrincipalHandle mPrincipal;
   // Whether or not this MediaEngine is enabled. If it's not enabled, it
   // operates in "pull" mode, and we append silence only, releasing the audio
   // input track.
@@ -217,6 +213,8 @@ class AudioInputProcessing : public AudioDataListener {
   AutoTArray<AudioDataValue,
              SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS>
       mInterleavedBuffer;
+  // Tracks the pending frames with paired principals piled up in packetizer.
+  std::deque<std::pair<TrackTime, PrincipalHandle>> mChunksInPacketizer;
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
