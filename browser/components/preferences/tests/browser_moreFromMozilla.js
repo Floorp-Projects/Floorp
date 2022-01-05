@@ -221,19 +221,20 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
     "utm_medium set"
   );
   Assert.equal(
-    searchParams.get("entrypoint_experiment"),
-    "morefrommozilla-experiment-1846",
-    "entrypoint_experiment set"
-  );
-  Assert.equal(
     searchParams.get("utm_content"),
     "fxvt-113-a-na",
     "utm_content set"
   );
-  Assert.equal(
-    searchParams.get("entrypoint_variation"),
-    "treatment-simple",
-    "entrypoint_variation set"
+
+  // Since we're not running MfM experiments in this release, we want to be sure that
+  // our URL params aren't claiming that we are.
+  Assert.ok(
+    !searchParams.has("entrypoint_variation"),
+    "entrypoint_variation should not be set"
+  );
+  Assert.ok(
+    !searchParams.has("entrypoint_experiment"),
+    "entrypoint_experiment should not be set"
   );
 
   BrowserTestUtils.removeTab(openedTab);
