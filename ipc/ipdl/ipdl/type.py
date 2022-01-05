@@ -1283,8 +1283,16 @@ class GatherDecls(TcheckVisitor):
                 "Compress": (None, "all"),
                 "Priority": ("normal", "input", "vsync", "mediumhigh", "control"),
                 "Nested": ("not", "inside_sync", "inside_cpow"),
+                "LegacyIntr": None,
             },
         )
+
+        if md.sendSemantics is INTR and "LegacyIntr" not in md.attributes:
+            self.error(
+                loc,
+                "intr message `%s' allowed only with [LegacyIntr]; DO NOT USE IN SHIPPING CODE",
+                msgname,
+            )
 
         if md.sendSemantics is INTR and "Priority" in md.attributes:
             self.error(loc, "intr message `%s' cannot specify [Priority]", msgname)

@@ -3,20 +3,20 @@ namespace _ipdltest {
 
 intr protocol PTestInterruptRaces {
 both:
-    intr Race() returns (bool hasReply);
-    intr StackFrame() returns ();
-    intr StackFrame3() returns ();
+    [LegacyIntr] intr Race() returns (bool hasReply);
+    [LegacyIntr] intr StackFrame() returns ();
+    [LegacyIntr] intr StackFrame3() returns ();
 
 parent:
     sync StartRace();
-    intr Parent();
+    [LegacyIntr] intr Parent();
     sync GetAnsweredParent() returns (bool answeredParent);
 
 child:
     async Start();
     async Wakeup();
     async Wakeup3();
-    intr Child();
+    [LegacyIntr] intr Child();
     async __delete__();
 };
 

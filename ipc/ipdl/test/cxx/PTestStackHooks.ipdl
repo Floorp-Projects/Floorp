@@ -12,10 +12,10 @@ child:
 parent:
     async Async();
     sync Sync();
-    intr Rpc();
+    [LegacyIntr] intr Rpc();
 
 both:
-    intr StackFrame();
+    [LegacyIntr] intr StackFrame();
 
 parent:
     async __delete__();
