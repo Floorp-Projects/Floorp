@@ -19,16 +19,16 @@
 let $0 = instantiate(`(module;;comment
 )`);
 
-// ./test/core/comments.wast:52:11
+// ./test/core/comments.wast:56:11
 let $1 = instantiate(`(module(;comment;)
 (;comment;))`);
 
-// ./test/core/comments.wast:62
+// ./test/core/comments.wast:66
 let $2 = instantiate(`(module
   (;comment(;nested(;further;)nested;)comment;)
 )`);
 
-// ./test/core/comments.wast:71
+// ./test/core/comments.wast:75
 let $3 = instantiate(`(module
   (;comment;;comment(;nested;)comment;)
 )`);
