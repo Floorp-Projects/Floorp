@@ -942,13 +942,11 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
       nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
       if (touchEvent->mMessage == eTouchStart) {
         auto& originalEvent = *original->AsTouchEvent();
-        if (StaticPrefs::layout_css_touch_action_enabled()) {
-          MOZ_ASSERT(NS_IsMainThread());
-          allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
-              this, GetDocument(), originalEvent);
-          if (!allowedTouchBehaviors.IsEmpty()) {
-            mAPZC->SetAllowedTouchBehavior(inputBlockId, allowedTouchBehaviors);
-          }
+        MOZ_ASSERT(NS_IsMainThread());
+        allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
+            this, GetDocument(), originalEvent);
+        if (!allowedTouchBehaviors.IsEmpty()) {
+          mAPZC->SetAllowedTouchBehavior(inputBlockId, allowedTouchBehaviors);
         }
         postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
             this, GetDocument(), originalEvent, rootLayersId, inputBlockId);

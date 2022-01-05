@@ -48,7 +48,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEvents.h"
@@ -1914,13 +1913,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
   nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
   if (localEvent.mMessage == eTouchStart && AsyncPanZoomEnabled()) {
     nsCOMPtr<Document> document = GetTopLevelDocument();
-    if (StaticPrefs::layout_css_touch_action_enabled()) {
-      allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
-          mPuppetWidget, document, localEvent);
-      if (!allowedTouchBehaviors.IsEmpty() && mApzcTreeManager) {
-        mApzcTreeManager->SetAllowedTouchBehavior(aInputBlockId,
-                                                  allowedTouchBehaviors);
-      }
+    allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
+        mPuppetWidget, document, localEvent);
+    if (!allowedTouchBehaviors.IsEmpty() && mApzcTreeManager) {
+      mApzcTreeManager->SetAllowedTouchBehavior(aInputBlockId,
+                                                allowedTouchBehaviors);
     }
     RefPtr<DisplayportSetListener> postLayerization =
         APZCCallbackHelper::SendSetTargetAPZCNotification(
