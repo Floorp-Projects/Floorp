@@ -441,42 +441,14 @@ class nsWindow final : public nsBaseWidget {
   void DispatchDeactivateEvent(void);
   void MaybeDispatchResized();
 
-  virtual void RegisterTouchWindow() override;
-  virtual bool CompositorInitiallyPaused() override {
+  void RegisterTouchWindow() override;
+  bool CompositorInitiallyPaused() override {
     return mCompositorState == COMPOSITOR_PAUSED_INITIALLY;
   }
   nsCOMPtr<nsIWidget> mParent;
-  // Has this widget been destroyed yet?
-  bool mIsDestroyed;
-  // Does WindowResized need to be called on listeners?
-  bool mNeedsDispatchResized;
-  // mIsShown tracks requested visible status from browser perspective, i.e.
-  // if the window should be visible or now.
-  bool mIsShown;
-  // mNeedsShow is set when browser requested to show this window but we failed
-  // to do so for some reason (wrong window size for instance).
-  // In such case we set mIsShown = true and mNeedsShow = true to indicate
-  // that the window is not actually visible but we report to browser that
-  // it is visible (mIsShown == true).
-  bool mNeedsShow;
-  // This track real window visibility from OS perspective.
-  // It's set by OnMap/OnUnrealize which is based on Gtk events.
-  bool mIsMapped;
-  // is this widget enabled?
-  bool mEnabled;
-  // has the native window for this been created yet?
-  bool mCreated;
-  // whether we handle touch event
-  bool mHandleTouchEvent;
-  // true if this is a drag and drop feedback popup
-  bool mIsDragPopup;
-  nsPopupType mPopupHint;
-  bool mWindowScaleFactorChanged;
-  int mWindowScaleFactor;
-  bool mCompositedScreen;
-  bool mIsAccelerated;
+  nsPopupType mPopupHint{};
+  int mWindowScaleFactor = 1;
 
- private:
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
 
@@ -540,26 +512,24 @@ class nsWindow final : public nsBaseWidget {
   nsCString mGtkWindowRoleName;
   void RefreshWindowClass();
 
-  GtkWidget* mShell;
-  MozContainer* mContainer;
-  GdkWindow* mGdkWindow;
-  bool mWindowShouldStartDragging;
-  PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
-  mozilla::Atomic<WindowCompositorState, mozilla::Relaxed> mCompositorState;
+  GtkWidget* mShell = nullptr;
+  MozContainer* mContainer = nullptr;
+  GdkWindow* mGdkWindow = nullptr;
+  PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate = nullptr;
+  mozilla::Atomic<WindowCompositorState, mozilla::Relaxed> mCompositorState{
+      COMPOSITOR_ENABLED};
   // This is used in COMPOSITOR_PAUSED_FLICKERING mode only to resume compositor
   // in some reasonable time when page content is not updated.
-  int mCompositorPauseTimeoutID;
+  int mCompositorPauseTimeoutID = 0;
 
-  uint32_t mHasMappedToplevel : 1, mRetryPointerGrab : 1;
-  nsSizeMode mSizeState;
-  float mAspectRatio;
-  float mAspectRatioSaved;
+  nsSizeMode mSizeState = nsSizeMode_Normal;
+  float mAspectRatio = 0.0f;
+  float mAspectRatioSaved = 0.0f;
   nsIntPoint mClientOffset;
 
   // This field omits duplicate scroll events caused by GNOME bug 726878.
-  guint32 mLastScrollEventTime;
+  guint32 mLastScrollEventTime = GDK_CURRENT_TIME;
   mozilla::ScreenCoord mLastPinchEventSpan;
-  bool mPanInProgress = false;
 
   // for touch event handling
   nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch>
@@ -567,64 +537,170 @@ class nsWindow final : public nsBaseWidget {
 
   // Upper bound on pending ConfigureNotify events to be dispatched to the
   // window. See bug 1225044.
-  unsigned int mPendingConfigures;
+  unsigned int mPendingConfigures = 0;
 
   // Window titlebar rendering mode, GTK_DECORATION_NONE if it's disabled
   // for this window.
-  GtkWindowDecoration mGtkWindowDecoration;
-  // Use dedicated GdkWindow for mContainer
-  bool mDrawToContainer;
-  // If true, draw our own window titlebar.
-  bool mDrawInTitlebar;
-  // Draw titlebar with :backdrop css state (inactive/unfocused).
-  bool mTitlebarBackdropState;
+  GtkWindowDecoration mGtkWindowDecoration = GTK_DECORATION_NONE;
+
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
   LayoutDeviceIntRegion mDraggableRegion;
-  // It's PictureInPicture window.
-  bool mIsPIPWindow;
-  // It's undecorated popup utility window, without resizers/titlebar,
-  // movable by mouse. Used on Wayland for popups without
-  // parent (for instance WebRTC sharing indicator, notifications).
-  bool mIsWaylandPanelWindow;
-  // It's child window, i.e. window which is nested in parent window.
-  // This is obsoleted and should not be used.
-  // We use GdkWindow hierarchy for such windows.
-  bool mIsChildWindow;
-  bool mAlwaysOnTop;
-  bool mNoAutoHide;
-  bool mMouseTransparent;
 
   // The cursor cache
   static GdkCursor* gsGtkCursorCache[eCursorCount];
 
-  // Transparency
-  bool mIsTransparent;
-  // This bitmap tracks which pixels are transparent. We don't support
-  // full translucency at this time; each pixel is either fully opaque
-  // or fully transparent.
-  gchar* mTransparencyBitmap;
-  int32_t mTransparencyBitmapWidth;
-  int32_t mTransparencyBitmapHeight;
+  // Has this widget been destroyed yet?
+  bool mIsDestroyed : 1;
+  // Does WindowResized need to be called on listeners?
+  bool mNeedsDispatchResized : 1;
+  // mIsShown tracks requested visible status from browser perspective, i.e.
+  // if the window should be visible or now.
+  bool mIsShown : 1;
+  // mNeedsShow is set when browser requested to show this window but we failed
+  // to do so for some reason (wrong window size for instance).
+  // In such case we set mIsShown = true and mNeedsShow = true to indicate
+  // that the window is not actually visible but we report to browser that
+  // it is visible (mIsShown == true).
+  bool mNeedsShow : 1;
+  // This track real window visibility from OS perspective.
+  // It's set by OnMap/OnUnrealize which is based on Gtk events.
+  bool mIsMapped : 1;
+  // is this widget enabled?
+  bool mEnabled : 1;
+  // has the native window for this been created yet?
+  bool mCreated : 1;
+  // whether we handle touch event
+  bool mHandleTouchEvent : 1;
+  // true if this is a drag and drop feedback popup
+  bool mIsDragPopup : 1;
+  bool mWindowScaleFactorChanged : 1;
+  bool mCompositedScreen : 1;
+  bool mIsAccelerated : 1;
+  bool mWindowShouldStartDragging : 1;
+  bool mHasMappedToplevel : 1;
+  bool mRetryPointerGrab : 1;
+  bool mPanInProgress : 1;
+  // Use dedicated GdkWindow for mContainer
+  bool mDrawToContainer : 1;
+  // If true, draw our own window titlebar.
+  bool mDrawInTitlebar : 1;
+  // Draw titlebar with :backdrop css state (inactive/unfocused).
+  bool mTitlebarBackdropState : 1;
+  // It's PictureInPicture window.
+  bool mIsPIPWindow : 1;
+  // It's undecorated popup utility window, without resizers/titlebar,
+  // movable by mouse. Used on Wayland for popups without
+  // parent (for instance WebRTC sharing indicator, notifications).
+  bool mIsWaylandPanelWindow : 1;
+  // It's child window, i.e. window which is nested in parent window.
+  // This is obsoleted and should not be used.
+  // We use GdkWindow hierarchy for such windows.
+  bool mIsChildWindow : 1;
+  bool mAlwaysOnTop : 1;
+  bool mNoAutoHide : 1;
+  bool mMouseTransparent : 1;
+  bool mIsTransparent : 1;
+  // We can't detect size state changes correctly so set this flag
+  // to force update mBounds after a size state change from a configure
+  // event.
+  bool mBoundsAreValid : 1;
+
+  /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
+   *  Kind of popup is choosen before GdkWindow is mapped so we can change
+   *  it only when GdkWindow is hidden.
+   *
+   *  Relevant Gtk code is at gdkwindow-wayland.c
+   *  in should_map_as_popup() and should_map_as_subsurface()
+   *
+   *  wl_subsurface:
+   *    - can't be positioned by move-to-rect
+   *    - can stand outside popup widget hierarchy (has toplevel as parent)
+   *    - don't have child popup widgets
+   *
+   *  xdg_popup:
+   *    - can be positioned by move-to-rect
+   *    - aligned in popup widget hierarchy, first one is attached to toplevel
+   *    - has child (popup) widgets
+   *
+   *  Thus we need to map Firefox popup type to desired Gtk one:
+   *
+   *  wl_subsurface:
+   *    - pernament panels
+   *
+   *  xdg_popup:
+   *    - menus
+   *    - autohide popups (hamburger menu)
+   *    - extension popups
+   *    - tooltips
+   *
+   *  We set mPopupTrackInHierarchy = false for pernament panels which
+   *  are always mapped to toplevel and painted as wl_surfaces.
+   */
+  bool mPopupTrackInHierarchy : 1;
+  bool mPopupTrackInHierarchyConfigured : 1;
+
+  /* On X11 Gtk tends to ignore window position requests when gtk_window
+   * is hidden. Save the position requests at mPopupPosition and apply
+   * when the widget is shown.
+   */
+  bool mHiddenPopupPositioned : 1;
+
   // The transparency bitmap is used instead of ARGB visual for toplevel
   // window to draw titlebar.
-  bool mTransparencyBitmapForTitlebar;
+  bool mTransparencyBitmapForTitlebar : 1;
 
   // True when we're on compositing window manager and this
   // window is using visual with alpha channel.
-  bool mHasAlphaVisual;
+  bool mHasAlphaVisual : 1;
+
+  // When popup is anchored, mPopupPosition is relative to its parent popup.
+  bool mPopupAnchored : 1;
+
+  // When popup is context menu.
+  bool mPopupContextMenu : 1;
+
+  // Indicates that this popup matches layout setup so we can use parent popup
+  // coordinates reliably.
+  bool mPopupMatchesLayout : 1;
+
+  /*  Indicates that popup setup was changed and
+   *  we need to recalculate popup coordinates.
+   */
+  bool mPopupChanged : 1;
+
+  // Popup is hidden only as a part of hierarchy tree update.
+  bool mPopupTemporaryHidden : 1;
+
+  // Popup is going to be closed and removed.
+  bool mPopupClosed : 1;
+
+  // Popup is positioned by gdk_window_move_to_rect()
+  bool mPopupUseMoveToRect : 1;
+
+  bool mPreferredPopupRectFlushed : 1;
+  /* mWaitingForMoveToRectCallback is set when move-to-rect is called
+   * and we're waiting for move-to-rect callback.
+   *
+   * If another position/resize request comes between move-to-rect call and
+   * move-to-rect callback we set mNewBoundsAfterMoveToRect.
+   */
+  bool mWaitingForMoveToRectCallback : 1;
+
+  // This bitmap tracks which pixels are transparent. We don't support
+  // full translucency at this time; each pixel is either fully opaque
+  // or fully transparent.
+  gchar* mTransparencyBitmap = nullptr;
+  int32_t mTransparencyBitmapWidth = 0;
+  int32_t mTransparencyBitmapHeight = 0;
 
   // all of our DND stuff
   void InitDragEvent(mozilla::WidgetDragEvent& aEvent);
 
-  float mLastMotionPressure;
+  float mLastMotionPressure = 0.0f;
 
   // Remember the last sizemode so that we can restore it when
   // leaving fullscreen
-  nsSizeMode mLastSizeMode;
-  // We can't detect size state changes correctly so set this flag
-  // to force update mBounds after a size state change from a configure
-  // event.
-  bool mBoundsAreValid;
+  nsSizeMode mLastSizeMode = nsSizeMode_Normal;
 
   static bool DragInProgress(void);
 
@@ -701,88 +777,18 @@ class nsWindow final : public nsBaseWidget {
   void LogPopupHierarchy();
 #endif
 
-  /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
-   *  Kind of popup is choosen before GdkWindow is mapped so we can change
-   *  it only when GdkWindow is hidden.
-   *
-   *  Relevant Gtk code is at gdkwindow-wayland.c
-   *  in should_map_as_popup() and should_map_as_subsurface()
-   *
-   *  wl_subsurface:
-   *    - can't be positioned by move-to-rect
-   *    - can stand outside popup widget hierarchy (has toplevel as parent)
-   *    - don't have child popup widgets
-   *
-   *  xdg_popup:
-   *    - can be positioned by move-to-rect
-   *    - aligned in popup widget hierarchy, first one is attached to toplevel
-   *    - has child (popup) widgets
-   *
-   *  Thus we need to map Firefox popup type to desired Gtk one:
-   *
-   *  wl_subsurface:
-   *    - pernament panels
-   *
-   *  xdg_popup:
-   *    - menus
-   *    - autohide popups (hamburger menu)
-   *    - extension popups
-   *    - tooltips
-   *
-   *  We set mPopupTrackInHierarchy = false for pernament panels which
-   *  are always mapped to toplevel and painted as wl_surfaces.
-   */
-  bool mPopupTrackInHierarchy;
-  bool mPopupTrackInHierarchyConfigured;
-
-  /* On X11 Gtk tends to ignore window position requests when gtk_window
-   * is hidden. Save the position requests at mPopupPosition and apply
-   * when the widget is shown.
-   */
-  bool mHiddenPopupPositioned;
-
   /*  mPopupPosition is the original popup position from layout,
    *  set by nsWindow::Move() or nsWindow::Resize().
    */
-  GdkPoint mPopupPosition;
-
-  /*  When popup is anchored, mPopupPosition is relative to its parent popup.
-   */
-  bool mPopupAnchored;
-
-  /*  When popup is context menu.
-   */
-  bool mPopupContextMenu;
+  GdkPoint mPopupPosition{};
 
   /*  mRelativePopupPosition is popup position calculated against parent window.
    */
-  GdkPoint mRelativePopupPosition;
+  GdkPoint mRelativePopupPosition{};
 
   /* mRelativePopupOffset is used by context menus.
    */
-  GdkPoint mRelativePopupOffset;
-
-  /*  Indicates that this popup matches layout setup so we can use
-   *  parent popup coordinates reliably.
-   */
-  bool mPopupMatchesLayout;
-
-  /*  Indicates that popup setup was changed and
-   *  we need to recalculate popup coordinates.
-   */
-  bool mPopupChanged;
-
-  /*  Popup is hidden only as a part of hierarchy tree update.
-   */
-  bool mPopupTemporaryHidden;
-
-  /*  Popup is going to be closed and removed.
-   */
-  bool mPopupClosed;
-
-  /* Popup is positioned by gdk_window_move_to_rect()
-   */
-  bool mPopupUseMoveToRect;
+  GdkPoint mRelativePopupOffset{};
 
   /* Last used anchor for move-to-rect.
    */
@@ -798,19 +804,9 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<nsWindow> mWaylandPopupNext;
   RefPtr<nsWindow> mWaylandPopupPrev;
 
-  /* Used by WaylandPopupMove() to track popup movement.
-   *
-   */
+  // Used by WaylandPopupMove() to track popup movement.
   nsRect mPreferredPopupRect;
-  bool mPreferredPopupRectFlushed;
 
-  /* mWaitingForMoveToRectCallback is set when move-to-rect is called
-   * and we're waiting for move-to-rect callback.
-   *
-   * If another position/resize request comes between move-to-rect call and
-   * move-to-rect callback we set mNewBoundsAfterMoveToRect.
-   */
-  bool mWaitingForMoveToRectCallback;
   LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 
   /**
@@ -889,9 +885,9 @@ class nsWindow final : public nsBaseWidget {
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
   LayoutDeviceIntPoint mNativePointerLockCenter;
-  zwp_locked_pointer_v1* mLockedPointer;
-  zwp_relative_pointer_v1* mRelativePointer;
-  xdg_activation_token_v1* mXdgToken;
+  zwp_locked_pointer_v1* mLockedPointer = nullptr;
+  zwp_relative_pointer_v1* mRelativePointer = nullptr;
+  xdg_activation_token_v1* mXdgToken = nullptr;
 #endif
   mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
 };
