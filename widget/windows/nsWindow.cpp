@@ -4292,7 +4292,7 @@ bool nsWindow::DispatchStandardEvent(EventMessage aMsg) {
   WidgetGUIEvent event(true, aMsg, this);
   InitEvent(event);
 
-  bool result = DispatchWindowEvent(&event);
+  bool result = DispatchWindowEvent(event);
   return result;
 }
 
@@ -4310,12 +4310,6 @@ bool nsWindow::DispatchContentCommandEvent(WidgetContentCommandEvent* aEvent) {
 bool nsWindow::DispatchWheelEvent(WidgetWheelEvent* aEvent) {
   nsEventStatus status =
       DispatchInputEvent(aEvent->AsInputEvent()).mContentStatus;
-  return ConvertStatus(status);
-}
-
-bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event) {
-  nsEventStatus status;
-  DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
@@ -4705,10 +4699,6 @@ bool nsWindow::IsTopLevelMouseExit(HWND aWnd) {
   if (mouseWnd == mouseTopLevel) return true;
 
   return WinUtils::GetTopLevelHWND(aWnd) != mouseTopLevel;
-}
-
-bool nsWindow::ConvertStatus(nsEventStatus aStatus) {
-  return aStatus == nsEventStatus_eConsumeNoDefault;
 }
 
 /**************************************************************
@@ -6149,38 +6139,38 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_CLEAR: {
       WidgetContentCommandEvent command(true, eContentCommandDelete, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       result = true;
     } break;
 
     case WM_CUT: {
       WidgetContentCommandEvent command(true, eContentCommandCut, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       result = true;
     } break;
 
     case WM_COPY: {
       WidgetContentCommandEvent command(true, eContentCommandCopy, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       result = true;
     } break;
 
     case WM_PASTE: {
       WidgetContentCommandEvent command(true, eContentCommandPaste, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       result = true;
     } break;
 
     case EM_UNDO: {
       WidgetContentCommandEvent command(true, eContentCommandUndo, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
     } break;
 
     case EM_REDO: {
       WidgetContentCommandEvent command(true, eContentCommandRedo, this);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
     } break;
@@ -6191,7 +6181,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (wParam == 0 || wParam == CF_TEXT || wParam == CF_UNICODETEXT) {
         WidgetContentCommandEvent command(true, eContentCommandPaste, this,
                                           true);
-        DispatchWindowEvent(&command);
+        DispatchWindowEvent(command);
         *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
         result = true;
       }
@@ -6199,14 +6189,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case EM_CANUNDO: {
       WidgetContentCommandEvent command(true, eContentCommandUndo, this, true);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
     } break;
 
     case EM_CANREDO: {
       WidgetContentCommandEvent command(true, eContentCommandRedo, this, true);
-      DispatchWindowEvent(&command);
+      DispatchWindowEvent(command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
     } break;

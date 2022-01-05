@@ -1330,6 +1330,12 @@ class nsIWidget : public nsISupports {
    */
   virtual void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) = 0;
 
+  /*
+   * Dispatch a gecko event for this widget.
+   * Returns true if it's consumed.  Otherwise, false.
+   */
+  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event) = 0;
+
   // A structure that groups the statuses from APZ dispatch and content
   // dispatch.
   struct ContentAndAPZEventStatus {
