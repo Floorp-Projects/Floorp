@@ -150,6 +150,22 @@ void DownmixAndInterleave(const nsTArray<const SrcT*>& aChannelData,
 struct AudioChunk {
   typedef mozilla::AudioSampleFormat SampleFormat;
 
+  AudioChunk() = default;
+
+  template <typename T>
+  AudioChunk(already_AddRefed<ThreadSharedObject> aBuffer,
+             const nsTArray<const T*>& aChannelData, TrackTime aDuration,
+             PrincipalHandle aPrincipalHandle)
+      : mDuration(aDuration),
+        mBuffer(aBuffer),
+        mBufferFormat(AudioSampleTypeToFormat<T>::Format),
+        mPrincipalHandle(std::move(aPrincipalHandle)) {
+    MOZ_ASSERT(!mBuffer == aChannelData.IsEmpty(), "Appending invalid data ?");
+    for (const T* data : aChannelData) {
+      mChannelData.AppendElement(data);
+    }
+  }
+
   // Generic methods
   void SliceTo(TrackTime aStart, TrackTime aEnd) {
     MOZ_ASSERT(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
@@ -345,37 +361,13 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   void ResampleChunks(nsAutoRef<SpeexResamplerState>& aResampler,
                       uint32_t* aResamplerChannelCount, uint32_t aInRate,
                       uint32_t aOutRate);
+
+  template <typename T>
   void AppendFrames(already_AddRefed<ThreadSharedObject> aBuffer,
-                    const nsTArray<const float*>& aChannelData,
-                    int32_t aDuration,
+                    const nsTArray<const T*>& aChannelData, TrackTime aDuration,
                     const PrincipalHandle& aPrincipalHandle) {
-    AudioChunk* chunk = AppendChunk(aDuration);
-    chunk->mBuffer = aBuffer;
-
-    MOZ_ASSERT(chunk->mBuffer || aChannelData.IsEmpty(),
-               "Appending invalid data ?");
-
-    for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
-      chunk->mChannelData.AppendElement(aChannelData[channel]);
-    }
-    chunk->mBufferFormat = AUDIO_FORMAT_FLOAT32;
-    chunk->mPrincipalHandle = aPrincipalHandle;
-  }
-  void AppendFrames(already_AddRefed<ThreadSharedObject> aBuffer,
-                    const nsTArray<const int16_t*>& aChannelData,
-                    int32_t aDuration,
-                    const PrincipalHandle& aPrincipalHandle) {
-    AudioChunk* chunk = AppendChunk(aDuration);
-    chunk->mBuffer = aBuffer;
-
-    MOZ_ASSERT(chunk->mBuffer || aChannelData.IsEmpty(),
-               "Appending invalid data ?");
-
-    for (uint32_t channel = 0; channel < aChannelData.Length(); ++channel) {
-      chunk->mChannelData.AppendElement(aChannelData[channel]);
-    }
-    chunk->mBufferFormat = AUDIO_FORMAT_S16;
-    chunk->mPrincipalHandle = aPrincipalHandle;
+    AppendAndConsumeChunk(AudioChunk(std::move(aBuffer), aChannelData,
+                                     aDuration, aPrincipalHandle));
   }
   void AppendSegment(const AudioSegment* aSegment) {
     MOZ_ASSERT(aSegment);
@@ -439,7 +431,7 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
 
     chunk->mVolume = aChunk.mVolume;
     chunk->mBufferFormat = aChunk.mBufferFormat;
-    chunk->mPrincipalHandle = aChunk.mPrincipalHandle;
+    chunk->mPrincipalHandle = std::move(aChunk.mPrincipalHandle);
     return chunk;
   }
   void ApplyVolume(float aVolume);
