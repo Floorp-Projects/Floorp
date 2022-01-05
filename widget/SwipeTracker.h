@@ -14,7 +14,6 @@
 #include "nsRefreshObservers.h"
 #include "Units.h"
 
-class nsChildView;
 class nsIWidget;
 class nsRefreshDriver;
 
@@ -50,7 +49,7 @@ class SwipeTracker final : public nsARefreshObserver {
  public:
   NS_INLINE_DECL_REFCOUNTING(SwipeTracker, override)
 
-  SwipeTracker(nsChildView& aWidget, const PanGestureInput& aSwipeStartEvent,
+  SwipeTracker(nsIWidget& aWidget, const PanGestureInput& aSwipeStartEvent,
                uint32_t aAllowedDirections, uint32_t aSwipeDirection);
 
   void Destroy();
@@ -64,6 +63,8 @@ class SwipeTracker final : public nsARefreshObserver {
 
   // nsARefreshObserver
   void WillRefresh(mozilla::TimeStamp aTime) override;
+
+  static bool CanTriggerSwipe(const PanGestureInput& aPanInput);
 
  protected:
   ~SwipeTracker();
@@ -80,7 +81,7 @@ class SwipeTracker final : public nsARefreshObserver {
   bool SendSwipeEvent(EventMessage aMsg, uint32_t aDirection, double aDelta,
                       const TimeStamp& aTimeStamp);
 
-  nsChildView& mWidget;
+  nsIWidget& mWidget;
   RefPtr<nsRefreshDriver> mRefreshDriver;
   layers::AxisPhysicsMSDModel mAxis;
   const LayoutDeviceIntPoint mEventPosition;
@@ -93,6 +94,15 @@ class SwipeTracker final : public nsARefreshObserver {
   bool mEventsAreControllingSwipe;
   bool mEventsHaveStartedNewGesture;
   bool mRegisteredWithRefreshDriver;
+};
+
+struct SwipeEventQueue {
+  SwipeEventQueue(uint32_t aAllowedDirections, uint64_t aInputBlockId)
+      : allowedDirections(aAllowedDirections), inputBlockId(aInputBlockId) {}
+
+  nsTArray<PanGestureInput> queuedEvents;
+  uint32_t allowedDirections;
+  uint64_t inputBlockId;
 };
 
 }  // namespace mozilla

@@ -80,7 +80,6 @@ UNIFIED_SOURCES += [
     "nsWindowMap.mm",
     "OSXNotificationCenter.mm",
     "ScreenHelperCocoa.mm",
-    "SwipeTracker.mm",
     "TextInputHandler.mm",
     "VibrancyManager.mm",
     "ViewRegion.mm",

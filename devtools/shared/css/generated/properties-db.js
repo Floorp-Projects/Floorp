@@ -11638,10 +11638,6 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-gutter.enabled"
   ],
   [
-    "touch-action",
-    "layout.css.touch_action.enabled"
-  ],
-  [
     "-webkit-line-clamp",
     "layout.css.webkit-line-clamp.enabled"
   ],

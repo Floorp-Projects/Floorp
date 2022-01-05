@@ -38,6 +38,9 @@ namespace mozilla {
 class CompositorVsyncDispatcher;
 class LiveResizeListener;
 class FallbackRenderer;
+class SwipeTracker;
+struct SwipeEventQueue;
+class WidgetWheelEvent;
 
 #ifdef ACCESSIBILITY
 namespace a11y {
@@ -312,6 +315,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       mozilla::WidgetInputEvent* aEvent) override;
   void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) override;
 
+  bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event) override;
+
   void SetConfirmedTargetAPZC(
       uint64_t aInputBlockId,
       const nsTArray<ScrollableLayerGuid>& aTargets) const override;
@@ -321,6 +326,31 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
 
   bool AsyncPanZoomEnabled() const override;
+
+  void SwipeFinished() override;
+  void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
+  void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
+                               uint32_t aAllowedDirections);
+  struct SwipeInfo {
+    bool wantsSwipe;
+    uint32_t allowedDirections;
+  };
+  SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
+  enum class CanTriggerSwipe : bool {
+    No = false,
+    Yes = true,
+  };
+  // Returns a WidgetWheelEvent which needs to be handled by APZ regardless of
+  // whether |aPanInput| event was used for SwipeTracker or not.
+  mozilla::WidgetWheelEvent MayStartSwipeForAPZ(
+      const mozilla::PanGestureInput& aPanInput,
+      const mozilla::layers::APZEventResult& aApzResult,
+      CanTriggerSwipe aCanTriggerSwipe);
+
+  // Returns true if |aPanInput| event was used for SwipeTracker, false
+  // otherwise.
+  bool MayStartSwipeForNonAPZ(const mozilla::PanGestureInput& aPanInput,
+                              CanTriggerSwipe aCanTriggerSwipe);
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
@@ -637,6 +667,10 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void DispatchPanGestureInput(mozilla::PanGestureInput& aInput);
   void DispatchPinchGestureInput(mozilla::PinchGestureInput& aInput);
 
+  static bool ConvertStatus(nsEventStatus aStatus) {
+    return aStatus == nsEventStatus_eConsumeNoDefault;
+  }
+
  protected:
   // Returns whether compositing should use an external surface size.
   virtual bool UseExternalCompositingSurface() const { return false; }
@@ -674,6 +708,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   RefPtr<WidgetShutdownObserver> mShutdownObserver;
   RefPtr<LocalesChangedObserver> mLocalesChangedObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;
+  RefPtr<mozilla::SwipeTracker> mSwipeTracker;
+  mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
   Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
@@ -691,6 +727,14 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   bool mIMEHasFocus;
   bool mIMEHasQuit;
   bool mIsFullyOccluded;
+  // This flag is only used when APZ is off. It indicates that the current pan
+  // gesture was processed as a swipe. Sometimes the swipe animation can finish
+  // before momentum events of the pan gesture have stopped firing, so this
+  // flag tells us that we shouldn't allow the remaining events to cause
+  // scrolling. It is reset to false once a new gesture starts (as indicated by
+  // a PANGESTURE_(MAY)START event).
+  bool mCurrentPanGestureBelongsToSwipe;
+
   static nsIRollupListener* gRollupListener;
 
   struct InitialZoomConstraints {

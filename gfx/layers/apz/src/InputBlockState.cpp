@@ -619,9 +619,6 @@ TouchBlockState::TouchBlockState(
       mTouchCounter(aCounter),
       mStartTime(GetTargetApzc()->GetFrameTime().Time()) {
   TBS_LOG("Creating %p\n", this);
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    mAllowedTouchBehaviorSet = true;
-  }
 }
 
 bool TouchBlockState::SetAllowedTouchBehaviors(
@@ -651,35 +648,21 @@ bool TouchBlockState::HasAllowedTouchBehaviors() const {
 
 void TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther) {
   TBS_LOG("%p copying properties from %p\n", this, &aOther);
-  if (StaticPrefs::layout_css_touch_action_enabled()) {
-    MOZ_ASSERT(aOther.mAllowedTouchBehaviorSet ||
-               aOther.IsContentResponseTimerExpired());
-    SetAllowedTouchBehaviors(aOther.mAllowedTouchBehaviors);
-  }
+  MOZ_ASSERT(aOther.mAllowedTouchBehaviorSet ||
+             aOther.IsContentResponseTimerExpired());
+  SetAllowedTouchBehaviors(aOther.mAllowedTouchBehaviors);
   mTransformToApzc = aOther.mTransformToApzc;
 }
 
 bool TouchBlockState::HasReceivedAllContentNotifications() const {
   return CancelableBlockState::HasReceivedAllContentNotifications()
          // See comment in TouchBlockState::IsReadyforHandling()
-         && (!StaticPrefs::layout_css_touch_action_enabled() ||
-             mAllowedTouchBehaviorSet);
+         && mAllowedTouchBehaviorSet;
 }
 
 bool TouchBlockState::IsReadyForHandling() const {
   if (!CancelableBlockState::IsReadyForHandling()) {
     return false;
-  }
-
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    // If layout_css_touch_action_enabled() was false when this block was
-    // created, then mAllowedTouchBehaviorSet is guaranteed to the true.
-    // However, the pref may have been flipped to false after the block was
-    // created. In that case, we should eventually get the touch-behaviour
-    // notification, or expire the content response timeout, but we don't really
-    // need to wait for those, since we don't care about the touch-behaviour
-    // values any more.
-    return true;
   }
 
   return mAllowedTouchBehaviorSet || IsContentResponseTimerExpired();
@@ -714,12 +697,9 @@ void TouchBlockState::DispatchEvent(const InputData& aEvent) const {
 }
 
 bool TouchBlockState::TouchActionAllowsPinchZoom() const {
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    return true;
-  }
   // Pointer events specification requires that all touch points allow zoom.
-  for (size_t i = 0; i < mAllowedTouchBehaviors.Length(); i++) {
-    if (!(mAllowedTouchBehaviors[i] & AllowedTouchBehavior::PINCH_ZOOM)) {
+  for (auto& behavior : mAllowedTouchBehaviors) {
+    if (!(behavior & AllowedTouchBehavior::PINCH_ZOOM)) {
       return false;
     }
   }
@@ -727,11 +707,8 @@ bool TouchBlockState::TouchActionAllowsPinchZoom() const {
 }
 
 bool TouchBlockState::TouchActionAllowsDoubleTapZoom() const {
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    return true;
-  }
-  for (size_t i = 0; i < mAllowedTouchBehaviors.Length(); i++) {
-    if (!(mAllowedTouchBehaviors[i] & AllowedTouchBehavior::DOUBLE_TAP_ZOOM)) {
+  for (auto& behavior : mAllowedTouchBehaviors) {
+    if (!(behavior & AllowedTouchBehavior::DOUBLE_TAP_ZOOM)) {
       return false;
     }
   }
@@ -739,9 +716,6 @@ bool TouchBlockState::TouchActionAllowsDoubleTapZoom() const {
 }
 
 bool TouchBlockState::TouchActionAllowsPanningX() const {
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    return true;
-  }
   if (mAllowedTouchBehaviors.IsEmpty()) {
     // Default to allowed
     return true;
@@ -751,9 +725,6 @@ bool TouchBlockState::TouchActionAllowsPanningX() const {
 }
 
 bool TouchBlockState::TouchActionAllowsPanningY() const {
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    return true;
-  }
   if (mAllowedTouchBehaviors.IsEmpty()) {
     // Default to allowed
     return true;
@@ -763,9 +734,6 @@ bool TouchBlockState::TouchActionAllowsPanningY() const {
 }
 
 bool TouchBlockState::TouchActionAllowsPanningXY() const {
-  if (!StaticPrefs::layout_css_touch_action_enabled()) {
-    return true;
-  }
   if (mAllowedTouchBehaviors.IsEmpty()) {
     // Default to allowed
     return true;

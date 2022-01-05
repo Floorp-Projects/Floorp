@@ -13,11 +13,12 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "nsAlgorithm.h"
-#include "nsChildView.h"
+#include "nsIWidget.h"
 #include "nsRefreshDriver.h"
 #include "UnitTransforms.h"
 
-// These values were tweaked to make the physics feel similar to the native swipe.
+// These values were tweaked to make the physics feel similar to the native
+// swipe.
 static const double kSpringForce = 250.0;
 static const double kVelocityTwitchTolerance = 0.0000001;
 static const double kWholePagePixelSize = 550.0;
@@ -29,14 +30,19 @@ namespace mozilla {
 
 static already_AddRefed<nsRefreshDriver> GetRefreshDriver(nsIWidget& aWidget) {
   nsIWidgetListener* widgetListener = aWidget.GetWidgetListener();
-  PresShell* presShell = widgetListener ? widgetListener->GetPresShell() : nullptr;
-  nsPresContext* presContext = presShell ? presShell->GetPresContext() : nullptr;
-  RefPtr<nsRefreshDriver> refreshDriver = presContext ? presContext->RefreshDriver() : nullptr;
+  PresShell* presShell =
+      widgetListener ? widgetListener->GetPresShell() : nullptr;
+  nsPresContext* presContext =
+      presShell ? presShell->GetPresContext() : nullptr;
+  RefPtr<nsRefreshDriver> refreshDriver =
+      presContext ? presContext->RefreshDriver() : nullptr;
   return refreshDriver.forget();
 }
 
-SwipeTracker::SwipeTracker(nsChildView& aWidget, const PanGestureInput& aSwipeStartEvent,
-                           uint32_t aAllowedDirections, uint32_t aSwipeDirection)
+SwipeTracker::SwipeTracker(nsIWidget& aWidget,
+                           const PanGestureInput& aSwipeStartEvent,
+                           uint32_t aAllowedDirections,
+                           uint32_t aSwipeDirection)
     : mWidget(aWidget),
       mRefreshDriver(GetRefreshDriver(mWidget)),
       mAxis(0.0, 0.0, 0.0, kSpringForce, 1.0),
@@ -58,18 +64,27 @@ SwipeTracker::SwipeTracker(nsChildView& aWidget, const PanGestureInput& aSwipeSt
 void SwipeTracker::Destroy() { UnregisterFromRefreshDriver(); }
 
 SwipeTracker::~SwipeTracker() {
-  MOZ_ASSERT(!mRegisteredWithRefreshDriver, "Destroy needs to be called before deallocating");
+  MOZ_ASSERT(!mRegisteredWithRefreshDriver,
+             "Destroy needs to be called before deallocating");
 }
 
 double SwipeTracker::SwipeSuccessTargetValue() const {
-  return (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT) ? -1.0 : 1.0;
+  return (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT)
+             ? -1.0
+             : 1.0;
 }
 
 double SwipeTracker::ClampToAllowedRange(double aGestureAmount) const {
   // gestureAmount needs to stay between -1 and 0 when swiping right and
   // between 0 and 1 when swiping left.
-  double min = (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT) ? -1.0 : 0.0;
-  double max = (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_LEFT) ? 1.0 : 0.0;
+  double min =
+      (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT)
+          ? -1.0
+          : 0.0;
+  double max =
+      (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_LEFT)
+          ? 1.0
+          : 0.0;
   return clamped(aGestureAmount, min, max);
 }
 
@@ -97,15 +112,18 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
         aEvent.mType == PanGestureInput::PANGESTURE_START) {
       mEventsHaveStartedNewGesture = true;
     }
-    return mEventsHaveStartedNewGesture ? nsEventStatus_eIgnore : nsEventStatus_eConsumeNoDefault;
+    return mEventsHaveStartedNewGesture ? nsEventStatus_eIgnore
+                                        : nsEventStatus_eConsumeNoDefault;
   }
 
-  double delta = -aEvent.mPanDisplacement.x / mWidget.BackingScaleFactor() / kWholePagePixelSize;
+  double delta = -aEvent.mPanDisplacement.x /
+                 mWidget.GetDefaultScaleInternal() / kWholePagePixelSize;
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, aEvent.mTimeStamp);
 
   if (aEvent.mType != PanGestureInput::PANGESTURE_END) {
-    double elapsedSeconds = std::max(0.008, (aEvent.mTimeStamp - mLastEventTimeStamp).ToSeconds());
+    double elapsedSeconds =
+        std::max(0.008, (aEvent.mTimeStamp - mLastEventTimeStamp).ToSeconds());
     mCurrentVelocity = delta / elapsedSeconds;
     mLastEventTimeStamp = aEvent.mTimeStamp;
   } else {
@@ -135,7 +153,8 @@ void SwipeTracker::StartAnimating(double aTargetValue) {
   // unregister ourselves.
   MOZ_ASSERT(!mRegisteredWithRefreshDriver);
   if (mRefreshDriver) {
-    mRefreshDriver->AddRefreshObserver(this, FlushType::Style, "Swipe animation");
+    mRefreshDriver->AddRefreshObserver(this, FlushType::Style,
+                                       "Swipe animation");
     mRegisteredWithRefreshDriver = true;
   }
 }
@@ -173,8 +192,8 @@ void SwipeTracker::UnregisterFromRefreshDriver() {
 }
 
 /* static */ WidgetSimpleGestureEvent SwipeTracker::CreateSwipeGestureEvent(
-    EventMessage aMsg, nsIWidget* aWidget, const LayoutDeviceIntPoint& aPosition,
-    const TimeStamp& aTimeStamp) {
+    EventMessage aMsg, nsIWidget* aWidget,
+    const LayoutDeviceIntPoint& aPosition, const TimeStamp& aTimeStamp) {
   // XXX Why isn't this initialized with nsCocoaUtils::InitInputEvent()?
   WidgetSimpleGestureEvent geckoEvent(true, aMsg, aWidget);
   geckoEvent.mModifiers = 0;
@@ -185,14 +204,30 @@ void SwipeTracker::UnregisterFromRefreshDriver() {
   return geckoEvent;
 }
 
-bool SwipeTracker::SendSwipeEvent(EventMessage aMsg, uint32_t aDirection, double aDelta,
-                                  const TimeStamp& aTimeStamp) {
+bool SwipeTracker::SendSwipeEvent(EventMessage aMsg, uint32_t aDirection,
+                                  double aDelta, const TimeStamp& aTimeStamp) {
   WidgetSimpleGestureEvent geckoEvent =
       CreateSwipeGestureEvent(aMsg, &mWidget, mEventPosition, aTimeStamp);
   geckoEvent.mDirection = aDirection;
   geckoEvent.mDelta = aDelta;
   geckoEvent.mAllowedDirections = mAllowedDirections;
   return mWidget.DispatchWindowEvent(geckoEvent);
+}
+
+// static
+bool SwipeTracker::CanTriggerSwipe(const PanGestureInput& aPanInput) {
+  if (aPanInput.mType != PanGestureInput::PANGESTURE_START) {
+    return false;
+  }
+
+  // Only initiate horizontal tracking for events whose horizontal element is
+  // at least eight times larger than its vertical element. This minimizes
+  // performance problems with vertical scrolls (by minimizing the possibility
+  // that they'll be misinterpreted as horizontal swipes), while still
+  // tolerating a small vertical element to a true horizontal swipe.  The number
+  // '8' was arrived at by trial and error.
+  return std::abs(aPanInput.mPanDisplacement.x) >
+         std::abs(aPanInput.mPanDisplacement.y) * 8;
 }
 
 }  // namespace mozilla

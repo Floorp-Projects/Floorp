@@ -2167,7 +2167,7 @@ bool NativeKey::DispatchCommandEvent(uint32_t aEventCommand) const {
            "%s app command event...",
            this, nsAtomCString(command).get()));
   bool ok =
-      mWidget->DispatchWindowEvent(&appCommandEvent) || mWidget->Destroyed();
+      mWidget->DispatchWindowEvent(appCommandEvent) || mWidget->Destroyed();
   MOZ_LOG(
       gKeyLog, LogLevel::Info,
       ("%p   NativeKey::DispatchCommandEvent(), dispatched app command event, "
@@ -2319,7 +2319,7 @@ bool NativeKey::HandleAppCommandMessage() const {
           gKeyLog, LogLevel::Info,
           ("%p   NativeKey::HandleAppCommandMessage(), dispatching %s event...",
            this, ToChar(contentCommandMessage)));
-      mWidget->DispatchWindowEvent(&contentCommandEvent);
+      mWidget->DispatchWindowEvent(contentCommandEvent);
       MOZ_LOG(gKeyLog, LogLevel::Info,
               ("%p   NativeKey::HandleAppCommandMessage(), dispatched %s event",
                this, ToChar(contentCommandMessage)));
