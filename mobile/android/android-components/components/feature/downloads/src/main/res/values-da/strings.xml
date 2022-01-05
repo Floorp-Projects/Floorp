@@ -44,4 +44,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Kunne ikke åbne %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Tilladelse til at få adgang til filer og medier er nødvendig for at hente filer. Gå til Indstillinger i Android, tryk på Tilladelser, og tryk så på Tillad.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Annuller private filhentninger?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Hvis du lukker alle private faneblade nu, vil hentning af %1$s blive annulleret. Er du sikker på, at du vil forlade privat browsing-tilstand?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Annuller filhentninger</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Forbliv i privat browsing-tilstand</string>
 </resources>

@@ -126,6 +126,15 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Girêdan hate resetkirin</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Girêdana torê di dema bazariya girêdanê de qut bû. Tika ye dîsa biceribîne.</p>
+      <ul>
+        <li>Dibe ku malper demkî nayê bikaranîn yan jî gelekî mijêl e. Piştî çend xulekan dîsa biceribîne.</li>
+        <li>Heke ti malperek venabe, girêdana înterneta cîhaza xwe yan jî girêdana Wi-Fiyê kontrol bike.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Cureya dosyeyê ya neewle</string>
 
@@ -139,14 +148,47 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Çewtiya Naveroka Xerabe</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Ji ber ku di guhestina daneyan de çewtiyek hatiye tespîtkirin, rûpela dixwazî vekî nayê nîşandan.</p>
+      <ul>
+        <li>Tika ye bi xwediyên malperê re peywendiyê çêke û wan agahdar bike.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Naverok têk çû</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Ji ber ku di guhestina daneyan de çewtiyek hatiye tespîtkirin, rûpela dixwazî vekî nayê nîşandan.</p>
+      <ul>
+        <li>Tika ye bi xwediyên malperê re peywendiyê çêke û wan agahdar bike.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Çewtiya kodkirina naverokê</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Ji ber ku rûpela dikî vekî şêweyeke jidandinê ya nederbasdar yan jî nayê destekkirin bi kar tîne, rûpela dixwazî vekî nayê nîşandan.</p>
+      <ul>
+        <li>Tika ye bi xwediyên malperê re peywendiyê çêke û wan agahdar bike.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Navnîşan nehate dîtin</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Gerokê nekarî ji bo navnîşana hatî xwestin pêşkêşkata host peyda bike.</p>
+      <ul>
+        <li>Navnîşanê ji bo şaşiyên nivîsandinê kontrol bike: wekî
+          <strong>ww</strong>.example.com ji dêvla
+          <strong>www</strong>.example.com.</li>
+        <li>Heke tu nkarî ti rûpelan bar bikî, înterneta amûra xwe yan jî girêdana Wi-Fiyê kontrol bike.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Girêdana înternetê tune</string>
@@ -157,8 +199,19 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Navnîşana nederbasdar</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Navnîşana hatî nivîsandin ne di formata naskirî de ye. Tika ye darikê cîgehê ji bo şaşiyan kontrol bike û dîsa biceribîne.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Navnîşan ne derbasdar e</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Malperên înternetê bi piranî wisa tên nivîsandin: <strong>http://www.example.com/</strong></li>
+        <li>Bala xwe bidê ka te xêza paldayî nivîsandiye: <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protokola Nenas</string>
@@ -187,6 +240,10 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Pirsgirêka malpera xapîner</string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Malpera ewle ne berdest e</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Te ji bo zêdetirina ewlekariyê HTTPS-Tenê vekiriye lê versiyoneke ewle ya HTTPSê ya malpera <em>%1$s</em>ê ne berdest e.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Ji malpera HTTP dewam bike</string>
 </resources>
