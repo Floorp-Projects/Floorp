@@ -1367,6 +1367,10 @@ class nsIWidget : public nsISupports {
   virtual bool AsyncPanZoomEnabled() const = 0;
 
   /**
+   */
+  virtual void SwipeFinished() = 0;
+
+  /**
    * Enables the dropping of files to a widget.
    */
   virtual void EnableDragDrop(bool aEnable) = 0;
