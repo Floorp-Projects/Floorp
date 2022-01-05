@@ -1088,10 +1088,6 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   if (menuFrame) {
     menuFrame->PopupClosed(aDeselectMenu);
   }
-
-  if (auto* widget = GetWidget()) {
-    widget->ClearCachedWebrenderResources();
-  }
 }
 
 nsIFrame::ReflowChildFlags nsMenuPopupFrame::GetXULLayoutFlags() {
