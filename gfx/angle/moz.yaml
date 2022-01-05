@@ -38,4 +38,5 @@ vendoring:
   update-actions:
     - action: run-script
       script: '{yaml_dir}/auto-update-angle.sh'
+      args: ['{revision}']
       cwd: '{cwd}'
