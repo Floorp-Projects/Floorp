@@ -267,7 +267,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=49e4ba52ba911aa9c6a499f30e849de2a972ec82#49e4ba52ba911aa9c6a499f30e849de2a972ec82"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -292,7 +292,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=49e4ba52ba911aa9c6a499f30e849de2a972ec82#49e4ba52ba911aa9c6a499f30e849de2a972ec82"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/kinetiknz/audioipc-2?rev=49e4ba52ba911aa9c6a499f30e849de2a972ec82#49e4ba52ba911aa9c6a499f30e849de2a972ec82"
+source = "git+https://github.com/kinetiknz/audioipc-2?rev=978b4082bdc7d8e1aa58dd49e45cdc81beacb333#978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",

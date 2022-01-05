@@ -64,7 +64,7 @@ rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 [source."https://github.com/kinetiknz/audioipc-2"]
 git = "https://github.com/kinetiknz/audioipc-2"
 replace-with = "vendored-sources"
-rev = "49e4ba52ba911aa9c6a499f30e849de2a972ec82"
+rev = "978b4082bdc7d8e1aa58dd49e45cdc81beacb333"
 
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
