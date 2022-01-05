@@ -433,8 +433,6 @@ class nsChildView final : public nsBaseWidget {
   virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
   LayoutDeviceIntRegion GetNonDraggableRegion() { return mNonDraggableRegion.Region(); }
 
-  virtual void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
-
   virtual void LookUpDictionary(const nsAString& aText,
                                 const nsTArray<mozilla::FontRange>& aFontRangeArray,
                                 const bool aIsVertical,
@@ -532,8 +530,6 @@ class nsChildView final : public nsBaseWidget {
   };
 
   SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
-  void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
-                               uint32_t aAllowedDirections);
 
  protected:
   ChildView* mView;  // my parallel cocoa view, [STRONG]
