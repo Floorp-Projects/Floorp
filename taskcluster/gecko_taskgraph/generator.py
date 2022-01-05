@@ -7,17 +7,17 @@ import os
 import copy
 
 import attr
+from taskgraph.parameters import Parameters
 from taskgraph.util.yaml import load_yaml
 
 from . import filter_tasks
 from .graph import Graph
-from .taskgraph import TaskGraph
-from .task import Task
-from .optimize import optimize_task_graph
 from .morph import morph
-from .parameters import Parameters
-from .util.python_path import find_object
+from .optimize import optimize_task_graph
+from .task import Task
+from .taskgraph import TaskGraph
 from .transforms.base import TransformSequence, TransformConfig
+from .util.python_path import find_object
 from .util.verify import (
     verify_docs,
     verifications,

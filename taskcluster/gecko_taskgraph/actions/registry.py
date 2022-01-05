@@ -9,13 +9,13 @@ from types import FunctionType
 from collections import namedtuple
 
 from mozbuild.util import memoize
+from taskgraph.parameters import Parameters
 from taskgraph.util import yaml
 
 from gecko_taskgraph import create
 from gecko_taskgraph.config import load_graph_config
 from gecko_taskgraph.util import taskcluster, hash
 from gecko_taskgraph.util.python_path import import_sibling_modules
-from gecko_taskgraph.parameters import Parameters
 
 
 actions = []
