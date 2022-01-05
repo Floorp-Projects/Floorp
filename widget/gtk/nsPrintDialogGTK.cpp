@@ -909,7 +909,8 @@ nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter* aParent,
   MOZ_ASSERT(aSettings, "aSettings must not be null");
 
   // Check for the flatpak portal first
-  if (ShouldUsePortal() && gtk_check_version(3, 22, 0) == nullptr) {
+  if (ShouldUsePortal(widget::PortalKind::Print) &&
+      gtk_check_version(3, 22, 0) == nullptr) {
     nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
     NS_ASSERTION(widget, "Need a widget for dialog to be modal.");
     GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(widget);

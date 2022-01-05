@@ -5,7 +5,7 @@
 
 #include "WidgetUtilsGtk.h"
 
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/UniquePtr.h"
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
@@ -92,7 +92,7 @@ bool IsRunningUnderFlatpak() {
   return sRunning;
 }
 
-bool ShouldUsePortal() {
+bool ShouldUsePortal(PortalKind aPortalKind) {
   static bool sFlatpakPortalEnv = [] {
     if (IsRunningUnderFlatpak()) {
       return true;
@@ -100,9 +100,31 @@ bool ShouldUsePortal() {
     const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
     return portalEnvString && atoi(portalEnvString) != 0;
   }();
-  return Preferences::HasUserValue("widget.use-xdg-desktop-portal")
-             ? Preferences::GetBool("widget.use-xdg-desktop-portal", false)
-             : sFlatpakPortalEnv;
+
+  bool autoBehavior = sFlatpakPortalEnv;
+  const int32_t pref = [&] {
+    switch (aPortalKind) {
+      case PortalKind::FilePicker:
+        return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();
+      case PortalKind::MimeHandler:
+        return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();
+      case PortalKind::Print:
+        // Print portal still needs more work, so auto behavior is just when
+        // flatpak is enabled.
+        autoBehavior = IsRunningUnderFlatpak();
+        return StaticPrefs::widget_use_xdg_desktop_portal_print();
+    }
+    return 2;
+  }();
+
+  switch (pref) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      return autoBehavior;
+  }
 }
 
 nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {
