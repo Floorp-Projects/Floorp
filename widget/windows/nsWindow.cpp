@@ -4319,12 +4319,6 @@ bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event) {
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event,
-                                   nsEventStatus& aStatus) {
-  DispatchEvent(event, aStatus);
-  return ConvertStatus(aStatus);
-}
-
 // Recursively dispatch synchronous paints for nsIWidget
 // descendants with invalidated rectangles.
 BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg) {
