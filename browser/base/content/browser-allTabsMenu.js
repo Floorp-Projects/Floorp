@@ -131,6 +131,10 @@ var gTabsPanel = {
       filterFn: tab => tab.hidden,
     });
 
+    this.allTabsButton.addEventListener("mousedown", e => {
+      this.showAllTabsPanel(e);
+    });
+
     this._initialized = true;
   },
 
@@ -140,7 +144,6 @@ var gTabsPanel = {
   },
 
   showAllTabsPanel(event) {
-    this.init();
     if (this.canOpen) {
       PanelUI.showSubView(
         this.kElements.allTabsView,
@@ -157,7 +160,6 @@ var gTabsPanel = {
   },
 
   showHiddenTabsPanel(event) {
-    this.init();
     if (!this.canOpen) {
       return;
     }
