@@ -506,7 +506,7 @@ static auto ToCString(const nsTArray<std::pair<nsCString, nsCString>>& aPairs) {
   });
 }
 
-mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
+mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
   GMP_CHILD_LOG_DEBUG("%s", __FUNCTION__);
 
   nsCString libPath;
