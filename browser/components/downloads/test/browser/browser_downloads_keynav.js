@@ -19,6 +19,11 @@ add_task(async function test_downloads_keynav() {
 
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
 
+  // Move the mouse pointer out of the way first so it doesn't
+  // interfere with the selection.
+  let listbox = document.getElementById("downloadsListBox");
+  EventUtils.synthesizeMouse(listbox, -5, -5, { type: "mousemove" });
+
   let downloads = [];
   for (let i = 0; i < 2; i++) {
     downloads.push({ state: DownloadsCommon.DOWNLOAD_FINISHED });
@@ -29,7 +34,6 @@ add_task(async function test_downloads_keynav() {
   await task_addDownloads(downloads);
   await task_openPanel();
 
-  let listbox = document.getElementById("downloadsListBox");
   is(document.activeElement, listbox, "downloads list is focused");
   is(listbox.selectedIndex, 0, "downloads list selected index starts at 0");
 
