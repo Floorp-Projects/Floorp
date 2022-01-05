@@ -3381,6 +3381,13 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
     return;
   }
 
+#ifdef ANDROID
+  // See bug 1748506
+  if (StringEndsWith(filePath, "/built_in_addons.json"_ns)) {
+    return;
+  }
+#endif
+
   // Ignore fetches/xhrs, as they are frequently used in a way where
   // non-existence is OK (ie with fallbacks). This risks false negatives (ie
   // files that *should* be there but aren't) - which we accept for now.
