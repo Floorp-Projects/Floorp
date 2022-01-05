@@ -270,8 +270,6 @@ class nsWindow final : public nsWindowBase {
                                   uint16_t aInputSource,
                                   WinPointerInfo* aPointerInfo = nullptr,
                                   bool aIgnoreAPZ = false);
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
-                                   nsEventStatus& aStatus);
   void DispatchPendingEvents();
   void DispatchCustomEvent(const nsString& eventName);
 
