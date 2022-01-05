@@ -171,14 +171,8 @@ nsFilePicker::nsFilePicker()
       mRunning(false),
       mAllowURLs(false),
       mFileChooserDelegate(nullptr) {
-  // Due to Bug 1635718 always use portal for file dialog on Wayland.
-  // FIXME: This is not what this code is doing? Pref is default false.
-  if (widget::GdkIsWaylandDisplay()) {
-    mUseNativeFileChooser =
-        Preferences::GetBool("widget.use-xdg-desktop-portal", true);
-  } else {
-    mUseNativeFileChooser = widget::ShouldUsePortal();
-  }
+  mUseNativeFileChooser =
+      widget::ShouldUsePortal(widget::PortalKind::FilePicker);
 }
 
 nsFilePicker::~nsFilePicker() = default;

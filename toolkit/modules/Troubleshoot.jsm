@@ -105,6 +105,9 @@ const PREFS_FOR_DISPLAY = [
   "webgl.",
   "widget.dmabuf",
   "widget.use-xdg-desktop-portal",
+  "widget.use-xdg-desktop-portal.file-picker",
+  "widget.use-xdg-desktop-portal.mime-handler",
+  "widget.use-xdg-desktop-portal.print",
   "widget.wayland",
 ];
 

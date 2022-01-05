@@ -29,7 +29,12 @@ bool GdkIsWaylandDisplay();
 bool GdkIsX11Display();
 
 bool IsRunningUnderFlatpak();
-bool ShouldUsePortal();
+enum class PortalKind {
+  FilePicker,
+  MimeHandler,
+  Print,
+};
+bool ShouldUsePortal(PortalKind);
 
 // Parse text/uri-list
 nsTArray<nsCString> ParseTextURIList(const nsACString& data);
