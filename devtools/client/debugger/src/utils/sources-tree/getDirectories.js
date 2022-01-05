@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createParentMap } from "./utils";
-import flattenDeep from "lodash/flattenDeep";
 
 function findSourceItem(sourceTree, source) {
   function _traverse(subtree) {
@@ -35,7 +34,7 @@ export function findSourceTreeNodes(sourceTree, path) {
   }
 
   const result = _traverse(sourceTree);
-  return Array.isArray(result) ? flattenDeep(result) : result;
+  return Array.isArray(result) ? result.flat(Infinity) : result;
 }
 
 function getAncestors(sourceTree, item) {
