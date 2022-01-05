@@ -6,11 +6,11 @@ both:
     async StartRace();
 
 parent:
-    intr Lose();
+    [LegacyIntr] intr Lose();
 
 child:
-    intr Win();
-    intr Rpc();
+    [LegacyIntr] intr Win();
+    [LegacyIntr] intr Rpc();
     async __delete__();
 
 /* Tests that race resolution does not cause deadlocks */

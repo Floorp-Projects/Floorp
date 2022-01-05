@@ -8,6 +8,6 @@ parent:
     async Msg(Shmem s, Foo f);
     sync SyncMsg(Shmem s, Foo f)
         returns (Shmem t, Foo g);
-    intr InterruptMsg(Shmem s, Foo f)
+    [LegacyIntr] intr InterruptMsg(Shmem s, Foo f)
         returns (Shmem t, Foo g);
 };

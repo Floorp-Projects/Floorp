@@ -8,7 +8,7 @@ parent:
 
 child:
     async Start();
-    intr Exit();
+    [LegacyIntr] intr Exit();
     async __delete__();
 };
 
