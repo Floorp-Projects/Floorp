@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <title>WebMIDI Listener Test</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="MIDITestUtils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    async function runTests() {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.webmidi.enabled", true]],
+      });
+      ok(
+        await SpecialPowers.testPermission(
+          "midi",
+          SpecialPowers.Services.perms.UNKNOWN_ACTION,
+          document
+        ),
+        "midi value should have UNKNOWN permission"
+      );
+      ok(
+        await SpecialPowers.testPermission(
+          "midi-sysex",
+          SpecialPowers.Services.perms.UNKNOWN_ACTION,
+          document
+        ),
+        "midi-sysex value should have UNKNOWN permission"
+      );
+
+      // Gated permission should fail without addon installed.
+      try {
+        await navigator.requestMIDIAccess({ sysex: false });
+        ok(false, "MIDI Access Request gate failed");
+      } catch (ex) {
+        ok(true, "MIDI Access Request denied by default");
+      }
+
+      // When an addon is installed, the permission is inserted.  Test
+      // that the request succeeds after we insert the permission.
+      await SpecialPowers.addPermission(
+        "midi",
+        SpecialPowers.Services.perms.ALLOW_ACTION,
+        document
+      );
+
+      // Gated permission should allow access after addon inserted permission.
+      try {
+        await navigator.requestMIDIAccess({ sysex: false });
+        ok(true, "MIDI Access Request allowed");
+      } catch (ex) {
+        ok(false, "MIDI Access Request failed");
+      }
+
+      // Remove the permission
+      await SpecialPowers.removePermission("midi", document);
+
+      SimpleTest.finish();
+    }
+    </script>
+  </body>
+</html>
