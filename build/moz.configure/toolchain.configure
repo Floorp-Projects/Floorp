@@ -832,8 +832,12 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                     # -m32/-m64 for the host, it's probably toolchain-prefixed,
                     # so we prioritize a raw 'gcc' instead.
                     prioritized = info.type
-
-            types = [prioritized] + [t for t in types if t != info.type]
+            if target.os != "WINNT" and host_or_target.os == "WINNT":
+                # When cross-compiling on Windows, don't prioritize. We'll fallback
+                # to checking for clang-cl first.
+                pass
+            else:
+                types = [prioritized] + [t for t in types if t != info.type]
 
         gcc = ("gcc",)
         if toolchain_prefix and host_or_target is target:
