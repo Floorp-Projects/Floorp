@@ -31,3 +31,11 @@ updatebot:
 
 vendoring:
   url: https://chromium.googlesource.com/angle/angle
+  source-hosting: googlesource
+  vendor-directory: gfx/angle/checkout
+  skip-vendoring-steps: ["fetch", "update-moz-build"]
+
+  update-actions:
+    - action: run-script
+      script: '{yaml_dir}/auto-update-angle.sh'
+      cwd: '{cwd}'
