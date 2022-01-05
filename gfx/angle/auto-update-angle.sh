@@ -48,10 +48,23 @@ export DEPOT_TOOLS_UPDATE=0
 pushd "$MOZ_FETCHES_DIR/depot_tools"
 touch .disable_auto_update
 
-# Move the preloaded binaries into place so we don't need to do any setup
-mv "$MOZ_FETCHES_DIR"/depot_tools-preloaded-binaries/* .
-# Move the hidden files also. If we don't do the .[^.]* we get an error trying to move . and ..
-mv "$MOZ_FETCHES_DIR"/depot_tools-preloaded-binaries/.[^.]* .
+################################################
+if test -n "$GENERATE_DEPOT_TOOLS_BINARIES"; then
+	# We're generating binaries, so run the setup manually
+	cmd '/c cipd_bin_setup.bat'
+
+	pushd bootstrap
+	cmd '/c win_tools.bat'
+	popd
+else
+	# Move the preloaded binaries into place so we don't need to do any setup
+	mv "$MOZ_FETCHES_DIR"/depot_tools-preloaded-binaries/* .
+	# Move the hidden files also. If we don't do the .[^.]* we get an error trying to move . and ..
+	mv "$MOZ_FETCHES_DIR"/depot_tools-preloaded-binaries/.[^.]* .
+fi
+
+################################################
+
 popd
 
 # do the update
