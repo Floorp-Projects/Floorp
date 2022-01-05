@@ -18,6 +18,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -105,7 +106,6 @@
 #include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
-#include "SwipeTracker.h"
 #include "VibrancyManager.h"
 #include "nsNativeThemeCocoa.h"
 #include "nsIDOMWindowUtils.h"
@@ -239,11 +239,6 @@ nsChildView::nsChildView()
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
-  if (mSwipeTracker) {
-    mSwipeTracker->Destroy();
-    mSwipeTracker = nullptr;
-  }
-
   // Notify the children that we're gone.  childView->ResetParent() can change
   // our list of children while it's being iterated, so the way we iterate the
   // list must allow for this.
@@ -1865,8 +1860,6 @@ void nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipe
     mCurrentPanGestureBelongsToSwipe = true;
   }
 }
-
-void nsChildView::SwipeFinished() { mSwipeTracker = nullptr; }
 
 void nsChildView::UpdateBoundsFromView() {
   auto oldSize = mBounds.Size();

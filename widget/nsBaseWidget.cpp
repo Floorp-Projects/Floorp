@@ -12,6 +12,7 @@
 #include "GLConsts.h"
 #include "InputData.h"
 #include "LiveResizeListener.h"
+#include "SwipeTracker.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
 #include "X11UndefineNone.h"
@@ -414,6 +415,11 @@ void nsBaseWidget::FreeLocalesChangedObserver() {
 //-------------------------------------------------------------------------
 
 nsBaseWidget::~nsBaseWidget() {
+  if (mSwipeTracker) {
+    mSwipeTracker->Destroy();
+    mSwipeTracker = nullptr;
+  }
+
   IMEStateManager::WidgetDestroyed(this);
 
   FreeLocalesChangedObserver();
@@ -2039,6 +2045,8 @@ nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
           [this, aEnable, kungFuDeathGrip]() { EnableDragDrop(aEnable); }),
       kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
+
+void nsBaseWidget::SwipeFinished() { mSwipeTracker = nullptr; }
 
 const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
   TextEventDispatcher* dispatcher = GetTextEventDispatcher();
