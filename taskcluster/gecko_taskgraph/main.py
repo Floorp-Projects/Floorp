@@ -106,7 +106,7 @@ def get_taskgraph_generator(root, parameters):
 
 def format_taskgraph(options, parameters, logfile=None):
     import gecko_taskgraph
-    from gecko_taskgraph.parameters import parameters_loader
+    from taskgraph.parameters import parameters_loader
 
     if logfile:
         oldhandler = logging.root.handlers[-1]
@@ -135,7 +135,7 @@ def format_taskgraph(options, parameters, logfile=None):
 
 
 def dump_output(out, path=None, params_spec=None):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     params_name = Parameters.format_spec(params_spec)
     fh = None
@@ -157,7 +157,7 @@ def dump_output(out, path=None, params_spec=None):
 
 
 def generate_taskgraph(options, parameters, logdir):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     def logfile(spec):
         """Determine logfile given a parameters specification."""
@@ -315,7 +315,7 @@ def generate_taskgraph(options, parameters, logdir):
 )
 def show_taskgraph(options):
     from mozversioncontrol import get_repository_object as get_repository
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     if options.pop("verbose", False):
         logging.root.setLevel(logging.DEBUG)
