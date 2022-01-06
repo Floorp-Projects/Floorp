@@ -127,7 +127,7 @@ class Suggestions {
       click_url: result.click_url,
       impression_url: result.impression_url,
       block_id: result.id,
-      advertiser: result.advertiser.toLocaleLowerCase(),
+      advertiser: result.advertiser,
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       score: SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
