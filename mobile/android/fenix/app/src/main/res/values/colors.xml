@@ -13,7 +13,7 @@
     <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
     <!-- App Bar Top (edit), Header (edit) -->
-    <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonInk20</color>
     <!-- Selected tab -->
     <color name="fx_mobile_layer_color_accent_nonopaque">@color/photonViolet70A12</color>
     <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
@@ -32,13 +32,13 @@
     <!-- Checkbox default, Radio button default -->
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Checkbox selected, Radio button selected -->
-    <color name="fx_mobile_action_color_form_selected" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_action_color_form_selected" tools:ignore="UnusedResources">@color/photonInk20</color>
     <!-- Switch background OFF, Switch background ON -->
     <color name="fx_mobile_action_color_form_surface" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Checkbox disabled, Radio disabled -->
     <color name="fx_mobile_action_color_form_disabled" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Switch thumb ON -->
-    <color name="fx_mobile_action_color_form_on" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_action_color_form_on" tools:ignore="UnusedResources">@color/photonInk20</color>
     <!-- Switch thumb OFF -->
     <color name="fx_mobile_action_color_form_off" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Scroll indicator active -->
@@ -72,7 +72,7 @@
     <!-- Information -->
     <color name="fx_mobile_icon_color_information">@color/photonBlue30</color>
     <!-- Icon button -->
-    <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonInk20</color>
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
     <color name="fx_mobile_icon_color_accent_violet" tools:ignore="UnusedResources">@color/photonViolet60</color>
     <color name="fx_mobile_icon_color_accent_blue" tools:ignore="UnusedResources">@color/photonBlue60</color>
@@ -88,7 +88,7 @@
     <!-- Form parts -->
     <color name="fx_mobile_border_color_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Selected tab -->
-    <color name="fx_mobile_border_color_selected" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_border_color_selected" tools:ignore="UnusedResources">@color/photonInk20</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
     <!-- Form parts -->
