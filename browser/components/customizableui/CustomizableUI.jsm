@@ -1438,7 +1438,7 @@ var CustomizableUIInternal = {
             this.getCustomizationTarget(node),
             CustomizableUI.REASON_WINDOW_CLOSED
           );
-          if (areaProperties.has("overflowable")) {
+          if (areaProperties.get("overflowable")) {
             node.overflowable.uninit();
             node.overflowable = null;
           }
