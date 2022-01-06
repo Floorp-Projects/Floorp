@@ -2997,6 +2997,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "dns-parser",
+ "gecko-profiler",
  "log",
  "socket2",
  "uuid",
