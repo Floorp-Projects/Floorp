@@ -51,12 +51,12 @@ class WritableStreamDefaultController final : public nsISupports,
 
   AbortSignal* Signal() { return mSignal; }
 
-  void Error(JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Error(JSContext* aCx, JS::Handle<JS::Value> aError,
+                                ErrorResult& aRv);
 
   // [[AbortSteps]]
-  virtual already_AddRefed<Promise> AbortSteps(JSContext* aCx,
-                                               JS::Handle<JS::Value> aReason,
-                                               ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> AbortSteps(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
   // [[ErrorSteps]]
   virtual void ErrorSteps();
@@ -169,23 +169,23 @@ extern void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-extern void WritableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerClose(
     JSContext* aCx, WritableStreamDefaultController* aController,
     ErrorResult& aRv);
 
-extern void WritableStreamDefaultControllerWrite(
+MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerWrite(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, double chunkSize, ErrorResult& aRv);
 
-extern void WritableStreamDefaultControllerError(
+MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerError(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-extern void WritableStreamDefaultControllerErrorIfNeeded(
+MOZ_CAN_RUN_SCRIPT extern void WritableStreamDefaultControllerErrorIfNeeded(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-extern double WritableStreamDefaultControllerGetChunkSize(
+MOZ_CAN_RUN_SCRIPT extern double WritableStreamDefaultControllerGetChunkSize(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 

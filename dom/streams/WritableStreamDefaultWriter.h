@@ -64,15 +64,16 @@ class WritableStreamDefaultWriter final : public nsISupports,
 
   Nullable<double> GetDesiredSize(ErrorResult& aRv);
 
-  already_AddRefed<Promise> Abort(JSContext* aCx, JS::Handle<JS::Value> aReason,
-                                  ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Abort(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Close(JSContext* aCx,
+                                                     ErrorResult& aRv);
 
   void ReleaseLock(JSContext* aCx, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Write(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                                  ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Write(
+      JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
   // Internal Slots:
  private:
