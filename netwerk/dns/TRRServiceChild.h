@@ -41,6 +41,7 @@ class TRRServiceChild : public PTRRServiceChild,
   mozilla::ipc::IPCResult RecvSetDetectedTrrURI(const nsCString& aURI);
   mozilla::ipc::IPCResult RecvSetDefaultTRRConnectionInfo(
       Maybe<HttpConnectionInfoCloneArgs>&& aArgs);
+  mozilla::ipc::IPCResult RecvUpdateEtcHosts(nsTArray<nsCString>&& aHosts);
 
  private:
   virtual ~TRRServiceChild();
