@@ -2693,42 +2693,41 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
 
-  void vcmpps(uint8_t order, Operand rhs, FloatRegister srcDest) {
+  void vcmpps(uint8_t order, Operand rhs, FloatRegister lhs,
+              FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());
     switch (rhs.kind()) {
       case Operand::FPREG:
-        masm.vcmpps_rr(order, rhs.fpu(), srcDest.encoding(),
-                       srcDest.encoding());
+        masm.vcmpps_rr(order, rhs.fpu(), lhs.encoding(), dest.encoding());
         break;
       case Operand::MEM_REG_DISP:
-        masm.vcmpps_mr(order, rhs.disp(), rhs.base(), srcDest.encoding(),
-                       srcDest.encoding());
+        masm.vcmpps_mr(order, rhs.disp(), rhs.base(), lhs.encoding(),
+                       dest.encoding());
         break;
       case Operand::MEM_ADDRESS32:
-        masm.vcmpps_mr(order, rhs.address(), srcDest.encoding(),
-                       srcDest.encoding());
+        masm.vcmpps_mr(order, rhs.address(), lhs.encoding(), dest.encoding());
         break;
       default:
         MOZ_CRASH("unexpected operand kind");
     }
   }
-  void vcmpeqps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_EQ, rhs, srcDest);
+  void vcmpeqps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_EQ, rhs, lhs, dest);
   }
-  void vcmpltps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_LT, rhs, srcDest);
+  void vcmpltps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_LT, rhs, lhs, dest);
   }
-  void vcmpleps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_LE, rhs, srcDest);
+  void vcmpleps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_LE, rhs, lhs, dest);
   }
-  void vcmpunordps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_UNORD, rhs, srcDest);
+  void vcmpunordps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_UNORD, rhs, lhs, dest);
   }
-  void vcmpneqps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_NEQ, rhs, srcDest);
+  void vcmpneqps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_NEQ, rhs, lhs, dest);
   }
-  void vcmpordps(const Operand& rhs, FloatRegister srcDest) {
-    vcmpps(X86Encoding::ConditionCmp_ORD, rhs, srcDest);
+  void vcmpordps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmpps(X86Encoding::ConditionCmp_ORD, rhs, lhs, dest);
   }
   void vcmppd(uint8_t order, Operand rhs, FloatRegister srcDest) {
     switch (rhs.kind()) {
