@@ -1341,7 +1341,7 @@ class HTMLEditUtils final {
     MOZ_ASSERT(HTMLEditUtils::IsAnyListElement(&aListElement));
     for (nsIContent* maybeFirstListItem = aListElement.GetFirstChild();
          maybeFirstListItem;
-         maybeFirstListItem = maybeFirstListItem->GetNextNode()) {
+         maybeFirstListItem = maybeFirstListItem->GetNextNode(&aListElement)) {
       if (HTMLEditUtils::IsListItem(maybeFirstListItem)) {
         return maybeFirstListItem->AsElement();
       }
