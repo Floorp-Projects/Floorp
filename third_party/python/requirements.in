@@ -1,5 +1,5 @@
 appdirs==1.4.4
-attrs==19.1.0
+attrs==19.2.0
 blessings==1.7
 cbor2==4.0.1
 # Though we don't depend on colorama directly, we need to explicitly

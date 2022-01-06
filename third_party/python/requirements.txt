@@ -50,9 +50,9 @@ async-timeout==3.0.1 \
     # via
     #   aiohttp
     #   taskcluster
-attrs==19.1.0 \
-    --hash=sha256:69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79 \
-    --hash=sha256:f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399
+attrs==19.2.0 \
+    --hash=sha256:ec20e7a4825331c1b5ebf261d111e16fa9612c1f7a5e1f884f12bd53a664dfd2 \
+    --hash=sha256:f913492e1663d3c36f502e5e9ba6cd13cf19d7fab50aa13239e420fef95e1396
     # via
     #   -r requirements-mach-vendor-python.in
     #   aiohttp
