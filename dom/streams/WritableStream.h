@@ -91,27 +91,26 @@ class WritableStream final : public nsISupports, public nsWrapperCache {
   }
 
   // WritableStreamDealWithRejection
-  void DealWithRejection(JSContext* aCx, JS::Handle<JS::Value> aError,
-                         ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void DealWithRejection(JSContext* aCx,
+                                            JS::Handle<JS::Value> aError,
+                                            ErrorResult& aRv);
 
   // WritableStreamFinishErroring
-  void FinishErroring(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void FinishErroring(JSContext* aCx, ErrorResult& aRv);
 
   // WritableStreamFinishInFlightClose
   void FinishInFlightClose();
 
   // WritableStreamFinishInFlightCloseWithError
-  void FinishInFlightCloseWithError(JSContext* aCx,
-                                    JS::Handle<JS::Value> aError,
-                                    ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void FinishInFlightCloseWithError(
+      JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
   // WritableStreamFinishInFlightWrite
   void FinishInFlightWrite();
 
   // WritableStreamFinishInFlightWriteWithError
-  void FinishInFlightWriteWithError(JSContext* aCX,
-                                    JS::Handle<JS::Value> aError,
-                                    ErrorResult& aR);
+  MOZ_CAN_RUN_SCRIPT void FinishInFlightWriteWithError(
+      JSContext* aCX, JS::Handle<JS::Value> aError, ErrorResult& aR);
 
   // WritableStreamHasOperationMarkedInFlight
   bool HasOperationMarkedInFlight() const {
@@ -128,8 +127,9 @@ class WritableStream final : public nsISupports, public nsWrapperCache {
   void RejectCloseAndClosedPromiseIfNeeded();
 
   // WritableStreamStartErroring
-  void StartErroring(JSContext* aCx, JS::Handle<JS::Value> aReason,
-                     ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void StartErroring(JSContext* aCx,
+                                        JS::Handle<JS::Value> aReason,
+                                        ErrorResult& aRv);
 
   // WritableStreamUpdateBackpressure
   void UpdateBackpressure(bool aBackpressure, ErrorResult& aRv);
@@ -182,13 +182,12 @@ inline bool IsWritableStreamLocked(WritableStream* aStream) {
   return aStream->Locked();
 }
 
-extern already_AddRefed<Promise> WritableStreamAbort(
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> WritableStreamAbort(
     JSContext* aCx, WritableStream* aStream, JS::Handle<JS::Value> aReason,
     ErrorResult& aRv);
 
-extern already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
-                                                     WritableStream* aStream,
-                                                     ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> WritableStreamClose(
+    JSContext* aCx, WritableStream* aStream, ErrorResult& aRv);
 
 extern already_AddRefed<Promise> WritableStreamAddWriteRequest(
     WritableStream* aStream, ErrorResult& aRv);
