@@ -694,7 +694,7 @@ abstract class BaseBrowserFragment :
         )
 
         // This component feature only works on Fenix when built on Mozilla infrastructure.
-        if (FeatureFlags.webAuthFeature && BuildConfig.MOZILLA_OFFICIAL) {
+        if (BuildConfig.MOZILLA_OFFICIAL) {
             webAuthnFeature.set(
                 feature = WebAuthnFeature(
                     engine = requireComponents.core.engine,

@@ -26,12 +26,11 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -72,19 +71,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
         }
 
-        if (FeatureFlags.showHomeButtonFeature) {
-            val homeAction = BrowserToolbar.Button(
-                imageDrawable = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_home
-                )!!,
-                contentDescription = context.getString(R.string.browser_toolbar_home),
-                iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
-                listener = browserToolbarInteractor::onHomeButtonClicked
-            )
+        val homeAction = BrowserToolbar.Button(
+            imageDrawable = AppCompatResources.getDrawable(
+                context,
+                R.drawable.mozac_ic_home
+            )!!,
+            contentDescription = context.getString(R.string.browser_toolbar_home),
+            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            listener = browserToolbarInteractor::onHomeButtonClicked
+        )
 
-            browserToolbarView.view.addNavigationAction(homeAction)
-        }
+        browserToolbarView.view.addNavigationAction(homeAction)
 
         if (resources.getBoolean(R.bool.tablet)) {
             val enableTint = ThemeManager.resolveAttribute(R.attr.primaryText, context)

@@ -24,16 +24,6 @@ object FeatureFlags {
     val addressesFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables WebAuthn support.
-     */
-    const val webAuthFeature = true
-
-    /**
-     * Enables the Home button in the browser toolbar to navigate back to the home screen.
-     */
-    const val showHomeButtonFeature = true
-
-    /**
      * Enables the Start On Home feature in the settings page.
      */
     const val showStartOnHomeSettings = true
@@ -62,11 +52,6 @@ object FeatureFlags {
      * Enables showing the home screen behind the search dialog
      */
     const val showHomeBehindSearch = true
-
-    /**
-     * Enables customizing the home screen
-     */
-    const val customizeHome = true
 
     /**
      * Identifies and separates the tabs list with a group containing search term tabs.
