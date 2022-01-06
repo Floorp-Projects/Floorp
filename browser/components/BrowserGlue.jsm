@@ -3944,7 +3944,6 @@ BrowserGlue.prototype = {
           defaultValue
         );
       }
-      Services.prefs.clearUserPref(oldPrefName);
     }
 
     if (currentUIVersion < 109) {
