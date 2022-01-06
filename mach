@@ -6,10 +6,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import sys
+from textwrap import dedent
 
 
 def load_mach(dir_path, mach_path):
+    # Defer import of "importlib.util" until after Python version check has happened
+    # so that Python 2 usages fail gracefully.
     import importlib.util
     spec = importlib.util.spec_from_file_location('mach_initialize', mach_path)
     mach_initialize = importlib.util.module_from_spec(spec)
@@ -33,6 +37,37 @@ def check_and_get_mach(dir_path):
 
 
 def main(args):
+    # Ensure we are running Python 3.6+. We run this check as soon as
+    # possible to avoid a cryptic import/usage error.
+    if sys.version_info < (3, 6):
+        print("Python 3.6+ is required to run mach.")
+        print("You are running Python", platform.python_version())
+        if sys.platform.startswith("linux"):
+            print(dedent("""
+            See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
+            for guidance on how to install Python on your system.
+            """).strip())
+        elif sys.platform.startswith("darwin"):
+            print(dedent("""
+            See https://firefox-source-docs.mozilla.org/setup/macos_build.html
+            for guidance on how to prepare your system to build Firefox. Perhaps
+            you need to update Xcode, or install Python using brew?
+            """).strip())
+        elif "MOZILLABUILD" in os.environ:
+            print(dedent("""
+            Python is provided by MozillaBuild; ensure your MozillaBuild installation is
+            up to date. See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
+            for details.
+            """).strip())
+        else:
+            print(dedent("""
+            We do not have specific instructions for your platform on how to
+            install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
+            helpful, if your system package manager does not provide a way to
+            install a recent enough Python 3.
+            """).strip())
+        sys.exit(1)
+
     # XCode python sets __PYVENV_LAUNCHER__, which overrides the executable
     # used when a python subprocess is created. This is an issue when we want
     # to run using our virtualenv python executables.
