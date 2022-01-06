@@ -166,6 +166,8 @@
     <string name="recently_visited_menu_item_remove">Rimuovi</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Visualizza tutti gli argomenti già esplorati</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
     <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Pulsante per mostrare tutti gli argomenti già esplorati</string>
 
     <!-- Browser Fragment -->

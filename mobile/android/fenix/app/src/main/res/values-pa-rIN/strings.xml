@@ -58,7 +58,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all"></string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">ਸਾਰੇ ਸੰਭਾਲੇ ਹੋਏ ਬੁੱਕਮਾਰਕ ਵੇਖਾਉਣ ਬਟਨ</string>
+    <string name="recently_saved_show_all_content_description_2">ਸਾਰੇ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਵੇਖੋ</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">ਸਾਰੇ ਸੰਭਾਲੇ ਹੋਏ ਬੁੱਕਮਾਰਕ ਵੇਖਾਉਣ ਬਟਨ</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ਮੌਜ਼ੀਲਾ ਵਲੋਂ ਤਿਆਰ ਕੀਤਾ</string>
@@ -142,7 +144,9 @@
     <string name="recent_tabs_show_all">ਸਭ ਵੇਖੋ</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
+    <string name="recent_tabs_show_all_content_description_2">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਨੂੰ ਵੇਖਾਓ</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot; ਲਈ ਤੁਹਾਡੀ ਖੋਜ</string>
@@ -166,7 +170,9 @@
     <string name="recently_visited_menu_item_remove">ਹਟਾਓ</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਖੋਜਾਂ ਦੇ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
+    <string name="past_explorations_show_all_content_description_2">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਛਾਣਬੀਣਾਂ ਨੂੰ ਵੇਖਾਓ</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਖੋਜਾਂ ਦੇ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1036,6 +1042,8 @@
     <string name="preference_phone_feature_notification">ਸੂਚਨਾਵਾਂ</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">ਪੱਕੀ ਸਟੋਰੇਜ਼</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">ਅੰਤਰ-ਸਾਈਟ ਕੂਕੀਜ਼</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM-ਕੰਟਰੋਲ ਕੀਤੀ ਸਮੱਗਰੀ</string>
     <!-- Label that indicates that a permission must be asked always -->
