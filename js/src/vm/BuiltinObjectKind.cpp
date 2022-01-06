@@ -24,6 +24,8 @@ static JSProtoKey ToProtoKey(BuiltinObjectKind kind) {
       return JSProto_Int32Array;
     case BuiltinObjectKind::Iterator:
       return JSProto_Iterator;
+    case BuiltinObjectKind::Map:
+      return JSProto_Map;
     case BuiltinObjectKind::Promise:
       return JSProto_Promise;
     case BuiltinObjectKind::RegExp:
@@ -61,6 +63,7 @@ static bool IsPrototype(BuiltinObjectKind kind) {
     case BuiltinObjectKind::ArrayBuffer:
     case BuiltinObjectKind::Int32Array:
     case BuiltinObjectKind::Iterator:
+    case BuiltinObjectKind::Map:
     case BuiltinObjectKind::Promise:
     case BuiltinObjectKind::RegExp:
     case BuiltinObjectKind::Set:
@@ -97,6 +100,9 @@ BuiltinObjectKind js::BuiltinConstructorForName(
   }
   if (name == frontend::TaggedParserAtomIndex::WellKnown::Iterator()) {
     return BuiltinObjectKind::Iterator;
+  }
+  if (name == frontend::TaggedParserAtomIndex::WellKnown::Map()) {
+    return BuiltinObjectKind::Map;
   }
   if (name == frontend::TaggedParserAtomIndex::WellKnown::Promise()) {
     return BuiltinObjectKind::Promise;
@@ -166,6 +172,8 @@ const char* js::BuiltinObjectName(BuiltinObjectKind kind) {
       return "Int32Array";
     case BuiltinObjectKind::Iterator:
       return "Iterator";
+    case BuiltinObjectKind::Map:
+      return "Map";
     case BuiltinObjectKind::Promise:
       return "Promise";
     case BuiltinObjectKind::RegExp:
