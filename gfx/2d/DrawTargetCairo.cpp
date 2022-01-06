@@ -664,12 +664,25 @@ void DrawTargetCairo::Link(const char* aDestination, const Rect& aRect) {
 
   // We need to \-escape any single-quotes in the destination string, in order
   // to pass it via the attributes arg to cairo_tag_begin.
+  //
+  // We also need to escape any backslashes (bug 1748077), as per doc at
+  // https://www.cairographics.org/manual/cairo-Tags-and-Links.html#cairo-tag-begin
+  // The cairo-pdf-interchange backend (used on all platforms EXCEPT macOS)
+  // actually requires that we *doubly* escape the backslashes (this may be a
+  // cairo bug), while the quartz backend is fine with them singly-escaped.
+  //
   // (Encoding of non-ASCII chars etc gets handled later by the PDF backend.)
   nsAutoCString dest(aDestination);
   for (size_t i = dest.Length(); i > 0;) {
     --i;
     if (dest[i] == '\'') {
       dest.ReplaceLiteral(i, 1, "\\'");
+    } else if (dest[i] == '\\') {
+#ifdef XP_MACOSX
+      dest.ReplaceLiteral(i, 1, "\\\\");
+#else
+      dest.ReplaceLiteral(i, 1, "\\\\\\\\");
+#endif
     }
   }
 
