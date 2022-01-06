@@ -149,7 +149,7 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredImpressionUrl: suggest.impression_url,
       sponsoredClickUrl: suggest.click_url,
       sponsoredBlockId: suggest.id,
-      sponsoredAdvertiser: suggest.advertiser.toLowerCase(),
+      sponsoredAdvertiser: suggest.advertiser,
       isSponsored: suggest.iab_category !== "5 - Education",
       helpUrl: UrlbarProviderQuickSuggest.helpUrl,
       helpL10nId: "firefox-suggest-urlbar-learn-more",
