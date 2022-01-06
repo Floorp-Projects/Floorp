@@ -31,9 +31,15 @@ talos-bcv:
     treeherder-symbol: T(bcv)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
+            fission-webrender-sw:
+                by-test-platform:
+                    (linux1804|macosx1015|windows10)-64-shippable-qr/opt: [mozilla-beta, trunk]
+                    (windows10-64|macosx1015-64).*-qr.*: [trunk]
+                    default: []
             webrender-sw:
                 by-test-platform:
                     (linux1804|macosx1015|windows10)-64-shippable-qr/opt: [mozilla-beta, trunk]
@@ -69,6 +75,7 @@ talos-chrome:
     treeherder-symbol: T(c)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-test-platform:
@@ -101,6 +108,7 @@ talos-damp:
     max-run-time: 5400
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
@@ -108,6 +116,10 @@ talos-damp:
                 by-test-platform:
                     (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central, autoland]
                     # Bug 1657864 - Disabled on macos for high frequency intermittents
+                    default: []
+            fission-webrender-sw:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -215,10 +227,15 @@ talos-g1:
     treeherder-symbol: T(g1)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -262,10 +279,15 @@ talos-g3:
     treeherder-symbol: T(g3)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -303,12 +325,17 @@ talos-g4:
     treeherder-symbol: T(g4)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central, autoland]
+                    default: []
+            fission-webrender-sw:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr/opt: [mozilla-beta, trunk]
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -353,10 +380,15 @@ talos-g5:
             - --suite=g5
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -465,10 +497,15 @@ talos-other:
     treeherder-symbol: T(o)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -506,10 +543,15 @@ talos-sessionrestore-many-windows:
     treeherder-symbol: T(smw)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-central, autoland]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-central, autoland]
                     default: []
@@ -547,10 +589,15 @@ talos-perf-reftest:
     treeherder-symbol: T(p)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -617,10 +664,15 @@ talos-svgr:
     treeherder-symbol: T(s)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -658,10 +710,15 @@ talos-tp5o:
     treeherder-symbol: T(tp)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -699,10 +756,15 @@ talos-tabswitch:
     treeherder-symbol: T(tabswitch)
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             fission:
+                by-test-platform:
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    default: []
+            fission-webrender-sw:
                 by-test-platform:
                     (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
@@ -740,12 +802,17 @@ talos-webgl:
     treeherder-symbol: T(webgl)
     variants:
         - webgl-ipc
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-variant:
             webgl-ipc:
                 by-test-platform:
                     (linux1804|windows10|macosx1015)-64.*: [trunk]
+                    default: []
+            fission-webrender-sw:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -794,6 +861,7 @@ talos-xperf:
             windows10-64.*: true
     variants:
         - fission
+        - fission-webrender-sw
         - webrender-sw
     run-on-projects:
         by-test-platform:
