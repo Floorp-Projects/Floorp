@@ -1283,14 +1283,9 @@ this.tabs = class extends ExtensionAPI {
           PrintUtils.startPrintWindow(activeTab.linkedBrowser.browsingContext);
         },
 
-        async printPreview() {
-          let activeTab = getTabOrActive(null);
-          let { PrintUtils, PrintPreviewListener } = activeTab.ownerGlobal;
-          try {
-            await PrintUtils.printPreview(PrintPreviewListener);
-          } catch (ex) {
-            return Promise.reject({ message: "Print preview failed" });
-          }
+        // Legacy API
+        printPreview() {
+          return Promise.resolve(this.print());
         },
 
         saveAsPDF(pageSettings) {

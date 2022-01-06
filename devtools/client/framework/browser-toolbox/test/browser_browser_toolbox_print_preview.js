@@ -28,7 +28,7 @@ add_task(async function() {
   await addTab(`data:text/html,<div id="test-div">PRINT PREVIEW TEST</div>`);
 
   info("Start the print preview for the current tab");
-  document.getElementById("cmd_printPreview").doCommand();
+  document.getElementById("cmd_print").doCommand();
 
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,

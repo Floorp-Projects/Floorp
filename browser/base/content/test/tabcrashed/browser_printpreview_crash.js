@@ -56,7 +56,7 @@ add_task(async function test() {
   );
 
   // Enter print preview
-  document.getElementById("cmd_printPreview").doCommand();
+  document.getElementById("cmd_print").doCommand();
   await BrowserTestUtils.waitForCondition(() => {
     let preview = document.querySelector(".printPreviewBrowser");
     return preview && BrowserTestUtils.is_visible(preview);
