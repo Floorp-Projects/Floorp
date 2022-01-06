@@ -6,10 +6,6 @@
   list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
 }
 
-#menu_printPreview {
-  list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
-}
-
 #menu_print {
   list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }

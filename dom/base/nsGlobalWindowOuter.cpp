@@ -5201,7 +5201,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
-  if (!StaticPrefs::print_tab_modal_enabled() && ShouldPromptToBlockDialogs() &&
+  bool print_tab_modal_enabled = true;
+  if (!print_tab_modal_enabled && ShouldPromptToBlockDialogs() &&
       !ConfirmDialogIfNeeded()) {
     return aError.ThrowNotAllowedError("Prompt was canceled by the user");
   }
@@ -5232,8 +5233,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   });
 
-  const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
-                         !StaticPrefs::print_always_print_silent();
+  const bool isPreview =
+      print_tab_modal_enabled && !StaticPrefs::print_always_print_silent();
   Print(nullptr, nullptr, nullptr, IsPreview(isPreview),
         IsForWindowDotPrint::Yes, nullptr, aError);
 #endif
@@ -5292,9 +5293,9 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   nsCOMPtr<nsIContentViewer> cv;
   RefPtr<BrowsingContext> bc;
   bool hasPrintCallbacks = false;
+  bool print_tab_modal_enabled = true;
   if (docToPrint->IsStaticDocument() &&
-      (aIsPreview == IsPreview::Yes ||
-       StaticPrefs::print_tab_modal_enabled())) {
+      (aIsPreview == IsPreview::Yes || print_tab_modal_enabled)) {
     if (aForWindowDotPrint == IsForWindowDotPrint::Yes) {
       aError.ThrowNotSupportedError(
           "Calling print() from a print preview is unsupported, did you intend "

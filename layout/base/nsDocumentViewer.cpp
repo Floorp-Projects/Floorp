@@ -2983,7 +2983,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   mPrintJob = printJob;
 
-  if (!hadPrintJob && !StaticPrefs::print_tab_modal_enabled()) {
+  bool print_tab_modal_enabled = true;
+  if (!hadPrintJob && !print_tab_modal_enabled) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
@@ -3110,7 +3111,8 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
-  if (!StaticPrefs::print_tab_modal_enabled()) {
+  bool print_tab_modal_enabled = true;
+  if (!print_tab_modal_enabled) {
     return PrintPreviewScrollToPageForOldUI(aType, aPageNum);
   }
 
@@ -3315,7 +3317,8 @@ nsDocumentViewer::ExitPrintPreview() {
     return NS_OK;
   }
 
-  if (!mPrintJob->HasEverPrinted() && !StaticPrefs::print_tab_modal_enabled()) {
+  bool print_tab_modal_enabled = true;
+  if (!mPrintJob->HasEverPrinted() && !print_tab_modal_enabled) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_CANCELLED, 1);
   }
 

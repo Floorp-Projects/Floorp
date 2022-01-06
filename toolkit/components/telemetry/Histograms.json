@@ -10496,58 +10496,6 @@
     "n_buckets": 50,
     "description": "(Bug 1207089) Time in ms between displaying a popup notification and dismissing it without an action the first time, keyed by ID"
   },
-  "PRINT_PREVIEW_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["carnold@mozilla.org"],
-    "bug_numbers": [1275570, 1568968],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "A counter incremented every time the browser enters print preview."
-  },
-  "PRINT_PREVIEW_SIMPLIFY_PAGE_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["carnold@mozilla.org"],
-    "bug_numbers": [1275570, 1568968],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "A counter incremented every time the browser enters simplified mode on print preview."
-  },
-  "PRINT_PREVIEW_SIMPLIFY_PAGE_UNAVAILABLE_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-     "alert_emails": ["carnold@mozilla.org"],
-     "bug_numbers": [1287587, 1568968],
-     "expires_in_version": "never",
-     "kind": "count",
-     "releaseChannelCollection": "opt-out",
-     "description": "A counter incremented every time the simplified mode is unavailable on print preview."
-   },
-  "PRINT_DIALOG_OPENED_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["jwatt@jwatt.org"],
-    "bug_numbers": [1306624, 1568968, 1594391],
-    "expires_in_version": "never",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "A counter incremented every time the user opens print dialog."
-  },
-  "PRINT_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-     "alert_emails": ["jwatt@jwatt.org"],
-     "bug_numbers": [1287587, 1568968, 1594391],
-     "expires_in_version": "never",
-     "kind": "count",
-     "keyed": true,
-     "releaseChannelCollection": "opt-out",
-     "description": "A counter incremented every time the user prints a document."
-   },
   "PRINT_BACKGROUND_TASK_TIME_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],

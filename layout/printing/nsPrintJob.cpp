@@ -640,8 +640,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     // and get a remote print job, but the parent won't display a prompt.
     // Note: The new print UI does not need to enter ShowPrintDialog below to
     // spin the event loop and fetch real printer settings from the parent.
-    if (!StaticPrefs::print_tab_modal_enabled() &&
-        (!printSilently || printingViaParent)) {
+    bool print_tab_modal_enabled = true;
+    if (!print_tab_modal_enabled && (!printSilently || printingViaParent)) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(
           do_GetService(kPrintingPromptService));
       if (printPromptService) {
@@ -746,7 +746,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         [self](nsresult aResult) { self->PageDone(aResult); });
   }
 
-  if (!StaticPrefs::print_tab_modal_enabled() && mIsCreatingPrintPreview) {
+  bool print_tab_modal_enabled = true;
+  if (!print_tab_modal_enabled && mIsCreatingPrintPreview) {
     // In legacy print-preview mode, override any UI that wants to PrintPreview
     // any selection or page range.  The legacy print-preview intends to view
     // every page in PrintPreview each time.
