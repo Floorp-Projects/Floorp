@@ -17,7 +17,7 @@
 
             <stroke
                 android:width="4dp"
-                android:color="@color/photonViolet70" />
+                android:color="@color/fx_mobile_border_color_accent" />
 
             <corners android:radius="@dimen/tab_tray_grid_item_outer_border_radius" />
         </shape>

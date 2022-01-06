@@ -92,7 +92,7 @@
     <!-- Form parts -->
     <color name="fx_mobile_border_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Active tab (Nav), Selected tab, Active form -->
-    <color name="fx_mobile_border_color_accent" tools:ignore="UnusedResources">@color/photonInk20</color>
+    <color name="fx_mobile_border_color_accent">@color/photonInk20</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
     <!-- Form parts -->
@@ -234,7 +234,7 @@
     <color name="recently_used_share_theme">@color/photonLightGrey30</color>
 
     <!-- Tab tray -->
-    <color name="tab_tray_item_text_normal_theme">@color/photonInk80</color>
+    <color name="tab_tray_item_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="tab_tray_item_url_normal_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
