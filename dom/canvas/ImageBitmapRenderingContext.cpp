@@ -138,6 +138,9 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
   }
 
   RefPtr<gfx::SourceSurface> surface = mImage->GetAsSourceSurface();
+  if (!surface) {
+    return nullptr;
+  }
   RefPtr<gfx::DataSourceSurface> data = surface->GetDataSurface();
   if (!data) {
     return nullptr;
