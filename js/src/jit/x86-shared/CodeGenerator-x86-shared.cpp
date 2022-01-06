@@ -2317,18 +2317,18 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
 
   switch (ins->simdOp()) {
     case wasm::SimdOp::V128And:
-      masm.bitwiseAndSimd128(rhs, lhsDest);
+      masm.bitwiseAndSimd128(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::V128Or:
-      masm.bitwiseOrSimd128(rhs, lhsDest);
+      masm.bitwiseOrSimd128(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::V128Xor:
-      masm.bitwiseXorSimd128(rhs, lhsDest);
+      masm.bitwiseXorSimd128(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::V128AndNot:
       // x86/x64 specific: The CPU provides ~A & B.  The operands were swapped
       // during lowering, and we'll compute A & ~B here as desired.
-      masm.bitwiseNotAndSimd128(rhs, lhsDest);
+      masm.bitwiseNotAndSimd128(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I8x16AvgrU:
       masm.unsignedAverageInt8x16(rhs, lhsDest);
@@ -2430,16 +2430,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.mulInt64x2(lhsDest, rhs, lhsDest, temp1);
       break;
     case wasm::SimdOp::F32x4Add:
-      masm.addFloat32x4(rhs, lhsDest);
+      masm.addFloat32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Sub:
-      masm.subFloat32x4(rhs, lhsDest);
+      masm.subFloat32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Mul:
-      masm.mulFloat32x4(rhs, lhsDest);
+      masm.mulFloat32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Div:
-      masm.divFloat32x4(rhs, lhsDest);
+      masm.divFloat32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Min:
       masm.minFloat32x4(rhs, lhsDest, temp1, temp2);
@@ -2544,34 +2544,34 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.compareInt16x8(Assembler::AboveOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4Eq:
-      masm.compareInt32x4(Assembler::Equal, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::Equal, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4Ne:
-      masm.compareInt32x4(Assembler::NotEqual, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::NotEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4LtS:
-      masm.compareInt32x4(Assembler::LessThan, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::LessThan, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4GtS:
-      masm.compareInt32x4(Assembler::GreaterThan, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::GreaterThan, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4LeS:
-      masm.compareInt32x4(Assembler::LessThanOrEqual, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::LessThanOrEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4GeS:
-      masm.compareInt32x4(Assembler::GreaterThanOrEqual, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::GreaterThanOrEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4LtU:
-      masm.compareInt32x4(Assembler::Below, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::Below, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4GtU:
-      masm.compareInt32x4(Assembler::Above, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::Above, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4LeU:
-      masm.compareInt32x4(Assembler::BelowOrEqual, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::BelowOrEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4GeU:
-      masm.compareInt32x4(Assembler::AboveOrEqual, rhs, lhsDest);
+      masm.compareInt32x4(Assembler::AboveOrEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I64x2Eq:
       masm.compareForEqualityInt64x2(Assembler::Equal, rhs, lhsDest);
@@ -2596,16 +2596,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
                                      lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::F32x4Eq:
-      masm.compareFloat32x4(Assembler::Equal, rhs, lhsDest);
+      masm.compareFloat32x4(Assembler::Equal, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Ne:
-      masm.compareFloat32x4(Assembler::NotEqual, rhs, lhsDest);
+      masm.compareFloat32x4(Assembler::NotEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Lt:
-      masm.compareFloat32x4(Assembler::LessThan, rhs, lhsDest);
+      masm.compareFloat32x4(Assembler::LessThan, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F32x4Le:
-      masm.compareFloat32x4(Assembler::LessThanOrEqual, rhs, lhsDest);
+      masm.compareFloat32x4(Assembler::LessThanOrEqual, lhsDest, rhs, output);
       break;
     case wasm::SimdOp::F64x2Eq:
       masm.compareFloat64x2(Assembler::Equal, rhs, lhsDest);
