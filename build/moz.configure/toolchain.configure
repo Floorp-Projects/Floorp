@@ -344,14 +344,10 @@ def get_compiler_info(compiler, language):
                 version = Version("8.0.0")
             elif version < "12.0":
                 version = Version("9.0.0")
-            elif version < "12.0.5":
+            elif version < "12.0.1":
                 version = Version("10.0.0")
-            elif version < "13.0":
-                version = Version("11.1.0")
-            elif version < "13.0.1":
-                version = Version("12.0.0")
             else:
-                version = Version("12.0.0.or.more")
+                version = Version("10.0.0.or.more")
 
     return namespace(
         type=type,
@@ -2127,9 +2123,9 @@ set_config("COVERAGE_CFLAGS", coverage_cflags)
 # - the linker is picked via the LINKER environment variable per windows.configure,
 #   but ought to be llvm-lld in any case.
 # For macOS:
-# - the linker is lld if the clang used is >= 13 (per LLVM version, not Xcode version)
-# - otherwise the linker is ld64, either from XCode on macOS, or from cctools-ports when
-#   cross-compiling.
+# - the linker is ld64, either from XCode on macOS, or from cctools-ports when
+#   cross-compiling. lld can be enabled manually, but as of writing, mach-o support
+#   for lld is incomplete.
 # For other OSes:
 # - on local developer builds: lld is used if present. Otherwise gold is used if present
 #   otherwise, BFD ld is used.
@@ -2268,13 +2264,6 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, target
         die("Could not use {} as linker".format(linker))
 
     if (
-        linker is None
-        and target.kernel == "Darwin"
-        and c_compiler.type == "clang"
-        and c_compiler.version >= "13.0"
-    ):
-        result = try_linker("lld")
-    elif (
         linker is None
         and developer_options
         and (result is None or result.KIND in ("bfd", "gold"))
