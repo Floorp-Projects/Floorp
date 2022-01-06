@@ -139,11 +139,12 @@ class WritableStartPromiseNativeHandler final : public PromiseNativeHandler {
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller
-    RefPtr<WritableStream> stream = mController->Stream();
     // Step 17. Upon fulfillment of startPromise,
     // Step 17.1. Assert: stream.[[state]] is "writable" or "erroring".
-    MOZ_ASSERT(stream->State() == WritableStream::WriterState::Writable ||
-               stream->State() == WritableStream::WriterState::Erroring);
+    MOZ_ASSERT(mController->Stream()->State() ==
+                   WritableStream::WriterState::Writable ||
+               mController->Stream()->State() ==
+                   WritableStream::WriterState::Erroring);
     // Step 17.2. Set controller.[[started]] to true.
     mController->SetStarted(true);
     // Step 17.3 Perform
