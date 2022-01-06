@@ -255,6 +255,9 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
 
   void Destroy();
 
+  static void CallUpdateOcclusionState(
+      std::unordered_map<HWND, OcclusionState>* aMap, bool aShowAllWindows);
+
   // Updates root windows occclusion state. If aShowAllWindows is true,
   // all non-hidden windows will be marked visible.  This is used to force
   // rendering of thumbnails.
