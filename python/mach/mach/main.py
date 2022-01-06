@@ -490,6 +490,7 @@ To see more help for a specific command, run:
                 handler,
                 context,
                 debug_command=args.debug_command,
+                profile_command=args.profile_command,
                 **vars(args.command_args),
             )
         except KeyboardInterrupt as ki:
