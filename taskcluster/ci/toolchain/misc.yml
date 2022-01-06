@@ -266,7 +266,7 @@ linux64-makecab:
         fetch:
             - makecab
         toolchain:
-            - linux64-rust-1.47
+            - linux64-rust-1.57
 
 win64-mozmake:
     description: "mozmake for Windows"
