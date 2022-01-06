@@ -46,11 +46,7 @@
 
   #category-search>.category-icon {
     list-style-image: url(chrome://browser/skin/search.svg) !important;
-  }
-  #category-privacy>.category-icon {
-    list-style-image: url(chrome://browser/skin/lock.svg) !important;
-  }
-
+  }  
   #category-sync>.category-icon {
     list-style-image: url(chrome://browser/skin/sync.svg) !important;
   }
@@ -1564,7 +1560,7 @@ richlistitem .text-link:hover {
 }
 
 .checkbox-row {
-  display: flex;
+  display: none !important;
   align-items: baseline;
 }
 

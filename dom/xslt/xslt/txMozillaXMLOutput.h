@@ -79,7 +79,6 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
   nsresult createTxWrapper();
   nsresult startHTMLElement(nsIContent* aElement, bool aXHTML);
   void endHTMLElement(nsIContent* aElement);
-  void processHTTPEquiv(nsAtom* aHeader, const nsString& aValue);
   nsresult createHTMLElement(nsAtom* aName, mozilla::dom::Element** aResult);
 
   nsresult attributeInternal(nsAtom* aPrefix, nsAtom* aLocalName, int32_t aNsID,
@@ -103,7 +102,6 @@ class txMozillaXMLOutput : public txAOutputXMLEventHandler {
   RefPtr<txTransformNotifier> mNotifier;
 
   uint32_t mTreeDepth, mBadChildLevel;
-  nsCString mRefreshString;
 
   txStack mTableStateStack;
   enum TableState {

@@ -41,7 +41,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using mozilla::services::GetObserverService;
 using mozilla::widget::ScreenManager;
 
 nsDeviceContext::nsDeviceContext()
@@ -282,8 +281,8 @@ nsresult nsDeviceContext::InitForPrinting(nsIDeviceContextSpec* aDevice) {
 nsresult nsDeviceContext::BeginDocument(const nsAString& aTitle,
                                         const nsAString& aPrintToFileName,
                                         int32_t aStartPage, int32_t aEndPage) {
-  MOZ_ASSERT(!mIsCurrentlyPrintingDoc,
-             "Mismatched BeginDocument/EndDocument calls");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc,
+                        "Mismatched BeginDocument/EndDocument calls");
 
   nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName,
                                             aStartPage, aEndPage);
@@ -303,55 +302,64 @@ nsresult nsDeviceContext::BeginDocument(const nsAString& aTitle,
   return rv;
 }
 
-nsresult nsDeviceContext::EndDocument(void) {
-  MOZ_ASSERT(mIsCurrentlyPrintingDoc,
-             "Mismatched BeginDocument/EndDocument calls");
+nsresult nsDeviceContext::EndDocument() {
+  MOZ_DIAGNOSTIC_ASSERT(mIsCurrentlyPrintingDoc,
+                        "Mismatched BeginDocument/EndDocument calls");
+  MOZ_DIAGNOSTIC_ASSERT(mPrintTarget);
 
   mIsCurrentlyPrintingDoc = false;
 
-  nsresult rv = mPrintTarget->EndPrinting();
-  if (NS_SUCCEEDED(rv)) {
+  if (mPrintTarget) {
+    MOZ_TRY(mPrintTarget->EndPrinting());
     mPrintTarget->Finish();
+    mPrintTarget = nullptr;
   }
 
-  if (mDeviceContextSpec) mDeviceContextSpec->EndDocument();
+  if (mDeviceContextSpec) {
+    MOZ_TRY(mDeviceContextSpec->EndDocument());
+  }
 
-  mPrintTarget = nullptr;
-
-  return rv;
+  return NS_OK;
 }
 
-nsresult nsDeviceContext::AbortDocument(void) {
-  MOZ_ASSERT(mIsCurrentlyPrintingDoc,
-             "Mismatched BeginDocument/EndDocument calls");
+nsresult nsDeviceContext::AbortDocument() {
+  MOZ_DIAGNOSTIC_ASSERT(mIsCurrentlyPrintingDoc,
+                        "Mismatched BeginDocument/EndDocument calls");
 
   nsresult rv = mPrintTarget->AbortPrinting();
-
   mIsCurrentlyPrintingDoc = false;
 
-  if (mDeviceContextSpec) mDeviceContextSpec->EndDocument();
+  if (mDeviceContextSpec) {
+    mDeviceContextSpec->EndDocument();
+  }
 
   mPrintTarget = nullptr;
 
   return rv;
 }
 
-nsresult nsDeviceContext::BeginPage(void) {
-  nsresult rv = NS_OK;
-
-  if (mDeviceContextSpec) rv = mDeviceContextSpec->BeginPage();
-
-  if (NS_FAILED(rv)) return rv;
-
-  return mPrintTarget->BeginPage();
+nsresult nsDeviceContext::BeginPage() {
+  MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc || mPrintTarget,
+                        "What nulled out our print target while printing?");
+  if (mDeviceContextSpec) {
+    MOZ_TRY(mDeviceContextSpec->BeginPage());
+  }
+  if (mPrintTarget) {
+    MOZ_TRY(mPrintTarget->BeginPage());
+  }
+  return NS_OK;
 }
 
-nsresult nsDeviceContext::EndPage(void) {
-  nsresult rv = mPrintTarget->EndPage();
-
-  if (mDeviceContextSpec) mDeviceContextSpec->EndPage();
-
-  return rv;
+nsresult nsDeviceContext::EndPage() {
+  MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc || mPrintTarget,
+                        "What nulled out our print target while printing?");
+  if (mPrintTarget) {
+    MOZ_TRY(mPrintTarget->EndPage());
+  }
+  if (mDeviceContextSpec) {
+    MOZ_TRY(mDeviceContextSpec->EndPage());
+  }
+  return NS_OK;
 }
 
 void nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect) {

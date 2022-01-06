@@ -55,11 +55,11 @@ bottomLinks-privacy = Privacy Policy
 # Variables:
 #   $version (String): version of Firefox, e.g. 66.0.1
 #   $bits (Number): bits of the architecture (32 or 64)
-aboutDialog-version = 8.2.3 ({ $bits }-bit)
+aboutDialog-version = 8.2.4 ({ $bits }-bit)
 
 # Example of resulting string: 66.0a1 (2019-01-16) (64-bit)
 # Variables:
 #   $version (String): version of Firefox for Nightly builds, e.g. 66.0a1
 #   $isodate (String): date in ISO format, e.g. 2019-01-16
 #   $bits (Number): bits of the architecture (32 or 64)
-aboutDialog-version-nightly = 8.2.3 ({ $isodate }) ({ $bits }-bit)
+aboutDialog-version-nightly = 8.2.4 ({ $isodate }) ({ $bits }-bit)

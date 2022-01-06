@@ -433,19 +433,15 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   result =
       imgCon->GetImageProvider(aManager->LayerManager(), decodeSize, svgContext,
                                region, aFlags, getter_AddRefs(provider));
-  if (!provider) {
-    NS_WARNING("Failed to get image provider");
-    return result;
-  }
-
-  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
   Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageProviderKey(
       aItem, provider, result, aResources);
   if (key.isNothing()) {
     return result;
   }
+
+  auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+  wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
   aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
   return result;

@@ -1,4 +1,4 @@
-const BROWSER_VERSION = "8.2.3"
+const BROWSER_VERSION = "8.2.4"
 const APP_ID = "floorp"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 

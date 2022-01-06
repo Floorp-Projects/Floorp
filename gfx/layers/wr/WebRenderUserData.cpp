@@ -259,21 +259,21 @@ WebRenderImageProviderData::~WebRenderImageProviderData() = default;
 Maybe<wr::ImageKey> WebRenderImageProviderData::UpdateImageKey(
     WebRenderImageProvider* aProvider, ImgDrawResult aDrawResult,
     wr::IpcResourceUpdateQueue& aResources) {
-  MOZ_ASSERT(aProvider);
-
   if (mProvider != aProvider) {
     mProvider = aProvider;
   }
 
   wr::ImageKey key = {};
-  nsresult rv = mProvider->UpdateKey(mManager, aResources, key);
+  nsresult rv = mProvider ? mProvider->UpdateKey(mManager, aResources, key)
+                          : NS_ERROR_FAILURE;
   mKey = NS_SUCCEEDED(rv) ? Some(key) : Nothing();
   mDrawResult = aDrawResult;
   return mKey;
 }
 
 bool WebRenderImageProviderData::Invalidate(ImageProviderId aProviderId) const {
-  if (!aProviderId || mProvider->GetProviderId() != aProviderId || !mKey) {
+  if (!aProviderId || !mProvider || mProvider->GetProviderId() != aProviderId ||
+      !mKey) {
     return false;
   }
 
