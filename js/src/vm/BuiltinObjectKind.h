@@ -33,7 +33,6 @@ enum class BuiltinObjectKind : uint8_t {
   ArrayBuffer,
   Int32Array,
   Iterator,
-  Map,
   Promise,
   RegExp,
   Set,
