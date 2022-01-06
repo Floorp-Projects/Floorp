@@ -16,17 +16,16 @@ or think your project or team might be a good Early Adopter of FOG,
 please reach out to the team on
 [#glean:mozilla.org][glean-matrix].
 
-```eval_rst
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-    :glob:
+```{toctree}
+:titlesonly:
+:maxdepth: 2
+:glob:
 
-    user/index
-    dev/index
+user/index
+dev/index
 ```
 
-[telemetry]: ../telemetry
+[telemetry]: ../telemetry/index
 [glean-sdk]: https://github.com/mozilla/glean/
 [book-of-glean]: https://mozilla.github.io/glean/book/index.html
 [privacy-policy]: https://www.mozilla.org/privacy/
