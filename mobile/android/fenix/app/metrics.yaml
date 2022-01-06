@@ -127,9 +127,9 @@ events:
           bookmarks, desktop_view_off, desktop_view_on, downloads,
           find_in_page, forward, help, history, library, new_private_tab,
           new_tab, open_in_app, open_in_fenix, quit, reader_mode_appearance,
-          reader_mode_off, reader_mode_on, reload, save_to_collection,
-          set_default_browser, settings, share, stop, sync_account, and
-          sync_tabs.
+          reader_mode_off, reader_mode_on, reload, remove_from_top_sites,
+          save_to_collection, set_default_browser, settings, share, stop,
+          sync_account, and sync_tabs.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
       - https://github.com/mozilla-mobile/fenix/issues/19923

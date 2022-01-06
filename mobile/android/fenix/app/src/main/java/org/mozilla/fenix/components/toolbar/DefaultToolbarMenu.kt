@@ -23,12 +23,14 @@ import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuImageTextCheckboxButton
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.TwoStateBrowserMenuImageText
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -48,6 +50,7 @@ import org.mozilla.fenix.utils.BrowsersCache
  * @param store reference to the application's [BrowserStore].
  * @param hasAccountProblem If true, there was a problem signing into the Firefox account.
  * @param shouldReverseItems If true, reverse the menu items.
+ * @param pinnedSiteStorage Used to check if the current url is a pinned site.
  * @param onItemTapped Called when a menu item is tapped.
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
  * @param bookmarksStorage Used to check if a page is bookmarked.
@@ -60,9 +63,11 @@ open class DefaultToolbarMenu(
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
     private val lifecycleOwner: LifecycleOwner,
     private val bookmarksStorage: BookmarksStorage,
+    private val pinnedSiteStorage: PinnedSiteStorage,
     val isPinningSupported: Boolean
 ) : ToolbarMenu {
 
+    private var isCurrentUrlPinned = false
     private var isCurrentUrlBookmarked = false
     private var isBookmarkedJob: Job? = null
 
@@ -271,13 +276,23 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
     }
 
-    val addToTopSitesItem = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_add_to_top_sites),
-        imageResource = R.drawable.ic_top_sites,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.AddToTopSites)
-    }
+    val addRemoveTopSitesItem = TwoStateBrowserMenuImageText(
+        primaryLabel = context.getString(R.string.browser_menu_add_to_top_sites),
+        secondaryLabel = context.getString(R.string.browser_menu_remove_from_top_sites),
+        primaryStateIconResource = R.drawable.ic_top_sites,
+        secondaryStateIconResource = R.drawable.ic_top_sites,
+        iconTintColorResource = primaryTextColor(),
+        isInPrimaryState = { !isCurrentUrlPinned },
+        isInSecondaryState = { isCurrentUrlPinned },
+        primaryStateAction = {
+            isCurrentUrlPinned = true
+            onItemTapped.invoke(ToolbarMenu.Item.AddToTopSites)
+        },
+        secondaryStateAction = {
+            isCurrentUrlPinned = false
+            onItemTapped.invoke(ToolbarMenu.Item.RemoveFromTopSites)
+        }
+    )
 
     val saveToCollectionItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_save_to_collection_2),
@@ -367,7 +382,7 @@ open class DefaultToolbarMenu(
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
                 installToHomescreen.apply { visible = ::canInstall },
-                addToTopSitesItem,
+                addRemoveTopSitesItem,
                 saveToCollectionItem,
                 BrowserMenuDivider(),
                 settingsItem,
@@ -393,6 +408,15 @@ open class DefaultToolbarMenu(
     internal fun menuItemButtonTintColor() = ThemeManager.resolveAttribute(R.attr.menuItemButtonTintColor, context)
 
     @VisibleForTesting
+    internal fun updateIsCurrentUrlPinned(currentUrl: String) {
+        lifecycleOwner.lifecycleScope.launch {
+            isCurrentUrlPinned = pinnedSiteStorage
+                .getPinnedSites()
+                .find { it.url == currentUrl } != null
+        }
+    }
+
+    @VisibleForTesting
     internal fun registerForIsBookmarkedUpdates() {
         store.flowScoped(lifecycleOwner) { flow ->
             flow.mapNotNull { state -> state.selectedTab }
@@ -403,6 +427,9 @@ open class DefaultToolbarMenu(
                     )
                 }
                 .collect {
+                    isCurrentUrlPinned = false
+                    updateIsCurrentUrlPinned(it.content.url)
+
                     isCurrentUrlBookmarked = false
                     updateCurrentUrlIsBookmarked(it.content.url)
                 }

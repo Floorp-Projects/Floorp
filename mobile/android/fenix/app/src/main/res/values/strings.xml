@@ -1172,7 +1172,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed" moz:removedIn="96" tools:ignore="UnusedResources">Site removed</string>
+    <string name="snackbar_top_site_removed">Site removed</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo" moz:removedIn="96" tools:ignore="UnusedResources">Undo</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1808,6 +1808,8 @@
     <string name="bookmark_deletion_confirmation">Are you sure you want to delete this bookmark?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Add to top sites</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Remove from top sites</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verified By: %1$s </string>

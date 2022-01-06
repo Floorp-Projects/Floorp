@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
@@ -72,6 +73,7 @@ class DefaultBrowserToolbarMenuController(
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSitesStorage: DefaultTopSitesStorage,
+    private val pinnedSiteStorage: PinnedSiteStorage,
     private val browserStore: BrowserStore
 ) : BrowserToolbarMenuController {
 
@@ -355,6 +357,33 @@ class DefaultBrowserToolbarMenuController(
                 metrics.track(Event.SetDefaultBrowserToolbarMenuClicked)
                 activity.openSetDefaultBrowserOption()
             }
+            is ToolbarMenu.Item.RemoveFromTopSites -> {
+                scope.launch {
+                    val removedTopSite: TopSite? =
+                        pinnedSiteStorage
+                            .getPinnedSites()
+                            .find { it.url == currentSession?.content?.url }
+                    if (removedTopSite != null) {
+                        ioScope.launch {
+                            currentSession?.let {
+                                with(activity.components.useCases.topSitesUseCase) {
+                                    removeTopSites(removedTopSite)
+                                }
+                            }
+                        }.join()
+                    }
+
+                    FenixSnackbar.make(
+                        view = swipeRefresh,
+                        duration = Snackbar.LENGTH_SHORT,
+                        isDisplayedWithBrowserToolbar = true
+                    )
+                        .setText(
+                            swipeRefresh.context.getString(R.string.snackbar_top_site_removed)
+                        )
+                        .show()
+                }
+            }
         }
     }
 
@@ -402,6 +431,7 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.Downloads -> Event.BrowserMenuItemTapped.Item.DOWNLOADS
             is ToolbarMenu.Item.NewTab -> Event.BrowserMenuItemTapped.Item.NEW_TAB
             is ToolbarMenu.Item.SetDefaultBrowser -> Event.BrowserMenuItemTapped.Item.SET_DEFAULT_BROWSER
+            is ToolbarMenu.Item.RemoveFromTopSites -> Event.BrowserMenuItemTapped.Item.REMOVE_FROM_TOP_SITES
         }
 
         metrics.track(Event.BrowserMenuItemTapped(eventItem))

@@ -21,6 +21,7 @@ interface ToolbarMenu {
         object OpenInFenix : Item()
         object SaveToCollection : Item()
         object AddToTopSites : Item()
+        object RemoveFromTopSites : Item()
         object InstallPwaToHomeScreen : Item()
         object AddToHomeScreen : Item()
         data class SyncAccount(val accountState: AccountState) : Item()

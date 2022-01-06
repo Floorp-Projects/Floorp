@@ -17,6 +17,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -35,6 +36,7 @@ class DefaultToolbarMenuTest {
     private lateinit var toolbarMenu: DefaultToolbarMenu
     private lateinit var context: Context
     private lateinit var bookmarksStorage: BookmarksStorage
+    private lateinit var pinnedSiteStorage: PinnedSiteStorage
 
     private val testDispatcher = TestCoroutineDispatcher()
 
@@ -52,6 +54,7 @@ class DefaultToolbarMenuTest {
         every { context.theme } returns mockk(relaxed = true)
 
         bookmarksStorage = mockk(relaxed = true)
+        pinnedSiteStorage = mockk(relaxed = true)
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -76,6 +79,7 @@ class DefaultToolbarMenuTest {
                 hasAccountProblem = false,
                 onItemTapped = { },
                 lifecycleOwner = lifecycleOwner,
+                pinnedSiteStorage = pinnedSiteStorage,
                 bookmarksStorage = bookmarksStorage,
                 isPinningSupported = false
             )
