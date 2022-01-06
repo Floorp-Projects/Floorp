@@ -99,6 +99,15 @@ function createMockedObjects(createHandlerApp) {
   return mockedLauncher;
 }
 
+function createTemporarySaveDirectory() {
+  var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+  saveDir.append("testsavedir");
+  if (!saveDir.exists()) {
+    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
+  return saveDir;
+}
+
 async function openHelperAppDialog(launcher) {
   let helperAppDialog = Cc[
     "@mozilla.org/helperapplauncherdialog;1"

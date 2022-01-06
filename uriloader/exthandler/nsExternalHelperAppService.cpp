@@ -2666,7 +2666,8 @@ void nsExternalAppHandler::RequestSaveDestination(
 NS_IMETHODIMP nsExternalAppHandler::PromptForSaveDestination() {
   if (mCanceled) return NS_OK;
 
-  if (!StaticPrefs::browser_download_improvements_to_download_panel()) {
+  if (!StaticPrefs::browser_download_improvements_to_download_panel() ||
+      mForceSave) {
     mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 
