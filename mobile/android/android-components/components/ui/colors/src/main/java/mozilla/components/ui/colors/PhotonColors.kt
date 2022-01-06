@@ -156,6 +156,7 @@ object PhotonColors {
     val Violet60 = Color(0xFF7542E5)
     val Violet70 = Color(0xFF592ACB)
     val Violet70A12 = Color(0x1F592ACB)
+    val Violet70A80 = Color(0xCC592ACB)
     val Violet80 = Color(0xFF45278D)
     val Violet90 = Color(0xFF321C64)
     val Violet90A20 = Color(0x33321C64)

@@ -193,6 +193,7 @@
 	<color name="photonViolet60">#ff7542e5</color>
 	<color name="photonViolet70">#ff592ACB</color>
 	<color name="photonViolet70A12">#1F592ACB</color>
+	<color name="photonViolet70A80">#CC592ACB</color>
 	<color name="photonViolet80">#ff45278d</color>
 	<color name="photonViolet90">#ff321c64</color>
 	<color name="photonViolet90A20">#33321c64</color>
