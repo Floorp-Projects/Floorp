@@ -498,7 +498,7 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
     return false;
   }
 
-  return aChunk->Channels() > 8;
+  return aChunk->Channels() <= 8;
 }
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
