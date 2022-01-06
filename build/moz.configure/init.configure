@@ -104,12 +104,16 @@ option(env="CONFIG_SHELL", nargs=1, help="Path to a POSIX shell")
 @depends("CONFIG_SHELL", "MOZILLABUILD")
 @checking("for a shell")
 @imports("sys")
+@imports(_from="pathlib", _import="Path")
 def shell(value, mozillabuild):
     if value:
         return find_program(value[0])
     shell = "sh"
     if mozillabuild:
-        shell = mozillabuild[0] + "/msys/bin/sh"
+        if (Path(mozillabuild[0]) / "msys2").exists():
+            shell = mozillabuild[0] + "/msys2/usr/bin/sh"
+        else:
+            shell = mozillabuild[0] + "/msys/bin/sh"
     if sys.platform == "win32":
         shell = shell + ".exe"
     return find_program(shell)
