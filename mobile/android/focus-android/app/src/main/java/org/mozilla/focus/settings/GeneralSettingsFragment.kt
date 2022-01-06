@@ -102,7 +102,7 @@ class GeneralSettingsFragment :
                 resources.getString(R.string.preference_language_systemdefault)
             )
         return value?.let {
-            if (value == LOCALE_SYSTEM_DEFAULT) {
+            if (value.isEmpty() || value == LOCALE_SYSTEM_DEFAULT) {
                 return resources.getString(R.string.preference_language_systemdefault)
             }
             LocaleDescriptor(it).getNativeName()

@@ -29,7 +29,6 @@
 
     <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
     <androidx.preference.Preference
-        android:defaultValue=""
         android:key="@string/pref_key_locale"
         android:layout="@layout/focus_preference"
         android:title="@string/preference_language"
