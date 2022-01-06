@@ -21,6 +21,10 @@
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
+#if defined(XP_WIN) && !defined(__MINGW32__)
+#  include <shlobj_core.h>  // for SHGetSpecialFolderPathA
+#endif                      // XP_WIN
+
 namespace mozilla {
 namespace net {
 
@@ -337,6 +341,47 @@ void TRRServiceBase::UnregisterProxyChangeListener() {
   }
 
   pps->RemoveProxyConfigCallback(this);
+}
+
+void TRRServiceBase::DoReadEtcHostsFile(ParsingCallback aCallback) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!StaticPrefs::network_trr_exclude_etc_hosts()) {
+    return;
+  }
+
+  auto readHostsTask = [aCallback]() {
+    MOZ_ASSERT(!NS_IsMainThread(), "Must not run on the main thread");
+#if defined(XP_WIN) && !defined(__MINGW32__)
+    // Inspired by libevent/evdns.c
+    // Windows is a little coy about where it puts its configuration
+    // files.  Sure, they're _usually_ in C:\windows\system32, but
+    // there's no reason in principle they couldn't be in
+    // W:\hoboken chicken emergency
+
+    nsCString path;
+    path.SetLength(MAX_PATH + 1);
+    if (!SHGetSpecialFolderPathA(NULL, path.BeginWriting(), CSIDL_SYSTEM,
+                                 false)) {
+      LOG(("Calling SHGetSpecialFolderPathA failed"));
+      return;
+    }
+
+    path.SetLength(strlen(path.get()));
+    path.Append("\\drivers\\etc\\hosts");
+#elif defined(__MINGW32__)
+    nsAutoCString path("C:\\windows\\system32\\drivers\\etc\\hosts"_ns);
+#else
+    nsAutoCString path("/etc/hosts"_ns);
+#endif
+
+    LOG(("Reading hosts file at %s", path.get()));
+    rust_parse_etc_hosts(&path, aCallback);
+  };
+
+  Unused << NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("Read /etc/hosts file", readHostsTask),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 }  // namespace net
