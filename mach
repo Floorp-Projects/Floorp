@@ -53,11 +53,20 @@ def main(args):
             for guidance on how to prepare your system to build Firefox. Perhaps
             you need to update Xcode, or install Python using brew?
             """).strip())
-        elif "MOZILLABUILD" in os.environ:
+        elif "MOZILLABUILD" in os.environ and os.environ.get("TERM"):
             print(dedent("""
             Python is provided by MozillaBuild; ensure your MozillaBuild installation is
             up to date. See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
             for details.
+            """).strip())
+        elif sys.platform.startswith("win"):
+            print(dedent("""
+            You probably want to be interacting with Mach from within MozillaBuild, see
+            https://firefox-source-docs.mozilla.org/setup/windows_build.html for details.
+            
+            If you are deliberately using Mach from outside MozillaBuild, then see
+            https://firefox-source-docs.mozilla.org/mach/windows-usage-outside-mozillabuild.html#install-python
+            for guidance on installing native Python on your system.
             """).strip())
         else:
             print(dedent("""
