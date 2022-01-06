@@ -67,7 +67,7 @@ var FormAutofill = {
     return Region.home || "US";
   },
   get isAutofillEnabled() {
-  return (
+    return (
       FormAutofill.isAutofillAddressesEnabled ||
       this.isAutofillCreditCardsEnabled
     );
