@@ -17,6 +17,7 @@ function background() {
     browser.test.assertEq(port.name, "ernie", "port name correct");
     browser.test.assertTrue(port.sender.url.endsWith("file_sample.html"), "URL correct");
     browser.test.assertTrue(port.sender.tab.url.endsWith("file_sample.html"), "tab URL correct");
+    browser.test.assertEq(port.sender.frameId, 0, "frameId of top frame");
 
     let expected = "message 1";
     port.onMessage.addListener(msg => {
