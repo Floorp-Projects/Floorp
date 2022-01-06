@@ -338,6 +338,15 @@ void ReadableByteStreamControllerEnqueueChunkToQueue(
   aController->AddToQueueTotalSize(double(aByteLength));
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-get-num-read-into-requests
+static size_t ReadableStreamGetNumReadIntoRequests(ReadableStream* aStream) {
+  // Step 1.
+  MOZ_ASSERT(ReadableStreamHasBYOBReader(aStream));
+
+  // Step 2.
+  return aStream->GetReader()->AsBYOB()->ReadIntoRequests().length();
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-should-call-pull
 bool ReadableByteStreamControllerShouldCallPull(
     ReadableByteStreamController* aController) {
@@ -365,10 +374,11 @@ bool ReadableByteStreamControllerShouldCallPull(
     return true;
   }
 
-#if 0
-  // Step 6: Disabled until BYOB Streams implemented
-  if (ReadableStreamHasBYOBReader(stream) && ReadableStreamGetNumR)
-#endif
+  // Step 6.
+  if (ReadableStreamHasBYOBReader(stream) &&
+      ReadableStreamGetNumReadIntoRequests(stream) > 0) {
+    return true;
+  }
 
   // Step 7.
   Nullable<double> desiredSize =
@@ -935,15 +945,6 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
 
   // Step 7.
   ReadableByteStreamControllerCallPullIfNeeded(aCx, this, aRv);
-}
-
-// https://streams.spec.whatwg.org/#readable-stream-get-num-read-into-requests
-static size_t ReadableStreamGetNumReadIntoRequests(ReadableStream* aStream) {
-  // Step 1.
-  MOZ_ASSERT(ReadableStreamHasBYOBReader(aStream));
-
-  // Step 2.
-  return aStream->GetReader()->AsBYOB()->ReadIntoRequests().length();
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-shift-pending-pull-into

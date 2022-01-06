@@ -117,16 +117,33 @@ void ReadableStream::SetReader(ReadableStreamGenericReader* aReader) {
   mReader = aReader;
 }
 
-bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
-  // Step 1.
+// https://streams.spec.whatwg.org/#readable-stream-has-byob-reader
+bool ReadableStreamHasBYOBReader(ReadableStream* aStream) {
+  // Step 1. Let reader be stream.[[reader]].
   ReadableStreamGenericReader* reader = aStream->GetReader();
 
-  // Step 2.
+  // Step 2. If reader is undefined, return false.
   if (!reader) {
     return false;
   }
 
-  // Step 3+4:
+  // Step 3. If reader implements ReadableStreamBYOBReader, return true.
+  // Step 4. Return false.
+  return reader->IsBYOB();
+}
+
+// https://streams.spec.whatwg.org/#readable-stream-has-default-reader
+bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
+  // Step 1. Let reader be stream.[[reader]].
+  ReadableStreamGenericReader* reader = aStream->GetReader();
+
+  // Step 2. If reader is undefined, return false.
+  if (!reader) {
+    return false;
+  }
+
+  // Step 3. If reader implements ReadableStreamDefaultReader, return true.
+  // Step 4. Return false.
   return reader->IsDefault();
 }
 
