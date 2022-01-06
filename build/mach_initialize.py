@@ -6,7 +6,6 @@ from __future__ import division, print_function, unicode_literals
 
 import math
 import os
-import platform
 import shutil
 import sys
 
@@ -140,31 +139,6 @@ CATEGORIES = {
     },
 }
 
-INSTALL_PYTHON_GUIDANCE_LINUX = """
-See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
-for guidance on how to install Python on your system.
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_OSX = """
-See https://firefox-source-docs.mozilla.org/setup/macos_build.html
-for guidance on how to prepare your system to build Firefox. Perhaps
-you need to update Xcode, or install Python using brew?
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_MOZILLABUILD = """
-Python is provided by MozillaBuild; ensure your MozillaBuild
-installation is up to date.
-See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
-for details.
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_OTHER = """
-We do not have specific instructions for your platform on how to
-install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
-helpful, if your system package manager does not provide a way to
-install a recent enough Python 3.
-""".strip()
-
 
 def _activate_python_environment(topsrcdir, get_state_dir):
     from mach.site import MachSiteManager
@@ -177,21 +151,6 @@ def _activate_python_environment(topsrcdir, get_state_dir):
 
 
 def initialize(topsrcdir):
-    # Ensure we are running Python 3.6+. We run this check as soon as
-    # possible to avoid a cryptic import/usage error.
-    if sys.version_info < (3, 6):
-        print("Python 3.6+ is required to run mach.")
-        print("You are running Python", platform.python_version())
-        if sys.platform.startswith("linux"):
-            print(INSTALL_PYTHON_GUIDANCE_LINUX)
-        elif sys.platform.startswith("darwin"):
-            print(INSTALL_PYTHON_GUIDANCE_OSX)
-        elif "MOZILLABUILD" in os.environ:
-            print(INSTALL_PYTHON_GUIDANCE_MOZILLABUILD)
-        else:
-            print(INSTALL_PYTHON_GUIDANCE_OTHER)
-        sys.exit(1)
-
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
     # to clean the repo themselves.
