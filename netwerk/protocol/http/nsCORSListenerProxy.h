@@ -59,6 +59,7 @@ class nsCORSListenerProxy final : public nsIStreamListener,
 
   static void Shutdown();
   static void ClearCache();
+  static void ClearPrivateBrowsingCache();
 
   [[nodiscard]] nsresult Init(nsIChannel* aChannel,
                               DataURIHandling aAllowDataURI);
