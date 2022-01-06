@@ -906,3 +906,4 @@ work within what Glean currently affords or
 [telemetry-events]: ../../telemetry/collection/events.html
 [telemetry-scalars]: ../../telemetry/collection/scalars.html
 [telemetry-histograms]: ../../telemetry/collection/histograms.html
+[repositories-yaml]: https://github.com/mozilla/probe-scraper/blob/main/repositories.yaml
