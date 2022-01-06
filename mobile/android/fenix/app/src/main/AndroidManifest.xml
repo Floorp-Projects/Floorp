@@ -315,8 +315,8 @@
             android:value="true" />
         <!-- Removes the default Workmanager  initialization so that we can use on-demand initializer. -->
         <provider
-            android:name="androidx.work.impl.WorkManagerInitializer"
-            android:authorities="${applicationId}.workmanager-init"
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
             tools:node="remove" />
     </application>
 
