@@ -654,6 +654,9 @@
     <!-- Preference for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only">Blocca solo l’audio</string>
 
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Consigliato</string>
+
     <!-- Preference for block autoplay audio and video-->
     <string name="preference_block_autoplay_audio_video">Blocca audio e video</string>
 
@@ -792,6 +795,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modalità solo HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Tenta automaticamente di connettersi ai siti web utilizzando HTTPS per una maggiore sicurezza. Le connessioni HTTPS forniscono una connessione sicura e crittata con i siti visitati.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Eccezioni</string>
     <!-- Description for the exceptions preference screen-->
@@ -878,6 +884,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Usa il tema del dispositivo</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Il sito richiesto non supporta HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Per impostazione predefinita, %1$s tenta di connettersi utilizzando HTTPS per una maggiore sicurezza. Per modificare questa impostazione o per ulteriori informazioni, apri Impostazioni &gt; Privacy e sicurezza &gt; Sicurezza.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

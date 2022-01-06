@@ -643,6 +643,18 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avansert</string>
 
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatisk avspeling</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Tillat lyd og video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokker berre lyd</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Tilrådd</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Undersøkingar</string>
 
@@ -782,9 +794,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Berre HTTPS-modus</string>
 
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS gir eit trygt, kryptert samband mellom %1$s og nettstadar du besøkjer. Dei fleste nettstadar støttar HTTPS, og dersom berre HTTPS-modus er aktivert, vil %1$s oppgradere alle tilkoplingar til HTTPS.</string>
-
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Unntak</string>
     <!-- Description for the exceptions preference screen-->
@@ -850,6 +859,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fjern</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Byt namn</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Gi nytt namn</string>
 
