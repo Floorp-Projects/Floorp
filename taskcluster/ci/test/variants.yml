@@ -81,6 +81,17 @@ fission-xorigin:
                 - "--setpref=fission.autostart=true"
                 - "--enable-xorigin-tests"
 
+fission-webrender-sw:
+    description: "{description} with software webrender enabled"
+    contact: aosmond
+    suffix: "fis-swr"
+    merge:
+        webrender: true
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.software=true"
+                - "--setpref=fission.autostart=true"
+
 # TODO: After 2022-01-01, verify this variant is still needed.
 fission-webgl-ipc:
     description: "{description} with fission and WebGL IPC process enabled"
@@ -128,6 +139,7 @@ wayland:
 
 webrender-sw:
     description: "{description} with software webrender enabled"
+    contact: aosmond
     suffix: "swr"
     merge:
         webrender: true
