@@ -41,8 +41,6 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 
-#include <unistd.h>
-
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
     mozilla::Variant<mozilla::Nothing,
