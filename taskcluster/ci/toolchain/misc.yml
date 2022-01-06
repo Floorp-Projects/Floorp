@@ -286,6 +286,8 @@ win64-mozmake:
 
 nsis:
     description: "NSIS for Linux and Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(nsis)
     run:
