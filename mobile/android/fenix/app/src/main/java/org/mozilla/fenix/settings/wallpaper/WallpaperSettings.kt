@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.wallpaper
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -29,8 +30,9 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -41,8 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperManager
 import java.util.Locale
 
 /**
@@ -55,8 +59,11 @@ import java.util.Locale
  * @param onViewWallpaper Callback for when the view action is clicked from snackbar.
  */
 @Composable
+@Suppress("LongParameterList")
 fun WallpaperSettings(
     wallpapers: List<Wallpaper>,
+    defaultWallpaper: Wallpaper,
+    loadWallpaperResource: (Wallpaper) -> Bitmap,
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
     onViewWallpaper: () -> Unit,
@@ -76,6 +83,8 @@ fun WallpaperSettings(
         Surface(color = FirefoxTheme.colors.layer2) {
             WallpaperThumbnails(
                 wallpapers = wallpapers,
+                defaultWallpaper = defaultWallpaper,
+                loadWallpaperResource = loadWallpaperResource,
                 selectedWallpaper = selectedWallpaper,
                 onSelectWallpaper = { updatedWallpaper ->
                     coroutineScope.launch {
@@ -140,8 +149,11 @@ private fun WallpaperSnackbar(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
+@Suppress("LongParameterList")
 private fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
+    defaultWallpaper: Wallpaper,
+    loadWallpaperResource: (Wallpaper) -> Bitmap,
     selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
     onSelectWallpaper: (Wallpaper) -> Unit,
@@ -153,6 +165,8 @@ private fun WallpaperThumbnails(
         items(wallpapers) { wallpaper ->
             WallpaperThumbnailItem(
                 wallpaper = wallpaper,
+                defaultWallpaper = defaultWallpaper,
+                loadWallpaperResource = loadWallpaperResource,
                 isSelected = selectedWallpaper == wallpaper,
                 onSelect = onSelectWallpaper
             )
@@ -169,8 +183,11 @@ private fun WallpaperThumbnails(
  * @param onSelect Action to take when this wallpaper is selected.
  */
 @Composable
+@Suppress("LongParameterList")
 private fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
+    defaultWallpaper: Wallpaper,
+    loadWallpaperResource: (Wallpaper) -> Bitmap,
     isSelected: Boolean,
     aspectRatio: Float = 1.1f,
     onSelect: (Wallpaper) -> Unit
@@ -196,12 +213,12 @@ private fun WallpaperThumbnailItem(
             .then(border)
             .clickable { onSelect(wallpaper) }
     ) {
-        if (wallpaper != Wallpaper.NONE) {
+        if (wallpaper != defaultWallpaper) {
             val contentDescription = stringResource(
                 R.string.wallpapers_item_name_content_description, wallpaper.name
             )
             Image(
-                painterResource(id = wallpaper.drawable),
+                bitmap = loadWallpaperResource(wallpaper).asImageBitmap(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = contentDescription,
                 modifier = Modifier.fillMaxSize()
@@ -214,9 +231,16 @@ private fun WallpaperThumbnailItem(
 @Composable
 private fun WallpaperThumbnailsPreview() {
     FirefoxTheme {
+        val context = LocalContext.current
+        val wallpaperManager = context.components.wallpaperManager
+
         WallpaperSettings(
-            wallpapers = Wallpaper.values().toList(),
-            selectedWallpaper = Wallpaper.NONE,
+            defaultWallpaper = WallpaperManager.defaultWallpaper,
+            loadWallpaperResource = {
+                wallpaperManager.loadWallpaperFromAssets(it, context)
+            },
+            wallpapers = wallpaperManager.availableWallpapers,
+            selectedWallpaper = wallpaperManager.currentWallpaper,
             onSelectWallpaper = {},
             onViewWallpaper = {},
         )

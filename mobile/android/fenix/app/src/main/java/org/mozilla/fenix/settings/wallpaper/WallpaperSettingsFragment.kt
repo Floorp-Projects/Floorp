@@ -20,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperManager
 
 class WallpaperSettingsFragment : Fragment() {
     private val wallpaperManager by lazy {
@@ -37,7 +38,11 @@ class WallpaperSettingsFragment : Fragment() {
                 FirefoxTheme {
                     var currentWallpaper by remember { mutableStateOf(wallpaperManager.currentWallpaper) }
                     WallpaperSettings(
-                        wallpapers = Wallpaper.values().toList(),
+                        wallpapers = wallpaperManager.availableWallpapers,
+                        defaultWallpaper = WallpaperManager.defaultWallpaper,
+                        loadWallpaperResource = {
+                            wallpaperManager.loadWallpaperFromAssets(it, requireContext())
+                        },
                         selectedWallpaper = currentWallpaper,
                         onSelectWallpaper = { selectedWallpaper: Wallpaper ->
                             currentWallpaper = selectedWallpaper

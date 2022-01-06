@@ -4,13 +4,16 @@
 
 package org.mozilla.fenix.wallpapers
 
-import org.mozilla.fenix.R
-
 /**
- * A enum that represents the available wallpapers and their states.
+ * A class that represents an available wallpaper and its state.
+ * @property name Indicates the name of this wallpaper.
+ * @property portraitPath A file path for the portrait version of this wallpaper.
+ * @property landscapePath A file path for the landscape version of this wallpaper.
+ * @property isDark Indicates if the most predominant color on the wallpaper is dark.
  */
-enum class Wallpaper(val drawable: Int, val isDark: Boolean) {
-    NONE(drawable = R.attr.homeBackground, isDark = false),
-    FIRST(drawable = R.drawable.wallpaper_1, isDark = true),
-    SECOND(drawable = R.drawable.wallpaper_2, isDark = false);
-}
+data class Wallpaper(
+    val name: String,
+    val portraitPath: String,
+    val landscapePath: String,
+    val isDark: Boolean
+)

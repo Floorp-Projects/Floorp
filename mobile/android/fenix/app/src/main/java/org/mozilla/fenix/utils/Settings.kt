@@ -41,13 +41,13 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
+import org.mozilla.fenix.wallpapers.WallpaperManager
 import java.security.InvalidParameterException
 
 private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
@@ -168,7 +168,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var currentWallpaper by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
-        default = Wallpaper.NONE.name
+        default = WallpaperManager.defaultWallpaper.name
     )
 
     var openLinksInAPrivateTab by booleanPreference(
