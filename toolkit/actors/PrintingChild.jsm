@@ -26,8 +26,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/DeferredTask.jsm"
 );
 
-let gPrintPreviewInitializingInfo = null;
-
 let gPendingPreviewsMap = new Map();
 
 class PrintingChild extends JSWindowActorChild {
@@ -46,13 +44,6 @@ class PrintingChild extends JSWindowActorChild {
     this.contentWindow?.removeEventListener("scroll", this);
   }
 
-  // Bug 1088061: nsPrintJob's DoCommonPrint currently expects the
-  // progress listener passed to it to QI to an nsIPrintingPromptService
-  // in order to know that a printing progress dialog has been shown. That's
-  // really all the interface is used for, hence the fact that I don't actually
-  // implement the interface here. Bug 1088061 has been filed to remove
-  // this hackery.
-
   handleEvent(event) {
     switch (event.type) {
       case "PrintingError": {
@@ -63,36 +54,6 @@ class PrintingChild extends JSWindowActorChild {
           isPrinting: wbp.doingPrint,
           nsresult,
         });
-        break;
-      }
-
-      case "printPreviewUpdate": {
-        let info = gPrintPreviewInitializingInfo;
-        if (!info) {
-          // If there is no gPrintPreviewInitializingInfo then we did not
-          // initiate the preview so ignore this event.
-          return;
-        }
-
-        // Only send Printing:Preview:Entered message on first update, indicated
-        // by gPrintPreviewInitializingInfo.entered not being set.
-        if (!info.entered) {
-          gPendingPreviewsMap.delete(this.browsingContext.id);
-
-          info.entered = true;
-          this.sendAsyncMessage("Printing:Preview:Entered", {
-            failed: false,
-            changingBrowsers: info.changingBrowsers,
-          });
-
-          // If we have another request waiting, dispatch it now.
-          if (info.nextRequest) {
-            Services.tm.dispatchToMainThread(info.nextRequest);
-          }
-        }
-
-        // Always send page count update.
-        this.updatePageCount();
         break;
       }
 
@@ -112,21 +73,6 @@ class PrintingChild extends JSWindowActorChild {
   receiveMessage(message) {
     let data = message.data;
     switch (message.name) {
-      case "Printing:Preview:Enter": {
-        this.enterPrintPreview(
-          BrowsingContext.get(data.browsingContextId),
-          data.simplifiedMode,
-          data.changingBrowsers,
-          data.lastUsedPrinterName
-        );
-        break;
-      }
-
-      case "Printing:Preview:Exit": {
-        this.exitPrintPreview();
-        break;
-      }
-
       case "Printing:Preview:Navigate": {
         this.navigate(data.navType, data.pageNum);
         break;
@@ -141,36 +87,6 @@ class PrintingChild extends JSWindowActorChild {
     }
 
     return undefined;
-  }
-
-  getPrintSettings(lastUsedPrinterName) {
-    try {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-        Ci.nsIPrintSettingsService
-      );
-
-      let printSettings = PSSVC.newPrintSettings;
-      if (!printSettings.printerName) {
-        printSettings.printerName = lastUsedPrinterName;
-      }
-      // First get any defaults from the printer
-      PSSVC.initPrintSettingsFromPrinter(
-        printSettings.printerName,
-        printSettings
-      );
-      // now augment them with any values from last time
-      PSSVC.initPrintSettingsFromPrefs(
-        printSettings,
-        true,
-        printSettings.kInitSaveAll
-      );
-
-      return printSettings;
-    } catch (e) {
-      Cu.reportError(e);
-    }
-
-    return null;
   }
 
   async parseDocument(URL, contentWindow) {
@@ -348,96 +264,6 @@ class PrintingChild extends JSWindowActorChild {
     });
   }
 
-  enterPrintPreview(
-    browsingContext,
-    simplifiedMode,
-    changingBrowsers,
-    lastUsedPrinterName
-  ) {
-    const { docShell } = this;
-
-    try {
-      let contentWindow = browsingContext.window;
-      let printSettings = this.getPrintSettings(lastUsedPrinterName);
-
-      // If we happen to be on simplified mode, we need to set docURL in order
-      // to generate header/footer content correctly, since simplified tab has
-      // "about:blank" as its URI.
-      if (printSettings && simplifiedMode) {
-        printSettings.docURL = contentWindow.document.baseURI;
-      }
-
-      // Get this early in case the actor goes away during print preview.
-      let browserContextId = this.browsingContext.id;
-
-      // The print preview docshell will be in a different TabGroup, so
-      // printPreviewInitialize must be run in a separate runnable to avoid
-      // touching a different TabGroup in our own runnable.
-      let printPreviewInitialize = () => {
-        // During dispatching this function to the main-thread, the docshell
-        // might be destroyed, for example the print preview window gets closed
-        // soon after it's opened, in such case we should just simply bail out.
-        if (docShell.isBeingDestroyed()) {
-          this.sendAsyncMessage("Printing:Preview:Entered", {
-            failed: true,
-          });
-          return;
-        }
-
-        try {
-          let listener = new PrintingListener(this);
-          gPendingPreviewsMap.set(browserContextId, listener);
-
-          gPrintPreviewInitializingInfo = { changingBrowsers };
-
-          contentWindow.printPreview(printSettings, listener, docShell);
-        } catch (error) {
-          // This might fail if we, for example, attempt to print a XUL document.
-          // In that case, we inform the parent to bail out of print preview.
-          Cu.reportError(error);
-          gPrintPreviewInitializingInfo = null;
-          this.sendAsyncMessage("Printing:Preview:Entered", {
-            failed: true,
-          });
-        }
-      };
-
-      // If gPrintPreviewInitializingInfo.entered is not set we are still in the
-      // initial setup of a previous preview request. We delay this one until
-      // that has finished because running them at the same time will almost
-      // certainly cause failures.
-      if (
-        gPrintPreviewInitializingInfo &&
-        !gPrintPreviewInitializingInfo.entered
-      ) {
-        gPrintPreviewInitializingInfo.nextRequest = printPreviewInitialize;
-      } else {
-        Services.tm.dispatchToMainThread(printPreviewInitialize);
-      }
-    } catch (error) {
-      // This might fail if we, for example, attempt to print a XUL document.
-      // In that case, we inform the parent to bail out of print preview.
-      Cu.reportError(error);
-      this.sendAsyncMessage("Printing:Preview:Entered", {
-        failed: true,
-      });
-    }
-  }
-
-  exitPrintPreview() {
-    gPrintPreviewInitializingInfo = null;
-    this.docShell.exitPrintPreview();
-  }
-
-  updatePageCount() {
-    let cv = this.docShell.contentViewer;
-    cv.QueryInterface(Ci.nsIWebBrowserPrint);
-    this.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
-      numPages: cv.printPreviewNumPages,
-      totalPages: cv.rawNumPages,
-    });
-  }
-
   updateCurrentPage() {
     let cv = this.docShell.contentViewer;
     cv.QueryInterface(Ci.nsIWebBrowserPrint);
@@ -452,42 +278,3 @@ class PrintingChild extends JSWindowActorChild {
     cv.printPreviewScrollToPage(navType, pageNum);
   }
 }
-
-PrintingChild.prototype.QueryInterface = ChromeUtils.generateQI([
-  "nsIPrintingPromptService",
-]);
-
-function PrintingListener(actor) {
-  this.actor = actor;
-}
-PrintingListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
-
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    this.actor.sendAsyncMessage("Printing:Preview:StateChange", {
-      stateFlags: aStateFlags,
-      status: aStatus,
-    });
-  },
-
-  onProgressChange(
-    aWebProgress,
-    aRequest,
-    aCurSelfProgress,
-    aMaxSelfProgress,
-    aCurTotalProgress,
-    aMaxTotalProgress
-  ) {
-    this.actor.sendAsyncMessage("Printing:Preview:ProgressChange", {
-      curSelfProgress: aCurSelfProgress,
-      maxSelfProgress: aMaxSelfProgress,
-      curTotalProgress: aCurTotalProgress,
-      maxTotalProgress: aMaxTotalProgress,
-    });
-  },
-
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {},
-  onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {},
-  onSecurityChange(aWebProgress, aRequest, aState) {},
-  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {},
-};

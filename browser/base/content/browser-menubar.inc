@@ -57,10 +57,6 @@
                 <menuitem id="menu_printSetup"
                           command="cmd_pageSetup" data-l10n-id="menu-file-print-setup" hidden="true"/>
 #endif
-#ifndef XP_MACOSX
-                <menuitem id="menu_printPreview"
-                          command="cmd_printPreview" data-l10n-id="menu-file-print-preview" hidden="true"/>
-#endif
                 <menuitem id="menu_print"
                           key="printKb"
                           command="cmd_print" data-l10n-id="menu-file-print"/>

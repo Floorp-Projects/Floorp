@@ -10631,14 +10631,6 @@
   value: false
   mirror: always
 
-# Whether tab_modal print UI is enabled.
-#
-# The tab modal print dialog is currently only for early beta or nightly.
-- name: print.tab_modal.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether the pages per sheet print setting is enabled.
 - name: print.pages_per_sheet.enabled
   type: RelaxedAtomicBool

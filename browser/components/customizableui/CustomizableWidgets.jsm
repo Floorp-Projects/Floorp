@@ -246,7 +246,7 @@ const CustomizableWidgets = [
     shortcutId: "printKb",
     keepBroadcastAttributesWhenCustomizing: true,
     onCreated(aNode) {
-      aNode.setAttribute("command", "cmd_print");
+      aNode.setAttribute("command", "cmd_printPreviewToggle");
     },
   },
   {
