@@ -647,6 +647,115 @@ const availableLocaleDisplayNames = {
   ]),
 };
 
+const nativeLocaleNames = new Map(
+  Object.entries({
+    ach: "Acholi",
+    af: "Afrikaans",
+    an: "Aragonés",
+    ar: "العربية",
+    ast: "Asturianu",
+    az: "Azərbaycanca",
+    be: "Беларуская",
+    bg: "Български",
+    bn: "বাংলা",
+    bo: "བོད་སྐད",
+    br: "Brezhoneg",
+    brx: "बड़ो",
+    bs: "Bosanski",
+    ca: "Català",
+    "ca-valencia": "Català (Valencià)",
+    cak: "Kaqchikel",
+    cs: "Čeština",
+    cy: "Cymraeg",
+    da: "Dansk",
+    de: "Deutsch",
+    dsb: "Dolnoserbšćina",
+    el: "Ελληνικά",
+    "en-CA": "English (CA)",
+    "en-GB": "English (GB)",
+    "en-US": "English (US)",
+    eo: "Esperanto",
+    "es-AR": "Español (AR)",
+    "es-CL": "Español (CL)",
+    "es-ES": "Español (ES)",
+    "es-MX": "Español (MX)",
+    et: "Eesti",
+    eu: "Euskara",
+    fa: "فارسی",
+    ff: "Pulaar",
+    fi: "Suomi",
+    fr: "Français",
+    "fy-NL": "Frysk",
+    "ga-IE": "Gaeilge",
+    gd: "Gàidhlig",
+    gl: "Galego",
+    gn: "Guarani",
+    "gu-IN": "ગુજરાતી",
+    he: "עברית",
+    "hi-IN": "हिन्दी",
+    hr: "Hrvatski",
+    hsb: "Hornjoserbšćina",
+    hu: "Magyar",
+    "hy-AM": "հայերեն",
+    ia: "Interlingua",
+    id: "Indonesia",
+    is: "Islenska",
+    it: "Italiano",
+    ja: "日本語",
+    "ja-JP-mac": "日本語",
+    ka: "ქართული",
+    kab: "Taqbaylit",
+    kk: "қазақ тілі",
+    km: "ខ្មែរ",
+    kn: "ಕನ್ನಡ",
+    ko: "한국어",
+    lij: "Ligure",
+    lo: "ລາວ",
+    lt: "Lietuvių",
+    ltg: "Latgalīšu",
+    lv: "Latviešu",
+    mk: "македонски",
+    ml: "മലയാളം",
+    mr: "मराठी",
+    ms: "Melayu",
+    my: "မြန်မာ",
+    "nb-NO": "Norsk Bokmål",
+    "ne-NP": "नेपाली",
+    nl: "Nederlands",
+    "nn-NO": "Nynorsk",
+    oc: "Occitan",
+    or: "ଓଡ଼ିଆ",
+    "pa-IN": "ਪੰਜਾਬੀ",
+    pl: "Polski",
+    "pt-BR": "Português (BR)",
+    "pt-PT": "Português (PT)",
+    rm: "Rumantsch",
+    ro: "Română",
+    ru: "Русский",
+    si: "සිංහල",
+    sk: "Slovenčina",
+    sl: "Slovenščina",
+    son: "Soŋay",
+    sq: "Shqip",
+    sr: "Cрпски",
+    "sv-SE": "Svenska",
+    ta: "தமிழ்",
+    te: "తెలుగు",
+    th: "ไทย",
+    tl: "Tagalog",
+    tr: "Türkçe",
+    trs: "Triqui",
+    uk: "Українська",
+    ur: "اردو",
+    uz: "O‘zbek",
+    vi: "Tiếng Việt",
+    wo: "Wolof",
+    xh: "IsiXhosa",
+    "zh-CN": "简体中文",
+    "zh-TW": "正體中文",
+  })
+);
+
 class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
   constructor(locales, options = {}, ...args) {
     // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
@@ -841,7 +950,9 @@ class MozIntl {
     });
   }
 
-  getLocaleDisplayNames(locales, localeCodes) {
+  getLocaleDisplayNames(locales, localeCodes, options = {}) {
+    const { preferNative = false } = options;
+
     if (locales !== undefined) {
       throw new Error("First argument support not implemented yet");
     }
@@ -853,6 +964,10 @@ class MozIntl {
     return localeCodes.map(localeCode => {
       if (typeof localeCode !== "string") {
         throw new TypeError("All locale codes must be strings.");
+      }
+
+      if (preferNative && nativeLocaleNames.has(localeCode)) {
+        return nativeLocaleNames.get(localeCode);
       }
 
       let locale;
