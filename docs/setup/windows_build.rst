@@ -153,6 +153,12 @@ start working on <https://codetribute.mozilla.org/>`_.
 See the :ref:`Firefox Contributors' Quick Reference` to learn how to test your changes,
 send patches to Mozilla, update your source code locally, and more.
 
+.. note::
+
+    If you'd like to interact with Mach from a different command line environment
+    than MozillaBuild, there's experimental support for it described
+    :ref:`over here <Using Mach on Windows Outside MozillaBuild>`.
+
 Troubleshooting
 ---------------
 
