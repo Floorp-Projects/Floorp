@@ -9,8 +9,7 @@ This is intended to be a reference to help you fill out your
 [migration worksheet][migration-worksheet],
 or for mentally translating Telemetry concepts to Glean ones.
 
-```eval_rst
-.. contents::
+```{contents}
 ```
 
 ## General Things To Bear In Mind
