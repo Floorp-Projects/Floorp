@@ -26,6 +26,7 @@
                 onoverflow="this.setAttribute('textoverflow', 'true');"
                 onunderflow="this.removeAttribute('textoverflow');"
                 align="start"
+                pack="center"
                 flex="1">
             <label class="tab-text tab-label" role="presentation"/>
             <hbox class="tab-secondary-label">

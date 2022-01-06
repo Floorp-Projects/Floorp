@@ -468,6 +468,10 @@
   display: none;
 }
 
+#tabbrowser-tabs:not([secondarytext-unsupported]) .tab-label-container {
+  height: 2.7em;
+}
+
 .tab-secondary-label {
   font-size: .75em;
   opacity: .8;
