@@ -307,6 +307,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
     return A;
 }
 
+#ifdef NIGHTLY_BUILD
 // Array Grouping proposal
 //
 // Array.prototype.groupBy
@@ -446,6 +447,8 @@ function ArrayGroupByToMap(callbackfn/*, thisArg*/) {
     /* Step 9. Return map. */
     return map;
 }
+
+#endif
 
 /* ES5 15.4.4.21. */
 function ArrayReduce(callbackfn/*, initialValue*/) {
