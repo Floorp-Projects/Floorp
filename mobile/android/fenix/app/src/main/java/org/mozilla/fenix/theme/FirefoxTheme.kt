@@ -51,7 +51,7 @@ private val darkColorPalette = FirefoxColors(
     scrimAccentEnd = PhotonColors.DarkGrey90A96,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
-    actionPrimary = PhotonColors.Violet70,
+    actionPrimary = PhotonColors.Violet60,
     actionSecondary = PhotonColors.DarkGrey10,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
@@ -220,7 +220,7 @@ class FirefoxColors(
 
     // Actions
 
-    // Primary button, Snackbar, Floating action button, Controls
+    // Primary button, Snackbar, Floating action button, Chip selected
     var actionPrimary by mutableStateOf(actionPrimary)
         private set
     // Secondary button, Chip
