@@ -321,7 +321,11 @@ class SortedItemSelectList {
 async function getLocaleDisplayInfo(localeCodes) {
   let availableLocales = new Set(await getAvailableLocales());
   let packagedLocales = new Set(Services.locale.packagedLocales);
-  let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
+  let localeNames = Services.intl.getLocaleDisplayNames(
+    undefined,
+    localeCodes,
+    { preferNative: true }
+  );
   return localeCodes.map((code, i) => {
     return {
       id: "locale-" + code,
