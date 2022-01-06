@@ -797,10 +797,6 @@ navbar-print =
     .label = Print
     .tooltiptext = Print this page… ({ $shortcut })
 
-navbar-print-tab-modal-disabled =
-    .label = Print
-    .tooltiptext = Print this page
-
 navbar-home =
     .label = Home
     .tooltiptext = { -brand-short-name } Home Page

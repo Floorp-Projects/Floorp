@@ -1071,12 +1071,7 @@ const PanelUI = {
   _formatPrintButtonShortcuts() {
     let printButton = this.mainView.querySelector("#appMenu-print-button2");
     if (printButton) {
-      if (
-        !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
-        AppConstants.platform !== "macosx"
-      ) {
-        printButton.removeAttribute("shortcut");
-      } else if (!printButton.hasAttribute("shortcut")) {
+      if (!printButton.hasAttribute("shortcut")) {
         printButton.setAttribute(
           "shortcut",
           ShortcutUtils.prettifyShortcut(
