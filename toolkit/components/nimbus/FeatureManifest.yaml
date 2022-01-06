@@ -269,6 +269,19 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled
       description: >-
         Updates the sponsored label position to below the image for Pocket cards on newtab.
+saveToPocket:
+  description: The save to Pocket feature
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    layoutRefresh:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.layout.enabled
+      description: Enable the new Pocket panels.
+    emailButton:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.emailButton.enabled
+      description: Just for the new Pocket panels, enables the email signup button.
 password-autocomplete:
   description: A special autocomplete UI for password fields.
   hasExposure: false
