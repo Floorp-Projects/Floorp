@@ -12,12 +12,10 @@ then run
 ./mach vendor python
 ```
 
-```eval_rst
-.. note::
-
-    **Important**: the glean_parser and all of its dependencies must support Python 3.5, as discussed here.
-    This is the minimum version supported by mach and installed on the CI images for running tests.
-    This is enforced by the version ranges declared in the Python installation manifest.
+```{note}
+**Important**: the glean_parser and all of its dependencies must support Python 3.5, as discussed here.
+This is the minimum version supported by mach and installed on the CI images for running tests.
+This is enforced by the version ranges declared in the Python installation manifest.
 ```
 
 ## Version mismatch of the Python dependencies
