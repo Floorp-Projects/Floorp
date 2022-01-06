@@ -32,8 +32,6 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 
-#include <unistd.h>
-
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WritableStream)
