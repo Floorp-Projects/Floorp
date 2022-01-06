@@ -1394,16 +1394,20 @@ class UrlbarInput {
     let firstToken = end == -1 ? trimmedValue : trimmedValue.substring(0, end);
     // Enter search mode if the string starts with a restriction token.
     let searchMode = UrlbarUtils.searchModeForToken(firstToken);
+    let firstTokenIsRestriction = !!searchMode;
     if (!searchMode && searchEngine) {
       searchMode = { engineName: searchEngine.name };
+      firstTokenIsRestriction = searchEngine.aliases.includes(firstToken);
     }
 
     if (searchMode) {
       searchMode.entry = searchModeEntry;
       this.searchMode = searchMode;
-      // Remove the restriction token/alias from the string to be searched for
-      // in search mode.
-      value = value.replace(firstToken, "");
+      if (firstTokenIsRestriction) {
+        // Remove the restriction token/alias from the string to be searched for
+        // in search mode.
+        value = value.replace(firstToken, "");
+      }
       if (UrlbarTokenizer.REGEXP_SPACES.test(value[0])) {
         // If there was a trailing space after the restriction token/alias,
         // remove it.
