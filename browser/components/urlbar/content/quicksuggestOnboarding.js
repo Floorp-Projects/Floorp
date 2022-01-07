@@ -147,13 +147,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   addSubmitListener(document.getElementById("onboardingNext"), () => {
     document.getElementById("introduction-section").classList.add("inactive");
     document.getElementById("main-section").classList.add("active");
+    window.arguments[0].visitedMain = true;
   });
   addSubmitListener(document.getElementById("onboardingLearnMore"), () => {
-    window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE;
+    window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_2;
     window.close();
   });
   addSubmitListener(document.getElementById("onboardingSkipLink"), () => {
-    window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
+    window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW_2;
     window.close();
   });
 
@@ -178,8 +179,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     window.arguments[0].choice = onboardingAccept.checked
-      ? ONBOARDING_CHOICE.ACCEPT
-      : ONBOARDING_CHOICE.REJECT;
+      ? ONBOARDING_CHOICE.ACCEPT_2
+      : ONBOARDING_CHOICE.REJECT_2;
     window.close();
   }
   addSubmitListener(onboardingSubmit, submitListener);
@@ -206,7 +207,7 @@ async function applyVariation(variation) {
     const onboardingClose = document.getElementById("onboardingClose");
     onboardingClose.classList.add("active");
     addSubmitListener(onboardingClose, () => {
-      window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
+      window.arguments[0].choice = ONBOARDING_CHOICE.CLOSE_1;
       window.close();
     });
   }
