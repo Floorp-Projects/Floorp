@@ -5036,6 +5036,15 @@
     mirror: always
 #endif
 
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  # Spoof the timing of the video sample instead of marking the untimed
+  # sample to be displayed immediately.
+-   name: gfx.core-animation.specialize-video.spoof-timing
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif
+
 #if defined(MOZ_WIDGET_ANDROID)
   # Overrides the glClear color used when the surface origin is not (0, 0)
   # Used for drawing a border around the content.
