@@ -1247,9 +1247,20 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   CFTypeRefPtr<CMVideoFormatDescriptionRef> formatDescriptionDeallocator =
       CFTypeRefPtr<CMVideoFormatDescriptionRef>::WrapUnderCreateRule(formatDescription);
 
+  CMSampleTimingInfo timingInfo = kCMTimingInfoInvalid;
+
+  bool spoofTiming = StaticPrefs::gfx_core_animation_specialize_video_spoof_timing();
+  if (spoofTiming) {
+    // Since we don't have timing information for the sample, set the sample to play at the
+    // current timestamp.
+    CMTimebaseRef timebase = [(AVSampleBufferDisplayLayer*)mContentCALayer controlTimebase];
+    CMTime nowTime = CMTimebaseGetTime(timebase);
+    timingInfo = {.presentationTimeStamp = nowTime};
+  }
+
   CMSampleBufferRef sampleBuffer = nullptr;
-  osValue = CMSampleBufferCreateReadyWithImageBuffer(
-      kCFAllocatorDefault, pixelBuffer, formatDescription, &kCMTimingInfoInvalid, &sampleBuffer);
+  osValue = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault, pixelBuffer,
+                                                     formatDescription, &timingInfo, &sampleBuffer);
   if (osValue != noErr) {
     MOZ_ASSERT(sampleBuffer == nullptr, "Failed call shouldn't allocate memory.");
     return false;
@@ -1257,17 +1268,19 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   CFTypeRefPtr<CMSampleBufferRef> sampleBufferDeallocator =
       CFTypeRefPtr<CMSampleBufferRef>::WrapUnderCreateRule(sampleBuffer);
 
-  // Since we don't have timing information for the sample, before we enqueue it, we
-  // attach an attribute that specifies that the sample should be played immediately.
-  CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-  if (!attachmentsArray || CFArrayGetCount(attachmentsArray) == 0) {
-    // No dictionary to alter.
-    return false;
+  if (!spoofTiming) {
+    // Since we don't have timing information for the sample, before we enqueue it, we
+    // attach an attribute that specifies that the sample should be played immediately.
+    CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+    if (!attachmentsArray || CFArrayGetCount(attachmentsArray) == 0) {
+      // No dictionary to alter.
+      return false;
+    }
+    CFMutableDictionaryRef sample0Dictionary =
+        (__bridge CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachmentsArray, 0);
+    CFDictionarySetValue(sample0Dictionary, kCMSampleAttachmentKey_DisplayImmediately,
+                         kCFBooleanTrue);
   }
-  CFMutableDictionaryRef sample0Dictionary =
-      (__bridge CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachmentsArray, 0);
-  CFDictionarySetValue(sample0Dictionary, kCMSampleAttachmentKey_DisplayImmediately,
-                       kCFBooleanTrue);
 
   [(AVSampleBufferDisplayLayer*)mContentCALayer enqueueSampleBuffer:sampleBuffer];
 
@@ -1331,6 +1344,11 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.edgeAntialiasingMask = 0;
     if (aSpecializeVideo) {
       mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
+      CMTimebaseRef timebase;
+      CMTimebaseCreateWithMasterClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
+      CMTimebaseSetRate(timebase, 1.0f);
+      [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
+      CFRelease(timebase);
     } else {
       mContentCALayer = [[CALayer layer] retain];
     }
