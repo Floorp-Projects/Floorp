@@ -47,8 +47,10 @@ class WallpaperManager(private val settings: Settings) {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         } else {
-            updateThemePreference(followDeviceTheme = true)
-            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            // For the default wallpaper, there is not need to adjust the theme,
+            // as we want to allow users decide which theme they want to have.
+            // The default wallpaper adapts to whichever theme the user has.
+            return
         }
 
         if (AppCompatDelegate.getDefaultNightMode() != mode) {
@@ -59,12 +61,10 @@ class WallpaperManager(private val settings: Settings) {
 
     private fun updateThemePreference(
         useDarkTheme: Boolean = false,
-        useLightTheme: Boolean = false,
-        followDeviceTheme: Boolean = false
+        useLightTheme: Boolean = false
     ) {
         settings.shouldUseDarkTheme = useDarkTheme
         settings.shouldUseLightTheme = useLightTheme
-        settings.shouldFollowDeviceTheme = followDeviceTheme
     }
 
     /**
