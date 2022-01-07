@@ -22,6 +22,8 @@ module.exports = {
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
   ],
+  IDBDatabase: [["prototype", "createMutableFile"]],
+  IDBMutableFile: [["prototype", "open"]],
   ImageBitmapRenderingContext: [["prototype", "transferImageBitmap"]],
   MathMLElement: [
     ["prototype", "onmozfullscreenchange"],
@@ -29,6 +31,7 @@ module.exports = {
   ],
   MouseEvent: [["prototype", "mozPressure"]],
   Navigator: [["prototype", "mozGetUserMedia"]],
+  OffscreenCanvas: [["prototype", "toBlob"]],
   RTCPeerConnection: [
     ["prototype", "getLocalStreams"],
     ["prototype", "getRemoteStreams"],
