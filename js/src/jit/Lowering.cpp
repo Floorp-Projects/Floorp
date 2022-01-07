@@ -5090,12 +5090,6 @@ void LIRGenerator::visitWasmLoadGlobalCell(MWasmLoadGlobalCell* ins) {
   }
 }
 
-void LIRGenerator::visitWasmLoadTableElement(MWasmLoadTableElement* ins) {
-  LAllocation elements = useRegisterAtStart(ins->elements());
-  LAllocation index = useRegisterAtStart(ins->index());
-  define(new (alloc()) LWasmLoadTableElement(elements, index), ins);
-}
-
 void LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins) {
   MDefinition* value = ins->value();
   size_t offs = offsetof(wasm::TlsData, globalArea) + ins->globalDataOffset();
@@ -5156,12 +5150,6 @@ void LIRGenerator::visitWasmStoreStackResult(MWasmStoreStackResult* ins) {
 void LIRGenerator::visitWasmDerivedPointer(MWasmDerivedPointer* ins) {
   LAllocation base = useRegisterAtStart(ins->base());
   define(new (alloc()) LWasmDerivedPointer(base), ins);
-}
-
-void LIRGenerator::visitWasmDerivedIndexPointer(MWasmDerivedIndexPointer* ins) {
-  LAllocation base = useRegisterAtStart(ins->base());
-  LAllocation index = useRegisterAtStart(ins->index());
-  define(new (alloc()) LWasmDerivedIndexPointer(base, index), ins);
 }
 
 void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
