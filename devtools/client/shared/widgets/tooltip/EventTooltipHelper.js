@@ -28,14 +28,12 @@ const CONTAINER_WIDTH = 500;
  *        Toolbox used to select debugger panel
  */
 function setEventTooltip(tooltip, eventListenerInfos, toolbox) {
-  const eventTooltip = new EventTooltip(tooltip, eventListenerInfos, toolbox);
-  eventTooltip.init();
+  return new EventTooltip(tooltip, eventListenerInfos, toolbox);
 }
 
 class EventTooltip {
   constructor(tooltip, eventListenerInfos, toolbox) {
     this._tooltip = tooltip;
-    this._eventListenerInfos = eventListenerInfos;
     this._toolbox = toolbox;
     this._eventEditors = new WeakMap();
 
@@ -46,9 +44,7 @@ class EventTooltip {
     this._debugClicked = this._debugClicked.bind(this);
     this.destroy = this.destroy.bind(this);
     this._subscriptions = [];
-  }
 
-  init() {
     const config = {
       mode: Editor.modes.js,
       lineNumbers: false,
@@ -67,7 +63,7 @@ class EventTooltip {
 
     const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
     const Capturing = L10N.getStr("eventsTooltip.Capturing");
-    for (const listener of this._eventListenerInfos) {
+    for (const listener of eventListenerInfos) {
       const phase = listener.capturing ? Capturing : Bubbling;
       const level = listener.DOM0 ? "DOM0" : "DOM2";
 
@@ -350,7 +346,7 @@ class EventTooltip {
       unsubscribe();
     }
 
-    this._eventListenerInfos = this._toolbox = this._tooltip = null;
+    this._toolbox = this._tooltip = null;
   }
 }
 
