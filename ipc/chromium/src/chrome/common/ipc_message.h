@@ -171,12 +171,9 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   // Initialize a message with a user-defined type, priority value, and
   // destination WebView ID.
-  //
-  // NOTE: `recordWriteLatency` is only passed by IPDL generated message code,
-  // and is used to trigger the IPC_WRITE_LATENCY_MS telemetry.
   Message(int32_t routing_id, msgid_t type,
           uint32_t segmentCapacity = 0,  // 0 for the default capacity.
-          HeaderFlags flags = HeaderFlags(), bool recordWriteLatency = false);
+          HeaderFlags flags = HeaderFlags());
 
   Message(const char* data, int data_len);
 
@@ -251,8 +248,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   void set_seqno(int32_t aSeqno) { header()->seqno = aSeqno; }
 
   const char* name() const { return StringFromIPCMessageType(type()); }
-
-  const mozilla::TimeStamp& create_time() const { return create_time_; }
 
   uint32_t num_handles() const;
 
@@ -431,8 +426,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
 #endif
-
-  mozilla::TimeStamp create_time_;
 };
 
 class MessageInfo {
