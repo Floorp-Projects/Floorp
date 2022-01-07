@@ -56,9 +56,6 @@ static const char sPrintSettingsServiceContractID[] =
 
 #include "nsThreadUtils.h"
 
-// Printing
-#include "nsIWebBrowserPrint.h"
-
 // Printing Prompts
 #include "nsIPrintingPromptService.h"
 static const char kPrintingPromptService[] =
@@ -446,10 +443,6 @@ nsPrintJob::GetSeqFrameAndCountSheets() const {
 }
 //---------------------------------------------------------------------------------
 //-- Done: Methods needed by the DocViewer
-//---------------------------------------------------------------------------------
-
-//---------------------------------------------------------------------------------
-//-- Section: nsIWebBrowserPrint
 //---------------------------------------------------------------------------------
 
 // Foward decl for Debug Helper Functions
