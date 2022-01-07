@@ -3157,20 +3157,6 @@ class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
   size_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
 };
 
-class LWasmDerivedIndexPointer : public LInstructionHelper<1, 2, 0> {
- public:
-  LIR_HEADER(WasmDerivedIndexPointer);
-  explicit LWasmDerivedIndexPointer(const LAllocation& base,
-                                    const LAllocation& index)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, base);
-    setOperand(1, index);
-  }
-  const LAllocation* base() { return getOperand(0); }
-  const LAllocation* index() { return getOperand(1); }
-  Scale scale() { return mirRaw()->toWasmDerivedIndexPointer()->scale(); }
-};
-
 class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0> {
  public:
   LIR_HEADER(WasmParameterI64);

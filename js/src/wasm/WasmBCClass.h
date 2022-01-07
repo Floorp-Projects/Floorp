@@ -1070,15 +1070,6 @@ struct BaseCompiler final {
 
   //////////////////////////////////////////////////////////////////////
   //
-  // Table access.
-
-  Address addressOfTableField(const TableDesc& table, uint32_t fieldOffset,
-                              RegPtr tls);
-  void loadTableLength(const TableDesc& table, RegPtr tls, RegI32 length);
-  void loadTableElements(const TableDesc& table, RegPtr tls, RegPtr elements);
-
-  //////////////////////////////////////////////////////////////////////
-  //
   // Heap access.
 
   void bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
@@ -1533,10 +1524,6 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTableGrow();
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
-
-  void emitTableBoundsCheck(const TableDesc& table, RegI32 index, RegPtr tls);
-  [[nodiscard]] bool emitTableGetAnyRef(uint32_t tableIndex);
-  [[nodiscard]] bool emitTableSetAnyRef(uint32_t tableIndex);
 
 #ifdef ENABLE_WASM_GC
   [[nodiscard]] bool emitStructNewWithRtt();
