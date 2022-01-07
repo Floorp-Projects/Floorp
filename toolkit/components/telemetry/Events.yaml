@@ -3001,7 +3001,7 @@ contextservices.quicksuggest:
       - adw@mozilla.com
     expiry_version: never
   opt_in_dialog:
-    objects: ["accept", "dismissed_escape_key", "dismissed_other", "learn_more", "not_now_link", "settings"]
+    objects: ["accept", "reject", "dismissed_escape_key", "dismissed_other", "learn_more", "not_now_link"]
     release_channel_collection: opt-out
     products:
       - "firefox"
@@ -3009,17 +3009,16 @@ contextservices.quicksuggest:
     description: >
       This is recorded when the user responds to the Firefox Suggest opt-in
       onboarding dialog. 'accept' is recorded when the user accepts the dialog
-      and opts in, 'settings' is recorded when the user clicks in the
-      "Customize" button (the user remains opted out in this case), 'learn_more'
-      is recorded when the user clicks "Learn more" (the user remains opted
-      out), 'not_now_link' is recorded when the user clicks "Not now" (the user
-      remains opted out), 'dismissed_escape_key' is recorded when the user
-      dismisses the dialog by pressing the Escape key (the user remains opted
-      out), 'dismissed_other' is recorded when the dialog is dismissed in some
-      other unknown way, for example when the dialog is replaced with another
-      higher priority dialog like the one shown when quitting the app (the user
-      remains opted out)
-    bug_numbers: [1723860]
+      and opts in, 'settings' is recorded when the user rejects the dialog and
+      opts out, 'learn_more' is recorded when the user clicks "Learn more" (the
+      user remains opted out), 'not_now_link' is recorded when the user clicks
+      "Not now" (the user remains opted out), 'dismissed_escape_key' is recorded
+      when the user dismisses the dialog by pressing the Escape key (the user
+      remains opted out), 'dismissed_other' is recorded when the dialog is
+      dismissed in some other unknown way, for example when the dialog is
+      replaced with another higher priority dialog like the one shown when
+      quitting the app (the user remains opted out)
+    bug_numbers: [1723860, 1745026]
     notification_emails:
       - fx-search@mozilla.com
       - adw@mozilla.com

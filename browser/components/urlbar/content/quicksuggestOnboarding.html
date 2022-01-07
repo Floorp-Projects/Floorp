@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src chrome:; object-src 'none'">
+    <meta name="referrer" content="no-referrer">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" type="text/css"
+          href="chrome://browser/content/urlbar/quicksuggestOnboarding.css">
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="browser/branding/brandings.ftl"/>
+    <link rel="localization" href="preview/firefoxSuggest.ftl">
+    <script src="chrome://browser/content/urlbar/quicksuggestOnboarding.js"></script>
+  </head>
+  <body role="dialog"
+        aria-labelledby="introduction-title">
+    <section id="introduction-section">
+      <span class="logo" role="presentation"></span>
+      <h1 id="introduction-title"
+          class="title"
+          aria-live="polite"
+          data-l10n-id="firefox-suggest-onboarding-introduction-title"></h1>
+      <button id="onboardingNext"
+              class="primary"
+              tabindex="1"
+              data-l10n-id="firefox-suggest-onboarding-introduction-button"></button>
+      <div class="pager">
+        <span class="current"></span>
+        <span></span>
+      </div>
+    </section>
+    <section id="main-section">
+      <span class="logo" role="presentation"></span>
+      <h1 class="title"
+          aria-live="polite"
+          data-l10n-id="firefox-suggest-onboarding-main-title"></h1>
+      <h2 class="description"
+           tabindex="-1"
+           data-l10n-id="firefox-suggest-onboarding-main-description"></h2>
+      <div class="option accept">
+        <label for="onboardingAccept"></label>
+        <input id="onboardingAccept"
+               type="radio"
+               tabindex="2"
+               name="search-experience"></input>
+        <div>
+          <div class="option-label"
+               data-l10n-id="firefox-suggest-onboarding-main-accept-option-label">
+            <a id="onboardingLearnMore"
+               tabindex="3"
+               data-l10n-name="firefox-suggest-onboarding-learn-more-link"></a>
+          </div>
+          <div class="option-description"
+               data-l10n-id="firefox-suggest-onboarding-main-accept-option-description">
+          </div>
+        </div>
+      </div>
+      <div class="option reject">
+        <label for="onboardingReject"></label>
+        <input id="onboardingReject"
+               type="radio"
+               tabindex="4"
+               name="search-experience"></input>
+        <div>
+          <div class="option-label"
+               data-l10n-id="firefox-suggest-onboarding-main-reject-option-label">
+          </div>
+          <div class="option-description"
+               data-l10n-id="firefox-suggest-onboarding-main-reject-option-description">
+          </div>
+        </div>
+      </div>
+      <button id="onboardingSubmit"
+              class="primary"
+              disabled="true"
+              tabindex="5"
+              data-l10n-id="firefox-suggest-onboarding-main-submit-button"></button>
+      <a id="onboardingNotNow"
+         tabindex="6"
+         data-l10n-id="firefox-suggest-onboarding-main-skip-link"></a>
+      <div class="pager">
+        <span></span>
+        <span class="current"></span>
+      </div>
+    </section>
+  </body>
+</html>
