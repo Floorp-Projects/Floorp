@@ -84,3 +84,23 @@ addressbar-firefox-suggest-info-sponsored = Based on your selection, you’ll re
 # Sponsored suggestions: off
 # Data collection: on
 addressbar-firefox-suggest-info-data = Based on your selection, you won’t receive suggestions from the web or sponsored sites. We will process your search query data to develop the { -firefox-suggest-brand-name } feature.
+
+## These strings are used in the introduction pane of the Firefox Suggest online
+## onboarding opt-in dialog.
+
+firefox-suggest-onboarding-introduction-title = Make sure you’ve got our newest search experience
+firefox-suggest-onboarding-introduction-button = Next
+
+## These strings are used in the main pane of the Firefox Suggest online
+## onboarding opt-in dialog. Options are displayed as radio buttons with a label
+## followed by a description.
+
+firefox-suggest-onboarding-main-title = We’re building a richer search experience
+firefox-suggest-onboarding-main-description = Finding the best of the web should be easier. Allowing { -vendor-short-name } to process your search queries will help develop our { -firefox-suggest-brand-name } feature, while keeping your privacy top of mind.
+firefox-suggest-onboarding-main-accept-option-label =
+    Allow improved search experience. <a data-l10n-name="firefox-suggest-onboarding-learn-more-link">Learn more</a>
+firefox-suggest-onboarding-main-accept-option-description = Include suggestions for a more curated web experience.
+firefox-suggest-onboarding-main-reject-option-label = Keep my default experience.
+firefox-suggest-onboarding-main-reject-option-description = Don’t allow search query processing.
+firefox-suggest-onboarding-main-submit-button = Save preferences
+firefox-suggest-onboarding-main-skip-link = Skip action
