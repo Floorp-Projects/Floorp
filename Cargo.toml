@@ -96,6 +96,9 @@ slotmap = { path = "build/rust/dummy-web/slotmap" }
 wasm-bindgen = { path = "build/rust/dummy-web/wasm-bindgen" }
 web-sys = { path = "build/rust/dummy-web/web-sys" }
 
+# Overrides to allow easier use of common internal crates.
+moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
+
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
