@@ -45,15 +45,15 @@ const RESTARTS_PREF = "quicksuggest.seenRestarts";
 // These values are used in telemetry events, so be careful about changing them.
 const ONBOARDING_CHOICE = {
   ACCEPT: "accept",
+  REJECT: "reject",
   DISMISSED_ESCAPE_KEY: "dismissed_escape_key",
   DISMISSED_OTHER: "dismissed_other",
   LEARN_MORE: "learn_more",
   NOT_NOW: "not_now_link",
-  SETTINGS: "settings",
 };
 
 const ONBOARDING_URI =
-  "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml";
+  "chrome://browser/content/urlbar/quicksuggestOnboarding.html";
 
 // This is a score in the range [0, 1] used by the provider to compare
 // suggestions from remote settings to suggestions from Merino. Remote settings
@@ -275,10 +275,8 @@ class Suggestions {
           fromChrome: true,
         });
         break;
-      case ONBOARDING_CHOICE.SETTINGS:
-        win.openPreferences("privacy-locationBar");
-        break;
       case ONBOARDING_CHOICE.ACCEPT:
+      case ONBOARDING_CHOICE.REJECT:
       case ONBOARDING_CHOICE.NOT_NOW:
         // No other action required.
         break;
