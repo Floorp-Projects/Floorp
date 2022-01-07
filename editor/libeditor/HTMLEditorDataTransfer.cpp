@@ -744,6 +744,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     return lastInsertedPoint.inspectErr();
   }
 
+  mHTMLEditor.TopLevelEditSubActionDataRef()
+      .mNeedsToCleanUpEmptyInlineElements = false;
+
   if (!lastInsertedPoint.inspect().IsSet()) {
     return NS_OK;
   }
