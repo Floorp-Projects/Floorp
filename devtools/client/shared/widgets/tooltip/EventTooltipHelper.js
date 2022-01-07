@@ -59,9 +59,6 @@ class EventTooltip {
     const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
     const Capturing = L10N.getStr("eventsTooltip.Capturing");
     for (const listener of eventListenerInfos) {
-      const phase = listener.capturing ? Capturing : Bubbling;
-      const level = listener.DOM0 ? "DOM0" : "DOM2";
-
       // Create this early so we can refer to it from a closure, below.
       const content = doc.createElementNS(XHTML_NS, "div");
 
@@ -135,18 +132,6 @@ class EventTooltip {
       attributesContainer.className = "event-tooltip-attributes-container";
       header.appendChild(attributesContainer);
 
-      if (!listener.hide.capturing) {
-        const attributesBox = doc.createElementNS(XHTML_NS, "div");
-        attributesBox.className = "event-tooltip-attributes-box";
-        attributesContainer.appendChild(attributesBox);
-
-        const capturing = doc.createElementNS(XHTML_NS, "span");
-        capturing.className = "event-tooltip-attributes";
-        capturing.textContent = phase;
-        capturing.setAttribute("title", phase);
-        attributesBox.appendChild(capturing);
-      }
-
       if (listener.tags) {
         for (const tag of listener.tags.split(",")) {
           const attributesBox = doc.createElementNS(XHTML_NS, "div");
@@ -161,15 +146,18 @@ class EventTooltip {
         }
       }
 
-      if (!listener.hide.dom0) {
+      if (!listener.hide.capturing) {
         const attributesBox = doc.createElementNS(XHTML_NS, "div");
         attributesBox.className = "event-tooltip-attributes-box";
         attributesContainer.appendChild(attributesBox);
 
-        const dom0 = doc.createElementNS(XHTML_NS, "span");
-        dom0.className = "event-tooltip-attributes";
-        dom0.textContent = level;
-        attributesBox.appendChild(dom0);
+        const capturing = doc.createElementNS(XHTML_NS, "span");
+        capturing.className = "event-tooltip-attributes";
+
+        const phase = listener.capturing ? Capturing : Bubbling;
+        capturing.textContent = phase;
+        capturing.setAttribute("title", phase);
+        attributesBox.appendChild(capturing);
       }
 
       // Content
@@ -177,7 +165,6 @@ class EventTooltip {
       this._eventEditors.set(content, {
         editor: editor,
         handler: listener.handler,
-        dom0: listener.DOM0,
         native: listener.native,
         appended: false,
         location,
