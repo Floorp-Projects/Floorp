@@ -85,22 +85,80 @@ addressbar-firefox-suggest-info-sponsored = Based on your selection, you’ll re
 # Data collection: on
 addressbar-firefox-suggest-info-data = Based on your selection, you won’t receive suggestions from the web or sponsored sites. We will process your search query data to develop the { -firefox-suggest-brand-name } feature.
 
-## These strings are used in the introduction pane of the Firefox Suggest online
-## onboarding opt-in dialog.
+## Used as title on the introduction pane. The text can be formatted to span
+## multiple lines as needed (line breaks are significant).
 
-firefox-suggest-onboarding-introduction-title = Make sure you’ve got our newest search experience
-firefox-suggest-onboarding-introduction-button = Next
+firefox-suggest-onboarding-introduction-title-1 =
+  Make sure you’ve got our latest
+  search experience
+firefox-suggest-onboarding-introduction-title-2 =
+  We’re building a better search experience —
+  one you can trust
+firefox-suggest-onboarding-introduction-title-3 =
+  We’re building a better way to find what
+  you’re looking for on the web
+firefox-suggest-onboarding-introduction-title-4 =
+  A faster search experience is in the works
+firefox-suggest-onboarding-introduction-title-5 =
+  Together, we can create the kind of search
+  experience the Internet deserves
+firefox-suggest-onboarding-introduction-title-6 =
+  Meet { -firefox-suggest-brand-name }, the next
+  evolution in search
+firefox-suggest-onboarding-introduction-title-7 =
+  Find the best of the web, faster.
 
-## These strings are used in the main pane of the Firefox Suggest online
-## onboarding opt-in dialog. Options are displayed as radio buttons with a label
-## followed by a description.
+##
 
-firefox-suggest-onboarding-main-title = We’re building a richer search experience
-firefox-suggest-onboarding-main-description = Finding the best of the web should be easier. Allowing { -vendor-short-name } to process your search queries will help develop our { -firefox-suggest-brand-name } feature, while keeping your privacy top of mind.
-firefox-suggest-onboarding-main-accept-option-label =
-    Allow improved search experience. <a data-l10n-name="firefox-suggest-onboarding-learn-more-link">Learn more</a>
-firefox-suggest-onboarding-main-accept-option-description = Include suggestions for a more curated web experience.
-firefox-suggest-onboarding-main-reject-option-label = Keep my default experience.
-firefox-suggest-onboarding-main-reject-option-description = Don’t allow search query processing.
+firefox-suggest-onboarding-introduction-next-button-1 = Find out how
+firefox-suggest-onboarding-introduction-next-button-2 = Find out more
+
+## Used as title on the main pane. The text can be formatted to span
+## multiple lines as needed (line breaks are significant).
+
+firefox-suggest-onboarding-main-title-1 =
+  We’re building a richer search experience
+firefox-suggest-onboarding-main-title-2 =
+  Help us guide the way to the
+  best of the Internet
+firefox-suggest-onboarding-main-title-3 =
+  A richer, smarter search experience
+firefox-suggest-onboarding-main-title-4 =
+  Finding the best of the web, faster
+firefox-suggest-onboarding-main-title-5 =
+  We’re building a better search experience —
+  you can help
+firefox-suggest-onboarding-main-title-6 =
+  It’s time to think outside the search engine
+firefox-suggest-onboarding-main-title-7 =
+  We’re building a smarter search experience —
+  one you can trust
+firefox-suggest-onboarding-main-title-8 =
+  Finding the best of the web should be
+  simpler and more secure.
+
+##
+
+firefox-suggest-onboarding-main-description-1 = Allowing { -vendor-short-name } to process your search queries means you’re helping us create smarter, more relevant search suggestions. And, as always, we’ll keep your privacy top of mind.
+firefox-suggest-onboarding-main-description-2 = When you allow { -vendor-short-name } to process your search queries, you’re helping build a better { -firefox-suggest-brand-name } for everyone. And, as always, we’ll keep your privacy top of mind.
+firefox-suggest-onboarding-main-description-3 = What if your browser helped you zero in on what you’re actually looking for? Allowing { -vendor-short-name } to process your search queries helps us create more relevant search suggestions that still keep your privacy top of mind.
+firefox-suggest-onboarding-main-description-4 = You’re trying to get where you’re going on the web and get on with it. When you allow { -vendor-short-name } to process your search queries, we can help you get there faster—while keeping your privacy top of mind.
+firefox-suggest-onboarding-main-description-5 = Allowing { -vendor-short-name } to process your search queries will help us create more relevant suggestions for everyone. And, as always, we’ll keep your privacy top of mind.
+firefox-suggest-onboarding-main-description-6 = Allowing { -vendor-short-name } to process your search queries will help us create more relevant search suggestions. We’re building { -firefox-suggest-brand-name } to help you get where you’re going on the Internet while keeping your privacy in mind.
+firefox-suggest-onboarding-main-description-7 = Allowing { -vendor-short-name } to process your search queries helps us create more relevant search suggestions.
+firefox-suggest-onboarding-main-description-8 = Allowing { -vendor-short-name } to process your search queries helps us provide more relevant search suggestions. We don’t use this data to profile you on the web.
+
+firefox-suggest-onboarding-main-privacy-first = No user profiling. Privacy-first, always.
+
+firefox-suggest-onboarding-main-accept-option-label = Allow. <a data-l10n-name="learn-more-link">Learn more</a>
+
+firefox-suggest-onboarding-main-accept-option-description-1 = Help improve the { -firefox-suggest-brand-name } feature with more relevant suggestions. Your search queries will be processed.
+firefox-suggest-onboarding-main-accept-option-description-2 = Recommended for people who support improving the { -firefox-suggest-brand-name } feature.  Your search queries will be processed.
+
+firefox-suggest-onboarding-main-reject-option-label = Don’t allow.
+
+firefox-suggest-onboarding-main-reject-option-description-1 = Keep the default { -firefox-suggest-brand-name } experience with the strictest data-sharing controls.
+firefox-suggest-onboarding-main-reject-option-description-2 = Recommended for people who prefer the strictest data-sharing controls. Keep the default experience.
+
 firefox-suggest-onboarding-main-submit-button = Save preferences
-firefox-suggest-onboarding-main-skip-link = Skip action
+firefox-suggest-onboarding-main-skip-link = Not now
