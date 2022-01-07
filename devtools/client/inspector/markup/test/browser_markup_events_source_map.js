@@ -19,7 +19,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: "webpack:///events_original.js:7",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: `function clickme() {
   console.log("clickme");
 }`,
