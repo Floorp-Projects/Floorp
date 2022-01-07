@@ -484,7 +484,6 @@ class JQueryEventCollector extends MainEventCollector {
               tags: "jQuery",
               hide: {
                 capturing: true,
-                dom0: true,
               },
             };
 
@@ -577,7 +576,6 @@ class JQueryLiveEventCollector extends MainEventCollector {
                 handler: handler,
                 tags: "jQuery,Live",
                 hide: {
-                  dom0: true,
                   capturing: true,
                 },
               };
@@ -688,9 +686,6 @@ class ReactEventCollector extends MainEventCollector {
             type: name,
             handler: listener,
             tags: "React",
-            hide: {
-              dom0: true,
-            },
             override: {
               capturing: name.endsWith("Capture"),
             },
@@ -834,7 +829,6 @@ class EventCollector {
    *                              // inside event bubble.
    *           hide: {            // Flags for hiding certain properties.
    *             capturing: true,
-   *             dom0: true,
    *           }
    *         }
    */
@@ -897,10 +891,9 @@ class EventCollector {
    *             handler: function() { doSomething() },
    *             origin: "http://www.mozilla.com",
    *             tags: tags,
-   *             DOM0: true,
    *             capturing: true,
    *             hide: {
-   *               DOM0: true
+   *               capturing: true
    *             },
    *             native: false
    *           }
@@ -929,7 +922,7 @@ class EventCollector {
       const override = listener.override || {};
       const tags = listener.tags || "";
       const type = listener.type || "";
-      let dom0 = false;
+      let isScriptBoundToNonScriptElement = false;
       let functionSource = handler.toString();
       let line = 0;
       let column = null;
@@ -968,10 +961,10 @@ class EventCollector {
         // Scripts are provided via script tags. If it wasn't provided by a
         // script tag it must be a DOM0 event.
         if (script.source.element) {
-          dom0 = script.source.element.class !== "HTMLScriptElement";
-        } else {
-          dom0 = false;
+          isScriptBoundToNonScriptElement =
+            script.source.element.class !== "HTMLScriptElement";
         }
+
         line = script.startLine;
         column = script.startColumn;
         url = script.url;
@@ -1029,7 +1022,7 @@ class EventCollector {
       } else {
         origin =
           url +
-          (dom0 || line === 0
+          (isScriptBoundToNonScriptElement || line === 0
             ? ""
             : ":" + line + (column === null ? "" : ":" + column));
       }
@@ -1039,7 +1032,6 @@ class EventCollector {
         handler: override.handler || functionSource.trim(),
         origin: override.origin || origin,
         tags: override.tags || tags,
-        DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
         capturing:
           typeof override.capturing !== "undefined"
             ? override.capturing
@@ -1052,7 +1044,7 @@ class EventCollector {
       // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
       // generated dynamically from e.g. an onclick="" attribute so the script
       // doesn't actually exist.
-      if (native || dom0) {
+      if (native || isScriptBoundToNonScriptElement) {
         eventObj.hide.debugger = true;
       }
     } finally {
