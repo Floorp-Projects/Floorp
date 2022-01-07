@@ -1648,6 +1648,16 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRendering(
     }
   }
 
+  // Notify any observers that the compositor has been reinitialized,
+  // eg the ZoomConstraintsClients for documents in this process.
+  // This must occur after the ReinitRendering call above so that the
+  // APZCTreeManagers have been connected.
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "compositor-reinitialized",
+                                     nullptr);
+  }
+
   RemoteDecoderManagerChild::InitForGPUProcess(std::move(aVideoManager));
   return IPC_OK();
 }
