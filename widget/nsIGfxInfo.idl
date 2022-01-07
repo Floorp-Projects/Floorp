@@ -315,6 +315,16 @@ interface nsIGfxInfo : nsISupports
   // xpcshell-tests.
   boolean controlGPUProcessForXPCShell(in boolean aEnable);
 
+  // Returns a promise resolving to true if the GPU process is enabled and ready,
+  // and false if it is disabled. If the process is currently being (re)started
+  // then this will not resolve until it has finished launching.
+  [implicit_jscontext]
+  Promise ensureGPUProcessReadyForTests();
+
+  // Kills the GPU process cleanly, without generating a crash dump.
+  // This is intended only for use by tests.
+  void killGPUProcessForTests();
+
   // Causes the GPU process to crash. This is intended only for use by tests.
   void crashGPUProcessForTests();
 };

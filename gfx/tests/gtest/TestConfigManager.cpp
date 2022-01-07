@@ -240,6 +240,13 @@ class MockGfxInfo final : public nsIGfxInfo {
                                           bool* _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD EnsureGPUProcessReadyForTests(JSContext* cx,
+                                           dom::Promise** aPromise) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD KillGPUProcessForTests() override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   NS_IMETHOD CrashGPUProcessForTests() override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
