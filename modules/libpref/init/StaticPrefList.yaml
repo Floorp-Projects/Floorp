@@ -5043,6 +5043,13 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
+
+  # Check that the sample has a color space and if it doesn't, log that
+  # and supply the default color space from the main display.
+-   name: gfx.core-animation.specialize-video.check-color-space
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
