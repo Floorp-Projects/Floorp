@@ -231,46 +231,60 @@ def run_python_tests(
     jobs = jobs or cpu_count()
 
     return_code = 0
+    failure_output = []
 
     def on_test_finished(result):
         output, ret, test_path = result
 
-        for line in output:
+        if ret:
+            # Log the output of failed tests at the end so it's easy to find.
+            failure_output.extend(output)
+
+            if not return_code:
+                command_context.log(
+                    logging.ERROR,
+                    "python-test",
+                    {"test_path": test_path, "ret": ret},
+                    "Setting retcode to {ret} from {test_path}",
+                )
+        else:
+            for line in output:
+                command_context.log(
+                    logging.INFO, "python-test", {"line": line.rstrip()}, "{line}"
+                )
+
+        return return_code or ret
+
+    try:
+        with ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures = [
+                executor.submit(_run_python_test, command_context, test, jobs, verbose)
+                for test in parallel
+            ]
+
+            try:
+                for future in as_completed(futures):
+                    return_code = on_test_finished(future.result())
+            except KeyboardInterrupt:
+                # Hack to force stop currently running threads.
+                # https://gist.github.com/clchiou/f2608cbe54403edb0b13
+                executor._threads.clear()
+                thread._threads_queues.clear()
+                raise
+
+        for test in sequential:
+            return_code = on_test_finished(
+                _run_python_test(command_context, test, jobs, verbose)
+            )
+            if return_code and exitfirst:
+                break
+    finally:
+        # Now log failed tests (even if there was a KeyboardInterrupt or other
+        # exception).
+        for line in failure_output:
             command_context.log(
                 logging.INFO, "python-test", {"line": line.rstrip()}, "{line}"
             )
-
-        if ret and not return_code:
-            command_context.log(
-                logging.ERROR,
-                "python-test",
-                {"test_path": test_path, "ret": ret},
-                "Setting retcode to {ret} from {test_path}",
-            )
-        return return_code or ret
-
-    with ThreadPoolExecutor(max_workers=jobs) as executor:
-        futures = [
-            executor.submit(_run_python_test, command_context, test, jobs, verbose)
-            for test in parallel
-        ]
-
-        try:
-            for future in as_completed(futures):
-                return_code = on_test_finished(future.result())
-        except KeyboardInterrupt:
-            # Hack to force stop currently running threads.
-            # https://gist.github.com/clchiou/f2608cbe54403edb0b13
-            executor._threads.clear()
-            thread._threads_queues.clear()
-            raise
-
-    for test in sequential:
-        return_code = on_test_finished(
-            _run_python_test(command_context, test, jobs, verbose)
-        )
-        if return_code and exitfirst:
-            break
 
     command_context.log(
         logging.INFO,
