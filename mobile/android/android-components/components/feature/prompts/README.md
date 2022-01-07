@@ -1,6 +1,7 @@
 # [Android Components](../../../README.md) > Feature > Prompts
 
-A feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content like select, option and menu html elements.
+A feature for displaying native dialogs. It will subscribe to the selected session and will handle all the common prompt dialogs from web content like input type
+date, file, time, color, option, menu, authentication, confirmation and alerts.
 
 ## Usage
 
@@ -24,9 +25,10 @@ implementation "org.mozilla.components:feature-prompts:{latest-version}"
   }
 
   val promptFeature = PromptFeature(fragment = this,
-    sessionManager = sessionManager,
-    fragmentManager= fragmentManager,
-    onNeedToRequestPermissions = onNeedToRequestPermissions
+      fragment = fragment, 
+      store = store,
+      fragmentManager= fragmentManager,
+      onNeedToRequestPermissions = onNeedToRequestPermissions
   )
 
   // It will start listing for new prompt requests from web content.
