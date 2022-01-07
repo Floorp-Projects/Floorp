@@ -1672,6 +1672,15 @@ var TelemetrySendImpl = {
       throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
 
+    let suppressPingsender = Services.prefs.getBoolPref(
+      "toolkit.telemetry.testing.suppressPingsender",
+      false
+    );
+    if (suppressPingsender) {
+      this._log.trace("Silently skipping pingsender call in automation");
+      return;
+    }
+
     const exeName =
       AppConstants.platform === "win" ? "pingsender.exe" : "pingsender";
 
