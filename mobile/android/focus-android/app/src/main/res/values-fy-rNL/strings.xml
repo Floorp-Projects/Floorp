@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avansearre</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Websitemachtigingen</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatysk ôfspylje</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Audio en fideo tastean</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Allinnich audio blokkearje</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Oanrekommandearre</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Audio en fideo blokkearje</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Undersiken</string>
 
@@ -779,8 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Allinnich-HTTPS-modus</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS biedt in feilige, fersifere ferbining tusken %1$s en de troch jo besochte websites. De measte websites stypje HTTPS en as de Allinnich-HTTPS-modus ynskeakele is, sil %1$s alle ferbiningen fernije nei HTTPS.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Probearret automatysk ferbining te meitsjen mei websites fia HTTPS foar in bettere befeiliging. HTTPS-ferbiningen soargje foar in feilige, fersifere ferbining mei websites dy’t jo besykje.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Utsûnderingen</string>
@@ -844,8 +863,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fuortsmite</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Omneame</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Omneame</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Namme fluchkeppeling</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -863,6 +887,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Apparaattema folgje</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">De troch jo opfrege website stipet gjin HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Standert probearret %1$s ferbining te meitsjen fia HTTPS foar in bettere befeiliging. Gean nei Ynstellingen &gt; Privacy &amp; Befeiliging &gt; Befeiliging om dizze ynstelling te wizigjen of foar mear ynformaasje.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
