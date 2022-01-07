@@ -284,11 +284,11 @@ def create_parser(mach_interface=False):
         help="Device name of mobile device.",
     )
     add_arg(
-        "--enable-fission",
-        dest="enable_fission",
-        action="store_true",
-        default=False,
-        help="Enable Fission (site isolation) in Gecko.",
+        "--disable-fission",
+        dest="fission",
+        action="store_false",
+        default=True,
+        help="Disable Fission (site isolation) in Gecko.",
     )
     add_arg(
         "--setpref",

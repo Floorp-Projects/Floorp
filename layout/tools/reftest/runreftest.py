@@ -533,6 +533,12 @@ class RefTest(object):
             options.extraProfileFiles.append(os.path.join(here, "chrome"))
 
         self.copyExtraFilesToProfile(options, profile)
+
+        self.log.info(
+            "Running with e10s: {}".format(prefs["browser.tabs.remote.autostart"])
+        )
+        self.log.info("Running with fission: {}".format(prefs["fission.autostart"]))
+
         return profile
 
     def environment(self, **kwargs):
@@ -878,9 +884,6 @@ class RefTest(object):
 
         # browser environment
         env = self.buildBrowserEnv(options, profile.profile)
-
-        self.log.info("Running with e10s: {}".format(options.e10s))
-        self.log.info("Running with fission: {}".format(options.fission))
 
         def timeoutHandler():
             self.handleTimeout(timeout, proc, options.utilityPath, debuggerInfo)
