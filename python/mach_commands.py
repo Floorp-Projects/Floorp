@@ -10,8 +10,6 @@ import os
 import tempfile
 from multiprocessing import cpu_count
 
-import six
-
 from concurrent.futures import ThreadPoolExecutor, as_completed, thread
 
 import mozinfo
@@ -144,10 +142,7 @@ def python(
 def python_test(command_context, *args, **kwargs):
     try:
         tempdir = str(tempfile.mkdtemp(suffix="-python-test"))
-        if six.PY2:
-            os.environ[b"PYTHON_TEST_TMP"] = tempdir
-        else:
-            os.environ["PYTHON_TEST_TMP"] = tempdir
+        os.environ["PYTHON_TEST_TMP"] = tempdir
         return run_python_tests(command_context, *args, **kwargs)
     finally:
         import mozfile
@@ -312,7 +307,6 @@ def _run_python_test(command_context, test, jobs, verbose):
     file_displayed_test = []  # used as boolean
 
     def _line_handler(line):
-        line = six.ensure_str(line)
         if not file_displayed_test:
             output = "Ran" in line or "collected" in line or line.startswith("TEST-")
             if output:
@@ -328,13 +322,14 @@ def _run_python_test(command_context, test, jobs, verbose):
     python = command_context.virtualenv_manager.python_path
     cmd = [python, test["path"]]
     env = os.environ.copy()
-    if six.PY2:
-        env[b"PYTHONDONTWRITEBYTECODE"] = b"1"
-    else:
-        env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
 
     proc = ProcessHandler(
-        cmd, env=env, processOutputLine=_line_handler, storeOutput=False
+        cmd,
+        env=env,
+        processOutputLine=_line_handler,
+        storeOutput=False,
+        universal_newlines=True,
     )
     proc.run()
 
