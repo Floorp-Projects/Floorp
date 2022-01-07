@@ -427,12 +427,11 @@ struct AssertionConditionType {
     } while (false)
 #endif /* DEBUG */
 
-#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 #  define MOZ_DIAGNOSTIC_ASSERT(...)                                    \
     MOZ_ASSERT_GLUE(                                                    \
         MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
         ("MOZ_DIAGNOSTIC_ASSERT", __VA_ARGS__))
-#  define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
 #else
 #  define MOZ_DIAGNOSTIC_ASSERT(...) \
     do {                             \
