@@ -322,28 +322,9 @@ add_task(async function test() {
 
   // ## Fission Isolation
   if (Services.appinfo.fissionAutostart) {
-    const fissionUrl = "example.com";
-    const fissionRemoteType = `webIsolated=https://example.com`;
-
-    await do_test_sw(fissionUrl, fissionRemoteType, "synthetic", null);
-    await do_test_sw(fissionUrl, fissionRemoteType, "synthetic", fileBlob);
-
-    // ## ServiceWorker isolation via allow-list
+    // ## ServiceWorker isolation
     const isolateUrl = "example.com";
     const isolateRemoteType = `webServiceWorker=https://` + isolateUrl;
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [
-          "browser.tabs.remote.serviceWorkerIsolationList",
-          "https://" + isolateUrl,
-        ],
-        [
-          "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
-          false,
-        ],
-        ["browser.tabs.remote.separatedMozillaDomains", ""],
-      ],
-    });
     await do_test_sw(isolateUrl, isolateRemoteType, "synthetic", null);
     await do_test_sw(isolateUrl, isolateRemoteType, "synthetic", fileBlob);
   }
