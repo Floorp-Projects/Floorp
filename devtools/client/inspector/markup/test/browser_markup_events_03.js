@@ -18,7 +18,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":69:17",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "es6Method(foo, bar) {\n" + '  alert("obj.es6Method");\n' + "}",
       },
@@ -30,7 +30,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":88:25",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function* generator() {\n" + '  alert("generator");\n' + "}",
       },
     ],
@@ -41,7 +41,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":46:58",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function*() {\n" + '  alert("anonGenerator");\n' + "}",
       },
     ],
@@ -52,7 +52,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":22:18",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function foo() {\n" + '  alert("namedFunctionExpression");\n' + "}",
       },
@@ -64,7 +64,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":26:45",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function() {\n" + '  alert("anonFunctionExpression");\n' + "}",
       },
@@ -76,7 +76,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":31:27",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function bar() {\n" + '  alert("returnedFunction");\n' + "}",
       },
     ],
