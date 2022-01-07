@@ -2,40 +2,219 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#infoContainer {
+/**
+ * We follow the example of the upgrade dialog for font sizes, line heights,
+ * etc. See: https://searchfox.org/mozilla-central/source/browser/themes/shared/upgradeDialog.css
+ */
+
+:root {
+  /* As this dialog is designed under assuming the base font size is 11px,
+     specify image size using current font-size. */
+  --introduction-logo-width: calc(158 / 11 * 1em);
+  --introduction-logo-height: calc(114 / 11 * 1em);
+  --main-logo-width: calc(100 / 11 * 1em);
+  --main-logo-height: calc(64 / 11 * 1em);
+  /* --fixed-large-margin is constant regardless of compact mode. */
+  --fixed-large-margin: 24px;
+  --large-margin: 24px;
+  --small-margin: 16px;
+  --section-vertical-padding: 32px;
+  --section-horizontal-padding: 64px;
+}
+
+body.compact {
+  /* 15px is the usual font-size. */
+  font-size: 13px;
+  --main-logo-width: calc(100 / 13 * 1em);
+  --main-logo-height: calc(64 / 13 * 1em);
+  --large-margin: 12px;
+  --small-margin: 8px;
+  --section-vertical-padding: 16px;
+  --section-horizontal-padding: 32px;
+}
+
+section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   text-align: center;
-  padding: 1em 0;
+  padding: var(--section-vertical-padding) var(--section-horizontal-padding);
+  width: 536px;
+  /* This is the natural height of the main section. */
+  min-height: 587px;
 }
 
-a {
+body.compact section {
+  /* This is the natural height of the main section in compact mode. */
+  min-height: 450px;
+}
+
+.title {
+  font-size: 1.6em;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.logo {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: none;
+}
+
+.pager > span {
+  display: inline-block;
+  border-radius: 3px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--in-content-border-color);
+  margin-inline: 4px;
+}
+
+.pager > .current {
+  background-color: var(--in-content-primary-button-background);
+}
+
+#introduction-section .logo {
+  background-image: url("quicksuggestOnboarding_magglass_animation.svg");
+  width: var(--introduction-logo-width);
+  height: var(--introduction-logo-height);
+  margin-block-end: var(--large-margin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #introduction-section .logo {
+    background-image: url("quicksuggestOnboarding_magglass.svg");
+  }
+}
+
+#introduction-section .title {
+  margin-block-end: var(--large-margin);
+}
+
+#main-section {
+  display: none;
+}
+
+#main-section .logo {
+  background-image: url("quicksuggestOnboarding_magglass.svg");
+  width: var(--main-logo-width);
+  height: var(--main-logo-height);
+  margin-block-end: var(--large-margin);
+}
+
+#main-section .title {
+  margin-block-end: var(--large-margin);
+}
+
+#main-section .description {
+  margin-block: 0 var(--fixed-large-margin);
+  font-size: 1.1em;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+#main-section .option {
+  border-radius: 4px;
+  border: 2px solid var(--in-content-box-info-background);
+  display: flex;
+  text-align: start;
+  padding: var(--small-margin);
+  width: calc(100% - (var(--small-margin) + 2px) * 2);
+  flex-direction: row;
+  position: relative;
+}
+
+#main-section .option.selected {
+  border-color: var(--in-content-primary-button-background);
+}
+
+#main-section .option.accept {
+  margin-block-end: var(--small-margin);
+}
+
+#main-section .option.reject {
+  margin-block-end: var(--fixed-large-margin);
+}
+
+#main-section .option > label {
+  /* Make whole option area selectable for the radio button. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body:not(.compact) #main-section .option > input {
+  /* Vertically align the radio button with the .option-label. */
+  margin-block-start: 0.25em;
+}
+
+#main-section .option > div {
+  /* Make this area be front than label to make the link included clickable.
+     And, make this area not recieve pointer-events so that this area as well
+     will be selectable area for the radio. */
+  z-index: 1;
+  pointer-events: none;
+}
+
+#main-section .option > div a {
+  /* Make a clickable explicitly since the parent element might not receive the
+     event. */
+  pointer-events: auto;
+}
+
+#main-section .option > div > .option-label {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-block-end: 2px;
+}
+
+#main-section .option > div > .option-description {
+  font-size: 1em;
+}
+
+#main-section a {
   cursor: pointer;
+  font-weight: normal;
 }
 
-#notNowLinkContainer {
-  text-align: end;
-  padding-inline-end: 1em;
+button,
+#onboardingNotNow {
+  margin-block-end: var(--small-margin);
 }
 
-#infoIcon {
-  width: 112px;
-  height: 112px;
-  margin: 0 auto 1em;
-  background-image: url("chrome://branding/content/about-logo.svg");
-  background-size: 100%;
+/* transition from introduction to main */
+#introduction-section.inactive {
+  /* Avoid including this section size */
+  position: fixed;
+  pointer-events: none;
+  animation: fadeout 0.3s forwards;
 }
 
-#infoTitle {
-  font-size: 1.5em;
-  margin: 0;
+#main-section.active {
+  display: flex;
+  animation: fadein 0.3s forwards;
 }
 
-#infoBody {
-  margin: 1em 0;
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    visibility: hidden;
+    opacity: 0;
+  }
 }
 
-#illustration {
-  background: url("quicksuggestOnboarding_illustration.svg") no-repeat center;
-  min-width: 538px;
-  height: 219px;
-  margin: 1em 0 2em;
+@keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    pointer-events: initial;
+    opacity: 1;
+  }
 }

@@ -4,7 +4,8 @@
 
 browser.jar:
    content/browser/urlbar/preloaded-top-urls.json      (content/preloaded-top-urls.json)
-   content/browser/urlbar/quicksuggestOnboarding.xhtml (content/quicksuggestOnboarding.xhtml)
+   content/browser/urlbar/quicksuggestOnboarding.html (content/quicksuggestOnboarding.html)
    content/browser/urlbar/quicksuggestOnboarding.js    (content/quicksuggestOnboarding.js)
    content/browser/urlbar/quicksuggestOnboarding.css   (content/quicksuggestOnboarding.css)
-   content/browser/urlbar/quicksuggestOnboarding_illustration.svg (content/quicksuggestOnboarding_illustration.svg)
+   content/browser/urlbar/quicksuggestOnboarding_magglass_animation.svg (content/quicksuggestOnboarding_magglass_animation.svg)
+   content/browser/urlbar/quicksuggestOnboarding_magglass.svg (content/quicksuggestOnboarding_magglass.svg)

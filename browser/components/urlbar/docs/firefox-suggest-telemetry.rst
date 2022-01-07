@@ -211,6 +211,8 @@ The event's objects are the following:
 
 :accept:
   The user accepted the dialog and opted in.
+:reject:
+  The user rejected the dialog and opted out.
 :dismissed_escape_key:
   The user dismissed the dialog by pressing the Escape key. The user remains
   opted out in this case.
@@ -222,9 +224,12 @@ The event's objects are the following:
   The user clicked "Learn more". The user remains opted out in this case.
 :not_now_link:
   The user clicked "Not now". The user remains opted out in this case.
+:not_now:
+  The dialog was dismissed in some way without opting in. This object was
+  removed in Firefox 94.0.
 :settings:
   The user clicked the "Customize" button. The user remains opted out in this
-  case.
+  case. This object was removed in Firefox 96.0.
 
 Changelog
   Firefox 92.0.1
@@ -237,8 +242,14 @@ Changelog
     ``dismissed_other``, ``learn_more``, ``not_now_link``, and ``settings``.
     [Bug 1733687_]
 
+  Firefox 96.0
+    Objects changed to: ``accept``, ``reject``, ``dismissed_escape_key``,
+    ``dismissed_other``, ``learn_more`` and ``not_now_link``.
+    [Bug 1745026_]
+
 .. _1723860: https://bugzilla.mozilla.org/show_bug.cgi?id=1723860
 .. _1733687: https://bugzilla.mozilla.org/show_bug.cgi?id=1733687
+.. _1745026: https://bugzilla.mozilla.org/show_bug.cgi?id=1745026
 
 contextservices.quicksuggest.sponsored_toggled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,6 +298,8 @@ string-valued pref with the following possible values:
   The user has not made a choice (e.g., because the dialog hasn't been shown).
 :accept:
   The user accepted the dialog and opted in.
+:reject:
+  The user rejected the dialog and opted out.
 :dismissed_escape_key:
   The user dismissed the dialog by pressing the Escape key. The user remains
   opted out in this case.
@@ -300,13 +313,17 @@ string-valued pref with the following possible values:
   The user clicked "Not now". The user remains opted out in this case.
 :settings:
   The user clicked the "Customize" button. The user remains opted out in this
-  case.
+  case. This object was removed in Firefox 96.0.
 
 Changelog
   Firefox 94.0
     Introduced. [Bug 1734447_]
 
+  Firefox 96.0
+    Added ``reject`` and removed ``settings``. [Bug 1745026_]
+
 .. _1734447: https://bugzilla.mozilla.org/show_bug.cgi?id=1734447
+.. _1745026: https://bugzilla.mozilla.org/show_bug.cgi?id=1745026
 
 browser.urlbar.quicksuggest.dataCollection.enabled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
