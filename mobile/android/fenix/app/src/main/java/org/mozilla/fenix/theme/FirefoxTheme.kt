@@ -83,7 +83,7 @@ private val darkColorPalette = FirefoxColors(
     iconGradientEnd = PhotonColors.Blue20,
     borderDefault = PhotonColors.DarkGrey05,
     borderFormDefault = PhotonColors.LightGrey05,
-    borderSelected = PhotonColors.Violet40,
+    borderAccent = PhotonColors.Violet40,
     borderDisabled = PhotonColors.LightGrey70,
     borderWarning = PhotonColors.Red40
 )
@@ -131,7 +131,7 @@ private val lightColorPalette = FirefoxColors(
     iconGradientEnd = PhotonColors.Blue60,
     borderDefault = PhotonColors.LightGrey30,
     borderFormDefault = PhotonColors.DarkGrey90,
-    borderSelected = PhotonColors.Ink20,
+    borderAccent = PhotonColors.Ink20,
     borderDisabled = PhotonColors.LightGrey70,
     borderWarning = PhotonColors.Red80
 )
@@ -184,7 +184,7 @@ class FirefoxColors(
     iconGradientEnd: Color,
     borderDefault: Color,
     borderFormDefault: Color,
-    borderSelected: Color,
+    borderAccent: Color,
     borderDisabled: Color,
     borderWarning: Color
 ) {
@@ -319,8 +319,8 @@ class FirefoxColors(
     // Form parts
     var borderFormDefault by mutableStateOf(borderFormDefault)
         private set
-    // Selected tab
-    var borderSelected by mutableStateOf(borderSelected)
+    // Active tab (Nav), Selected tab, Active form
+    var borderAccent by mutableStateOf(borderAccent)
         private set
     // Form parts
     var borderDisabled by mutableStateOf(borderDisabled)
@@ -372,7 +372,7 @@ class FirefoxColors(
         iconGradientEnd = other.iconGradientEnd
         borderDefault = other.borderDefault
         borderFormDefault = other.borderFormDefault
-        borderSelected = other.borderSelected
+        borderAccent = other.borderAccent
         borderDisabled = other.borderDisabled
         borderWarning = other.borderWarning
     }
@@ -420,7 +420,7 @@ class FirefoxColors(
         iconGradientEnd = iconGradientEnd,
         borderDefault = borderDefault,
         borderFormDefault = borderFormDefault,
-        borderSelected = borderSelected,
+        borderAccent = borderAccent,
         borderDisabled = borderDisabled,
         borderWarning = borderWarning
     )
