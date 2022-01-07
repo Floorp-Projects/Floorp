@@ -312,10 +312,11 @@ def create_parser(mach_interface=False):
         " Currently only supported in production.",
     )
     add_arg(
-        "--enable-fission",
-        action="store_true",
-        default=False,
-        help="Enable Fission (site isolation) in Gecko.",
+        "--disable-fission",
+        action="store_false",
+        dest="fission",
+        default=True,
+        help="Disable Fission (site isolation) in Gecko.",
     )
 
     add_logging_group(parser)

@@ -563,11 +563,12 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
-            ["--enable-fission"],
+            ["--disable-fission"],
             {
-                "action": "store_true",
-                "default": False,
-                "help": "Run tests with fission (site isolation) enabled.",
+                "action": "store_false",
+                "default": True,
+                "dest": "fission",
+                "help": "Run tests with fission (site isolation) disabled.",
             },
         ],
         [
@@ -1155,8 +1156,14 @@ class MochitestArguments(ArgumentContainer):
                 "--disable-e10s.".format(options.flavor)
             )
 
-        if options.enable_fission:
-            options.extraPrefs.append("fission.autostart=true")
+        # If e10s explicitly disabled and no fission option specified, disable fission
+        if (
+            (not options.e10s)
+            and options.fission
+            and ("fission.autostart=true" not in options.extraPrefs)
+            and ("fission.autostart=false" not in options.extraPrefs)
+        ):
+            options.fission = False
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,

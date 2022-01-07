@@ -328,7 +328,7 @@ def get_browser_config(config):
         "debugger": None,
         "debugger_args": None,
         "develop": False,
-        "enable_fission": False,
+        "fission": True,
         "process": "",
         "framework": "talos",
         "repository": None,
