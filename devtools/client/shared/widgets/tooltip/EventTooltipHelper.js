@@ -32,23 +32,23 @@ function setEventTooltip(tooltip, eventListenerInfos, toolbox) {
   eventTooltip.init();
 }
 
-function EventTooltip(tooltip, eventListenerInfos, toolbox) {
-  this._tooltip = tooltip;
-  this._eventListenerInfos = eventListenerInfos;
-  this._toolbox = toolbox;
-  this._eventEditors = new WeakMap();
+class EventTooltip {
+  constructor(tooltip, eventListenerInfos, toolbox) {
+    this._tooltip = tooltip;
+    this._eventListenerInfos = eventListenerInfos;
+    this._toolbox = toolbox;
+    this._eventEditors = new WeakMap();
 
-  // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
-  this._tooltip.eventTooltip = this;
+    // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
+    this._tooltip.eventTooltip = this;
 
-  this._headerClicked = this._headerClicked.bind(this);
-  this._debugClicked = this._debugClicked.bind(this);
-  this.destroy = this.destroy.bind(this);
-  this._subscriptions = [];
-}
+    this._headerClicked = this._headerClicked.bind(this);
+    this._debugClicked = this._debugClicked.bind(this);
+    this.destroy = this.destroy.bind(this);
+    this._subscriptions = [];
+  }
 
-EventTooltip.prototype = {
-  init: function() {
+  init() {
     const config = {
       mode: Editor.modes.js,
       lineNumbers: false,
@@ -202,13 +202,13 @@ EventTooltip.prototype = {
     this._tooltip.panel.appendChild(this.container);
     this._tooltip.setContentSize({ width: CONTAINER_WIDTH, height: Infinity });
     this._tooltip.on("hidden", this.destroy);
-  },
+  }
 
-  _addContentListeners: function(header) {
+  _addContentListeners(header) {
     header.addEventListener("click", this._headerClicked);
-  },
+  }
 
-  _headerClicked: function(event) {
+  _headerClicked(event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
@@ -267,9 +267,9 @@ EventTooltip.prototype = {
         this._tooltip.emit("event-tooltip-ready");
       });
     }
-  },
+  }
 
-  _debugClicked: function(event) {
+  _debugClicked(event) {
     const header = event.currentTarget;
     const content = header.nextElementSibling;
 
@@ -287,12 +287,12 @@ EventTooltip.prototype = {
         location.id
       );
     }
-  },
+  }
 
   /**
    * Parse URI and return {url, line, column}; or return null if it can't be parsed.
    */
-  _parseLocation: function(uri) {
+  _parseLocation(uri) {
     if (uri && uri !== "?") {
       uri = uri.replace(/"/g, "");
 
@@ -314,9 +314,9 @@ EventTooltip.prototype = {
       return { url: uri, line: 1, column: null };
     }
     return null;
-  },
+  }
 
-  destroy: function() {
+  destroy() {
     if (this._tooltip) {
       this._tooltip.off("hidden", this.destroy);
 
@@ -351,7 +351,7 @@ EventTooltip.prototype = {
     }
 
     this._eventListenerInfos = this._toolbox = this._tooltip = null;
-  },
-};
+  }
+}
 
 module.exports.setEventTooltip = setEventTooltip;
