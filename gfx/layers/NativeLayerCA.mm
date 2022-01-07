@@ -1263,6 +1263,7 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     return false;
   }
 
+#ifdef NIGHTLY_BUILD
   if (StaticPrefs::gfx_core_animation_specialize_video_check_color_space()) {
     // Ensure the resulting pixel buffer has a color space. If it doesn't, then modify
     // the surface and create the buffer again.
@@ -1289,6 +1290,7 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     }
     MOZ_ASSERT(CVImageBufferGetColorSpace(pixelBuffer), "Pixel buffer should have a color space.");
   }
+#endif
 
   CFTypeRefPtr<CVPixelBufferRef> pixelBufferDeallocator =
       CFTypeRefPtr<CVPixelBufferRef>::WrapUnderCreateRule(pixelBuffer);
@@ -1303,13 +1305,18 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   CFTypeRefPtr<CMVideoFormatDescriptionRef> formatDescriptionDeallocator =
       CFTypeRefPtr<CMVideoFormatDescriptionRef>::WrapUnderCreateRule(formatDescription);
 
+#ifdef NIGHTLY_BUILD
   if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
     LogSurface(aSurfaceRef, pixelBuffer, formatDescription);
   }
+#endif
 
   CMSampleTimingInfo timingInfo = kCMTimingInfoInvalid;
 
-  bool spoofTiming = StaticPrefs::gfx_core_animation_specialize_video_spoof_timing();
+  bool spoofTiming = false;
+#ifdef NIGHTLY_BUILD
+  spoofTiming = StaticPrefs::gfx_core_animation_specialize_video_spoof_timing();
+#endif
   if (spoofTiming) {
     // Since we don't have timing information for the sample, set the sample to play at the
     // current timestamp.
