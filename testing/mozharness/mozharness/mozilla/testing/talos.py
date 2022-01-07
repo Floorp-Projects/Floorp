@@ -208,12 +208,12 @@ class Talos(
                 },
             ],
             [
-                ["--enable-fission"],
+                ["--disable-fission"],
                 {
-                    "action": "store_true",
-                    "dest": "enable_fission",
-                    "default": False,
-                    "help": "Enable Fission (site isolation) in Gecko.",
+                    "action": "store_false",
+                    "dest": "fission",
+                    "default": True,
+                    "help": "Disable Fission (site isolation) in Gecko.",
                 },
             ],
             [
@@ -527,13 +527,12 @@ class Talos(
             options.extend(
                 ["--setpref={}".format(p) for p in self.config["extra_prefs"]]
             )
-        # enabling fission can come from the --enable-fission cmd line argument; or in CI
+        # disabling fission can come from the --disable-fission cmd line argument; or in CI
         # it comes from a taskcluster transform which adds a --setpref for fission.autostart
-        if (
-            self.config["enable_fission"]
-            or "fission.autostart=true" in self.config["extra_prefs"]
-        ):
-            options.extend(["--enable-fission"])
+        if (not self.config["fission"]) or "fission.autostart=false" in self.config[
+            "extra_prefs"
+        ]:
+            options.extend(["--disable-fission"])
 
         return options
 

@@ -2847,12 +2847,15 @@ toolbar#nav-bar {
         """Prepare, configure, run tests and cleanup"""
         self.extraPrefs = parse_preferences(options.extraPrefs)
 
+        if "fission.autostart" not in self.extraPrefs:
+            self.extraPrefs["fission.autostart"] = options.fission
+
         # for test manifest parsing.
         mozinfo.update(
             {
                 "a11y_checks": options.a11y_checks,
                 "e10s": options.e10s,
-                "fission": self.extraPrefs.get("fission.autostart", False),
+                "fission": self.extraPrefs.get("fission.autostart", True),
                 "headless": options.headless,
                 # Until the test harness can understand default pref values,
                 # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
@@ -2865,7 +2868,7 @@ toolbar#nav-bar {
                 "sessionHistoryInParent": self.extraPrefs.get(
                     "fission.sessionHistoryInParent", False
                 )
-                or self.extraPrefs.get("fission.autostart", False),
+                or self.extraPrefs.get("fission.autostart", True),
                 "socketprocess_e10s": self.extraPrefs.get(
                     "network.process.enabled", False
                 ),

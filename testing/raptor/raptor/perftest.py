@@ -136,7 +136,7 @@ class Perftest(object):
             "enable_control_server_wait": memory_test or cpu_test,
             "e10s": e10s,
             "device_name": device_name,
-            "enable_fission": extra_prefs.get("fission.autostart", False),
+            "fission": extra_prefs.get("fission.autostart", True),
             "disable_perf_tuning": disable_perf_tuning,
             "conditioned_profile": conditioned_profile,
             "chimera": chimera,
@@ -386,7 +386,7 @@ class Perftest(object):
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
 
-        if self.config["extra_prefs"].get("fission.autostart", False):
+        if self.config["extra_prefs"].get("fission.autostart", True):
             LOG.info("Enabling fission via browser preferences")
             LOG.info("Browser preferences: {}".format(self.config["extra_prefs"]))
         self.profile.set_preferences(self.config["extra_prefs"])
