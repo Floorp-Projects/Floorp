@@ -746,6 +746,14 @@ void GPUProcessManager::HandleProcessLost() {
   for (const auto& listener : mListeners) {
     listener->OnCompositorUnexpectedShutdown();
   }
+
+  // Notify any observers that the compositor has been reinitialized,
+  // eg the ZoomConstraintsClients for parent process documents.
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "compositor-reinitialized",
+                                     nullptr);
+  }
 }
 
 void GPUProcessManager::RebuildRemoteSessions() {
