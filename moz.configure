@@ -137,6 +137,11 @@ set_define("MOZ_DEBUG", moz_debug)
 # down to old-configure.
 add_old_configure_assignment("MOZ_DEBUG", depends("--enable-debug")(lambda x: bool(x)))
 
+set_config(
+    "MOZ_DIAGNOSTIC_ASSERT_ENABLED",
+    True,
+    when=moz_debug | milestone.is_early_beta_or_earlier,
+)
 set_define(
     "MOZ_DIAGNOSTIC_ASSERT_ENABLED",
     True,
