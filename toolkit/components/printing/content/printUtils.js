@@ -462,46 +462,6 @@ var PrintUtils = {
     }
     return printSettings;
   },
-
-  get shouldSimplify() {
-    return this._shouldSimplify;
-  },
-
-  setSimplifiedMode(shouldSimplify) {
-    this._shouldSimplify = shouldSimplify;
-  },
-
-  getLastUsedPrinterName() {
-    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-      Ci.nsIPrintSettingsService
-    );
-    let lastUsedPrinterName = PSSVC.lastUsedPrinterName;
-    if (!lastUsedPrinterName) {
-      // We "pass" print settings over to the content process by saving them to
-      // prefs (yuck!). It is important to try to avoid saving to prefs without
-      // prefixing them with a printer name though, so this hack tries to make
-      // sure that (in the common case) we have set the "last used" printer,
-      // which makes us save to prefs prefixed with its name, and makes sure
-      // the content process will pick settings up from those prefixed prefs
-      // too.
-      let settings = this.getPrintSettings();
-      if (settings.printerName) {
-        PSSVC.savePrintSettingsToPrefs(
-          settings,
-          false,
-          Ci.nsIPrintSettings.kInitSavePrinterName
-        );
-        PSSVC.savePrintSettingsToPrefs(
-          settings,
-          true,
-          Ci.nsIPrintSettings.kInitSaveAll
-        );
-        lastUsedPrinterName = settings.printerName;
-      }
-    }
-
-    return lastUsedPrinterName;
-  },
 };
 
 class PrintPreview extends MozElements.BaseControl {
