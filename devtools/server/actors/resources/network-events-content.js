@@ -107,6 +107,15 @@ class NetworkEventContentWatcher {
       return;
     }
 
+    // Only one network request should be created per URI for images from the cache
+    const hasNetworkEventForURI = Array.from(this._networkEvents.values()).find(
+      networkEvent => networkEvent.url === channel.URI.spec
+    );
+
+    if (hasNetworkEventForURI) {
+      return;
+    }
+
     this.onNetworkEventAvailable(channel, {
       networkEventOptions: { fromCache: true },
       resourceOverrides: {
@@ -142,6 +151,7 @@ class NetworkEventContentWatcher {
     this._networkEvents.set(resource.resourceId, {
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
+      url: resource.url,
       types: [],
       resourceUpdates: {},
     });
