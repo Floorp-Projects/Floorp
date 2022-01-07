@@ -193,9 +193,6 @@ int
 setup_wasapi_stream(cubeb_stream * stm);
 ERole
 pref_to_role(cubeb_stream_prefs param);
-int
-wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
-                     IMMDeviceEnumerator * enumerator, IMMDevice * dev);
 void
 wasapi_destroy_device(cubeb_device_info * device_info);
 static int
@@ -1910,8 +1907,8 @@ initialize_iaudioclient2(com_ptr<IAudioClient> & audio_client)
   return CUBEB_OK;
 }
 
-// Not static to suppress a warning.
-/* static */ bool
+#if 0
+bool
 initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
                          cubeb_stream * stm,
                          const com_heap_ptr<WAVEFORMATEX> & mix_format,
@@ -2021,6 +2018,7 @@ initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
   LOG("Could not initialize shared stream with IAudioClient3: error: %lx", hr);
   return false;
 }
+#endif
 
 #define DIRECTION_NAME (direction == eCapture ? "capture" : "render")
 
@@ -2181,10 +2179,12 @@ setup_wasapi_stream_one_side(cubeb_stream * stm,
   REFERENCE_TIME latency_hns = frames_to_hns(stream_params->rate, stm->latency);
   stm->input_bluetooth_handsfree = false;
 
+  wasapi_default_devices default_devices(stm->device_enumerator.get());
+
   cubeb_device_info device_info;
   if (wasapi_create_device(stm->context, device_info,
-                           stm->device_enumerator.get(),
-                           device.get()) == CUBEB_OK) {
+                           stm->device_enumerator.get(), device.get(),
+                           &default_devices) == CUBEB_OK) {
     const char * HANDSFREE_TAG = "BTHHFENUM";
     size_t len = sizeof(HANDSFREE_TAG);
     if (direction == eCapture) {
@@ -3011,31 +3011,48 @@ static com_ptr<IMMDevice> wasapi_get_device_node(
   return ret;
 }
 
-static BOOL
-wasapi_is_default_device(EDataFlow flow, ERole role, LPCWSTR device_id,
-                         IMMDeviceEnumerator * enumerator)
+static com_heap_ptr<wchar_t>
+wasapi_get_default_device_id(EDataFlow flow, ERole role,
+                             IMMDeviceEnumerator * enumerator)
 {
-  BOOL ret = FALSE;
   com_ptr<IMMDevice> dev;
-  HRESULT hr;
 
-  hr = enumerator->GetDefaultAudioEndpoint(flow, role, dev.receive());
+  HRESULT hr = enumerator->GetDefaultAudioEndpoint(flow, role, dev.receive());
   if (SUCCEEDED(hr)) {
     wchar_t * tmp = nullptr;
     if (SUCCEEDED(dev->GetId(&tmp))) {
-      com_heap_ptr<wchar_t> defdevid(tmp);
-      ret = (wcscmp(defdevid.get(), device_id) == 0);
+      com_heap_ptr<wchar_t> devid(tmp);
+      return devid;
     }
   }
 
-  return ret;
+  return nullptr;
 }
+
+struct wasapi_default_devices {
+  wasapi_default_devices(IMMDeviceEnumerator * enumerator)
+      : render_console_id(
+            wasapi_get_default_device_id(eRender, eConsole, enumerator)),
+        render_comms_id(
+            wasapi_get_default_device_id(eRender, eCommunications, enumerator)),
+        capture_console_id(
+            wasapi_get_default_device_id(eCapture, eConsole, enumerator)),
+        capture_comms_id(
+            wasapi_get_default_device_id(eCapture, eCommunications, enumerator))
+  {
+  }
+  com_heap_ptr<wchar_t> render_console_id;
+  com_heap_ptr<wchar_t> render_comms_id;
+  com_heap_ptr<wchar_t> capture_console_id;
+  com_heap_ptr<wchar_t> capture_comms_id;
+};
 
 /* `ret` must be deallocated with `wasapi_destroy_device`, iff the return value
  * of this function is `CUBEB_OK`. */
 int
 wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
-                     IMMDeviceEnumerator * enumerator, IMMDevice * dev)
+                     IMMDeviceEnumerator * enumerator, IMMDevice * dev,
+                     wasapi_default_devices * defaults)
 {
   com_ptr<IMMEndpoint> endpoint;
   com_ptr<IMMDevice> devnode;
@@ -3045,6 +3062,8 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
   com_ptr<IPropertyStore> propstore;
   REFERENCE_TIME def_period, min_period;
   HRESULT hr;
+
+  XASSERT(enumerator && dev && defaults);
 
   // zero-out to be able to safely delete the pointers to friendly_name and
   // group_id at all time in this function.
@@ -3133,18 +3152,19 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
   }
 
   ret.preferred = CUBEB_DEVICE_PREF_NONE;
-  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator)) {
+  if ((flow == eRender &&
+       wcscmp(device_id.get(), defaults->render_console_id.get()) == 0) ||
+      (flow == eCapture &&
+       wcscmp(device_id.get(), defaults->capture_console_id.get()) == 0)) {
     ret.preferred =
-        (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_MULTIMEDIA);
-  }
-  if (wasapi_is_default_device(flow, eCommunications, device_id.get(),
-                               enumerator)) {
+        (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_MULTIMEDIA |
+                            CUBEB_DEVICE_PREF_NOTIFICATION);
+  } else if ((flow == eRender &&
+              wcscmp(device_id.get(), defaults->render_comms_id.get()) == 0) ||
+             (flow == eCapture &&
+              wcscmp(device_id.get(), defaults->capture_comms_id.get()) == 0)) {
     ret.preferred =
         (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_VOICE);
-  }
-  if (wasapi_is_default_device(flow, eConsole, device_id.get(), enumerator)) {
-    ret.preferred =
-        (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_NOTIFICATION);
   }
 
   if (flow == eRender) {
@@ -3229,14 +3249,17 @@ wasapi_enumerate_devices(cubeb * context, cubeb_device_type type,
     return CUBEB_ERROR;
   }
 
-  if (type == CUBEB_DEVICE_TYPE_OUTPUT)
+  wasapi_default_devices default_devices(enumerator.get());
+
+  if (type == CUBEB_DEVICE_TYPE_OUTPUT) {
     flow = eRender;
-  else if (type == CUBEB_DEVICE_TYPE_INPUT)
+  } else if (type == CUBEB_DEVICE_TYPE_INPUT) {
     flow = eCapture;
-  else if (type & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT))
+  } else if (type & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) {
     flow = eAll;
-  else
+  } else {
     return CUBEB_ERROR;
+  }
 
   hr = enumerator->EnumAudioEndpoints(flow, DEVICE_STATEMASK_ALL,
                                       collection.receive());
@@ -3264,7 +3287,7 @@ wasapi_enumerate_devices(cubeb * context, cubeb_device_type type,
       continue;
     }
     if (wasapi_create_device(context, devices[out->count], enumerator.get(),
-                             dev.get()) == CUBEB_OK) {
+                             dev.get(), &default_devices) == CUBEB_OK) {
       out->count += 1;
     }
   }
