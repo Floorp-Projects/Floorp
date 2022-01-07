@@ -29,6 +29,7 @@ const mockTopContext = {
   get children() {
     return [mockNestedContext];
   },
+  currentWindowGlobal: {},
   id: 7,
   get top() {
     return this;
@@ -37,6 +38,7 @@ const mockTopContext = {
 };
 
 const mockNestedContext = {
+  currentWindowGlobal: {},
   id: 8,
   parent: mockTopContext,
   top: mockTopContext,
@@ -80,6 +82,20 @@ add_test(
     ok(
       topContext.webProgress.onStateChangeCalled,
       "WebProgress' onStateChange has been fired on the top browsing context"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
+  async function test_waitForInitialNavigationCompleted_missingWindowGlobal() {
+    const browsingContext = Object.assign({}, mockTopContext);
+    delete browsingContext.currentWindowGlobal;
+    await waitForInitialNavigationCompleted(browsingContext);
+    ok(
+      browsingContext.webProgress.onStateChangeCalled,
+      "WebProgress' onStateChange has been fired"
     );
 
     run_next_test();
