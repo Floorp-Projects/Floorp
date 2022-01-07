@@ -195,8 +195,10 @@ class CompositorWidget {
    *
    * This is called from CompositorBridgeParent::ResumeComposition,
    * immediately prior to webrender being resumed.
+   *
+   * Returns true if composition can be successfully resumed, else false.
    */
-  virtual void OnResumeComposition() {}
+  virtual bool OnResumeComposition() { return true; }
 
   /**
    * Return the size of the drawable area of the widget.

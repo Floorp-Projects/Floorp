@@ -1114,9 +1114,10 @@ class LayerViewSupport final
   void SyncPauseCompositor() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
+    mCompositorPaused = true;
+
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
-      mCompositorPaused = true;
       child->Pause();
     }
 
