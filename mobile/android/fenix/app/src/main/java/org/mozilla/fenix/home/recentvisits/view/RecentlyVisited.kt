@@ -343,7 +343,7 @@ private fun RecentlyVisitedDivider(
 ) {
     Divider(
         modifier = modifier,
-        color = FirefoxTheme.colors.borderDivider,
+        color = FirefoxTheme.colors.borderDefault,
         thickness = 0.5.dp
     )
 }

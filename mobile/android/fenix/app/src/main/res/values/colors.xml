@@ -85,6 +85,8 @@
     <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue60</color>
 
     <!-- Border -->
+    <!-- Default, Divider, Dotted -->
+    <color name="fx_mobile_border_color_default" tools:ignore="UnusedResources">@color/photonLightGrey30</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Selected tab -->
@@ -93,7 +95,6 @@
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
-    <color name="fx_mobile_border_color_divider" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
 
     <!-- Private theme color variables -->
 

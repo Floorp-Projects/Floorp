@@ -81,11 +81,11 @@ private val darkColorPalette = FirefoxColors(
     iconAccentYellow = PhotonColors.Yellow20,
     iconGradientStart = PhotonColors.Violet20,
     iconGradientEnd = PhotonColors.Blue20,
+    borderDefault = PhotonColors.DarkGrey05,
     borderFormDefault = PhotonColors.LightGrey05,
     borderSelected = PhotonColors.Violet40,
     borderDisabled = PhotonColors.LightGrey70,
-    borderWarning = PhotonColors.Red40,
-    borderDivider = PhotonColors.DarkGrey05
+    borderWarning = PhotonColors.Red40
 )
 
 private val lightColorPalette = FirefoxColors(
@@ -129,11 +129,11 @@ private val lightColorPalette = FirefoxColors(
     iconAccentYellow = PhotonColors.Yellow60,
     iconGradientStart = PhotonColors.Violet50,
     iconGradientEnd = PhotonColors.Blue60,
+    borderDefault = PhotonColors.LightGrey30,
     borderFormDefault = PhotonColors.DarkGrey90,
     borderSelected = PhotonColors.Ink20,
     borderDisabled = PhotonColors.LightGrey70,
-    borderWarning = PhotonColors.Red80,
-    borderDivider = PhotonColors.LightGrey40,
+    borderWarning = PhotonColors.Red80
 )
 
 /**
@@ -182,11 +182,11 @@ class FirefoxColors(
     iconAccentYellow: Color,
     iconGradientStart: Color,
     iconGradientEnd: Color,
+    borderDefault: Color,
     borderFormDefault: Color,
     borderSelected: Color,
     borderDisabled: Color,
-    borderWarning: Color,
-    borderDivider: Color
+    borderWarning: Color
 ) {
     // Layers
 
@@ -313,6 +313,9 @@ class FirefoxColors(
 
     // Border
 
+    // Default, Divider, Dotted
+    var borderDefault by mutableStateOf(borderDefault)
+        private set
     // Form parts
     var borderFormDefault by mutableStateOf(borderFormDefault)
         private set
@@ -324,8 +327,6 @@ class FirefoxColors(
         private set
     // Form parts
     var borderWarning by mutableStateOf(borderWarning)
-        private set
-    var borderDivider by mutableStateOf(borderDivider)
         private set
 
     fun update(other: FirefoxColors) {
@@ -369,11 +370,11 @@ class FirefoxColors(
         iconAccentYellow = other.iconAccentYellow
         iconGradientStart = other.iconGradientStart
         iconGradientEnd = other.iconGradientEnd
+        borderDefault = other.borderDefault
         borderFormDefault = other.borderFormDefault
         borderSelected = other.borderSelected
         borderDisabled = other.borderDisabled
         borderWarning = other.borderWarning
-        borderDivider = other.borderDivider
     }
 
     fun copy(): FirefoxColors = FirefoxColors(
@@ -417,11 +418,11 @@ class FirefoxColors(
         iconAccentYellow = iconAccentYellow,
         iconGradientStart = iconGradientStart,
         iconGradientEnd = iconGradientEnd,
+        borderDefault = borderDefault,
         borderFormDefault = borderFormDefault,
         borderSelected = borderSelected,
         borderDisabled = borderDisabled,
-        borderWarning = borderWarning,
-        borderDivider = borderDivider
+        borderWarning = borderWarning
     )
 }
 
