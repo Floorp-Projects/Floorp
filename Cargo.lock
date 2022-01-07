@@ -2570,7 +2570,6 @@ dependencies = [
 [[package]]
 name = "js-sys"
 version = "0.3.100"
-source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f355a99243"
 
 [[package]]
 name = "jsparagus"
@@ -4671,7 +4670,6 @@ checksum = "9def91fd1e018fe007022791f865d0ccc9b3a0d5001e01aabb8b40e46000afb5"
 [[package]]
 name = "slotmap"
 version = "1.100.0"
-source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f355a99243"
 
 [[package]]
 name = "smallbitvec"
@@ -5523,7 +5521,6 @@ checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 [[package]]
 name = "wasm-bindgen"
 version = "0.2.100"
-source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f355a99243"
 
 [[package]]
 name = "wasm-encoder"
@@ -5573,7 +5570,6 @@ dependencies = [
 [[package]]
 name = "web-sys"
 version = "0.3.100"
-source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f355a99243"
 
 [[package]]
 name = "webdriver"
