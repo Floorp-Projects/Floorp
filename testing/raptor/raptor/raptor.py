@@ -47,6 +47,13 @@ def main(args=sys.argv[1:]):
 
     args.extra_prefs = parse_preferences(args.extra_prefs or [])
 
+    if args.enable_fission:
+        args.extra_prefs.update(
+            {
+                "fission.autostart": True,
+            }
+        )
+
     if args.enable_marionette_trace:
         args.extra_prefs.update(
             {
@@ -54,18 +61,8 @@ def main(args=sys.argv[1:]):
             }
         )
 
-    # if fission.autostart not specified by --setpref, update pref to match
-    # args.fission
-    if args.extra_prefs and "fission.autostart" not in args.extra_prefs:
-        args.extra_prefs.update(
-            {
-                "fission.autostart": args.fission,
-            }
-        )
-
-    # if fission.autostart=False then make sure fission disabled
-    if args.extra_prefs and not args.extra_prefs.get("fission.autostart", True):
-        args.fission = False
+    if args.extra_prefs and args.extra_prefs.get("fission.autostart", False):
+        args.enable_fission = True
 
     args.environment = dict(parse_key_value(args.environment or [], context="--setenv"))
 
