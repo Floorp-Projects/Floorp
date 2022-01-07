@@ -406,60 +406,43 @@ var PrintUtils = {
     );
   },
 
-  _setPrinterDefaultsForSelectedPrinter(
-    aPSSVC,
-    aPrintSettings,
-    defaultsOnly = false
-  ) {
-    if (!aPrintSettings.printerName) {
-      aPrintSettings.printerName = aPSSVC.lastUsedPrinterName;
-      if (!aPrintSettings.printerName) {
-        // It is important to try to avoid passing settings over to the
-        // content process in the old print UI by saving to unprefixed prefs.
-        // To avoid that we try to get the name of a printer we can use.
-        let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
-          Ci.nsIPrinterList
-        );
-        aPrintSettings.printerName = printerList.systemDefaultPrinterName;
-      }
-    }
-
-    // First get any defaults from the printer. We want to skip this for Save to
-    // PDF since it isn't a real printer and will throw.
-    if (aPrintSettings.printerName != this.SAVE_TO_PDF_PRINTER) {
-      aPSSVC.initPrintSettingsFromPrinter(
-        aPrintSettings.printerName,
-        aPrintSettings
-      );
-    }
-
-    if (!defaultsOnly) {
-      // now augment them with any values from last time
-      aPSSVC.initPrintSettingsFromPrefs(
-        aPrintSettings,
-        true,
-        aPrintSettings.kInitSaveAll
-      );
-    }
-  },
-
   getPrintSettings(aPrinterName, defaultsOnly) {
     var printSettings;
     try {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
+
+      // We must not try to print using an nsIPrintSettings without a printer
+      // name set.
+      let printerName =
+        aPrinterName ||
+        PSSVC.lastUsedPrinterName ||
+        Cc["@mozilla.org/gfx/printerlist;1"].getService(Ci.nsIPrinterList)
+          .systemDefaultPrinterName;
+
       printSettings = PSSVC.newPrintSettings;
-      if (aPrinterName) {
-        printSettings.printerName = aPrinterName;
+      printSettings.printerName = printerName;
+
+      // First get any defaults from the printer. We want to skip this for Save
+      // to PDF since it isn't a real printer and will throw.
+      if (printSettings.printerName != this.SAVE_TO_PDF_PRINTER) {
+        PSSVC.initPrintSettingsFromPrinter(
+          printSettings.printerName,
+          printSettings
+        );
       }
-      this._setPrinterDefaultsForSelectedPrinter(
-        PSSVC,
-        printSettings,
-        defaultsOnly
-      );
+
+      if (!defaultsOnly) {
+        // Apply any settings that have been saved for this printer.
+        PSSVC.initPrintSettingsFromPrefs(
+          printSettings,
+          true,
+          printSettings.kInitSaveAll
+        );
+      }
     } catch (e) {
-      dump("getPrintSettings: " + e + "\n");
+      Cu.reportError("PrintUtils.getPrintSettings failed: " + e + "\n");
     }
     return printSettings;
   },
