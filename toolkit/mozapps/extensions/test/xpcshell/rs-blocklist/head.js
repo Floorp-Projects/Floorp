@@ -22,8 +22,12 @@ function enable_blocklist_v2_instead_of_useMLBF() {
   Blocklist.allowDeprecatedBlocklistV2 = true;
   Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
   // Sanity check: blocklist v2 has been enabled.
-  Assert.ok(
-    !!Blocklist.ExtensionBlocklist._updateEntries,
+  const { BlocklistPrivate } = ChromeUtils.import(
+    "resource://gre/modules/Blocklist.jsm"
+  );
+  Assert.equal(
+    Blocklist.ExtensionBlocklist,
+    BlocklistPrivate.ExtensionBlocklistRS,
     "ExtensionBlocklistRS should have been enabled"
   );
 }
@@ -39,11 +43,9 @@ async function load_mlbf_record_as_blob() {
 function getExtensionBlocklistMLBF() {
   // ExtensionBlocklist.Blocklist is an ExtensionBlocklistMLBF if the useMLBF
   // pref is set to true.
-  // An alternative way to obtain ExtensionBlocklistMLBF is by importing the
-  // global of Blocklist.jsm and reading ExtensionBlocklistMLBF off it, but
-  // to avoid using the deprecated ChromeUtils.import(.., null), bug 1524027
-  // needs to be fixed first. So let's use Blocklist.ExtensionBlocklist.
-  const ExtensionBlocklistMLBF = Blocklist.ExtensionBlocklist;
+  const {
+    BlocklistPrivate: { ExtensionBlocklistMLBF },
+  } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
   Assert.ok(
     Services.prefs.getBoolPref("extensions.blocklist.useMLBF", false),
     "blocklist.useMLBF should be true"
