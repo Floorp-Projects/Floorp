@@ -1066,12 +1066,6 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   mCurrentMenu = nullptr;  // make sure no current menu is set
   mHFlip = mVFlip = false;
 
-  // Clear WebRender resources before our mView gets destroyed so that we can
-  // ensure to reach out the widget.
-  if (auto* widget = GetWidget()) {
-    widget->ClearCachedWebrenderResources();
-  }
-
   nsView* view = GetView();
   nsViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
