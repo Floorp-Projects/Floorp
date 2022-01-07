@@ -511,10 +511,6 @@ class DisplayToolbar internal constructor(
     }
 
     internal fun setTrackingProtectionState(state: Toolbar.SiteTrackingProtection) {
-        if (!indicators.contains(Indicators.TRACKING_PROTECTION)) {
-            return
-        }
-
         views.trackingProtectionIndicator.siteTrackingProtection = state
         updateSeparatorVisibility()
     }
