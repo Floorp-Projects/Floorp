@@ -8,7 +8,7 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-var EXPORTED_SYMBOLS = ["Blocklist"];
+var EXPORTED_SYMBOLS = ["Blocklist", "BlocklistPrivate"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -263,8 +263,6 @@ const BlocklistTelemetry = {
   },
 };
 
-this.BlocklistTelemetry = BlocklistTelemetry;
-
 const Utils = {
   /**
    * Checks whether this entry is valid for the current OS and ABI.
@@ -509,10 +507,8 @@ async function targetAppFilter(entry, environment) {
  * The RemoteSetttings client takes care of filtering out versions that don't apply.
  * The code here stores entries in memory and sends them to the gfx component in
  * serialized text form, using ',', '\t' and '\n' as separators.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.GfxBlocklistRS = {
+const GfxBlocklistRS = {
   _ensureInitialized() {
     if (this._initialized || !gBlocklistEnabled) {
       return;
@@ -686,10 +682,8 @@ this.GfxBlocklistRS = {
  *
  * This is a legacy format, and implements deprecated operations (bug 1620580).
  * ExtensionBlocklistMLBF supersedes this implementation.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.ExtensionBlocklistRS = {
+const ExtensionBlocklistRS = {
   async _ensureEntries() {
     this.ensureInitialized();
     if (!this._entries && gBlocklistEnabled) {
@@ -956,10 +950,8 @@ this.ExtensionBlocklistRS = {
  *
  * Stashes can be used to update the blocklist without forcing the whole MLBF
  * to be downloaded again. These stashes are applied on top of the base MLBF.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.ExtensionBlocklistMLBF = {
+const ExtensionBlocklistMLBF = {
   RS_ATTACHMENT_ID: "addons-mlbf.bin",
 
   async _fetchMLBF(record) {
@@ -1484,3 +1476,11 @@ let Blocklist = {
 };
 
 Blocklist._init();
+
+// Allow tests to reach implementation objects.
+const BlocklistPrivate = {
+  BlocklistTelemetry,
+  ExtensionBlocklistMLBF,
+  ExtensionBlocklistRS,
+  GfxBlocklistRS,
+};
