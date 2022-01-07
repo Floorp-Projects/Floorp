@@ -51,16 +51,16 @@ impl<T: XpCom + 'static> Iterator for IterSimpleEnumerator<T> {
 
 fn process_type() -> u32 {
     if let Some(appinfo) = xpcom::services::get_XULRuntime() {
-        let mut process_type = nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32;
+        let mut process_type = nsIXULRuntime::PROCESS_TYPE_DEFAULT;
         if unsafe { appinfo.GetProcessType(&mut process_type).succeeded() } {
             return process_type;
         }
     }
-    nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32
+    nsIXULRuntime::PROCESS_TYPE_DEFAULT
 }
 
 pub fn is_parent_process() -> bool {
-    process_type() == nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32
+    process_type() == nsIXULRuntime::PROCESS_TYPE_DEFAULT
 }
 
 pub fn get_packaged_locales() -> Option<ThinVec<nsCString>> {

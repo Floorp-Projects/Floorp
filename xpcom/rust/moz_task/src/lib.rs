@@ -144,7 +144,7 @@ pub struct DispatchOptions(u32);
 impl Default for DispatchOptions {
     #[inline]
     fn default() -> Self {
-        DispatchOptions(nsIEventTarget::DISPATCH_NORMAL as u32)
+        DispatchOptions(nsIEventTarget::DISPATCH_NORMAL)
     }
 }
 
@@ -161,7 +161,7 @@ impl DispatchOptions {
     /// dedicated thread pool, leaving the main pool free for CPU-bound tasks.
     #[inline]
     pub fn may_block(self, may_block: bool) -> DispatchOptions {
-        const FLAG: u32 = nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK as u32;
+        const FLAG: u32 = nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK;
         if may_block {
             DispatchOptions(self.flags() | FLAG)
         } else {
@@ -179,7 +179,7 @@ impl DispatchOptions {
     /// event target when the event is about to finish.
     #[inline]
     pub unsafe fn at_end(self, may_block: bool) -> DispatchOptions {
-        const FLAG: u32 = nsIEventTarget::DISPATCH_AT_END as u32;
+        const FLAG: u32 = nsIEventTarget::DISPATCH_AT_END;
         if may_block {
             DispatchOptions(self.flags() | FLAG)
         } else {

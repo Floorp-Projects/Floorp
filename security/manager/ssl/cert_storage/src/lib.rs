@@ -296,10 +296,10 @@ impl SecurityState {
     }
 
     pub fn get_has_prior_data(&self, data_type: u8) -> Result<bool, SecurityStateError> {
-        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8 {
+        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL {
             return Ok(self.crlite_filter.is_some());
         }
-        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_INCREMENTAL as u8 {
+        if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_INCREMENTAL {
             return Ok(self.crlite_stash.is_some());
         }
 
@@ -373,7 +373,7 @@ impl SecurityState {
 
         let st: i16 = match self.read_entry(&issuer_serial) {
             Ok(Some(value)) => value,
-            Ok(None) => nsICertStorage::STATE_UNSET as i16,
+            Ok(None) => nsICertStorage::STATE_UNSET,
             Err(_) => {
                 return Err(SecurityStateError::from(
                     "problem reading revocation state (from issuer / serial)",
@@ -381,13 +381,13 @@ impl SecurityState {
             }
         };
 
-        if st != nsICertStorage::STATE_UNSET as i16 {
+        if st != nsICertStorage::STATE_UNSET {
             return Ok(st);
         }
 
         match self.read_entry(&subject_pubkey) {
             Ok(Some(value)) => Ok(value),
-            Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
+            Ok(None) => Ok(nsICertStorage::STATE_UNSET),
             Err(_) => {
                 return Err(SecurityStateError::from(
                     "problem reading revocation state (from subject / pubkey)",
@@ -408,7 +408,7 @@ impl SecurityState {
         let subject_pubkey = make_key!(PREFIX_CRLITE, subject, &pub_key_hash);
         match self.read_entry(&subject_pubkey) {
             Ok(Some(value)) => Ok(value),
-            Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
+            Ok(None) => Ok(nsICertStorage::STATE_UNSET),
             Err(_) => Err(SecurityStateError::from("problem reading crlite state")),
         }
     }
@@ -449,7 +449,7 @@ impl SecurityState {
             &mut writer,
             &make_key!(
                 PREFIX_DATA_TYPE,
-                &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8]
+                &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL]
             ),
             &Value::U64(timestamp),
         )?;
@@ -529,13 +529,13 @@ impl SecurityState {
                 &reader,
                 &make_key!(
                     PREFIX_DATA_TYPE,
-                    &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL as u8]
+                    &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL]
                 ),
             ) {
                 Ok(Some(Value::U64(timestamp))) => timestamp,
                 // If we don't have a timestamp yet, we won't have a filter. Return the earliest
                 // timestamp possible to indicate this to callers.
-                Ok(None) => return Ok((0, nsICertStorage::STATE_UNSET as i16)),
+                Ok(None) => return Ok((0, nsICertStorage::STATE_UNSET)),
                 Ok(_) => {
                     return Err(SecurityStateError::from(
                         "unexpected type when trying to get Value::U64",
@@ -545,8 +545,8 @@ impl SecurityState {
             }
         };
         let enrollment_state = self.get_crlite_state(issuer, issuer_spki)?;
-        if enrollment_state != nsICertStorage::STATE_ENFORCE as i16 {
-            return Ok((timestamp, nsICertStorage::STATE_NOT_ENROLLED as i16));
+        if enrollment_state != nsICertStorage::STATE_ENFORCE {
+            return Ok((timestamp, nsICertStorage::STATE_NOT_ENROLLED));
         }
         let mut digest = Sha256::default();
         digest.input(issuer_spki);
@@ -558,11 +558,11 @@ impl SecurityState {
             // This can only happen if the backing file was deleted or if it or our database has
             // become corrupted. In any case, we have no information, so again return the earliest
             // timestamp to indicate this to the user.
-            None => return Ok((0, nsICertStorage::STATE_UNSET as i16)),
+            None => return Ok((0, nsICertStorage::STATE_UNSET)),
         };
         match result {
-            true => Ok((timestamp, nsICertStorage::STATE_ENFORCE as i16)),
-            false => Ok((timestamp, nsICertStorage::STATE_UNSET as i16)),
+            true => Ok((timestamp, nsICertStorage::STATE_ENFORCE)),
+            false => Ok((timestamp, nsICertStorage::STATE_UNSET)),
         }
     }
 
@@ -622,10 +622,7 @@ impl SecurityState {
         // Make a note that we have prior cert data now.
         env_and_store.store.put(
             &mut writer,
-            &make_key!(
-                PREFIX_DATA_TYPE,
-                &[nsICertStorage::DATA_TYPE_CERTIFICATE as u8]
-            ),
+            &make_key!(PREFIX_DATA_TYPE, &[nsICertStorage::DATA_TYPE_CERTIFICATE]),
             &Value::Bool(true),
         )?;
 
@@ -1537,7 +1534,7 @@ impl CertStorage {
         let task = Box::new(try_ns!(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.set_batch_state(&entries, nsICertStorage::DATA_TYPE_REVOCATION as u8),
+            move |ss| ss.set_batch_state(&entries, nsICertStorage::DATA_TYPE_REVOCATION),
         )));
         let runnable = try_ns!(TaskRunnable::new("SetRevocations", task));
         try_ns!(TaskRunnable::dispatch(runnable, self.queue.coerce()));
@@ -1557,7 +1554,7 @@ impl CertStorage {
         if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
-        *state = nsICertStorage::STATE_UNSET as i16;
+        *state = nsICertStorage::STATE_UNSET;
         let ss = get_security_state!(self);
         match ss.get_revocation_state(&*issuer, &*serial, &*subject, &*pub_key) {
             Ok(st) => {
@@ -1618,7 +1615,7 @@ impl CertStorage {
         let task = Box::new(try_ns!(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.set_batch_state(&crlite_entries, nsICertStorage::DATA_TYPE_CRLITE as u8),
+            move |ss| ss.set_batch_state(&crlite_entries, nsICertStorage::DATA_TYPE_CRLITE),
         )));
         let runnable = try_ns!(TaskRunnable::new("SetCRLiteState", task));
         try_ns!(TaskRunnable::dispatch(runnable, self.queue.coerce()));
@@ -1636,7 +1633,7 @@ impl CertStorage {
         if subject.is_null() || pub_key.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
-        *state = nsICertStorage::STATE_UNSET as i16;
+        *state = nsICertStorage::STATE_UNSET;
         let ss = get_security_state!(self);
         match ss.get_crlite_state(&*subject, &*pub_key) {
             Ok(st) => {
@@ -1728,7 +1725,7 @@ impl CertStorage {
             return NS_ERROR_NULL_POINTER;
         }
         *valid_before = 0;
-        *state = nsICertStorage::STATE_UNSET as i16;
+        *state = nsICertStorage::STATE_UNSET;
         let ss = get_security_state!(self);
         match ss.get_crlite_revocation_state(&*issuer, &*issuerSPKI, &*serialNumber) {
             Ok((crlite_timestamp, st)) => {
@@ -1886,8 +1883,8 @@ impl MemoryReporter {
         callback.Callback(
             &nsCStr::new() as &nsACString,
             &nsCStr::from("explicit/cert-storage/storage") as &nsACString,
-            nsIMemoryReporter::KIND_HEAP as i32,
-            nsIMemoryReporter::UNITS_BYTES as i32,
+            nsIMemoryReporter::KIND_HEAP,
+            nsIMemoryReporter::UNITS_BYTES,
             size as i64,
             &nsCStr::from("Memory used by certificate storage") as &nsACString,
             data,

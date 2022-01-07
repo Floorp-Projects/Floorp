@@ -58,7 +58,7 @@ impl<F> RunnableBuilder<F> {
         RunnableBuilder {
             name,
             function,
-            priority: nsIRunnablePriority::PRIORITY_NORMAL as u32,
+            priority: nsIRunnablePriority::PRIORITY_NORMAL,
             options: DispatchOptions::default(),
         }
     }
