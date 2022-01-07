@@ -60,6 +60,16 @@ extern nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
                                       nsTArray<uint8_t>&& aArray);
 
 /**
+ * Factory method to get an nsIInputStream from an arbitrary StreamBufferSource.
+ * This will take a strong reference to the source.
+ *
+ * Result will implement nsIStringInputStream, nsITellableStream and
+ * nsISeekableStream.
+ */
+extern nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                                      mozilla::StreamBufferSource* aSource);
+
+/**
  * Factory method to get an nsInputStream from an nsACString.  Result will
  * implement nsIStringInputStream, nsTellableStream and nsISeekableStream.
  */
