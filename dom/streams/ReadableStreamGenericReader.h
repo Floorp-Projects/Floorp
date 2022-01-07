@@ -52,9 +52,8 @@ class ReadableStreamGenericReader : public nsISupports {
   // IDL Methods
   already_AddRefed<Promise> Closed() const;
 
-  already_AddRefed<Promise> Cancel(JSContext* aCx,
-                                   JS::Handle<JS::Value> aReason,
-                                   ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Cancel(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
  protected:
   virtual ~ReadableStreamGenericReader() = default;

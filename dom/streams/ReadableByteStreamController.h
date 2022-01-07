@@ -63,16 +63,17 @@ class ReadableByteStreamController final : public ReadableStreamController,
 
   void Close(JSContext* aCx, ErrorResult& aRv);
 
-  void Enqueue(JSContext* aCx, const ArrayBufferView& aChunk, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, const ArrayBufferView& aChunk,
+                                  ErrorResult& aRv);
 
   void Error(JSContext* aCx, JS::Handle<JS::Value> aErrorValue,
              ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise> CancelSteps(JSContext* aCx,
-                                                JS::Handle<JS::Value> aReason,
-                                                ErrorResult& aRv) override;
-  virtual void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
-                         ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
+                                            ReadRequest* aReadRequest,
+                                            ErrorResult& aRv) override;
 
   // Internal Slot Accessors
   Maybe<uint64_t> AutoAllocateChunkSize() { return mAutoAllocateChunkSize; }
@@ -332,19 +333,19 @@ struct PullIntoDescriptor final
   ~PullIntoDescriptor() = default;
 };
 
-extern void ReadableByteStreamControllerRespond(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespond(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerRespondInternal(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespondInternal(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerRespondWithNewView(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerRespondWithNewView(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aView, ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerPullInto(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
     ErrorResult& aRv);
@@ -353,7 +354,7 @@ extern void ReadableByteStreamControllerError(
     ReadableByteStreamController* aController, JS::HandleValue aValue,
     ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerEnqueue(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aChunk, ErrorResult& aRv);
 
@@ -365,7 +366,7 @@ extern void ReadableByteStreamControllerClose(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
-extern void SetUpReadableByteStreamController(
+MOZ_CAN_RUN_SCRIPT extern void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableByteStreamController* aController,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,

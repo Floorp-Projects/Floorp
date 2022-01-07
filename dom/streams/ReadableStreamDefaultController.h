@@ -62,15 +62,16 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
   void Close(JSContext* aCx, ErrorResult& aRv);
 
-  void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                                  ErrorResult& aRv);
 
   void Error(JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise> CancelSteps(JSContext* aCx,
-                                                JS::Handle<JS::Value> aReason,
-                                                ErrorResult& aRv) override;
-  virtual void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
-                         ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
+                                            ReadRequest* aReadRequest,
+                                            ErrorResult& aRv) override;
 
   // Internal Slot Accessors
   UnderlyingSourceCancelCallbackHelper* GetCancelAlgorithm() const {
@@ -138,7 +139,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   RefPtr<ReadableStream> mStream;
 };
 
-extern void SetUpReadableStreamDefaultController(
+MOZ_CAN_RUN_SCRIPT extern void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
@@ -147,12 +148,13 @@ extern void SetUpReadableStreamDefaultController(
     double aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
     ErrorResult& aRv);
 
-extern void SetupReadableStreamDefaultControllerFromUnderlyingSource(
+MOZ_CAN_RUN_SCRIPT extern void
+SetupReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerEnqueue(
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
@@ -160,10 +162,9 @@ extern void ReadableStreamDefaultControllerClose(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
-extern void ReadableStreamDefaultReaderRead(JSContext* aCx,
-                                            ReadableStreamGenericReader* reader,
-                                            ReadRequest* aRequest,
-                                            ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultReaderRead(
+    JSContext* aCx, ReadableStreamGenericReader* reader, ReadRequest* aRequest,
+    ErrorResult& aRv);
 
 extern void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,

@@ -48,7 +48,6 @@ void ReadableStreamBYOBRequest::GetView(
 }
 
 // https://streams.spec.whatwg.org/#rs-byob-request-respond
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamBYOBRequest::Respond(JSContext* aCx, uint64_t bytesWritten,
                                         ErrorResult& aRv) {
   // Step 1.
@@ -84,7 +83,6 @@ void ReadableStreamBYOBRequest::Respond(JSContext* aCx, uint64_t bytesWritten,
 }
 
 // https://streams.spec.whatwg.org/#rs-byob-request-respond-with-new-view
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamBYOBRequest::RespondWithNewView(JSContext* aCx,
                                                    const ArrayBufferView& view,
                                                    ErrorResult& aRv) {
