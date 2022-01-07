@@ -91,8 +91,8 @@ class Table : public ShareableBase<Table> {
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
 
-  // Raw pointer to the table for use in TableTls.
-  uint8_t* tlsElements() const;
+  // Only for function values.  Raw pointer to the table.
+  uint8_t* functionBase() const;
 
   // set/get/fillFuncRef is allowed only on table-of-funcref.
   // get/fillAnyRef is allowed only on table-of-anyref.

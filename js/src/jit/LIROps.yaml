@@ -2723,16 +2723,7 @@
   arguments:
     offset: size_t
 
-- name: WasmLoadTableElement
-  result_type: WordSized
-  operands:
-    elements: WordSized
-    index: WordSized
-
 - name: WasmDerivedPointer
-  gen_boilerplate: false
-
-- name: WasmDerivedIndexPointer
   gen_boilerplate: false
 
 - name: WasmStoreRef
