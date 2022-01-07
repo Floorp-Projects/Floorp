@@ -428,16 +428,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   /**
-   * Gets event listeners and adds their information to the events array.
-   *
-   * @param  {Node} node
-   *         Node for which we are to get listeners.
-   */
-  getEventListeners: function(node) {
-    return this._eventCollector.getEventListeners(node);
-  },
-
-  /**
    * Retrieve the script location of the custom element definition for this node, when
    * relevant. To be linked to a custom element definition
    */
@@ -570,7 +560,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get all event listeners that are listening on this node.
    */
   getEventListenerInfo: function() {
-    return this.getEventListeners(this.rawNode);
+    return this._eventCollector.getEventListeners(this.rawNode);
   },
 
   /**

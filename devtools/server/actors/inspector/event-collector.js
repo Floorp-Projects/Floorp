@@ -861,10 +861,14 @@ class EventCollector {
       }
 
       for (const listener of listeners) {
-        if (collector.normalizeListener) {
-          listener.normalizeListener = collector.normalizeListener;
+        const eventObj = this.processHandlerForEvent(
+          listener,
+          dbg,
+          collector.normalizeListener
+        );
+        if (eventObj) {
+          listenerArray.push(eventObj);
         }
-        this.processHandlerForEvent(listenerArray, listener, dbg);
       }
     }
 
@@ -878,13 +882,13 @@ class EventCollector {
   /**
    * Process an event listener.
    *
-   * @param  {Array} listenerArray
-   *         listenerArray contains all event objects that we have gathered
-   *         so far.
    * @param  {EventListener} listener
    *         The event listener to process.
    * @param  {Debugger} dbg
    *         Debugger instance.
+   * @param  {Function|null} normalizeListener
+   *         An optional function that will be called to retrieve data about the listener.
+   *         It should be a *Collector method.
    *
    * @return {Array}
    *         An array of objects where a typical object looks like this:
@@ -902,8 +906,9 @@ class EventCollector {
    *           }
    */
   // eslint-disable-next-line complexity
-  processHandlerForEvent(listenerArray, listener, dbg) {
+  processHandlerForEvent(listener, dbg, normalizeListener) {
     let globalDO;
+    let eventObj;
 
     try {
       const { capturing, handler } = listener;
@@ -915,8 +920,6 @@ class EventCollector {
       // we don't do this then all chrome listeners simply display "native code."
       globalDO = dbg.addDebuggee(global);
       let listenerDO = globalDO.makeDebuggeeValue(handler);
-
-      const { normalizeListener } = listener;
 
       if (normalizeListener) {
         listenerDO = normalizeListener(listenerDO, listener);
@@ -1031,7 +1034,7 @@ class EventCollector {
             : ":" + line + (column === null ? "" : ":" + column));
       }
 
-      const eventObj = {
+      eventObj = {
         type: override.type || type,
         handler: override.handler || functionSource.trim(),
         origin: override.origin || origin,
@@ -1052,13 +1055,14 @@ class EventCollector {
       if (native || dom0) {
         eventObj.hide.debugger = true;
       }
-      listenerArray.push(eventObj);
     } finally {
       // Ensure that we always remove the debuggee.
       if (globalDO) {
         dbg.removeDebuggee(globalDO);
       }
     }
+
+    return eventObj;
   }
 }
 
