@@ -16,54 +16,46 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function click(selector) {
-  return BrowserTestUtils.synthesizeMouseAtCenter(
-    selector,
-    {},
-    gBrowser.selectedBrowser
-  );
-}
-
-function rightClick(selector) {
-  return BrowserTestUtils.synthesizeMouseAtCenter(
-    selector,
-    { type: "contextmenu", button: 2 },
-    gBrowser.selectedBrowser
-  );
-}
-
-function awaitFileSave(name, ext) {
-  return new Promise(resolve => {
+function awaitSavedFileContents(name, ext) {
+  return new Promise((resolve, reject) => {
     MockFilePicker.showCallback = fp => {
-      ok(true, "File picker was opened");
-      const fileName = fp.defaultString;
-      is(
-        fileName,
-        name,
-        "File picker should provide the correct default filename."
-      );
-      is(
-        fp.defaultExtension,
-        ext,
-        "File picker should provide the correct default file extension."
-      );
-      const destFile = destDir.clone();
-      destFile.append(fileName);
-      MockFilePicker.setFiles([destFile]);
-      MockFilePicker.showCallback = null;
-      mockTransferCallback = function(downloadSuccess) {
-        ok(downloadSuccess, "JSON should have been downloaded successfully");
-        ok(destFile.exists(), "The downloaded file should exist.");
-        resolve(destFile);
-      };
+      try {
+        ok(true, "File picker was opened");
+        const fileName = fp.defaultString;
+        is(
+          fileName,
+          name,
+          "File picker should provide the correct default filename."
+        );
+        is(
+          fp.defaultExtension,
+          ext,
+          "File picker should provide the correct default file extension."
+        );
+        const destFile = destDir.clone();
+        destFile.append(fileName);
+        MockFilePicker.setFiles([destFile]);
+        MockFilePicker.showCallback = null;
+        mockTransferCallback = async function(downloadSuccess) {
+          try {
+            ok(
+              downloadSuccess,
+              "JSON should have been downloaded successfully"
+            );
+            ok(destFile.exists(), "The downloaded file should exist.");
+            const { path } = destFile;
+            await BrowserTestUtils.waitForCondition(() => IOUtils.exists(path));
+            const buffer = await IOUtils.read(path);
+            resolve(new TextDecoder().decode(buffer));
+          } catch (error) {
+            reject(error);
+          }
+        };
+      } catch (error) {
+        reject(error);
+      }
     };
   });
-}
-
-async function getFileContents(file) {
-  await BrowserTestUtils.waitForCondition(() => OS.File.exists(file.path));
-  const buffer = await OS.File.read(file.path);
-  return new TextDecoder().decode(buffer);
 }
 
 function createTemporarySaveDirectory() {
@@ -92,54 +84,48 @@ add_task(async function() {
 
   const JSON_FILE = "simple_json.json";
   const TEST_JSON_URL = URL_ROOT + JSON_FILE;
-  await addJsonViewTab(TEST_JSON_URL);
+  const tab = await addJsonViewTab(TEST_JSON_URL);
 
   const response = await fetch(new Request(TEST_JSON_URL));
 
   info("Fetched JSON contents.");
   const rawJSON = await response.text();
   const prettyJSON = JSON.stringify(JSON.parse(rawJSON), null, "  ");
+  isnot(
+    rawJSON,
+    prettyJSON,
+    "Original and prettified JSON should be different."
+  );
 
-  // Attempt to save original JSON via "Save As" command
-  let onFileSaved = awaitFileSave(JSON_FILE, "json");
-  await new Promise(resolve => {
-    info("Register to handle popupshown.");
-    document.addEventListener(
-      "popupshown",
-      function(event) {
-        info("Context menu opened.");
-        const savePageCommand = document.getElementById("context-savepage");
-        savePageCommand.doCommand();
-        info("SavePage command done.");
-        event.target.hidePopup();
-        info("Context menu hidden.");
-        resolve();
-      },
-      { once: true }
-    );
-    rightClick("body");
-    info("Right clicked.");
-  });
-  let data = await onFileSaved.then(getFileContents);
-  is(data, rawJSON, "Original JSON contents should have been saved.");
+  // Attempt to save original JSON via saveBrowser (ctrl/cmd+s or "Save Page As" command).
+  let data = awaitSavedFileContents(JSON_FILE, "json");
+  saveBrowser(tab.linkedBrowser);
+  is(await data, rawJSON, "Original JSON contents should have been saved.");
 
   // Attempt to save original JSON via "Save" button
-  onFileSaved = awaitFileSave(JSON_FILE, "json");
-  await click(saveButton);
+  data = awaitSavedFileContents(JSON_FILE, "json");
+  await clickJsonNode(saveButton);
   info("Clicked Save button.");
-  data = await onFileSaved.then(getFileContents);
-  is(data, rawJSON, "Original JSON contents should have been saved.");
+  is(await data, rawJSON, "Original JSON contents should have been saved.");
 
   // Attempt to save prettified JSON via "Save" button
   await selectJsonViewContentTab("rawdata");
   info("Switched to Raw Data tab.");
-  await click(prettifyButton);
+  await clickJsonNode(prettifyButton);
   info("Clicked Pretty Print button.");
-  onFileSaved = awaitFileSave(JSON_FILE, "json");
-  await click(saveButton);
+  data = awaitSavedFileContents(JSON_FILE, "json");
+  await clickJsonNode(saveButton);
   info("Clicked Save button.");
-  data = await onFileSaved.then(getFileContents);
-  is(data, prettyJSON, "Prettified JSON contents should have been saved.");
+  is(
+    await data,
+    prettyJSON,
+    "Prettified JSON contents should have been saved."
+  );
+
+  // saveBrowser should still save original contents.
+  data = awaitSavedFileContents(JSON_FILE, "json");
+  saveBrowser(tab.linkedBrowser);
+  is(await data, rawJSON, "Original JSON contents should have been saved.");
 });
 
 add_task(async function() {
@@ -149,10 +135,10 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/json adds .json extension by default.");
-  const onFileSaved = awaitFileSave("index.json", "json");
-  await click(saveButton);
+  const data = awaitSavedFileContents("index.json", "json");
+  await clickJsonNode(saveButton);
   info("Clicked Save button.");
-  await onFileSaved.then(getFileContents);
+  is(await data, "2", "JSON contents should have been saved.");
 });
 
 add_task(async function() {
@@ -162,8 +148,8 @@ add_task(async function() {
   await addJsonViewTab(TEST_JSON_URL);
 
   info("Checking that application/manifest+json does not add .json extension.");
-  const onFileSaved = awaitFileSave("index", null);
-  await click(saveButton);
+  const data = awaitSavedFileContents("index", null);
+  await clickJsonNode(saveButton);
   info("Clicked Save button.");
-  await onFileSaved.then(getFileContents);
+  is(await data, "3", "JSON contents should have been saved.");
 });
