@@ -88,7 +88,7 @@ impl<F> TaskBuilder<F> {
         TaskBuilder {
             name,
             future,
-            priority: nsIRunnablePriority::PRIORITY_NORMAL as u32,
+            priority: nsIRunnablePriority::PRIORITY_NORMAL,
             options: DispatchOptions::default(),
         }
     }
