@@ -56,7 +56,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.jsm",
-  waitForLoadEvent: "chrome://remote/content/marionette/sync.js",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
   WebElement: "chrome://remote/content/marionette/element.js",
@@ -2008,13 +2007,6 @@ GeckoDriver.prototype.newWindow = async function(cmd) {
 
   let contentBrowser;
 
-  // Actors need the new window to be loaded to safely execute queries.
-  // Wait until a load event is dispatched for the new browsing context.
-  const onBrowserContentLoaded = waitForLoadEvent(
-    "pageshow",
-    () => contentBrowser?.browsingContext
-  );
-
   switch (type) {
     case "window":
       let win = await this.curBrowser.openBrowserWindow(focus, isPrivate);
@@ -2028,16 +2020,13 @@ GeckoDriver.prototype.newWindow = async function(cmd) {
       contentBrowser = browser.getBrowserForTab(tab);
   }
 
-  await onBrowserContentLoaded;
+  // Actors need the new window to be loaded to safely execute queries.
+  // Wait until the initial page load has been finished.
+  await waitForInitialNavigationCompleted(contentBrowser.browsingContext);
 
-  // Wait until the browser is available.
-  // TODO: Fix by using `Browser:Init` or equivalent on bug 1311041
-  let windowId = await new PollPromise((resolve, reject) => {
-    let id = windowManager.getIdForBrowser(contentBrowser);
-    windowManager.windowHandles.includes(id) ? resolve(id) : reject();
-  });
+  const id = windowManager.getIdForBrowser(contentBrowser);
 
-  return { handle: windowId.toString(), type };
+  return { handle: id.toString(), type };
 };
 
 /**
