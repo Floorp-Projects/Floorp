@@ -86,7 +86,7 @@
 
     <!-- Border -->
     <!-- Form parts -->
-    <color name="fx_mobile_border_color_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_border_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Selected tab -->
     <color name="fx_mobile_border_color_selected" tools:ignore="UnusedResources">@color/photonInk20</color>
     <!-- Form parts -->
