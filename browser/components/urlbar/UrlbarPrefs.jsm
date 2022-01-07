@@ -247,6 +247,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the user has opted in to data collection for quick suggest.
   ["quicksuggest.dataCollection.enabled", false],
 
+  // The version of dialog user saw.
+  ["quicksuggest.onboardingDialogVersion", 0],
+
   // Whether to show the quick suggest onboarding dialog.
   ["quicksuggest.shouldShowOnboardingDialog", true],
 
