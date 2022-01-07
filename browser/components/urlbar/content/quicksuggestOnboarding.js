@@ -8,13 +8,142 @@ const { ONBOARDING_CHOICE } = ChromeUtils.import(
   "resource:///modules/UrlbarQuickSuggest.jsm"
 );
 
-// Number of height pixels to switch to compact mode to avoid showing scrollbars
-// on the non-compact mode. This is based on the natural height of the full-size
-// section height 587px + padding-block-start 32px + padding-block-end 32px +
-// the approximate height of the tab bar 44px.
-const COMPACT_MODE_HEIGHT = 587 + 32 * 2 + 44;
+const VARIATION_MAP = {
+  a: {
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-1",
+      "main-title": "firefox-suggest-onboarding-main-title-1",
+      "main-description": "firefox-suggest-onboarding-main-description-1",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-1",
+    },
+  },
+  b: {
+    introductionCloseButton: true,
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
+      "main-title": "firefox-suggest-onboarding-main-title-2",
+      "main-description": "firefox-suggest-onboarding-main-description-2",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-1",
+    },
+  },
+  c: {
+    logoType: "firefox",
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-3",
+      "main-title": "firefox-suggest-onboarding-main-title-3",
+      "main-description": "firefox-suggest-onboarding-main-description-3",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-1",
+    },
+  },
+  d: {
+    introductionCloseButton: true,
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
+      "main-title": "firefox-suggest-onboarding-main-title-4",
+      "main-description": "firefox-suggest-onboarding-main-description-4",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-2",
+    },
+  },
+  e: {
+    logoType: "firefox",
+    introductionCloseButton: true,
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
+      "main-title": "firefox-suggest-onboarding-main-title-5",
+      "main-description": "firefox-suggest-onboarding-main-description-5",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-2",
+    },
+  },
+  f: {
+    introductionCloseButton: true,
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-2",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
+      "main-title": "firefox-suggest-onboarding-main-title-6",
+      "main-description": "firefox-suggest-onboarding-main-description-6",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-2",
+    },
+  },
+  g: {
+    mainPrivacyFirst: true,
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-7",
+      "main-title": "firefox-suggest-onboarding-main-title-7",
+      "main-description": "firefox-suggest-onboarding-main-description-7",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-2",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-2",
+    },
+  },
+  h: {
+    logoType: "firefox",
+    l10nUpdates: {
+      onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
+      "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
+      "main-title": "firefox-suggest-onboarding-main-title-8",
+      "main-description": "firefox-suggest-onboarding-main-description-8",
+      "main-accept-option-description":
+        "firefox-suggest-onboarding-main-accept-option-description-1",
+      "main-reject-option-description":
+        "firefox-suggest-onboarding-main-reject-option-description-1",
+    },
+  },
+};
 
-document.addEventListener("DOMContentLoaded", () => {
+// If the window height is smaller than this value when the dialog opens, then
+// the dialog will open in compact mode. The dialog will not change modes while
+// it's open even if the window height changes.
+const COMPACT_MODE_HEIGHT =
+  650 + // section min-height (non-compact mode)
+  2 * 32 + // 2 * --section-vertical-padding (non-compact mode)
+  44; // approximate height of the browser window's tab bar
+
+// Used for test only. If links or buttons may be clicked or typed Key_Enter
+// while translating l10n, cannot capture the events since not register listeners
+// yet. To avoid the issue, add this flag to know the listeners are ready.
+let resolveOnboardingReady;
+window._quicksuggestOnboardingReady = new Promise(r => {
+  resolveOnboardingReady = r;
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await document.l10n.ready;
+
+  const variation = VARIATION_MAP[window.arguments[0].variationType];
+  if (variation) {
+    document.l10n.pauseObserving();
+    try {
+      await applyVariation(variation);
+    } finally {
+      document.l10n.resumeObserving();
+    }
+  }
+
   addSubmitListener(document.getElementById("onboardingNext"), () => {
     document.getElementById("introduction-section").classList.add("inactive");
     document.getElementById("main-section").classList.add("active");
@@ -23,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE;
     window.close();
   });
-  addSubmitListener(document.getElementById("onboardingNotNow"), () => {
+  addSubmitListener(document.getElementById("onboardingSkipLink"), () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
     window.close();
   });
@@ -68,9 +197,47 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.outerHeight < COMPACT_MODE_HEIGHT) {
     document.body.classList.add("compact");
   }
+
+  resolveOnboardingReady();
 });
 
+async function applyVariation(variation) {
+  if (variation.introductionCloseButton) {
+    const onboardingClose = document.getElementById("onboardingClose");
+    onboardingClose.classList.add("active");
+    addSubmitListener(onboardingClose, () => {
+      window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
+      window.close();
+    });
+  }
+
+  if (variation.logoType) {
+    for (const logo of document.querySelectorAll(".logo")) {
+      logo.classList.add(variation.logoType);
+    }
+  }
+
+  if (variation.mainPrivacyFirst) {
+    const label = document.querySelector("#main-section .privacy-first");
+    label.classList.add("active");
+  }
+
+  if (variation.l10nUpdates) {
+    const translatedElements = [];
+    for (const [id, newL10N] of Object.entries(variation.l10nUpdates)) {
+      const element = document.getElementById(id);
+      document.l10n.setAttributes(element, newL10N);
+      translatedElements.push(element);
+    }
+    await document.l10n.translateElements(translatedElements);
+  }
+}
+
 function addSubmitListener(element, listener) {
+  if (!element) {
+    console.warn("Element is null on addSubmitListener");
+    return;
+  }
   element.addEventListener("click", listener);
   element.addEventListener("keydown", e => {
     if (e.keyCode == e.DOM_VK_RETURN) {
