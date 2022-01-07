@@ -15,23 +15,19 @@ const beautify = require("devtools/shared/jsbeautify/beautify");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
-/**
- * Set the content of a provided HTMLTooltip instance to display a list of event
- * listeners, with their event type, capturing argument and a link to the code
- * of the event handler.
- *
- * @param {HTMLTooltip} tooltip
- *        The tooltip instance on which the event details content should be set
- * @param {Array} eventListenerInfos
- *        A list of event listeners
- * @param {Toolbox} toolbox
- *        Toolbox used to select debugger panel
- */
-function setEventTooltip(tooltip, eventListenerInfos, toolbox) {
-  return new EventTooltip(tooltip, eventListenerInfos, toolbox);
-}
-
 class EventTooltip {
+  /**
+   * Set the content of a provided HTMLTooltip instance to display a list of event
+   * listeners, with their event type, capturing argument and a link to the code
+   * of the event handler.
+   *
+   * @param {HTMLTooltip} tooltip
+   *        The tooltip instance on which the event details content should be set
+   * @param {Array} eventListenerInfos
+   *        A list of event listeners
+   * @param {Toolbox} toolbox
+   *        Toolbox used to select debugger panel
+   */
   constructor(tooltip, eventListenerInfos, toolbox) {
     this._tooltip = tooltip;
     this._toolbox = toolbox;
@@ -42,7 +38,6 @@ class EventTooltip {
 
     this._headerClicked = this._headerClicked.bind(this);
     this._debugClicked = this._debugClicked.bind(this);
-    this.destroy = this.destroy.bind(this);
     this._subscriptions = [];
 
     const config = {
@@ -197,7 +192,6 @@ class EventTooltip {
     this._tooltip.panel.innerHTML = "";
     this._tooltip.panel.appendChild(this.container);
     this._tooltip.setContentSize({ width: CONTAINER_WIDTH, height: Infinity });
-    this._tooltip.on("hidden", this.destroy);
   }
 
   _addContentListeners(header) {
@@ -314,8 +308,6 @@ class EventTooltip {
 
   destroy() {
     if (this._tooltip) {
-      this._tooltip.off("hidden", this.destroy);
-
       const boxes = this.container.querySelectorAll(
         ".event-tooltip-content-box"
       );
@@ -350,4 +342,4 @@ class EventTooltip {
   }
 }
 
-module.exports.setEventTooltip = setEventTooltip;
+module.exports.EventTooltip = EventTooltip;
