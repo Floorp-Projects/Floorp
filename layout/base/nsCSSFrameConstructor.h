@@ -731,10 +731,11 @@ class nsCSSFrameConstructor final : public nsFrameManager {
       FrameConstructionDataGetter mDataGetter;
       FrameFullConstructor mFullConstructor;
 
-      constexpr Func(FrameCreationFunc aFunc) : mCreationFunc(aFunc) {}
-      constexpr Func(FrameConstructionDataGetter aDataGetter)
+      explicit constexpr Func(FrameCreationFunc aFunc) : mCreationFunc(aFunc) {}
+      explicit constexpr Func(FrameConstructionDataGetter aDataGetter)
           : mDataGetter(aDataGetter) {}
-      constexpr Func(FrameFullConstructor aCtor) : mFullConstructor(aCtor) {}
+      explicit constexpr Func(FrameFullConstructor aCtor)
+          : mFullConstructor(aCtor) {}
     } mFunc;
     // Flag bits that can modify the way the construction happens
     const uint32_t mBits = 0;
@@ -744,11 +745,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
     constexpr FrameConstructionData() : FrameConstructionData(nullptr) {}
 
-    constexpr FrameConstructionData(std::nullptr_t, uint32_t aBits = 0)
+    MOZ_IMPLICIT constexpr FrameConstructionData(std::nullptr_t,
+                                                 uint32_t aBits = 0)
         : mFunc(static_cast<FrameCreationFunc>(nullptr)), mBits(aBits) {}
 
-    constexpr FrameConstructionData(FrameCreationFunc aCreationFunc,
-                                    uint32_t aBits = 0)
+    MOZ_IMPLICIT constexpr FrameConstructionData(
+        FrameCreationFunc aCreationFunc, uint32_t aBits = 0)
         : mFunc(aCreationFunc), mBits(aBits) {}
     constexpr FrameConstructionData(FrameCreationFunc aCreationFunc,
                                     uint32_t aBits,
@@ -756,13 +758,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
         : mFunc(aCreationFunc),
           mBits(aBits | FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS),
           mAnonBoxPseudo(aAnonBoxPseudo) {}
-    constexpr FrameConstructionData(FrameConstructionDataGetter aDataGetter,
-                                    uint32_t aBits = 0)
+    MOZ_IMPLICIT constexpr FrameConstructionData(
+        FrameConstructionDataGetter aDataGetter, uint32_t aBits = 0)
         : mFunc(aDataGetter),
           mBits(aBits | FCDATA_FUNC_IS_DATA_GETTER),
           mAnonBoxPseudo(PseudoStyleType::NotPseudo) {}
-    constexpr FrameConstructionData(FrameFullConstructor aCtor,
-                                    uint32_t aBits = 0)
+    MOZ_IMPLICIT constexpr FrameConstructionData(FrameFullConstructor aCtor,
+                                                 uint32_t aBits = 0)
         : mFunc(aCtor),
           mBits(aBits | FCDATA_FUNC_IS_FULL_CTOR),
           mAnonBoxPseudo(PseudoStyleType::NotPseudo) {}
