@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for pinch zooming after GPU process restart</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let initial_resolution = await getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  // Kill the GPU process
+  await SpecialPowers.spawnChrome([], async () => {
+    const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    gfxInfo.killGPUProcessForTests();
+    await gfxInfo.ensureGPUProcessReadyForTests();
+  });
+
+  // Ensure resolution is unchanged by GPU process restart
+  await waitUntilApzStable();
+  let resolution = await getResolution();
+  ok(
+    resolution == initial_resolution,
+    "The resolution (" + resolution + ") is the same after GPU process restart"
+  );
+
+  // Perform the zoom
+  await pinchZoomInWithTouch(150, 300);
+
+  // Flush state and get the resolution we're at now
+  await promiseApzFlushedRepaints();
+  let final_resolution = await getResolution();
+  ok(
+    final_resolution > initial_resolution,
+    "The final resolution (" + final_resolution + ") is greater after zooming in"
+  );
+}
+
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>
