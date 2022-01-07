@@ -290,6 +290,7 @@ nsis:
         local-toolchain: true
     treeherder:
         symbol: TL(nsis)
+    run-on-projects: [trunk]
     run:
         script: build-nsis.sh
         toolchain-artifact: public/build/nsis.tar.zst
