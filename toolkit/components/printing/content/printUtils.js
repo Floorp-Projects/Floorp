@@ -66,6 +66,19 @@ var PrintUtils = {
   },
 
   /**
+   * Updates the hidden state of the "Page Setup" menu items in the File menu,
+   * depending on the value of the `print.show_page_setup_menu` pref.
+   * Note: not all platforms have a "Page Setup" menu item (or Page Setup
+   * window).
+   */
+  updatePrintSetupMenuHiddenState() {
+    let pageSetupMenuItem = document.getElementById("menu_printSetup");
+    if (pageSetupMenuItem) {
+      pageSetupMenuItem.hidden = !SHOW_PAGE_SETUP_MENU;
+    }
+  },
+
+  /**
    * Shows the page setup dialog, and saves any settings changed in
    * that dialog if print.save_print_settings is set to true.
    *
@@ -125,18 +138,6 @@ var PrintUtils = {
       }
     }
     return null;
-  },
-
-  /**
-   * Updates the hidden state of the "Print preview" and "Page Setup"
-   * menu items in the file menu depending on the print tab modal pref.
-   * The print preview menu item is not available on mac.
-   */
-  updatePrintPreviewMenuHiddenState() {
-    let pageSetupMenuItem = document.getElementById("menu_printSetup");
-    if (pageSetupMenuItem) {
-      pageSetupMenuItem.hidden = !SHOW_PAGE_SETUP_MENU;
-    }
   },
 
   /**
