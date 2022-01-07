@@ -855,7 +855,7 @@ dependencies = [
 [[package]]
 name = "coremidi"
 version = "0.6.0"
-source = "git+https://github.com/chris-zen/coremidi.git?rev=753163a8e5aeb8d69d2e0558301fd34a3d04327a#753163a8e5aeb8d69d2e0558301fd34a3d04327a"
+source = "git+https://github.com/chris-zen/coremidi.git?rev=fc68464b5445caf111e41f643a2e69ccce0b4f83#fc68464b5445caf111e41f643a2e69ccce0b4f83"
 dependencies = [
  "core-foundation",
  "core-foundation-sys",
@@ -3067,14 +3067,17 @@ dependencies = [
 [[package]]
 name = "midir"
 version = "0.7.0"
-source = "git+https://github.com/mozilla/midir.git?rev=dc87afbd4361ae5ec192e1fab0a6409dd13d4011#dc87afbd4361ae5ec192e1fab0a6409dd13d4011"
+source = "git+https://github.com/mozilla/midir.git?rev=4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f#4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f"
 dependencies = [
  "alsa",
  "bitflags",
  "coremidi",
+ "js-sys",
  "libc",
  "memalloc",
  "nix",
+ "wasm-bindgen",
+ "web-sys",
  "winapi",
 ]
 
