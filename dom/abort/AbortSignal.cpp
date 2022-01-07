@@ -152,6 +152,11 @@ void AbortSignal::ThrowIfAborted(JSContext* aCx, ErrorResult& aRv) {
 
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
 void AbortSignal::SignalAbort(JS::Handle<JS::Value> aReason) {
+  // Step 1, in case "signal abort" algorithm is called directly
+  if (Aborted()) {
+    return;
+  }
+
   // Steps 1-4.
   AbortSignalImpl::SignalAbort(aReason);
 
