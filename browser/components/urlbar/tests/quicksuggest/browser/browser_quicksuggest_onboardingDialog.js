@@ -103,8 +103,9 @@ add_task(async function accept() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
-    onboardingDialogChoice: "accept",
+    onboardingDialogChoice: "accept_2",
     expectedUserBranchPrefs: {
+      "quicksuggest.onboardingDialogVersion": JSON.stringify({ version: 1 }),
       "quicksuggest.dataCollection.enabled": true,
     },
     telemetryEvents: [
@@ -116,7 +117,7 @@ add_task(async function accept() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "accept",
+        object: "accept_2",
       },
     ],
   });
@@ -149,7 +150,7 @@ add_task(async function reject() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
-    onboardingDialogChoice: "reject",
+    onboardingDialogChoice: "reject_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -162,7 +163,7 @@ add_task(async function reject() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "reject",
+        object: "reject_2",
       },
     ],
   });
@@ -192,7 +193,7 @@ add_task(async function skip() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
-    onboardingDialogChoice: "not_now_link",
+    onboardingDialogChoice: "not_now_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -205,7 +206,7 @@ add_task(async function skip() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "not_now_link",
+        object: "not_now_2",
       },
     ],
   });
@@ -246,7 +247,7 @@ add_task(async function learnMore() {
       );
       BrowserTestUtils.removeTab(tab);
     },
-    onboardingDialogChoice: "learn_more",
+    onboardingDialogChoice: "learn_more_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -259,7 +260,7 @@ add_task(async function learnMore() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "learn_more",
+        object: "learn_more_2",
       },
     ],
   });
@@ -277,6 +278,7 @@ add_task(async function escKey_focusInsideDialog() {
         document.activeElement.classList.contains("dialogFrame"),
         "dialogFrame is focused in the browser window"
       );
+
       EventUtils.synthesizeKey("KEY_Escape");
       Assert.equal(
         gBrowser.currentURI.spec,
@@ -285,7 +287,7 @@ add_task(async function escKey_focusInsideDialog() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
-    onboardingDialogChoice: "dismissed_escape_key",
+    onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -298,7 +300,7 @@ add_task(async function escKey_focusInsideDialog() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "dismissed_escape_key",
+        object: "dismiss_2",
       },
     ],
   });
@@ -318,7 +320,7 @@ add_task(async function escKey_focusOutsideDialog() {
       );
       EventUtils.synthesizeKey("KEY_Escape");
     },
-    onboardingDialogChoice: "dismissed_escape_key",
+    onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -331,7 +333,7 @@ add_task(async function escKey_focusOutsideDialog() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "dismissed_escape_key",
+        object: "dismiss_2",
       },
     ],
   });
@@ -385,7 +387,7 @@ async function doQueuedEscKeyTest(otherDialogKey) {
       EventUtils.synthesizeKey("KEY_Escape");
       await onboardingClosedPromise;
     },
-    onboardingDialogChoice: "dismissed_escape_key",
+    onboardingDialogChoice: "dismiss_1",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -398,7 +400,7 @@ async function doQueuedEscKeyTest(otherDialogKey) {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "dismissed_escape_key",
+        object: "dismiss_1",
       },
     ],
   });
@@ -424,7 +426,7 @@ add_task(async function dismissed_other_on_introduction() {
       gDialogBox._dialog.close();
       await maybeShowPromise;
     },
-    onboardingDialogChoice: "dismissed_other",
+    onboardingDialogChoice: "dismiss_1",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -437,7 +439,7 @@ add_task(async function dismissed_other_on_introduction() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "dismissed_other",
+        object: "dismiss_1",
       },
     ],
   });
@@ -564,7 +566,7 @@ add_task(async function focus_accept() {
       info("Enter to submit");
       EventUtils.synthesizeKey("KEY_Enter");
     },
-    onboardingDialogChoice: "accept",
+    onboardingDialogChoice: "accept_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": true,
     },
@@ -577,7 +579,7 @@ add_task(async function focus_accept() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "accept",
+        object: "accept_2",
       },
     ],
   });
@@ -612,7 +614,7 @@ add_task(async function focus_learnMore() {
       );
       BrowserTestUtils.removeTab(tab);
     },
-    onboardingDialogChoice: "learn_more",
+    onboardingDialogChoice: "learn_more_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -625,7 +627,7 @@ add_task(async function focus_learnMore() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "learn_more",
+        object: "learn_more_2",
       },
     ],
   });
@@ -645,7 +647,7 @@ add_task(async function focus_reject() {
       info("Enter to submit");
       EventUtils.synthesizeKey("KEY_Enter");
     },
-    onboardingDialogChoice: "reject",
+    onboardingDialogChoice: "reject_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -658,7 +660,7 @@ add_task(async function focus_reject() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "reject",
+        object: "reject_2",
       },
     ],
   });
@@ -681,7 +683,7 @@ add_task(async function focus_skip() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
-    onboardingDialogChoice: "not_now_link",
+    onboardingDialogChoice: "not_now_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -694,7 +696,7 @@ add_task(async function focus_skip() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "not_now_link",
+        object: "not_now_2",
       },
     ],
   });
@@ -711,7 +713,7 @@ add_task(async function focus_accept_wraparound() {
       EventUtils.synthesizeKey(" ");
       EventUtils.synthesizeKey("KEY_Enter");
     },
-    onboardingDialogChoice: "accept",
+    onboardingDialogChoice: "accept_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": true,
     },
@@ -724,7 +726,7 @@ add_task(async function focus_accept_wraparound() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "accept",
+        object: "accept_2",
       },
     ],
   });
@@ -826,7 +828,7 @@ add_task(async function close_button_on_introduction_pane() {
           info("Waiting for maybeShowOnboardingDialog to finish");
           await maybeShowPromise;
         },
-        onboardingDialogChoice: "not_now_link",
+        onboardingDialogChoice: "close_1",
         expectedUserBranchPrefs: {
           "quicksuggest.dataCollection.enabled": false,
         },
@@ -839,7 +841,7 @@ add_task(async function close_button_on_introduction_pane() {
           {
             category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
             method: "opt_in_dialog",
-            object: "not_now_link",
+            object: "close_1",
           },
         ],
       });
@@ -1261,6 +1263,12 @@ async function doVariationTest({
 
       EventUtils.synthesizeKey("KEY_Escape");
       await maybeShowPromise;
+
+      info("Check the version and variation pref");
+      Assert.equal(
+        UrlbarPrefs.get("quicksuggest.onboardingDialogVersion"),
+        JSON.stringify({ version: 1, variation: variation.toLowerCase() })
+      );
     },
   });
 }
@@ -1363,7 +1371,7 @@ async function canTabMoveFocus() {
       EventUtils.synthesizeKey("KEY_Escape");
       await maybeShowPromise;
     },
-    onboardingDialogChoice: "dismissed_escape_key",
+    onboardingDialogChoice: "dismiss_2",
     expectedUserBranchPrefs: {
       "quicksuggest.dataCollection.enabled": false,
     },
@@ -1376,7 +1384,7 @@ async function canTabMoveFocus() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "dismissed_escape_key",
+        object: "dismiss_2",
       },
     ],
   });

@@ -46,12 +46,13 @@ const DIALOG_VARIATION_PREF = "quickSuggestOnboardingDialogVariation";
 // Values returned by the onboarding dialog depending on the user's response.
 // These values are used in telemetry events, so be careful about changing them.
 const ONBOARDING_CHOICE = {
-  ACCEPT: "accept",
-  REJECT: "reject",
-  DISMISSED_ESCAPE_KEY: "dismissed_escape_key",
-  DISMISSED_OTHER: "dismissed_other",
-  LEARN_MORE: "learn_more",
-  NOT_NOW: "not_now_link",
+  ACCEPT_2: "accept_2",
+  CLOSE_1: "close_1",
+  DISMISS_1: "dismiss_1",
+  DISMISS_2: "dismiss_2",
+  LEARN_MORE_2: "learn_more_2",
+  NOT_NOW_2: "not_now_2",
+  REJECT_2: "reject_2",
 };
 
 const ONBOARDING_URI =
@@ -233,70 +234,43 @@ class Suggestions {
 
     let win = BrowserWindowTracker.getTopWindow();
 
-    // Set up a key listener so we can tell when the dialog is dismissed with
-    // the Escape key. There are a few reasons this is so complicated:
-    //
-    // (1) Key events are not dispatched to the dialog content when the focus is
-    //     not in the dialog. The focus is in the dialog initially, but all it
-    //     takes to move out of the dialog is for the user to click outside it,
-    //     as they might when they're trying to dismiss it. Therefore we add our
-    //     key listener here, to the browser window.
-    // (2) `keypress` is not dispatched to the browser window when the focus is
-    //     inside the dialog but `keydown` is, so we listen for `keydown`.
-    // (3) Our dialog will be queued and deferred if other dialogs are currently
-    //     shown, so don't assume the first Escape key is related to ours.
-    let escapeKeyPressed = false;
-    let keyListener = keyEvent => {
-      if (
-        keyEvent.keyCode == keyEvent.DOM_VK_ESCAPE &&
-        win.gDialogBox.dialog?.frameContentWindow?.document?.documentURI ==
-          ONBOARDING_URI
-      ) {
-        escapeKeyPressed = true;
-      }
-    };
-    win.addEventListener("keydown", keyListener, true);
-
     let variationType;
     try {
       // An error happens if the pref is not in user prefs.
       variationType = UrlbarPrefs.get(DIALOG_VARIATION_PREF).toLowerCase();
     } catch (e) {}
 
-    let params = { choice: undefined, variationType };
+    let params = { choice: undefined, variationType, visitedMain: false };
     await win.gDialogBox.open(ONBOARDING_URI, params);
 
-    win.removeEventListener("keydown", keyListener, true);
-
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
-    UrlbarPrefs.set(DIALOG_VERSION_PREF, 1);
+    UrlbarPrefs.set(
+      DIALOG_VERSION_PREF,
+      JSON.stringify({ version: 1, variation: variationType })
+    );
 
     // Record the user's opt-in choice on the user branch. This pref is sticky,
     // so it will retain its user-branch value regardless of what the particular
     // default was at the time.
-    let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT;
+    let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT_2;
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
     switch (params.choice) {
-      case ONBOARDING_CHOICE.LEARN_MORE:
+      case ONBOARDING_CHOICE.LEARN_MORE_2:
         win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
           fromChrome: true,
         });
         break;
-      case ONBOARDING_CHOICE.ACCEPT:
-      case ONBOARDING_CHOICE.REJECT:
-      case ONBOARDING_CHOICE.NOT_NOW:
+      case ONBOARDING_CHOICE.ACCEPT_2:
+      case ONBOARDING_CHOICE.REJECT_2:
+      case ONBOARDING_CHOICE.NOT_NOW_2:
+      case ONBOARDING_CHOICE.CLOSE_1:
         // No other action required.
         break;
       default:
-        if (escapeKeyPressed) {
-          params.choice = ONBOARDING_CHOICE.DISMISSED_ESCAPE_KEY;
-          break;
-        }
-        // Catch-all for other cases. Typically this should not happen, but one
-        // case where it does is when the dialog is replaced by another higher
-        // priority dialog like the one that's shown when quitting the app.
-        params.choice = ONBOARDING_CHOICE.DISMISSED_OTHER;
+        params.choice = params.visitedMain
+          ? ONBOARDING_CHOICE.DISMISS_2
+          : ONBOARDING_CHOICE.DISMISS_1;
         break;
     }
 
