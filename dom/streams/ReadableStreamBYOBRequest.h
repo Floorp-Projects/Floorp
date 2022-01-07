@@ -47,10 +47,12 @@ class ReadableStreamBYOBRequest final : public nsISupports,
 
   void GetView(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal) const;
 
-  void Respond(JSContext* aCx, uint64_t bytesWritten, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Respond(JSContext* aCx, uint64_t bytesWritten,
+                                  ErrorResult& aRv);
 
-  void RespondWithNewView(JSContext* aCx, const ArrayBufferView& view,
-                          ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void RespondWithNewView(JSContext* aCx,
+                                             const ArrayBufferView& view,
+                                             ErrorResult& aRv);
 
   ReadableByteStreamController* Controller() { return mController; }
   void SetController(ReadableByteStreamController* aController) {

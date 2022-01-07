@@ -57,8 +57,8 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   static already_AddRefed<ReadableStreamBYOBReader> Constructor(
       const GlobalObject& global, ReadableStream& stream, ErrorResult& rv);
 
-  already_AddRefed<Promise> Read(const ArrayBufferView& aArray,
-                                 ErrorResult& rv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Read(
+      const ArrayBufferView& aArray, ErrorResult& rv);
 
   void ReleaseLock(ErrorResult& rv);
 
@@ -75,11 +75,9 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
 already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
     JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv);
 
-void ReadableStreamBYOBReaderRead(JSContext* aCx,
-                                  ReadableStreamBYOBReader* aReader,
-                                  JS::HandleObject aView,
-                                  ReadIntoRequest* aReadIntoRequest,
-                                  ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
+    JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,
+    ReadIntoRequest* aReadIntoRequest, ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

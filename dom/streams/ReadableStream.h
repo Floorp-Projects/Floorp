@@ -93,21 +93,23 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // IDL Methods
-  static already_AddRefed<ReadableStream> Constructor(
-      const GlobalObject& aGlobal,
-      const Optional<JS::Handle<JSObject*>>& aUnderlyingSource,
-      const QueuingStrategy& aStrategy, ErrorResult& aRv);
+  // TODO: Use MOZ_CAN_RUN_SCRIPT when IDL constructors can use it (bug 1749042)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<ReadableStream>
+  Constructor(const GlobalObject& aGlobal,
+              const Optional<JS::Handle<JSObject*>>& aUnderlyingSource,
+              const QueuingStrategy& aStrategy, ErrorResult& aRv);
 
   bool Locked() const;
 
-  already_AddRefed<Promise> Cancel(JSContext* cx, JS::Handle<JS::Value> aReason,
-                                   ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Cancel(
+      JSContext* cx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
   void GetReader(JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
                  OwningReadableStreamReader& resultReader, ErrorResult& aRv);
 
-  void Tee(JSContext* aCx, nsTArray<RefPtr<ReadableStream>>& aResult,
-           ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Tee(JSContext* aCx,
+                              nsTArray<RefPtr<ReadableStream>>& aResult,
+                              ErrorResult& aRv);
 
   // Internal Slots:
  private:
@@ -141,7 +143,7 @@ extern void ReadableStreamAddReadRequest(ReadableStream* aStream,
 extern void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
                                              ReadIntoRequest* aReadIntoRequest);
 
-extern already_AddRefed<Promise> ReadableStreamCancel(
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> ReadableStreamCancel(
     JSContext* aCx, ReadableStream* aStream, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
 
@@ -152,11 +154,12 @@ AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
 extern bool ReadableStreamHasBYOBReader(ReadableStream* aStream);
 extern bool ReadableStreamHasDefaultReader(ReadableStream* aStream);
 
-extern already_AddRefed<ReadableStream> CreateReadableByteStream(
-    JSContext* aCx, nsIGlobalObject* aGlobal,
-    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
-    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
-    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm, ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<ReadableStream>
+CreateReadableByteStream(JSContext* aCx, nsIGlobalObject* aGlobal,
+                         UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+                         UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+                         UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
+                         ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

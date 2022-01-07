@@ -156,7 +156,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Read_ReadIntoRequest)
 NS_INTERFACE_MAP_END_INHERITING(ReadIntoRequest)
 
 // https://streams.spec.whatwg.org/#readable-stream-byob-reader-read
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamBYOBReaderRead(JSContext* aCx,
                                   ReadableStreamBYOBReader* aReader,
                                   JS::HandleObject aView,
@@ -191,7 +190,6 @@ void ReadableStreamBYOBReaderRead(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#byob-reader-read
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
     const ArrayBufferView& aArray, ErrorResult& aRv) {
   AutoJSAPI jsapi;

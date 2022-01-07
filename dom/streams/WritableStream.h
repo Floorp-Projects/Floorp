@@ -141,17 +141,19 @@ class WritableStream final : public nsISupports, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // IDL Methods
-  static already_AddRefed<WritableStream> Constructor(
-      const GlobalObject& aGlobal,
-      const Optional<JS::Handle<JSObject*>>& aUnderlyingSink,
-      const QueuingStrategy& aStrategy, ErrorResult& aRv);
+  // TODO: Use MOZ_CAN_RUN_SCRIPT when IDL constructors can use it (bug 1749042)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WritableStream>
+  Constructor(const GlobalObject& aGlobal,
+              const Optional<JS::Handle<JSObject*>>& aUnderlyingSink,
+              const QueuingStrategy& aStrategy, ErrorResult& aRv);
 
   bool Locked() const { return !!mWriter; }
 
-  already_AddRefed<Promise> Abort(JSContext* cx, JS::Handle<JS::Value> aReason,
-                                  ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Abort(
+      JSContext* cx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Close(JSContext* aCx,
+                                                     ErrorResult& aRv);
 
   already_AddRefed<WritableStreamDefaultWriter> GetWriter(ErrorResult& aRv);
 
