@@ -7353,6 +7353,42 @@ contextual.services.quicksuggest:
     record_in_processes:
       - main
 
+power:
+  total_cpu_time_ms:
+    bug_numbers:
+      - 1736040
+      - 1748627
+    description: >
+      Total CPU time used by all processes in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+      - 'gpu'
+      - 'socket'
+
+  total_gpu_time_ms:
+    bug_numbers:
+      - 1743176
+      - 1748627
+    description: >
+      Total GPU time used by all processes in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
