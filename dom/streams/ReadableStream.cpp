@@ -320,7 +320,6 @@ void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-cancel
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
                                                ReadableStream* aStream,
                                                JS::Handle<JS::Value> aError,
@@ -408,7 +407,6 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#rs-cancel
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStream::Cancel(JSContext* aCx,
                                                  JS::Handle<JS::Value> aReason,
                                                  ErrorResult& aRv) {
@@ -809,7 +807,6 @@ static void ReadableStreamTee(JSContext* aCx, ReadableStream* aStream,
   ReadableStreamDefaultTee(aCx, aStream, aCloneForBranch2, aResult, aRv);
 }
 
-MOZ_CAN_RUN_SCRIPT
 void ReadableStream::Tee(JSContext* aCx,
                          nsTArray<RefPtr<ReadableStream>>& aResult,
                          ErrorResult& aRv) {
@@ -832,7 +829,6 @@ void ReadableStreamAddReadIntoRequest(ReadableStream* aStream,
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-createreadablebytestream
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<ReadableStream> CreateReadableByteStream(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,

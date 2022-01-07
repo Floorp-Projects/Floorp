@@ -185,12 +185,11 @@ void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   ReadableStreamDefaultControllerClose(aCx, this, aRv);
 }
 
-static void ReadableStreamDefaultControllerCallPullIfNeeded(
+MOZ_CAN_RUN_SCRIPT static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
@@ -277,7 +276,6 @@ void ReadableStreamDefaultControllerEnqueue(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-close
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultController::Enqueue(JSContext* aCx,
                                               JS::Handle<JS::Value> aChunk,
                                               ErrorResult& aRv) {
@@ -357,6 +355,7 @@ void ReadableStreamDefaultControllerError(
 class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
   ~PullIfNeededNativePromiseHandler() = default;
 
+  // Virtually const, but cycle collected
   RefPtr<ReadableStreamDefaultController> mController;
 
  public:
@@ -367,7 +366,8 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       ReadableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 7.1
     mController->SetPulling(false);
@@ -378,7 +378,8 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
 
       // Step 7.2.2
       IgnoredErrorResult rv;
-      ReadableStreamDefaultControllerCallPullIfNeeded(aCx, mController, rv);
+      ReadableStreamDefaultControllerCallPullIfNeeded(
+          aCx, MOZ_KnownLive(mController), rv);
       // Not Sure How To Handle Errors Inside Native Callbacks,
       (void)NS_WARN_IF(rv.Failed());
     }
@@ -402,7 +403,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PullIfNeededNativePromiseHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
-MOZ_CAN_RUN_SCRIPT
 static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv) {
@@ -528,7 +528,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StartPromiseNativeHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
-MOZ_CAN_RUN_SCRIPT
 void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
@@ -594,7 +593,6 @@ void SetUpReadableStreamDefaultController(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source
-MOZ_CAN_RUN_SCRIPT
 void SetupReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
@@ -632,7 +630,6 @@ void SetupReadableStreamDefaultControllerFromUnderlyingSource(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1.
@@ -654,7 +651,6 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-pull
-MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
                                                 ReadRequest* aReadRequest,
                                                 ErrorResult& aRv) {

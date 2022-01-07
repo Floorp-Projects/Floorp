@@ -396,7 +396,7 @@ bool ReadableByteStreamControllerShouldCallPull(
   return false;
 }
 
-void ReadableByteStreamControllerCallPullIfNeeded(
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerCallPullIfNeeded(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
@@ -405,6 +405,7 @@ void ReadableByteStreamControllerCallPullIfNeeded(
 class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
   ~ByteStreamPullIfNeededPromiseHandler() = default;
 
+  // Virtually const, but cycle collected
   RefPtr<ReadableByteStreamController> mController;
 
  public:
@@ -427,7 +428,8 @@ class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
 
       // Step 7.2.2
       ErrorResult rv;
-      ReadableByteStreamControllerCallPullIfNeeded(aCx, mController, rv);
+      ReadableByteStreamControllerCallPullIfNeeded(
+          aCx, MOZ_KnownLive(mController), rv);
       (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Resolved Error");
     }
   }
@@ -450,7 +452,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamPullIfNeededPromiseHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerCallPullIfNeeded(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv) {
@@ -626,7 +627,6 @@ void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aChunk, ErrorResult& aRv) {
@@ -758,7 +758,6 @@ void ReadableByteStreamControllerEnqueue(
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-enqueue
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamController::Enqueue(JSContext* aCx,
                                            const ArrayBufferView& aChunk,
                                            ErrorResult& aRv) {
@@ -808,7 +807,6 @@ void ReadableByteStreamController::Error(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-cancel
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableByteStreamController::CancelSteps(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1.
@@ -859,7 +857,6 @@ void ReadableByteStreamControllerHandleQueueDrain(
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamController::PullSteps(JSContext* aCx,
                                              ReadRequest* aReadRequest,
                                              ErrorResult& aRv) {
@@ -1140,7 +1137,6 @@ static void ReadableByteStreamControllerRespondInReadableState(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-internal
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerRespondInternal(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv) {
@@ -1192,7 +1188,6 @@ void ReadableByteStreamControllerRespondInternal(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerRespond(
     JSContext* aCx, ReadableByteStreamController* aController,
     uint64_t aBytesWritten, ErrorResult& aRv) {
@@ -1247,7 +1242,6 @@ void ReadableByteStreamControllerRespond(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-respond-with-new-view
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerRespondWithNewView(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aView, ErrorResult& aRv) {
@@ -1449,7 +1443,6 @@ bool ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-pull-into
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
@@ -1682,7 +1675,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ByteStreamStartPromiseNativeHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
-MOZ_CAN_RUN_SCRIPT
 void SetUpReadableByteStreamController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableByteStreamController* aController,

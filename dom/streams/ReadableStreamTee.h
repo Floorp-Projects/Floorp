@@ -70,9 +70,9 @@ struct ReadableStreamDefaultTeeReadRequest final : public ReadRequest {
   virtual ~ReadableStreamDefaultTeeReadRequest() = default;
 };
 
-void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
-                           nsTArray<RefPtr<ReadableStream>>& aResult,
-                           ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamTee(
+    JSContext* aCx, ReadableStream* aStream,
+    nsTArray<RefPtr<ReadableStream>>& aResult, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 #endif

@@ -155,7 +155,7 @@ class WritableStreamDefaultController final : public nsISupports,
   RefPtr<WritableStream> mStream;
 };
 
-extern void SetUpWritableStreamDefaultController(
+MOZ_CAN_RUN_SCRIPT extern void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
     UnderlyingSinkStartCallbackHelper* aStartAlgorithm,
@@ -164,7 +164,8 @@ extern void SetUpWritableStreamDefaultController(
     UnderlyingSinkAbortCallbackHelper* aAbortAlgorithm, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
-extern void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
+MOZ_CAN_RUN_SCRIPT extern void
+SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* aCx, WritableStream* aStream, JS::HandleObject aUnderlyingSink,
     UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);

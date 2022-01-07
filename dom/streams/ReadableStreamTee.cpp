@@ -215,11 +215,12 @@ void ReadableStreamDefaultTeeReadRequest::ErrorSteps(
   mTeeState->SetReading(false);
 }
 
-void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
-                           ErrorResult& aRv);
-void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
-                        JS::HandleObject aView, bool aForBranch2,
-                        ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT void PullWithDefaultReader(JSContext* aCx,
+                                              TeeState* aTeeState,
+                                              ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
+                                           JS::HandleObject aView,
+                                           bool aForBranch2, ErrorResult& aRv);
 
 // Algorithm described in
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee, Steps
@@ -232,8 +233,9 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
 // NativeByteStreamTeePullAlgorithm, which implements
 // UnderlyingSourcePullCallbackHelper is the version which provies the return
 // promise.
-void ByteStreamTeePullAlgorithm(JSContext* aCx, size_t index,
-                                TeeState* aTeeState, ErrorResult& aRv) {
+MOZ_CAN_RUN_SCRIPT void ByteStreamTeePullAlgorithm(JSContext* aCx, size_t index,
+                                                   TeeState* aTeeState,
+                                                   ErrorResult& aRv) {
   MOZ_ASSERT(index == 1 || index == 2);
 
   // Step {17,18}.1: If reading is true,
@@ -270,6 +272,7 @@ void ByteStreamTeePullAlgorithm(JSContext* aCx, size_t index,
 
 class NativeByteStreamTeePullAlgorithm final
     : public UnderlyingSourcePullCallbackHelper {
+  // Virtually const, but is cycle collected
   RefPtr<TeeState> mTeeState;
   size_t mBranchIndex;
 
@@ -294,7 +297,8 @@ class NativeByteStreamTeePullAlgorithm final
       return nullptr;
     }
 
-    ByteStreamTeePullAlgorithm(aCx, mBranchIndex, mTeeState, aRv);
+    ByteStreamTeePullAlgorithm(aCx, mBranchIndex, MOZ_KnownLive(mTeeState),
+                               aRv);
 
     return returnPromise.forget();
   }
@@ -447,7 +451,7 @@ struct PullWithDefaultReaderReadRequest final : public ReadRequest {
 
         // Step 8.
         if (mTeeState->ReadAgainForBranch1()) {
-          ByteStreamTeePullAlgorithm(cx, 1, mTeeState, rv);
+          ByteStreamTeePullAlgorithm(cx, 1, MOZ_KnownLive(mTeeState), rv);
         }
       }
 
@@ -483,7 +487,6 @@ NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee:
 // Step 15.
-MOZ_CAN_RUN_SCRIPT
 void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
                            ErrorResult& aRv) {
   // Step 15.1: Not implemented until BYOB Readers are implemented.
@@ -650,12 +653,12 @@ class PullWithBYOBReader_ReadIntoRequest final : public ReadIntoRequest {
 
         // Step 8.
         if (mTeeState->ReadAgainForBranch1()) {
-          ByteStreamTeePullAlgorithm(cx, 1, mTeeState, rv);
+          ByteStreamTeePullAlgorithm(cx, 1, MOZ_KnownLive(mTeeState), rv);
           if (rv.MaybeSetPendingException(cx)) {
             return;
           }
         } else if (mTeeState->ReadAgainForBranch2()) {
-          ByteStreamTeePullAlgorithm(cx, 1, mTeeState, rv);
+          ByteStreamTeePullAlgorithm(cx, 1, MOZ_KnownLive(mTeeState), rv);
           if (rv.MaybeSetPendingException(cx)) {
             return;
           }
@@ -771,7 +774,6 @@ NS_INTERFACE_MAP_END_INHERITING(ReadIntoRequest)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 // Step 16.
-MOZ_CAN_RUN_SCRIPT
 void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
                         JS::HandleObject aView, bool aForBranch2,
                         ErrorResult& aRv) {
@@ -978,7 +980,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableByteStreamTeeCancelAlgorithm)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamTee(JSContext* aCx, ReadableStream* aStream,
                            nsTArray<RefPtr<ReadableStream>>& aResult,
                            ErrorResult& aRv) {

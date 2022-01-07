@@ -187,7 +187,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WritableStartPromiseNativeHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller
-MOZ_CAN_RUN_SCRIPT
 void SetUpWritableStreamDefaultController(
     JSContext* aCx, WritableStream* aStream,
     WritableStreamDefaultController* aController,
@@ -272,7 +271,6 @@ void SetUpWritableStreamDefaultController(
 }
 
 // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
-MOZ_CAN_RUN_SCRIPT
 void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* aCx, WritableStream* aStream, JS::HandleObject aUnderlyingSink,
     UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
