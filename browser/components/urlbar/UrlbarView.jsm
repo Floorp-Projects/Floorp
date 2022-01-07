@@ -2166,6 +2166,7 @@ class UrlbarView {
    */
   async _cacheL10nStrings() {
     let idArgs = [
+      ...this._cacheL10nIDArgsForSearchService(),
       { id: "urlbar-result-action-search-bookmarks" },
       { id: "urlbar-result-action-search-history" },
       { id: "urlbar-result-action-search-in-private" },
@@ -2174,17 +2175,52 @@ class UrlbarView {
       { id: "urlbar-result-action-visit" },
     ];
 
-    if (Services.search.defaultPrivateEngine) {
+    if (UrlbarPrefs.get("groupLabels.enabled")) {
+      idArgs.push({ id: "urlbar-group-firefox-suggest" });
+    }
+
+    if (UrlbarPrefs.get("quickSuggestEnabled")) {
+      idArgs.push({ id: "urlbar-result-action-sponsored" });
+    }
+
+    await this._l10nCache.ensureAll(idArgs);
+  }
+
+  /**
+   * A helper for l10n string caching that returns `{ id, args }` objects for
+   * strings that depend on the search service.
+   *
+   * @returns {array}
+   *   Array of `{ id, args }` objects, possibly empty.
+   */
+  _cacheL10nIDArgsForSearchService() {
+    // The search service may not be initialized if the user opens the view very
+    // quickly after startup. Skip caching related strings in that case. Strings
+    // are cached opportunistically every time the view opens, so they'll be
+    // cached soon. We could use the search service's async methods, which
+    // internally await initialization, but that would allow previously cached
+    // out-of-date strings to appear in the view while the async calls are
+    // ongoing. Generally there's no reason for our string-caching paths to be
+    // async and it may even be a bad idea (except for the final necessary
+    // `this._l10nCache.ensureAll()` call).
+    if (!Services.search.isInitialized) {
+      return [];
+    }
+
+    let idArgs = [];
+
+    let { defaultEngine, defaultPrivateEngine } = Services.search;
+    let engineNames = [defaultEngine?.name, defaultPrivateEngine?.name].filter(
+      name => name
+    );
+
+    if (defaultPrivateEngine) {
       idArgs.push({
         id: "urlbar-result-action-search-in-private-w-engine",
-        args: { engine: Services.search.defaultPrivateEngine.name },
+        args: { engine: defaultPrivateEngine.name },
       });
     }
 
-    let engineNames = [
-      Services.search.defaultEngine?.name,
-      Services.search.defaultPrivateEngine?.name,
-    ].filter(name => name);
     let engineStringIDs = [
       "urlbar-result-action-tabtosearch-web",
       "urlbar-result-action-tabtosearch-other-engine",
@@ -2196,19 +2232,14 @@ class UrlbarView {
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push(
-        { id: "urlbar-group-firefox-suggest" },
-        ...engineNames.map(engineName => ({
+        ...engineNames.map(name => ({
           id: "urlbar-group-search-suggestions",
-          args: { engine: engineName },
+          args: { engine: name },
         }))
       );
     }
 
-    if (UrlbarPrefs.get("quickSuggestEnabled")) {
-      idArgs.push({ id: "urlbar-result-action-sponsored" });
-    }
-
-    await this._l10nCache.ensureAll(idArgs);
+    return idArgs;
   }
 
   /**
