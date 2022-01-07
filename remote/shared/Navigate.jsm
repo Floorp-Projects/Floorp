@@ -43,7 +43,10 @@ function waitForInitialNavigationCompleted(browsingContext) {
         Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
     );
 
-    if (!browsingContext.webProgress.isLoadingDocument) {
+    // Right after its creation a browsing context doesn't have a window global.
+    const isInitial = !browsingContext.currentWindowGlobal;
+
+    if (!browsingContext.webProgress.isLoadingDocument && !isInitial) {
       logger.trace("Initial navigation already completed");
       resolve();
     }
