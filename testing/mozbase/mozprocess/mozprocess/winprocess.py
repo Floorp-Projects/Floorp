@@ -499,6 +499,7 @@ STILL_ACTIVE = 259
 
 # Used when we terminate a process.
 ERROR_CONTROL_C_EXIT = 0x23C
+ERROR_CONTROL_C_EXIT_DECIMAL = 3221225786
 
 # GetExitCodeProcess()
 

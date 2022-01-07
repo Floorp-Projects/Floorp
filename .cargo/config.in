@@ -20,7 +20,7 @@ rev = "3bfc47d9a571d0842676043ba60716318e946c06"
 [source."https://github.com/mozilla/midir.git"]
 git = "https://github.com/mozilla/midir.git"
 replace-with = "vendored-sources"
-rev = "dc87afbd4361ae5ec192e1fab0a6409dd13d4011"
+rev = "4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f"
 
 [source."https://github.com/mozilla/l10nregistry-rs.git"]
 git = "https://github.com/mozilla/l10nregistry-rs.git"
@@ -51,10 +51,6 @@ rev = "c51b63595a27a6ef45161012323e0261475c10c9"
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
 rev = "a1a6ba41f0c610ebe751639f25f037474ca52941"
-
-[source."https://github.com/kvark/dummy-web"]
-git = "https://github.com/kvark/dummy-web"
-replace-with = "vendored-sources"
 
 [source."https://github.com/kinetiknz/mio-named-pipes"]
 git = "https://github.com/kinetiknz/mio-named-pipes"
@@ -104,7 +100,7 @@ rev = "8ffd6ba"
 [source."https://github.com/chris-zen/coremidi.git"]
 git = "https://github.com/chris-zen/coremidi.git"
 replace-with = "vendored-sources"
-rev = "753163a8e5aeb8d69d2e0558301fd34a3d04327a"
+rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 
 [source.crates-io]
 replace-with = "vendored-sources"
