@@ -249,11 +249,11 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--disable-fission",
-            action="store_false",
-            default=True,
+            "--enable-fission",
+            action="store_true",
+            default=False,
             dest="fission",
-            help="Run tests with fission (site isolation) disabled.",
+            help="Run tests with fission (site isolation) enabled.",
         )
 
         self.add_argument(

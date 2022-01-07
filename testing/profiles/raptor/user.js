@@ -44,6 +44,11 @@ user_pref('datareporting.healthreport.uploadEnabled', false);
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1706180
 user_pref('toolkit.telemetry.initDelay', 99999999);
 
+// Explicitly turn off fission so we don't accidentally use the wrong default
+// value. This can be removed once harnesses and tasks assume fission by
+// default.
+user_pref("fission.autostart", false);
+
 // disable autoplay for raptor tests
 user_pref('media.autoplay.default', 5);
 user_pref('media.autoplay.ask-permission', true);
