@@ -427,7 +427,7 @@ struct AssertionConditionType {
     } while (false)
 #endif /* DEBUG */
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 #  define MOZ_DIAGNOSTIC_ASSERT(...)                                    \
     MOZ_ASSERT_GLUE(                                                    \
         MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
