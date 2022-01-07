@@ -408,6 +408,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
           features |= NSWindowStyleMaskClosable;
         }
       }
+      if (aBorderStyle & eBorderStyle_minimize) {
+        features |= NSWindowStyleMaskMiniaturizable;
+      }
       break;
     case eWindowType_toplevel:
     case eWindowType_dialog:
