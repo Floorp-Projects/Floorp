@@ -317,7 +317,6 @@
 #ifdef NS_PRINTING
 #  include "nsIPrintSettings.h"
 #  include "nsIPrintSettingsService.h"
-#  include "nsIWebBrowserPrint.h"
 #endif
 
 #ifdef MOZ_WEBSPEECH

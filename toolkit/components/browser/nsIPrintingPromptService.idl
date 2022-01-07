@@ -6,10 +6,11 @@
 /* Doc interface here */
 
 #include "nsISupports.idl"
-#include "nsIWebBrowserPrint.idl"
 #include "nsIWebProgressListener.idl"
 #include "nsIPrintSettings.idl"
 #include "nsIObserver.idl"
+
+interface mozIDOMWindowProxy;
 
 [scriptable, uuid(72006d06-a2a5-4250-ae92-04b2f0e2ab8d)]
 interface nsIPrintingPromptService : nsISupports

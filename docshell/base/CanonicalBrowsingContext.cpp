@@ -53,7 +53,6 @@
 
 #ifdef NS_PRINTING
 #  include "mozilla/embedding/printingui/PrintingParent.h"
-#  include "nsIWebBrowserPrint.h"
 #endif
 
 using namespace mozilla::ipc;
