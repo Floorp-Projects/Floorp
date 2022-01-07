@@ -5050,6 +5050,12 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
+
+  # Log properties of the video surface, buffer, and format.
+-   name: gfx.core-animation.specialize-video.log
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
