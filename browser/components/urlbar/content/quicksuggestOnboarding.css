@@ -8,29 +8,42 @@
  */
 
 :root {
-  /* As this dialog is designed under assuming the base font size is 11px,
-     specify image size using current font-size. */
-  --introduction-logo-width: calc(158 / 11 * 1em);
-  --introduction-logo-height: calc(114 / 11 * 1em);
-  --main-logo-width: calc(100 / 11 * 1em);
-  --main-logo-height: calc(64 / 11 * 1em);
-  /* --fixed-large-margin is constant regardless of compact mode. */
-  --fixed-large-margin: 24px;
+  --introduction-magglass-logo-width: 176px;
+  --introduction-magglass-logo-height: 128px;
+  --introduction-firefox-logo-width: 72px;
+  --introduction-firefox-logo-height: 72px;
+  --main-magglass-logo-width: 88px;
+  --main-magglass-logo-height: 64px;
+  --main-firefox-logo-width: 50px;
+  --main-firefox-logo-height: 50px;
+  --x-large-margin: 40px;
   --large-margin: 24px;
+  --large-margin-const: 24px;
   --small-margin: 16px;
+  --small-margin-const: 16px;
+  --x-small-margin-const: 8px;
   --section-vertical-padding: 32px;
   --section-horizontal-padding: 64px;
 }
 
 body.compact {
-  /* 15px is the usual font-size. */
-  font-size: 13px;
-  --main-logo-width: calc(100 / 13 * 1em);
-  --main-logo-height: calc(64 / 13 * 1em);
+  --main-magglass-logo-width: 66px;
+  --main-magglass-logo-height: 48px;
+  --main-firefox-logo-width: 32px;
+  --main-firefox-logo-height: 32px;
+  --x-large-margin: 20px;
   --large-margin: 12px;
   --small-margin: 8px;
   --section-vertical-padding: 16px;
   --section-horizontal-padding: 32px;
+
+  /* 15px is the non-compact font-size. */
+  font-size: 13px;
+}
+
+body,
+section {
+  width: 536px;
 }
 
 section {
@@ -40,20 +53,30 @@ section {
   flex-direction: column;
   text-align: center;
   padding: var(--section-vertical-padding) var(--section-horizontal-padding);
-  width: 536px;
-  /* This is the natural height of the main section. */
-  min-height: 587px;
+  /* This is the largest approximate natural height of the main section across
+     platforms and dialog variations, erring on the side of being slightly
+     larger than necessary. If you change this, also update COMPACT_MODE_HEIGHT
+     in the JS. */
+  min-height: 650px;
 }
 
 body.compact section {
-  /* This is the natural height of the main section in compact mode. */
-  min-height: 450px;
+  /* This is the largest approximate natural height of the main section across
+     platforms and dialog variations in compact mode, erring on the side of
+     being slightly larger than necessary. */
+  min-height: 510px;
+}
+
+a {
+  cursor: pointer;
+  font-weight: normal;
 }
 
 .title {
   font-size: 1.6em;
   font-weight: 600;
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 .logo {
@@ -77,42 +100,95 @@ body.compact section {
 }
 
 #introduction-section .logo {
-  background-image: url("quicksuggestOnboarding_magglass_animation.svg");
-  width: var(--introduction-logo-width);
-  height: var(--introduction-logo-height);
+  background-image: url("quicksuggestOnboarding_magglass.svg");
+  width: var(--introduction-magglass-logo-width);
+  height: var(--introduction-magglass-logo-height);
   margin-block-end: var(--large-margin);
 }
 
-@media (prefers-reduced-motion: reduce) {
+#introduction-section .logo.firefox {
+  background-image: url("chrome://branding/content/about-logo.svg");
+  width: var(--introduction-firefox-logo-width);
+  height: var(--introduction-firefox-logo-height);
+}
+
+@media (prefers-reduced-motion: no-preference) {
   #introduction-section .logo {
-    background-image: url("quicksuggestOnboarding_magglass.svg");
+    background-image: url("quicksuggestOnboarding_magglass_animation.svg");
   }
 }
 
 #introduction-section .title {
-  margin-block-end: var(--large-margin);
+  margin-block-end: var(--x-large-margin);
+}
+
+#onboardingClose {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  margin: 16px;
+  padding: 0;
+  line-height: 0;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+#onboardingClose:not(.active) {
+  display: none;
+}
+
+#onboardingClose img {
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #main-section {
+  display: flex;
+}
+
+#main-section:not(.active) {
   display: none;
 }
 
 #main-section .logo {
   background-image: url("quicksuggestOnboarding_magglass.svg");
-  width: var(--main-logo-width);
-  height: var(--main-logo-height);
+  width: var(--main-magglass-logo-width);
+  height: var(--main-magglass-logo-height);
   margin-block-end: var(--large-margin);
+}
+
+#main-section .logo.firefox {
+  background-image: url("chrome://branding/content/about-logo.svg");
+  width: var(--main-firefox-logo-width);
+  height: var(--main-firefox-logo-height);
 }
 
 #main-section .title {
-  margin-block-end: var(--large-margin);
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .description-section {
+  /* The effective visual margin between the description and first option should
+      be --large-margin-const. Each child in the description has a bottom margin
+      of --small-margin, so subtract it from --large-margin-const. */
+  margin-block: 0 calc(var(--large-margin-const) - var(--small-margin));
 }
 
 #main-section .description {
-  margin-block: 0 var(--fixed-large-margin);
   font-size: 1.1em;
   font-weight: 400;
   line-height: 1.6;
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .privacy-first {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .privacy-first:not(.active) {
+  display: none;
 }
 
 #main-section .option {
@@ -120,8 +196,13 @@ body.compact section {
   border: 2px solid var(--in-content-box-info-background);
   display: flex;
   text-align: start;
-  padding: var(--small-margin);
-  width: calc(100% - (var(--small-margin) + 2px) * 2);
+  /* Use --small-margin-const for the horizontal padding to make the option's
+     horizontal padding larger than the vertical padding in compact mode. The
+     radio button and text are too close to the left and right edges of the
+     option's border otherwise. */
+  padding: var(--small-margin) var(--small-margin-const);
+  width: 100% - calc(2 * var(--section-horizontal-padding));
+  box-sizing: border-box;
   flex-direction: row;
   position: relative;
 }
@@ -135,7 +216,7 @@ body.compact section {
 }
 
 #main-section .option.reject {
-  margin-block-end: var(--fixed-large-margin);
+  margin-block-end: var(--large-margin-const);
 }
 
 #main-section .option > label {
@@ -176,14 +257,12 @@ body:not(.compact) #main-section .option > input {
   font-size: 1em;
 }
 
-#main-section a {
-  cursor: pointer;
-  font-weight: normal;
+button {
+  margin-block-end: var(--large-margin);
 }
 
-button,
-#onboardingNotNow {
-  margin-block-end: var(--small-margin);
+#onboardingSkipLink {
+  margin-block-end: var(--x-small-margin-const);
 }
 
 /* transition from introduction to main */
@@ -195,7 +274,6 @@ button,
 }
 
 #main-section.active {
-  display: flex;
   animation: fadein 0.3s forwards;
 }
 
