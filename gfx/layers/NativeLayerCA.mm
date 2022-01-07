@@ -1234,6 +1234,34 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     MOZ_ASSERT(pixelBuffer == nullptr, "Failed call shouldn't allocate memory.");
     return false;
   }
+
+  if (StaticPrefs::gfx_core_animation_specialize_video_check_color_space()) {
+    // Ensure the resulting pixel buffer has a color space. If it doesn't, then modify
+    // the surface and create the buffer again.
+    CFTypeRefPtr<CGColorSpaceRef> colorSpace =
+        CFTypeRefPtr<CGColorSpaceRef>::WrapUnderGetRule(CVImageBufferGetColorSpace(pixelBuffer));
+    if (!colorSpace) {
+      printf("VIDEO_LOG: pixel buffer created by EnqueueSurface has no color space.\n");
+
+      // Use our main display color space.
+      colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
+          CGDisplayCopyColorSpace(CGMainDisplayID()));
+      auto colorData =
+          CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(CGColorSpaceCopyICCData(colorSpace.get()));
+      IOSurfaceSetValue(aSurfaceRef, CFSTR("IOSurfaceColorSpace"), colorData.get());
+
+      // Get rid of our old pixel buffer and create a new one.
+      CFRelease(pixelBuffer);
+      cvValue =
+          CVPixelBufferCreateWithIOSurface(kCFAllocatorDefault, aSurfaceRef, nullptr, &pixelBuffer);
+      if (cvValue != kCVReturnSuccess) {
+        MOZ_ASSERT(pixelBuffer == nullptr, "Failed call shouldn't allocate memory.");
+        return false;
+      }
+    }
+    MOZ_ASSERT(CVImageBufferGetColorSpace(pixelBuffer), "Pixel buffer should have a color space.");
+  }
+
   CFTypeRefPtr<CVPixelBufferRef> pixelBufferDeallocator =
       CFTypeRefPtr<CVPixelBufferRef>::WrapUnderCreateRule(pixelBuffer);
 
