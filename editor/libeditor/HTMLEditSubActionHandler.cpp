@@ -632,9 +632,10 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     }
 
     // If the selection is in empty inline HTML elements, we should delete
-    // them.
-    if (mPlaceholderBatch && SelectionRef().IsCollapsed() &&
-        SelectionRef().GetFocusNode()) {
+    // them unless it's inserted intentionally.
+    if (mPlaceholderBatch &&
+        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyInlineElements &&
+        SelectionRef().IsCollapsed() && SelectionRef().GetFocusNode()) {
       RefPtr<Element> mostDistantEmptyInlineAncestor = nullptr;
       for (Element* ancestor :
            SelectionRef().GetFocusNode()->InclusiveAncestorsOfType<Element>()) {
