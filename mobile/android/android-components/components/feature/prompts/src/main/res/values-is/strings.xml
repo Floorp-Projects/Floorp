@@ -82,4 +82,29 @@
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Sýsla með innskráningar</string>
 
-    </resources>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Fletta út tillögum að innskráningu</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Fella saman tillögur að innskráningu</string>
+
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Tillögur að innskráningu</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Senda gögn til baka á þetta vefsvæði?</string>
+    <string name="mozac_feature_prompt_repost_message">Ef þú endurlest þessa síðu gæti það endurtekið nýlegar aðgerðir, eins og að senda greiðslu eða setja inn athugasemd tvisvar.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Endursenda gögn</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Hætta við</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Veldu greiðslukort</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Fletta út tillögum að greiðslukortum</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Fella saman tillögur að greiðslukortum</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Sýsla með greiðslukort</string>
+</resources>

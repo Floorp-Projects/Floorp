@@ -43,4 +43,7 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">عمل مکمل کریں بمع</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s کھولنے میں ناکام رہا</string>
-</resources>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">نجی ڈاؤن لوڈز کو منسوخ کریں؟</string>
+    </resources>

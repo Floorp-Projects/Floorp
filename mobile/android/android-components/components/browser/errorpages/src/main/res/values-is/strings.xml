@@ -16,7 +16,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>Ekki er hægt að sýna síðuna vegna þess að ekki var hægt að auðkenna gögnin.</li>
-        <li>Hafið samband við vefstjóra svæðisins til að láta hann vita af þessu vandamáli.</li>
+        <li>Hafið samband við vefstjóra vefsvæðisins til að láta hann vita af þessu vandamáli.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
@@ -44,7 +44,7 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">Tenging slitnaði</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-      <p>Vafrinn náði að tengjast en tengingin rofnaði vði flutning upplýsinga. Vinsamlega reynið aftur.</p>
+      <p>Vafrinn náði að tengjast en tengingin rofnaði vði flutning upplýsinga. Endilega reyndu aftur.</p>
       <ul>
         <li>Vefsvæðið gæti verið ótiltækt tímabundið eða of undir of miklu álagi. Reyndu aftur eftir smá tíma.</li>
         <li>Athugaðu gagnatengingu tækisins eða þráðulausu tenginguna ef þú getur ekki hlaðið síður.</li>
@@ -108,7 +108,7 @@
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
-      <p>Vafrinn náði að tengjast en tengingin rofnaði við flutning upplýsinga. Vinsamlega reynið aftur.</p>
+      <p>Vafrinn náði að tengjast en tengingin rofnaði við flutning upplýsinga. Endilega reyndu aftur.</p>
       <ul>
         <li>Vefsvæðið gæti verið ótiltækt tímabundið eða of undir of miklu álagi. Reyndu aftur eftir smá tíma.</li>
         <li>Athugaðu gagnatengingu tækisins eða þráðulausu tenginguna ef þú getur ekki hlaðið neinar síður.</li>
@@ -232,13 +232,13 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Villa vegna spilliforrits</string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Vandamál með spilliforrit</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
       <p>Vefsvæðið %1$s hefur verið tilkynnt sem árásarsvæði og aðgangur hefur verið hindraður vegna öryggisstillinga.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Óæskilegt vefsvæði</string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Vandamál með óæskilegt vefsvæði</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
       <p>Tilkynnt hefur verið að vefsvæðið %1$s sé að deila óæskilegum hugbúnaði og hefur aðgangur að því verið lokaður vegna öryggisstillinga.</p>]]></string>
@@ -255,6 +255,10 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Vefsvæðið %1$s hefur verið tilkynnt sem svindlsvæði og aðgangur hefur verið hindraður vegna öryggisstillinga.</p>]]></string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Öruggt vefsvæði ekki tiltækt</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Þú hefur virkjað Einungis-HTTPS-ham til að auka öryggi en HTTPS-útgáfa af <em>%1$s</em> er ekki tiltæk.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Halda áfram á HTTP-vefsvæði</string>
 </resources>

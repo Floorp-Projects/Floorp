@@ -31,4 +31,16 @@
     <string name="mozac_feature_sitepermissions_always_allow">Alltaf</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">Aldrei</string>
+    <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_persistent_storage_title">Leyfa %1$s að geyma gögn í varanlegri geymslu?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Leyfa %1$s að spila DRM-stýrt efni?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">Leyfa %1$s að nota vefkökur sínar á %2$s?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">Þú gætir viljað loka fyrir aðgang ef það er ekki ljóst hvers vegna %s þarfnast þessara gagna.</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">Frekari upplýsingar</string>
 </resources>

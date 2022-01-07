@@ -33,4 +33,6 @@
     <string name="mozac_feature_sitepermissions_never_allow">کبھی نہیں</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">%1$s  کو DRM کے زیر کنٹرول شدہ مواد چلانے کی اجازت دیں؟</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">مزید سیکھیں</string>
 </resources>

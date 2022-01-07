@@ -7,7 +7,7 @@
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Opna mynd í nýjum flipa</string>
     <!-- Text for context menu item to save / download the link. -->
-    <string name="mozac_feature_contextmenu_download_link">Tengill til að hala niður</string>
+    <string name="mozac_feature_contextmenu_download_link">Niðurhalstengill</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Deila tengli</string>
     <!-- Text for context menu item to share the image with an other app. -->
@@ -25,7 +25,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nýr einkaflipi opnaður</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">Afritað tengil á klemmuspjald</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Tengill afritaður á klippispjald</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Skipta</string>
     <!-- Text for context menu item to open the link in an external app. -->
@@ -35,7 +35,7 @@
     <!-- Text for context menu item to copy the email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_email_address">Afrita tölvupóstfang</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Tölvupósfang afritað á klippispjald</string>
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Tölvupóstfang afritað á klippispjald</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Bæta við tengilið</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
