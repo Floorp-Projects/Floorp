@@ -96,7 +96,7 @@ def bootstrap_toolchain_tasks(host):
     # amount of data to what we use, so that trace logs can be more useful.
     tasks = {
         k: {
-            "index": t.optimization["index-search"][0],
+            "index": t.optimization["index-search"],
             "artifact": t.attributes["toolchain-artifact"],
         }
         for k, t in tasks.items()
@@ -124,6 +124,7 @@ def bootstrap_path(path, **kwargs):
     @imports("subprocess")
     @imports("sys")
     @imports(_from="mozbuild.util", _import="ensureParentDir")
+    @imports(_from="importlib", _import="import_module")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
     def bootstrap_path(bootstrap, toolchains_base_dir, tasks, build_env, path):
@@ -144,8 +145,8 @@ def bootstrap_path(path, **kwargs):
             if not task:
                 return False
             task_index = task["index"]
-            log.debug("Resolved %s to %s", label, task_index)
-            task_index = task_index.split(".")[-1]
+            log.debug("Resolved %s to %s", label, task_index[0])
+            task_index = task_index[0].split(".")[-1]
             artifact = task["artifact"]
             # `mach artifact toolchain` doesn't support authentication for
             # private artifacts.
@@ -161,6 +162,18 @@ def bootstrap_path(path, **kwargs):
             if index == task_index and exists:
                 log.debug("%s is up-to-date", label)
                 return True
+            # Manually import with import_module so that we can gracefully disable bootstrap
+            # when e.g. building from a js standalone tarball, that doesn't contain the
+            # taskgraph code. In those cases, `mach artifact toolchain --from-build` would
+            # also fail.
+            try:
+                IndexSearch = import_module(
+                    "gecko_taskgraph.optimize.strategies"
+                ).IndexSearch
+            except Exception:
+                log.debug("Cannot bootstrap %s: missing taskgraph module", label)
+                return False
+            task_id = IndexSearch().should_replace_task(task, {}, None, task["index"])
             log.info(
                 "%s bootstrapped toolchain in %s",
                 "Updating" if exists else "Installing",
@@ -174,8 +187,8 @@ def bootstrap_path(path, **kwargs):
                     "--log-no-times",
                     "artifact",
                     "toolchain",
-                    "--from-build",
-                    label,
+                    "--from-task",
+                    f"{task_id}:{artifact}",
                 ],
                 cwd=toolchains_base_dir,
                 check=True,
