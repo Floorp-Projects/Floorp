@@ -220,7 +220,7 @@ class SourcesTree extends Component {
   renderTree() {
     const { expanded, focused, projectRoot } = this.props;
 
-    const { highlightItems, listItems, parentMap, sourceTree } = this.state;
+    const { highlightItems, listItems, getParent, sourceTree } = this.state;
 
     const treeProps = {
       autoExpandAll: false,
@@ -228,7 +228,7 @@ class SourcesTree extends Component {
       expanded,
       focused,
       getChildren: getChildren,
-      getParent: item => parentMap.get(item),
+      getParent,
       getPath: this.getPath,
       getRoots: () => this.getRoots(sourceTree, projectRoot),
       highlightItems,
