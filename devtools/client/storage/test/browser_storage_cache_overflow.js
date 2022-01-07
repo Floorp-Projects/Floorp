@@ -16,10 +16,16 @@ add_task(async function() {
   gUI.tree.expandAll();
 
   await selectTreeItem(["Cache", "https://example.com", "lorem"]);
-  checkCellLength(ITEMS_PER_PAGE);
+  await waitFor(
+    () => getCellLength() == ITEMS_PER_PAGE,
+    "Wait until the first 50 messages have been rendered"
+  );
 
   await scroll();
-  checkCellLength(ITEMS_PER_PAGE * 2);
+  await waitFor(
+    () => getCellLength() == ITEMS_PER_PAGE * 2,
+    "Wait until 100 messages have been rendered"
+  );
 
   info("Close Toolbox");
   await gDevTools.closeToolboxForTab(gBrowser.selectedTab);

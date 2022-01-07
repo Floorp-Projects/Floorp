@@ -1064,11 +1064,12 @@ async function performAdd(store) {
 const CELL_SELECTOR =
   "#storage-table .table-widget-wrapper:first-child .table-widget-cell";
 
-function checkCellLength(len) {
-  const cells = gPanelWindow.document.querySelectorAll(CELL_SELECTOR);
-  const msg = `Table should initially display ${len} items`;
+function getCellLength() {
+  return gPanelWindow.document.querySelectorAll(CELL_SELECTOR).length;
+}
 
-  is(cells.length, len, msg);
+function checkCellLength(len) {
+  is(getCellLength(), len, `Table should initially display ${len} items`);
 }
 
 async function scroll() {
