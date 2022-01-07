@@ -166,8 +166,8 @@ def run_tests(config, browser_config):
     if browser_config["subtests"]:
         browser_config["preferences"]["talos.subtests"] = browser_config["subtests"]
 
-    if browser_config.get("enable_fission", False):
-        browser_config["preferences"]["fission.autostart"] = True
+    if not browser_config.get("fission", True):
+        browser_config["preferences"]["fission.autostart"] = False
 
     browser_config["preferences"]["network.proxy.type"] = 2
     browser_config["preferences"]["network.proxy.autoconfig_url"] = (
@@ -268,7 +268,7 @@ function FindProxyForURL(url, host) {
         talos_results.add_extra_option("gecko-profile")
 
     # differentiate fission vs non-fission results in perfherder
-    if browser_config.get("enable_fission", False):
+    if browser_config.get("fission", True):
         talos_results.add_extra_option("fission")
 
     # differentiate webrender from non-webrender results
