@@ -17,19 +17,6 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_ADDREF(MemoryBlobImpl::DataOwnerAdapter)
-NS_IMPL_RELEASE(MemoryBlobImpl::DataOwnerAdapter)
-
-NS_INTERFACE_MAP_BEGIN(MemoryBlobImpl::DataOwnerAdapter)
-  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
-  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
-  NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
-                                     mSerializableInputStream)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
-NS_INTERFACE_MAP_END
-
 // static
 already_AddRefed<MemoryBlobImpl> MemoryBlobImpl::CreateWithCustomLastModified(
     void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
@@ -51,70 +38,12 @@ already_AddRefed<MemoryBlobImpl> MemoryBlobImpl::CreateWithLastModifiedNow(
 }
 
 nsresult MemoryBlobImpl::DataOwnerAdapter::Create(DataOwner* aDataOwner,
-                                                  uint32_t aStart,
-                                                  uint32_t aLength,
+                                                  size_t aStart, size_t aLength,
                                                   nsIInputStream** _retval) {
-  nsresult rv;
   MOZ_ASSERT(aDataOwner, "Uh ...");
-
-  nsCOMPtr<nsIInputStream> stream;
-
-  rv = NS_NewByteInputStream(
-      getter_AddRefs(stream),
-      Span(static_cast<const char*>(aDataOwner->mData) + aStart, aLength),
-      NS_ASSIGNMENT_DEPEND);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*_retval = new MemoryBlobImpl::DataOwnerAdapter(aDataOwner, stream,
-                                                            aLength));
-
-  return NS_OK;
-}
-
-void MemoryBlobImpl::DataOwnerAdapter::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void MemoryBlobImpl::DataOwnerAdapter::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-template <typename M>
-void MemoryBlobImpl::DataOwnerAdapter::SerializeInternal(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
-  MOZ_ASSERT(aSizeUsed);
-
-  // If we'd be serializing the underlying nsStringInputStream as a pipe,
-  // serialize ourselves as a pipe directly instead to avoid the string copy in
-  // nsStringInputStream's serialize method. Otherwise we'll delegate and
-  // serialize as a string internally.
-  if (mLength >= aMaxSize) {
-    *aSizeUsed = 0;
-    mozilla::ipc::InputStreamHelper::SerializeInputStreamAsPipe(
-        this, aParams, aDelayedStart, aManager);
-    return;
-  }
-
-  mSerializableInputStream->Serialize(aParams, aFileDescriptors, aDelayedStart,
-                                      aMaxSize, aSizeUsed, aManager);
-}
-
-bool MemoryBlobImpl::DataOwnerAdapter::Deserialize(
-    const mozilla::ipc::InputStreamParams&, const FileDescriptorArray&) {
-  MOZ_CRASH("This method should never be called");
-  return false;
+  Span data{static_cast<const char*>(aDataOwner->mData) + aStart, aLength};
+  RefPtr adapter = new MemoryBlobImpl::DataOwnerAdapter(aDataOwner, data);
+  return NS_NewByteInputStream(_retval, adapter);
 }
 
 already_AddRefed<BlobImpl> MemoryBlobImpl::CreateSlice(
