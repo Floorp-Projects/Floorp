@@ -457,12 +457,12 @@ class Raptor(
                 },
             ],
             [
-                ["--enable-fission"],
+                ["--disable-fission"],
                 {
-                    "action": "store_true",
-                    "dest": "enable_fission",
-                    "default": False,
-                    "help": "Enable Fission (site isolation) in Gecko.",
+                    "action": "store_false",
+                    "dest": "fission",
+                    "default": True,
+                    "help": "Disable Fission (site isolation) in Gecko.",
                 },
             ],
             [
@@ -906,8 +906,8 @@ class Raptor(
             options.extend(["--disable-perf-tuning"])
         if self.config.get("cold", False):
             options.extend(["--cold"])
-        if self.config.get("enable_fission", False):
-            options.extend(["--enable-fission"])
+        if not self.config.get("fission", True):
+            options.extend(["--disable-fission"])
         if self.config.get("verbose", False):
             options.extend(["--verbose"])
         if self.config.get("extra_prefs"):
