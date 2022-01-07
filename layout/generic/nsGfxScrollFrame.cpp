@@ -1101,19 +1101,46 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
       scrolledArea, ReflowChildFlags::Default);
 }
 
-nscoord nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(
+nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
     gfxContext* aRenderingContext) {
-  ScrollStyles ss = GetScrollStyles();
-  if (ss.mVertical != StyleOverflow::Scroll || !mHelper.mVScrollbarBox)
+  const bool isVerticalWM = GetWritingMode().IsVertical();
+  nsIFrame* inlineEndScrollbarBox =
+      isVerticalWM ? mHelper.mHScrollbarBox : mHelper.mVScrollbarBox;
+  if (!inlineEndScrollbarBox) {
+    // No scrollbar box frame means no intrinsic size.
     return 0;
+  }
 
-  // Don't need to worry about reflow depth here since it's
-  // just for scrollbars
+  const auto* styleForScrollbar = nsLayoutUtils::StyleForScrollbar(this);
+  if (styleForScrollbar->StyleUIReset()->mScrollbarWidth ==
+      StyleScrollbarWidth::None) {
+    // Scrollbar shouldn't appear at all with "scrollbar-width: none".
+    return 0;
+  }
+
+  const auto& styleScrollbarGutter =
+      styleForScrollbar->StyleDisplay()->mScrollbarGutter;
+  ScrollStyles ss = GetScrollStyles();
+  const StyleOverflow& inlineEndStyleOverflow =
+      isVerticalWM ? ss.mHorizontal : ss.mVertical;
+
+  // Return the scrollbar-gutter size only if we have "overflow:scroll" or
+  // non-auto "scrollbar-gutter", so early-return here if the conditions aren't
+  // satisfied.
+  if (inlineEndStyleOverflow != StyleOverflow::Scroll &&
+      styleScrollbarGutter == StyleScrollbarGutter::AUTO) {
+    return 0;
+  }
+
+  // No need to worry about reflow depth here since it's just for scrollbars.
   nsBoxLayoutState bls(PresContext(), aRenderingContext, 0);
-  nsSize vScrollbarPrefSize(0, 0);
-  GetScrollbarMetrics(bls, mHelper.mVScrollbarBox, nullptr,
-                      &vScrollbarPrefSize);
-  return vScrollbarPrefSize.width;
+  nsSize scrollbarPrefSize;
+  GetScrollbarMetrics(bls, inlineEndScrollbarBox, nullptr, &scrollbarPrefSize);
+  const nscoord scrollbarSize =
+      isVerticalWM ? scrollbarPrefSize.height : scrollbarPrefSize.width;
+  const auto bothEdges =
+      bool(styleScrollbarGutter & StyleScrollbarGutter::BOTH_EDGES);
+  return bothEdges ? scrollbarSize * 2 : scrollbarSize;
 }
 
 // Legacy, this sucks!
@@ -1144,7 +1171,7 @@ nscoord nsHTMLScrollFrame::GetMinISize(gfxContext* aRenderingContext) {
   }();
 
   DISPLAY_MIN_INLINE_SIZE(this, result);
-  return result + GetIntrinsicVScrollbarWidth(aRenderingContext);
+  return result + IntrinsicScrollbarGutterSizeAtInlineEdges(aRenderingContext);
 }
 
 /* virtual */
@@ -1154,8 +1181,8 @@ nscoord nsHTMLScrollFrame::GetPrefISize(gfxContext* aRenderingContext) {
           ? 0
           : mHelper.mScrolledFrame->GetPrefISize(aRenderingContext);
   DISPLAY_PREF_INLINE_SIZE(this, result);
-  return NSCoordSaturatingAdd(result,
-                              GetIntrinsicVScrollbarWidth(aRenderingContext));
+  return NSCoordSaturatingAdd(
+      result, IntrinsicScrollbarGutterSizeAtInlineEdges(aRenderingContext));
 }
 
 nsresult nsHTMLScrollFrame::GetXULPadding(nsMargin& aMargin) {
