@@ -141,7 +141,7 @@ class HomeMenu(
 
         val extensionsItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_add_ons),
-            R.drawable.ic_addons_extensions,
+            R.drawable.mozac_ic_extensions,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Extensions)
