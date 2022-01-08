@@ -463,7 +463,7 @@
 
     <style name="QuickSettingsLargeText.Icon">
         <item name="android:drawablePadding">8dp</item>
-        <item name="drawableEndCompat">@drawable/ic_arrowhead_right</item>
+        <item name="drawableEndCompat">@drawable/mozac_ic_arrowhead_right</item>
     </style>
 
     <style name="QuickSettingsText.Icon">

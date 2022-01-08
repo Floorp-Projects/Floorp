@@ -30,7 +30,7 @@
         android:layout_alignParentEnd="true"
         android:text="@string/enhanced_tracking_protection_details"
         android:visibility="gone"
-        app:drawableEndCompat="@drawable/ic_arrowhead_right"
+        app:drawableEndCompat="@drawable/mozac_ic_arrowhead_right"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

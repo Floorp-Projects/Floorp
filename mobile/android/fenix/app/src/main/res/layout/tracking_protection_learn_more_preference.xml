@@ -81,7 +81,7 @@
         app:layout_constraintBottom_toBottomOf="@id/learn_more"
         app:layout_constraintStart_toEndOf="@id/learn_more"
         app:layout_constraintTop_toTopOf="@id/learn_more"
-        app:srcCompat="@drawable/ic_arrowhead_right" />
+        app:srcCompat="@drawable/mozac_ic_arrowhead_right" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
