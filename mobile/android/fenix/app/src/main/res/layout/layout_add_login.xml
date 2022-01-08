@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/credit_cards_saved_cards_item_margin_start"
-        app:srcCompat="@drawable/ic_new"
+        app:srcCompat="@drawable/mozac_ic_new"
         android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="@id/add_login_text"
         app:layout_constraintStart_toStartOf="parent"

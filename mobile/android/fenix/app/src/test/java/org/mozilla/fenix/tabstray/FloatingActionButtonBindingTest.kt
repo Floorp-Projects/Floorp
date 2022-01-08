@@ -99,7 +99,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 1) { actionButton.show() }
         verify(exactly = 0) { actionButton.extend() }
         verify(exactly = 0) { actionButton.hide() }
-        verify(exactly = 1) { actionButton.setIconResource(R.drawable.ic_new) }
+        verify(exactly = 1) { actionButton.setIconResource(R.drawable.mozac_ic_new) }
         verify(exactly = 1) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.PrivateTabs.ordinal)))
@@ -110,7 +110,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 1) { actionButton.extend() }
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.tab_drawer_fab_content) }
-        verify(exactly = 2) { actionButton.setIconResource(R.drawable.ic_new) }
+        verify(exactly = 2) { actionButton.setIconResource(R.drawable.mozac_ic_new) }
         verify(exactly = 2) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.SyncedTabs.ordinal)))

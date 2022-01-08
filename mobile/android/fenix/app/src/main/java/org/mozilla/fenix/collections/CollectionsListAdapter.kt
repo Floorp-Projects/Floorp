@@ -49,7 +49,7 @@ class CollectionsListAdapter(
             holder.textView.putCompoundDrawablesRelativeWithIntrinsicBounds(
                 start = AppCompatResources.getDrawable(
                     holder.textView.context,
-                    R.drawable.ic_new
+                    R.drawable.mozac_ic_new
                 )
             )
         } else {

@@ -157,7 +157,7 @@ class CreditCardsSettingFragment : BiometricPromptPreferenceFragment() {
             manageSavedCardsPreference.title =
                 getString(R.string.preferences_credit_cards_manage_saved_cards)
         } else {
-            manageSavedCardsPreference.setIcon(R.drawable.ic_new)
+            manageSavedCardsPreference.setIcon(R.drawable.mozac_ic_new)
             manageSavedCardsPreference.title =
                 getString(R.string.preferences_credit_cards_add_credit_card)
         }

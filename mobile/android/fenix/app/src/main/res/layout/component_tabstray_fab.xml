@@ -20,5 +20,5 @@
     android:visibility="gone"
     app:elevation="99dp"
     app:borderWidth="0dp"
-    app:icon="@drawable/ic_new"
+    app:icon="@drawable/mozac_ic_new"
     app:iconTint="@color/photonWhite" />
