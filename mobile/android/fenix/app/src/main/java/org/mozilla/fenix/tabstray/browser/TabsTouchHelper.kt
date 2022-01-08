@@ -84,7 +84,7 @@ class TouchCallback(
         }
 
         val icon = recyclerView.context.getDrawableWithTint(
-            R.drawable.ic_delete,
+            R.drawable.mozac_ic_delete,
             recyclerView.context.getColorFromAttr(R.attr.destructive)
         )!!
         val background = AppCompatResources.getDrawable(

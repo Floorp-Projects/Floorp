@@ -44,7 +44,7 @@ class SwipeToDeleteCallback(
         isCurrentlyActive: Boolean
     ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-        val icon = AppCompatResources.getDrawable(recyclerView.context, R.drawable.ic_delete)
+        val icon = AppCompatResources.getDrawable(recyclerView.context, R.drawable.mozac_ic_delete)
         icon?.setTint(recyclerView.context.getColorFromAttr(R.attr.destructive))
 
         val backgroundDrawable = when {

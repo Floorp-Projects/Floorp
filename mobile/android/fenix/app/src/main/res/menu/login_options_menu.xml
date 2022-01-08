@@ -25,7 +25,7 @@
     <item
         android:id="@+id/delete_login_button"
         android:contentDescription="@string/login_menu_delete_button"
-        android:icon="@drawable/ic_delete"
+        android:icon="@drawable/mozac_ic_delete"
         android:minWidth="82dp"
         android:padding="20dp"
         android:paddingStart="20dp"
