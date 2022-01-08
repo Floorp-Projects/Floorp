@@ -2593,43 +2593,49 @@ void nsPresContext::NotifyNonBlankPaint() {
 }
 
 void nsPresContext::NotifyContentfulPaint() {
+  if (mHadContentfulPaint) {
+    return;
+  }
   nsRootPresContext* rootPresContext = GetRootPresContext();
   if (!rootPresContext) {
     return;
   }
-  if (!mHadContentfulPaint) {
-#if defined(MOZ_WIDGET_ANDROID)
-    if (!mHadNonTickContentfulPaint) {
-      (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
-                                CanBubble::eYes, ChromeOnlyDispatch::eYes))
-          ->PostDOMEvent();
-    }
+  if (!mHadNonTickContentfulPaint) {
+#ifdef MOZ_WIDGET_ANDROID
+    (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
+                              CanBubble::eYes, ChromeOnlyDispatch::eYes))
+        ->PostDOMEvent();
 #endif
-    if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
-      if (!mHadNonTickContentfulPaint) {
-        rootPresContext->RefreshDriver()
-            ->AddForceNotifyContentfulPaintPresContext(this);
-        mHadNonTickContentfulPaint = true;
+    if (rootPresContext == this && IsChrome()) {
+      if (nsCOMPtr<nsIWidget> rootWidget = GetRootWidget()) {
+        rootWidget->DidGetContentfulPaint();
       }
-      return;
     }
-    mHadContentfulPaint = true;
-    mFirstContentfulPaintTransactionId =
-        Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-    if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
-      if (Performance* perf = innerWindow->GetPerformance()) {
-        TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
-            /* aEnsureTimerStarted */ false);
-        MOZ_ASSERT(!nowTime.IsNull(),
-                   "Most recent refresh timestamp should exist since we are in "
-                   "a refresh driver tick");
-        MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
-                   "We should only notify contentful paint during refresh "
-                   "driver ticks");
-        RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
-            perf, u"first-contentful-paint"_ns, nowTime);
-        perf->SetFCPTimingEntry(paintTiming);
-      }
+  }
+  if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
+    if (!mHadNonTickContentfulPaint) {
+      rootPresContext->RefreshDriver()
+          ->AddForceNotifyContentfulPaintPresContext(this);
+      mHadNonTickContentfulPaint = true;
+    }
+    return;
+  }
+  mHadContentfulPaint = true;
+  mFirstContentfulPaintTransactionId =
+      Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+  if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
+    if (Performance* perf = innerWindow->GetPerformance()) {
+      TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
+          /* aEnsureTimerStarted */ false);
+      MOZ_ASSERT(!nowTime.IsNull(),
+                 "Most recent refresh timestamp should exist since we are in "
+                 "a refresh driver tick");
+      MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
+                 "We should only notify contentful paint during refresh "
+                 "driver ticks");
+      RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
+          perf, u"first-contentful-paint"_ns, nowTime);
+      perf->SetFCPTimingEntry(paintTiming);
     }
   }
 }
