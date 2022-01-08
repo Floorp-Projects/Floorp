@@ -177,6 +177,8 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Qoʻshimcha dasturlar</string>
 
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Kengaytmalar</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Hech qanday qoʻshimcha dastur mavjud emas</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -197,6 +199,8 @@
     <string name="browser_menu_install_on_homescreen">Oʻrnatish</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Sinxronlangan varaqlar</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Qayta sinxronlash</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Sahifadan topish</string>
     <!-- Browser menu button that creates a private tab -->
@@ -224,6 +228,20 @@
     <string name="browser_menu_open_app_link">Ilovada ochish</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Koʻrinish</string>
+
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Oʻqish rejimini sozlash</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Qoʻshish</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Tahrirlash</string>
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Bosh sahifani sozlash</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Bosh sahifani sozlash</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Bosh ekran</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -263,6 +281,36 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Batafsil maʼlumot</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%sni qidirish</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Toʻgʻridan-toʻgʻri manzil panelidan qidiring</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefoxda yangi xususiyatlar</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Endi toʻxtagan joydan davom etish osonroq.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Sozlangan Firefox bosh sahfiasi</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Ochiq varaqlar, xatchoʻplar va tarixiga oʻting.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Qulay tartibli varaqlar</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Yaxshilangan tartib va avtomatik yopiladigan varaqlar yordamida tartibsizliklarni toʻgʻrilang.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Oxirgi qidiruvlar</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Bosh sahifa va varaqlar orqali oxirgi qidiruvlarga yana tashrif buyuring.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Moslashtirilgan Firefox bosh sahifasi endi toʻxtagan joydan davom etishni osonlashtiradi. Oxirgi varaqlar, xatchoʻplar va qidiruv natijalarini endi osongina topasiz.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Yangi Firefox varaqgʻini ochish</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Izlash</string>
 
