@@ -238,6 +238,10 @@ function init_all() {
 
   window.addEventListener("hashchange", onHashChange);
 
+  document.getElementById("focusSearch1").addEventListener("command", () => {
+    gSearchResultsPane.searchInput.focus();
+  });
+
   gotoPref().then(() => {
     let helpButton = document.getElementById("helpButton");
     let helpUrl =

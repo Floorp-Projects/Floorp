@@ -908,8 +908,6 @@ DevToolsStartup.prototype = {
       k.setAttribute("modifiers", mod);
     }
 
-    // Bug 371900: command event is fired only if "oncommand" attribute is set.
-    k.setAttribute("oncommand", ";");
     k.addEventListener("command", oncommand);
 
     return k;
