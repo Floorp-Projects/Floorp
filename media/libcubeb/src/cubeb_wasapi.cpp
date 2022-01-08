@@ -183,6 +183,28 @@ private:
 
 extern cubeb_ops const wasapi_ops;
 
+static com_heap_ptr<wchar_t>
+wasapi_get_default_device_id(EDataFlow flow, ERole role,
+                             IMMDeviceEnumerator * enumerator);
+
+struct wasapi_default_devices {
+  wasapi_default_devices(IMMDeviceEnumerator * enumerator)
+      : render_console_id(
+            wasapi_get_default_device_id(eRender, eConsole, enumerator)),
+        render_comms_id(
+            wasapi_get_default_device_id(eRender, eCommunications, enumerator)),
+        capture_console_id(
+            wasapi_get_default_device_id(eCapture, eConsole, enumerator)),
+        capture_comms_id(
+            wasapi_get_default_device_id(eCapture, eCommunications, enumerator))
+  {
+  }
+  com_heap_ptr<wchar_t> render_console_id;
+  com_heap_ptr<wchar_t> render_comms_id;
+  com_heap_ptr<wchar_t> capture_console_id;
+  com_heap_ptr<wchar_t> capture_comms_id;
+};
+
 int
 wasapi_stream_stop(cubeb_stream * stm);
 int
@@ -193,6 +215,10 @@ int
 setup_wasapi_stream(cubeb_stream * stm);
 ERole
 pref_to_role(cubeb_stream_prefs param);
+int
+wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
+                     IMMDeviceEnumerator * enumerator, IMMDevice * dev,
+                     wasapi_default_devices * defaults);
 void
 wasapi_destroy_device(cubeb_device_info * device_info);
 static int
@@ -1884,7 +1910,7 @@ handle_channel_layout(cubeb_stream * stm, EDataFlow direction,
   }
 }
 
-static bool
+static int
 initialize_iaudioclient2(com_ptr<IAudioClient> & audio_client)
 {
   com_ptr<IAudioClient2> audio_client2;
@@ -3028,24 +3054,6 @@ wasapi_get_default_device_id(EDataFlow flow, ERole role,
 
   return nullptr;
 }
-
-struct wasapi_default_devices {
-  wasapi_default_devices(IMMDeviceEnumerator * enumerator)
-      : render_console_id(
-            wasapi_get_default_device_id(eRender, eConsole, enumerator)),
-        render_comms_id(
-            wasapi_get_default_device_id(eRender, eCommunications, enumerator)),
-        capture_console_id(
-            wasapi_get_default_device_id(eCapture, eConsole, enumerator)),
-        capture_comms_id(
-            wasapi_get_default_device_id(eCapture, eCommunications, enumerator))
-  {
-  }
-  com_heap_ptr<wchar_t> render_console_id;
-  com_heap_ptr<wchar_t> render_comms_id;
-  com_heap_ptr<wchar_t> capture_console_id;
-  com_heap_ptr<wchar_t> capture_comms_id;
-};
 
 /* `ret` must be deallocated with `wasapi_destroy_device`, iff the return value
  * of this function is `CUBEB_OK`. */
