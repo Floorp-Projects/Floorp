@@ -91,10 +91,10 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     override fun onResume() {
         super.onResume()
+
         if (pairWithEmailStarted ||
             requireComponents.backgroundServices.accountManager.authenticatedAccount() != null
         ) {
-
             findNavController().popBackStack()
             return
         }
@@ -118,9 +118,11 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         binding.signInScanButton.setOnClickListener(paringClickListener)
         binding.signInEmailButton.setOnClickListener(signInClickListener)
         binding.signInInstructions.text = HtmlCompat.fromHtml(
-            if (requireContext().settings().allowDomesticChinaFxaServer && Config.channel.isMozillaOnline)
+            if (requireContext().settings().allowDomesticChinaFxaServer && Config.channel.isMozillaOnline) {
                 getString(R.string.sign_in_instructions_cn)
-            else getString(R.string.sign_in_instructions),
+            } else {
+                getString(R.string.sign_in_instructions)
+            },
             HtmlCompat.FROM_HTML_MODE_LEGACY
         )
 

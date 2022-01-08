@@ -122,12 +122,19 @@ class CollectionCreationView(
 
         binding.selectAllButton.apply {
             val allSelected = state.selectedTabs.size == state.tabs.size
-            text =
-                if (allSelected) context.getString(R.string.create_collection_deselect_all)
-                else context.getString(R.string.create_collection_select_all)
+
+            text = if (allSelected) {
+                context.getString(R.string.create_collection_deselect_all)
+            } else {
+                context.getString(R.string.create_collection_select_all)
+            }
+
             setOnClickListener {
-                if (allSelected) interactor.deselectAllTapped()
-                else interactor.selectAllTapped()
+                if (allSelected) {
+                    interactor.deselectAllTapped()
+                } else {
+                    interactor.selectAllTapped()
+                }
             }
         }
 

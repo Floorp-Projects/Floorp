@@ -23,8 +23,10 @@ class FenixLogSink(private val logsDebug: Boolean = true) : LogSink {
         throwable: Throwable?,
         message: String?
     ) {
-        if (priority == Log.Priority.DEBUG && !logsDebug)
+        if (priority == Log.Priority.DEBUG && !logsDebug) {
             return
+        }
+
         androidLogSink.log(priority, tag, throwable, message)
     }
 }

@@ -70,7 +70,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val ALLOWED_INT = 2
         private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
-        private const val APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD = 3
         private const val INACTIVE_TAB_MINIMUM_TO_SHOW_AUTO_CLOSE_DIALOG = 20
 
         const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L

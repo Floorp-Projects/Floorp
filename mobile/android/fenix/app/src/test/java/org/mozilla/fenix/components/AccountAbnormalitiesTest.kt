@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.helpers.perf.TestStrictModeManager
-import kotlin.coroutines.CoroutineContext
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AccountAbnormalitiesTest {
@@ -28,7 +27,11 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk()
 
         // no account present
-        val accountAbnormalities = newAccountAbnormalities(crashReporter)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
 
         try {
             accountAbnormalities.userRequestedLogout()
@@ -54,7 +57,11 @@ class AccountAbnormalitiesTest {
     fun `LogoutWithoutAuth detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
 
-        val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
         // Logout action must be preceded by auth.
@@ -66,7 +73,11 @@ class AccountAbnormalitiesTest {
     fun `OverlappingFxaLogoutRequest detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
 
-        val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
@@ -83,7 +94,11 @@ class AccountAbnormalitiesTest {
     fun `callback logout abnormalities detected`() = runBlocking {
         val crashReporter: CrashReporter = mockk(relaxed = true)
 
-        val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
         // User didn't request this logout.
@@ -96,7 +111,11 @@ class AccountAbnormalitiesTest {
         val crashReporter: CrashReporter = mockk(relaxed = true)
         val accountManager: FxaAccountManager = mockk(relaxed = true)
 
-        val accountAbnormalities = newAccountAbnormalities(crashReporter, this.coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         accountAbnormalities.onReady(null)
 
         accountAbnormalities.onAuthenticated(mockk(), mockk())
@@ -104,7 +123,11 @@ class AccountAbnormalitiesTest {
         every { accountManager.authenticatedAccount() } returns null
 
         // Pretend we restart, and instantiate a new middleware instance.
-        val accountAbnormalities2 = newAccountAbnormalities(crashReporter, this.coroutineContext)
+        val accountAbnormalities2 = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         // mock accountManager doesn't have an account, but we expect it to have one since we
         // were authenticated before our "restart".
         accountAbnormalities2.onReady(null)
@@ -116,7 +139,11 @@ class AccountAbnormalitiesTest {
     fun `logout happy case`() = runBlocking {
         val crashReporter: CrashReporter = mockk()
 
-        val accountAbnormalities = newAccountAbnormalities(crashReporter, coroutineContext)
+        val accountAbnormalities = AccountAbnormalities(
+            testContext,
+            crashReporter,
+            TestStrictModeManager() as StrictModeManager
+        )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
         // We saw an auth event, then user requested a logout.
@@ -129,14 +156,5 @@ class AccountAbnormalitiesTest {
         verify {
             crashReporter.submitCaughtException(any<T>())
         }
-    }
-
-    private fun newAccountAbnormalities(
-        crashReporter: CrashReporter,
-        coroutineContext: CoroutineContext? = null
-    ): AccountAbnormalities = if (coroutineContext != null) {
-        AccountAbnormalities(testContext, crashReporter, TestStrictModeManager() as StrictModeManager, coroutineContext)
-    } else {
-        AccountAbnormalities(testContext, crashReporter, TestStrictModeManager() as StrictModeManager)
     }
 }

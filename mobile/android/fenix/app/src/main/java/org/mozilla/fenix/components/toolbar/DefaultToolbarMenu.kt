@@ -302,12 +302,16 @@ open class DefaultToolbarMenu(
     val settingsItem = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_settings),
         startImageResource = R.drawable.mozac_ic_settings,
-        iconTintColorResource = if (hasAccountProblem)
-            ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
-            primaryTextColor(),
-        textColorResource = if (hasAccountProblem)
-            ThemeManager.resolveAttribute(R.attr.textPrimary, context) else
-            primaryTextColor(),
+        iconTintColorResource = if (hasAccountProblem) {
+            ThemeManager.resolveAttribute(R.attr.syncDisconnected, context)
+        } else {
+            primaryTextColor()
+        },
+        textColorResource = if (hasAccountProblem) {
+            ThemeManager.resolveAttribute(R.attr.textPrimary, context)
+        } else {
+            primaryTextColor()
+        },
         highlight = BrowserMenuHighlight.HighPriority(
             endImageResource = R.drawable.ic_sync_disconnected,
             backgroundTint = context.getColorFromAttr(R.attr.syncDisconnectedBackground),

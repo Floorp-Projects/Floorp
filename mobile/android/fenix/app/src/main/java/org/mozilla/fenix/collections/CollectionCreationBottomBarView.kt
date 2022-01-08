@@ -53,9 +53,11 @@ class CollectionCreationBottomBarView(
                 context.getString(R.string.create_collection_save_to_collection_empty)
             } else {
                 context.getString(
-                    if (state.selectedTabs.size == 1)
-                        R.string.create_collection_save_to_collection_tab_selected else
-                        R.string.create_collection_save_to_collection_tabs_selected,
+                    if (state.selectedTabs.size == 1) {
+                        R.string.create_collection_save_to_collection_tab_selected
+                    } else {
+                        R.string.create_collection_save_to_collection_tabs_selected
+                    },
                     state.selectedTabs.size
                 )
             }

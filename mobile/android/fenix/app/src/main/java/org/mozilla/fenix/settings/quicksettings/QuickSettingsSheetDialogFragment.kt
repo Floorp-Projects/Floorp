@@ -103,13 +103,11 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             settings = components.settings,
             permissionStorage = components.core.permissionStorage,
             reload = components.useCases.sessionUseCases.reload,
-            addNewTab = components.useCases.tabsUseCases.addTab,
             requestRuntimePermissions = { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
                 tryToRequestPermissions = true
             },
-            displayPermissions = ::showPermissionsView,
-            dismiss = ::dismiss
+            displayPermissions = ::showPermissionsView
         )
 
         interactor = QuickSettingsInteractor(quickSettingsController)

@@ -9,14 +9,12 @@ import android.content.SharedPreferences
 import android.os.StrictMode
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.perf.StrictModeManager
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Miscellaneous FxA-related abnormalities.
@@ -51,13 +49,11 @@ internal abstract class AbnormalFxaEvent : Exception() {
  * See [AbnormalFxaEvent] for types of abnormal events this class detects.
  *
  * @param crashReporter An instance of [CrashReporter] used for reporting detected abnormalities.
- * @param coroutineContext A [CoroutineContext] used for executing async tasks. Defaults to [Dispatchers.IO].
  */
 class AccountAbnormalities(
     context: Context,
     private val crashReporter: CrashReporter,
     strictMode: StrictModeManager,
-    private val coroutineContext: CoroutineContext = Dispatchers.IO
 ) : AccountObserver {
     companion object {
         private const val PREF_FXA_ABNORMALITIES = "fxa_abnormalities"

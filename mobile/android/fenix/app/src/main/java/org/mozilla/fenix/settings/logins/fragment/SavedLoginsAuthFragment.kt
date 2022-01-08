@@ -89,9 +89,11 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
         requirePreference<Preference>(R.string.pref_key_save_logins_settings).apply {
             summary = getString(
-                if (context.settings().shouldPromptToSaveLogins)
-                    R.string.preferences_passwords_save_logins_ask_to_save else
+                if (context.settings().shouldPromptToSaveLogins) {
+                    R.string.preferences_passwords_save_logins_ask_to_save
+                } else {
                     R.string.preferences_passwords_save_logins_never_save
+                }
             )
             setOnPreferenceClickListener {
                 navigateToSaveLoginSettingFragment()

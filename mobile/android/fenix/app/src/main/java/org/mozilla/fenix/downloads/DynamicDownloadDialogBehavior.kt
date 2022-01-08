@@ -100,13 +100,17 @@ class DynamicDownloadDialogBehavior<V : View>(
     ) {
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
             if (expanded) {
-                if (child.translationY >= bottomToolbarHeight / 2)
+                if (child.translationY >= bottomToolbarHeight / 2) {
                     animateSnap(child, SnapDirection.DOWN)
-                else animateSnap(child, SnapDirection.UP)
-            } else {
-                if (child.translationY < (bottomToolbarHeight + child.height.toFloat() / 2))
+                } else {
                     animateSnap(child, SnapDirection.UP)
-                else animateSnap(child, SnapDirection.DOWN)
+                }
+            } else {
+                if (child.translationY < (bottomToolbarHeight + child.height.toFloat() / 2)) {
+                    animateSnap(child, SnapDirection.UP)
+                } else {
+                    animateSnap(child, SnapDirection.DOWN)
+                }
             }
         }
     }
@@ -151,7 +155,11 @@ class DynamicDownloadDialogBehavior<V : View>(
         addUpdateListener { child.translationY = it.animatedValue as Float }
         setFloatValues(
             child.translationY,
-            if (direction == SnapDirection.UP) 0f else child.height.toFloat() + bottomToolbarHeight
+            if (direction == SnapDirection.UP) {
+                0f
+            } else {
+                child.height.toFloat() + bottomToolbarHeight
+            }
         )
         start()
     }

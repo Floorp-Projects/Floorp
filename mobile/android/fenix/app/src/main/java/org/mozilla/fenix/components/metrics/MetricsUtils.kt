@@ -33,8 +33,11 @@ object MetricsUtils {
         val isCustom = engine.type == SearchEngine.Type.CUSTOM
 
         val engineSource =
-            if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)
-            else Event.PerformedSearch.EngineSource.Default(engine, isCustom)
+            if (isShortcut) {
+                Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)
+            } else {
+                Event.PerformedSearch.EngineSource.Default(engine, isCustom)
+            }
 
         return when (searchAccessPoint) {
             SearchAccessPoint.SUGGESTION -> Event.PerformedSearch(

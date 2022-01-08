@@ -224,8 +224,11 @@ class SearchWidgetProvider : AppWidgetProvider() {
             SearchWidgetProviderSize.LARGE -> R.layout.search_widget_large
             SearchWidgetProviderSize.MEDIUM -> R.layout.search_widget_medium
             SearchWidgetProviderSize.SMALL -> {
-                if (showMic) R.layout.search_widget_small
-                else R.layout.search_widget_small_no_mic
+                if (showMic) {
+                    R.layout.search_widget_small
+                } else {
+                    R.layout.search_widget_small_no_mic
+                }
             }
             SearchWidgetProviderSize.EXTRA_SMALL_V2 -> R.layout.search_widget_extra_small_v2
             SearchWidgetProviderSize.EXTRA_SMALL_V1 -> R.layout.search_widget_extra_small_v1

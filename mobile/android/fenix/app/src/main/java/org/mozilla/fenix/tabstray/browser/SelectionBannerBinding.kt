@@ -34,8 +34,6 @@ import org.mozilla.fenix.tabstray.ext.showWithTheme
  * @property store The TabsTrayStore instance.
  * @property navInteractor An instance of [NavigationInteractor] for navigating on menu clicks.
  * @property tabsTrayInteractor An instance of [TabsTrayInteractor] for handling deletion.
- * @property containerView The view in the layout that contains all the implicit multi-select
- * views. NB: This parameter is a bit opaque and requires a larger layout refactor to correct.
  * @property backgroundView The background view that we want to alter when changing [Mode].
  * @property showOnSelectViews A variable list of views that will be made visible when in select mode.
  * @property showOnNormalViews A variable list of views that will be made visible when in normal mode.
@@ -48,7 +46,6 @@ class SelectionBannerBinding(
     private val store: TabsTrayStore,
     private val navInteractor: NavigationInteractor,
     private val tabsTrayInteractor: TabsTrayInteractor,
-    private val containerView: View,
     private val backgroundView: View,
     private val showOnSelectViews: VisibilityModifier,
     private val showOnNormalViews: VisibilityModifier

@@ -104,8 +104,11 @@ class HistoryView(
             val numRecentTabs = recentlyClosedNav.context.components.core.store.state.closedTabs.size
             recentlyClosedTabsDescription.text = String.format(
                 context.getString(
-                    if (numRecentTabs == 1)
-                        R.string.recently_closed_tab else R.string.recently_closed_tabs
+                    if (numRecentTabs == 1) {
+                        R.string.recently_closed_tab
+                    } else {
+                        R.string.recently_closed_tabs
+                    }
                 ),
                 numRecentTabs
             )

@@ -107,11 +107,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         accountSettingsStore = StoreProvider.get(this) {
             AccountSettingsFragmentStore(
                 AccountSettingsFragmentState(
-                    lastSyncedDate =
-                    if (getLastSynced(requireContext()) == 0L)
+                    lastSyncedDate = if (getLastSynced(requireContext()) == 0L) {
                         LastSyncTime.Never
-                    else
-                        LastSyncTime.Success(getLastSynced(requireContext())),
+                    } else {
+                        LastSyncTime.Success(getLastSynced(requireContext()))
+                    },
                     deviceName = requireComponents.backgroundServices.defaultDeviceName(
                         requireContext()
                     )

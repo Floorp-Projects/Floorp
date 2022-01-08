@@ -322,7 +322,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 store = tabsTrayStore,
                 navInteractor = navigationInteractor,
                 tabsTrayInteractor = tabsTrayInteractor,
-                containerView = view,
                 backgroundView = tabsTrayBinding.topBar,
                 showOnSelectViews = VisibilityModifier(
                     tabsTrayMultiselectItemsBinding.collectMultiSelect,

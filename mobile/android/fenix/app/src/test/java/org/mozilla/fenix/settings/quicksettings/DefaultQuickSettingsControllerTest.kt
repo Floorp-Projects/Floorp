@@ -26,7 +26,6 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -82,9 +81,6 @@ class DefaultQuickSettingsControllerTest {
     private lateinit var reload: SessionUseCases.ReloadUrlUseCase
 
     @MockK(relaxed = true)
-    private lateinit var addNewTab: TabsUseCases.AddNewTabUseCase
-
-    @MockK(relaxed = true)
     private lateinit var requestPermissions: (Array<String>) -> Unit
 
     private lateinit var controller: DefaultQuickSettingsController
@@ -112,11 +108,9 @@ class DefaultQuickSettingsControllerTest {
                 settings = appSettings,
                 permissionStorage = permissionStorage,
                 reload = reload,
-                addNewTab = addNewTab,
                 requestRuntimePermissions = requestPermissions,
                 engine = engine,
-                displayPermissions = {},
-                dismiss = {}
+                displayPermissions = {}
             )
         )
     }
@@ -192,10 +186,8 @@ class DefaultQuickSettingsControllerTest {
             settings = appSettings,
             permissionStorage = permissionStorage,
             reload = reload,
-            addNewTab = addNewTab,
             requestRuntimePermissions = requestPermissions,
-            displayPermissions = {},
-            dismiss = {}
+            displayPermissions = {}
         )
 
         every { websitePermission.phoneFeature } returns PhoneFeature.CAMERA
@@ -416,8 +408,7 @@ class DefaultQuickSettingsControllerTest {
 
     private fun createController(
         requestPermissions: (Array<String>) -> Unit = { _ -> },
-        displayPermissions: () -> Unit = { },
-        dismiss: () -> Unit = { }
+        displayPermissions: () -> Unit = {}
     ): DefaultQuickSettingsController {
         return spyk(
             DefaultQuickSettingsController(
@@ -431,10 +422,8 @@ class DefaultQuickSettingsControllerTest {
                 settings = appSettings,
                 permissionStorage = permissionStorage,
                 reload = reload,
-                addNewTab = addNewTab,
                 requestRuntimePermissions = requestPermissions,
-                displayPermissions = displayPermissions,
-                dismiss = dismiss
+                displayPermissions = displayPermissions
             )
         )
     }

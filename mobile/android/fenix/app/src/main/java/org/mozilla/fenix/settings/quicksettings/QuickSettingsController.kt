@@ -14,7 +14,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
-import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.telemetry.glean.private.NoExtras
@@ -95,11 +94,9 @@ interface QuickSettingsController {
  * @param settings [Settings] application settings.
  * @param permissionStorage [PermissionStorage] app state for website permissions exception.
  * @param reload [ReloadUrlUseCase] callback allowing for reloading the current web page.
- * @param addNewTab [AddNewTabUseCase] callback allowing for loading a URL in a new tab.
  * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
  * specific Android runtime permissions.
  * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
- * @param dismiss callback allowing to request this entire Fragment to be dismissed.
  */
 @Suppress("TooManyFunctions")
 class DefaultQuickSettingsController(
@@ -115,11 +112,9 @@ class DefaultQuickSettingsController(
     private val settings: Settings,
     private val permissionStorage: PermissionStorage,
     private val reload: ReloadUrlUseCase,
-    private val addNewTab: AddNewTabUseCase,
     private val requestRuntimePermissions: OnNeedToRequestPermissions = { },
     private val displayPermissions: () -> Unit,
     private val engine: Engine = context.components.core.engine,
-    private val dismiss: () -> Unit
 ) : QuickSettingsController {
     override fun handlePermissionsShown() {
         displayPermissions()

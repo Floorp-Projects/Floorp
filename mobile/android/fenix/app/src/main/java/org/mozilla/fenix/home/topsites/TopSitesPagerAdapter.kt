@@ -77,8 +77,11 @@ class TopSitesPagerAdapter(
     @VisibleForTesting
     internal fun getCurrentPageChanges(payload: TopSitePagerPayload, position: Int) =
         payload.changed.filter { changedPair ->
-            if (position == 0) changedPair.first < TOP_SITES_PER_PAGE
-            else changedPair.first >= TOP_SITES_PER_PAGE
+            if (position == 0) {
+                changedPair.first < TOP_SITES_PER_PAGE
+            } else {
+                changedPair.first >= TOP_SITES_PER_PAGE
+            }
         }
 
     override fun onBindViewHolder(holder: TopSiteViewHolder, position: Int) {

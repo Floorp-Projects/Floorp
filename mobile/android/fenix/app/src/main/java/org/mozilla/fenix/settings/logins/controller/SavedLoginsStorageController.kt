@@ -39,8 +39,6 @@ open class SavedLoginsStorageController(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
-    private suspend fun getLogin(loginId: String): Login? = passwordsStorage.get(loginId)
-
     fun delete(loginId: String) {
         var deleteLoginJob: Deferred<Boolean>? = null
         val deleteJob = lifecycleScope.launch(ioDispatcher) {

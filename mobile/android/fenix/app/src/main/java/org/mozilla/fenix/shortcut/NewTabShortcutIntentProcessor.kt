@@ -15,14 +15,6 @@ import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 class NewTabShortcutIntentProcessor : IntentProcessor {
 
     /**
-     * Returns true if this intent processor will handle the intent.
-     */
-    private fun matches(intent: Intent): Boolean {
-        val safeIntent = SafeIntent(intent)
-        return safeIntent.action == ACTION_OPEN_TAB || safeIntent.action == ACTION_OPEN_PRIVATE_TAB
-    }
-
-    /**
      * Processes the given [Intent].
      *
      * @param intent The intent to process.

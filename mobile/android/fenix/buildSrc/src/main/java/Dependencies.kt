@@ -17,7 +17,7 @@ object Versions {
     const val sentry = "5.6.2"
     const val leakcanary = "2.8.1"
     const val osslicenses_plugin = "0.10.4"
-    const val detekt = "1.17.1"
+    const val detekt = "1.19.0"
     const val jna = "5.6.0"
 
     const val androidx_activity_compose = "1.4.0"

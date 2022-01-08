@@ -651,8 +651,11 @@ class DefaultSessionControlController(
     override fun handleReportSessionMetrics(state: AppState) {
         with(metrics) {
             track(
-                if (state.recentTabs.isEmpty()) Event.RecentTabsSectionIsNotVisible
-                else Event.RecentTabsSectionIsVisible
+                if (state.recentTabs.isEmpty()) {
+                    Event.RecentTabsSectionIsNotVisible
+                } else {
+                    Event.RecentTabsSectionIsVisible
+                }
             )
 
             track(Event.RecentBookmarkCount(state.recentBookmarks.size))

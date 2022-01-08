@@ -119,7 +119,7 @@ private fun ThumbnailImage(
 
 @Preview
 @Composable
-fun ThumbnailCardPreview() {
+private fun ThumbnailCardPreview() {
     ThumbnailCard(
         url = "https://mozilla.com",
         key = "123",

@@ -49,7 +49,6 @@ import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.TabTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 private const val URI_PARAM_UTM_KEY = "utm_source"
 private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
@@ -274,17 +273,15 @@ private class PocketStoryProvider : PreviewParameterProvider<PocketRecommendedSt
 internal fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
     return mutableListOf<PocketRecommendedStory>().apply {
         for (index in 0 until limit) {
-            val randomNumber = Random.nextInt(0, 10)
-
             add(
                 PocketRecommendedStory(
-                    title = "This is a ${"very ".repeat(randomNumber)} long title",
+                    title = "This is a ${"very ".repeat(index)} long title",
                     publisher = "Publisher",
-                    url = "https://story$randomNumber.com",
+                    url = "https://story$index.com",
                     imageUrl = "",
-                    timeToRead = randomNumber,
-                    category = "Category #$randomNumber",
-                    timesShown = randomNumber.toLong()
+                    timeToRead = index,
+                    category = "Category #$index",
+                    timesShown = index.toLong()
                 )
             )
         }
