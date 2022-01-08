@@ -51,7 +51,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/multiselect_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/multiselect_title"
-        app:srcCompat="@drawable/ic_close"
+        app:srcCompat="@drawable/mozac_ic_close"
         app:tint="@color/contrast_text_normal_theme" />
 
     <TextView

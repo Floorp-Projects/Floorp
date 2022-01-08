@@ -38,7 +38,7 @@
         app:tint="@color/photonLightGrey05"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_close" />
+        app:srcCompat="@drawable/mozac_ic_close" />
 
     <TextView
         android:id="@+id/tip_description_text"

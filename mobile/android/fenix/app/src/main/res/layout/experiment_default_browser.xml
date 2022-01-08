@@ -19,8 +19,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/description_text"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_close"
-        tools:srcCompat="@drawable/ic_close" />
+        app:srcCompat="@drawable/mozac_ic_close"
+        tools:srcCompat="@drawable/mozac_ic_close" />
 
     <TextView
         android:id="@+id/description_text"

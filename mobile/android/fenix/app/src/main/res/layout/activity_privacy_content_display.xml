@@ -21,7 +21,7 @@
                     android:layout_marginLeft="10dp"
                     android:background="@android:color/transparent"
                     android:id="@+id/privacyContentCloseButton"
-                    android:src="@drawable/ic_close"
+                    android:src="@drawable/mozac_ic_close"
                     android:contentDescription="@string/privacy_content_close_button_content_description"
                     tools:ignore="AndroidSrcXmlDetector" />
 
