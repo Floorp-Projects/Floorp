@@ -70,7 +70,6 @@ export function initialSourcesState(state) {
     projectDirectoryRoot: prefs.projectDirectoryRoot,
     projectDirectoryRootName: prefs.projectDirectoryRootName,
     chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
-    focusedItem: null,
     /* FORMAT:
      * blackboxedRanges: {
      *  [source url]: [range, range, ...], -- source lines blackboxed
@@ -182,9 +181,6 @@ function update(state = initialSourcesState(), action) {
         ...initialSourcesState(state),
         epoch: state.epoch + 1,
       };
-
-    case "SET_FOCUSED_SOURCE_ITEM":
-      return { ...state, focusedItem: action.item };
   }
 
   return state;
