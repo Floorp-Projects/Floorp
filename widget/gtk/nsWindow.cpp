@@ -416,7 +416,7 @@ nsWindow::nsWindow()
       mPreferredPopupRectFlushed(false),
       mWaitingForMoveToRectCallback(false),
       mConfiguredClearColor(false),
-      mGotContentfulPaint(false) {
+      mGotNonBlankPaint(false) {
   mWindowType = eWindowType_child;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -8376,11 +8376,11 @@ nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {
   return nsBaseWidget::GetWindowRenderer();
 }
 
-void nsWindow::DidGetContentfulPaint() {
-  if (mGotContentfulPaint) {
+void nsWindow::DidGetNonBlankPaint() {
+  if (mGotNonBlankPaint) {
     return;
   }
-  mGotContentfulPaint = true;
+  mGotNonBlankPaint = true;
   if (!mConfiguredClearColor) {
     // Nothing to do, we hadn't overridden the clear color.
     mConfiguredClearColor = true;
