@@ -141,7 +141,7 @@
     <color name="menu_item_button_normal_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="recently_used_share_theme">@color/photonDarkGrey10</color>
 
-    <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_dark_theme</color>
+    <color name="mozac_widget_favicon_background_normal_theme">@color/photonDarkGrey50</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_dark_theme</color>
 
     <!-- Tab tray -->
