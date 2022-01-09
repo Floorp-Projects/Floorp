@@ -10,6 +10,6 @@
     android:state_enabled="true" />
 <item
     android:id="@+id/disabled"
-    android:drawable="@drawable/ic_autoplay_disabled" />
+    android:drawable="@drawable/mozac_ic_autoplay_blocked" />
 
 </selector>
