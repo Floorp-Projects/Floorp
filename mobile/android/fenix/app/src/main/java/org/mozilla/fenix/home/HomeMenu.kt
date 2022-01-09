@@ -103,7 +103,7 @@ class HomeMenu(
     }
 
     val desktopItem = BrowserMenuImageSwitch(
-        imageResource = R.drawable.ic_desktop,
+        imageResource = R.drawable.mozac_ic_device_desktop,
         label = context.getString(R.string.browser_menu_desktop_site),
         initialState = { context.settings().openNextTabInDesktopMode }
     ) { checked ->
