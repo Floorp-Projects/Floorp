@@ -56,20 +56,100 @@ import { getAllThreads } from "./threads";
 
 export function initialSourcesState(state) {
   return {
+    /**
+     * All currently available sources.
+     *
+     * See create.js: `createSourceObject` method for the description of stored objects.
+     * This reducers will add an extra `content` attribute which is the source text for each source.
+     */
     sources: createInitial(),
+
+    /**
+     * All sources associated with a given URL. When using source maps, multiple
+     * sources can have the same URL.
+     *
+     * Dictionary(url => array<source id>)
+     */
     urls: {},
+
+    /**
+     * All full URLs belonging to a given plain (query string stripped) URL.
+     * Query strings are only shown in the Sources tab if they are required for
+     * disambiguation.
+     *
+     * Dictionary(plain url => array<source url>)
+     */
     plainUrls: {},
+
+    /**
+     * List of all source ids whose source has a url attribute defined
+     *
+     * Array<source id>
+     */
     sourcesWithUrls: [],
-    content: {},
+
+    /**
+     * Mapping of source id's to one or more source-actor id's.
+     * Dictionary whose keys are source id's and values are arrays
+     * made of all the related source-actor id's.
+     *
+     * "source" are the objects stored in this reducer, in the `sources` attribute.
+     * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
+     *
+     * Dictionary(source id => array<SourceActor ID>)
+     */
     actors: {},
+
     breakpointPositions: {},
     breakableLines: {},
+
+    /**
+     * Incremental number that is bumped each time we navigate to a new page.
+     *
+     * This is used to better handle async race condition where we mix previous page data
+     * with the new page. As sources are keyed by URL we may easily conflate the two page loads data.
+     */
     epoch: 1,
+
+    /**
+     * The actual currently selected location.
+     * Only set if the related source is already registered in the sources reducer.
+     * Otherwise, pendingSelectedLocation should be used. Typically for sources
+     * which are about to be created.
+     *
+     * It also includes line and column information.
+     *
+     * See `createLocation` for the definition of this object.
+     */
     selectedLocation: undefined,
+
+    /**
+     * When we want to select a source that isn't available yet, use this.
+     * The location object should have a url attribute instead of a sourceId.
+     */
     pendingSelectedLocation: prefs.pendingSelectedLocation,
+
+    /**
+     * Project root set from the Source Tree.
+     *
+     * This focused the source tree on a subset of sources.
+     * `relativeUrl` attribute of all sources will be updated according
+     * to the new root.
+     */
     projectDirectoryRoot: prefs.projectDirectoryRoot,
     projectDirectoryRootName: prefs.projectDirectoryRootName,
+
+    /**
+     * Boolean, to be set to true in order to display WebExtension's content scripts
+     * that are applied to the current page we are debugging.
+     *
+     * Covered by: browser_dbg-content-script-sources.js
+     * Bound to: devtools.chrome.enabled
+     *
+     * boolean
+     */
     chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
+
     /* FORMAT:
      * blackboxedRanges: {
      *  [source url]: [range, range, ...], -- source lines blackboxed
