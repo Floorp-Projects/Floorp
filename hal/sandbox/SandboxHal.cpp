@@ -90,7 +90,7 @@ RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
           GetCurrentSerialEventTarget(), __func__,
           [=](const mozilla::MozPromise<bool, ipc::ResponseRejectReason,
                                         true>::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve() && aValue.ResolveValue()) {
+            if (aValue.IsResolve()) {
               return mozilla::MozPromise<bool, bool, false>::CreateAndResolve(
                   true, __func__);
             }
