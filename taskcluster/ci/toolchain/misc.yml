@@ -212,6 +212,8 @@ win32-pdbstr:
 
 win64-pdbstr:
     description: "pdbstr for 64-bits Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(pdbstr)
     worker-type: b-win2012
@@ -220,6 +222,7 @@ win64-pdbstr:
             - name: project/gecko/pdbstr/pdbstr.tar.zst
               path: pdbstr.tar.zst
               type: file
+    run-on-projects: [trunk]
     run:
         script: exfiltrate-pdbstr.sh
         arguments: ['x64']
@@ -227,8 +230,11 @@ win64-pdbstr:
 
 linux64-winchecksec:
     description: "winchecksec"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(winchecksec)
+    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.zst
@@ -239,11 +245,14 @@ linux64-winchecksec:
 
 win64-winchecksec:
     description: "winchecksec"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(winchecksec)
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.zst
@@ -270,12 +279,15 @@ linux64-makecab:
 
 win64-mozmake:
     description: "mozmake for Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(mozmake)
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     worker-type: b-win2012
+    run-on-projects: [trunk]
     run:
         script: build-mozmake.sh
         toolchain-artifact: public/build/mozmake.tar.zst
