@@ -191,9 +191,6 @@
     <color name="add_on_private_browsing_interior_icon_background_private_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">@color/photonViolet50</color>
 
-    <color name="mozac_widget_favicon_background_private_theme">@color/photonInk50</color>
-    <color name="mozac_widget_favicon_border_private_theme">@color/photonInk50</color>
-
     <!-- Tab Tray -->
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
