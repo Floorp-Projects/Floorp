@@ -43,7 +43,7 @@
             android:layout_height="48dp"
             android:layout_gravity="center"
             android:scaleType="center"
-            app:srcCompat="@drawable/ic_menu"
+            app:srcCompat="@drawable/mozac_ic_menu"
             app:tint="?primaryText" />
     </LinearLayout>
 </merge>

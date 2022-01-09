@@ -82,7 +82,7 @@
         app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/collection_icon"
-        app:srcCompat="@drawable/ic_menu"
+        app:srcCompat="@drawable/mozac_ic_menu"
         tools:visibility="visible" />
 
     <View

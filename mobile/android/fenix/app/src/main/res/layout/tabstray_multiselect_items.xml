@@ -45,6 +45,6 @@
         app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toEndOf="@id/topBar"
         app:layout_constraintTop_toTopOf="@id/topBar"
-        app:srcCompat="@drawable/ic_menu"
+        app:srcCompat="@drawable/mozac_ic_menu"
         app:tint="@color/contrast_text_normal_theme" />
 </merge>
