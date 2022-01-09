@@ -142,7 +142,7 @@
     <color name="recently_used_share_theme">@color/photonDarkGrey10</color>
 
     <color name="mozac_widget_favicon_background_normal_theme">@color/photonDarkGrey50</color>
-    <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_dark_theme</color>
+    <color name="mozac_widget_favicon_border_normal_theme">@color/photonDarkGrey10</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/photonLightGrey05</color>

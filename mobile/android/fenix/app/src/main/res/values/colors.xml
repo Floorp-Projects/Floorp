@@ -147,8 +147,6 @@
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
 
-    <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>
-
     <!-- Tab Tray -->
     <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
 
