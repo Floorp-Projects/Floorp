@@ -17,7 +17,7 @@
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/ic_microphone_enabled"
+            android:icon="@drawable/mozac_ic_microphone"
             android:key="@string/pref_key_phone_feature_microphone"
             android:title="@string/preference_phone_feature_microphone"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
