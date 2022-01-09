@@ -534,9 +534,9 @@ class nsIWidget : public nsISupports {
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() = 0;
 
   /**
-   * Notifies the root widget of a contentful paint.
+   * Notifies the root widget of a non-blank paint.
    */
-  virtual void DidGetContentfulPaint() {}
+  virtual void DidGetNonBlankPaint() {}
 
   /**
    * Accessor functions to get and set the listener which handles various
