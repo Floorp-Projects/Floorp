@@ -8,7 +8,12 @@
  */
 
 import { insertSourceActors } from "../../actions/source-actors";
-import { makeSourceId } from "../../client/firefox/create";
+import {
+  makeSourceId,
+  createGeneratedSource,
+  createSourceMapOriginalSource,
+  createSourceActor,
+} from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
 import { syncBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
@@ -18,7 +23,6 @@ import { selectLocation, setBreakableLines } from "../sources";
 import {
   getRawSourceURL,
   isPrettyURL,
-  isUrlExtension,
   isInlineScript,
 } from "../../utils/source";
 import {
@@ -33,7 +37,7 @@ import {
   isSourceLoadingOrLoaded,
 } from "../../selectors";
 
-import { prefs, features } from "../../utils/prefs";
+import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
 import { validateNavigateContext, ContextError } from "../../utils/context";
 
@@ -213,17 +217,7 @@ export function newOriginalSources(sourceInfo) {
 
       seen.add(id);
 
-      sources.push({
-        id,
-        url,
-        relativeUrl: url,
-        isPrettyPrinted: false,
-        isWasm: false,
-        isBlackBoxed: false,
-        isExtension: false,
-        extensionName: null,
-        isOriginal: true,
-      });
+      sources.push(createSourceMapOriginalSource(id, url));
     }
 
     const cx = getContext(state);
@@ -268,39 +262,15 @@ export function newGeneratedSources(sourceResources) {
       const id = makeSourceId(sourceResource);
 
       if (!getSource(getState(), id) && !newSourcesObj[id]) {
-        newSourcesObj[id] = {
-          id,
-          url: sourceResource.url,
-          relativeUrl: sourceResource.url,
-          isPrettyPrinted: false,
-          extensionName: sourceResource.extensionName,
-          isBlackBoxed: false,
-          isWasm: !!features.wasm && sourceResource.introductionType === "wasm",
-          isExtension:
-            (sourceResource.url && isUrlExtension(sourceResource.url)) || false,
-          isOriginal: false,
-        };
+        newSourcesObj[id] = createGeneratedSource(sourceResource);
       }
 
       const actorId = sourceResource.actor;
-      // As sourceResource is only SourceActor's form and not the SourceFront,
-      // we have to go through the target to retrieve the related ThreadActor's ID.
-      const threadActorID = sourceResource.targetFront.getCachedFront("thread")
-        .actorID;
 
       // We are sometimes notified about a new source multiple times if we
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
-        newSourceActors.push({
-          id: actorId,
-          actor: actorId,
-          thread: threadActorID,
-          source: id,
-          sourceMapBaseURL: sourceResource.sourceMapBaseURL,
-          sourceMapURL: sourceResource.sourceMapURL,
-          url: sourceResource.url,
-          introductionType: sourceResource.introductionType,
-        });
+        newSourceActors.push(createSourceActor(sourceResource));
       }
 
       resultIds.push(id);
