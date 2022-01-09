@@ -690,6 +690,12 @@ class nsWindow final : public nsBaseWidget {
    */
   bool mWaitingForMoveToRectCallback : 1;
 
+  // Whether we've configured default clear color already.
+  bool mConfiguredClearColor : 1;
+  // Whether we've received a non-blank paint in which case we can reset the
+  // clear color to transparent.
+  bool mGotNonBlankPaint : 1;
+
   // This bitmap tracks which pixels are transparent. We don't support
   // full translucency at this time; each pixel is either fully opaque
   // or fully transparent.
@@ -718,6 +724,7 @@ class nsWindow final : public nsBaseWidget {
 
   // nsBaseWidget
   WindowRenderer* GetWindowRenderer() override;
+  void DidGetNonBlankPaint() override;
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 
