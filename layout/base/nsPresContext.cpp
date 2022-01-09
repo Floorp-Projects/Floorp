@@ -2590,6 +2590,11 @@ void nsPresContext::NotifyNonBlankPaint() {
 
     mFirstNonBlankPaintTime = TimeStamp::Now();
   }
+  if (IsChrome() && IsRoot()) {
+    if (nsCOMPtr<nsIWidget> rootWidget = GetRootWidget()) {
+      rootWidget->DidGetNonBlankPaint();
+    }
+  }
 }
 
 void nsPresContext::NotifyContentfulPaint() {
@@ -2606,11 +2611,6 @@ void nsPresContext::NotifyContentfulPaint() {
                               CanBubble::eYes, ChromeOnlyDispatch::eYes))
         ->PostDOMEvent();
 #endif
-    if (rootPresContext == this && IsChrome()) {
-      if (nsCOMPtr<nsIWidget> rootWidget = GetRootWidget()) {
-        rootWidget->DidGetContentfulPaint();
-      }
-    }
   }
   if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
     if (!mHadNonTickContentfulPaint) {
