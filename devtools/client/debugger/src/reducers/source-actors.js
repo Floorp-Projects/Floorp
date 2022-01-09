@@ -18,14 +18,25 @@ import {
 
 import { asyncActionAsValue } from "../actions/utils/middleware/promise";
 
+/**
+ * This reducer stores the list of all source actors.
+ * There is a one-one relationship with Source Actors from the server codebase,
+ * as well as SOURCE Resources distributed by the ResourceCommand API.
+ *
+ * See create.js: `createSourceActor` for the shape of the source actor objects.
+ * This reducer will append the following attributes:
+ * - breakableLines: { state: <"pending"|"fulfilled">, value: Array<Number> }
+ *   List of all lines where breakpoints can be set
+ * - breakpointPositions: Map<line, { state: <"pending"|"fulfilled">, value: Array<Number> }>
+ *   Map of the column positions per line where breakpoints can be set
+ */
 export const initial = createInitial();
 
 export default function update(state = initial, action) {
   switch (action.type) {
     case "INSERT_SOURCE_ACTORS": {
       const { items } = action;
-      // The `item` objects are defined from `newGeneratedSources` action:
-      // https://searchfox.org/mozilla-central/rev/4646b826a25d3825cf209db890862b45fa09ffc3/devtools/client/debugger/src/actions/sources/newSources.js#300-314
+      // The `item` objects are defined from create.js: `createSource` method.
       state = insertResources(
         state,
         items.map(item => ({
