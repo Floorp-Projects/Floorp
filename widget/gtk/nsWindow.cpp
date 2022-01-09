@@ -414,8 +414,9 @@ nsWindow::nsWindow()
       mPopupClosed(false),
       mPopupUseMoveToRect(false),
       mPreferredPopupRectFlushed(false),
-      mWaitingForMoveToRectCallback(false)
-{
+      mWaitingForMoveToRectCallback(false),
+      mConfiguredClearColor(false),
+      mGotNonBlankPaint(false) {
   mWindowType = eWindowType_child;
   mSizeConstraints.mMaxSize = GetSafeWindowSize(mSizeConstraints.mMaxSize);
 
@@ -3524,6 +3525,13 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
 
   if (knowsCompositor && layerManager && mCompositorSession) {
+    if (!mConfiguredClearColor && !mParent) {
+      layerManager->WrBridge()->SendSetDefaultClearColor(LookAndFeel::Color(
+          LookAndFeel::ColorID::Window, LookAndFeel::ColorSchemeForChrome(),
+          LookAndFeel::UseStandins::No));
+      mConfiguredClearColor = true;
+    }
+
     // We need to paint to the screen even if nothing changed, since if we
     // don't have a compositing window manager, our pixels could be stale.
     layerManager->SetNeedsComposite(true);
@@ -8366,6 +8374,21 @@ nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {
   }
 
   return nsBaseWidget::GetWindowRenderer();
+}
+
+void nsWindow::DidGetNonBlankPaint() {
+  if (mGotNonBlankPaint) {
+    return;
+  }
+  mGotNonBlankPaint = true;
+  if (!mConfiguredClearColor) {
+    // Nothing to do, we hadn't overridden the clear color.
+    mConfiguredClearColor = true;
+    return;
+  }
+  // Reset the clear color set in the expose event to transparent.
+  GetWindowRenderer()->AsWebRender()->WrBridge()->SendSetDefaultClearColor(
+      NS_TRANSPARENT);
 }
 
 /* nsWindow::SetCompositorWidgetDelegate() sets remote GtkCompositorWidget
