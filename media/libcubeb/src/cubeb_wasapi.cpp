@@ -199,6 +199,24 @@ struct wasapi_default_devices {
             wasapi_get_default_device_id(eCapture, eCommunications, enumerator))
   {
   }
+
+  bool is_default(EDataFlow flow, ERole role, wchar_t const * id)
+  {
+    wchar_t const * default_id = nullptr;
+    if (flow == eRender && role == eConsole) {
+      default_id = this->render_console_id.get();
+    } else if (flow == eRender && role == eCommunications) {
+      default_id = this->render_comms_id.get();
+    } else if (flow == eCapture && role == eConsole) {
+      default_id = this->capture_console_id.get();
+    } else if (flow == eCapture && role == eCommunications) {
+      default_id = this->capture_comms_id.get();
+    }
+
+    return default_id && wcscmp(id, default_id) == 0;
+  }
+
+private:
   com_heap_ptr<wchar_t> render_console_id;
   com_heap_ptr<wchar_t> render_comms_id;
   com_heap_ptr<wchar_t> capture_console_id;
@@ -3160,17 +3178,11 @@ wasapi_create_device(cubeb * ctx, cubeb_device_info & ret,
   }
 
   ret.preferred = CUBEB_DEVICE_PREF_NONE;
-  if ((flow == eRender &&
-       wcscmp(device_id.get(), defaults->render_console_id.get()) == 0) ||
-      (flow == eCapture &&
-       wcscmp(device_id.get(), defaults->capture_console_id.get()) == 0)) {
+  if (defaults->is_default(flow, eConsole, device_id.get())) {
     ret.preferred =
         (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_MULTIMEDIA |
                             CUBEB_DEVICE_PREF_NOTIFICATION);
-  } else if ((flow == eRender &&
-              wcscmp(device_id.get(), defaults->render_comms_id.get()) == 0) ||
-             (flow == eCapture &&
-              wcscmp(device_id.get(), defaults->capture_comms_id.get()) == 0)) {
+  } else if (defaults->is_default(flow, eCommunications, device_id.get())) {
     ret.preferred =
         (cubeb_device_pref)(ret.preferred | CUBEB_DEVICE_PREF_VOICE);
   }
