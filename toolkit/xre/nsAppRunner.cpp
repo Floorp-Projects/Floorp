@@ -4120,24 +4120,31 @@ bool IsWaylandEnabled() {
   if (!waylandDisplay) {
     return false;
   }
-
-  const char* x11Display = PR_GetEnv("DISPLAY");
-  // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
-  const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND");
-  bool enableWayland = !x11Display || (waylandPref && *waylandPref == '1');
-  if (!enableWayland) {
-    const char* backendPref = PR_GetEnv("GDK_BACKEND");
-    enableWayland = (backendPref && strncmp(backendPref, "wayland", 7) == 0);
-    if (enableWayland) {
-      NS_WARNING(
-          "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
-          "GDK_BACKEND is a Gtk3 debug variable and may cause various issues.");
+  const bool gtkIsNewEnough = !gtk_check_version(3, 22, 0);
+  const bool enabled = [] {
+    if (!PR_GetEnv("DISPLAY")) {
+      // No X11 display, so try to run wayland.
+      return true;
     }
+    // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
+    if (const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND")) {
+      return *waylandPref == '1';
+    }
+    if (const char* backendPref = PR_GetEnv("GDK_BACKEND")) {
+      if (!strncmp(backendPref, "wayland", 7)) {
+        NS_WARNING(
+            "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
+            "GDK_BACKEND is a Gtk3 debug variable and may cause issues.");
+        return true;
+      }
+    }
+    return false;
+  }();
+  if (enabled && !gtkIsNewEnough) {
+    NS_WARNING(
+        "Running Wayland backend on Gtk3 < 3.22. Expect issues/glitches");
   }
-  if (enableWayland && gtk_check_version(3, 22, 0) != nullptr) {
-    NS_WARNING("Running Wayland backen on Gtk3 < 3.22. Expect issues/glitches");
-  }
-  return enableWayland;
+  return enabled;
 }
 #endif
 
