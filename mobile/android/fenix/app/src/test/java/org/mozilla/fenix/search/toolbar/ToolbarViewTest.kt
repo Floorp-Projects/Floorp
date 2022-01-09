@@ -44,7 +44,7 @@ class ToolbarViewTest {
         searchEngineSource = SearchEngineSource.Default(
             mockk {
                 every { name } returns "Search Engine"
-                every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
+                every { icon } returns testContext.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
             }
         ),
         defaultEngine = null,
