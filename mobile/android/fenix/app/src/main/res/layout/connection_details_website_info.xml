@@ -43,7 +43,7 @@
                 android:scaleType="fitCenter"
                 android:layout_marginStart="16dp"
                 android:layout_gravity="center_vertical"
-                tools:drawable="@drawable/ic_internet" />
+                tools:drawable="@drawable/mozac_ic_globe" />
 
             <TextView
                 android:id="@+id/title"

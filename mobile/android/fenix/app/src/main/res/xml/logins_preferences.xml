@@ -26,5 +26,5 @@
     <androidx.preference.Preference
         android:key="@string/pref_key_login_exceptions"
         android:title="@string/preferences_passwords_exceptions"
-        app:icon="@drawable/ic_internet" />
+        app:icon="@drawable/mozac_ic_globe" />
 </PreferenceScreen>

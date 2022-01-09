@@ -58,7 +58,7 @@
         app:allowDividerBelow="true"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/ic_internet"
+            android:icon="@drawable/mozac_ic_globe"
             android:key="@string/pref_key_show_site_exceptions"
             android:title="@string/preference_exceptions"
             app:allowDividerAbove="true"/>
