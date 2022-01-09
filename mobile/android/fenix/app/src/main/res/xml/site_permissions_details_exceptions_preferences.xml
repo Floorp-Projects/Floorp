@@ -5,7 +5,7 @@
 <androidx.preference.PreferenceScreen
         xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.preference.Preference
-            android:icon="@drawable/ic_camera_enabled"
+            android:icon="@drawable/mozac_ic_video"
             android:key="@string/pref_key_phone_feature_camera"
             android:title="@string/preference_phone_feature_camera"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
