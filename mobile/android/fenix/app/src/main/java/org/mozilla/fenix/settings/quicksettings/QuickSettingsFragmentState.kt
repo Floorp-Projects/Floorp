@@ -71,7 +71,7 @@ enum class WebsiteSecurityUiValues(
 ) {
     SECURE(
         R.string.quick_settings_sheet_secure_connection_2,
-        R.drawable.ic_lock
+        R.drawable.mozac_ic_lock
     ),
     INSECURE(
         R.string.quick_settings_sheet_insecure_connection_2,
