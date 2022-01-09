@@ -143,7 +143,6 @@
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
 
-    <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
 
     <!-- Dark theme color palette -->
@@ -233,7 +232,7 @@
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue50</color>
     <color name="select_login_header_normal_theme">@color/accent_bright_light_theme</color>
     <color name="select_credit_card_header_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_light_theme</color>
+    <color name="mozac_widget_favicon_background_normal_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_light_theme</color>
     <color name="notification_accent_color_normal_theme">@color/accent_bright_light_theme</color>
     <color name="menu_item_button_normal_theme">@color/accent_bright_light_theme</color>
