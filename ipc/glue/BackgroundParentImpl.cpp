@@ -125,7 +125,6 @@ using mozilla::dom::ContentParent;
 
 BackgroundParentImpl::BackgroundParentImpl() {
   AssertIsInMainOrSocketProcess();
-  AssertIsOnMainThread();
 
   MOZ_COUNT_CTOR(mozilla::ipc::BackgroundParentImpl);
 }

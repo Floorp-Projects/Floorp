@@ -917,7 +917,7 @@ class ContentParent final
       const nsACString& aContentProcessType);
 
   mozilla::ipc::IPCResult RecvInitBackground(
-      Endpoint<mozilla::ipc::PBackgroundParent>&& aEndpoint);
+      Endpoint<mozilla::ipc::PBackgroundStarterParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
   mozilla::ipc::IPCResult RecvAddPerformanceMetrics(
