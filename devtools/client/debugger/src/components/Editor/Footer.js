@@ -13,12 +13,7 @@ import {
   getContext,
 } from "../../selectors";
 
-import {
-  isPretty,
-  getFilename,
-  isOriginal,
-  shouldBlackbox,
-} from "../../utils/source";
+import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
 import {
   getGeneratedSource,
   canPrettyPrintSource,
@@ -172,7 +167,7 @@ class SourceFooter extends PureComponent {
       selectedSource,
     } = this.props;
 
-    if (!mappedSource || !selectedSource || !isOriginal(selectedSource)) {
+    if (!mappedSource || !selectedSource || !selectedSource.isOriginal) {
       return null;
     }
 
