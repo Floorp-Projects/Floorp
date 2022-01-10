@@ -226,7 +226,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "gEditItemOverlay",
-  "chrome://browser/content/places/editBookmark.js"
+  "chrome://browser/content/places/instantEditBookmark.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
