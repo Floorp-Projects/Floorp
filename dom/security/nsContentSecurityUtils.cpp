@@ -1362,7 +1362,15 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameTypeAndDetails.first),
                          extra);
 
-#ifdef NIGHTLY_BUILD
+#if defined(DEBUG) || defined(FUZZING)
+  auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
+      aFilename,
+      fileNameTypeAndDetails.second.isSome()
+          ? NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get()
+          : "(None)",
+      "Blocking a script load %s from file %s");
+  MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
+#elif defined(NIGHTLY_BUILD)
   // Cause a crash (if we've never crashed before and we can ensure we won't do
   // it again.)
   // The details in the second arg, passed to UNSAFE_PRINTF, are also included
@@ -1373,14 +1381,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
   } else {
     PossiblyCrash("js_load_1", aFilename, "(None)"_ns);
   }
-#elif defined(FUZZING)
-  auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
-      aFilename,
-      fileNameTypeAndDetails.second.isSome()
-          ? NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get()
-          : "(None)",
-      "Blocking a script load %s from file %s");
-  MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
 
   // If we got here we are going to return false, so set the error context
@@ -1393,10 +1393,15 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
   JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
                            JSMSG_UNSAFE_FILENAME, utf8Filename);
 
-  // Presently we are not enforcing any restrictions for the script filename,
-  // we're only reporting Telemetry. In the future we will assert in debug
-  // builds and return false to prevent execution in non-debug builds.
+  // Presently we are only enforcing restrictions for the script filename
+  // on Nightly.  On all channels we are reporting Telemetry. In the future we
+  // will assert in debug builds and return false to prevent execution in
+  // non-debug builds.
+#ifdef NIGHTLY_BUILD
+  return false;
+#else
   return true;
+#endif
 }
 
 /* static */
