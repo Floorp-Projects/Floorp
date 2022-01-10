@@ -54,20 +54,6 @@ interface FrameLoader {
   readonly attribute boolean isRemoteFrame;
 
   /**
-   * Activate remote frame.
-   * Throws an exception with non-remote frames.
-   */
-  [Throws]
-  void activateRemoteFrame();
-
-  /**
-   * Deactivate remote frame.
-   * Throws an exception with non-remote frames.
-   */
-  [Throws]
-  void deactivateRemoteFrame();
-
-  /**
    * Activate event forwarding from client (remote frame) to parent.
    */
   [Throws]
