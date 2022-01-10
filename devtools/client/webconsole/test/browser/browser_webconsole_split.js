@@ -5,16 +5,19 @@
 
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for splitting";
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/toolbox.properties"
-);
 
 // Test is slow on Linux EC2 instances - Bug 962931
 requestLongerTimeout(4);
 
 add_task(async function() {
   let toolbox;
+  const getFluentString = await getFluentStringHelper([
+    "devtools/client/toolbox.ftl",
+  ]);
+  const hideSplitConsoleLabel = getFluentString(
+    "toolbox-meatball-menu-hideconsole-label"
+  );
+
   await addTab(TEST_URI);
   await testConsoleLoadOnDifferentPanel();
   await testKeyboardShortcuts();
@@ -122,8 +125,7 @@ add_task(async function() {
     let label;
     if (menuItem && menuItem.querySelector(".label")) {
       label =
-        menuItem.querySelector(".label").textContent ===
-        L10N.getStr("toolbox.meatballMenu.hideconsole.label")
+        menuItem.querySelector(".label").textContent === hideSplitConsoleLabel
           ? "hide"
           : "split";
     }

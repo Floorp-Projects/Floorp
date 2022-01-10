@@ -15,6 +15,7 @@ const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const FORCE_THEME_NOTIFICATION_PREF = "devtools.theme.force-auto-theme-info";
 const SHOW_THEME_NOTIFICATION_PREF = "devtools.theme.show-auto-theme-info";
+const PSEUDO_LOCALE_PREF = "intl.l10n.pseudo";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -33,6 +34,10 @@ var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 var { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
+const {
+  FluentL10n,
+} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
 ).wrappedJSObject;
@@ -282,6 +287,9 @@ function Toolbox(
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
+  this.disablePseudoLocale = () => this.changePseudoLocale("none");
+  this.enableAccentedPseudoLocale = () => this.changePseudoLocale("accented");
+  this.enableBidiPseudoLocale = () => this.changePseudoLocale("bidi");
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.closeToolbox = this.closeToolbox.bind(this);
@@ -845,6 +853,12 @@ Toolbox.prototype = {
    */
   open: function() {
     return async function() {
+      // Kick off async loading the Fluent bundles.
+      const fluentL10n = new FluentL10n();
+      const fluentInitPromise = fluentL10n.init([
+        "devtools/client/toolbox.ftl",
+      ]);
+
       const isToolboxURL = this.win.location.href.startsWith(this._URL);
       if (isToolboxURL) {
         // Update the URL so that onceDOMReady watch for the right url.
@@ -944,7 +958,9 @@ Toolbox.prototype = {
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
-      this._mountReactComponent();
+      await fluentInitPromise;
+
+      this._mountReactComponent(fluentL10n.getBundles());
       this._buildDockOptions();
       this._buildTabs();
 
@@ -1882,22 +1898,32 @@ Toolbox.prototype = {
         definition.isTargetSupported(this.target) && definition.id !== "options"
     );
 
-    // Do async lookup of disable pop-up auto-hide state.
-    if (this.disableAutohideAvailable) {
-      const disable = await this._isDisableAutohideEnabled();
-      this.component.setDisableAutohide(disable);
+    // Do async lookups for the target browser's state.
+    if (this.isBrowserChromeTarget) {
+      // Parallelize the asynchronous calls, so that the DOM is only updated once when
+      // updating the React components.
+      const [disableAutohide, pseudoLocale] = await Promise.all([
+        this._isDisableAutohideEnabled(),
+        this.getPseudoLocale(),
+      ]);
+      this.component.setDisableAutohide(disableAutohide);
+      this.component.setPseudoLocale(pseudoLocale);
     }
   },
 
-  _mountReactComponent: function() {
+  _mountReactComponent(fluentBundles) {
     // Ensure the toolbar doesn't try to render until the tool is ready.
     const element = this.React.createElement(this.ToolboxController, {
       L10N,
+      fluentBundles,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
       toggleOptions: this.toggleOptions,
       toggleSplitConsole: this.toggleSplitConsole,
       toggleNoAutohide: this.toggleNoAutohide,
+      disablePseudoLocale: this.disablePseudoLocale,
+      enableAccentedPseudoLocale: this.enableAccentedPseudoLocale,
+      enableBidiPseudoLocale: this.enableBidiPseudoLocale,
       closeToolbox: this.closeToolbox,
       focusButton: this._onToolbarFocus,
       toolbox: this,
@@ -3219,19 +3245,62 @@ Toolbox.prototype = {
    * client. See the definition of the preference actor for more information.
    */
   get preferenceFront() {
-    const frontPromise = this.commands.client.mainRoot.getFront("preference");
-    frontPromise.then(front => {
-      // Set the _preferenceFront property to allow the resetPreferences toolbox method
-      // to cleanup the preference set when the toolbox is closed.
-      this._preferenceFront = front;
-    });
-
-    return frontPromise;
+    if (!this._preferenceFrontRequest) {
+      // Set the _preferenceFrontRequest property to allow the resetPreference toolbox
+      // method to cleanup the preference set when the toolbox is closed.
+      this._preferenceFrontRequest = this.commands.client.mainRoot.getFront(
+        "preference"
+      );
+    }
+    return this._preferenceFrontRequest;
   },
 
-  // Is the disable auto-hide of pop-ups feature available in this context?
-  get disableAutohideAvailable() {
+  // The auto-hide of pop-ups feature and pseudo-localization require targeting
+  // browser chrome.
+  get isBrowserChromeTarget() {
     return this.target.chrome;
+  },
+
+  /**
+   * See: https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
+   *
+   * @param {"bidi" | "accented" | "none"} pseudoLocale
+   */
+  async changePseudoLocale(pseudoLocale) {
+    await this.isOpen;
+    const prefFront = await this.preferenceFront;
+    if (pseudoLocale === "none") {
+      await prefFront.clearUserPref(PSEUDO_LOCALE_PREF);
+    } else {
+      await prefFront.setCharPref(PSEUDO_LOCALE_PREF, pseudoLocale);
+    }
+    this.component.setPseudoLocale(pseudoLocale);
+    this._pseudoLocaleChanged = true;
+  },
+
+  /**
+   * Returns the pseudo-locale when the target is browser chrome, otherwise undefined.
+   *
+   * @returns {"bidi" | "accented" | "none" | undefined}
+   */
+  async getPseudoLocale() {
+    // Ensure that the tools are open and the feature is available in this
+    // context.
+    await this.isOpen;
+    if (!this.isBrowserChromeTarget) {
+      return undefined;
+    }
+
+    const prefFront = await this.preferenceFront;
+    const locale = await prefFront.getCharPref(PSEUDO_LOCALE_PREF);
+
+    switch (locale) {
+      case "bidi":
+      case "accented":
+        return locale;
+      default:
+        return "none";
+    }
   },
 
   async toggleNoAutohide() {
@@ -3241,7 +3310,7 @@ Toolbox.prototype = {
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
-    if (this.disableAutohideAvailable) {
+    if (this.isBrowserChromeTarget) {
       this.component.setDisableAutohide(toggledValue);
     }
     this._autohideHasBeenToggled = true;
@@ -3251,7 +3320,7 @@ Toolbox.prototype = {
     // Ensure that the tools are open and the feature is available in this
     // context.
     await this.isOpen;
-    if (!this.disableAutohideAvailable) {
+    if (!this.isBrowserChromeTarget) {
       return false;
     }
 
@@ -3954,8 +4023,12 @@ Toolbox.prototype = {
     this.browserRequire = null;
     this._toolNames = null;
 
-    // Reset preferences set by the toolbox
-    outstanding.push(this.resetPreference());
+    // Reset preferences set by the toolbox, then remove the preference front.
+    outstanding.push(
+      this.resetPreference().then(() => {
+        this._preferenceFrontRequest = null;
+      })
+    );
 
     this.commands.targetCommand.unwatchTargets({
       types: this.commands.targetCommand.ALL_TYPES,
@@ -4168,17 +4241,25 @@ Toolbox.prototype = {
    * Reset preferences set by the toolbox.
    */
   async resetPreference() {
-    if (!this._preferenceFront) {
+    if (
+      // No preferences have been changed, so there is nothing to reset.
+      !this._preferenceFrontRequest ||
+      // Did any pertinent prefs actually change? For autohide and the pseudo-locale,
+      // only reset prefs in the Browser Toolbox if it's been toggled in the UI
+      // (don't reset the pref if it was already set before opening)
+      (!this._autohideHasBeenToggled && !this._pseudoLocaleChanged)
+    ) {
       return;
     }
 
-    // Only reset the autohide pref in the Browser Toolbox if it's been toggled
-    // in the UI (don't reset the pref if it was already set before opening)
-    if (this._autohideHasBeenToggled) {
-      await this._preferenceFront.clearUserPref(DISABLE_AUTOHIDE_PREF);
-    }
+    const preferenceFront = await this.preferenceFront;
 
-    this._preferenceFront = null;
+    if (this._autohideHasBeenToggled) {
+      await preferenceFront.clearUserPref(DISABLE_AUTOHIDE_PREF);
+    }
+    if (this._pseudoLocaleChanged) {
+      await preferenceFront.clearUserPref(PSEUDO_LOCALE_PREF);
+    }
   },
 
   // HAR Automation

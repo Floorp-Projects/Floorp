@@ -14,6 +14,9 @@ const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 const Targets = require("devtools/server/actors/targets/index");
+const {
+  getAllBrowsingContextsForContext,
+} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
@@ -84,11 +87,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *          and all its children resources (workers, iframes,...)
    * @param {Number} sessionContext.browserId: If this is a "browser-element" context type,
    *        the "browserId" of the <browser> element we would like to debug.
-   * @param {Object|null} config: Optional configuration object.
-   * @param {Boolean} config.isServerTargetSwitchingEnabled: Flag to to know if we should
+   * @param {Boolean} sessionContext.isServerTargetSwitchingEnabled: Flag to to know if we should
    *        spawn new top level targets for the debugged context.
    */
-  initialize: function(conn, sessionContext, config = {}) {
+  initialize: function(conn, sessionContext) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._sessionContext = sessionContext;
     if (sessionContext.type == "browser-element") {
@@ -104,7 +106,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       }
       this._browserElement = browsingContext.embedderElement;
     }
-    this._config = config;
 
     // Sometimes we get iframe targets before the top-level targets
     // mostly when doing bfcache navigations, lets cache the early iframes targets and
@@ -145,6 +146,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     return this._browserElement;
   },
 
+  getAllBrowsingContexts(options) {
+    return getAllBrowsingContextsForContext(this.sessionContext, options);
+  },
+
   /**
    * Helper to know if the context we are debugging has been already destroyed
    */
@@ -159,10 +164,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     throw new Error(
       "Unsupported session context type: " + this.sessionContext.type
     );
-  },
-
-  get isServerTargetSwitchingEnabled() {
-    return !!this._config.isServerTargetSwitchingEnabled;
   },
 
   destroy: function() {
@@ -382,7 +383,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // so there is no reason to delay target-destroy for remote iframes.
     if (
       documentEventWatcher &&
-      this.isServerTargetSwitchingEnabled &&
+      this.sessionContext.isServerTargetSwitchingEnabled &&
       actor.isTopLevelTarget
     ) {
       await documentEventWatcher.onceWillNavigateIsEmitted(actor.innerWindowId);

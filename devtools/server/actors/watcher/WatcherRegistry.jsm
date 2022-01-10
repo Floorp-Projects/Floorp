@@ -117,8 +117,6 @@ const WatcherRegistry = {
         // Expose watcher traits so we can retrieve them in content process.
         // This should be removed as part of Bug 1700092.
         watcherTraits: watcher.form().traits,
-        // Expose to the content process if we should create top level targets from the server side
-        isServerTargetSwitchingEnabled: watcher.isServerTargetSwitchingEnabled,
       };
       // Define empty default array for all data
       for (const name of Object.values(SUPPORTED_DATA)) {

@@ -17,11 +17,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  isWindowGlobalPartOfContext:
+    "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
   TargetActorRegistry:
     "resource://devtools/server/actors/targets/target-actor-registry.jsm",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
   WindowGlobalLogger:
     "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
 });
@@ -33,80 +32,6 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
 
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
-
-/**
- * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
- */
-function shouldNotifyWindowGlobal(
-  windowGlobal,
-  sessionContext,
-  { acceptTopLevelTarget = false }
-) {
-  const browsingContext = windowGlobal.browsingContext;
-  // Ignore about:blank loads, which spawn a document that never finishes loading
-  // and would require somewhat useless Target and all its related overload.
-  const window = Services.wm.getCurrentInnerWindowWithId(
-    windowGlobal.innerWindowId
-  );
-
-  // By default, before loading the actual document (even an about:blank document),
-  // we do load immediately "the initial about:blank document".
-  // This is expected by the spec. Typically when creating a new BrowsingContext/DocShell/iframe,
-  // we would have such transient initial document.
-  // `Document.isInitialDocument` helps identifying this transcient document, which
-  // we want to ignore as it would instantiate a very short lived target which
-  // confuses many tests and triggers race conditions by spamming many targets.
-  //
-  // We also ignore some other transient empty documents created while using `window.open()`
-  // When using this API with cross process loads, we may create up to three documents/WindowGlobals.
-  // We get a first initial about:blank document, and a second document created
-  // for moving the document in the right principal.
-  // The third document will be the actual document we expect to debug.
-  // The second document is an implementation artifact which ideally wouldn't exist
-  // and isn't expected by the spec.
-  // Note that `window.print` and print preview are using `window.open` and are going throught this.
-  if (window.document.isInitialDocument) {
-    return false;
-  }
-
-  // If we are focusing only on a sub-tree of Browsing Element,
-  // Ignore the out of the sub tree elements.
-  if (
-    sessionContext.type == "browser-element" &&
-    browsingContext.browserId != sessionContext.browserId
-  ) {
-    return false;
-  }
-
-  // For client-side target switching, only mention the "remote frames".
-  // i.e. the frames which are in a distinct process compared to their parent document
-  // If there is no parent, this is most likely the top level document.
-  //
-  // Ignore this check for the browser toolbox, as tab's BrowsingContext have no
-  // parent and aren't the top level target.
-  //
-  // `acceptTopLevelTarget` is set both when server side target switching is enabled
-  // or when navigating to and from pages in the bfcache
-  if (
-    !acceptTopLevelTarget &&
-    sessionContext.type == "browser-element" &&
-    !browsingContext.parent
-  ) {
-    return false;
-  }
-
-  // We may process an iframe that runs in the same process as its parent and we don't want
-  // to create targets for them if same origin targets are not enabled. Instead the WindowGlobalTargetActor
-  // will inspect these children document via docShell tree (typically via `docShells` or `windows` getters).
-  // This is quite common when Fission is off as any iframe will run in same process
-  // as their parent document. But it can also happen with Fission enabled if iframes have
-  // children iframes using the same origin.
-  if (!isEveryFrameTargetEnabled && !windowGlobal.isProcessRoot) {
-    return false;
-  }
-
-  return true;
-}
 
 // If true, log info about WindowGlobal's being created.
 const DEBUG = false;
@@ -177,23 +102,16 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     // Create one Target actor for each prefix/client which listen to frames
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-      const {
-        connectionPrefix,
-        sessionContext,
-        isServerTargetSwitchingEnabled,
-      } = sessionData;
-      // Always create new targets when server targets are enabled as we create targets for all the WindowGlobal's,
-      // including all WindowGlobal's of the top target.
+      const { connectionPrefix, sessionContext } = sessionData;
       // For bfcache navigations, we only create new targets when bfcacheInParent is enabled,
       // as this would be the only case where new DocShells will be created. This requires us to spawn a
       // new WindowGlobalTargetActor as one such actor is bound to a unique DocShell.
-      const acceptTopLevelTarget =
-        isServerTargetSwitchingEnabled ||
-        (isBFCache && this.isBfcacheInParentEnabled);
+      const forceAcceptTopLevelTarget =
+        isBFCache && this.isBfcacheInParentEnabled;
       if (
         sessionData.targets.includes("frame") &&
-        shouldNotifyWindowGlobal(this.manager, sessionContext, {
-          acceptTopLevelTarget,
+        isWindowGlobalPartOfContext(this.manager, sessionContext, {
+          forceAcceptTopLevelTarget,
         })
       ) {
         // If this was triggered because of a navigation, we want to retrieve the existing
@@ -487,8 +405,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
   }
 
   receiveMessage(message) {
-    // When debugging only a given tab, all messages but "packet" one pass `browserId`
-    // and are expected to match shouldNotifyWindowGlobal result.
+    // Assert that the message is intended for this window global,
+    // except for "packet" messages which use a dedicated routing
     if (
       message.name != "DevToolsFrameParent:packet" &&
       message.data.sessionContext.type == "browser-element"
@@ -498,14 +416,18 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !shouldNotifyWindowGlobal(this.manager, browserId, {
-          acceptTopLevelTarget: true,
-        })
+        !isWindowGlobalPartOfContext(
+          this.manager,
+          message.data.sessionContext,
+          {
+            forceAcceptTopLevelTarget: true,
+          }
+        )
       ) {
         throw new Error(
           "Mismatch between DevToolsFrameParent and DevToolsFrameChild " +
             (this.manager.browsingContext.browserId == browserId
-              ? "window global shouldn't be notified (shouldNotifyWindowGlobal mismatch)"
+              ? "window global shouldn't be notified (isWindowGlobalPartOfContext mismatch)"
               : `expected browsing context with browserId ${browserId}, but got ${this.manager.browsingContext.browserId}`)
         );
       }
@@ -580,13 +502,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // (watcherActorId,browserId, {browsingContextId}) in another DevToolsFrameChild instance.
     // This might be the case if we're navigating to a new page with server side target
     // enabled and we want to retrieve the target of the page we're navigating from.
-    const isMatchingBrowserElement =
-      this.manager.browsingContext.browserId == sessionContext.browserId;
-    const isMatchingWebExtension =
-      this.document.nodePrincipal.addonId == sessionContext.addonId;
     if (
-      (sessionContext.type == "browser-element" && isMatchingBrowserElement) ||
-      (sessionContext.type == "webextension" && isMatchingWebExtension)
+      isWindowGlobalPartOfContext(this.manager, sessionContext, {
+        forceAcceptTopLevelTarget: true,
+      })
     ) {
       // Ensure retrieving the one target actor related to this connection.
       // This allows to distinguish actors created for various toolboxes.
@@ -712,7 +631,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // It may not be the case if one Watcher isn't having server target switching enabled.
       let allActorsAreDestroyed = true;
       for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-        const { sessionContext, isServerTargetSwitchingEnabled } = sessionData;
+        const { sessionContext } = sessionData;
 
         // /!\ We may have an issue here as there could be multiple targets for a given
         // (watcherActorID,browserId) pair.
@@ -735,7 +654,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
         // As history navigations will be handled within the same DocShell and by the
         // same WindowGlobalTargetActor. The actor will listen to pageshow/pagehide by itself.
         // We should not destroy any target.
-        if (!this.isBfcacheInParentEnabled && !isServerTargetSwitchingEnabled) {
+        if (
+          !this.isBfcacheInParentEnabled &&
+          !sessionContext.isServerTargetSwitchingEnabled
+        ) {
           allActorsAreDestroyed = false;
           continue;
         }

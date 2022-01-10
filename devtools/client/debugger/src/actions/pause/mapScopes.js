@@ -17,7 +17,7 @@ import { PROMISE } from "../utils/middleware/promise";
 import assert from "../../utils/assert";
 
 import { log } from "../../utils/log";
-import { isGenerated, isOriginal } from "../../utils/source";
+import { isGenerated } from "../../utils/source";
 
 import { buildMappedScopes } from "../../utils/pause/mapScopes";
 import { isFulfilled } from "../../utils/async-value";
@@ -148,7 +148,7 @@ export function getMappedScopes(cx, scopes, frame) {
     }
 
     await dispatch(loadSourceText({ cx, source }));
-    if (isOriginal(source)) {
+    if (source.isOriginal) {
       await dispatch(loadSourceText({ cx, source: generatedSource }));
     }
 
