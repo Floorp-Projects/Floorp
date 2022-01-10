@@ -461,6 +461,10 @@ perfdocs-verify:
         env:
             WORKSPACE: /builds/worker/checkouts/gecko/
             DECISION_TASK_ID: {task-reference: <decision>}
+        artifacts:
+            - type: file
+              name: public/perfdocs.diff
+              path: /builds/worker/diff.txt
     when:
         files-changed:
             - 'taskcluster/**'
