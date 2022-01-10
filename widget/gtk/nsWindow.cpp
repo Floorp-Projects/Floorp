@@ -4909,71 +4909,71 @@ bool nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence) {
 }
 
 gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
-  if (StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
-    // Do not respond to pinch gestures involving more than two fingers
-    // unless specifically preffed on. These are sometimes hooked up to other
-    // actions at the desktop environment level and having the browser also
-    // pinch can be undesirable.
-    if (aEvent->n_fingers > 2 &&
-        !StaticPrefs::apz_gtk_touchpad_pinch_three_fingers_enabled()) {
-      return FALSE;
-    }
-    PinchGestureInput::PinchGestureType pinchGestureType =
-        PinchGestureInput::PINCHGESTURE_SCALE;
-    ScreenCoord CurrentSpan;
-    ScreenCoord PreviousSpan;
-
-    switch (aEvent->phase) {
-      case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
-        CurrentSpan = aEvent->scale;
-
-        // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
-        // WidgetWheelEvent that this PinchGestureInput event will be converted
-        // to not equal Zero as our discussion because we observed that the
-        // scale of the PHASE_BEGIN event is 1.
-        PreviousSpan = 0.999;
-        break;
-
-      case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
-        if (aEvent->scale == mLastPinchEventSpan) {
-          return FALSE;
-        }
-        CurrentSpan = aEvent->scale;
-        PreviousSpan = mLastPinchEventSpan;
-        break;
-
-      case GDK_TOUCHPAD_GESTURE_PHASE_END:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
-        CurrentSpan = aEvent->scale;
-        PreviousSpan = mLastPinchEventSpan;
-        break;
-
-      default:
-        return FALSE;
-    }
-
-    LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
-    PinchGestureInput event(
-        pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
-        GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
-        ScreenPoint(touchpadPoint.x, touchpadPoint.y),
-        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
-                     ? ScreenCoord(1.f)
-                     : CurrentSpan),
-        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
-                     ? ScreenCoord(1.f)
-                     : PreviousSpan),
-        KeymapWrapper::ComputeKeyModifiers(aEvent->state));
-
-    if (!event.SetLineOrPageDeltaY(this)) {
-      return FALSE;
-    }
-
-    mLastPinchEventSpan = aEvent->scale;
-    DispatchPinchGestureInput(event);
+  if (!StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
+    return TRUE;
   }
+  // Do not respond to pinch gestures involving more than two fingers
+  // unless specifically preffed on. These are sometimes hooked up to other
+  // actions at the desktop environment level and having the browser also
+  // pinch can be undesirable.
+  if (aEvent->n_fingers > 2 &&
+      !StaticPrefs::apz_gtk_touchpad_pinch_three_fingers_enabled()) {
+    return FALSE;
+  }
+  auto pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+  ScreenCoord currentSpan;
+  ScreenCoord previousSpan;
+
+  switch (aEvent->phase) {
+    case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+      currentSpan = aEvent->scale;
+
+      // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
+      // WidgetWheelEvent that this PinchGestureInput event will be converted
+      // to not equal Zero as our discussion because we observed that the
+      // scale of the PHASE_BEGIN event is 1.
+      previousSpan = 0.999;
+      break;
+
+    case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+      if (aEvent->scale == mLastPinchEventSpan) {
+        return FALSE;
+      }
+      currentSpan = aEvent->scale;
+      previousSpan = mLastPinchEventSpan;
+      break;
+
+    case GDK_TOUCHPAD_GESTURE_PHASE_END:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+      currentSpan = aEvent->scale;
+      previousSpan = mLastPinchEventSpan;
+      break;
+
+    default:
+      return FALSE;
+  }
+
+  LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
+  PinchGestureInput event(
+      pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
+      GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
+      ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+      100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                   ? ScreenCoord(1.f)
+                   : currentSpan),
+      100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                   ? ScreenCoord(1.f)
+                   : previousSpan),
+      KeymapWrapper::ComputeKeyModifiers(aEvent->state));
+
+  if (!event.SetLineOrPageDeltaY(this)) {
+    return FALSE;
+  }
+
+  mLastPinchEventSpan = aEvent->scale;
+  DispatchPinchGestureInput(event);
   return TRUE;
 }
 

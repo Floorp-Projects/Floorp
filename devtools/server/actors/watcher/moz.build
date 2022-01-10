@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    "browsing-context-helpers.jsm",
     "SessionDataHelpers.jsm",
     "WatcherRegistry.jsm",
 )

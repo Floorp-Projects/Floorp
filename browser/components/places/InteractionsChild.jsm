@@ -7,12 +7,19 @@
 var EXPORTED_SYMBOLS = ["InteractionsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
+});
 
 /**
  * Listens for interactions in the child process and passes information to the
@@ -32,32 +39,27 @@ class InteractionsChild extends JSWindowActorChild {
     }
     switch (event.type) {
       case "DOMContentLoaded": {
-        if (
-          !this.docShell.currentDocumentChannel ||
-          !(this.docShell.currentDocumentChannel instanceof Ci.nsIHttpChannel)
-        ) {
-          // If this is not an http channel, then it is something we're not
+        let docInfo = this.#getDocumentInfo();
+        if (!docInfo || !this.docShell.currentDocumentChannel) {
+          // If there is no document channel, then it is something we're not
           // interested in, but we do need to know that the previous interaction
           // has ended.
           this.sendAsyncMessage("Interactions:PageHide");
           return;
         }
 
-        if (!this.docShell.currentDocumentChannel.requestSucceeded) {
+        if (
+          this.docShell.currentDocumentChannel instanceof Ci.nsIHttpChannel &&
+          !this.docShell.currentDocumentChannel.requestSucceeded
+        ) {
           return;
         }
 
-        let docInfo = await this.#getDocumentInfo();
-        if (docInfo) {
-          this.sendAsyncMessage("Interactions:PageLoaded", docInfo);
-        }
+        this.sendAsyncMessage("Interactions:PageLoaded", docInfo);
         break;
       }
       case "pagehide": {
-        if (
-          !this.docShell.currentDocumentChannel ||
-          !(this.docShell.currentDocumentChannel instanceof Ci.nsIHttpChannel)
-        ) {
+        if (!this.docShell.currentDocumentChannel) {
           return;
         }
 
@@ -81,11 +83,16 @@ class InteractionsChild extends JSWindowActorChild {
    * @returns {string} docInfo.url
    *   The url of the document.
    */
-  async #getDocumentInfo() {
+  #getDocumentInfo() {
     let doc = this.document;
+
+    let requirements = InteractionsBlocklist.urlRequirements.get(
+      doc.documentURIObject.scheme + ":"
+    );
     if (
-      doc.documentURIObject.scheme != "http" &&
-      doc.documentURIObject.scheme != "https"
+      !requirements ||
+      (requirements.extension &&
+        !doc.documentURIObject.spec.endsWith(requirements.extension))
     ) {
       return null;
     }

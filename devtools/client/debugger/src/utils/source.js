@@ -9,7 +9,6 @@
 
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
-import { isOriginalSource } from "../utils/source-maps";
 import { endTruncateStr } from "./utils";
 import { truncateMiddleText } from "../utils/text";
 import { parse as parseURL } from "../utils/url";
@@ -485,14 +484,8 @@ export function underRoot(source, root, threads) {
   return !!source.url && source.url.includes(root);
 }
 
-export function isOriginal(source) {
-  // Pretty-printed sources are given original IDs, so no need
-  // for any additional check
-  return isOriginalSource(source);
-}
-
 export function isGenerated(source) {
-  return !isOriginal(source);
+  return !source.isOriginal;
 }
 
 export function getSourceQueryString(source) {

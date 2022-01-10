@@ -159,6 +159,9 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     if (!this.watcher) {
       this.watcher = new WatcherActor(this.conn, {
         type: "all",
+        // For now, the top level target (ParentProcessTargetActor) is created via ProcessDescriptor.getTarget
+        // and is never replaced by any other, nor is it created by the WatcherActor.
+        isServerTargetSwitchingEnabled: false,
       });
       this.manage(this.watcher);
     }
