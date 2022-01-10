@@ -9,17 +9,28 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console test for splitting</p>";
 
 add_task(async function() {
+  const getFluentString = await getFluentStringHelper([
+    "devtools/client/toolbox.ftl",
+  ]);
+  const hideLabel = getFluentString("toolbox-meatball-menu-hideconsole-label");
+  const showLabel = getFluentString("toolbox-meatball-menu-splitconsole-label");
+
   info("Opening a tab while there is no user setting on split console pref");
   let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(!toolbox.splitConsole, "Split console is hidden by default");
-  ok(
-    !(await doesMenuSayHide(toolbox)),
+  is(
+    await getSplitConsoleMenuLabel(toolbox),
+    showLabel,
     "Split console menu item says split by default"
   );
 
   await toggleSplitConsoleWithEscape(toolbox);
   ok(toolbox.splitConsole, "Split console is now visible.");
-  ok(await doesMenuSayHide(toolbox), "Split console menu item now says hide");
+  is(
+    await getSplitConsoleMenuLabel(toolbox),
+    hideLabel,
+    "Split console menu item now says hide"
+  );
   ok(getVisiblePrefValue(), "Visibility pref is true");
 
   is(
@@ -40,8 +51,9 @@ add_task(async function() {
     isInputFocused(toolbox.getPanel("webconsole").hud),
     "Split console input is focused by default"
   );
-  ok(
-    await doesMenuSayHide(toolbox),
+  is(
+    await getSplitConsoleMenuLabel(toolbox),
+    hideLabel,
     "Split console menu item initially says hide"
   );
   is(
@@ -64,8 +76,9 @@ add_task(async function() {
 
   await toggleSplitConsoleWithEscape(toolbox);
   ok(!toolbox.splitConsole, "Split console is now hidden.");
-  ok(
-    !(await doesMenuSayHide(toolbox)),
+  is(
+    await getSplitConsoleMenuLabel(toolbox),
+    showLabel,
     "Split console menu item now says split"
   );
   ok(!getVisiblePrefValue(), "Visibility pref is false");
@@ -98,7 +111,7 @@ function getHeightPrefValue() {
   return Services.prefs.getIntPref("devtools.toolbox.splitconsoleHeight");
 }
 
-async function doesMenuSayHide(toolbox) {
+async function getSplitConsoleMenuLabel(toolbox) {
   const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
   await waitUntil(
     () => toolbox.win.getComputedStyle(button).pointerEvents === "auto"
@@ -113,15 +126,10 @@ async function doesMenuSayHide(toolbox) {
           "toolbox-meatball-menu-splitconsole"
         );
 
-        const result =
-          menuItem &&
-          menuItem.querySelector(".label") &&
-          menuItem.querySelector(".label").textContent === "Hide Split Console";
-
         toolbox.doc.addEventListener(
           "popuphidden",
           () => {
-            resolve(result);
+            resolve(menuItem?.querySelector(".label")?.textContent);
           },
           { once: true }
         );
