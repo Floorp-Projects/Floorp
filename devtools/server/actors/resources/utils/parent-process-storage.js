@@ -228,7 +228,7 @@ class ParentProcessStorage {
     // - target switching is enabled OR bfCacheInParent is enabled, and a bfcache navigation
     //   is performed (See handling of "pageshow" event in DevToolsFrameChild)
     const isNewTargetBeingCreated =
-      this.watcherActor.isServerTargetSwitchingEnabled ||
+      this.watcherActor.sessionContext.isServerTargetSwitchingEnabled ||
       (isBfCacheNavigation && this.isBfcacheInParentEnabled);
 
     if (!isNewTargetBeingCreated) {
@@ -287,7 +287,7 @@ class StorageActorMock extends EventEmitter {
     // We only need to react to those events here if target switching is not enabled; when
     // it is enabled, ParentProcessStorage will spawn a whole new actor which will allow
     // the client to get the information it needs.
-    if (!this.watcherActor.isServerTargetSwitchingEnabled) {
+    if (!this.watcherActor.sessionContext.isServerTargetSwitchingEnabled) {
       this._offPageShow = watcherActor.on(
         "bf-cache-navigation-pageshow",
         ({ windowGlobal }) => {
@@ -429,7 +429,10 @@ class StorageActorMock extends EventEmitter {
     // We will create a new StorageActor for the top level tab documents when server side target
     // switching is enabled
     const isTopContext = subject.browsingContext.top == subject.browsingContext;
-    if (isTopContext && this.watcherActor.isServerTargetSwitchingEnabled) {
+    if (
+      isTopContext &&
+      this.watcherActor.sessionContext.isServerTargetSwitchingEnabled
+    ) {
       return;
     }
 
