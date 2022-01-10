@@ -186,15 +186,6 @@ interface nsIX509Cert : nsISupports {
   ACString getBase64DERString();
 
   /**
-   *  Test whether two certificate instances represent the
-   *  same certificate.
-   *
-   *  @return Whether the certificates are equal
-   */
-  [must_use]
-  boolean equals(in nsIX509Cert other);
-
-  /**
    * The base64 encoding of the DER encoded public key info using the specified
    * digest.
    */

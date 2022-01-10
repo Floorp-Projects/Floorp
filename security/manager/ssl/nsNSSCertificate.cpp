@@ -559,16 +559,6 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSSCertificate::Equals(nsIX509Cert* other, bool* result) {
-  NS_ENSURE_ARG(other);
-  NS_ENSURE_ARG(result);
-
-  UniqueCERTCertificate cert(other->GetCert());
-  *result = (mCert.get() == cert.get());
-  return NS_OK;
-}
-
 namespace mozilla {
 
 // TODO(bug 1036065): It seems like we only construct CERTCertLists for the

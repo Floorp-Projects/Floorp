@@ -37,6 +37,20 @@ function getCert() {
   });
 }
 
+function areCertsEqual(certA, certB) {
+  let derA = certA.getRawDER();
+  let derB = certB.getRawDER();
+  if (derA.length != derB.length) {
+    return false;
+  }
+  for (let i = 0; i < derA.length; i++) {
+    if (derA[i] != derB[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function startServer(
   cert,
   expectingPeerCert,
@@ -66,7 +80,10 @@ function startServer(
       info("TLS handshake done");
       if (expectingPeerCert) {
         ok(!!status.peerCert, "Has peer cert");
-        ok(status.peerCert.equals(cert), "Peer cert matches expected cert");
+        ok(
+          areCertsEqual(status.peerCert, cert),
+          "Peer cert matches expected cert"
+        );
       } else {
         ok(!status.peerCert, "No peer cert (as expected)");
       }

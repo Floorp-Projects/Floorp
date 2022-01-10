@@ -5,28 +5,6 @@
 
 "use strict";
 
-function test_cert_equals() {
-  let certA = constructCertFromFile("bad_certs/default-ee.pem");
-  let certB = constructCertFromFile("bad_certs/default-ee.pem");
-  let certC = constructCertFromFile("bad_certs/expired-ee.pem");
-
-  ok(
-    certA != certB,
-    "Cert objects constructed from the same file should not be equal" +
-      " according to the equality operators"
-  );
-  ok(
-    certA.equals(certB),
-    "equals() on cert objects constructed from the same cert file should" +
-      " return true"
-  );
-  ok(
-    !certA.equals(certC),
-    "equals() on cert objects constructed from files for different certs" +
-      " should return false"
-  );
-}
-
 // We hard-code the following certificates for the pkcs7 export tests so that we
 // don't have to change the test data when the certificates change each year.
 // Luckily these tests don't depend on the certificates being valid, so it's ok
@@ -678,12 +656,6 @@ function test_old_failed_certlist_deseralization_v2() {
 function run_test() {
   do_get_profile();
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
-
-  // Test nsIX509Cert.equals
-  add_test(function() {
-    test_cert_equals();
-    run_next_test();
-  });
 
   add_test(function() {
     test_cert_pkcs7_export();
