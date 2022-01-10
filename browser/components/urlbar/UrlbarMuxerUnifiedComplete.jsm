@@ -74,6 +74,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       strippedUrlToTopPrefixAndTitle: new Map(),
       urlToTabResultType: new Map(),
       addedRemoteTabUrls: new Set(),
+      addedSwitchTabUrls: new Set(),
       canShowPrivateSearch: context.results.length > 1,
       canShowTailSuggestions: true,
       // Form history and remote suggestions added so far.  Used for deduping
@@ -186,6 +187,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       ),
       urlToTabResultType: new Map(state.urlToTabResultType),
       addedRemoteTabUrls: new Set(state.addedRemoteTabUrls),
+      addedSwitchTabUrls: new Set(state.addedSwitchTabUrls),
       suggestions: new Set(state.suggestions),
     });
 
@@ -805,6 +807,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
+    // Discard switch-to-tab results that dupes another switch-to-tab result.
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+      state.addedSwitchTabUrls.has(result.payload.url)
+    ) {
+      return false;
+    }
+
     // Discard history results that dupe either remote or switch-to-tab results.
     if (
       !result.heuristic &&
@@ -1086,6 +1096,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // dedupe these.
     if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       state.addedRemoteTabUrls.add(result.payload.url);
+    }
+
+    // Keep track of which switch tabs we've added to dedupe switch tabs.
+    if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      state.addedSwitchTabUrls.add(result.payload.url);
     }
   }
 
