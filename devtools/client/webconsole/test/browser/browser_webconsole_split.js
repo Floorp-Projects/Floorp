@@ -11,6 +11,13 @@ requestLongerTimeout(4);
 
 add_task(async function() {
   let toolbox;
+  const getFluentString = await getFluentStringHelper([
+    "devtools/client/toolbox.ftl",
+  ]);
+  const hideSplitConsoleLabel = getFluentString(
+    "toolbox-meatball-menu-hideconsole-label"
+  );
+
   await addTab(TEST_URI);
   await testConsoleLoadOnDifferentPanel();
   await testKeyboardShortcuts();
@@ -118,7 +125,7 @@ add_task(async function() {
     let label;
     if (menuItem && menuItem.querySelector(".label")) {
       label =
-        menuItem.querySelector(".label").textContent === "Hide Split Console"
+        menuItem.querySelector(".label").textContent === hideSplitConsoleLabel
           ? "hide"
           : "split";
     }
