@@ -147,6 +147,8 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
   }
 
   BackgroundChild::Startup();
+  BackgroundChild::InitSocketStarter(this);
+
   SetThisProcessName("Socket Process");
 #if defined(XP_MACOSX)
   // Close all current connections to the WindowServer. This ensures that the
