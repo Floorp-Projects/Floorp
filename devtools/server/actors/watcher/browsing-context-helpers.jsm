@@ -39,6 +39,9 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
  *        is disabled. In case of client side target switching, the top browsing context
  *        is debugged via a target actor that is being instantiated manually by the frontend.
  *        And this target actor isn't created, nor managed by the watcher actor.
+ * @param {Boolean} options.acceptInitialDocument
+ *        By default, we ignore initial about:blank documents/WindowGlobals.
+ *        But some code cares about all the WindowGlobals, this flag allows to also accept them.
  * @param {WindowGlobal} options.windowGlobal
  *        When we are in the content process, we can't easily retrieve the WindowGlobal
  *        for a given BrowsingContext. So allow to pass it via this argument.
@@ -48,7 +51,11 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
 function isBrowsingContextPartOfContext(
   browsingContext,
   sessionContext,
-  { forceAcceptTopLevelTarget = false, windowGlobal } = {}
+  {
+    forceAcceptTopLevelTarget = false,
+    acceptInitialDocument = false,
+    windowGlobal,
+  } = {}
 ) {
   // When we are in the parent process, we have some parent-process only checks,
   // made possible thanks to the extra attributes available on CanonicalBrowsingContext interface.
@@ -84,82 +91,13 @@ function isBrowsingContextPartOfContext(
     );
   }
 
-  if (sessionContext.type == "all") {
-    // see browser-element jsdoc
-    if (!isEveryFrameTargetEnabled && !windowGlobal.isProcessRoot) {
-      return false;
-    }
-    return true;
-  }
-  if (sessionContext.type == "browser-element") {
-    if (browsingContext.browserId != sessionContext.browserId) {
-      return false;
-    }
-    // For client-side target switching, only mention the "remote frames".
-    // i.e. the frames which are in a distinct process compared to their parent document
-    // If there is no parent, this is most likely the top level document which we want to ignore.
-    //
-    // `forceAcceptTopLevelTarget` is set:
-    // * when navigating to and from pages in the bfcache, we ignore client side target
-    // and start emitting top level target from the server.
-    // * when the callsite care about all the debugged browsing contexts,
-    // no matter if their related targets are created by client or server.
-    const isClientSideTargetSwitching = !sessionContext.isServerTargetSwitchingEnabled;
-    const isTopLevelBrowsingContext = !browsingContext.parent;
-    if (
-      isClientSideTargetSwitching &&
-      !forceAcceptTopLevelTarget &&
-      isTopLevelBrowsingContext
-    ) {
-      return false;
-    }
-    // We may process an iframe that runs in the same process as its parent and we don't want
-    // to create targets for them if same origin targets (=EFT) are not enabled.
-    // Instead the WindowGlobalTargetActor will inspect these children document via docShell tree
-    // (typically via `docShells` or `windows` getters).
-    // This is quite common when Fission is off as any iframe will run in same process
-    // as their parent document. But it can also happen with Fission enabled if iframes have
-    // children iframes using the same origin.
-    if (!isEveryFrameTargetEnabled && !windowGlobal.isProcessRoot) {
-      return false;
-    }
-    return true;
-  }
-  if (sessionContext.type == "webextension") {
-    // documentPrincipal is only exposed on WindowGlobalParent,
-    // use a fallback for WindowGlobalChild.
-    const principal =
-      windowGlobal.documentPrincipal ||
-      browsingContext.window.document.nodePrincipal;
-    return principal.addonId == sessionContext.addonId;
-  }
-  throw new Error("Unsupported session context type: " + sessionContext.type);
-}
-
-/**
- * Helper function to know if a given WindowGlobal should be debugged by scope
- * described by the given session context. This method could be called from any process
- * as so accept either WindowGlobalParent or WindowGlobalChild instances.
- *
- * @param {WindowGlobalParent|WindowGlobalChild} windowGlobal
- *        The WindowGlobal we want to check if it is part of debugged context
- * @param {Object} sessionContext
- *        WatcherActor's session context. This helps know what is the overall debugged scope.
- *        See watcher actor constructor for more info.
- * @param {Object} options
- *        Optional arguments passed via a dictionary.
- *        See `isBrowsingContextPartOfContext` jsdoc.
- */
-function isWindowGlobalPartOfContext(
-  windowGlobal,
-  sessionContext,
-  { forceAcceptTopLevelTarget = false, acceptInitialDocument = false } = {}
-) {
+  // Some checks can't be done against WindowGlobal interface
+  // and we need to that against the window object
   const window = Services.wm.getCurrentInnerWindowWithId(
     windowGlobal.innerWindowId
   );
 
-  // We sometimes process WindowGlobal's that run in another content process.
+  // We sometimes process WindowGlobals that run in another content process.
   // (It is a bit surprising to have a JSWindowActorChild to be instantiated for
   // WindowGlobals that aren't from this process??)
   // And filtering them out is hard because:
@@ -198,11 +136,74 @@ function isWindowGlobalPartOfContext(
   ) {
     return false;
   }
+
+  // Now do the check specific to each session context type
+  if (sessionContext.type == "all") {
+    // see browser-element jsdoc
+    return windowGlobal.isProcessRoot || isEveryFrameTargetEnabled;
+  }
+  if (sessionContext.type == "browser-element") {
+    if (browsingContext.browserId != sessionContext.browserId) {
+      return false;
+    }
+    // For client-side target switching, only mention the "remote frames".
+    // i.e. the frames which are in a distinct process compared to their parent document
+    // If there is no parent, this is most likely the top level document which we want to ignore.
+    //
+    // `forceAcceptTopLevelTarget` is set:
+    // * when navigating to and from pages in the bfcache, we ignore client side target
+    // and start emitting top level target from the server.
+    // * when the callsite care about all the debugged browsing contexts,
+    // no matter if their related targets are created by client or server.
+    const isClientSideTargetSwitching = !sessionContext.isServerTargetSwitchingEnabled;
+    const isTopLevelBrowsingContext = !browsingContext.parent;
+    if (
+      isClientSideTargetSwitching &&
+      !forceAcceptTopLevelTarget &&
+      isTopLevelBrowsingContext
+    ) {
+      return false;
+    }
+    // We may process an iframe that runs in the same process as its parent and we don't want
+    // to create targets for them if same origin targets (=EFT) are not enabled.
+    // Instead the WindowGlobalTargetActor will inspect these children document via docShell tree
+    // (typically via `docShells` or `windows` getters).
+    // This is quite common when Fission is off as any iframe will run in same process
+    // as their parent document. But it can also happen with Fission enabled if iframes have
+    // children iframes using the same origin.
+    return windowGlobal.isProcessRoot || isEveryFrameTargetEnabled;
+  }
+  if (sessionContext.type == "webextension") {
+    // documentPrincipal is only exposed on WindowGlobalParent,
+    // use a fallback for WindowGlobalChild.
+    const principal =
+      windowGlobal.documentPrincipal ||
+      browsingContext.window.document.nodePrincipal;
+    return principal.addonId == sessionContext.addonId;
+  }
+  throw new Error("Unsupported session context type: " + sessionContext.type);
+}
+
+/**
+ * Helper function to know if a given WindowGlobal should be debugged by scope
+ * described by the given session context. This method could be called from any process
+ * as so accept either WindowGlobalParent or WindowGlobalChild instances.
+ *
+ * @param {WindowGlobalParent|WindowGlobalChild} windowGlobal
+ *        The WindowGlobal we want to check if it is part of debugged context
+ * @param {Object} sessionContext
+ *        WatcherActor's session context. This helps know what is the overall debugged scope.
+ *        See watcher actor constructor for more info.
+ * @param {Object} options
+ *        Optional arguments passed via a dictionary.
+ *        See `isBrowsingContextPartOfContext` jsdoc.
+ */
+function isWindowGlobalPartOfContext(windowGlobal, sessionContext, options) {
   return isBrowsingContextPartOfContext(
     windowGlobal.browsingContext,
     sessionContext,
     {
-      forceAcceptTopLevelTarget,
+      ...options,
       windowGlobal,
     }
   );
