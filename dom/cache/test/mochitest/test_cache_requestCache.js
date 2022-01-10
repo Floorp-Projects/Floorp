@@ -3,8 +3,8 @@
 var name = "requestCache" + context;
 var c;
 
-var reqWithoutCache = new Request("//mochi.test:8888/?noCache" + context);
-var reqWithCache = new Request("//mochi.test:8888/?withCache" + context, {
+var reqWithoutCache = new Request(`${location.href}?noCache${context}`);
+var reqWithCache = new Request(`${location.href}?withCache${context}`, {
   cache: "force-cache",
 });
 

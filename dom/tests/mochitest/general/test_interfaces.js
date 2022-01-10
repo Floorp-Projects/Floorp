@@ -217,9 +217,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BroadcastChannel", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Cache", insecureContext: true },
+  "Cache",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CacheStorage", insecureContext: true },
+  "CacheStorage",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CanvasCaptureMediaStream", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
