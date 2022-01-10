@@ -361,7 +361,7 @@ void WinWebAuthnManager::Register(
 
   // MakeCredentialOptions
   WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS WebAuthNCredentialOptions = {
-      WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_CURRENT_VERSION,
+      WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_VERSION_4,
       aInfo.TimeoutMS(),
       {0, NULL},
       {0, NULL},
@@ -371,7 +371,11 @@ void WinWebAuthnManager::Register(
       winAttestation,
       0,     // Flags
       NULL,  // CancellationId
-      pExcludeCredentialList};
+      pExcludeCredentialList,
+      WEBAUTHN_ENTERPRISE_ATTESTATION_NONE,
+      WEBAUTHN_LARGE_BLOB_SUPPORT_NONE,
+      FALSE,  // PreferResidentKey
+  };
 
   GUID cancellationId = {0};
   if (gWinWebauthnGetCancellationId(&cancellationId) == S_OK) {
