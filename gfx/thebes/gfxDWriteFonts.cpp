@@ -104,6 +104,10 @@ bool gfxDWriteFont::InitDWriteSupport() {
 
   if (XRE_IsParentProcess()) {
     UpdateSystemTextVars();
+  } else {
+    // UpdateClearTypeVars doesn't update the vars in non parent processes, but
+    // it does set sForceGDIClassicEnabled so we still need to call it.
+    UpdateClearTypeVars();
   }
   DWriteSettings::Initialize();
 
