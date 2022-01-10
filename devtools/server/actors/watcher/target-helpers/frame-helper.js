@@ -76,7 +76,10 @@ async function createTargets(watcher) {
     );
   }
 
-  if (watcher.isServerTargetSwitchingEnabled && watcher.browserElement) {
+  if (
+    watcher.sessionContext.isServerTargetSwitchingEnabled &&
+    watcher.sessionContext.type == "browser-element"
+  ) {
     // If server side target switching is enabled, process the top level browsing context first,
     // so that we guarantee it is notified to the client first.
     // If it is disabled, the top level target will be created from the client instead.
@@ -169,7 +172,7 @@ function destroyTargets(watcher) {
     watcher.browserElement
   );
   if (
-    watcher.isServerTargetSwitchingEnabled &&
+    watcher.sessionContext.isServerTargetSwitchingEnabled &&
     watcher.sessionContext.type == "browser-element"
   ) {
     // If server side target switching is enabled, we should also destroy the top level browsing context.
