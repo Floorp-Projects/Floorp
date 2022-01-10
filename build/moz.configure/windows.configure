@@ -344,6 +344,13 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
             "Please install them." % windows_sdk_dir.path
         )
 
+    cppwinrt_dir = os.path.join(windows_sdk_dir.include, "cppwinrt")
+    if not os.path.isdir(cppwinrt_dir):
+        die(
+            "Cannot find the C++/WinRT headers in the Windows SDK directory (%s). "
+            "Please install them." % windows_sdk_dir.path
+        )
+
     includes = []
     include_env = os.environ.get("INCLUDE")
     if include_env:
@@ -355,6 +362,7 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
             os.path.join(windows_sdk_dir.include, "shared"),
             os.path.join(windows_sdk_dir.include, "um"),
             winrt_dir,
+            cppwinrt_dir,
             os.path.join(ucrt_sdk_dir.include, "ucrt"),
         )
     )
@@ -367,6 +375,9 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
 
 
 set_config("INCLUDE", include_path)
+
+# cppwinrt requires this on clang because of no coroutine support, which is okay
+set_define("_SILENCE_CLANG_COROUTINE_MESSAGE", "")
 
 
 @template
