@@ -21,14 +21,7 @@ job-defaults:
                     - awsy/macosx_config.py
                 default:
                     - awsy/linux_config.py
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux1804-64(?!-shippable).*: 3
-                    windows10-64-2004(-qr)?/opt: 3
-                    default: 2
-            default: default
+    tier: default
     test-manifest-loader: null  # don't load tests in the taskgraph
 
 
@@ -40,6 +33,7 @@ awsy:
 awsy-tp6:
     description: Are we slim yet - tp6 pageset
     variants: [fission]
+    run-without-variant: false
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
         by-test-platform:
@@ -62,6 +56,7 @@ awsy-dmd:
 awsy-base:
     description: Are we slim yet - about:blank base case
     variants: [fission]
+    run-without-variant: false
     treeherder-symbol: SY(ab)
     run-on-projects:
         by-test-platform:
