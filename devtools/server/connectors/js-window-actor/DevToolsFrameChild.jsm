@@ -502,13 +502,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // (watcherActorId,browserId, {browsingContextId}) in another DevToolsFrameChild instance.
     // This might be the case if we're navigating to a new page with server side target
     // enabled and we want to retrieve the target of the page we're navigating from.
-    const isMatchingBrowserElement =
-      this.manager.browsingContext.browserId == sessionContext.browserId;
-    const isMatchingWebExtension =
-      this.document.nodePrincipal.addonId == sessionContext.addonId;
     if (
-      (sessionContext.type == "browser-element" && isMatchingBrowserElement) ||
-      (sessionContext.type == "webextension" && isMatchingWebExtension)
+      isWindowGlobalPartOfContext(this.manager, sessionContext, {
+        forceAcceptTopLevelTarget: true,
+      })
     ) {
       // Ensure retrieving the one target actor related to this connection.
       // This allows to distinguish actors created for various toolboxes.
