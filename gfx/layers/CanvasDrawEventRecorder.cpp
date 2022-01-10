@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "mozilla/layers/SharedSurfacesChild.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -499,6 +500,18 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
   memcpy(aOut, mBuf + bufPos, aSize);
   readCount += aSize;
   mWrite->returnCount = readCount;
+}
+
+void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
+    gfx::SourceSurface* aSurface, const char* aReason) {
+  wr::ExternalImageId extId{};
+  nsresult rv = layers::SharedSurfacesChild::Share(aSurface, extId);
+  if (NS_FAILED(rv)) {
+    DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
+    return;
+  }
+
+  StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
 }
 
 void CanvasDrawEventRecorder::RecordSourceSurfaceDestruction(void* aSurface) {

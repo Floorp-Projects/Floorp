@@ -200,6 +200,13 @@ void CanvasChild::OnTextureForwarded() {
 
     mHasOutstandingWriteLock = false;
   }
+
+  // We hold onto the last transaction's external surfaces until we have waited
+  // for the write locks in this transaction. This means we know that the
+  // surfaces have been picked up in the canvas threads and there is no race
+  // with them being removed from SharedSurfacesParent. Note this releases the
+  // current contents of mLastTransactionExternalSurfaces.
+  mRecorder->TakeExternalSurfaces(mLastTransactionExternalSurfaces);
 }
 
 void CanvasChild::EnsureBeginTransaction() {
