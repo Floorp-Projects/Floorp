@@ -116,6 +116,21 @@ static bool IsDisplayedNode(const nsINode* aNode) {
   return aNode->IsElement() && aNode->AsElement()->IsDisplayContents();
 }
 
+static bool IsRubyAnnotationNode(const nsINode* aNode) {
+  if (!aNode->IsContent()) {
+    return false;
+  }
+
+  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
+  if (!frame) {
+    return false;
+  }
+
+  StyleDisplay display = frame->StyleDisplay()->mDisplay;
+  return StyleDisplay::RubyText == display ||
+         StyleDisplay::RubyTextContainer == display;
+}
+
 static bool IsVisibleNode(const nsINode* aNode) {
   if (!IsDisplayedNode(aNode)) {
     return false;
@@ -175,6 +190,13 @@ static bool SkipNode(const nsIContent* aContent) {
         DumpNode(content);
         return true;
       }
+    }
+
+    if (StaticPrefs::browser_find_ignore_ruby_annotations() &&
+        IsRubyAnnotationNode(content)) {
+      DEBUG_FIND_PRINTF("Skipping node: ");
+      DumpNode(content);
+      return true;
     }
 
     if (content->IsInNativeAnonymousSubtree() &&
