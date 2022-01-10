@@ -84,15 +84,17 @@ function testMatchAcrossCaches() {
     // and make sure we don't confuse it with an alphabetically sorted list.
     {
       name: "caches-xmatch5" + context,
-      request: `${location.href}?5${context}`,
+      request: "//mochi.test:8888/?5" + context,
     },
     {
       name: "caches-xmatch2" + context,
-      request: `${location.origin}/tests/dom/cache/test/mochitest/test_caches.js?2${context}`,
+      request:
+        "//mochi.test:8888/tests/dom/cache/test/mochitest/test_caches.js?2" +
+        context,
     },
     {
       name: "caches-xmatch4" + context,
-      request: `${location.href}?4${context}`,
+      request: "//mochi.test:8888/?4" + context,
     },
   ];
   return Promise.all(
@@ -103,7 +105,7 @@ function testMatchAcrossCaches() {
     })
   )
     .then(function() {
-      return caches.match(`${location.href}?5${context}`, {
+      return caches.match("//mochi.test:8888/?5" + context, {
         ignoreSearch: true,
       });
     })
@@ -113,7 +115,7 @@ function testMatchAcrossCaches() {
     })
     .then(function(deleted) {
       ok(deleted, "Deletion should finish successfully");
-      return caches.match(`${location.href}?${context}`, {
+      return caches.match("//mochi.test:8888/?" + context, {
         ignoreSearch: true,
       });
     })
@@ -126,7 +128,7 @@ function testMatchAcrossCaches() {
     })
     .then(function(deleted) {
       ok(deleted, "Deletion should finish successfully");
-      return caches.match(`${location.href}?${context}`, {
+      return caches.match("//mochi.test:8888/?" + context, {
         ignoreSearch: true,
       });
     })
@@ -136,7 +138,7 @@ function testMatchAcrossCaches() {
     })
     .then(function(deleted) {
       ok(deleted, "Deletion should finish successfully");
-      return caches.match(`${location.href}?${context}`, {
+      return caches.match("//mochi.test:8888/?" + context, {
         ignoreSearch: true,
       });
     })

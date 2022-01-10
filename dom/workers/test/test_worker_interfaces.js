@@ -123,9 +123,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "BroadcastChannel", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "Cache",
+  { name: "Cache", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "CacheStorage",
+  { name: "CacheStorage", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CloseEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

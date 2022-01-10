@@ -102,7 +102,7 @@ SpecialPowers.pushPrefEnv({
 
   const name = "cachePadding";
   const other_name = "cachePaddingOther";
-  const cors_base = "https://example.net/tests/dom/cache/test/mochitest/";
+  const cors_base = "https://example.com/test/dom/cache/test/mochitest/";
   const url = "test_cache_add.js";
 
   await setupTestIframe();
@@ -160,7 +160,7 @@ SpecialPowers.pushPrefEnv({
     cache = await caches.open(name);
     await cache.put(cors_base + url, opaqueResponse);
     await waitForIOToComplete(cache, url);
-    let usage6 = await verifyUsage();
+    let usage6  = await verifyUsage();
     if (usage6 != usage5) {
       paddingSizeChange = true;
       break;
@@ -180,12 +180,12 @@ SpecialPowers.pushPrefEnv({
   // Force remove orphaned cached in the next action
   await resetStorage();
 
-  // Delete the opauqe response on current cache storage.
+  // Delete the opauqe repsonse on current cache storage.
   cache = await caches.open(name);
   await cache.delete(cors_base + url);
   await waitForIOToComplete(cache, url);
-  let usage7 = await verifyUsage();
-  ok(usage7 < usage3,
+  let usage7  = await verifyUsage();
+  ok(usage7 == usage2,
      "The opaque response should be removed by caches.delete() and " +
      "cache.delete()");
 
