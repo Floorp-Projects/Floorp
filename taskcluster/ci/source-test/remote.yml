@@ -21,7 +21,7 @@ job-defaults:
     worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: ubuntu1804-test}
-        max-run-time: 1800
+        max-run-time: 3600
         artifacts:
             - type: file
               name: public/remote/results.json
