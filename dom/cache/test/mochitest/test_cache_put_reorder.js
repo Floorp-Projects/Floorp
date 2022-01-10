@@ -4,9 +4,9 @@ var name = "putreorder" + context;
 var c;
 
 var reqs = [
-  `${location.href}?foo${context}`,
-  `${location.href}?bar${context}`,
-  `${location.href}?baz${context}`,
+  "//mochi.test:8888/?foo" + context,
+  "//mochi.test:8888/?bar" + context,
+  "//mochi.test:8888/?baz" + context,
 ];
 
 caches

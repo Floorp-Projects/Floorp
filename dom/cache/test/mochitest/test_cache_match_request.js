@@ -1,8 +1,8 @@
 /* global context testDone:true */
 
-var req = new Request(`${location.origin}/?${context}#fragment`);
-var requestWithAltQS = new Request(`${location.origin}/?queryString`);
-var unknownReq = new Request(`${location.origin}/non/existing/path?${context}`);
+var req = new Request("//mochi.test:8888/?" + context + "#fragment");
+var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
+var unknownReq = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response;
 var c;
 var responseText;
