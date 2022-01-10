@@ -1337,7 +1337,7 @@ impl RenderBackend {
             *frame_counter += 1;
 
             // borrow ck hack for profile_counters
-            let (pending_update, rendered_document) = {
+            let (pending_update, mut rendered_document) = {
                 let frame_build_start_time = precise_time_ns();
 
                 let frame_stats = doc.frame_stats.take();
@@ -1362,6 +1362,12 @@ impl RenderBackend {
                 let pending_update = self.resource_cache.pending_updates();
                 (pending_update, rendered_document)
             };
+
+            // Invalidate dirty rects if the compositing config has changed significantly
+            rendered_document
+                .frame
+                .composite_state
+                .update_dirty_rect_validity(&doc.prev_composite_descriptor);
 
             // Build a small struct that represents the state of the tiles to be composited.
             let composite_descriptor = rendered_document
