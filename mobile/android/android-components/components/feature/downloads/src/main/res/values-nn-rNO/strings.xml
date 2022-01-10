@@ -46,6 +46,12 @@
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Tilgang til filer og medium er nødvendig for å laste ned filer. Gå til Android-innstillingar, trykk på løyve (tillatelser) og trykk på tillat.</string>
 
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Avbryte private nedlastingar?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Om du lèt att alle private faner no, blir %1$s-nedlastinga avbroten. Er du sikker på at du vil gå ut av privat nettlesing?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">Avbryt nedlastingar</string>
-    </resources>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Fortset med privat nettlesing</string>
+</resources>

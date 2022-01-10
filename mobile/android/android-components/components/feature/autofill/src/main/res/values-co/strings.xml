@@ -16,7 +16,7 @@
 
     <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
     a third-party app after the authenticity verification failed. -->
-    <string name="mozac_feature_autofill_confirmation_title">Verificazione fiasca</string>
+    <string name="mozac_feature_autofill_confirmation_title">Verificazione fiascata</string>
 
     <!-- Autofill: Text shown in dialog asking the user to confirm before autofilling credentials into a
     third-party app where we could not verify the authenticity (e.g. we determined that this app is

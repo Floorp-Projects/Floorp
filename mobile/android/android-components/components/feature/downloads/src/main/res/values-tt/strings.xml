@@ -46,4 +46,7 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s кушымтасын ачу мөмкин түгел</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Файлларны йөкләп алу өчен файллардан һәм медиадан файдалану рөхсәте кирәк. Android көйләүләренә кереп, &quot;рөхсәтләр&quot; дигән битне ачып, &quot;рөхсәт итү&quot; дигәнгә басыгыз.</string>
-</resources>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Йөкләүдән баш тарту</string>
+    </resources>

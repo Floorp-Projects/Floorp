@@ -44,4 +44,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Impussibel d\'avrir %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Per pudair telechargiar datotecas è la permissiun da pudair acceder a datotecas e medias necessaria. Va als parameters dad Android, smatga sin permissiuns e lura sin permetter.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Interrumper las telechargiadas privatas?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Sche ti serras ussa tut ils tabs privats vegn la telechargiada da %1$s interrutta. Vuls ti propi bandunar il modus privat?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Interrumper las telechargiadas</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Restar en il modus privat</string>
 </resources>
