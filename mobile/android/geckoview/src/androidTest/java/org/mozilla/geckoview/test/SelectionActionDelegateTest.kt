@@ -47,7 +47,8 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 arrayOf("#textarea", ContentType.EDITABLE_ELEMENT, "dolor", true),
                 arrayOf("#contenteditable", ContentType.DIV, "sit", true),
                 arrayOf("#iframe", ContentType.IFRAME, "amet", false),
-                arrayOf("#designmode", ContentType.IFRAME, "consectetur", true))
+                arrayOf("#designmode", ContentType.IFRAME, "consectetur", true),
+                arrayOf("#x-input", ContentType.EDITABLE_ELEMENT, "adipisci", true))
     }
 
     @field:Parameter(0) @JvmField var id: String = ""
