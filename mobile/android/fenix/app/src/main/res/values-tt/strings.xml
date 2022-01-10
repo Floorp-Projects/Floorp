@@ -56,7 +56,9 @@
     <string name="recently_saved_show_all">Барысын да күрсәтү</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Барлык сакланган кыстыргычларны да күрсәтү төймәсе</string>
+    <string name="recently_saved_show_all_content_description_2">Барлык сакланган кыстыргычларны да күрсәтү</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Барлык сакланган кыстыргычларны да күрсәтү төймәсе</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla тарафыннан җитештерелә.</string>
@@ -130,7 +132,9 @@
     <string name="recent_tabs_show_all">Барысын да күрсәтү</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Барлың соңгы табларны күрсәтү төймәсе</string>
+    <string name="recent_tabs_show_all_content_description_2">Барлың соңгы табларны күрсәтү төймәсе</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Барлың соңгы табларны күрсәтү</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot; эзләвегез</string>
@@ -154,7 +158,9 @@
     <string name="recently_visited_menu_item_remove">Бетерү</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Тарихны тулысынча күрсәтү төймәсе</string>
+    <string name="past_explorations_show_all_content_description_2">Тарихны тулысынча күрсәтү</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Тарихны тулысынча күрсәтү төймәсе</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1003,6 +1009,8 @@
     <string name="preference_phone_feature_notification">Искәртү</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Даими саклагыч</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Сайт-ара кукилар</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM белән идарә ителгән эчтәлек</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1259,6 +1267,8 @@
     <string name="preferences_delete_browsing_data_on_quit">Чыкканда гизү мәгълүматларын бетерү</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Төп менюда &quot;Чыгу&quot; дигәнгә басканда, гизү мәгълүматларын автоматик рәвештә чистарта</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Төп менюдан \&quot;Чыгу\&quot;-ны сайлаганда, гизү мәгълүматларын автоматик рәвештә бетерә</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Чыгу</string>
 
@@ -1303,6 +1313,10 @@
     <string name="onboarding_account_sign_in_header_1">Firefox-ны җиһазлар арасында синхронлау</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_description">Бу җиһаздагы Firefox-ка кыстыргычлар, тарих һәм серсүзләрне китерү.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">Бу җиһаздагы башка бер Firefox браузерында Сез %s буларак кергәнсез. Бу хисап белән керәсегез киләме?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Әйе, кертегез</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1319,6 +1333,8 @@
     <string name="onboarding_tracking_protection_header_3">Даими хосусыйлык</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандарт (килешенгәнчә)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Хосусыйлык һәм җитештерүчәнлек балансланган. Битләр гадәттәгечә йөкләнәчәк.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Катгый (киңәш ителә)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1365,6 +1381,12 @@
     <string name="sign_in_with_camera">Камерагыз ярдәмендә керегез</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Моның урынына эл. почта кулланыгыз</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Аккаунтыгыз юкмы? Firefox-ны җиһазлар арасында синхронлау өчен, бер <u>хисап булдырыгыз</u>.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox хисабыгыз белән синхронлауны туктатачак, ләкин бу җиһаздагы гизү мәгълүматларының берсен дә бетермәячәк.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s хисабыгыз белән синхронлауны туктатачак, ләкин бу җиһаздагы гизү мәгълүматларының берсен дә бетермәячәк.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Өзү</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1378,10 +1400,16 @@
     <string name="etp_settings">Саклау көйләүләре</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Күзәтелүдән Көчәйтелгән Саклау</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Күзәтелмичә гизү</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Мәгълүматыгыз үзегездә генә булсын. %s онлайнда нәрсә эшләгәнегезне ачыкларга омтылган күпчелек күзәтүчеләрдән Сезне саклый.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Күбрәк белү</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандарт (килешенгәнчә)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Хосусыйлык һәм җитештерүчәнлек балансланган. Битләр гадәттәгечә йөкләнә.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Стандарт күзәтелүдән саклау чаралары нәрсәләрне блоклый</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1414,6 +1442,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Криптомайнерләр</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Бармак эзләрен җыючылар (идентификаторлар)</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Нечкәлекләр</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Тыелган</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1449,6 +1479,11 @@
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Юнәлтүләрне күзәтеп торучылар</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Билгеле күзәтүче вебсайтларга булган юнәлтүләр урнаштырган кукиларны чистарта.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Күбрәк белү</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Техник ярдәм</string>
@@ -1505,6 +1540,17 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Беркайчан да cакламау</string>
 
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s эчендә автотутыру</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s кулланганда вебсайтларда кулланучы исемнәре һәм серсүзләр саклансын һәм аннан автоматик рәвештә тутырылсын.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Башка кушымталарда автотутыру</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Җиһазыгыздагы башка кушымталарда кулланучы исемнәре һәм серсүзләр тутырылсын.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Логинны өстәү</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиннарны синхронлау </string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1515,6 +1561,8 @@
     <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Синхронлауга керү</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Сакланган логиннар</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Сез саклаган яки %s белән синхронланган логиннар монда күрсәтеләчәк.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Синхронлау турында күбрәк беләсез. </string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1566,6 +1614,8 @@
 
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Кулланучы исемен чистарту</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Сервер исемен чистарту</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Сайтны күчереп алу</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1642,14 +1692,21 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Зинһар, дөрес бер карта номерын кертегез</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Зинһар, бу кырны тутырыгыз</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Сакланган карталарыгызны карау өчен йозакны ачыгыз</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Кредит карталарыгызны саклагыз</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Хәзер урнаштыру</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">Cоңрак</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Җиһазыгызның йозагын ачыгыз</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Сакланган кредит картасы мәгълүматларын куллану өчен ачыгыз</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Эзләү системасын өстәү</string>
@@ -1718,6 +1775,14 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> көйләнешен кабызыгыз]]></string>
 
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Бәйләнеш хәвефсез</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Бәйләнеш хәвефсез түгел</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Кукиларны һәм сайт мәгълүматларын чистарту</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[<b>%s</b> сайты өчен барлык кукиларны һәм мәгълүматларны да чистартуны раслыйсызмы?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Барлык сайтлардагы барлык рөхсәтләрне дә чистартуны раслыйсызмы?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1757,9 +1822,15 @@
     <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Үзгәрешләрдән ваз кичү</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Үзгәртү</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Яңа логин өстәү</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Серсүз кирәк</string>
 
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Кулланучы исеме кирәк</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Хост исеме кирәк</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Тавышлы эзләү</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1767,6 +1838,13 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Мондый исемле кулланучы бар инде</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Веб-адреста &quot;https://&quot; яки &quot;http://&quot; булырга тиеш</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Дөрес бер хост исеме кирәк</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1787,9 +1865,13 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Төп сайтлар саны чиккә җитте</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Яңа төп сайт өстәү өчен башка берсен бетерегез. Сайтка басып торыгыз һәм «Бетерү»-не сайлагыз.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Яхшы, аңладым</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Иң күп каралган төп сайтлар</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Исем</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Төп сайт исеме</string>
@@ -1797,6 +1879,12 @@
 	<string name="top_sites_rename_dialog_ok">ОК</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Баш тарту</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">Актив булмаган таблар</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Барлык актив булмаган табларны ябу</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Бетерү</string>

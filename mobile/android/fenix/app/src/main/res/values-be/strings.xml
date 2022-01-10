@@ -22,7 +22,7 @@
     <string name="no_private_tabs_description">Тут будуць паказаны вашы прыватныя карткі.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 адкрытая картка. Націсніце, каб пераключыць карткі.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 адкрытая картка. Націсніце, каб пераключыць карткі.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Адкрытых картак: %1$s. Націсніце, каб пераключыць карткі.</string>
 
@@ -39,21 +39,17 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Захаваць абраныя карткі ў калекцыю</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Вылучана %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">Вылучана %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Зняты выбар %1$s</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">Зняты выбар %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Пакінуты рэжым мультывыбару</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Пакінуты рэжым мультывыбару</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Распачаты рэжым мультывыбару, абярыце карткі, каб дадаць іх у калекцыю</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Распачаты рэжым мультывыбару, абярыце карткі, каб дадаць іх у калекцыю</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Вылучана</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Нядаўна захаваныя</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Нядаўна дададзеныя закладкі</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Нядаўнія закладкі</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -61,20 +57,22 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Паказаць усе</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Паказаць усе захаваныя закладкі</string>
+    <string name="recently_saved_show_all_content_description_2">Паказаць усе захаваныя закладкі</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Паказаць усе захаваныя закладкі</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s распрацаваны Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Вы ў прыватным сеансе</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Вы ў прыватным сеансе</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">        %1$s выдаляе гісторыю пошуку і аглядання з прыватных картак, калі вы закрываеце іх ці выходзіце з праграмы. Гэта не робіць вас ананімным для вэб-сайтаў ці вашага правайдара, але дазваляе трымаць у сакрэце вашу сеціўную дзейнасць ад кагосьці, хто карыстаецца вашай прыладай.</string>
     <string name="private_browsing_common_myths">Шырокавядомыя забабоны пра прыватнае агляданне</string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Выдаліць сеанс</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Выдаліць сеанс</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -138,7 +136,9 @@
     <string name="recent_tabs_show_all">Паказаць усе</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Кнопка паказу ўсіх нядаўніх картак</string>
+    <string name="recent_tabs_show_all_content_description_2">Кнопка паказу ўсіх нядаўніх картак</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Паказаць усе нядаўнія карткі</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Вынік пошуку \&quot;%1$s\&quot;</string>
@@ -153,9 +153,6 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Мінулыя прагляды</string>
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Нядаўна наведаныя</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -164,11 +161,13 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Выдаліць</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Кнопка паказу нядаўняй гісторыі</string>
+    <string name="past_explorations_show_all_content_description_2">Паказаць усе мінулыя пошукі</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Кнопка паказу нядаўняй гісторыі</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Адкрытыя карткі</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Адкрытыя карткі</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Назад</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -180,11 +179,11 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Дадаць у закладкі</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Рэдагаваць закладку</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Рэдагаваць закладку</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дадаткі</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Пашырэнні</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Пашырэнні</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Няма дадаткаў</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -208,7 +207,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Знайсці на старонцы</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Прыватная картка</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Прыватная картка</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Захаваць у калекцыі</string>
 
@@ -216,7 +215,7 @@
     <string name="browser_menu_share">Падзяліцца</string>
 
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Падзяліцца з…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Падзяліцца з…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Адкрыць у %1$s</string>
@@ -233,7 +232,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Адкрыць у праграме</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Выгляд</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Выгляд</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Уладкаваць рэжым чытання</string>
@@ -253,13 +252,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Немагчыма злучыцца. Невядомая схема URL.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Немагчыма злучыцца. Невядомая схема URL.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Абраная мова</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Пошук</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Пошук</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Мова прылады</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -273,7 +272,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Налады пошукавых сістэм</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Гэтым разам шукаць у:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Гэтым разам шукаць у:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Уставіць спасылку з буфера абмену</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -327,7 +326,7 @@
     <!-- Title for the settings page-->
     <string name="settings">Налады</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Асноўнае</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Асноўнае</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Агульныя</string>
     <!-- Preference category for all links about Fenix -->
@@ -339,26 +338,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Адрасны радок</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Даведка</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Даведка</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Ацаніць у Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Даць водгук</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Даць водгук</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Пра %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Вашы правы</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Вашы правы</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Паролі</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Паролі</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Крэдытныя карткі і адрасы</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Крэдытныя карткі і адрасы</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Зрабіць прадвызначаным браўзерам</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Дадаткова</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Прыватнасць</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Прыватнасць</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Прыватнасць і бяспека</string>
     <!-- Preference for advanced site permissions -->
@@ -384,13 +383,11 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Уліковы запіс</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Увайсці</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Увайсці</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Паліца прылад</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тэма</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Хатняя старонка</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Хатняя старонка</string>
     <!-- Preference for gestures based actions -->
@@ -411,9 +408,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Збор дадзеных</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Паведамленне аб прыватнасці</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Паведамленне аб прыватнасці</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Прылады распрацоўшчыка</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Прылады распрацоўшчыка</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Аддаленая адладка праз USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -464,10 +461,6 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Перайсці назад да</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Нядаўна захаваныя</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Нядаўна дададзеныя закладкі</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Нядаўнія закладкі</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -533,21 +526,21 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Атрыманая картка</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Атрыманыя карткі</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Атрыманыя карткі</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Картка з %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Ахова ад сачэння</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Ахова ад сачэння</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Ахова ад сачэння</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Ахова ад сачэння</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Блакаваць змест і скрыпты, якія асочваюць вас у інтэрнэце</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Блакаваць змест і скрыпты, якія асочваюць вас у інтэрнэце</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Выключэнні</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Ахова ад сачэння выключана на гэтых сайтах</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Ахова ад сачэння выключана на гэтых сайтах</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Уключыць для ўсіх сайтаў</string>
     <!-- Text displayed when there are no exceptions -->
@@ -556,7 +549,7 @@
     <string name="exceptions_empty_message_learn_more_link">Даведацца больш</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Тэлеметрыя</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Тэлеметрыя</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Выкарыстанне і тэхнічныя дадзеныя</string>
     <!-- Preference description for usage and technical data collection -->
@@ -564,7 +557,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетынгавыя дадзеныя</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Дзяліцца звесткамі пра магчымасці, якімі вы карыстаецеся ў %1$s, з нашым пастаўшчыком мабільнага маркетынгу Leanplum.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Дзяліцца звесткамі пра магчымасці, якімі вы карыстаецеся ў %1$s, з нашым пастаўшчыком мабільнага маркетынгу Leanplum.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Дзеліцца асноўнымі звесткамі аб выкарыстанні з Adjust, нашым пастаўшчыком мабільнага маркетынгу</string>
     <!-- Title for studies preferences -->
@@ -572,17 +565,17 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Дазволіць Mozilla ўсталёўваць і запускаць даследаванні</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Доследы</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Доследы</string>
 
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Дазваляе Mozilla ўсталёўваць эксперыментальныя функцыі і збіраць звесткі для іх</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Дазваляе Mozilla ўсталёўваць эксперыментальныя функцыі і збіраць звесткі для іх</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Паведамляльнік пра крахі</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Паведамляльнік пра крахі</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Служба месцазнаходжання Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Служба месцазнаходжання Mozilla</string>
 
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Справаздача аб здароўі %s</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">Справаздача аб здароўі %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -590,7 +583,7 @@
     <!-- Preference for pairing -->
     <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Скануйце код спалучэння ў Firefox на камп’ютары</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Увайсці</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Увайсці</string>
 
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Увайдзіце, каб злучыцца зноў</string>
@@ -601,10 +594,10 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Адскануйце QR-код на <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Адкрыць камеру</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Адкрыць камеру</string>
 
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Адмяніць</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Адмяніць</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -637,9 +630,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Сеансы</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Сеансы</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Здымкі экрана</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Здымкі экрана</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Сцягванні</string>
     <!-- Option in library to open Bookmarks page -->
@@ -657,15 +650,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Новая картка</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Знайсці на старонцы</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Знайсці на старонцы</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Спіс для чытання</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Спіс для чытання</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Пошук</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Пошук</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Налады</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Меню элемента гісторыі</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Меню элемента гісторыі</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Закрыць</string>
 
@@ -717,20 +710,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Аўтаматычна закрываць адкрытыя карткі</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Запускаць на хатнім экране</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Пачатковы экран</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Праз чатыры гадзіны</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Хатняя старонка</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Заўжды</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Апошняя картка</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Ніколі</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Хатняя старонка пасля чатырох гадзін бяздзейнасці</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -771,7 +756,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Адкрытыя карткі</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Прыватны сеанс</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Прыватны сеанс</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Прыватныя карткі</string>
 
@@ -786,9 +771,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Сінхранізацыя</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Адкрытыя карткі</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Адкрытыя карткі</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Захаваць у калекцыі</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Захаваць у калекцыі</string>
     <!-- Text shown in the menu for the collection selector -->
     <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Выбраць</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -804,11 +789,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Закрыць усе карткі</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Новая картка</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Новая картка</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Дадому</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Дадому</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Пераключыць рэжым картак</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Пераключыць рэжым картак</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Закладка</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -828,25 +813,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Меню адкрытых картак</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Закрыць усе карткі</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Закрыць усе карткі</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Падзяліцца карткамі</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Падзяліцца карткамі</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Захаваць карткі у калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Меню картак</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Падзяліцца карткай</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Падзяліцца карткай</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Выдаліць</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Выдаліць</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Захаваць</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Захаваць</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Падзяліцца</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Падзяліцца</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Выява бягучага сеансу</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Выява бягучага сеансу</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Захаваць у калекцыі</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Захаваць у калекцыі</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Выдаліць калекцыю</string>
     <!-- Text for the menu button to rename a collection -->
@@ -866,10 +851,8 @@
     <string name="pwa_site_controls_title_private">%1$s (Прыватны рэжым)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Захаваць</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Захаваць</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Іншыя</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Іншыя карткі</string>
 
@@ -877,21 +860,13 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Выдаліць гісторыю</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Вы ўпэўненыя, што хочаце выдаліць сваю гісторыю?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Вы ўпэўненыя, што хочаце выдаліць сваю гісторыю?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Гісторыя выдалена</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s выдалены</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Ачысціць</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Капіраваць</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Падзяліцца</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Адкрыць у новай картцы</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Адкрыць у прыватнай картцы</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Ачысціць</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Выдаліць</string>
     <!-- History multi select title in app bar
@@ -899,13 +874,13 @@
     <string name="history_multi_select_title">Выбрана: %1$d</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Выдаліць %1$d элементаў</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Выдаліць %1$d элементаў</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Сёння</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Учора</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Апошнія 24 гадзіны</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">Апошнія 24 гадзіны</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Апошнія 7 дзён</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -930,7 +905,7 @@
 
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Адкрыць</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Адкрыць</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -941,7 +916,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Выбачайце. %1$s не можа загрузіць гэтую старонку.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Вы можаце паспрабаваць аднавіць ці закрыць гэтую картку ніжэй.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Вы можаце паспрабаваць аднавіць ці закрыць гэтую картку ніжэй.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Адправіць справаздачу аб краху ў Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -950,24 +925,24 @@
     <string name="tab_crash_restore">Аднавіць картку</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Налады сеанса</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Налады сеанса</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Падзяліцца сеансам</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Падзяліцца сеансам</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Меню закладак</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Меню закладак</string>
     <!-- Screen title for editing bookmarks -->
     <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Рэдагаваць закладку</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Выбраць папку</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Выбраць папку</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Вы ўпэўнены, што жадаеце выдаліць гэту папку?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s выдаліць вылучаныя элементы.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s выдалена</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">%1$s выдалена</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Дадаць папку</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -977,7 +952,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Змяніць</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Выбраць</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Выбраць</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Капіраваць</string>
     <!-- Bookmark overflow menu share button -->
@@ -1029,7 +1004,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Дазволы</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Дазволы</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Перайсці ў налады</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1039,7 +1014,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Рэкамендуецца</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Кіраваць дазволамі сайта</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Кіраваць дазволамі сайта</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Ачысціць дазволы</string>
     <!-- Button label for clearing a site permission-->
@@ -1060,6 +1035,8 @@
     <string name="preference_phone_feature_notification">Абвестка</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Пастаяннае сховішча</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Міжсайтавыя кукі</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Змесціва пад DRM кантролем</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1148,14 +1125,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Адправіць і падзяліцца</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Адправіць і падзяліцца</string>
     <!-- Share screen header -->
     <string name="share_header_2">Падзяліцца</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Падзяліцца</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Падзяліцца спасылкай</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Падзяліцца спасылкай</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Даслаць на прыладу</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1193,18 +1170,18 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Сеанс прыватнага аглядання</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Сеанс прыватнага аглядання</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Выдаліць прыватныя карткі</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Выдаліць прыватныя карткі</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Закрыць прыватныя карткі</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Адкрыць</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Адкрыць</string>
 
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Выдаліць і адкрыць</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Выдаліць і адкрыць</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Працуе на</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Працуе на</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Маркетынг</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1220,9 +1197,9 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Калекцыя перайменавана</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Картка выдалена</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Картка выдалена</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Карткі выдалены</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Карткі выдалены</string>
 
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Картка закрыта</string>
@@ -1230,11 +1207,11 @@
     <string name="snackbar_tabs_closed">Карткі закрыты</string>
 
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Карткі закрыты!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Карткі закрыты!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Закладкі захаваны!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Паглядзець</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Паглядзець</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Дададзена да папулярных сайтаў</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1242,15 +1219,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Прыватныя карткі закрыты</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Прыватныя карткі выдалены</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Прыватныя карткі выдалены</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">АДМЯНІЦЬ</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Сайт выдалены</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Сайт выдалены</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Адмяніць</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Адмяніць</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Пацвердзіць</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Пацвердзіць</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Дазволіць %1$s адкрыць %2$s</string>
@@ -1270,8 +1247,6 @@
     <string name="delete_tab_and_collection_dialog_title">Выдаліць %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Выдаліць</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Адмена</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Уваход у поўнаэкранны рэжым</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1302,10 +1277,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Адрасы: %d</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Гісторыя</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Гісторыя</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Старонак: %d</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">Старонак: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Кукі</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1323,7 +1298,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Выдаляць звесткі аглядання пры выхадзе</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце &quot;Выйсці&quot; ў галоўным меню</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце &quot;Выйсці&quot; ў галоўным меню</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Аўтаматычна выдаляе дадзеныя аглядання, калі вы выбіраеце \&quot;Выйсці\&quot; ў галоўным меню</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1375,14 +1350,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Вітаем у %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Ужо маеце ўліковы запіс?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Паглядзіце, што новага</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Адказы тут</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Ужо маеце ўліковы запіс?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Сінхранізуйце Firefox паміж прыладамі</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1398,7 +1366,7 @@
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Зарэгістравацца</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Не ўваходзіць</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Не ўваходзіць</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Сінхранізацыя ўключана</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1412,7 +1380,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Збалансаваная прыватнасць і прадукцыйнасць. Старонкі загружаюцца нармальна.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Строгая (рэкамендуецца)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Строгая (рэкамендуецца)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строгая</string>
     <!-- text for strict blocking option button description -->
@@ -1421,15 +1389,6 @@
     <string name="onboarding_toolbar_placement_header_1">Выберыце размяшчэнне панэлі інструментаў</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Майце панэль інструментаў пад рукой. Пакіньце яе ўнізе або перамясціце ўверх.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Аглядайце прыватна</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Адкрыць прыватную картку адзін раз: Націсніце значок %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Адкрываць прыватныя карткі кожны раз: Абнавіце налады прыватнага аглядання.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Адкрыць налады</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ваша прыватнасць</string>
     <!-- text for the privacy notice onboarding card description
@@ -1437,8 +1396,6 @@
     <string name="onboarding_privacy_notice_description2">Мы распрацавалі %s, каб даць вам кантроль над тым, чым дзяліцца ў Інтэрнэце, і тым, чым вы падзеліцеся з намі.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Паведамленне аб прыватнасці</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Закрыць</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Пачаць агляданне</string>
@@ -1479,7 +1436,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Не маеце ўліковага запісу? <u> Стварыце яго, </u> каб сінхранізаваць Firefox паміж прыладамі.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox спыніць сінхранізацыю з вашым уліковым запісам, але не выдаліць дадзеныя аглядання на гэтай прыладзе.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox спыніць сінхранізацыю з вашым уліковым запісам, але не выдаліць дадзеныя аглядання на гэтай прыладзе.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s спыніць сінхранізацыю з вашым уліковым запісам, але не выдаліць дадзеныя аглядання на гэтай прыладзе.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1537,7 +1494,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Толькі ў прыватных картках</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Толькі ў адмысловых картках</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Толькі ў адмысловых картках</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Майнеры крыптавалют</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1568,8 +1525,6 @@
     <string name="etp_tracking_content_title">Змест з элементамі сачэння</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Спыняе загрузку вонкавай рэкламы, відэа і іншага змесціва, якое змяшчае код асочвання. Можа адбіцца на некаторых функцыях вэб-сайта.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Фіялетавы колер шчыта азначае, што %s перапыніў асочвальнікаў на сайце. Націсніце, каб даведацца больш.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ахова ўключана на гэтым сайце</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1581,9 +1536,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Перайсці назад</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Вашы правы</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Вашы правы</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Выкарыстаныя бібліятэкі з адкрытым зыходным кодам</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Выкарыстаныя бібліятэкі з адкрытым зыходным кодам</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Што новага ў %s</string>
 
@@ -1624,9 +1579,9 @@
     <string name="about_debug_menu_toast_done">Меню адладкі ўключана</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 картка</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 картка</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">Карткі: %d</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">Карткі: %d</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1662,8 +1617,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Пытаць пра захаванне</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ніколі не захоўваць</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Аўтазапаўненне</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Аўтазапаўненне ў %1$s</string>
@@ -1681,9 +1634,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Сінхранізаваць лагіны паміж прыладамі</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Перападлучыцца</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Перападлучыцца</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Увайсці ў сінхранізацыю</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Увайсці ў сінхранізацыю</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Захаваныя лагіны</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1702,9 +1655,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Шукаць лагіны</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Па алфавіце</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Па алфавіце</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Нядаўна выкарыстаныя</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Нядаўна выкарыстаныя</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1712,26 +1665,26 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Пароль</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Паўторна ўвядзіце свой PIN-код</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Паўторна ўвядзіце свой PIN-код</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Разблакуйце, каб пабачыць захаваныя лагіны</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Разблакуйце, каб пабачыць захаваныя лагіны</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Гэта злучэнне неабароненае. Пры аўтарызацыі Вашы лагіны могуць быць перахопленыя.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Гэта злучэнне неабароненае. Пры аўтарызацыі Вашы лагіны могуць быць перахопленыя.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Даведацца больш</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Даведацца больш</string>
 
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Ці жадаеце Вы, каб %s захаваў гэты лагін?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Ці жадаеце Вы, каб %s захаваў гэты лагін?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Захаваць</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Захаваць</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Не захоўваць</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Не захоўваць</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Пароль скапіяваны ў буфер абмену</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Імя карыстальніка скапіявана ў буфер абмену</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Сайт скапіяваны ў буфер абмену</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Сайт скапіяваны ў буфер абмену</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Капіяваць пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1743,7 +1696,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Ачысціць імя хоста</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Капіяваць сайт</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Капіяваць сайт</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Адкрыць сайт у браўзеры</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1808,7 +1761,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Імя на карце</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Псеўданім карты</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Псеўданім карты</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Выдаліць карту</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1866,18 +1819,18 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Змяніць запыт на “%s”. Прыклад:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Падрабязней</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Падрабязней</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Інфармацыя аб дададзенай пошукавай сістэме</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Спасылка на падрабязныя звесткі</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Спасылка на падрабязныя звесткі</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Увядзіце назву пошукавай сістэмы</string>
 
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Пашукавік з назваю “%s” ужо існуе.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Пашукавік з назваю “%s” ужо існуе.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Увядзіце радок пошуку</string>
 
@@ -1919,11 +1872,11 @@
     <string name="quick_settings_sheet_secure_connection_2">Злучэнне абаронена</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Злучэнне не абаронена</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Бяспечнае злучэнне</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Не бяспечнае злучэнне</string>
 
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Выдаліць кукі і дадзеныя сайтаў</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Ці ўпэўнены, што хочаце ачысціць усе кукі і дадзеныя сайта <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ці ўпэўнены Вы, што хочаце выдаліць усе дазволы на ўсіх сайтах?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1933,7 +1886,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Няма выняткаў для сайта</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Папулярныя артыкулы</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Папулярныя артыкулы</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ці ўпэўнены Вы, што хочаце выдаліць гэту закладку?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1961,7 +1914,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Захаваць змены ва ўваходных даных.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Адмяніць змены</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Адмяніць змены</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Рэдагаванне</string>
     <!--  The page title for adding new login. -->
@@ -1983,8 +1936,6 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Вэб-адрас мусіць утрымліваць \“https://\“ альбо \“http://\“</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Вэб-адрас мусіць утрымліваць &quot;https://&quot; або &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -2018,10 +1969,6 @@
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Найчасцей наведаныя топ-сайты</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Паказваць найчасцей наведаныя топ-сайты</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Паказваць найбольш наведаныя сайты</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Назва</string>
@@ -2096,8 +2043,6 @@
     <string name="privacy_content_close_button_content_description">Закрыць</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Гісторыі, якія прымушаюць задумацца</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Гісторыі, якія прымушаюць задумацца</string>
     <!-- Header text for a section on the home screen. -->

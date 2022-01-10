@@ -33,11 +33,19 @@
     <string name="tab_tray_add_new_collection_name">Heiti</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Velja safn</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Hætta í fjölvalsham</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Vista valda flipa í safn</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">Valið %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
     <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">Ekki valið %1$s</string>
 
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Hætti í fjölvalsham</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Farinn í fjölvalsham, veldu flipa til að vista í safn</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Valið</string>
 
@@ -76,16 +84,23 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nei takk</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Þú getur stillt Firefox til að opna tengla sjálfvirkt í forritum.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Fara í stillingar</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Hafna</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Aðgangur að myndavél er nauðsynlegur. Farðu í stillingar Android, farðu í Heimildir og gefðu leyfi.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Fara í stillingar</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">Hafna</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Stilltu opna flipa til að loka sjálfkrafa ef þeir hafa ekki verið skoðaðir síðasta daginn, viku eða mánuð.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Skoða valkosti</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -118,6 +133,9 @@
     <!-- Heading for the Top Sites block -->
     <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Vinsælustu svæðin</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Hoppa aftur inn</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Birta allt</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
@@ -145,6 +163,11 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Fjarlægja</string>
 
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Sýna alla fyrri leiðangra</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Sýna hnapp fyrir alla fyrri leiðangra</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Opnir flipar</string>
@@ -162,6 +185,8 @@
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Breyta bókamerki</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Viðbætur</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Viðbætur</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Engar viðbætur hér</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -212,6 +237,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Útlit</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Sérsníða lesham</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Bæta við</string>
     <!-- Browser menu label for editing a bookmark -->
@@ -269,14 +296,24 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Hvað er nýtt í Firefox</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Nú er auðveldara að halda áfram þar sem frá var horfið.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">Persónuleg Firefox upphafssíða</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Hoppaðu í opna flipa, bókamerki og vafraferil.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Hreinlegir, skipulagðir flipar</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Hreinsaðu flipaóreiðuna með bættu skipulagi og sjálfvirkri lokun flipa.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">Nýlegar leitir</string>
+
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Skoðaðu nýjustu leitirnar þínar af upphafssíðunni þinni og flipum.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Sérsniðin Firefox-upphafssíða þín gerir það nú auðveldara að halda áfram þar sem frá var horfið. Finndu nýlega flipa, bókamerki og leitarniðurstöður.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -402,6 +439,8 @@
     <string name="preferences_enable_autocomplete_urls">Sjálfvirk útfylling vefslóða</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opna tengla í smáforritum</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Utanaðkomandi niðurhalsstjóri</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Viðbætur</string>
 
@@ -420,6 +459,12 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Eigandi safns (notandaauðkenni)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Viðbótasafni þínu hefur verið breytt. Slekk á forritinu til að innleiða breytingar…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Hoppa aftur inn</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Nýleg bókamerki</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -578,6 +623,11 @@
     <string name="preference_gestures_website_pull_to_refresh">Dragðu til að endurlesa</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Skrunaðu til að fela verkfæraslána</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Strjúka verkfæraslánni til hliðar til að skipta um flipa</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Strjúka verkfæraslánni upp til að opna flipa</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -748,6 +798,8 @@
     <string name="tab_tray_multiselect_menu_item_close">Loka</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Deila völdum flipum</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Valmynd valinna flipa</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Fjarlæga flipann úr safni</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -837,6 +889,9 @@
     <string name="history_empty_message">Ekkert ferli hér</string>
 
 
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Sóttar skrár fjarlægðar</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">Fjarlægði %1$s</string>
     <!-- Text shown when no download exists -->
@@ -1019,6 +1074,8 @@
     <string name="collections_header">Söfn</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Valmynd safns</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Safnaðu því sem skiptir þig máli.\nFlokkaðu saman svipaðar leitir, síður og flipa til að fá skjótan aðgang að því síðar.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Veldu flipa</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1171,6 +1228,8 @@
     <string name="qr_scanner_dialog_invalid_ok">Í lagi</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Ertu viss um að þú viljir eyða %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Ef þessum flipa er eytt verður öllu safninu eytt. Þú getur búið til ný söfn hvenær sem er.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Eyða %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1281,6 +1340,12 @@
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Samstilla Firefox á milli tækja</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Komdu með bókamerki, feril og lykilorð yfir í Firefox á þessu tæki.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">Þú ert skráð/ur inn sem %s í öðrum Firefox vafra á þessu tæki. Viltu skrá þig inn með þessum reikningi?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Já, skráðu mig inn</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1293,17 +1358,30 @@
     <string name="onboarding_firefox_account_sync_is_on">Kveikt er á samstillingu</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">Innskráning mistókst</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Sívökul friðhelgi</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Staðlað (sjálfgefið)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Jafnvægi milli næðis og afkasta. Síður hlaðast eðlilega.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Strangt (mælt með)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strangt</string>
 
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Lokar fyrir fleiri rekjara svo síður hlaðast hraðar, en einhver virkni á síðunni gæti rofnað.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Veldu staðsetningu verkfærastikunnar</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Settu verkfærastikuna innan seilingar. Haltu henni neðst eða færðu hana efst.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Persónuvernd þín</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">Við hönnuðum %s til að gefa þér stjórn yfir því hverju þú deilir á netinu og því sem þú deilir með okkur.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lestu persónuverndartilkynningu okkar</string>
 
@@ -1313,6 +1391,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Veldu þema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Sparaðu rafhlöðu og verndaðu sjónina með því að virkja dökka haminn.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Sjálfvirk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1341,6 +1421,8 @@
     <string name="sign_in_with_camera">Skráðu þig inn með myndavélinni þinni</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Nota tölvupóst í staðinn</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Enginn reikningur? <u>Búðu til einn slíkan</u> til að samstilla Firefox á milli tækja.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox mun hætta að samstilla reikninginn þinn en mun ekki eyða neinum vafragögnum á þessu tæki.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1365,18 +1447,22 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Fræðast meira</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Staðlað (sjálfgefið)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Jafnvægi milli næðis og afkasta. Síður hlaðast eðlilega.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">Hvað er lokað af með staðlaðri rekjaravernd</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Hvað er útilokað með stöðluðum rekjaravörnum</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strangt</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Lokar fyrir fleiri rekjara svo síður hlaðast hraðar, en einhver virkni á síðunni gæti rofnað.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_strict_info_button">Hvað er lokað af með strangari rekjaravernd</string>
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Hvað er útilokað með strangari rekjaravörnum</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Sérsniðið</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">Veldu hvaða rekjara og forskriftir á að loka fyrir.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Veldu hvaða rekjara og skriftur á að loka fyrir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_custom_info_button">Hvað er lokað á með sérsniðinni rekjaravernd</string>
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Hvað er útilokað með sérsniðnum rekjaravörnum</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Smákökur</string>
@@ -1429,23 +1515,30 @@
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Kveikt er á vörn fyrir þetta vefsvæði</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">Slökkt er á vernd fyrir þetta vefssvæði</string>
+    <string name="etp_panel_off">Slökkt er á vörn fyrir þetta vefssvæði</string>
 
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">Slökkt er á aukinni rekjaravernd fyrir þessi vefsvæði</string>
+    <string name="enhanced_tracking_protection_exceptions">Slökkt er á auknum rakningarvörnum fyrir þessi vefsvæði</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Fara til baka</string>
     <!-- About page Your rights link text -->
     <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Rétturinn þinn</string>
     <!-- About page link text to open open source licenses screen -->
-    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Opin hugbúnaðarsöfn sem við notum</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Opin aðgerðasöfn sem við notum</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Hvað er nýtt í %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS söfn</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Endurbeina rekjurum</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Hreinsar vefkökur settar með endurbeiningum á þekkt rakningarvefsvæði.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Sumir rekjarar merktir hér að neðan hafa verið leyfðir að hluta til á þessari síðu vegna þess að þú áttir í samskiptum við þá *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Frekari upplýsingar</string>
 
@@ -1837,6 +1930,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">Ekki hægt að bæta fleiri vefjum við helstu vefsvæði</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Fjarlægðu eitt til að bæta við nýju helstu vefsvæði. Ýttu og haltu niðri á síðuna og veldu að fjarlægja.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Í lagi, ég skil</string>
 
