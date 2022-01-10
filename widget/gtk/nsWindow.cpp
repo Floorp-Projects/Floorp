@@ -4612,7 +4612,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
         }
 
         // Older GTK doesn't support stop events, so we can't support fling
-        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
+        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSLY;
       }
 
       // TODO - use a more appropriate scrolling unit than lines.
