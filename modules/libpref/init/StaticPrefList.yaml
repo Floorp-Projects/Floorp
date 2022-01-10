@@ -1150,6 +1150,11 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+- name: browser.find.ignore_ruby_annotations
+  type: bool
+  value: true
+  mirror: always
+
 #if defined(XP_MACOSX)
 # Whether pressing Esc will exit fullscreen.
 - name: browser.fullscreen.exit_on_escape

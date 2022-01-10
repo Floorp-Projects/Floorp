@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=969980
 https://bugzilla.mozilla.org/show_bug.cgi?id=1589786
 https://bugzilla.mozilla.org/show_bug.cgi?id=1611568
 https://bugzilla.mozilla.org/show_bug.cgi?id=1649187
+https://bugzilla.mozilla.org/show_bug.cgi?id=1699599
 -->
 <head>
   <meta charset="UTF-8">
@@ -103,6 +104,10 @@ async function runTests() {
   searchValue = "𐐸𐐯𐑊𐐬";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "東京駅"
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found");
 
   rf.matchDiacritics = true;
 
@@ -331,6 +336,7 @@ async function runTests() {
 <p id="math">=</p>
 <p id="guarani">G̃uahe</p>
 <p id="deseret">𐐐𐐯𐑊𐐬 𐐶𐐯𐑉𐑊𐐼!</p>
+<p id="ruby"><ruby>東<rt>とう</rt></ruby><ruby>京<rt>きょう</ruby>駅</p>
 <div id="content" style="display: none">
 
 </div>
