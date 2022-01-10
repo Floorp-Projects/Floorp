@@ -71,6 +71,10 @@ class MeatballMenu extends PureComponent {
       // (i.e. we're not in a browser toolbox).
       disableAutohide: PropTypes.bool,
 
+      // Apply a pseudo-locale to the Firefox UI. This is only available in the browser
+      // toolbox. This value can be undefined, "accented", "bidi", "none".
+      pseudoLocale: PropTypes.string,
+
       // Function to turn the options panel on / off.
       toggleOptions: PropTypes.func.isRequired,
 
@@ -79,6 +83,12 @@ class MeatballMenu extends PureComponent {
 
       // Function to turn the disable pop-up autohide behavior on / off.
       toggleNoAutohide: PropTypes.func,
+
+      // Manage the pseudo-localization for the Firefox UI.
+      // https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
+      disablePseudoLocale: PropTypes.func,
+      enableAccentedPseudoLocale: PropTypes.func,
+      enableBidiPseudoLocale: PropTypes.func,
 
       // Bug 1709191 - The help shortcut key is localized without Fluent, and still needs
       // to be migrated. This is the only remaining use of the legacy L10N object.
@@ -101,6 +111,7 @@ class MeatballMenu extends PureComponent {
     //
     // - The "Disable pop-up autohide" menu item being added after the Browser
     //   Toolbox is connected.
+    // - The pseudo locale options being added after the Browser Toolbox is connected.
     // - The split console label changing between "Show Split Console" and "Hide
     //   Split Console".
     // - The "Show/Hide Split Console" entry being added removed or removed.
@@ -109,6 +120,7 @@ class MeatballMenu extends PureComponent {
     // autohide" is active, but for completeness we handle them here.
     const didChange =
       typeof this.props.disableAutohide !== typeof prevProps.disableAutohide ||
+      this.props.pseudoLocale !== prevProps.pseudoLocale ||
       this.props.currentToolId !== prevProps.currentToolId ||
       this.props.isSplitConsoleActive !== prevProps.isSplitConsoleActive;
 
@@ -180,6 +192,27 @@ class MeatballMenu extends PureComponent {
       );
     }
 
+    // Settings
+    items.push(
+      MenuItem({
+        id: "toolbox-meatball-menu-settings",
+        key: "settings",
+        l10nID: "toolbox-meatball-menu-settings-label",
+        // Bug 1709191 - The help key is localized without Fluent, and still needs to
+        // be migrated.
+        accelerator: this.props.L10N.getStr("toolbox.help.key"),
+        onClick: this.props.toggleOptions,
+        className: "iconic",
+      })
+    );
+
+    if (
+      typeof this.props.disableAutohide !== "undefined" ||
+      typeof this.props.pseudoLocale !== "undefined"
+    ) {
+      items.push(hr({ key: "docs-separator-1" }));
+    }
+
     // Disable pop-up autohide
     //
     // If |disableAutohide| is undefined, it means this feature is not available
@@ -198,21 +231,43 @@ class MeatballMenu extends PureComponent {
       );
     }
 
-    // Settings
-    items.push(
-      MenuItem({
-        id: "toolbox-meatball-menu-settings",
-        key: "settings",
-        l10nID: "toolbox-meatball-menu-settings-label",
-        // Bug 1709191 - The help key is localized without Fluent, and still needs to
-        // be migrated.
-        accelerator: this.props.L10N.getStr("toolbox.help.key"),
-        onClick: this.props.toggleOptions,
-        className: "iconic",
-      })
-    );
+    // Pseudo-locales.
+    if (typeof this.props.pseudoLocale !== "undefined") {
+      const {
+        pseudoLocale,
+        enableAccentedPseudoLocale,
+        enableBidiPseudoLocale,
+        disablePseudoLocale,
+      } = this.props;
+      items.push(
+        MenuItem({
+          id: "toolbox-meatball-menu-pseudo-locale-accented",
+          key: "pseudo-locale-accented",
+          l10nID: "toolbox-meatball-menu-pseudo-locale-accented",
+          type: "checkbox",
+          checked: pseudoLocale === "accented",
+          onClick:
+            pseudoLocale === "accented"
+              ? disablePseudoLocale
+              : enableAccentedPseudoLocale,
+          className: "iconic",
+        }),
+        MenuItem({
+          id: "toolbox-meatball-menu-pseudo-locale-bidi",
+          key: "pseudo-locale-bidi",
+          l10nID: "toolbox-meatball-menu-pseudo-locale-bidi",
+          type: "checkbox",
+          checked: pseudoLocale === "bidi",
+          onClick:
+            pseudoLocale === "bidi"
+              ? disablePseudoLocale
+              : enableBidiPseudoLocale,
+          className: "iconic",
+        })
+      );
+    }
 
-    items.push(hr({ key: "docs-separator" }));
+    items.push(hr({ key: "docs-separator-2" }));
 
     // Getting started
     items.push(
