@@ -5,6 +5,7 @@
 <head>
   <title>Test Cache with QuotaManager Restart</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -29,9 +30,8 @@ SpecialPowers.pushPrefEnv({
     return caches.open("foo");
   }).then(function(usage) {
     ok(false, "caches should not be usable in untrusted http origin");
-    SimpleTest.finish();
   }).catch(function(err) {
-    is(err.name, "TypeError", "caches should reject with TypeError");
+    is(err.name, "SecurityError", "caches should reject with SecurityError");
     SimpleTest.finish();
   });
 });

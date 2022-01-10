@@ -2,7 +2,7 @@
 
 var cache = null;
 var name = "https_" + context;
-var urlBase = `${location.origin}/tests/dom/cache/test/mochitest`;
+var urlBase = "https://example.com/tests/dom/cache/test/mochitest";
 var url1 = urlBase + "/test_cache.js";
 var url2 = urlBase + "/test_cache_add.js";
 

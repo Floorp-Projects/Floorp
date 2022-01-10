@@ -4,12 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/ServiceWorker/#cachestorage-interface
+ * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
+ *
  */
+
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-storage
 
 interface Principal;
 
-[SecureContext, Exposed=(Window,Worker),
+[Exposed=(Window,Worker),
  Pref="dom.caches.enabled"]
 interface CacheStorage {
   [Throws, ChromeOnly]

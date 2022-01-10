@@ -4,10 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/ServiceWorker/#cache-interface
+ * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
+ *
  */
 
-[SecureContext, Exposed=(Window,Worker),
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache
+
+[Exposed=(Window,Worker),
  Pref="dom.caches.enabled"]
 interface Cache {
   [NewObject]
