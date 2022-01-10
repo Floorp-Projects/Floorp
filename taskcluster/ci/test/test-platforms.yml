@@ -320,12 +320,6 @@ macosx1015-64-ccov-qr/opt:
     test-sets:
         - macosx1015-64-qr-tests
 
-macosx1014-64-shippable-qr/opt:
-    build-platform: macosx64-shippable/opt
-    test-sets:
-        - browsertime
-        - macosx64-talos
-
 ##
 # Android platforms (matching /android-em.*/)
 #
