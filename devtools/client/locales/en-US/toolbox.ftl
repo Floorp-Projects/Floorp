@@ -26,4 +26,7 @@ toolbox-meatball-menu-community-label = Community…
 # contributors.
 toolbox-meatball-menu-noautohide-label = Disable Popup Auto-Hide
 
+toolbox-meatball-menu-pseudo-locale-accented = Enable “accented” locale
+toolbox-meatball-menu-pseudo-locale-bidi = Enable “bidi” locale
+
 ##
