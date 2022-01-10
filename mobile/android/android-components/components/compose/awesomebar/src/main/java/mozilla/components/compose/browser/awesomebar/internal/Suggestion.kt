@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -163,8 +164,7 @@ private fun AutocompleteButton(
         colorFilter = ColorFilter.tint(colors.autocompleteIcon),
         contentDescription = stringResource(R.string.mozac_browser_awesomebar_edit_suggestion),
         modifier = modifier
-            .width(24.dp)
-            .height(24.dp)
+            .size(48.dp)
             .rotate(
                 if (orientation == AwesomeBarOrientation.BOTTOM) {
                     270f
@@ -173,5 +173,6 @@ private fun AutocompleteButton(
                 }
             )
             .clickable { onAutoComplete() }
+            .padding(12.dp)
     )
 }
