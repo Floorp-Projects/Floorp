@@ -57,4 +57,27 @@ sealed class TopSite {
         override val url: String,
         override val createdAt: Long?,
     ) : TopSite()
+
+    /**
+     * This top site is provided by the [TopSitesProvider].
+     *
+     * @property id Unique ID of this top site.
+     * @property title The title of the top site.
+     * @property url The URL of the top site.
+     * @property clickUrl The click URL of the top site.
+     * @property imageUrl The image URL of the top site.
+     * @property impressionUrl The URL that needs to be fired when the top site is displayed.
+     * @property position The position of the top site.
+     * @property createdAt The optional date the top site was added.
+     */
+    data class Provided(
+        override val id: Long?,
+        override val title: String?,
+        override val url: String,
+        val clickUrl: String,
+        val imageUrl: String,
+        val impressionUrl: String,
+        val position: Int,
+        override val createdAt: Long?,
+    ) : TopSite()
 }

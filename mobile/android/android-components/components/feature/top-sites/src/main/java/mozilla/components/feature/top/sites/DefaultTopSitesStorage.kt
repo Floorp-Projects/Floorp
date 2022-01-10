@@ -12,6 +12,7 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.top.sites.ext.hasUrl
 import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.coroutines.CoroutineContext
@@ -36,6 +37,7 @@ class DefaultTopSitesStorage(
 ) : TopSitesStorage, Observable<TopSitesStorage.Observer> by ObserverRegistry() {
 
     private var scope = CoroutineScope(coroutineContext)
+    private val logger = Logger("DefaultTopSitesStorage")
 
     // Cache of the last retrieved top sites
     var cachedTopSites = listOf<TopSite>()
@@ -63,7 +65,9 @@ class DefaultTopSitesStorage(
 
             // Remove the top site from both history and pinned sites storage to avoid having it
             // show up as a frecent site if it is a pinned site.
-            historyStorage.deleteVisitsFor(topSite.url)
+            if (topSite !is TopSite.Provided) {
+                historyStorage.deleteVisitsFor(topSite.url)
+            }
 
             notifyObservers { onStorageUpdated() }
         }
@@ -79,6 +83,7 @@ class DefaultTopSitesStorage(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun getTopSites(
         totalSites: Int,
         frecencyConfig: FrecencyThresholdOption?
@@ -90,9 +95,13 @@ class DefaultTopSitesStorage(
         topSites.addAll(pinnedSites)
 
         topSitesProvider?.let { provider ->
-            val providerTopSites = provider.getTopSites()
-            topSites.addAll(providerTopSites.take(numSitesRequired))
-            numSitesRequired -= providerTopSites.size
+            try {
+                val providerTopSites = provider.getTopSites()
+                topSites.addAll(providerTopSites.take(numSitesRequired))
+                numSitesRequired -= providerTopSites.size
+            } catch (e: Exception) {
+                logger.error("Failed to fetch top sites from provider", e)
+            }
         }
 
         if (frecencyConfig != null && numSitesRequired > 0) {

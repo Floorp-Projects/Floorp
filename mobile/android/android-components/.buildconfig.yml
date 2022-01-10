@@ -303,6 +303,10 @@ projects:
     path: components/service/pocket
     description: 'A library to communicate with the Pocket API'
     publish: true
+  service-contile:
+    path: components/service/contile
+    description: 'A library to communicate with the Contile services API'
+    publish: true
   support-base:
     path: components/support/base
     description: 'Base component containing building blocks for components.'

@@ -84,6 +84,7 @@ treeherder:
         samples-sync-logins: samples-sync-logins
         samples-sync: samples-sync
         samples-toolbar: samples-toolbar
+        service-contile: service-contile
         service-digitalassetlinks: service-digitalassetlinks
         service-experiments: service-experiments
         service-firefox-accounts: service-firefox-accounts
