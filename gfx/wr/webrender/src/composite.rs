@@ -790,6 +790,22 @@ impl CompositeState {
         }
     }
 
+    /// Compare this state vs. a previous frame state, and invalidate dirty rects if
+    /// the surface count has changed
+    pub fn update_dirty_rect_validity(
+        &mut self,
+        old_descriptor: &CompositeDescriptor,
+    ) {
+        // TODO(gw): Make this more robust in other cases - there are other situations where
+        //           the surface count may be the same but we still need to invalidate the
+        //           dirty rects (e.g. if the surface ordering changed, or the external
+        //           surface itself is animated?)
+
+        if old_descriptor.surfaces.len() != self.descriptor.surfaces.len() {
+            self.dirty_rects_are_valid = false;
+        }
+    }
+
     fn compute_external_surface_dependencies(
         &mut self,
         external_surface: &ExternalSurfaceDescriptor,
