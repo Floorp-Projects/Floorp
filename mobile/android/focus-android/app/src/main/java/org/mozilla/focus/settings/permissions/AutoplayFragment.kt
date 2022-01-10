@@ -11,6 +11,7 @@ import org.mozilla.focus.ext.requirePreference
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.RadioButtonPreference
 import org.mozilla.focus.settings.addToRadioGroup
+import org.mozilla.focus.state.AppAction
 
 class AutoplayFragment : BaseSettingsFragment() {
 
@@ -55,6 +56,7 @@ class AutoplayFragment : BaseSettingsFragment() {
         Preference.OnPreferenceChangeListener { preference, newValue ->
             if (newValue as Boolean) {
                 requireComponents.settings.updateAutoplayPrefKey(preference.key)
+                requireComponents.appStore.dispatch(AppAction.AutoplayChange(true))
             }
             true
         }

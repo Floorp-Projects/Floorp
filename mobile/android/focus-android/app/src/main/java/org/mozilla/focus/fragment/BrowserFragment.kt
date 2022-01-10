@@ -332,6 +332,10 @@ class BrowserFragment :
             owner = this,
             view = rootView
         )
+        if (requireComponents.appStore.state.autoplayRulesChanged) {
+            requireComponents.sessionUseCases.reload(tabId)
+            requireComponents.appStore.dispatch(AppAction.AutoplayChange(false))
+        }
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {

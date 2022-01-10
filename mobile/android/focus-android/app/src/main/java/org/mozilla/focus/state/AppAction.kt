@@ -75,4 +75,9 @@ sealed class AppAction : Action {
      * The list of [TopSite] has changed.
      */
     data class TopSitesChange(val topSites: List<TopSite>) : AppAction()
+
+    /**
+     * Site permissions autoplay rules has changed.
+     */
+    data class AutoplayChange(val value: Boolean) : AppAction()
 }

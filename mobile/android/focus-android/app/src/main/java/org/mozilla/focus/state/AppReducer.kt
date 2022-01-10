@@ -29,6 +29,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.NavigateUp -> navigateUp(state, action)
             is AppAction.OpenTab -> openTab(state, action)
             is AppAction.TopSitesChange -> topSitesChanged(state, action)
+            is AppAction.AutoplayChange -> autoplayRulesChanged(state, action)
         }
     }
 }
@@ -143,6 +144,13 @@ private fun openTab(state: AppState, action: AppAction.OpenTab): AppState {
  */
 private fun topSitesChanged(state: AppState, action: AppAction.TopSitesChange): AppState {
     return state.copy(topSites = action.topSites)
+}
+
+/**
+ * The rules of site permissions autoplay has changed.
+ */
+private fun autoplayRulesChanged(state: AppState, action: AppAction.AutoplayChange): AppState {
+    return state.copy(autoplayRulesChanged = action.value)
 }
 
 @Suppress("ComplexMethod")
