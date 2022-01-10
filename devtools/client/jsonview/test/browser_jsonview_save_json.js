@@ -45,6 +45,10 @@ function awaitSavedFileContents(name, ext) {
             ok(destFile.exists(), "The downloaded file should exist.");
             const { path } = destFile;
             await BrowserTestUtils.waitForCondition(() => IOUtils.exists(path));
+            await BrowserTestUtils.waitForCondition(async () => {
+              const { size } = await IOUtils.stat(path);
+              return size > 0;
+            });
             const buffer = await IOUtils.read(path);
             resolve(new TextDecoder().decode(buffer));
           } catch (error) {
