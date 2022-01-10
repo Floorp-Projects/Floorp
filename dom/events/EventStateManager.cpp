@@ -2972,7 +2972,7 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
     case WidgetWheelEvent::SCROLL_SYNCHRONOUSLY:
       mode = ScrollMode::Instant;
       break;
-    case WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY:
+    case WidgetWheelEvent::SCROLL_ASYNCHRONOUSLY:
       mode = ScrollMode::Normal;
       break;
     case WidgetWheelEvent::SCROLL_SMOOTHLY:
