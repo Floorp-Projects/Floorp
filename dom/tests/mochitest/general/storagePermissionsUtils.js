@@ -10,14 +10,14 @@ const inFrame = ("" + location).match(/frame/);
 if (inFrame) {
   ok = function(a, message) {
     if (!a) {
-      parent.postMessage("FAILURE: " + message, "http://mochi.test:8888");
+      parent.postMessage("FAILURE: " + message, location.origin);
     } else {
-      parent.postMessage(message, "http://mochi.test:8888");
+      parent.postMessage(message, location.origin);
     }
   };
 
   finishTest = function() {
-    parent.postMessage("done", "http://mochi.test:8888");
+    parent.postMessage("done", location.origin);
   };
 } else {
   finishTest = function() {
