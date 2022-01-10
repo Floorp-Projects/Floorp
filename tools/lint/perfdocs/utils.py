@@ -81,17 +81,33 @@ def are_dirs_equal(dir_1, dir_2):
 
     if mismatch or errors:
         logger.log(f"Found mismatches: {mismatch}")
-        for entry in mismatch:
-            logger.log(f"Mismatch found on {entry}")
-            with open(os.path.join(dir_1, entry)) as f:
-                newlines = f.readlines()
-            with open(os.path.join(dir_2, entry)) as f:
-                baselines = f.readlines()
-            for line in difflib.unified_diff(
-                baselines, newlines, fromfile="base", tofile="new"
-            ):
-                logger.log(line)
-            logger.log(f"Completed diff on {entry}")
+        with open("/builds/worker/diff.txt", "w") as difffile:
+            for entry in mismatch:
+                logger.log(f"Mismatch found on {entry}")
+                with open(os.path.join(dir_1, entry)) as f:
+                    newlines = f.readlines()
+                with open(os.path.join(dir_2, entry)) as f:
+                    baselines = f.readlines()
+                for line in difflib.unified_diff(
+                    baselines, newlines, fromfile="base", tofile="new"
+                ):
+                    logger.log(line)
+
+                # here we want to add to diff.txt in a patch format
+                basedir = "/builds/worker/checkouts/gecko/"
+                relative_path = os.path.join(dir_2, entry).split(basedir)[-1]
+                patch = difflib.unified_diff(
+                    baselines, newlines, fromfile=relative_path, tofile=relative_path
+                )
+                write_header = True
+                for line in patch:
+                    if write_header:
+                        difffile.write(
+                            f"diff --git a/{relative_path} b/{relative_path}\n"
+                        )
+                        write_header = False
+                    difffile.write(line)
+                logger.log(f"Completed diff on {entry}")
         return False
 
     for common_dir in dirs_cmp.common_dirs:
