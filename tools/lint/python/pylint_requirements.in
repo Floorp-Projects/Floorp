@@ -1,4 +1,4 @@
 pylint==2.11.1
 colorama==0.4.4 # Needed on Windows.
-typed-ast==1.4.2
+typed-ast==1.4.3
 typing-extensions==3.10.0.2
