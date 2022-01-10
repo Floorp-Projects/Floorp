@@ -223,11 +223,25 @@ XPCOMUtils.defineLazyScriptGetter(
   ["DownloadsButton", "DownloadsIndicatorView"],
   "chrome://browser/content/downloads/indicator.js"
 );
-XPCOMUtils.defineLazyScriptGetter(
-  this,
-  "gEditItemOverlay",
-  "chrome://browser/content/places/instantEditBookmark.js"
-);
+if (
+  Services.prefs.getBoolPref(
+    "browser.bookmarks.editDialog.delayedApply.enabled",
+    false
+  )
+) {
+  XPCOMUtils.defineLazyScriptGetter(
+    this,
+    "gEditItemOverlay",
+    "chrome://browser/content/places/editBookmark.js"
+  );
+} else {
+  XPCOMUtils.defineLazyScriptGetter(
+    this,
+    "gEditItemOverlay",
+    "chrome://browser/content/places/instantEditBookmark.js"
+  );
+}
+
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "gGfxUtils",
