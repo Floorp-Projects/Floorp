@@ -14,6 +14,9 @@ const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 const Targets = require("devtools/server/actors/targets/index");
+const {
+  getAllBrowsingContextsForContext,
+} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
@@ -141,6 +144,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   get browserElement() {
     return this._browserElement;
+  },
+
+  getAllBrowsingContexts(options) {
+    return getAllBrowsingContextsForContext(this.sessionContext, options);
   },
 
   /**

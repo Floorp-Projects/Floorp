@@ -4,11 +4,6 @@
 
 "use strict";
 
-const {
-  getAllRemoteBrowsingContexts,
-  shouldNotifyWindowGlobal,
-} = require("devtools/server/actors/watcher/target-helpers/utils.js");
-
 const DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME = "DevToolsWorker";
 
 /**
@@ -21,7 +16,10 @@ async function createTargets(watcher) {
   // Go over all existing BrowsingContext in order to:
   // - Force the instantiation of a DevToolsWorkerChild
   // - Have the DevToolsWorkerChild to spawn the WorkerTargetActors
-  const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
+  const browsingContexts = watcher.getAllBrowsingContexts({
+    acceptSameProcessIframes: true,
+    forceAcceptTopLevelTarget: true,
+  });
   const promises = [];
   for (const browsingContext of browsingContexts) {
     const promise = browsingContext.currentWindowGlobal
@@ -48,7 +46,10 @@ async function createTargets(watcher) {
  */
 async function destroyTargets(watcher) {
   // Go over all existing BrowsingContext in order to destroy all targets
-  const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
+  const browsingContexts = watcher.getAllBrowsingContexts({
+    acceptSameProcessIframes: true,
+    forceAcceptTopLevelTarget: true,
+  });
   for (const browsingContext of browsingContexts) {
     let windowActor;
     try {
@@ -77,7 +78,10 @@ async function destroyTargets(watcher) {
  *        The values to be added to this type of data
  */
 async function addSessionDataEntry({ watcher, type, entries }) {
-  const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
+  const browsingContexts = watcher.getAllBrowsingContexts({
+    acceptSameProcessIframes: true,
+    forceAcceptTopLevelTarget: true,
+  });
   const promises = [];
   for (const browsingContext of browsingContexts) {
     const promise = browsingContext.currentWindowGlobal
@@ -100,7 +104,10 @@ async function addSessionDataEntry({ watcher, type, entries }) {
  * See addSessionDataEntry for argument documentation.
  */
 function removeSessionDataEntry({ watcher, type, entries }) {
-  const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
+  const browsingContexts = watcher.getAllBrowsingContexts({
+    acceptSameProcessIframes: true,
+    forceAcceptTopLevelTarget: true,
+  });
   for (const browsingContext of browsingContexts) {
     browsingContext.currentWindowGlobal
       .getActor(DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME)
@@ -111,29 +118,6 @@ function removeSessionDataEntry({ watcher, type, entries }) {
         entries,
       });
   }
-}
-
-/**
- * Get the list of all BrowsingContext we should interact with.
- * The precise condition of which BrowsingContext we should interact with are defined
- * in `shouldNotifyWindowGlobal`
- *
- * @param BrowserElement browserElement (optional)
- *        If defined, this will restrict to only the Browsing Context matching this
- *        Browser Element and any of its (nested) children iframes.
- */
-function getFilteredBrowsingContext(browserElement) {
-  const browsingContexts = getAllRemoteBrowsingContexts(
-    browserElement?.browsingContext
-  );
-  if (browserElement?.browsingContext) {
-    browsingContexts.push(browserElement?.browsingContext);
-  }
-  return browsingContexts.filter(browsingContext =>
-    shouldNotifyWindowGlobal(browsingContext, browserElement?.browserId, {
-      acceptNonRemoteFrame: true,
-    })
-  );
 }
 
 module.exports = {
