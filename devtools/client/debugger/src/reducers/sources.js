@@ -13,7 +13,6 @@ import {
   underRoot,
   getRelativeUrl,
   isGenerated,
-  isOriginal as isOriginalSource,
   getPlainUrl,
   isPretty,
   isJavaScript,
@@ -655,7 +654,7 @@ export function getSpecificSourceByURLInSources(
 ) {
   const foundSources = getSourcesByURLInSources(sources, urls, url);
   if (foundSources) {
-    return foundSources.find(source => isOriginalSource(source) == isOriginal);
+    return foundSources.find(source => source.isOriginal == isOriginal);
   }
   return null;
 }
@@ -953,7 +952,7 @@ export function canPrettyPrintSource(state, id) {
   if (
     !source ||
     isPretty(source) ||
-    isOriginalSource(source) ||
+    source.isOriginal ||
     (prefs.clientSourceMapsEnabled && isSourceWithMap(state, id))
   ) {
     return false;
@@ -1006,7 +1005,7 @@ export function getBreakableLines(state, sourceId) {
     return null;
   }
 
-  if (isOriginalSource(source)) {
+  if (source.isOriginal) {
     return state.sources.breakableLines[sourceId];
   }
 
