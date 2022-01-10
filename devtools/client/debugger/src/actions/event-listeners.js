@@ -9,8 +9,8 @@ import {
 } from "../selectors";
 
 async function updateBreakpoints(dispatch, client, newEvents) {
-  dispatch({ type: "UPDATE_EVENT_LISTENERS", active: newEvents });
   await client.setEventListenerBreakpoints(newEvents);
+  dispatch({ type: "UPDATE_EVENT_LISTENERS", active: newEvents });
 }
 
 async function updateExpanded(dispatch, newExpanded) {

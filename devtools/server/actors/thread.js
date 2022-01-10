@@ -595,6 +595,34 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   getActiveEventBreakpoints() {
     return Array.from(this._activeEventBreakpoints);
   },
+
+  /**
+   * Add event breakpoints to the list of active event breakpoints
+   *
+   * @param {Array<String>} ids: events to add (e.g. ["event.mouse.click","event.mouse.mousedown"])
+   */
+  addEventBreakpoints(ids) {
+    this.setActiveEventBreakpoints(
+      this.getActiveEventBreakpoints().concat(ids)
+    );
+  },
+
+  /**
+   * Remove event breakpoints from the list of active event breakpoints
+   *
+   * @param {Array<String>} ids: events to remove (e.g. ["event.mouse.click","event.mouse.mousedown"])
+   */
+  removeEventBreakpoints(ids) {
+    this.setActiveEventBreakpoints(
+      this.getActiveEventBreakpoints().filter(eventBp => !ids.includes(eventBp))
+    );
+  },
+
+  /**
+   * Set the the list of active event breakpoints
+   *
+   * @param {Array<String>} ids: events to add breakpoint for (e.g. ["event.mouse.click","event.mouse.mousedown"])
+   */
   setActiveEventBreakpoints(ids) {
     this._activeEventBreakpoints = new Set(ids);
 
