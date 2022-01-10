@@ -2445,6 +2445,15 @@ void gfxPlatform::InitGPUProcessPrefs() {
 
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
+  nsCString message;
+  nsCString failureId;
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
+                                        &message, failureId)) {
+    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+    // Don't return early here. We must continue the checks below in case
+    // the user has force-enabled the GPU process.
+  }
+
   // We require E10S - otherwise, there is very little benefit to the GPU
   // process, since the UI process must still use acceleration for
   // performance.
