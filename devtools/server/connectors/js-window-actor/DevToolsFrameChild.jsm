@@ -177,18 +177,14 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     // Create one Target actor for each prefix/client which listen to frames
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-      const {
-        connectionPrefix,
-        sessionContext,
-        isServerTargetSwitchingEnabled,
-      } = sessionData;
+      const { connectionPrefix, sessionContext } = sessionData;
       // Always create new targets when server targets are enabled as we create targets for all the WindowGlobal's,
       // including all WindowGlobal's of the top target.
       // For bfcache navigations, we only create new targets when bfcacheInParent is enabled,
       // as this would be the only case where new DocShells will be created. This requires us to spawn a
       // new WindowGlobalTargetActor as one such actor is bound to a unique DocShell.
       const acceptTopLevelTarget =
-        isServerTargetSwitchingEnabled ||
+        sessionContext.isServerTargetSwitchingEnabled ||
         (isBFCache && this.isBfcacheInParentEnabled);
       if (
         sessionData.targets.includes("frame") &&
@@ -712,7 +708,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // It may not be the case if one Watcher isn't having server target switching enabled.
       let allActorsAreDestroyed = true;
       for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-        const { sessionContext, isServerTargetSwitchingEnabled } = sessionData;
+        const { sessionContext } = sessionData;
 
         // /!\ We may have an issue here as there could be multiple targets for a given
         // (watcherActorID,browserId) pair.
@@ -735,7 +731,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
         // As history navigations will be handled within the same DocShell and by the
         // same WindowGlobalTargetActor. The actor will listen to pageshow/pagehide by itself.
         // We should not destroy any target.
-        if (!this.isBfcacheInParentEnabled && !isServerTargetSwitchingEnabled) {
+        if (
+          !this.isBfcacheInParentEnabled &&
+          !sessionContext.isServerTargetSwitchingEnabled
+        ) {
           allActorsAreDestroyed = false;
           continue;
         }
