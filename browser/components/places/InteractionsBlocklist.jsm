@@ -126,6 +126,45 @@ class _InteractionsBlocklist {
   }
 
   /**
+   * Only certain urls can be added as Interactions, either manually or
+   * automatically.
+   * @returns {Map} A Map keyed by protocol, for each protocol an object may
+   *          define stricter requirements, like extension.
+   */
+  get urlRequirements() {
+    return new Map([
+      ["http:", {}],
+      ["https:", {}],
+      ["file:", { extension: "pdf" }],
+    ]);
+  }
+
+  /**
+   * Whether to record interactions for a given URL.
+   * The rules are defined in InteractionsBlocklist.urlRequirements.
+   * @param {string|URL|nsIURI} url The URL to check.
+   * @returns {boolean} whether the url can be added to snapshots.
+   */
+  canRecordUrl(url) {
+    let protocol, pathname;
+    if (typeof url == "string") {
+      url = new URL(url);
+    }
+    if (url instanceof Ci.nsIURI) {
+      protocol = url.scheme + ":";
+      pathname = url.filePath;
+    } else {
+      protocol = url.protocol;
+      pathname = url.pathname;
+    }
+    let requirements = InteractionsBlocklist.urlRequirements.get(protocol);
+    return (
+      requirements &&
+      (!requirements.extension || pathname.endsWith(requirements.extension))
+    );
+  }
+
+  /**
    * Checks a URL against a blocklist of URLs. If the URL is blocklisted, we
    * should not record an interaction.
    *
@@ -136,6 +175,10 @@ class _InteractionsBlocklist {
    */
   isUrlBlocklisted(urlToCheck) {
     if (FilterAdult.isAdultUrl(urlToCheck)) {
+      return true;
+    }
+
+    if (!this.canRecordUrl(urlToCheck)) {
       return true;
     }
 
@@ -153,6 +196,11 @@ class _InteractionsBlocklist {
       );
       return false;
     }
+
+    if (url.protocol == "file:") {
+      return false;
+    }
+
     let hostWithoutSuffix = UrlbarUtils.stripPublicSuffixFromHost(url.host);
     let [hostWithSubdomains] = UrlbarUtils.stripPrefixAndTrim(
       hostWithoutSuffix,
