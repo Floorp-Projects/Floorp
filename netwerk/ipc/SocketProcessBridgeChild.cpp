@@ -33,6 +33,8 @@ bool SocketProcessBridgeChild::Create(
   sSocketProcessBridgeChild =
       new SocketProcessBridgeChild(std::move(aEndpoint));
   if (sSocketProcessBridgeChild->Inited()) {
+    mozilla::ipc::BackgroundChild::InitSocketBridgeStarter(
+        sSocketProcessBridgeChild);
     return true;
   }
 

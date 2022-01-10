@@ -296,9 +296,9 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
-    Endpoint<PBackgroundParent>&& aEndpoint) {
+    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
   LOG(("SocketProcessParent::RecvInitBackground\n"));
-  if (!ipc::BackgroundParent::Alloc(nullptr, std::move(aEndpoint))) {
+  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 
