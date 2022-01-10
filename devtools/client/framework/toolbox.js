@@ -33,6 +33,10 @@ var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 var { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
+const {
+  FluentL10n,
+} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
+
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
 ).wrappedJSObject;
@@ -845,6 +849,12 @@ Toolbox.prototype = {
    */
   open: function() {
     return async function() {
+      // Kick off async loading the Fluent bundles.
+      const fluentL10n = new FluentL10n();
+      const fluentInitPromise = fluentL10n.init([
+        "devtools/client/toolbox.ftl",
+      ]);
+
       const isToolboxURL = this.win.location.href.startsWith(this._URL);
       if (isToolboxURL) {
         // Update the URL so that onceDOMReady watch for the right url.
@@ -944,7 +954,9 @@ Toolbox.prototype = {
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
-      this._mountReactComponent();
+      await fluentInitPromise;
+
+      this._mountReactComponent(fluentL10n.getBundles());
       this._buildDockOptions();
       this._buildTabs();
 
@@ -1889,10 +1901,11 @@ Toolbox.prototype = {
     }
   },
 
-  _mountReactComponent: function() {
+  _mountReactComponent(fluentBundles) {
     // Ensure the toolbar doesn't try to render until the tool is ready.
     const element = this.React.createElement(this.ToolboxController, {
       L10N,
+      fluentBundles,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
       toggleOptions: this.toggleOptions,
