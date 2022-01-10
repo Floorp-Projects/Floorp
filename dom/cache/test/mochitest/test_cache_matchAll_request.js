@@ -1,11 +1,11 @@
 /* global context testDone:true */
 
-var req1 = new Request("//mochi.test:8888/?1&" + context + "#fragment");
-var req2 = new Request("//mochi.test:8888/?2&" + context);
-var req3 = new Request("//mochi.test:8888/?3&" + context);
-var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
+var req1 = new Request(`${location.origin}/?1&${context}#fragment`);
+var req2 = new Request(`${location.origin}/?2&${context}`);
+var req3 = new Request(`${location.origin}/?3&${context}`);
+var requestWithAltQS = new Request(`${location.origin}/?queryString`);
 var unknownRequest = new Request(
-  "//mochi.test:8888/non/existing/path?" + context
+  `${location.origin}/non/existing/path?${context}`
 );
 var response1, response3;
 var c;

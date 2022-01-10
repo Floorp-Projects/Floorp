@@ -22,14 +22,14 @@ function setupTest(reqs) {
 
 function testBasics() {
   var tests = [
-    "//mochi.test:8888/?foo" + context,
-    "//mochi.test:8888/?bar" + context,
+    `${location.origin}/?foo${context}`,
+    `${location.origin}/?bar${context}`,
   ];
   var cache;
   return setupTest(tests)
     .then(function(c) {
       cache = c;
-      return cache.delete("//mochi.test:8888/?baz");
+      return cache.delete(`${location.origin}/?baz`);
     })
     .then(function(deleted) {
       ok(!deleted, "Deleting a non-existing entry should fail");
@@ -51,9 +51,9 @@ function testBasics() {
 
 function testFragment() {
   var tests = [
-    "//mochi.test:8888/?foo" + context,
-    "//mochi.test:8888/?bar" + context,
-    "//mochi.test:8888/?baz" + context + "#fragment",
+    `${location.origin}/?foo${context}`,
+    `${location.origin}/?bar${context}`,
+    `${location.origin}/?baz${context}#fragment`,
   ];
   var cache;
   return setupTest(tests)
@@ -73,7 +73,7 @@ function testFragment() {
         "The correct entry must be deleted"
       );
       // Now, delete a request that was added with a fragment
-      return cache.delete("//mochi.test:8888/?baz" + context);
+      return cache.delete(`${location.origin}/?baz${context}`);
     })
     .then(function(deleted) {
       ok(deleted, "Deleting an existing entry should succeed");
@@ -87,10 +87,10 @@ function testFragment() {
 
 function testInterleaved() {
   var tests = [
-    "//mochi.test:8888/?foo" + context,
-    "//mochi.test:8888/?bar" + context,
+    `${location.origin}/?foo${context}`,
+    `${location.origin}/?bar${context}`,
   ];
-  var newURL = "//mochi.test:8888/?baz" + context;
+  var newURL = `${location.origin}/?baz${context}`;
   var cache;
   return setupTest(tests)
     .then(function(c) {

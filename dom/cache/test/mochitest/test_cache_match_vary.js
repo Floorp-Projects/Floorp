@@ -1,7 +1,6 @@
 /* global context testDone:true */
 
-var requestURL =
-  "//mochi.test:8888/tests/dom/cache/test/mochitest/vary.sjs?" + context;
+var requestURL = `${location.origin}/tests/dom/cache/test/mochitest/vary.sjs?${context}`;
 var name = "match-vary" + context;
 
 function checkResponse(r, response, responseText) {
