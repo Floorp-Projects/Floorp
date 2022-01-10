@@ -51,6 +51,10 @@ SimpleTest.finish = function finish() {
   from { transform: translate(120%, 120%); }
   to { transform: translate(0%, 0%); }
 }
+@keyframes background-color {
+  from { background-color: rgb(255, 0, 0,); }
+  to { background-color: rgb(0, 255, 0,); }
+}
 div {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
@@ -2098,7 +2102,7 @@ waitForAllPaints(() => {
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_opacity_zero_descendant() {
     const container = addDiv(null, { style: 'opacity: 0' });
-    const child = addDiv(null, { style: 'animation: rotate 100s infinite;' });
+    const child = addDiv(null, { style: 'animation: background-color 100s infinite;' });
     container.appendChild(child);
 
     const animation = child.getAnimations()[0];
@@ -2115,7 +2119,7 @@ waitForAllPaints(() => {
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_opacity_zero_descendant_abspos() {
     const container = addDiv(null, { style: 'opacity: 0' });
-    const child = addDiv(null, { style: 'position: abspos; animation: rotate 100s infinite;' });
+    const child = addDiv(null, { style: 'position: abspos; animation: background-color 100s infinite;' });
     container.appendChild(child);
 
     const animation = child.getAnimations()[0];
