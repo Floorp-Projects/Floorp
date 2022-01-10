@@ -175,9 +175,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     InlineTranslator::RemoveSourceSurface(aRefPtr);
   }
 
-  already_AddRefed<gfx::SourceSurface> LookupExternalSurface(
-      uint64_t aKey) final;
-
   /**
    * Gets the cached DataSourceSurface, if it exists, associated with a
    * SourceSurface from another process.
