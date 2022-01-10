@@ -130,7 +130,6 @@ talos-damp:
                     windows.*-32-shippable.*/.*: []
                     (linux|windows|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    macosx1014.*: []
                     default: [mozilla-beta, trunk]
     mozharness:
         extra-options:
@@ -821,7 +820,6 @@ talos-webgl:
             default:
                 by-test-platform:
                     windows.*-32.*: []
-                    macosx1014.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: [mozilla-beta, trunk]

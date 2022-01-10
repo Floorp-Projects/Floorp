@@ -73,7 +73,6 @@ browsertime-tp6:
                             by-test-platform:
                                 (linux|windows|macos)(?!.*-qr).*: []
                                 linux.*shippable.*: [trunk, mozilla-beta]
-                                macosx1014-64-shippable-qr.*: [trunk]
                                 macosx1015.*shippable-qr.*: [trunk, mozilla-beta]
                                 windows10-64.*shippable.*: [trunk, mozilla-beta]
                                 default: []
@@ -183,7 +182,6 @@ browsertime-tp6-essential:
             firefox:
                 by-test-platform:
                     linux.*shippable.*: [trunk, mozilla-beta]
-                    macosx1014-64-shippable-qr.*: [trunk]
                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
@@ -251,7 +249,6 @@ browsertime-benchmark:
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
                                     linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1014-64-shippable-qr.*: [trunk]
                                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
@@ -263,7 +260,6 @@ browsertime-benchmark:
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
                                     linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1014-64-shippable-qr.*: [trunk]
                                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
@@ -275,7 +271,6 @@ browsertime-benchmark:
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
                                     linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1014-64-shippable-qr.*: [trunk]
                                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
@@ -296,7 +291,6 @@ browsertime-benchmark:
                                     (linux|windows|macos)(?!.*shippable).*: []
                                     (linux|windows|macosx1015)(?!.*-qr).*: []
                                     linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1014-64-shippable-qr.*: [trunk]
                                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
@@ -341,14 +335,12 @@ browsertime-benchmark-wasm:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    macosx1014.*: []
                     .*shippable-qr/.*: [mozilla-central]
                     default: []
             default:
                 by-app:
                     firefox:
                         by-test-platform:
-                            macosx1014.*: []
                             (linux|windows|macos)(?!.*shippable).*: []
                             (linux|windows|macos)(?!.*-qr).*: []
                             linux.*shippable.*: [trunk, mozilla-beta]
@@ -473,7 +465,6 @@ browsertime-tp6-live-sheriffed:
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows|macosx1015)(?!.*-qr).*: []
                     windows.*-32.*: []
-                    macosx1014.*: []
                     default: []
     tier: 2
     treeherder-symbol: Btime-live(tp6)
