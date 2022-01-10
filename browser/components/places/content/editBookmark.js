@@ -3,10 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global MozXULElement */
-/* import-globals-from controller.js */
 
 // This is defined in browser.js and only used in the star UI.
 /* global setToolbarVisibility */
+
+/* import-globals-from controller.js */
 
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -19,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
-  browser: "chrome://remote/content/marionette/browser.js",
 });
 
 var gEditItemOverlay = {

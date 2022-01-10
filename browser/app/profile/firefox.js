@@ -1193,6 +1193,10 @@ pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 // The number of recently selected folders in the edit bookmarks dialog.
 pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 
+// By default the Edit Bookmark dialog is instant-apply. This feature pref will allow to
+// just save on Accept, once the project is complete.
+pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
+
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);
 
 // Feature-disable the protected-mode auto-flip
