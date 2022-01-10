@@ -5,11 +5,6 @@
 
 // Test that the split console state is persisted.
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/toolbox.properties"
-);
-
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console test for splitting</p>";
 
@@ -121,8 +116,7 @@ async function doesMenuSayHide(toolbox) {
         const result =
           menuItem &&
           menuItem.querySelector(".label") &&
-          menuItem.querySelector(".label").textContent ===
-            L10N.getStr("toolbox.meatballMenu.hideconsole.label");
+          menuItem.querySelector(".label").textContent === "Hide Split Console";
 
         toolbox.doc.addEventListener(
           "popuphidden",
