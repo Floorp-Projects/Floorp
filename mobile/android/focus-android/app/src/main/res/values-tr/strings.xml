@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Gelişmiş</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Site izinleri</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Otomatik oynatma</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Ses ve videoya izin ver</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Yalnızca sesi engelle</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Önerilen</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Ses ve videoyu engelle</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Araştırmalar</string>
 
@@ -779,8 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Yalnızca HTTPS modu</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS, ziyaret ettiğiniz sitelerle %1$s arasında güvenli ve şifrelenmiş bağlantı sağlar. Çoğu site HTTPS desteği sunar. “Yalnızca HTTPS” modunu açarsanız %1$s tüm bağlantılarda HTTPS kullanmaya çalışır.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Daha fazla güvenlik için HTTPS kullanan sitelere otomatik olarak bağlanmaya çalışır. HTTPS bağlantıları, ziyaret ettiğiniz web sitelerine güvenli, şifreli bir bağlantı sağlar.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">İstisnalar</string>
@@ -844,8 +863,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kaldır</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Yeniden adlandır</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Yeniden adlandır</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Kısayol adı</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -863,6 +887,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Cihaz temasına uy</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">İstediğiniz site HTTPS’yi desteklemiyor</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Varsayılan olarak %1$s, güvenliğinizi artırmak için HTTPS aracılığıyla bağlanmaya çalışır. Bu ayarı değiştirmek veya daha bilgi almak için Ayarlar &gt; Gizlilik ve Güvenlik &gt; Güvenlik kısmına bakabilirsiniz.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

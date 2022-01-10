@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Kitkas</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Svetainių leidimai</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automatinis grojimas</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Leisti garsus ir vaizdo įrašus</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokuoti tik garsus</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Rekomenduojama</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokuoti garsus ir vaizdo įrašus</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Tyrimai</string>
 
@@ -770,11 +788,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">Pereiti į saitą naujoje kortelėje nedelsiant</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Saugusis naršymas</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Saugusis naršymas</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokuoti galimai pavojingas ir apgaulingas svetaines</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Blokuoti žinomas apgaulingas, kenksmingas, nepageidaujamą programinę įrangą siūlančias svetaines.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Tik HTTPS veiksena</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Siekiant didesnio saugumo, automatiškai bandoma jungtis prie svetainių naudojant HTTPS. HTTPS ryšys užtikrina saugų, šifruotą prisijungimą prie jūsų lankomų svetainių.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Išimtys</string>
@@ -838,6 +861,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Pašalinti</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Pervadinti</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Pervadinti</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Leistuko pavadinimas</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Įrašyti ir pasidalinti paveikslai &lt;b&gt;nebus&lt;/b&gt; pašalinti jums išvalius „%1$s“ žurnalą</string>
@@ -854,4 +884,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Naudoti įrenginio grafinį apvalkalą</string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Bandoma atverti svetainė nepalaiko HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Pagal numatytuosius nustatymus, siekiant didesnio saugumo, „%1$s“ bando jungtis naudojant HTTPS. Norėdami pakeisti šį nustatymą, arba sužinoti daugiau, eikite į meniu „Nustatymai“ &gt; „Privatumas ir saugumas“ &gt; „Saugumas“.</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Užverti kortelę</string>
 </resources>

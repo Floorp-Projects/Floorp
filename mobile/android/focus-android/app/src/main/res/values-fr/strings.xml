@@ -795,6 +795,9 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mode HTTPS uniquement</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Essayer automatiquement de se connecter aux sites en utilisant HTTPS pour une sécurité accrue. Les connexions HTTPS procurent une connexion sécurisée et chiffrée aux sites web que vous visitez.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
     <!-- Description for the exceptions preference screen-->
@@ -881,6 +884,11 @@ Ajoutez-le à la liste d’autorisation dans les paramètres</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Suivre le thème de l’appareil</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Le site demandé ne prend pas en charge HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Par défaut, %1$s essaie de se connecter en utilisant HTTPS pour une sécurité accrue. Pour modifier ce réglage ou pour en savoir plus, allez à Paramètres &gt; Vie privée et sécurité &gt; Sécurité.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

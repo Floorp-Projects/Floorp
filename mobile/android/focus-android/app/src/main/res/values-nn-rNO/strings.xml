@@ -643,6 +643,9 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avansert</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Nettstadløyve</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Automatisk avspeling</string>
 
@@ -654,6 +657,9 @@
 
     <!-- Preference summary for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only_summary">Tilrådd</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokker lyd og video</string>
 
     <!-- Preference for studies -->
     <string name="preference_studies">Undersøkingar</string>
@@ -794,6 +800,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Berre HTTPS-modus</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Vil automatisk prøve å kople til nettstadar med HTTPS for auka sikkerheit. HTTPS-tilkoplingar gir deg trygg, kryptert tilkopling til nettstadar du besøkjer.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Unntak</string>
     <!-- Description for the exceptions preference screen-->
@@ -864,6 +873,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Gi nytt namn</string>
 
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Namn på snarveg</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Lagra og delte bilde &lt;b&gt;vil ikkje bli&lt;/b&gt; fjerna når du slettar %1$s-historikken</string>
@@ -880,6 +892,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Følg tema til eining</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Sida du ba om støttar ikkje HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Som standard vil %1$s forsøke å kople til med HTTPS for auka sikkerheit. For å endre innstillingane eller å lese meir, gå til Innstillingar &gt; Personvern og sikkerheit &gt; Sikkerheit.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
