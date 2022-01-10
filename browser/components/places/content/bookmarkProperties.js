@@ -50,7 +50,7 @@
  * dialog is accepted.
  */
 
-/* import-globals-from editBookmark.js */
+/* import-globals-from instantEditBookmark.js */
 /* import-globals-from controller.js */
 
 /* Shared Places Import - change other consumers if you change this: */
