@@ -20,42 +20,34 @@ Awsy tests
    * **Test Task**:
       * test-linux1804-64-clang-trunk-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: None
             * awsy-base-fis-e10s: None
 
       * test-linux1804-64-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: None
             * awsy-base-fis-e10s: None
 
       * test-linux1804-64-shippable-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
       * test-macosx1015-64-shippable-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
       * test-windows10-32-2004-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: None
             * awsy-base-fis-e10s: None
 
       * test-windows10-32-2004-shippable-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: None
             * awsy-base-fis-e10s: None
 
       * test-windows10-64-2004-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: None
             * awsy-base-fis-e10s: None
 
       * test-windows10-64-2004-shippable-qr/opt
             * awsy-base-dmd-e10s: None
-            * awsy-base-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-base-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
 
@@ -130,35 +122,27 @@ Awsy tests
 
    * **Test Task**:
       * test-linux1804-64-clang-trunk-qr/opt
-            * awsy-tp6-e10s: None
             * awsy-tp6-fis-e10s: None
 
       * test-linux1804-64-qr/opt
-            * awsy-tp6-e10s: None
             * awsy-tp6-fis-e10s: None
 
       * test-linux1804-64-shippable-qr/opt
-            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
       * test-macosx1015-64-shippable-qr/opt
-            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
       * test-windows10-32-2004-qr/opt
-            * awsy-tp6-e10s: None
             * awsy-tp6-fis-e10s: None
 
       * test-windows10-32-2004-shippable-qr/opt
-            * awsy-tp6-e10s: None
             * awsy-tp6-fis-e10s: None
 
       * test-windows10-64-2004-qr/opt
-            * awsy-tp6-e10s: None
             * awsy-tp6-fis-e10s: None
 
       * test-windows10-64-2004-shippable-qr/opt
-            * awsy-tp6-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-tp6-fis-e10s: integration, mozilla-beta, mozilla-central, mozilla-release
 
 

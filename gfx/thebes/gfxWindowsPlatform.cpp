@@ -1453,14 +1453,6 @@ void gfxWindowsPlatform::InitGPUProcessSupport() {
     return;
   }
 
-  nsCString message;
-  nsCString failureId;
-  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
-                                        &message, failureId)) {
-    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-    return;
-  }
-
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     // Don't use the GPU process if not using D3D11, unless software
     // compositor is allowed

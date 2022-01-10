@@ -71,6 +71,10 @@ class MeatballMenu extends PureComponent {
       // (i.e. we're not in a browser toolbox).
       disableAutohide: PropTypes.bool,
 
+      // Apply a pseudo-locale to the Firefox UI. This is only available in the browser
+      // toolbox. This value can be undefined, "accented", "bidi", "none".
+      pseudoLocale: PropTypes.string,
+
       // Function to turn the options panel on / off.
       toggleOptions: PropTypes.func.isRequired,
 
@@ -80,7 +84,15 @@ class MeatballMenu extends PureComponent {
       // Function to turn the disable pop-up autohide behavior on / off.
       toggleNoAutohide: PropTypes.func,
 
-      // Localization interface.
+      // Manage the pseudo-localization for the Firefox UI.
+      // https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
+      disablePseudoLocale: PropTypes.func,
+      enableAccentedPseudoLocale: PropTypes.func,
+      enableBidiPseudoLocale: PropTypes.func,
+
+      // Bug 1709191 - The help shortcut key is localized without Fluent, and still needs
+      // to be migrated. This is the only remaining use of the legacy L10N object.
+      // Everything else should prefer the Fluent API.
       L10N: PropTypes.object.isRequired,
 
       // Callback function that will be invoked any time the component contents
@@ -99,6 +111,7 @@ class MeatballMenu extends PureComponent {
     //
     // - The "Disable pop-up autohide" menu item being added after the Browser
     //   Toolbox is connected.
+    // - The pseudo locale options being added after the Browser Toolbox is connected.
     // - The split console label changing between "Show Split Console" and "Hide
     //   Split Console".
     // - The "Show/Hide Split Console" entry being added removed or removed.
@@ -107,6 +120,7 @@ class MeatballMenu extends PureComponent {
     // autohide" is active, but for completeness we handle them here.
     const didChange =
       typeof this.props.disableAutohide !== typeof prevProps.disableAutohide ||
+      this.props.pseudoLocale !== prevProps.pseudoLocale ||
       this.props.currentToolId !== prevProps.currentToolId ||
       this.props.isSplitConsoleActive !== prevProps.isSplitConsoleActive;
 
@@ -122,22 +136,22 @@ class MeatballMenu extends PureComponent {
     for (const hostType of this.props.hostTypes) {
       // This is more verbose than it needs to be but lets us easily search for
       // l10n entities.
-      let l10nkey;
+      let l10nID;
       switch (hostType.position) {
         case "window":
-          l10nkey = "toolbox.meatballMenu.dock.separateWindow.label";
+          l10nID = "toolbox-meatball-menu-dock-separate-window-label";
           break;
 
         case "bottom":
-          l10nkey = "toolbox.meatballMenu.dock.bottom.label";
+          l10nID = "toolbox-meatball-menu-dock-bottom-label";
           break;
 
         case "left":
-          l10nkey = "toolbox.meatballMenu.dock.left.label";
+          l10nID = "toolbox-meatball-menu-dock-left-label";
           break;
 
         case "right":
-          l10nkey = "toolbox.meatballMenu.dock.right.label";
+          l10nID = "toolbox-meatball-menu-dock-right-label";
           break;
 
         default:
@@ -149,7 +163,7 @@ class MeatballMenu extends PureComponent {
         MenuItem({
           id: `toolbox-meatball-menu-dock-${hostType.position}`,
           key: `dock-${hostType.position}`,
-          label: this.props.L10N.getStr(l10nkey),
+          l10nID,
           onClick: hostType.switchHost,
           checked: hostType.position === this.props.currentHostType,
           className: "iconic",
@@ -163,19 +177,40 @@ class MeatballMenu extends PureComponent {
 
     // Split console
     if (this.props.currentToolId !== "webconsole") {
-      const l10nkey = this.props.isSplitConsoleActive
-        ? "toolbox.meatballMenu.hideconsole.label"
-        : "toolbox.meatballMenu.splitconsole.label";
+      const l10nID = this.props.isSplitConsoleActive
+        ? "toolbox-meatball-menu-hideconsole-label"
+        : "toolbox-meatball-menu-splitconsole-label";
       items.push(
         MenuItem({
           id: "toolbox-meatball-menu-splitconsole",
           key: "splitconsole",
-          label: this.props.L10N.getStr(l10nkey),
+          l10nID,
           accelerator: "Esc",
           onClick: this.props.toggleSplitConsole,
           className: "iconic",
         })
       );
+    }
+
+    // Settings
+    items.push(
+      MenuItem({
+        id: "toolbox-meatball-menu-settings",
+        key: "settings",
+        l10nID: "toolbox-meatball-menu-settings-label",
+        // Bug 1709191 - The help key is localized without Fluent, and still needs to
+        // be migrated.
+        accelerator: this.props.L10N.getStr("toolbox.help.key"),
+        onClick: this.props.toggleOptions,
+        className: "iconic",
+      })
+    );
+
+    if (
+      typeof this.props.disableAutohide !== "undefined" ||
+      typeof this.props.pseudoLocale !== "undefined"
+    ) {
+      items.push(hr({ key: "docs-separator-1" }));
     }
 
     // Disable pop-up autohide
@@ -187,9 +222,7 @@ class MeatballMenu extends PureComponent {
         MenuItem({
           id: "toolbox-meatball-menu-noautohide",
           key: "noautohide",
-          label: this.props.L10N.getStr(
-            "toolbox.meatballMenu.noautohide.label"
-          ),
+          l10nID: "toolbox-meatball-menu-noautohide-label",
           type: "checkbox",
           checked: this.props.disableAutohide,
           onClick: this.props.toggleNoAutohide,
@@ -198,28 +231,50 @@ class MeatballMenu extends PureComponent {
       );
     }
 
-    // Settings
-    items.push(
-      MenuItem({
-        id: "toolbox-meatball-menu-settings",
-        key: "settings",
-        label: this.props.L10N.getStr("toolbox.meatballMenu.settings.label"),
-        accelerator: this.props.L10N.getStr("toolbox.help.key"),
-        onClick: this.props.toggleOptions,
-        className: "iconic",
-      })
-    );
+    // Pseudo-locales.
+    if (typeof this.props.pseudoLocale !== "undefined") {
+      const {
+        pseudoLocale,
+        enableAccentedPseudoLocale,
+        enableBidiPseudoLocale,
+        disablePseudoLocale,
+      } = this.props;
+      items.push(
+        MenuItem({
+          id: "toolbox-meatball-menu-pseudo-locale-accented",
+          key: "pseudo-locale-accented",
+          l10nID: "toolbox-meatball-menu-pseudo-locale-accented",
+          type: "checkbox",
+          checked: pseudoLocale === "accented",
+          onClick:
+            pseudoLocale === "accented"
+              ? disablePseudoLocale
+              : enableAccentedPseudoLocale,
+          className: "iconic",
+        }),
+        MenuItem({
+          id: "toolbox-meatball-menu-pseudo-locale-bidi",
+          key: "pseudo-locale-bidi",
+          l10nID: "toolbox-meatball-menu-pseudo-locale-bidi",
+          type: "checkbox",
+          checked: pseudoLocale === "bidi",
+          onClick:
+            pseudoLocale === "bidi"
+              ? disablePseudoLocale
+              : enableBidiPseudoLocale,
+          className: "iconic",
+        })
+      );
+    }
 
-    items.push(hr({ key: "docs-separator" }));
+    items.push(hr({ key: "docs-separator-2" }));
 
     // Getting started
     items.push(
       MenuItem({
         id: "toolbox-meatball-menu-documentation",
         key: "documentation",
-        label: this.props.L10N.getStr(
-          "toolbox.meatballMenu.documentation.label"
-        ),
+        l10nID: "toolbox-meatball-menu-documentation-label",
         onClick: openDevToolsDocsLink,
       })
     );
@@ -229,7 +284,7 @@ class MeatballMenu extends PureComponent {
       MenuItem({
         id: "toolbox-meatball-menu-community",
         key: "community",
-        label: this.props.L10N.getStr("toolbox.meatballMenu.community.label"),
+        l10nID: "toolbox-meatball-menu-community-label",
         onClick: openCommunityLink,
       })
     );

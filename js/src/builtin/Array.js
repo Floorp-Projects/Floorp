@@ -307,6 +307,149 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
     return A;
 }
 
+#ifdef NIGHTLY_BUILD
+// Array Grouping proposal
+//
+// Array.prototype.groupBy
+// https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
+function ArrayGroupBy(callbackfn/*, thisArg*/) {
+    /* Step 1. Let O be ? ToObject(this value). */
+    var O = ToObject(this);
+
+    /* Step 2. Let len be ? LengthOfArrayLike(O). */
+    var len = ToLength(O.length);
+
+    /* Step 3. If IsCallable(callbackfn) is false, throw a TypeError exception. */
+    if (!IsCallable(callbackfn)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
+
+    /* Step 5. Let groups be a new empty List. */
+    var groups = new_List();
+
+    var T = arguments.length > 1 ? arguments[1] : void 0;
+
+    /* Steps 4, 6. */
+    for (var k = 0; k < len; k++) {
+
+        /* Skip Step 6.a. Let Pk be ! ToString(𝔽(k)).
+         *
+         * k is coerced into a string through the property access. */
+
+        /* Step 6.b. Let kValue be ? Get(O, Pk). */
+        var kValue = O[k];
+
+        /* Step 6.c.
+         * Let propertyKey be ? ToPropertyKey(
+         *   ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+         */
+        var propertyKey = TO_PROPERTY_KEY(
+          callContentFunction(callbackfn, T, kValue, k, O)
+        );
+
+        /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
+        if (!groups[propertyKey]) {
+            var elements = [ kValue ];
+            DefineDataProperty(groups, propertyKey, elements);
+        } else {
+            var lenElements = groups[propertyKey].length;
+            DefineDataProperty(groups[propertyKey], lenElements, kValue);
+        }
+    }
+
+    /* Step 7. Let obj be ! OrdinaryObjectCreate(null). */
+    var object = {};
+
+    /* Step 8. For each Record { [[Key]], [[Elements]] } g of groups, do
+     *  a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
+     *  b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
+     */
+    for (var propertyKey in groups) {
+        DefineDataProperty(object, propertyKey, groups[propertyKey])
+    }
+
+    /* Step 9. Return obj. */
+    return object;
+}
+
+// Array Grouping proposal
+//
+// Array.prototype.groupByToMap
+// https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
+function ArrayGroupByToMap(callbackfn/*, thisArg*/) {
+
+    /* Step 1. Let O be ? ToObject(this value). */
+    var O = ToObject(this);
+
+    /* Step 2. Let len be ? LengthOfArrayLike(O). */
+    var len = ToLength(O.length);
+
+    /* Step 3.
+     * If IsCallable(callbackfn) is false, throw a TypeError exception.
+     */
+    if (!IsCallable(callbackfn)) {
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
+
+    /* Skipping Step 5. Let groups be a new empty List.
+     *
+     * Intermediate object isn't necessary as we have direct access
+     * to the map constructor and set/get methods.
+     */
+
+    /* Step 7. Let map be ! Construct(%Map%). */
+    var C = GetBuiltinConstructor("Map");
+    var map = new C();
+
+    var T = arguments.length > 1 ? arguments[1] : void 0;
+
+    /* Combine Step 6. and Step 8.
+     *
+     * We have direct access to the map constructor and set/get methods.
+     * We can treat these two loops as one, as there isn't a risk that user
+     * polyfilling will impact the implementation.
+     */
+    for (var k = 0; k < len; k++) {
+        /* Skipping Step 6.a. Let Pk be ! ToString(𝔽(k)).
+         *
+         * Value is coerced to String by property access in step 6.b.
+         */
+
+        /* Step 6.b. Let kValue be ? Get(O, Pk). */
+        var kValue = O[k];
+
+        /* Step 6.c.
+         * Let key be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
+         */
+        var propertyKey = callContentFunction(callbackfn,T, kValue, k, O);
+
+        /* Skipping Step 6.d. If key is -0𝔽, set key to +0𝔽.
+         *
+         * This step is performed by std_Map_set.
+         */
+
+        /* Step 8.c. Append entry as the last element of map.[[MapData]].
+         *
+         * We are not using an intermediate object to store the values.
+         * So, this step applies it directly to the map object. Skips steps
+         * 6.e (Perform ! AddValueToKeyedGroup(groups, key, kValue))
+         * and 8.a-b as a result.
+         */
+        if (!callFunction(std_Map_get, map, propertyKey)) {
+            var elements = [ kValue ];
+            callFunction(std_Map_set, map, propertyKey, elements);
+        } else {
+            var elements = callFunction(std_Map_get, map, propertyKey);
+            DefineDataProperty(elements, elements.length, kValue);
+        }
+    }
+
+    /* Step 9. Return map. */
+    return map;
+}
+
+#endif
+
 /* ES5 15.4.4.21. */
 function ArrayReduce(callbackfn/*, initialValue*/) {
     /* Step 1. */
@@ -1237,7 +1380,7 @@ function ArrayWithSorted(comparefn) {
     var items = std_Array(len);
 
     /* Steps 5-6. */
-    for(var k = 0; k < len; k++) {
+    for (var k = 0; k < len; k++) {
         DefineDataProperty(items, k, O[k]);
     }
 
