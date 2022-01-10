@@ -18,7 +18,7 @@ import { addBreakpoint } from "../breakpoints";
 import { prettyPrintSource } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
 
-import { isOriginal, isPretty } from "../../utils/source";
+import { isPretty } from "../../utils/source";
 import { memoizeableAction } from "../../utils/memoizableAction";
 
 const Telemetry = require("devtools/client/shared/telemetry");
@@ -28,7 +28,7 @@ const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
 const telemetry = new Telemetry();
 
 async function loadSource(state, source, { sourceMaps, client, getState }) {
-  if (isPretty(source) && isOriginal(source)) {
+  if (isPretty(source) && source.isOriginal) {
     const generatedSource = getGeneratedSource(state, source);
     if (!generatedSource) {
       throw new Error("Unable to find minified original.");
@@ -46,7 +46,7 @@ async function loadSource(state, source, { sourceMaps, client, getState }) {
     );
   }
 
-  if (isOriginal(source)) {
+  if (source.isOriginal) {
     const result = await sourceMaps.getOriginalSourceText(source.id);
     if (!result) {
       // The way we currently try to load and select a pending

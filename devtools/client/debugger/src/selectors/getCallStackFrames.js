@@ -9,7 +9,6 @@ import {
 } from "../reducers/sources";
 import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
-import { isOriginal } from "../utils/source";
 import { createSelector } from "reselect";
 
 function getLocation(frame, isGeneratedSource) {
@@ -24,7 +23,7 @@ function getSourceForFrame(sources, frame, isGeneratedSource) {
 }
 
 function appendSource(sources, frame, selectedSource) {
-  const isGeneratedSource = selectedSource && !isOriginal(selectedSource);
+  const isGeneratedSource = selectedSource && !selectedSource.isOriginal;
   return {
     ...frame,
     location: getLocation(frame, isGeneratedSource),
