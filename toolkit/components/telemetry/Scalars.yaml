@@ -2047,6 +2047,19 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - main
+  toggle_enabled:
+    bug_numbers:
+      - 1639774
+    description: Whether the user has Picture-in-Picture enabled.
+    expires: "never"
+    kind: boolean
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 preferences:
   created_new_user_prefs_file:

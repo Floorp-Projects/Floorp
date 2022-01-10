@@ -2551,6 +2551,32 @@ pictureinpicture:
     expiry_version: "never"
     release_channel_collection: opt-out
 
+pictureinpicture.settings:
+  enable:
+    objects: ["player"]
+    description: Recorded when Picture-in-Picture is enabled.
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1639774
+    expiry_version: "never"
+  disable:
+    objects: ["player"]
+    description: Recorded when Picture-in-Picture is disabled.
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1639774
+    expiry_version: "never"
+
 doh:
   evaluate_v2:
     methods: ["evaluate_v2"]
