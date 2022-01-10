@@ -11,6 +11,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -500,6 +501,11 @@ UniquePtr<SurfaceDescriptor> CanvasTranslator::WaitForSurfaceDescriptor(
   UniquePtr<SurfaceDescriptor> descriptor = std::move(result->second);
   mSurfaceDescriptors.erase(aTextureId);
   return descriptor;
+}
+
+already_AddRefed<gfx::SourceSurface> CanvasTranslator::LookupExternalSurface(
+    uint64_t aKey) {
+  return SharedSurfacesParent::Get(wr::ToExternalImageId(aKey));
 }
 
 already_AddRefed<gfx::GradientStops> CanvasTranslator::GetOrCreateGradientStops(
