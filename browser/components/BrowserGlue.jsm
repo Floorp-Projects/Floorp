@@ -2710,6 +2710,12 @@ BrowserGlue.prototype = {
         },
       },
 
+      {
+        task: () => {
+          this._collectTelemetryPiPEnabled();
+        },
+      },
+
       // WebDriver components (Remote Agent and Marionette) need to be
       // initialized as very last step.
       {
@@ -4556,6 +4562,41 @@ BrowserGlue.prototype = {
       badge?.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
+  },
+
+  _collectTelemetryPiPEnabled() {
+    Services.telemetry.setEventRecordingEnabled(
+      "pictureinpicture.settings",
+      true
+    );
+
+    const TOGGLE_ENABLED_PREF =
+      "media.videocontrols.picture-in-picture.video-toggle.enabled";
+
+    const observe = (subject, topic, data) => {
+      const enabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF, false);
+      Services.telemetry.scalarSet("pictureinpicture.toggle_enabled", enabled);
+
+      // Record events when preferences change
+      if (topic === "nsPref:changed") {
+        if (enabled) {
+          Services.telemetry.recordEvent(
+            "pictureinpicture.settings",
+            "enable",
+            "player"
+          );
+        } else {
+          Services.telemetry.recordEvent(
+            "pictureinpicture.settings",
+            "disable",
+            "player"
+          );
+        }
+      }
+    };
+
+    Services.prefs.addObserver(TOGGLE_ENABLED_PREF, observe);
+    observe();
   },
 
   QueryInterface: ChromeUtils.generateQI([
