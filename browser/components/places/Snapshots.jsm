@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   CommonNames: "resource:///modules/CommonNames.jsm",
   Interactions: "resource:///modules/Interactions.jsm",
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
@@ -149,20 +150,6 @@ const Snapshots = new (class Snapshots {
     if (!PlacesPreviews.enabled) {
       PageThumbs.addExpirationFilter(this);
     }
-  }
-
-  /**
-   * Only certain urls can be added as Snapshots, either manually or
-   * automatically.
-   * @returns {Map} A Map keyed by protocol, for each protocol an object may
-   *          define stricter requirements, like extension.
-   */
-  get urlRequirements() {
-    return new Map([
-      ["http:", {}],
-      ["https:", {}],
-      ["file:", { extension: "pdf" }],
-    ]);
   }
 
   #notify(topic, urls) {
@@ -300,31 +287,6 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Whether a given URL can be added to snapshots.
-   * The rules are defined in this.urlRequirements.
-   * @param {string|URL|nsIURI} url The URL to check.
-   * @returns {boolean} whether the url can be added to snapshots.
-   */
-  canSnapshotUrl(url) {
-    let protocol, pathname;
-    if (typeof url == "string") {
-      url = new URL(url);
-    }
-    if (url instanceof Ci.nsIURI) {
-      protocol = url.scheme + ":";
-      pathname = url.filePath;
-    } else {
-      protocol = url.protocol;
-      pathname = url.pathname;
-    }
-    let requirements = this.urlRequirements.get(protocol);
-    return (
-      requirements &&
-      (!requirements.extension || pathname.endsWith(requirements.extension))
-    );
-  }
-
-  /**
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
@@ -342,7 +304,7 @@ const Snapshots = new (class Snapshots {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
-    if (!this.canSnapshotUrl(url)) {
+    if (!InteractionsBlocklist.canRecordUrl(url)) {
       throw new Error("This url cannot be added to snapshots");
     }
 
@@ -838,7 +800,7 @@ const Snapshots = new (class Snapshots {
           // likely in the future these picking rules will be replaced by some
           // ML machinery. Thus it seems not worth the added complexity.
           let filters = [];
-          for (let protocol of this.urlRequirements.keys()) {
+          for (let protocol of InteractionsBlocklist.urlRequirements.keys()) {
             filters.push(
               `(url_hash BETWEEN hash('${protocol}', 'prefix_lo') AND hash('${protocol}', 'prefix_hi'))`
             );
@@ -847,7 +809,7 @@ const Snapshots = new (class Snapshots {
         } else {
           let urlMatches = [];
           urls.forEach((url, idx) => {
-            if (!this.canSnapshotUrl(url)) {
+            if (!InteractionsBlocklist.canRecordUrl(url)) {
               logConsole.debug(`Url can't be added to snapshots: ${url}`);
               return;
             }
