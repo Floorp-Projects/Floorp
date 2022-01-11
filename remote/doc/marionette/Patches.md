@@ -30,4 +30,4 @@ But you can also schedule tests by selecting relevant jobs yourself:
 [commit creation guidelines]: https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html?highlight=phabricator#submitting-patches-for-review
 [becoming a Mozilla committer]: https://www.mozilla.org/en-US/about/governance/policies/commit/
 [Firefox CI]: https://treeherder.mozilla.org/
-[try preset]: https://firefox-source-docs.mozilla.org/tools/try/presets.html
+[try preset]: /tools/try/presets

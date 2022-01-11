@@ -47,7 +47,7 @@ This enables `LogLevel::Debug` level information and places all
 output in the file service.log in your current working directory.
 
 
-[preference]: ./Prefs.html
+[preference]: Prefs.md
 [System observer notifications]: https://developer.mozilla.org/en-US/docs/Archive/Add-ons/Overlay_Extensions/XUL_School/Observer_Notifications
 [prlog.h]: https://searchfox.org/mozilla-central/source/nsprpub/pr/include/prlog.h
 [wiki]: https://wiki.mozilla.org/Remote/Developer_Resources

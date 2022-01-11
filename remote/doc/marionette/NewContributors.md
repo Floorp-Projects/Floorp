@@ -36,7 +36,7 @@ Accounts, communication
      someone may have answered you in the mean time.
 
   5. If you're having trouble reaching us over Element, you are welcome to send an
-     email to our [mailing list](index.html#communication) instead. It's a good
+     email to our [mailing list](index.rst#communication) instead. It's a good
      idea to include your Element nick in your email message.
 
 [Element]: https://chat.mozilla.org
@@ -48,7 +48,7 @@ Accounts, communication
 Getting the code, running tests
 -------------------------------
 
-Follow the documentation on [Contributing](Contributing.html) to get a sense of
+Follow the documentation on [Contributing](Contributing.md) to get a sense of
 our projects, and which is of most interest for you. You will also learn how to
 get the Firefox source code, build your custom Firefox build, and how to run the
 tests.
@@ -59,7 +59,7 @@ Work on bugs and get code review
 
 Once you are familiar with the code of the test harnesses, and the tests you might
 want to start with your first contribution. The necessary steps to submit and verify
-your patches are laid out in [Patches.md](Patches.html).
+your patches are laid out in [Patches](Patches.md).
 
 
 Resources

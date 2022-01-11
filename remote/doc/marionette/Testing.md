@@ -57,7 +57,7 @@ In case you want to run the tests with another binary like [Firefox Nightly]:
 
 When working on Marionette it is often useful to surface the stdout
 from Gecko, which can be achieved using the `--gecko-log` option.
-See <Debugging.html> for usage instructions, but the gist is that
+See [Debugging](Debugging.md) for usage instructions, but the gist is that
 you can redirect all Gecko output to stdout:
 
     % ./mach marionette-test --gecko-log - TEST
@@ -75,7 +75,7 @@ controlling the dimensions of the no-op virtual display.  This is
 similar to using Xvfb(1) which you may know from the X windowing system,
 but has the additional benefit of also working on macOS and Windows.
 
-[functional tests]: PythonTests.html
+[functional tests]: PythonTests.md
 [Firefox Nightly]: https://nightly.mozilla.org/
 
 
@@ -132,7 +132,7 @@ Marionette when you connect manually:
 You should see output like `{"applicationType":"gecko","marionetteProtocol":3}`
 
 [headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
-[geckodriver]: /testing/geckodriver/geckodriver
+[geckodriver]: /testing/geckodriver/index.rst
 
 
 WPT functional tests
@@ -179,7 +179,7 @@ One-click loaners
 -----------------
 
 Additionally, for debugging hard-to-reproduce test failures in CI,
-one-click loaners from <Taskcluster.html> can be particularly useful.
+one-click loaners from [Taskcluster](Taskcluster.md) can be particularly useful.
 
 
 Out-of-tree testing
@@ -188,7 +188,7 @@ Out-of-tree testing
 All the above examples show tests running _in-tree_, with a local
 checkout of _central_ and a local build of Firefox.  It is also
 possibly to run the Marionette tests _without_ a local build and
-with a downloaded test archive from <Taskcluster.html>.
+with a downloaded test archive from [Taskcluster](Taskcluster.md)
 
 If you want to run tests from a downloaded test archive, you will
 need to download the `target.common.tests.tar.gz` artifact attached to
