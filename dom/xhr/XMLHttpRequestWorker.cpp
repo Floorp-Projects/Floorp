@@ -1886,6 +1886,11 @@ void XMLHttpRequestWorker::Send(
     return;
   }
 
+  if (mStateData->mReadyState != XMLHttpRequest_Binding::OPENED) {
+    aRv.ThrowInvalidStateError("XMLHttpRequest state must be OPENED.");
+    return;
+  }
+
   if (!mProxy || mStateData->mFlagSend) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
