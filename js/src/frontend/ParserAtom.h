@@ -114,7 +114,7 @@ class TaggedParserAtomIndex {
   static constexpr uint32_t IndexLimit = Bit(IndexBit);
   static constexpr uint32_t SmallIndexLimit = Bit(SmallIndexBit);
 
-  static constexpr size_t Length1StaticLimit = 128U;
+  static constexpr size_t Length1StaticLimit = 256U;
   static constexpr size_t Length2StaticLimit =
       StaticStrings::NUM_LENGTH2_ENTRIES;
 
@@ -608,6 +608,9 @@ class WellKnownParserAtoms {
     return TaggedParserAtomIndex::null();
   }
 
+  TaggedParserAtomIndex lookupTinyIndexUTF8(const mozilla::Utf8Unit* utf8Ptr,
+                                            size_t nbyte) const;
+
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) +
            wellKnownMap_.shallowSizeOfExcludingThis(mallocSizeOf);
@@ -762,8 +765,9 @@ class ParserAtomsTable {
                                Length2StaticParserString index);
 #endif
 
-  static void getLength1Content(Length1StaticParserString s, char contents[1]) {
-    contents[0] = char(s);
+  static void getLength1Content(Length1StaticParserString s,
+                                Latin1Char contents[1]) {
+    contents[0] = Latin1Char(s);
   }
 
   static void getLength2Content(Length2StaticParserString s, char contents[2]) {
