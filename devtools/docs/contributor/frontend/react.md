@@ -132,7 +132,7 @@ const App = React.createClass({
 
 If you are using something like Redux to manage state this is handled
 automatically for you with the library you use to bind Redux with
-React. See more in [Redux](redux.html).
+React. See more in [Redux](redux.md).
 
 ## DOM Diffing
 

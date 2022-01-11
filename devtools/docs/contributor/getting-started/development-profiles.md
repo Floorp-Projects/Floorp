@@ -39,7 +39,7 @@ Create a new profile, and name it `development`. Then start Firefox by clicking 
 
 Next time you start Firefox with `./mach run -P development`, the new profile will be automatically used, and settings will persist between browser launches.
 
-It's now time to [start contributing](../contributing.html)! 😃
+It's now time to [start contributing](../contributing.md)! 😃
 
 ---
 
