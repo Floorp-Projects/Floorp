@@ -799,6 +799,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modd HTTPS-yn-Unig</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Yn ceisio cysylltu’n awtomatig â gwefannau gan ddefnyddio HTTPS i wella diogelwch. Mae cysylltiadau HTTPS yn darparu cysylltiad diogel, wedi’i amgryptio i wefannau rydych chi’n ymweld â nhw.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Eithriadau</string>
     <!-- Description for the exceptions preference screen-->
@@ -861,8 +864,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Tynnu</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Ailenwi</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Ailenwi</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Enw llwybr byr</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -880,6 +888,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Dilyn thema’r ddyfais</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Nid yw’r wefan y gofynnoch amdani yn cefnogi HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Drwy ragosodiad, mae %1$s yn ceisio cysylltu gan ddefnyddio HTTPS er mwyn cynyddu diogelwch. I newid y gosodiad hwn neu i ddysgu ragor, ewch i Gosodiadau &gt; Preifatrwydd a Diogelwch &gt; Diogelwch.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
