@@ -73,7 +73,6 @@ class WindowGlobalTargetFront extends TargetMixin(
     const event = Object.create(null);
     event.url = packet.url;
     event.title = packet.title;
-    event.nativeConsoleAPI = packet.nativeConsoleAPI;
     event.isFrameSwitching = packet.isFrameSwitching;
 
     // Keep the title unmodified when a developer toolbox switches frame

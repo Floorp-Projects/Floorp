@@ -138,7 +138,6 @@ const windowGlobalTargetSpecPrototype = {
       type: "tabNavigated",
       url: Option(0, "string"),
       title: Option(0, "string"),
-      nativeConsoleAPI: Option(0, "boolean"),
       state: Option(0, "string"),
       isFrameSwitching: Option(0, "boolean"),
     },

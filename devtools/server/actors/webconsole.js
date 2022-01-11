@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* global XPCNativeWrapper */
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
@@ -375,28 +374,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
   grip: function() {
     return { actor: this.actorID };
-  },
-
-  hasNativeConsoleAPI: function(window) {
-    if (isWorker || !(window instanceof Ci.nsIDOMWindow)) {
-      // We can only use XPCNativeWrapper on non-worker nsIDOMWindow.
-      return true;
-    }
-
-    let isNative = false;
-    try {
-      // We are very explicitly examining the "console" property of
-      // the non-Xrayed object here.
-      const console = window.wrappedJSObject.console;
-      // In xpcshell tests, console ends up being undefined and XPCNativeWrapper
-      // crashes in debug builds.
-      if (console) {
-        isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
-      }
-    } catch (ex) {
-      // ignored
-    }
-    return isNative;
   },
 
   _findProtoChain: ThreadActor.prototype._findProtoChain,
@@ -789,8 +766,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     startedListeners.forEach(this._listeners.add, this._listeners);
 
     return {
-      startedListeners: startedListeners,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(this.global),
+      startedListeners,
     };
   },
 
