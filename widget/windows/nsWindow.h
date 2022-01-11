@@ -301,6 +301,8 @@ class nsWindow final : public nsWindowBase {
 
   void SetSmallIcon(HICON aIcon);
   void SetBigIcon(HICON aIcon);
+  void SetSmallIconNoData();
+  void SetBigIconNoData();
 
   static void SetIsRestoringSession(const bool aIsRestoringSession) {
     sIsRestoringSession = aIsRestoringSession;
