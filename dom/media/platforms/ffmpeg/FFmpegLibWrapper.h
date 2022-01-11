@@ -84,6 +84,8 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
                           uint8_t** poutbuf, int* poutbuf_size,
                           const uint8_t* buf, int buf_size, int64_t pts,
                           int64_t dts, int64_t pos);
+  AVCodec* (*av_codec_iterate)(void** opaque);
+  int (*av_codec_is_decoder)(const AVCodec* codec);
 
   // only used in libavcodec <= 54
   AVFrame* (*avcodec_alloc_frame)();
