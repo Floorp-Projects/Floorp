@@ -149,7 +149,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
         val recoverableException = WebExtensionException(Exception(), isRecoverable = true)
-        (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
+        worker.updateAttemptStorage = updateAttemptStorage
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
@@ -175,7 +175,7 @@ class AddonUpdaterWorkerTest {
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
         val unrecoverableException = WebExtensionException(Exception(), isRecoverable = false)
-        (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
+        worker.updateAttemptStorage = updateAttemptStorage
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
