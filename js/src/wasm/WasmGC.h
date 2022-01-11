@@ -26,6 +26,7 @@
 #include "js/Vector.h"
 #include "util/Memory.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmFrame.h"
 
 namespace js {
 
@@ -57,10 +58,9 @@ struct StackMap final {
   // Users of the map will know the address of the wasm::Frame that is covered
   // by this map.  In order that they can calculate the exact address range
   // covered by the map, the map also stores the offset, from the highest
-  // addressed word of the map, of the embedded wasm::Frame.  This is an
-  // offset down from the highest address, rather than up from the lowest, so
-  // as to limit its range to 11 bits, where
-  // 11 == ceil(log2(MaxParams * sizeof-biggest-param-type-in-words))
+  // addressed word of the map, of the embedded wasm::Frame.  This is an offset
+  // down from the highest address, rather than up from the lowest, so as to
+  // limit its range to FrameOffsetBits bits.
   //
   // The stackmap may also cover a DebugFrame (all DebugFrames which may
   // potentially contain live pointers into the JS heap get a map).  If so that
@@ -88,13 +88,19 @@ struct StackMap final {
   // clang-format on
 
   // The total number of stack words covered by the map ..
-  uint32_t numMappedWords : 30;
+  static constexpr size_t MappedWordsBits = 30;
+  uint32_t numMappedWords : MappedWordsBits;
 
   // .. of which this many are "exit stub" extras
-  uint32_t numExitStubWords : 6;
+  static constexpr size_t ExitStubWordsBits = 6;
+  uint32_t numExitStubWords : ExitStubWordsBits;
 
-  // Where is Frame* relative to the top?  This is an offset in words.
-  uint32_t frameOffsetFromTop : 11;
+  // Where is Frame* relative to the top?  This is an offset in words.  On every
+  // platform, FrameOffsetBits needs to be at least
+  // ceil(log2(MaxParams*sizeof-biggest-param-type-in-words)).  The most
+  // constraining platforms are 32-bit with SIMD support, currently x86-32.
+  static constexpr size_t FrameOffsetBits = 12;
+  uint32_t frameOffsetFromTop : FrameOffsetBits;
 
   // Notes the presence of a DebugFrame with possibly-live references.  A
   // DebugFrame may or may not contain GC-managed data; in situations when it is
@@ -103,9 +109,21 @@ struct StackMap final {
   uint32_t hasDebugFrameWithLiveRefs : 1;
 
  private:
-  static constexpr uint32_t maxMappedWords = (1 << 30) - 1;
-  static constexpr uint32_t maxExitStubWords = (1 << 6) - 1;
-  static constexpr uint32_t maxFrameOffsetFromTop = (1 << 11) - 1;
+  static constexpr uint32_t maxMappedWords = (1 << MappedWordsBits) - 1;
+  static constexpr uint32_t maxExitStubWords = (1 << ExitStubWordsBits) - 1;
+  static constexpr uint32_t maxFrameOffsetFromTop = (1 << FrameOffsetBits) - 1;
+
+  static constexpr size_t MaxParamSize =
+      std::max(sizeof(jit::FloatRegisters::RegisterContent),
+               sizeof(jit::Registers::RegisterContent));
+
+  // Add 16 words to account for the size of FrameWithTls including any shadow
+  // stack (at worst 8 words total), and then a little headroom in case the
+  // argument area had to be aligned.
+  static_assert(FrameWithTls::sizeOf() / sizeof(void*) <= 8);
+  static_assert(maxFrameOffsetFromTop >=
+                    (MaxParams * MaxParamSize / sizeof(void*)) + 16,
+                "limited size of the offset field");
 
   uint32_t bitmap[1];
 

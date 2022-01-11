@@ -185,6 +185,10 @@ class FrameWithTls : public Frame {
   TlsData* calleeTls() { return calleeTls_; }
   TlsData* callerTls() { return callerTls_; }
 
+  constexpr static uint32_t sizeOf() {
+    return sizeof(wasm::FrameWithTls) + js::jit::ShadowStackSpace;
+  }
+
   constexpr static uint32_t sizeOfTlsFields() {
     return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
   }
