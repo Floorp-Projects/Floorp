@@ -89,7 +89,7 @@ class TabsFeatureTest {
         tabsFeature.filterTabs(filter)
 
         verify(presenter).tabsFilter = filter
-        verify(tabsTray).updateTabs(emptyList(), null)
+        verify(tabsTray).updateTabs(emptyList(), null, null)
     }
 
     @Test

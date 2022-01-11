@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -62,6 +63,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { true }
         )
 
@@ -98,6 +100,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { true }
         )
 
@@ -135,6 +138,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { true }
         )
 
@@ -174,6 +178,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { true }
         )
 
@@ -211,6 +216,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { true }
         )
 
@@ -244,6 +250,7 @@ class TabsTrayPresenterTest {
             tabsTray,
             store,
             closeTabsTray = {},
+            tabPartitionsFilter = { null },
             tabsFilter = { it.content.private }
         )
 
@@ -274,6 +281,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            tabPartitionsFilter = { null },
             tabsFilter = { true },
             closeTabsTray = { closed = true }
         )
@@ -309,6 +317,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            tabPartitionsFilter = { null },
             tabsFilter = { true },
             closeTabsTray = { closed = true }
         )
@@ -345,6 +354,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            tabPartitionsFilter = { null },
             tabsFilter = { it.content.private },
             closeTabsTray = { invoked = true }
         )
@@ -360,7 +370,7 @@ private class MockedTabsTray : TabsTray {
     var updateTabs: List<TabSessionState>? = null
     var selectedTabId: String? = null
 
-    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
+    override fun updateTabs(tabs: List<TabSessionState>, tabPartition: TabPartition?, selectedTabId: String?) {
         updateTabs = tabs
         this.selectedTabId = selectedTabId
     }

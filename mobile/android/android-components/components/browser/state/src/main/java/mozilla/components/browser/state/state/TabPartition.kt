@@ -49,3 +49,22 @@ fun TabPartition.getGroupByName(name: String) = this.tabGroups.firstOrNull {
 fun TabPartition.getGroupById(id: String) = this.tabGroups.firstOrNull {
     it.id == id
 }
+
+/**
+ * Check if a [TabPartition] has no tabs
+ *
+ * @return true if the [TabPartition] has no tabs, false otherwise.
+ */
+fun TabPartition?.isEmpty(): Boolean {
+    return this?.tabGroups?.filter { tabGroup -> tabGroup.tabIds.isNotEmpty() }
+        .isNullOrEmpty()
+}
+
+/**
+ * Check if a [TabPartition] has tabs
+ *
+ * @return true if the [TabPartition] has tabs, false otherwise.
+ */
+fun TabPartition?.isNotEmpty(): Boolean {
+    return isEmpty().not()
+}
