@@ -65,16 +65,13 @@ browsertime-tp6:
                 fission:
                     by-test-platform:
                         windows.*-32.*: []
-                        .*shippable-qr/.*: [mozilla-central]
+                        .*shippable-qr/.*: [trunk, mozilla-beta]
                         default: []
                 default:
                     by-app:
                         firefox:
                             by-test-platform:
-                                (linux|windows|macos)(?!.*-qr).*: []
-                                linux.*shippable.*: [trunk, mozilla-beta]
-                                macosx1015.*shippable-qr.*: [trunk, mozilla-beta]
-                                windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                (!.*shippable-qr/.*): [trunk, mozilla-beta]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -150,10 +147,7 @@ browsertime-responsiveness:
                 by-app:
                     firefox:
                         by-test-platform:
-                            .*clang.*: []
-                            linux.*shippable.*: [trunk]
-                            macosx1015.*shippable.*: [trunk]
-                            windows10-64.*shippable.*: [trunk]
+                            (!.*shippable-qr/.*): [trunk]
                             default: []
                     default: []
     tier:
@@ -178,15 +172,20 @@ browsertime-tp6-essential:
             - wikipedia
             - yahoo-mail
     run-on-projects:
-        by-app:
-            firefox:
+        by-variant:
+            fission:
                 by-test-platform:
-                    linux.*shippable.*: [trunk, mozilla-beta]
-                    macosx1015.*shippable.*: [trunk, mozilla-beta]
-                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                    windows.*-32.*: []
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
+                    .*shippable-qr/.*: [trunk, mozilla-beta]
                     default: []
-            default: []
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            (!.*shippable-qr/.*): [trunk]
+                            default: []
+                    default: []
     tier:
         by-test-platform:
             linux1804-64-clang-trunk-qr/opt: 2
@@ -213,8 +212,7 @@ browsertime-benchmark:
     treeherder-symbol: Btime()
     tier:
         by-variant:
-            fission: 3
-            default:
+            fission:
                 by-app:
                     firefox:
                         by-subtest:
@@ -232,67 +230,38 @@ browsertime-benchmark:
                         by-subtest:
                             unity-webgl: 3
                             default: 2
+            default: 3
     variants: [fission]
     run-on-projects:
         by-variant:
             fission:
-                by-test-platform:
-                    windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
-                    default: []
+                by-subtest:
+                    unity-webgl:
+                        by-test-platform:
+                            windows.*-32.*: []
+                            .*shippable-qr/.*: [trunk]
+                            default: []
+                    default:
+                        by-test-platform:
+                            windows.*-32.*: []
+                            .*shippable-qr/.*: [trunk, mozilla-beta]
+                            default: []
             default:
                 by-subtest:
-                    assorted-dom:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    (linux|windows|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
-                                    linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
-                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
-                                    default: []
-                            default: []
-                    motionmark-htmlsuite:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    (linux|windows|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
-                                    linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
-                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
-                                    default: []
-                            default: []
-                    speedometer:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    (linux|windows|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: [autoland]
-                                    linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
-                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
-                                    default: []
-                            default: []
                     unity-webgl:
                         by-app:
                             firefox:
                                 by-test-platform:
                                     windows.*-32.*: []
-                                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: []
-                                    default: [autoland]
+                                    (!.*shippable-qr/.*): [trunk]
+                                    default: []
                             default: []
                     default:
                         by-app:
                             firefox:
                                 by-test-platform:
-                                    (linux|windows|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: []
-                                    linux.*shippable.*: [trunk, mozilla-beta]
-                                    macosx1015.*shippable.*: [trunk, mozilla-beta]
-                                    windows10-64.*shippable.*: [trunk, mozilla-beta]
+                                    windows.*-32.*: []
+                                    (!.*shippable-qr/.*): [trunk, mozilla-beta]
                                     default: []
                             default: []
     max-run-time:
@@ -341,11 +310,7 @@ browsertime-benchmark-wasm:
                 by-app:
                     firefox:
                         by-test-platform:
-                            (linux|windows|macos)(?!.*shippable).*: []
-                            (linux|windows|macos)(?!.*-qr).*: []
-                            linux.*shippable.*: [trunk, mozilla-beta]
-                            macosx1015.*shippable.*: [trunk, mozilla-beta]
-                            windows10-64.*shippable.*: [trunk, mozilla-beta]
+                            (!.*shippable-qr/.*): [mozilla-central]
                             default: []
                     default: []
     max-run-time:
@@ -382,8 +347,7 @@ browsertime-youtube-playback:
                     default: []
             default:
                 by-test-platform:
-                    windows.*-32.*/opt: []
-                    (linux|windows.*64|macos)(.*shippable).*: [mozilla-central]
+                    (!.*shippable-qr/.*): [mozilla-central]
                     default: []
     tier: 2
     limit-platforms:
@@ -486,7 +450,6 @@ browsertime-tp6-profiling:
             fission: []
             default:
                 by-test-platform:
-                    (linux|windows|macosx1015)(?!.*-qr).*: []
                     (linux|windows|macosx1015).*shippable-qr.*: [mozilla-central]
                     default: []
     tier:
@@ -515,7 +478,7 @@ browsertime-custom:
                     default: []
             default:
                 by-test-platform:
-                    (linux|windows10-64|macosx).*shippable-qr.*: [mozilla-central]
+                    (!.*shippable-qr/.*): [mozilla-central]
                     default: []
     tier: 2
     treeherder-symbol: Btime(ps)
@@ -536,14 +499,11 @@ browsertime-first-install:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
+                    .*shippable-qr/.*: [trunk]
                     default: []
             default:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*-qr).*: []
-                    linux.*shippable.*: [trunk]
-                    macos.*shippable-qr.*: [trunk]
-                    windows10-64.*shippable.*: [trunk]
+                    (!.*shippable-qr/.*): [trunk]
                     default: []
     tier: 2
     treeherder-symbol: Btime(welcome)
