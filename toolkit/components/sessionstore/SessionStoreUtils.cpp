@@ -1196,7 +1196,6 @@ static Element* FindNodeByXPath(Document& aDocument,
   return Element::FromNodeOrNull(result->GetSingleNodeValue(rv));
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
 /* static */
 bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
                                         Document& aDocument,
@@ -1308,7 +1307,6 @@ void RestoreFormEntry(Element* aNode, const FormEntryValue& aValue) {
   }
 }
 
-MOZ_CAN_RUN_SCRIPT
 /* static */
 void SessionStoreUtils::RestoreFormData(
     Document& aDocument, const nsString& aInnerHTML,
@@ -1456,7 +1454,6 @@ static void CollectFrameTreeData(JSContext* aCx,
   }
 }
 
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<nsISessionStoreRestoreData>
 SessionStoreUtils::ConstructSessionStoreRestoreData(
     const GlobalObject& aGlobal) {
@@ -1465,7 +1462,6 @@ SessionStoreUtils::ConstructSessionStoreRestoreData(
 }
 
 /* static */
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> SessionStoreUtils::InitializeRestore(
     const GlobalObject& aGlobal, CanonicalBrowsingContext& aContext,
     nsISessionStoreRestoreData* aData, ErrorResult& aError) {
