@@ -858,6 +858,8 @@ namespace mozilla {
 // Side constants for use in various places.
 enum Side : uint8_t { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
+std::ostream& operator<<(std::ostream&, const mozilla::Side&);
+
 constexpr auto AllPhysicalSides() {
   return mozilla::MakeInclusiveEnumeratedRange(eSideTop, eSideLeft);
 }
