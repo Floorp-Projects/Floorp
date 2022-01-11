@@ -65,7 +65,6 @@
 #include "nsXPCOMPrivate.h"
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
-#include "XPCPrefableContextOptions.h"
 #include "XPCSelfHostedShmem.h"
 
 #if defined(XP_MACOSX)
@@ -228,23 +227,6 @@ T GetWorkerPref(const nsACString& aPref,
   return result;
 }
 
-// Optimized version for bool that receives already-concatenated pref names.
-//
-// Used by xpc::SetPrefableContextOptions.
-bool GetWorkerBoolPref(const char* jsPref, const char* workerPref) {
-  using PrefHelper = PrefTraits<bool>;
-
-  if (PrefHelper::Exists(workerPref)) {
-    return PrefHelper::Get(workerPref);
-  }
-
-  if (PrefHelper::Exists(jsPref)) {
-    return PrefHelper::Get(jsPref);
-  }
-
-  return PrefHelper::kDefaultValue;
-}
-
 void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   AssertIsOnMainThread();
 
@@ -275,7 +257,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
 #endif
 
   JS::ContextOptions contextOptions;
-  xpc::SetPrefableContextOptions(contextOptions, GetWorkerBoolPref);
+  xpc::SetPrefableContextOptions(contextOptions);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
