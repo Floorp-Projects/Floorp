@@ -38,7 +38,8 @@ namespace widget {
 using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
-    : mWindowSurface(nullptr)
+    : mWindowSurface(nullptr),
+      mWindowSurfaceValid(false)
 #ifdef MOZ_WAYLAND
       ,
       mWidget(nullptr)
@@ -53,14 +54,21 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 {
 }
 
+WindowSurfaceProvider::~WindowSurfaceProvider() {
+  CleanupResources();
+  CleanupWindowSurface();
+}
+
 #ifdef MOZ_WAYLAND
 void WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
+  mWindowSurfaceValid = false;
   mWidget = std::move(aWidget);
 }
 #endif
 #ifdef MOZ_X11
 void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
                                        int aDepth, bool aIsShaped) {
+  mWindowSurfaceValid = false;
   mXWindow = aWindow;
   mXVisual = aVisual;
   mXDepth = aDepth;
@@ -69,7 +77,7 @@ void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
 #endif
 
 void WindowSurfaceProvider::CleanupResources() {
-  mWindowSurface = nullptr;
+  mWindowSurfaceValid = false;
 #ifdef MOZ_WAYLAND
   mWidget = nullptr;
 #endif
@@ -79,6 +87,11 @@ void WindowSurfaceProvider::CleanupResources() {
   mXDepth = 0;
   mIsShaped = false;
 #endif
+}
+
+void WindowSurfaceProvider::CleanupWindowSurface() {
+  mWindowSurface = nullptr;
+  mWindowSurfaceValid = true;
 }
 
 RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
@@ -124,6 +137,10 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     return nullptr;
   }
 
+  if (!mWindowSurfaceValid) {
+    CleanupWindowSurface();
+  }
+
   if (!mWindowSurface) {
     mWindowSurface = CreateWindowSurface();
     if (!mWindowSurface) {
@@ -149,7 +166,10 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  if (mWindowSurface) mWindowSurface->Commit(aInvalidRegion);
+  // Commit to mWindowSurface only when we have a valid one.
+  if (mWindowSurface && mWindowSurfaceValid) {
+    mWindowSurface->Commit(aInvalidRegion);
+  }
 }
 
 }  // namespace widget
