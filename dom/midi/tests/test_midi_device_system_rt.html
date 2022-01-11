@@ -18,9 +18,9 @@
        function checkReturn(msg) {
          checkCount++;
          if (checkCount == 1) {
-           MIDITestUtils.checkPacket(msg.data, [0xF8]);
+           MIDITestUtils.checkPacket(msg.data, [0xFA]);
          } else if (checkCount == 2) {
-           MIDITestUtils.checkPacket(msg.data, [0xF9]);
+           MIDITestUtils.checkPacket(msg.data, [0xF8]);
          } else if (checkCount == 3) {
            MIDITestUtils.checkPacket(msg.data, [0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0xF7]);
            SimpleTest.finish();
