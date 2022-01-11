@@ -496,8 +496,7 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
   const MemoryOrShmem& memOrShmem = sdb.data();
   switch (memOrShmem.type()) {
     case MemoryOrShmem::Tuintptr_t:
-      gfxCriticalError() << "PlanarYCbCrData::From SurfaceDescriptorBuffer "
-                            "w/uintptr_t unsupported.";
+      gfxCriticalError() << "PlanarYCbCrData::From SurfaceDescriptorBuffer w/uintptr_t unsupported.";
       break;
     case MemoryOrShmem::TShmem:
       buffer.emplace(memOrShmem.get_Shmem().Range<uint8_t>());
@@ -527,39 +526,34 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
   yuvData.mColorRange = yuvDesc.colorRange();
 
   const auto GetPlanePtr = [&](const uint32_t beginOffset,
-                               const gfx::IntSize size,
-                               const int32_t stride) -> uint8_t* {
+        const gfx::IntSize size, const int32_t stride) -> uint8_t* {
     if (size.width > stride) return nullptr;
-    auto bytesNeeded = CheckedInt<uintptr_t>(stride) *
-                       size.height;  // Don't accept `stride*(h-1)+w`.
+    auto bytesNeeded = CheckedInt<uintptr_t>(stride) * size.height; // Don't accept `stride*(h-1)+w`.
     bytesNeeded += beginOffset;
     if (!bytesNeeded.isValid() || bytesNeeded.value() > buffer->length()) {
-      gfxCriticalError()
-          << "PlanarYCbCrData::From asked for out-of-bounds plane data.";
+      gfxCriticalError() << "PlanarYCbCrData::From asked for out-of-bounds plane data.";
       return nullptr;
     }
     return (buffer->begin() + beginOffset).get();
   };
-  yuvData.mYChannel =
-      GetPlanePtr(yuvDesc.yOffset(), yuvData.mYSize, yuvData.mYStride);
-  yuvData.mCbChannel =
-      GetPlanePtr(yuvDesc.cbOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
-  yuvData.mCrChannel =
-      GetPlanePtr(yuvDesc.crOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+  yuvData.mYChannel = GetPlanePtr(yuvDesc.yOffset(), yuvData.mYSize, yuvData.mYStride);
+  yuvData.mCbChannel = GetPlanePtr(yuvDesc.cbOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+  yuvData.mCrChannel = GetPlanePtr(yuvDesc.crOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
 
   if (yuvData.mYSkip || yuvData.mCbSkip || yuvData.mCrSkip ||
       yuvData.mYSize.width < 0 || yuvData.mYSize.height < 0 ||
       yuvData.mCbCrSize.width < 0 || yuvData.mCbCrSize.height < 0 ||
-      yuvData.mYStride < 0 || yuvData.mCbCrStride < 0 || !yuvData.mYChannel ||
-      !yuvData.mCbChannel || !yuvData.mCrChannel) {
+      yuvData.mYStride < 0 || yuvData.mCbCrStride < 0 ||
+      !yuvData.mYChannel || !yuvData.mCbChannel || !yuvData.mCrChannel) {
     gfxCriticalError() << "Unusual PlanarYCbCrData: " << yuvData.mYSkip << ","
                        << yuvData.mCbSkip << "," << yuvData.mCrSkip << ", "
                        << yuvData.mYSize.width << "," << yuvData.mYSize.height
                        << ", " << yuvData.mCbCrSize.width << ","
                        << yuvData.mCbCrSize.height << ", " << yuvData.mYStride
-                       << "," << yuvData.mCbCrStride << ", "
-                       << yuvData.mYChannel << "," << yuvData.mCbChannel << ","
-                       << yuvData.mCrChannel;
+                       << "," << yuvData.mCbCrStride
+                       << ", " << yuvData.mYChannel
+                       << "," << yuvData.mCbChannel
+                       << "," << yuvData.mCrChannel;
     return {};
   }
 
