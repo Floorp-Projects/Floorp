@@ -1,6 +1,6 @@
 # Writing new DAMP performance tests
 
-See [DAMP Performance tests](performance-tests.md) for an overall description of our performance tests.
+See [DAMP Performance tests](performance-tests-damp.md) for an overall description of our performance tests.
 Here, we will describe how to write a new test and register it to run in DAMP.
 
 ```note::
@@ -16,8 +16,8 @@ Here, we will describe how to write a new test and register it to run in DAMP.
 ```
 
 This page contains the general documentation for writing DAMP tests. See also:
-- [Performance test writing example](./writing-perf-tests-example.html) for a practical example of creating a new test
-- [Performance test writing tips](./writing-perf-tests-tips.html) for detailed tips on how to write a good and efficient test
+- [Performance test writing example](writing-perf-tests-example.md) for a practical example of creating a new test
+- [Performance test writing tips](writing-perf-tests-tips.md) for detailed tips on how to write a good and efficient test
 
 ## Test location
 
