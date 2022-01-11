@@ -231,16 +231,24 @@ this.test = class extends ExtensionAPI {
 
           return promise.then(
             result => {
-              assertTrue(false, `Promise resolved, expected rejection: ${msg}`);
+              let message = `Promise resolved, expected rejection '${toSource(
+                expectedError
+              )}'`;
+              if (msg) {
+                message += `: ${msg}`;
+              }
+              assertTrue(false, message);
             },
             error => {
-              let errorMessage = toSource(error && error.message);
+              let expected = toSource(expectedError);
+              let message = `got '${toSource(error)}'`;
+              if (msg) {
+                message += `: ${msg}`;
+              }
 
               assertTrue(
                 errorMatches(error, expectedError, context),
-                `Promise rejected, expecting rejection to match ${toSource(
-                  expectedError
-                )}, got ${errorMessage}: ${msg}`
+                `Promise rejected, expecting rejection to match '${expected}', ${message}`
               );
             }
           );
@@ -250,15 +258,23 @@ this.test = class extends ExtensionAPI {
           try {
             func();
 
-            assertTrue(false, `Function did not throw, expected error: ${msg}`);
+            let message = `Function did not throw, expected error '${toSource(
+              expectedError
+            )}'`;
+            if (msg) {
+              message += `: ${msg}`;
+            }
+            assertTrue(false, message);
           } catch (error) {
-            let errorMessage = toSource(error && error.message);
+            let expected = toSource(expectedError);
+            let message = `got '${toSource(error)}'`;
+            if (msg) {
+              message += `: ${msg}`;
+            }
 
             assertTrue(
               errorMatches(error, expectedError, context),
-              `Function threw, expecting error to match ${toSource(
-                expectedError
-              )}, got ${errorMessage}: ${msg}`
+              `Function threw, expecting error to match '${expected}', ${message}`
             );
           }
         },

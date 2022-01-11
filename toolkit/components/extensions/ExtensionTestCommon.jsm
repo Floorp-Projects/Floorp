@@ -237,6 +237,37 @@ function provide(obj, keys, value, override = false) {
 
 ExtensionTestCommon = class ExtensionTestCommon {
   /**
+   * Shortcut to more easily access WebExtensionPolicy.backgroundServiceWorkerEnabled
+   * from mochitest-plain tests.
+   *
+   * @returns {boolean} true if the background service worker are enabled.
+   */
+  static getBackgroundServiceWorkerEnabled() {
+    return WebExtensionPolicy.backgroundServiceWorkerEnabled;
+  }
+
+  /**
+   * A test helper mainly used to skip test tasks if running in "backgroundServiceWorker" test mode
+   * (e.g. while running test files shared across multiple test modes: e.g. in-process-webextensions,
+   * remote-webextensions, sw-webextensions etc.).
+   *
+   * The underlying pref "extension.backgroundServiceWorker.forceInTestExtension":
+   * - is set to true in the xpcshell-serviceworker.ini and mochitest-serviceworker.ini manifests
+   *   (and so it is going to be set to true while running the test files listed in those manifests)
+   * - when set to true, all test extension using a background script without explicitly listing it
+   *   in the test extension manifest will be automatically executed as background service workers
+   *   (instead of background scripts loaded in a background page)
+   *
+   * @returns {boolean} true if the test is running in "background service worker mode"
+   */
+  static isInBackgroundServiceWorkerTests() {
+    return Services.prefs.getBoolPref(
+      "extensions.backgroundServiceWorker.forceInTestExtension",
+      false
+    );
+  }
+
+  /**
    * This code is designed to make it easy to test a WebExtension
    * without creating a bunch of files. Everything is contained in a
    * single JS object.
@@ -284,10 +315,22 @@ ExtensionTestCommon = class ExtensionTestCommon {
       delete manifest.host_permissions;
     }
 
+    if (data.useServiceWorker === undefined) {
+      // If we're force-testing service workers we will turn the background
+      // script part of ExtensionTestUtils test extensions into a background
+      // service worker.
+      data.useServiceWorker = ExtensionTestCommon.isInBackgroundServiceWorkerTests();
+    }
+
     if (data.background) {
       let bgScript = Services.uuid.generateUUID().number + ".js";
 
-      provide(manifest, ["background", "scripts"], [bgScript], true);
+      let scriptKey = data.useServiceWorker
+        ? ["background", "service_worker"]
+        : ["background", "scripts"];
+      let scriptVal = data.useServiceWorker ? bgScript : [bgScript];
+      provide(manifest, scriptKey, scriptVal, true);
+
       files[bgScript] = data.background;
     }
 
