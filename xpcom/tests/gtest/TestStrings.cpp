@@ -2050,6 +2050,23 @@ TEST_F(Strings, ConvertToSpan) {
   }
 }
 
+template <typename T>
+void InsertSpanHelper() {
+  T str1, str2;
+  str1.AssignLiteral("hello world");
+  str2.AssignLiteral("span ");
+
+  T expect;
+  expect.AssignLiteral("hello span world");
+
+  Span span(str2);
+  str1.Insert(span, 6);
+  EXPECT_TRUE(str1.Equals(expect));
+}
+
+TEST_F(Strings, InsertSpan) { InsertSpanHelper<nsCString>(); }
+TEST_F(Strings, InsertSpanW) { InsertSpanHelper<nsString>(); }
+
 TEST_F(Strings, TokenizedRangeEmpty) {
   // 8-bit strings
   {
