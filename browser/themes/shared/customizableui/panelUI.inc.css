@@ -15,7 +15,6 @@
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
-%define panelPaletteIconSize 16px
 
 %define appmenuWarningBackgroundColor #FFEFBF
 %define appmenuWarningBackgroundColorHover #FFE8A2
@@ -45,6 +44,8 @@
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
   --panel-subview-body-padding: 8px 0;
+
+  --panel-and-palette-icon-size: 16px;
 }
 
 :root:not(:-moz-lwtheme) {
@@ -433,8 +434,8 @@ toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .to
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  height: @panelPaletteIconSize@;
-  width: @panelPaletteIconSize@;
+  height: var(--panel-and-palette-icon-size);
+  width: var(--panel-and-palette-icon-size);
 }
 
 #customization-palette .toolbarbutton-1 {
@@ -448,10 +449,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 /* badge itself is positioned correctly. Here we make sure that the icon itself
 /* has the minimum size we want, but no padding/margin. */
 .customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: @panelPaletteIconSize@;
-  height: @panelPaletteIconSize@;
-  min-width: @panelPaletteIconSize@;
-  min-height: @panelPaletteIconSize@;
+  width: var(--panel-and-palette-icon-size);
+  height: var(--panel-and-palette-icon-size);
+  min-width: var(--panel-and-palette-icon-size);
+  min-height: var(--panel-and-palette-icon-size);
   margin: 0;
   padding: 0;
 }
