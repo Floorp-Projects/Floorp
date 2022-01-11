@@ -1,3 +1,3 @@
 platform-tools
-build-tools;30.0.2
-platforms;android-30
+build-tools;31.0.0
+platforms;android-31

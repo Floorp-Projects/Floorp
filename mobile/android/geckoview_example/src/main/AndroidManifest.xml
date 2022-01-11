@@ -27,6 +27,7 @@
                 android:label="GeckoView Example"
                 android:launchMode="singleTop"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                android:exported="true"
                 android:windowSoftInputMode="stateUnspecified|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -52,11 +53,13 @@
                 android:name=".SessionActivity"
                 android:label="GeckoView Example"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                android:exported="false"
                 android:windowSoftInputMode="stateUnspecified|adjustResize">
         </activity>
         <activity
                 android:name=".SettingsActivity"
                 android:label="Settings"
+                android:exported="false"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         </activity>
 
