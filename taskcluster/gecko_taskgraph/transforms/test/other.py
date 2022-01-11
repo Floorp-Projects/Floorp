@@ -1053,8 +1053,5 @@ def set_schedules_components(config, tasks):
         schedules.add(category)
         schedules.add(platform_family(task["build-platform"]))
 
-        if task["webrender"]:
-            schedules.add("webrender")
-
         task["schedules-component"] = sorted(schedules)
         yield task
