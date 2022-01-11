@@ -52,7 +52,7 @@ public class WebRequest extends WebMessage {
     CACHE_MODE_FORCE_CACHE,
     CACHE_MODE_ONLY_IF_CACHED
   })
-  /* package */ @interface CacheMode {};
+  public @interface CacheMode {};
 
   /** Default cache mode. Normal caching rules apply. */
   public static final int CACHE_MODE_DEFAULT = 1;

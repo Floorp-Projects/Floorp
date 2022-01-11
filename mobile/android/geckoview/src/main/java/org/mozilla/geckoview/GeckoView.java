@@ -300,7 +300,7 @@ public class GeckoView extends FrameLayout {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({BACKEND_SURFACE_VIEW, BACKEND_TEXTURE_VIEW})
-  /* protected */ @interface ViewBackend {}
+  public @interface ViewBackend {}
 
   /**
    * Set which view should be used by this GeckoView instance to display content.

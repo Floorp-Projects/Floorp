@@ -166,6 +166,9 @@ package org.mozilla.geckoview {
     ctor public AddressSelectOption(@NonNull Autocomplete.Address);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autocomplete.AddressSelectOption.AddressSelectHint {
+  }
+
   public static class Autocomplete.AddressSelectOption.Hint {
     ctor public Hint();
     field public static final int INSECURE_FORM = 2;
@@ -199,10 +202,16 @@ package org.mozilla.geckoview {
     ctor public CreditCardSelectOption(@NonNull Autocomplete.CreditCard);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autocomplete.CreditCardSelectOption.CreditCardSelectHint {
+  }
+
   public static class Autocomplete.CreditCardSelectOption.Hint {
     ctor public Hint();
     field public static final int INSECURE_FORM = 2;
     field public static final int NONE = 0;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autocomplete.LSUsedField {
   }
 
   public static class Autocomplete.LoginEntry {
@@ -251,6 +260,9 @@ package org.mozilla.geckoview {
     field public static final int NONE = 0;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autocomplete.SaveOption.SaveOptionHint {
+  }
+
   public abstract static class Autocomplete.SelectOption<T> extends Autocomplete.Option<T> {
     ctor public SelectOption(@NonNull T, int);
   }
@@ -262,6 +274,9 @@ package org.mozilla.geckoview {
     field public static final int INSECURE_FORM = 2;
     field public static final int MATCHING_ORIGIN = 8;
     field public static final int NONE = 0;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autocomplete.SelectOption.SelectOptionHint {
   }
 
   public static interface Autocomplete.StorageDelegate {
@@ -282,6 +297,15 @@ package org.mozilla.geckoview {
 
   public class Autofill {
     ctor public Autofill();
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autofill.AutofillHint {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autofill.AutofillInputType {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface Autofill.AutofillNotify {
   }
 
   public static interface Autofill.Delegate {
@@ -402,6 +426,21 @@ package org.mozilla.geckoview {
     method @UiThread public int getSafeBrowsingCategory();
     method @UiThread public boolean isBlocking();
     field @NonNull public final String uri;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBAntiTracking {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieBehavior {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieLifetime {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBEtpLevel {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBSafeBrowsing {
   }
 
   public static class ContentBlocking.CookieBehavior {
@@ -561,6 +600,9 @@ package org.mozilla.geckoview {
     field public final int count;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlockingController.LogEntry.BlockingData.LogEvent {
+  }
+
   public class CrashReporter {
     ctor public CrashReporter();
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull Intent, @NonNull String);
@@ -698,6 +740,9 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread public GeckoResult<Intent> onStartActivityForResult(@NonNull PendingIntent);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoRuntime.CrashedProcessType {
+  }
+
   public static interface GeckoRuntime.Delegate {
     method @UiThread public void onShutdown();
   }
@@ -800,6 +845,12 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webManifest(boolean);
     method @NonNull protected GeckoRuntimeSettings newSettings(@Nullable GeckoRuntimeSettings);
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoRuntimeSettings.ColorScheme {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoRuntimeSettings.HttpsOnlyMode {
   }
 
   public class GeckoSession {
@@ -922,6 +973,15 @@ package org.mozilla.geckoview {
     field public final int type;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ContentDelegate.ContextElement.Type {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.FinderDisplayFlags {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.FinderFindFlags {
+  }
+
   @AnyThread public static class GeckoSession.FinderResult {
     ctor protected FinderResult();
     field @Nullable public final RectF clientRect;
@@ -932,6 +992,9 @@ package org.mozilla.geckoview {
     field @NonNull public final String searchString;
     field public final int total;
     field public final boolean wrapped;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.HeaderFilter {
   }
 
   public static interface GeckoSession.HistoryDelegate {
@@ -953,6 +1016,9 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.HistoryDelegate.HistoryList implements List<GeckoSession.HistoryDelegate.HistoryItem> {
     method @AnyThread default public int getCurrentIndex();
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.LoadFlags {
   }
 
   @AnyThread public static class GeckoSession.Loader {
@@ -977,6 +1043,12 @@ package org.mozilla.geckoview {
     ctor protected RecordingDevice();
     field public final long status;
     field public final long type;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.MediaDelegate.RecordingDevice.DeviceType {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.MediaDelegate.RecordingDevice.RecordingStatus {
   }
 
   public static class GeckoSession.MediaDelegate.RecordingDevice.Status {
@@ -1016,6 +1088,9 @@ package org.mozilla.geckoview {
     field @NonNull public final String uri;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.Permission {
+  }
+
   public static interface GeckoSession.PermissionDelegate {
     method @UiThread default public void onAndroidPermissionsRequest(@NonNull GeckoSession, @Nullable String[], @NonNull GeckoSession.PermissionDelegate.Callback);
     method @Nullable @UiThread default public GeckoResult<Integer> onContentPermissionRequest(@NonNull GeckoSession, @NonNull GeckoSession.PermissionDelegate.ContentPermission);
@@ -1051,6 +1126,9 @@ package org.mozilla.geckoview {
     field public final int value;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PermissionDelegate.ContentPermission.Value {
+  }
+
   public static interface GeckoSession.PermissionDelegate.MediaCallback {
     method @UiThread default public void grant(@Nullable String, @Nullable String);
     method @UiThread default public void grant(@Nullable GeckoSession.PermissionDelegate.MediaSource, @Nullable GeckoSession.PermissionDelegate.MediaSource);
@@ -1071,6 +1149,12 @@ package org.mozilla.geckoview {
     field @Deprecated @DeprecationSchedule(id="media-source-rawId",version=100) @NonNull public final String rawId;
     field public final int source;
     field public final int type;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PermissionDelegate.MediaSource.Source {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PermissionDelegate.MediaSource.Type {
   }
 
   public static interface GeckoSession.ProgressDelegate {
@@ -1097,6 +1181,12 @@ package org.mozilla.geckoview {
     field public final int mixedModePassive;
     field @Nullable public final String origin;
     field public final int securityMode;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ProgressDelegate.SecurityInformation.ContentType {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ProgressDelegate.SecurityInformation.SecurityMode {
   }
 
   public static interface GeckoSession.PromptDelegate {
@@ -1140,6 +1230,12 @@ package org.mozilla.geckoview {
     field @Nullable public final String password;
     field @Nullable public final String uri;
     field @Nullable public final String username;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.AuthFlag {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.AuthLevel {
   }
 
   public static class GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.Flags {
@@ -1188,6 +1284,9 @@ package org.mozilla.geckoview {
     field @Nullable public final String message;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.ButtonPrompt.ButtonType {
+  }
+
   public static class GeckoSession.PromptDelegate.ButtonPrompt.Type {
     ctor protected Type();
     field public static final int NEGATIVE = 2;
@@ -1216,6 +1315,9 @@ package org.mozilla.geckoview {
     field public final boolean separator;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.ChoicePrompt.ChoiceType {
+  }
+
   public static class GeckoSession.PromptDelegate.ChoicePrompt.Type {
     ctor protected Type();
     field public static final int MENU = 1;
@@ -1236,6 +1338,9 @@ package org.mozilla.geckoview {
     field @Nullable public final String maxValue;
     field @Nullable public final String minValue;
     field public final int type;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.DateTimePrompt.DatetimeType {
   }
 
   public static class GeckoSession.PromptDelegate.DateTimePrompt.Type {
@@ -1262,6 +1367,12 @@ package org.mozilla.geckoview {
     field public static final int ENVIRONMENT = 3;
     field public static final int NONE = 0;
     field public static final int USER = 2;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.FilePrompt.CaptureType {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.FilePrompt.FileType {
   }
 
   public static class GeckoSession.PromptDelegate.FilePrompt.Type {
@@ -1302,11 +1413,17 @@ package org.mozilla.geckoview {
     field public static final int SUCCESS = 0;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PromptDelegate.SharePrompt.ShareResult {
+  }
+
   public static class GeckoSession.PromptDelegate.TextPrompt extends GeckoSession.PromptDelegate.BasePrompt {
     ctor protected TextPrompt(@NonNull String, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
     field @Nullable public final String message;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.RestartReason {
   }
 
   public static interface GeckoSession.ScrollDelegate {
@@ -1355,11 +1472,23 @@ package org.mozilla.geckoview {
     field @NonNull public final String text;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.SelectionActionDelegateAction {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.SelectionActionDelegateFlag {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.SelectionActionDelegateHideReason {
+  }
+
   @AnyThread public static class GeckoSession.SessionState extends AbstractSequentialList<GeckoSession.HistoryDelegate.HistoryItem> implements Parcelable GeckoSession.HistoryDelegate.HistoryList {
     ctor public SessionState(@NonNull GeckoSession.SessionState);
     method @Nullable public static GeckoSession.SessionState fromString(@Nullable String);
     method public void readFromParcel(@NonNull Parcel);
     field public static final Parcelable.Creator<GeckoSession.SessionState> CREATOR;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.TargetWindow {
   }
 
   public static interface GeckoSession.TextInputDelegate {
@@ -1372,6 +1501,9 @@ package org.mozilla.geckoview {
     field public static final int RESTART_REASON_BLUR = 1;
     field public static final int RESTART_REASON_CONTENT_CHANGE = 2;
     field public static final int RESTART_REASON_FOCUS = 0;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.VisitFlags {
   }
 
   @AnyThread public static class GeckoSession.WebResponseInfo {
@@ -1468,6 +1600,9 @@ package org.mozilla.geckoview {
     field @Nullable protected GeckoSession mSession;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoView.ViewBackend {
+  }
+
   @AnyThread public class GeckoWebExecutor {
     ctor public GeckoWebExecutor(@NonNull GeckoRuntime);
     method @NonNull public GeckoResult<WebResponse> fetch(@NonNull WebRequest);
@@ -1479,6 +1614,9 @@ package org.mozilla.geckoview {
     field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
     field public static final int FETCH_FLAGS_PRIVATE = 8;
     field public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1024;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoWebExecutor.FetchFlags {
   }
 
   @AnyThread public class Image {
@@ -1539,6 +1677,9 @@ package org.mozilla.geckoview {
     field public static final long SEEK_TO = 8L;
     field public static final long SKIP_AD = 64L;
     field public static final long STOP = 4L;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface MediaSession.MSFeature {
   }
 
   public static class MediaSession.Metadata {
@@ -1604,11 +1745,23 @@ package org.mozilla.geckoview {
     field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface PanZoomController.InputResult {
+  }
+
   public static class PanZoomController.InputResultDetail {
     ctor protected InputResultDetail(int, int, int);
     method @AnyThread public int handledResult();
     method @AnyThread public int overscrollDirections();
     method @AnyThread public int scrollableDirections();
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface PanZoomController.OverscrollDirections {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface PanZoomController.ScrollBehaviorType {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface PanZoomController.ScrollableDirections {
   }
 
   @UiThread public class ProfilerController {
@@ -1674,6 +1827,9 @@ package org.mozilla.geckoview {
     field public static final int VISUAL_VIEWPORT_WIDTH = 1;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface ScreenLength.ScreenLengthType {
+  }
+
   @UiThread public class SessionAccessibility {
     method @Nullable public View getView();
     method public boolean onMotionEvent(@NonNull MotionEvent);
@@ -1737,6 +1893,9 @@ package org.mozilla.geckoview {
     field public static final long SITE_SETTINGS = 192L;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface StorageController.StorageControllerClearFlags {
+  }
+
   public class WebExtension {
     method @Nullable @UiThread public WebExtension.BrowsingDataDelegate getBrowsingDataDelegate();
     method @Nullable @UiThread public WebExtension.DownloadDelegate getDownloadDelegate();
@@ -1765,11 +1924,17 @@ package org.mozilla.geckoview {
     field @Nullable public final String title;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.Action.ActionType {
+  }
+
   public static interface WebExtension.ActionDelegate {
     method @UiThread default public void onBrowserAction(@NonNull WebExtension, @Nullable GeckoSession, @NonNull WebExtension.Action);
     method @Nullable @UiThread default public GeckoResult<GeckoSession> onOpenPopup(@NonNull WebExtension, @NonNull WebExtension.Action);
     method @UiThread default public void onPageAction(@NonNull WebExtension, @Nullable GeckoSession, @NonNull WebExtension.Action);
     method @Nullable @UiThread default public GeckoResult<GeckoSession> onTogglePopup(@NonNull WebExtension, @NonNull WebExtension.Action);
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.BlocklistState {
   }
 
   public static class WebExtension.BlocklistStateFlags {
@@ -1806,6 +1971,12 @@ package org.mozilla.geckoview {
     field public static final long HISTORY = 16L;
     field public static final long LOCAL_STORAGE = 32L;
     field public static final long PASSWORDS = 64L;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.BrowsingDataTypes {
+  }
+
+  public static interface WebExtension.ContextFlags {
   }
 
   public static class WebExtension.CreateTabDetails {
@@ -1906,6 +2077,12 @@ package org.mozilla.geckoview {
     field public final boolean saveAs;
   }
 
+  public static interface WebExtension.DownloadRequest.ConflictActionFlags {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.EnabledFlags {
+  }
+
   public static class WebExtension.Flags {
     ctor protected Flags();
     field public static final long ALLOW_CONTENT_MESSAGING = 1L;
@@ -1915,6 +2092,9 @@ package org.mozilla.geckoview {
   public static class WebExtension.InstallException extends Exception {
     ctor protected InstallException();
     field public final int code;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.InstallException.Codes {
   }
 
   public static class WebExtension.InstallException.ErrorCodes {
@@ -1945,6 +2125,9 @@ package org.mozilla.geckoview {
     field @Nullable public final GeckoSession session;
     field @NonNull public final String url;
     field @NonNull public final WebExtension webExtension;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.MessageSender.EnvType {
   }
 
   public class WebExtension.MetaData {
@@ -1998,6 +2181,9 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread default public GeckoResult<AllowOrDeny> onUpdateTab(@NonNull WebExtension, @NonNull GeckoSession, @NonNull WebExtension.UpdateTabDetails);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.SignedState {
+  }
+
   public static class WebExtension.SignedStateFlags {
     ctor public SignedStateFlags();
     field public static final int MISSING = 0;
@@ -2021,6 +2207,9 @@ package org.mozilla.geckoview {
     field @Nullable public final Boolean muted;
     field @Nullable public final Boolean pinned;
     field @Nullable public final String url;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.WebExtensionFlags {
   }
 
   public class WebExtensionController {
@@ -2048,6 +2237,9 @@ package org.mozilla.geckoview {
     ctor public EnableSource();
     field public static final int APP = 2;
     field public static final int USER = 1;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtensionController.EnableSources {
   }
 
   @UiThread public static interface WebExtensionController.PromptDelegate {
@@ -2135,6 +2327,9 @@ package org.mozilla.geckoview {
     method @NonNull public WebRequest.Builder referrer(@Nullable String);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebRequest.CacheMode {
+  }
+
   @AnyThread public class WebRequestError extends Exception {
     ctor public WebRequestError(int, int);
     ctor public WebRequestError(int, int, X509Certificate);
@@ -2176,6 +2371,12 @@ package org.mozilla.geckoview {
     field public final int category;
     field @Nullable public final X509Certificate certificate;
     field public final int code;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebRequestError.Error {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebRequestError.ErrorCategory {
   }
 
   @AnyThread public class WebResponse extends WebMessage {

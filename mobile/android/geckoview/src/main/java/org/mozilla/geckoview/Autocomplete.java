@@ -811,7 +811,7 @@ public class Autocomplete {
   @IntDef(
       flag = true,
       value = {UsedField.PASSWORD})
-  /* package */ @interface LSUsedField {}
+  public @interface LSUsedField {}
 
   // Sync with UsedField in GeckoViewAutocomplete.jsm.
   /** Possible login entry field types for {@link StorageDelegate#onLoginUsed}. */
@@ -945,7 +945,7 @@ public class Autocomplete {
     @IntDef(
         flag = true,
         value = {Hint.NONE, Hint.GENERATED, Hint.LOW_CONFIDENCE})
-    /* package */ @interface SaveOptionHint {}
+    public @interface SaveOptionHint {}
 
     /** Hint types for login saving requests. */
     public static class Hint {
@@ -982,7 +982,7 @@ public class Autocomplete {
           Hint.DUPLICATE_USERNAME,
           Hint.MATCHING_ORIGIN
         })
-    /* package */ @interface SelectOptionHint {}
+    public @interface SelectOptionHint {}
 
     /** Hint types for selection requests. */
     public static class Hint {
@@ -1166,7 +1166,7 @@ public class Autocomplete {
     @IntDef(
         flag = true,
         value = {Hint.NONE, Hint.INSECURE_FORM})
-    /* package */ @interface CreditCardSelectHint {}
+    public @interface CreditCardSelectHint {}
 
     /** Hint types for credit card selection requests. */
     public static class Hint {
@@ -1223,7 +1223,7 @@ public class Autocomplete {
     @IntDef(
         flag = true,
         value = {Hint.NONE, Hint.INSECURE_FORM})
-    /* package */ @interface AddressSelectHint {}
+    public @interface AddressSelectHint {}
 
     /** Hint types for credit card selection requests. */
     public static class Hint {
