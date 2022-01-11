@@ -440,6 +440,36 @@ def generate_telemetry_docs(command_context):
     subprocess.check_call(args)
 
 
+@SubCommand(
+    "doc",
+    "show-targets",
+    description="List all reference targets. Requires the docs to have been built.",
+)
+@CommandArgument(
+    "--format", default="html", dest="fmt", help="Documentation format used."
+)
+@CommandArgument(
+    "--outdir", default=None, metavar="DESTINATION", help="Where output was written."
+)
+def show_reference_targets(command_context, fmt="html", outdir=None):
+    command_context.activate_virtualenv()
+    command_context.virtualenv_manager.install_pip_requirements(
+        os.path.join(here, "requirements.txt")
+    )
+
+    import sphinx.ext.intersphinx
+
+    outdir = outdir or os.path.join(command_context.topobjdir, "docs")
+    inv_path = os.path.join(outdir, fmt, "objects.inv")
+
+    if not os.path.exists(inv_path):
+        return die(
+            "object inventory not found: {inv_path}.\n"
+            "Rebuild the docs and rerun this command"
+        )
+    sphinx.ext.intersphinx.inspect_main([inv_path])
+
+
 def die(msg, exit_code=1):
     msg = "%s: %s" % (sys.argv[0], msg)
     print(msg, file=sys.stderr)
