@@ -1,10 +1,9 @@
 package org.mozilla.geckoview.test
 
 import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.ViewCompat
-import android.view.View
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -22,48 +21,58 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class GeckoViewTest {
-    val activityRule = ActivityTestRule<GeckoViewTestActivity>(GeckoViewTestActivity::class.java)
+    val activityRule = ActivityScenarioRule(GeckoViewTestActivity::class.java)
     var sessionRule = GeckoSessionTestRule()
-
-    val view get() = activityRule.activity.view
 
     @get:Rule
     val rules = RuleChain.outerRule(activityRule).around(sessionRule)
 
     @Before
     fun setup() {
-        // Attach the default session from the session rule to the GeckoView
-        view.setSession(sessionRule.session)
+        activityRule.scenario.onActivity {
+            // Attach the default session from the session rule to the GeckoView
+            it.view.setSession(sessionRule.session)
+        }
     }
 
     @After
     fun cleanup() {
-        view.releaseSession()
+        activityRule.scenario.onActivity {
+            it.view.releaseSession()
+        }
     }
 
     @Test
     fun setSessionOnClosed() {
-        view.session!!.close()
-        view.setSession(GeckoSession())
+        activityRule.scenario.onActivity {
+            it.view.session!!.close()
+            it.view.setSession(GeckoSession())
+        }
     }
 
     @Test(expected = IllegalStateException::class)
     fun setSessionOnOpenThrows() {
-        assertThat("Session is open", view.session!!.isOpen, equalTo(true))
-        view.setSession(GeckoSession())
+        activityRule.scenario.onActivity {
+            assertThat("Session is open", it.view.session!!.isOpen, equalTo(true))
+            it.view.setSession(GeckoSession())
+        }
     }
 
     @Test(expected = java.lang.IllegalStateException::class)
     fun displayAlreadyAcquired() {
-        assertThat("View should be attached",
-                ViewCompat.isAttachedToWindow(view), equalTo(true))
-        view.session!!.acquireDisplay()
+        activityRule.scenario.onActivity {
+            assertThat("View should be attached",
+                    ViewCompat.isAttachedToWindow(it.view), equalTo(true))
+            it.view.session!!.acquireDisplay()
+        }
     }
 
     @Test
     fun relaseOnDetach() {
-        // The GeckoDisplay should be released when the View is detached from the window...
-        view.onDetachedFromWindow()
-        view.session!!.releaseDisplay(view.session!!.acquireDisplay())
+        activityRule.scenario.onActivity {
+            // The GeckoDisplay should be released when the View is detached from the window...
+            it.view.onDetachedFromWindow()
+            it.view.session!!.releaseDisplay(it.view.session!!.acquireDisplay())
+        }
     }
 }
