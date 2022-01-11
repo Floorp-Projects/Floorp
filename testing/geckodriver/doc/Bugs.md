@@ -40,7 +40,7 @@ is appropriate.  Bugs specific to geckodriver will be filed in the
 [`Testing :: geckodriver`] component in Bugzilla.
 
 [mailing list]: ./#communication
-[trace-level log]: TraceLogs.html
+[trace-level log]: TraceLogs.md
 [GitHub issue tracker]: https://github.com/mozilla/geckodriver/issues
 [ISSUE_TEMPLATE.md]: https://raw.githubusercontent.com/mozilla/geckodriver/master/ISSUE_TEMPLATE.md
 [`Testing :: geckodriver`]: https://bugzilla.mozilla.org/buglist.cgi?component=geckodriver
