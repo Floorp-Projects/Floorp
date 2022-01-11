@@ -110,16 +110,6 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
             'vaapi_vp9.c',
         ]
         USE_LIBS += ['mozva']
-    if CONFIG["MOZ_AV1"]:
-        SOURCES += [
-            'atsc_a53.c',
-            'libdav1d.c',
-        ]
-        USE_LIBS += ['dav1d']
-        if CONFIG["MOZ_DAV1D_ASM"]:
-            USE_LIBS += [
-                'media_libdav1d_asm'
-            ]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [
