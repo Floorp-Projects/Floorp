@@ -23,8 +23,8 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
 .. code-block:: groovy 
 
     ext {
-        geckoviewChannel = "nightly"
-        geckoviewVersion = "70.0.20190712095934"
+        geckoviewChannel = <channel>
+        geckoviewVersion = <version>
     }
 
 
@@ -39,15 +39,15 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
     }
 
 
-**3. Java 8 required support** 
+**3. Java 11 required support**
 
-As GeckoView uses some Java 8 APIs, it requires these compatibility flags:
+As GeckoView uses some Java 11 APIs, it requires these compatibility flags:
 
 .. code-block:: groovy 
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
 **4. Add GeckoView Implementations**
