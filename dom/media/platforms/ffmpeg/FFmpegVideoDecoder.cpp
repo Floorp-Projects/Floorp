@@ -474,13 +474,14 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
     res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     if (res == int(AVERROR_EOF)) {
+      FFMPEG_LOG("  End of stream.");
       return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
     }
     if (res == AVERROR(EAGAIN)) {
       return NS_OK;
     }
     if (res < 0) {
-      FFMPEG_LOG("avcodec_receive_frame error: %d", res);
+      FFMPEG_LOG("  avcodec_receive_frame error: %d", res);
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("avcodec_receive_frame error: %d", res));
     }
@@ -594,6 +595,8 @@ gfx::YUVColorSpace FFmpegVideoDecoder<LIBAV_VER>::GetFrameColorSpace() const {
       case AVCOL_SPC_SMPTE170M:
       case AVCOL_SPC_BT470BG:
         return gfx::YUVColorSpace::BT601;
+      case AVCOL_SPC_RGB:
+        return gfx::YUVColorSpace::Identity;
       default:
         break;
     }
@@ -627,6 +630,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
       mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
+#endif
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION)
+      || mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
 #endif
   ) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
