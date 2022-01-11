@@ -2051,6 +2051,7 @@ already_AddRefed<EventSource> EventSource::Constructor(
       }
       eventSource->mReadyState = EventSourceImpl::CONNECTING;
 
+      guardESImpl.release();
       return eventSource.forget();
     }
 
