@@ -1563,8 +1563,7 @@ void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
                                           bool aSelectFirstItem) {
   RefPtr<nsIContent> popup = aPendingPopup.mPopup;
 
-  nsMenuPopupFrame* popupFrame =
-      do_QueryFrame(popup->GetPrimaryFrame());
+  nsMenuPopupFrame* popupFrame = do_QueryFrame(popup->GetPrimaryFrame());
   if (!popupFrame) {
     return;
   }

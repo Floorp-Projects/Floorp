@@ -416,11 +416,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument() {
     if (widget::ShouldUsePortal(widget::PortalKind::Print)) {
       // Use the name of the file for printing to match with
       // nsFlatpakPrintPortal
-      nsCOMPtr<nsIObserverService> os =
-          mozilla::services::GetObserverService();
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       // Pass filename to be sure that observer process the right data
-      os->NotifyObservers(nullptr, "print-to-file-finished",
-                          targetPath.get());
+      os->NotifyObservers(nullptr, "print-to-file-finished", targetPath.get());
     }
   }
   return NS_OK;

@@ -487,13 +487,13 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
 
     GroupPos groupPos = GroupPosition();
     nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level, groupPos.setSize,
-                                groupPos.posInSet);
+                                 groupPos.posInSet);
 
     bool hierarchical = false;
     uint32_t itemCount = AccGroupInfo::TotalItemCount(this, &hierarchical);
     if (itemCount) {
       attributes->SetAttribute(nsGkAtoms::child_item_count,
-                              static_cast<int32_t>(itemCount));
+                               static_cast<int32_t>(itemCount));
     }
 
     if (hierarchical) {
