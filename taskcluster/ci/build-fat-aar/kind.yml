@@ -19,8 +19,6 @@ transforms:
 job-defaults:
     attributes:
         artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
-        maven_packages:
-            - geckoview
     index:
         product: mobile
     worker-type: b-linux
@@ -97,6 +95,8 @@ jobs:
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
+            maven_packages:
+                - geckoview
         shipping-phase: build
         shipping-product: fennec
         index:
@@ -131,6 +131,9 @@ jobs:
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
+            maven_packages:
+                - geckoview
+                - geckoview-exoplayer2
         shipping-phase: build
         shipping-product: fennec
         index:

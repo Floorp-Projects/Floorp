@@ -378,6 +378,7 @@ def gradle_android_archive_geckoview_tasks(build_config, aab_enabled):
         "geckoview:publish{geckoview.variant.name}PublicationToMavenRepository".format(
             geckoview=build_config.geckoview
         ),
+        "exoplayer2:publishDebugPublicationToMavenRepository",
     ]
 
     if aab_enabled:

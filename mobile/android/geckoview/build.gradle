@@ -12,58 +12,6 @@ apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 // :annotations project.
 evaluationDependsOn(':annotations')
 
-// Non-official versions are like "61.0a1", where "a1" is the milestone.
-// This simply strips that off, leaving "61.0" in this example.
-def getAppVersionWithoutMilestone() {
-    return mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
-}
-
-// This converts MOZ_APP_VERSION into an integer
-// version code.
-//
-// We take something like 58.1.2a1 and come out with 5800102
-// This gives us 3 digits for the major number, and 2 digits
-// each for the minor and build number. Beta and Release
-//
-// This must be synchronized with _compute_gecko_version(...) in /taskcluster/gecko_taskgraph/transforms/task.py
-def computeVersionCode() {
-    String appVersion = getAppVersionWithoutMilestone()
-
-    // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
-    String[] parts = appVersion.split('\\.')
-
-    assert parts.size() == 2 || parts.size() == 3
-
-    // Major
-    int code = Integer.parseInt(parts[0]) * 100000
-
-    // Minor
-    code += Integer.parseInt(parts[1]) * 100
-
-    // Build
-    if (parts.size() == 3) {
-        code += Integer.parseInt(parts[2])
-    }
-
-    return code;
-}
-
-def getVersionNumber() {
-    def appVersion = getAppVersionWithoutMilestone()
-    def parts = appVersion.split('\\.')
-    def version = parts[0] + "." + parts[1] + "." + getBuildId()
-    if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
-        version += "-SNAPSHOT"
-    }
-    return version
-}
-
-// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
-def getBuildId() {
-    return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
-}
-
 android {
     buildToolsVersion project.ext.buildToolsVersion
     compileSdkVersion project.ext.compileSdkVersion
@@ -78,8 +26,8 @@ android {
         manifestPlaceholders = project.ext.manifestPlaceholders
         multiDexEnabled true
 
-        versionCode computeVersionCode()
-        versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
         consumerProguardFiles 'proguard-rules.txt'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -90,7 +38,7 @@ android {
         // For the benefit of future archaeologists:
         // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
         // on XULRunner, which is never the case on Android.
-        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${getBuildId()}\"";
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${project.ext.buildId}\"";
         buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
         buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
         buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
@@ -152,10 +100,7 @@ android {
     sourceSets {
         main {
             java {
-                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
-
                 if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
-                    exclude 'com/google/android/exoplayer2/**'
                     exclude 'org/mozilla/gecko/media/GeckoHlsAudioRenderer.java'
                     exclude 'org/mozilla/gecko/media/GeckoHlsPlayer.java'
                     exclude 'org/mozilla/gecko/media/GeckoHlsRendererBase.java'
@@ -244,7 +189,7 @@ configurations {
             }
             afterEvaluate {
                 // Implicit capability
-                capability("org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}")
+                capability("org.mozilla.geckoview:${getArtifactId()}:${project.ext.versionNumber}")
             }
         }
     }
@@ -256,19 +201,13 @@ configurations {
         outgoing {
             afterEvaluate {
                 // Implicit capability
-                capability("org.mozilla.geckoview:geckoview:${getVersionNumber()}")
+                capability("org.mozilla.geckoview:geckoview:${project.ext.versionNumber}")
             }
         }
     }
 }
 
 dependencies {
-    // For exoplayer.
-    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-    compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
-    compileOnly "org.checkerframework:checker-qual:2.5.0"
-    compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
-
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
 
@@ -277,6 +216,10 @@ dependencies {
 
     implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
     implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
+
+    if (mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
+        implementation project(":exoplayer2")
+    }
 
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testImplementation 'junit:junit:4.12'
@@ -384,7 +327,7 @@ android.libraryVariants.all { variant ->
     }
 
     def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
+        archiveClassifier = 'javadoc'
         destinationDirectory = javadoc.destinationDir
     }
 
@@ -447,15 +390,7 @@ version = getVersionNumber()
 group = 'org.mozilla.geckoview'
 
 def getArtifactId() {
-    def id = "geckoview"
-    // Release artifacts don't specify the channel, for the sake of simplicity.
-    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
-        id += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
-    }
-
-    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-        id += "-omni"
-    }
+    def id = "geckoview" + project.ext.artifactSuffix
 
     if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
         // In automation, per-architecture artifacts identify
