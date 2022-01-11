@@ -304,7 +304,7 @@ Notes:
 
 The code for the tabs uses their ids to automatically report telemetry when you switch between panels, so you don't need to explicitly call `toolOpened` and `toolClosed` on top level panels.
 
-You will still need to call those functions on subpanels, or tools such as about:debugging which are not opened as tabs.
+You will still need to call those functions on subpanels, or tools such as `about:debugging` which are not opened as tabs.
 
 #### Testing
 
@@ -426,7 +426,7 @@ Click [here](https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Data_Co
 
 ### Local data
 
-Go to [about:telemetry](about:telemetry) to see stats relating to your local instance.
+Go to `about:telemetry` to see stats relating to your local instance.
 
 ### Global data
 
