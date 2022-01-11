@@ -375,8 +375,8 @@ void gfxMacFont::InitMetrics() {
   }
   mSpaceGlyph = glyphID;
 
-  mMetrics.ideographicWidth = GetCharWidth(cmap, kWaterIdeograph, &glyphID,
-                                           cgConvFactor);
+  mMetrics.ideographicWidth =
+      GetCharWidth(cmap, kWaterIdeograph, &glyphID, cgConvFactor);
   if (glyphID == 0) {
     // Indicate "not found".
     mMetrics.ideographicWidth = -1.0;
