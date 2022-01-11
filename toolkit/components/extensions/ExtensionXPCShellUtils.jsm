@@ -609,6 +609,18 @@ class ExternallyInstalledWrapper extends AOMExtensionWrapper {
 var ExtensionTestUtils = {
   BASE_MANIFEST,
 
+  // Shortcut to more easily access WebExtensionPolicy.backgroundServiceWorkerEnabled
+  // from mochitest-plain tests.
+  getBackgroundServiceWorkerEnabled() {
+    return ExtensionTestCommon.getBackgroundServiceWorkerEnabled();
+  },
+
+  // A test helper used to check if the pref "extension.backgroundServiceWorker.forceInTestExtension"
+  // is set to true.
+  isInBackgroundServiceWorkerTests() {
+    return ExtensionTestCommon.isInBackgroundServiceWorkerTests();
+  },
+
   async normalizeManifest(
     manifest,
     manifestType = "manifest.WebExtensionManifest",
