@@ -13,6 +13,9 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION)
+#  include "AOMDecoder.h"
+#endif
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
@@ -828,6 +831,12 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
 #if LIBAVCODEC_VERSION_MAJOR >= 55
   if (VPXDecoder::IsVP9(aMimeType)) {
     return AV_CODEC_ID_VP9;
+  }
+#endif
+
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION)
+  if (AOMDecoder::IsAV1(aMimeType)) {
+    return AV_CODEC_ID_AV1;
   }
 #endif
 
