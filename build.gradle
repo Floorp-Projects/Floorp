@@ -42,6 +42,12 @@ allprojects {
               " found ${getRustVersionFor("glean")}")
         }
 
+        artifactSuffix = getArtifactSuffix()
+        versionName = getVersionName()
+        versionCode = computeVersionCode()
+        versionNumber = getVersionNumber()
+        buildId = getBuildId()
+
         buildToolsVersion = mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
         compileSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
         targetSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
@@ -163,6 +169,79 @@ ext.geckoBinariesOnlyIf = { task ->
 
     rootProject.logger.lifecycle("Executing task ${task.path}")
     return true
+}
+
+// Non-official versions are like "61.0a1", where "a1" is the milestone.
+// This simply strips that off, leaving "61.0" in this example.
+def getAppVersionWithoutMilestone() {
+    return project.ext.mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
+}
+
+// This converts MOZ_APP_VERSION into an integer
+// version code.
+//
+// We take something like 58.1.2a1 and come out with 5800102
+// This gives us 3 digits for the major number, and 2 digits
+// each for the minor and build number. Beta and Release
+//
+// This must be synchronized with _compute_gecko_version(...) in /taskcluster/gecko_taskgraph/transforms/task.py
+def computeVersionCode() {
+    String appVersion = getAppVersionWithoutMilestone()
+
+    // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
+    String[] parts = appVersion.split('\\.')
+
+    assert parts.size() == 2 || parts.size() == 3
+
+    // Major
+    int code = Integer.parseInt(parts[0]) * 100000
+
+    // Minor
+    code += Integer.parseInt(parts[1]) * 100
+
+    // Build
+    if (parts.size() == 3) {
+        code += Integer.parseInt(parts[2])
+    }
+
+    return code;
+}
+
+def getVersionName() {
+    return "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+}
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
+def getVersionNumber() {
+    def appVersion = getAppVersionWithoutMilestone()
+    def parts = appVersion.split('\\.')
+    def version = parts[0] + "." + parts[1] + "." + getBuildId()
+    def substs = project.ext.mozconfig.substs
+    if (!substs.MOZILLA_OFFICIAL && !substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+        version += "-SNAPSHOT"
+    }
+    return version
+}
+
+def getArtifactSuffix() {
+    def substs = project.ext.mozconfig.substs
+
+    def suffix = ""
+    // Release artifacts don't specify the channel, for the sake of simplicity.
+    if (substs.MOZ_UPDATE_CHANNEL != 'release') {
+        suffix += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+    }
+
+    if (!substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        suffix += "-omni"
+    }
+
+    return suffix
 }
 
 class MachExec extends Exec {
