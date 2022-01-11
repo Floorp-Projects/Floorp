@@ -1631,13 +1631,7 @@ void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode) {
   UpdateFullscreenState(aFullScreen, aNativeMode);
 }
 
-static bool gMenubarAlwaysShownInFullScreen = false;
-
 void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
-  if (aFullScreen) {
-    gMenubarAlwaysShownInFullScreen = NSMenu.menuBarVisible;
-  }
-
   bool wasInFullscreen = mInFullScreenMode;
   mInFullScreenMode = aFullScreen;
   if (aNativeMode || mInNativeFullScreenMode) {
@@ -3698,6 +3692,25 @@ static bool ScreenHasNotch(nsCocoaWindow* aGeckoWindow) {
   return false;
 }
 
+static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
+  switch (StaticPrefs::widget_macos_shift_by_menubar_on_fullscreen()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      break;
+  }
+  // TODO: On notch-less macbooks, this creates extra space when the
+  // "automatically show and hide the menubar on fullscreen" option is unchecked
+  // (default checked). We tried to detect that in bug 1737831 but it wasn't
+  // reliable enough, see the regressions from that bug. For now, stick to the
+  // good behavior for default configurations (that is, shift by menubar height
+  // on notch-less macbooks, and don't for devices that have a notch). This will
+  // need refinement in the future.
+  return !ScreenHasNotch(aWindow);
+}
+
 - (void)updateTitlebarShownAmount:(CGFloat)aShownAmount {
   NSInteger styleMask = [self styleMask];
   if (!(styleMask & NSWindowStyleMaskFullScreen)) {
@@ -3726,7 +3739,7 @@ static bool ScreenHasNotch(nsCocoaWindow* aGeckoWindow) {
       // [ToolbarWindow titlebarHeight]. titlebarHeight returns 0 when we're in
       // fullscreen.
       CGFloat shiftByPixels = mInitialTitlebarHeight * aShownAmount;
-      if (!gMenubarAlwaysShownInFullScreen && !ScreenHasNotch(geckoWindow)) {
+      if (ShouldShiftByMenubarHeightInFullscreen(geckoWindow)) {
         shiftByPixels += mMenuBarHeight * aShownAmount;
       }
       // Use mozilla::DesktopToLayoutDeviceScale rather than the
