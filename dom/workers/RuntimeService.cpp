@@ -133,7 +133,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_JS_OPTIONS_PREFIX "javascript.options."
 #define PREF_WORKERS_OPTIONS_PREFIX PREF_WORKERS_PREFIX "options."
 #define PREF_MEM_OPTIONS_PREFIX "mem."
-#define PREF_GCZEAL "gcZeal"
+#define PREF_GCZEAL "gczeal"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
@@ -216,41 +216,6 @@ T GetPref(const char* aFullPref,
   return result;
 }
 
-template <typename T>
-T GetWorkerPref(const nsACString& aPref,
-                const T aDefault = PrefTraits<T>::kDefaultValue,
-                bool* aPresent = nullptr) {
-  AssertIsOnMainThread();
-
-  using PrefHelper = PrefTraits<T>;
-
-  T result;
-  bool present = true;
-
-  nsAutoCString prefName;
-  prefName.AssignLiteral(PREF_WORKERS_OPTIONS_PREFIX);
-  prefName.Append(aPref);
-
-  if (PrefHelper::Exists(prefName.get())) {
-    result = PrefHelper::Get(prefName.get());
-  } else {
-    prefName.AssignLiteral(PREF_JS_OPTIONS_PREFIX);
-    prefName.Append(aPref);
-
-    if (PrefHelper::Exists(prefName.get())) {
-      result = PrefHelper::Get(prefName.get());
-    } else {
-      result = aDefault;
-      present = false;
-    }
-  }
-
-  if (aPresent) {
-    *aPresent = present;
-  }
-  return result;
-}
-
 void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   AssertIsOnMainThread();
 
@@ -271,8 +236,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   }
 
 #ifdef JS_GC_ZEAL
-  if (prefName.EqualsLiteral(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL) ||
-      prefName.EqualsLiteral(PREF_WORKERS_OPTIONS_PREFIX PREF_GCZEAL)) {
+  if (prefName.EqualsLiteral(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) {
     return;
   }
 #endif
@@ -306,12 +270,13 @@ void LoadGCZealOptions(const char* /* aPrefName */, void* /* aClosure */) {
     return;
   }
 
-  int32_t gczeal = GetWorkerPref<int32_t>(nsLiteralCString(PREF_GCZEAL), -1);
+  int32_t gczeal = GetPref<int32_t>(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL, -1);
   if (gczeal < 0) {
     gczeal = 0;
   }
 
-  int32_t frequency = GetWorkerPref<int32_t>("gcZeal.frequency"_ns, -1);
+  int32_t frequency =
+      GetPref<int32_t>(PREF_JS_OPTIONS_PREFIX PREF_GCZEAL ".frequency", -1);
   if (frequency < 0) {
     frequency = JS_DEFAULT_ZEAL_FREQ;
   }
@@ -1499,9 +1464,6 @@ nsresult RuntimeService::Init() {
       WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
       WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
       WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
-#ifdef JS_GC_ZEAL
-      WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions) ||
-#endif
       NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
           LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
       NS_FAILED(Preferences::RegisterPrefixCallback(LoadContextOptions,
@@ -1774,7 +1736,6 @@ void RuntimeService::Cleanup() {
         WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
         WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
 #ifdef JS_GC_ZEAL
-        WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions) ||
         NS_FAILED(Preferences::UnregisterCallback(
             LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
