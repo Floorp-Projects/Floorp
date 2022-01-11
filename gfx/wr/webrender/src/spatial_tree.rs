@@ -435,7 +435,7 @@ impl SceneSpatialTree {
 
                 let existing_node = &self.spatial_nodes[e.index];
 
-                if existing_node.descriptor != node.descriptor || existing_node.parent != node.parent {
+                if *existing_node != node {
                     self.updates.updates.push(SpatialTreeUpdate::Update {
                         index: e.index,
                         parent: node.parent,
