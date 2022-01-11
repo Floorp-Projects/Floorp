@@ -1,7 +1,7 @@
 # Migrating Firefox Telemetry to Glean
 
 This guide aims to help you migrate individual data collections from
-[Firefox Telemetry](../../telemetry)
+[Firefox Telemetry](/toolkit/components/telemetry/index.rst)
 to
 [Glean][book-of-glean] via [Firefox on Glean](../index.md).
 
@@ -902,7 +902,7 @@ work within what Glean currently affords or
 [new-metric-type]: https://wiki.mozilla.org/Glean/Adding_or_changing_Glean_metric_types
 [glean-matrix]: https://chat.mozilla.org/#/room/#glean:mozilla.org
 [checkerboard-severity]: https://searchfox.org/mozilla-central/rev/d59bdea4956040e16113b05296c56867f761735b/gfx/layers/apz/src/CheckerboardEvent.cpp#44
-[telemetry-events]: ../../telemetry/collection/events.html
-[telemetry-scalars]: ../../telemetry/collection/scalars.html
-[telemetry-histograms]: ../../telemetry/collection/histograms.html
+[telemetry-events]: /toolkit/components/telemetry/collection/events.rst
+[telemetry-scalars]: /toolkit/components/telemetry/collection/scalars.rst
+[telemetry-histograms]: /toolkit/components/telemetry/collection/histograms.rst
 [repositories-yaml]: https://github.com/mozilla/probe-scraper/blob/main/repositories.yaml

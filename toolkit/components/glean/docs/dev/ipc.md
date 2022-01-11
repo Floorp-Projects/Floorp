@@ -141,7 +141,7 @@ FOG supports messaging between the following types of child process and the pare
 * socket children (via `PSocketProcess`)
 
 See
-[the process model docs](../../../../dom/ipc/process_model.html)
+[the process model docs](/dom/ipc/process_model.rst)
 for more information about what that means.
 
 ### Adding Support for a new Process Type
