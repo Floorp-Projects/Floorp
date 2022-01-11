@@ -1192,7 +1192,7 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   ScriptStencilRef script{context, scriptIndex};
   const ScriptStencilExtra& extra = script.scriptExtra();
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   const ScriptStencil& data = script.scriptData();
   MOZ_ASSERT(!data.hasSharedData(), "Script is already compiled!");
   MOZ_DIAGNOSTIC_ASSERT(!data.isGhost());
