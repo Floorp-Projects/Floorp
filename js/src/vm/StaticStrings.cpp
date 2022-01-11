@@ -75,9 +75,9 @@ bool StaticStrings::init(JSContext* cx) {
           getLength2IndexStatic(char(i / 10) + '0', char(i % 10) + '0');
       intStaticTable[i] = length2StaticTable[index];
     } else {
-      Latin1Char buffer[] = {Latin1Char('0' + (i / 100)),
-                             Latin1Char('0' + ((i / 10) % 10)),
-                             Latin1Char('0' + (i % 10))};
+      Latin1Char buffer[] = {Latin1Char(firstCharOfLength3(i)),
+                             Latin1Char(secondCharOfLength3(i)),
+                             Latin1Char(thirdCharOfLength3(i))};
       JSLinearString* s =
           NewInlineString<NoGC>(cx, Latin1Range(buffer, 3), gc::TenuredHeap);
       if (!s) {
