@@ -242,14 +242,27 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // This will destroy the content process one
       this._destroyTargetActor(watcherActorID);
       // And this will destroy the parent process one
-      this.sendAsyncMessage("DevToolsFrameChild:destroy", {
-        actors: [
-          {
-            watcherActorID,
-            form,
-          },
-        ],
-      });
+      try {
+        this.sendAsyncMessage("DevToolsFrameChild:destroy", {
+          actors: [
+            {
+              watcherActorID,
+              form,
+            },
+          ],
+        });
+      } catch (e) {
+        // Ignore exception when the JSWindowActorChild has already been destroyed.
+        // We often try to emit this message while the WindowGlobal is in the process of being
+        // destroyed. We eagerly destroy the target actor during reloads,
+        // just before the WindowGlobal starts destroying, but sendAsyncMessage
+        // doesn't have time to complete and throws.
+        if (
+          !e.message.includes("JSWindowActorChild cannot send at the moment")
+        ) {
+          throw e;
+        }
+      }
     });
     this._connections.set(watcherActorID, {
       connection,
