@@ -1432,14 +1432,6 @@
   value: true
   mirror: always
 
-# Temporary pref which makes certain ServiceWorkers be isolated in special
-# processes instead of within a the normal web/webIsolated process based on
-# the URI.  Entries are separated by commas
-- name: browser.tabs.remote.serviceWorkerIsolationList
-  type: String
-  value: ""
-  mirror: never
-
 # When this pref is enabled, opaque response is only allowed to enter the
 # content process if it's a response for media (audio, image, video), CSS, or
 # JavaScript.
