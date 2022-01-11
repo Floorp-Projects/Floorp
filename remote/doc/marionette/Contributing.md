@@ -2,7 +2,7 @@ Contributing
 ============
 
 If you are new to open source or to Mozilla, you might like this
-[tutorial for new Marionette contributors](NewContributors.html).
+[tutorial for new Marionette contributors](NewContributors.md).
 
 We are delighted that you want to help improve Marionette!
 ‘Marionette’ means different a few different things, depending
@@ -32,8 +32,8 @@ By participating in this project, you agree to abide by the Mozilla
 [Community Participation Guidelines].  Here are some guidelines
 for contributing high-quality and actionable bugs and code.
 
-[_Marionette_]: ./index.html
-[_geckodriver_]: ../../geckodriver/geckodriver
+[_Marionette_]: ./index.rst
+[_geckodriver_]: /testing/geckodriver/index.rst
 [_webdriver_]: https://searchfox.org/mozilla-central/source/testing/webdriver/README.md
 [WebDriver protocol]: https://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide
@@ -58,21 +58,20 @@ code in our [code style document], which we highly recommend you read.
 [reach out to us]: ./index.html#communication
 [mozilla-central]: https://searchfox.org/mozilla-central/source/remote/marionette/
 [good first bugs]: https://codetribute.mozilla.org/projects/automation
-[code style document]: CodeStyle.html
+[code style document]: CodeStyle.md
 
 
 Next steps
 ----------
 
-  * [Building](Building.html)
-  * [Debugging](Debugging.html)
-  * [Testing](Testing.html)
-  * [Patching](Patches.html)
+  * [Building](Building.md)
+  * [Debugging](Debugging.md)
+  * [Testing](Testing.md)
+  * [Patching](Patches.md)
 
 
 Other resources
 ---------------
 
-  * [Code style](CodeStyle.html)
-  * [Internals](internals/)
-  * [New Contributor Tutorial](NewContributors.html)
+  * [Code style](CodeStyle.md)
+  * [New Contributor Tutorial](NewContributors.md)

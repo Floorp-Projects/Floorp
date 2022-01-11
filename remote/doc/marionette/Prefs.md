@@ -42,5 +42,5 @@ on the same system.  The effective port is written to the user
 preference file when the server has started and is also logged to
 stdout.
 
-[Remote Agent Preferences]: ../../remote/Prefs.html
+[Remote Agent Preferences]: /remote/Prefs.md
 
