@@ -180,6 +180,7 @@ class CPUInfo {
     SSE4_1 = 6,
     SSE4_2 = 7
   };
+  static const int AVX_PRESENT_BIT = 8;
 
   static SSEVersion GetSSEVersion() {
     if (maxSSEVersion == UnknownSSE) {
@@ -199,6 +200,10 @@ class CPUInfo {
 
     MOZ_ASSERT_IF(!avxEnabled, !avxPresent);
     return avxPresent;
+  }
+
+  static inline uint32_t GetFingerprint() {
+    return GetSSEVersion() | (IsAVXPresent() ? AVX_PRESENT_BIT : 0);
   }
 
  private:
