@@ -3869,6 +3869,18 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
 #endif
 }
 
+void nsWindow::SetBigIconNoData() {
+  HICON bigIcon =
+      ::LoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
+  SetBigIcon(bigIcon);
+}
+
+void nsWindow::SetSmallIconNoData() {
+  HICON smallIcon =
+      ::LoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
+  SetSmallIcon(smallIcon);
+}
+
 /**************************************************************
  *
  * SECTION: nsIWidget::WidgetToScreenOffset
