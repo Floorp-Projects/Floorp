@@ -334,7 +334,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                          const JS::Value& aEncoderOptions, nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName, const nsAString& aType,
                             nsIPrincipal& aSubjectPrincipal, File** aResult);
-  void CallPrintCallback();
+  MOZ_CAN_RUN_SCRIPT void CallPrintCallback();
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
