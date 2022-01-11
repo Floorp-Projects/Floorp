@@ -50,7 +50,7 @@ A list of all available websocket targets:
 The contained `webSocketDebuggerUrl` entries can be used to connect to the
 websocket and interact with the browser by using the CDP protocol.
 
-[Remote Protocol]: /testing/remote/doc/
+[Remote Protocol]: /remote/index.rst
 [Chrome DevTools Protocol]: https://chromedevtools.github.io/devtools-protocol/
 
 
