@@ -383,11 +383,11 @@ for ( [imm, expect1, expect2] of
 // For integer comparison followed by select, check that the comparison result
 // isn't materialised into a register, for specific types.
 
-for ( [cmpTy, selTy, cmpRegPfx, cselRegPfx] of
-      [ ['i32', 'i32',  'w', 'w'],
-        ['i32', 'i64',  'w', 'x'],
-        ['i64', 'i32',  'x', 'w'],
-        ['i64', 'i64',  'x', 'x'],
+for ( [cmpTy, cmpOp, selTy, cmpRegPfx, cselRegPfx, armCC] of
+      [ ['i32', 'le_s', 'i32',  'w', 'w', 'le'],
+        ['i32', 'lt_u', 'i64',  'w', 'x', 'lo'],
+        ['i64', 'le_s', 'i32',  'x', 'w', 'le'],
+        ['i64', 'lt_u', 'i64',  'x', 'x', 'lo'],
       ] ) {
    codegenTestARM64_adhoc(
     `(module
@@ -397,11 +397,11 @@ for ( [cmpTy, selTy, cmpRegPfx, cselRegPfx] of
              (result ${selTy})
          (select (local.get $p3)
                  (local.get $p4)
-                 (${cmpTy}.eq (local.get $p1) (local.get $p2)))
+                 (${cmpTy}.${cmpOp} (local.get $p1) (local.get $p2)))
        )
     )`,
     'f',
     `.b01001f  cmp  ${cmpRegPfx}0, ${cmpRegPfx}1
-     .a830040  csel ${cselRegPfx}0, ${cselRegPfx}2, ${cselRegPfx}3, eq`
+     .a83.040  csel ${cselRegPfx}0, ${cselRegPfx}2, ${cselRegPfx}3, ${armCC}`
    );
 }
