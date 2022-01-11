@@ -69,6 +69,8 @@ void TaggedParserAtomIndex::validateRaw() {
     // always valid
   } else if (isLength2StaticParserString()) {
     MOZ_ASSERT(size_t(toLength2StaticParserString()) < Length2StaticLimit);
+  } else if (isLength3StaticParserString()) {
+    // always valid
   } else {
     MOZ_ASSERT(isNull());
   }
@@ -198,22 +200,25 @@ void ParserAtomsTable::dump(TaggedParserAtomIndex index) const {
   }
 
   if (index.isLength1StaticParserString()) {
-    Latin1Char content[1];
-    getLength1Content(index.toLength1StaticParserString(), content);
     js::Fprinter out(stderr);
     out.put("\"");
-    out.putChar(content[0]);
+    dumpCharsNoQuote(out, index.toLength1StaticParserString());
     out.put("\"\n");
     return;
   }
 
   if (index.isLength2StaticParserString()) {
-    char content[2];
-    getLength2Content(index.toLength2StaticParserString(), content);
     js::Fprinter out(stderr);
     out.put("\"");
-    out.putChar(content[0]);
-    out.putChar(content[1]);
+    dumpCharsNoQuote(out, index.toLength2StaticParserString());
+    out.put("\"\n");
+    return;
+  }
+
+  if (index.isLength3StaticParserString()) {
+    js::Fprinter out(stderr);
+    out.put("\"");
+    dumpCharsNoQuote(out, index.toLength3StaticParserString());
     out.put("\"\n");
     return;
   }
@@ -245,6 +250,11 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
     return;
   }
 
+  if (index.isLength3StaticParserString()) {
+    dumpCharsNoQuote(out, index.toLength3StaticParserString());
+    return;
+  }
+
   MOZ_ASSERT(index.isNull());
   out.put("#<null>");
 }
@@ -271,6 +281,16 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
   getLength2Content(index, content);
   out.putChar(content[0]);
   out.putChar(content[1]);
+}
+
+/* static */
+void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
+                                        Length3StaticParserString index) {
+  char content[3];
+  getLength3Content(index, content);
+  out.putChar(content[0]);
+  out.putChar(content[1]);
+  out.putChar(content[2]);
 }
 #endif
 
@@ -636,10 +656,20 @@ bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
     return IsIdentifierASCII(char(content[0]));
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
-  return IsIdentifierASCII(content[0], content[1]);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return IsIdentifierASCII(content[0], content[1]);
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+#ifdef DEBUG
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
+  MOZ_ASSERT(!reinterpret_cast<const Latin1Char*>(
+      IsIdentifier(reinterpret_cast<const Latin1Char*>(content), 3)));
+#endif
+  return false;
 }
 
 bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
@@ -689,16 +719,21 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
     return false;
   }
 
-  // Length-1/2 shouldn't be used for extented uncloned self-hosted
+  // Length-1/2/3 shouldn't be used for extented uncloned self-hosted
   // function name, and this query shouldn't be used for them.
 #ifdef DEBUG
   if (index.isLength1StaticParserString()) {
     Latin1Char content[1];
     getLength1Content(index.toLength1StaticParserString(), content);
     MOZ_ASSERT(content[0] != ExtendedUnclonedSelfHostedFunctionNamePrefix);
-  } else {
+  } else if (index.isLength2StaticParserString()) {
     char content[2];
     getLength2Content(index.toLength2StaticParserString(), content);
+    MOZ_ASSERT(content[0] != ExtendedUnclonedSelfHostedFunctionNamePrefix);
+  } else {
+    MOZ_ASSERT(index.isLength3StaticParserString());
+    char content[3];
+    getLength3Content(index.toLength3StaticParserString(), content);
     MOZ_ASSERT(content[0] != ExtendedUnclonedSelfHostedFunctionNamePrefix);
   }
 #endif
@@ -766,18 +801,32 @@ bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
     return false;
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
-  // Leading '0' isn't allowed.
-  // See CheckStringIsIndex comment.
-  if (content[0] != '0' && mozilla::IsAsciiDigit(content[0]) &&
-      mozilla::IsAsciiDigit(content[1])) {
-    *indexp =
-        AsciiDigitToNumber(content[0]) * 10 + AsciiDigitToNumber(content[1]);
-    return true;
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    // Leading '0' isn't allowed.
+    // See CheckStringIsIndex comment.
+    if (content[0] != '0' && mozilla::IsAsciiDigit(content[0]) &&
+        mozilla::IsAsciiDigit(content[1])) {
+      *indexp =
+          AsciiDigitToNumber(content[0]) * 10 + AsciiDigitToNumber(content[1]);
+      return true;
+    }
+    return false;
   }
-  return false;
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  *indexp = uint32_t(index.toLength3StaticParserString());
+#ifdef DEBUG
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
+  MOZ_ASSERT(uint32_t(AsciiDigitToNumber(content[0])) * 100 +
+                 uint32_t(AsciiDigitToNumber(content[1])) * 10 +
+                 uint32_t(AsciiDigitToNumber(content[2])) ==
+             *indexp);
+  MOZ_ASSERT(100 <= *indexp);
+#endif
+  return true;
 }
 
 bool ParserAtomsTable::isInstantiatedAsJSAtom(
@@ -805,8 +854,12 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
     return 1;
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  return 2;
+  if (index.isLength2StaticParserString()) {
+    return 2;
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  return 3;
 }
 
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
@@ -831,11 +884,26 @@ bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
     return CharsToNumber(cx, content, 1, result);
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
-  return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 2,
-                       result);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 2,
+                         result);
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  *result = double(index.toLength3StaticParserString());
+#ifdef DEBUG
+  char content[3];
+  double tmp;
+  getLength3Content(index.toLength3StaticParserString(), content);
+  if (!CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 3,
+                     &tmp)) {
+    return false;
+  }
+  MOZ_ASSERT(tmp == *result);
+#endif
+  return true;
 }
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
@@ -865,12 +933,21 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
         JS::CharsToNewUTF8CharsZ(cx, mozilla::Range(content, 1)).c_str());
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return UniqueChars(
+        JS::CharsToNewUTF8CharsZ(
+            cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2))
+            .c_str());
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
   return UniqueChars(
       JS::CharsToNewUTF8CharsZ(
-          cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2))
+          cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 3))
           .c_str());
 }
 
@@ -910,11 +987,18 @@ UniqueChars ParserAtomsTable::toPrintableString(
                                  mozilla::Range<const Latin1Char>(content, 1));
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return ToPrintableStringImpl(
+        cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2));
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
   return ToPrintableStringImpl(
-      cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2));
+      cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 3));
 }
 
 UniqueChars ParserAtomsTable::toQuotedString(
@@ -942,11 +1026,19 @@ UniqueChars ParserAtomsTable::toQuotedString(
         cx, mozilla::Range<const Latin1Char>(content, 1), '\"');
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return ToPrintableStringImpl(
+        cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2),
+        '\"');
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
   return ToPrintableStringImpl(
-      cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2),
+      cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 3),
       '\"');
 }
 
@@ -980,9 +1072,14 @@ JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
     return cx->staticStrings().getUnit(ch);
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  size_t s = static_cast<size_t>(index.toLength2StaticParserString());
-  return cx->staticStrings().getLength2FromIndex(s);
+  if (index.isLength2StaticParserString()) {
+    size_t s = static_cast<size_t>(index.toLength2StaticParserString());
+    return cx->staticStrings().getLength2FromIndex(s);
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  uint32_t s = uint32_t(index.toLength3StaticParserString());
+  return cx->staticStrings().getUint(s);
 }
 
 bool ParserAtomsTable::appendTo(StringBuffer& buffer,
@@ -1005,10 +1102,16 @@ bool ParserAtomsTable::appendTo(StringBuffer& buffer,
     return buffer.append(content[0]);
   }
 
-  MOZ_ASSERT(index.isLength2StaticParserString());
-  char content[2];
-  getLength2Content(index.toLength2StaticParserString(), content);
-  return buffer.append(content, 2);
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    return buffer.append(content, 2);
+  }
+
+  MOZ_ASSERT(index.isLength3StaticParserString());
+  char content[3];
+  getLength3Content(index.toLength3StaticParserString(), content);
+  return buffer.append(content, 3);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,

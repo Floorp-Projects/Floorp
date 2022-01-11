@@ -338,6 +338,85 @@ BEGIN_TEST(testParserAtom_tiny2) {
 }
 END_TEST(testParserAtom_tiny2)
 
+// Test length-3 fast-path is consistent across entry points.
+BEGIN_TEST(testParserAtom_int) {
+  using js::frontend::ParserAtom;
+  using js::frontend::ParserAtomsTable;
+  using js::frontend::ParserAtomVector;
+
+  js::LifoAlloc alloc(512);
+  ParserAtomsTable atomTable(cx->runtime(), alloc);
+
+  {
+    const char ascii[] = {'1', '0', '0'};
+    JS::Latin1Char latin1[] = {'1', '0', '0'};
+    const mozilla::Utf8Unit utf8[] = {
+        mozilla::Utf8Unit('1'), mozilla::Utf8Unit('0'), mozilla::Utf8Unit('0')};
+    char16_t char16[] = {'1', '0', '0'};
+
+    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
+    CHECK(refIndex);
+    CHECK(atomTable.internAscii(cx, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(cx, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(cx, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(cx, char16, 3) == refIndex);
+  }
+
+  {
+    const char ascii[] = {'2', '5', '5'};
+    JS::Latin1Char latin1[] = {'2', '5', '5'};
+    const mozilla::Utf8Unit utf8[] = {
+        mozilla::Utf8Unit('2'), mozilla::Utf8Unit('5'), mozilla::Utf8Unit('5')};
+    char16_t char16[] = {'2', '5', '5'};
+
+    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
+    CHECK(refIndex);
+    CHECK(atomTable.internAscii(cx, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(cx, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(cx, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(cx, char16, 3) == refIndex);
+  }
+
+  {
+    const char ascii[] = {'0', '9', '9'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  {
+    const char ascii[] = {'0', 'F', 'F'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  {
+    const char ascii[] = {'1', '0', 'A'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  {
+    const char ascii[] = {'1', '0', 'a'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  {
+    const char ascii[] = {'2', '5', '6'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  {
+    const char ascii[] = {'3', '0', '0'};
+
+    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+  }
+
+  return true;
+}
+END_TEST(testParserAtom_int)
+
 // "€"    U+0080
 // "½"    U+00BD
 // "¿"    U+00BF

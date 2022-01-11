@@ -2871,6 +2871,15 @@ void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
     return;
   }
 
+  if (taggedIndex.isLength3StaticParserString()) {
+    json.property("tag", "Length3Static");
+    auto index = taggedIndex.toLength3StaticParserString();
+    GenericPrinter& out = json.beginStringProperty("atom");
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
+    json.endString();
+    return;
+  }
+
   MOZ_ASSERT(taggedIndex.isNull());
   json.property("tag", "null");
 }
@@ -2928,6 +2937,12 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
 
   if (taggedIndex.isLength2StaticParserString()) {
     auto index = taggedIndex.toLength2StaticParserString();
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
+    return;
+  }
+
+  if (taggedIndex.isLength3StaticParserString()) {
+    auto index = taggedIndex.toLength3StaticParserString();
     ParserAtomsTable::dumpCharsNoQuote(out, index);
     return;
   }
@@ -3744,9 +3759,14 @@ JSString* CompilationAtomCache::getExistingStringAt(
     return cx->staticStrings().getUnit(char16_t(index));
   }
 
-  MOZ_ASSERT(taggedIndex.isLength2StaticParserString());
-  auto index = taggedIndex.toLength2StaticParserString();
-  return cx->staticStrings().getLength2FromIndex(size_t(index));
+  if (taggedIndex.isLength2StaticParserString()) {
+    auto index = taggedIndex.toLength2StaticParserString();
+    return cx->staticStrings().getLength2FromIndex(size_t(index));
+  }
+
+  MOZ_ASSERT(taggedIndex.isLength3StaticParserString());
+  auto index = taggedIndex.toLength3StaticParserString();
+  return cx->staticStrings().getUint(uint32_t(index));
 }
 
 JSString* CompilationAtomCache::getStringAt(ParserAtomIndex index) const {
