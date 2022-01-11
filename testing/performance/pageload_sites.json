@@ -258,8 +258,7 @@
     {
       "login": false,
       "name": "imdb",
-      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2",
-      "secondary_url": "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
+      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
     },
     {
       "login": false,
