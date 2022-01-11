@@ -2,13 +2,13 @@
 
 This page explains how optimize the performance the Firefox code base
 
-The [test documentation](../../testing/perfdocs/)
-explains how to test for performance in Firefox. 
-The [profiler documentation](../../tools/profiler/)
-explains how to use the Gecko profiler. 
+The [test documentation](/testing/perfdocs/index.rst)
+explains how to test for performance in Firefox.
+The [profiler documentation](/tools/profiler/index.rst)
+explains how to use the Gecko profiler.
 
 ## General Performance references
-* Tips on generating valid performance metrics by [benchmarking](benchmarking.md)
+* Tips on generating valid performance metrics by [benchmarking](Benchmarking.md)
 * [GPU Performance](GPU_performance.md) Tips for reducing impacts on browser performance in front-end code.
 * [Automated Performance testing and Sheriffing](automated_performance_testing_and_sheriffing.md) Information on automated performance testing and sheriffing at Mozilla.
 * [Performance best practices for Firefox front-end engineers](bestpractices.md) Tips for reducing impacts on browser performance in front-end code.
