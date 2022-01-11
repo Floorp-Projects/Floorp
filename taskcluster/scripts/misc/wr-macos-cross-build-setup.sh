@@ -55,5 +55,6 @@ export AR="${CLANGDIR}/bin/llvm-ar"
 # the right arguments to the linker when invoked by cargo is nigh impossible
 # without this.
 export MOZ_CARGO_WRAP_LD="${CC}"
+export MOZ_CARGO_WRAP_LD_CXX="${CXX}"
 export MOZ_CARGO_WRAP_LDFLAGS="${TARGET_CFLAGS}"
 export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER="${GECKO_PATH}/build/cargo-linker"
