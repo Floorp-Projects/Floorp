@@ -12377,6 +12377,16 @@
   mirror: always
 
 #ifdef XP_MACOSX
+
+# Whether to shift by the menubar height on fullscreen mode.
+# 0: never
+# 1: always
+# 2: auto (tries to detect when it is needed)
+- name: widget.macos.shift-by-menubar-on-fullscreen
+  type: RelaxedAtomicUint32
+  value: 2
+  mirror: always
+
 - name: widget.macos.native-context-menus
   type: RelaxedAtomicBool
   value: true
