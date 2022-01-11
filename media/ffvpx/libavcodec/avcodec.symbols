@@ -8,6 +8,7 @@ av_codec_get_pkt_timebase
 av_codec_get_seek_preroll
 av_codec_is_decoder
 av_codec_is_encoder
+av_codec_iterate
 av_codec_next
 av_codec_set_chroma_intra_matrix
 av_codec_set_codec_descriptor
