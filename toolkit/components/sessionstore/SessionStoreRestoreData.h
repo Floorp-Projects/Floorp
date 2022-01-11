@@ -28,7 +28,7 @@ class SessionStoreRestoreData final : public nsISessionStoreRestoreData {
   bool IsEmpty();
   SessionStoreRestoreData* FindDataForChild(BrowsingContext* aContext);
   bool CanRestoreInto(nsIURI* aDocumentURI);
-  bool RestoreInto(RefPtr<BrowsingContext> aContext);
+  MOZ_CAN_RUN_SCRIPT bool RestoreInto(RefPtr<BrowsingContext> aContext);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISESSIONSTORERESTOREDATA
