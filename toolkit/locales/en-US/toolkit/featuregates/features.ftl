@@ -26,10 +26,6 @@ experimental-features-css-constructable-stylesheets =
     .label = CSS: Constructable Stylesheets
 experimental-features-css-constructable-stylesheets-description = The addition of a constructor to the <a data-l10n-name="mdn-cssstylesheet">CSSStyleSheet</a> interface as well as a variety of related changes makes it possible to directly create new stylesheets without having to add the sheet to the HTML. This makes it much easier to create reusable stylesheets for use with <a data-l10n-name="mdn-shadowdom">Shadow DOM</a>. See <a data-l10n-name="bugzilla">bug 1520690</a> for more details.
 
-experimental-features-devtools-execution-context-selector =
-    .label = Developer Tools: Execution Context Selector
-experimental-features-devtools-execution-context-selector-description = This feature displays a button on the console’s command line that lets you change the context in which the expression you enter will be executed. See <a data-l10n-name="bugzilla1">bug 1605154</a> and <a data-l10n-name="bugzilla2">bug 1605153</a> for more details.
-
 experimental-features-devtools-compatibility-panel =
     .label = Developer Tools: Compatibility Panel
 experimental-features-devtools-compatibility-panel-description = A side panel for the Page Inspector that shows you information detailing your app’s cross-browser compatibility status. See <a data-l10n-name="bugzilla">bug 1584464</a> for more details.

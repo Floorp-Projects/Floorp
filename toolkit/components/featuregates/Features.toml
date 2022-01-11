@@ -42,17 +42,6 @@ bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
 default-value = false
 
-[devtools-execution-context-selector]
-title = "experimental-features-devtools-execution-context-selector"
-description = "experimental-features-devtools-execution-context-selector-description"
-description-links = {bugzilla1 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605154", bugzilla2 = "https://bugzilla.mozilla.org/show_bug.cgi?id=1605153"}
-restart-required = false
-preference = "devtools.webconsole.input.context"
-type = "boolean"
-bug-numbers = [1605154, 1605153]
-is-public = true
-default-value = true
-
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
 description = "experimental-features-devtools-compatibility-panel-description"
