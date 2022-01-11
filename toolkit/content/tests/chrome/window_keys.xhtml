@@ -55,11 +55,20 @@ var keysToTest = [
   ["k-g-co", "G", { ctrlKey: true, osKey: true } ],
   ["scommand", "Y", { } ],
   ["", "U", { } ],
+  ["k-z-c", "Z", { ctrlKey: true } ],
 ];
 
 function runTest()
 {
+  let nonInlineKeyFired = false;
+  document.getElementById("k-z-c").addEventListener("command", event => {
+    nonInlineKeyFired = true;
+    checkKey(event);
+  });
+
   iterateKeys(true, "normal");
+
+  ok(nonInlineKeyFired, "non-inline command listener fired");
 
   var keyset = document.getElementById("keyset");
   keyset.setAttribute("disabled", "true");
@@ -174,6 +183,7 @@ SimpleTest.waitForFocus(runTest);
   <key id="k-g-co" key="g" modifiers="control os" oncommand="checkKey(event)"/>
   <key id="k-y" key="y" command="scommand"/>
   <key id="k-u" key="u" command="scommand-disabled"/>
+  <key id="k-z-c" key="z" modifiers="control"/>
 </keyset>
 
 <keyset id="keyset2">

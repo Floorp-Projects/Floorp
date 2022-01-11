@@ -584,8 +584,13 @@ bool XULKeySetGlobalKeyListener::IsExecutableElement(
     return false;
   }
 
-  aElement->GetAttr(nsGkAtoms::oncommand, value);
-  return !value.IsEmpty();
+  // Internal keys are defined as <key> elements so that the menu label
+  // and disabled state can be updated properly, but the command is executed
+  // by some other means. This will typically be because the key is defined
+  // as a shortcut defined in ShortcutKeyDefinitions.cpp instead, or on Mac,
+  // some special system defined keys.
+  return !aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::internal,
+                                nsGkAtoms::_true, eCaseMatters);
 }
 
 already_AddRefed<dom::EventTarget> XULKeySetGlobalKeyListener::GetHandlerTarget(
