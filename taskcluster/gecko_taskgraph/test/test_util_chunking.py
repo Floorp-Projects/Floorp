@@ -158,7 +158,6 @@ def mock_mozinfo():
             "fission": fission,
             "headless": headless,
             "tsan": tsan,
-            "webrender": False,
             "appname": "firefox",
         }
 
