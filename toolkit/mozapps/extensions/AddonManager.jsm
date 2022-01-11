@@ -988,7 +988,6 @@ var AddonManagerInternal = {
    *
    * @param  aMethod
    *         The method name to call
-   * @see    callProvider
    */
   callProviders(aMethod, ...aArgs) {
     if (!aMethod || typeof aMethod != "string") {
@@ -1107,8 +1106,6 @@ var AddonManagerInternal = {
 
   /**
    * Notified when a preference we're interested in has changed.
-   *
-   * @see nsIObserver
    */
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
