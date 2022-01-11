@@ -36,7 +36,7 @@ The test structure is illustrated here:
 	        # code to execute after all tests are run
 	        MarionetteTestCase.tearDown(self)
 
-[remote protocol]: Protocol.html
+[remote protocol]: Protocol.md
 [unittest]: https://docs.python.org/2.7/library/unittest.html
 [`setUp`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUp
 [`setUpClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUpClass
@@ -67,5 +67,5 @@ The full API documentation is found [here], but the key objects are:
 
   * [`Marionette`]: client that speaks to Firefox.
 
-[here]: ../../../python/marionette_driver.html
-[`Marionette`]: ../../../python/marionette_driver.html#marionette_driver.marionette.Marionette
+[here]: /python/marionette_driver.rst
+[`Marionette`]: /python/marionette_driver.rst#marionette_driver.marionette.Marionette
