@@ -133,10 +133,6 @@ a {
   min-height: 20px;
 }
 
-#onboardingClose:not(.active) {
-  display: none;
-}
-
 #onboardingClose img {
   -moz-context-properties: fill;
   fill: currentColor;
