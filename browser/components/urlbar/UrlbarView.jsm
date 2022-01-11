@@ -112,7 +112,7 @@ class UrlbarView {
   }
 
   get allowEmptySelection() {
-    let { heuristicResult } = this._queryContext;
+    let { heuristicResult } = this._queryContext || {};
     return !heuristicResult || !this._shouldShowHeuristic(heuristicResult);
   }
 
