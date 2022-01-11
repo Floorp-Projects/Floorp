@@ -34,8 +34,11 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
+import java.net.Proxy;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +48,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import org.mozilla.gecko.util.ProxySelector;
 /**
  * An {@link HttpDataSource} that uses Android's {@link HttpURLConnection}.
  *
@@ -494,6 +496,19 @@ public class DefaultHttpDataSource extends BaseDataSource implements HttpDataSou
     throw new NoRouteToHostException("Too many redirects: " + redirectCount);
   }
 
+  private static URLConnection openConnectionWithProxy(final URI uri) throws IOException {
+    final java.net.ProxySelector ps = java.net.ProxySelector.getDefault();
+    Proxy proxy = Proxy.NO_PROXY;
+    if (ps != null) {
+      final List<Proxy> proxies = ps.select(uri);
+      if (proxies != null && !proxies.isEmpty()) {
+        proxy = proxies.get(0);
+      }
+    }
+
+    return uri.toURL().openConnection(proxy);
+  }
+
   /**
    * Configures a connection and opens it.
    *
@@ -521,7 +536,7 @@ public class DefaultHttpDataSource extends BaseDataSource implements HttpDataSou
      * simplicity, instead of duplicating the whole file we changed the connection object
      * to use the ProxySelector.
      */
-    HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
+    HttpURLConnection connection = (HttpURLConnection) openConnectionWithProxy(url.toURI());
 
     connection.setConnectTimeout(connectTimeoutMillis);
     connection.setReadTimeout(readTimeoutMillis);
