@@ -315,7 +315,10 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
     if (!aDeadline.IsNull()) {
       if (aDeadline < now) {
         // This slice overflowed the idle period.
-        idleDuration = aDeadline - startTimeStamp;
+        if (aDeadline > startTimeStamp) {
+          idleDuration = aDeadline - startTimeStamp;
+        }
+        // Otherwise the whole slice was done outside the idle period.
       } else {
         // Note, we don't want to use duration here, since it may contain
         // data also from JS engine triggered GC slices.
