@@ -271,18 +271,4 @@ AVFrame* FFmpegDataDecoder<LIBAV_VER>::PrepareFrame() {
   return aLib->avcodec_find_decoder(aCodec);
 }
 
-#ifdef MOZ_WAYLAND
-/* static */ AVCodec* FFmpegDataDecoder<LIBAV_VER>::FindHardwareAVCodec(
-    FFmpegLibWrapper* aLib, AVCodecID aCodec) {
-  void* opaque = nullptr;
-  while (AVCodec* codec = aLib->av_codec_iterate(&opaque)) {
-    if (codec->id == aCodec && aLib->av_codec_is_decoder(codec) &&
-        aLib->avcodec_get_hw_config(codec, 0)) {
-      return codec;
-    }
-  }
-  return nullptr;
-}
-#endif
-
 }  // namespace mozilla
