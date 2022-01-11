@@ -287,7 +287,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void SetRestoreData(SessionStoreRestoreData* aData, ErrorResult& aError);
   void ClearRestoreState();
-  void RequestRestoreTabContent(WindowGlobalParent* aWindow);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RequestRestoreTabContent(
+      WindowGlobalParent* aWindow);
   already_AddRefed<Promise> GetRestorePromise();
 
   nsresult WriteSessionStorageToSessionStore(
