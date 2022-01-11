@@ -52,7 +52,7 @@ window.addEventListener(
         <command id="cmd_cut" internal="true" />
         <command id="cmd_copy" internal="true" />
         <command id="cmd_paste" internal="true" />
-        <command id="cmd_delete" internal="true" />
+        <command id="cmd_delete" />
         <command id="cmd_selectAll" internal="true" />
         <command id="cmd_switchTextDirection" />
       </commandset>
