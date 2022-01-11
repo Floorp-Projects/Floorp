@@ -72,7 +72,7 @@ mochitest-plain:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    linux1804-64-qr/debug: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             wayland:
                 by-test-platform:
@@ -164,6 +164,7 @@ mochitest-browser-chrome:
     loopback-video: true
     variants:
         - fission
+        - socketprocess_networking
         - webrender-sw
         - webrender-sw+a11y-checks
         - webrender-sw+fission
@@ -173,6 +174,10 @@ mochitest-browser-chrome:
             fission:
                 by-test-platform:
                     (windows10-64-2004|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -260,10 +265,7 @@ mochitest-browser-chrome-failures:
         - webrender-sw
     run-on-projects:
         by-variant:
-            socketprocess_networking:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
-                    default: []
+            socketprocess_networking: []
             wayland:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
@@ -307,10 +309,7 @@ browser-screenshots:
     run-on-projects:
         by-variant:
             fission: []
-            socketprocess_networking:
-                by-test-platform:
-                    linux.*64/debug: ['mozilla-central']
-                    default: []
+            socketprocess_networking: []
             wayland:
                 by-test-platform:
                     linux.*64/debug: ['mozilla-central']
@@ -347,7 +346,7 @@ mochitest-chrome:
         by-variant:
             socketprocess_networking+1proc:
                 by-test-platform:
-                    linux.*64-qr/debug: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             wayland+1proc:
                 by-test-platform:
@@ -411,7 +410,7 @@ mochitest-devtools-chrome:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    linux.*64-qr/debug: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             wayland:
                 by-test-platform:
@@ -475,10 +474,7 @@ mochitest-plain-gpu:
     run-on-projects:
         by-variant:
             fission: []
-            socketprocess_networking:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
-                    default: []
+            socketprocess_networking: []
             wayland:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
@@ -530,10 +526,7 @@ mochitest-chrome-gpu:
     run-on-projects:
         by-variant:
             fission: []
-            socketprocess_networking:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
-                    default: []
+            socketprocess_networking: []
             wayland:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
@@ -692,10 +685,7 @@ mochitest-media-failures:
         - webrender-sw
     run-on-projects:
         by-variant:
-            socketprocess_networking:
-                by-test-platform:
-                    linux.*64-qr/debug: ['mozilla-central']
-                    default: []
+            socketprocess_networking: []
             wayland:
                 by-test-platform:
                     linux.*64-qr/debug: ['mozilla-central']
@@ -759,7 +749,7 @@ mochitest-plain-headless:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    linux.*64-qr/debug: ['mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             wayland:
                 by-test-platform:
@@ -1100,7 +1090,7 @@ mochitest-remote:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    linux.*64-qr/debug: built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw:
                 by-test-platform:
