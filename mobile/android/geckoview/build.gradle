@@ -596,7 +596,10 @@ apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko
     packageFilter = 'org.mozilla.geckoview'
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
-    skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
+    skipClassesRegex = [
+        '^org.mozilla.geckoview.BuildConfig$',
+        '^org.mozilla.geckoview.R$',
+    ]
     lintFilters = ['GV']
     deprecationAnnotation = 'org.mozilla.geckoview.DeprecationSchedule'
     libraryVersion = mozconfig.substs.MOZILLA_VERSION.split('\\.')[0] as Integer
