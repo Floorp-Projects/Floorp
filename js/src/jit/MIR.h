@@ -2730,6 +2730,7 @@ class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
 static inline Assembler::Condition JSOpToCondition(
     MCompare::CompareType compareType, JSOp op) {
   bool isSigned = (compareType != MCompare::Compare_UInt32 &&
+                   compareType != MCompare::Compare_UInt64 &&
                    compareType != MCompare::Compare_UIntPtr);
   return JSOpToCondition(op, isSigned);
 }

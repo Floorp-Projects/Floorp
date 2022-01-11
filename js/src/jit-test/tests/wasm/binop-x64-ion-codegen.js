@@ -237,7 +237,7 @@ for ( [imm, expect1, expect2] of
 // For integer comparison followed by select, check that the comparison result
 // isn't materialised into a register, for specific types.
 
-function cmpSel32vs64(cmpTy, selTy) {
+function cmpSel32vs64(cmpTy, cmpOp, selTy) {
     return `(module
               (func (export "f")
                     (param $p1 ${cmpTy}) (param $p2 ${cmpTy})
@@ -245,26 +245,26 @@ function cmpSel32vs64(cmpTy, selTy) {
                     (result ${selTy})
                 (select (local.get $p3)
                         (local.get $p4)
-                        (${cmpTy}.eq (local.get $p1) (local.get $p2)))
+                        (${cmpTy}.${cmpOp} (local.get $p1) (local.get $p2)))
               )
             )`;
 }
 if (getBuildConfiguration().windows) {
-    for ( [cmpTy, selTy, insn1, insn2, insn3] of
-          [ ['i32', 'i32',  '8b c3        mov %ebx, %eax',
-                            '3b ca        cmp %edx, %ecx',
-                            '41 0f 45 c1  cmovnz %r9d, %eax'],
-            ['i32', 'i64',  '48 8b c3     mov %rbx, %rax',
-                            '3b ca        cmp %edx, %ecx',
-                            '49 0f 45 c1  cmovnz %r9, %rax'],
-            ['i64', 'i32',  '8b c3        mov %ebx, %eax',
-                            '48 3b ca     cmp %rdx, %rcx',
-                            '41 0f 45 c1  cmovnz %r9d, %eax'],
-            ['i64', 'i64',  '48 8b c3     mov %rbx, %rax',
-                            '48 3b ca     cmp %rdx, %rcx',
-                            '49 0f 45 c1  cmovnz %r9, %rax']
+    for ( [cmpTy, cmpOp, selTy, insn1, insn2, insn3] of
+          [ ['i32', 'le_s', 'i32',  '8b c3        mov %ebx, %eax',
+                                    '3b ca        cmp %edx, %ecx',
+                                    '41 0f 4f c1  cmovnle %r9d, %eax'],
+            ['i32', 'lt_u', 'i64',  '48 8b c3     mov %rbx, %rax',
+                                    '3b ca        cmp %edx, %ecx',
+                                    '49 0f 43 c1  cmovnb %r9, %rax'],
+            ['i64', 'le_s', 'i32',  '8b c3        mov %ebx, %eax',
+                                    '48 3b ca     cmp %rdx, %rcx',
+                                    '41 0f 4f c1  cmovnle %r9d, %eax'],
+            ['i64', 'lt_u', 'i64',  '48 8b c3     mov %rbx, %rax',
+                                    '48 3b ca     cmp %rdx, %rcx',
+                                    '49 0f 43 c1  cmovnb %r9, %rax']
           ] ) {
-        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, selTy), 'f',
+        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, cmpOp, selTy), 'f',
           `4. 8b d8   mov %r8.*, %.bx
            ${insn1}
            ${insn2}
@@ -272,21 +272,21 @@ if (getBuildConfiguration().windows) {
         );
     }
 } else {
-    for ( [cmpTy, selTy, insn1, insn2, insn3] of
-          [ ['i32', 'i32',  '8b c2        mov %edx, %eax',
-                            '3b fe        cmp %esi, %edi',
-                            '0f 45 c1     cmovnz %ecx, %eax'],
-            ['i32', 'i64',  '48 8b c2     mov %rdx, %rax',
-                            '3b fe        cmp %esi, %edi',
-                            '48 0f 45 c1  cmovnz %rcx, %rax'],
-            ['i64', 'i32',  '8b c2        mov %edx, %eax',
-                            '48 3b fe     cmp %rsi, %rdi',
-                            '0f 45 c1     cmovnz %ecx, %eax'],
-            ['i64', 'i64',  '48 8b c2     mov %rdx, %rax',
-                            '48 3b fe     cmp %rsi, %rdi',
-                            '48 0f 45 c1  cmovnz %rcx, %rax']
+    for ( [cmpTy, cmpOp, selTy, insn1, insn2, insn3] of
+          [ ['i32', 'le_s', 'i32',  '8b c2        mov %edx, %eax',
+                                    '3b fe        cmp %esi, %edi',
+                                    '0f 4f c1     cmovnle %ecx, %eax'],
+            ['i32', 'lt_u', 'i64',  '48 8b c2     mov %rdx, %rax',
+                                    '3b fe        cmp %esi, %edi',
+                                    '48 0f 43 c1  cmovnb %rcx, %rax'],
+            ['i64', 'le_s', 'i32',  '8b c2        mov %edx, %eax',
+                                    '48 3b fe     cmp %rsi, %rdi',
+                                    '0f 4f c1     cmovnle %ecx, %eax'],
+            ['i64', 'lt_u', 'i64',  '48 8b c2     mov %rdx, %rax',
+                                    '48 3b fe     cmp %rsi, %rdi',
+                                    '48 0f 43 c1  cmovnb %rcx, %rax']
           ] ) {
-        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, selTy), 'f',
+        codegenTestX64_adhoc(cmpSel32vs64(cmpTy, cmpOp, selTy), 'f',
           `${insn1}
            ${insn2}
            ${insn3}`
