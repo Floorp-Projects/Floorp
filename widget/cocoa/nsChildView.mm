@@ -4265,6 +4265,10 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
               operation:(NSDragOperation)aOperation {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#endif
+
   gDraggedTransferables = nullptr;
 
   NSEvent* currentEvent = [NSApp currentEvent];
@@ -4369,6 +4373,10 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
                   item:(NSPasteboardItem*)aItem
     provideDataForType:(NSString*)aType {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#endif
 
   if (!gDraggedTransferables) {
     return;
