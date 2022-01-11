@@ -248,6 +248,10 @@ nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
                                               uint32_t aActionType) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#endif
+
   if (!gLastDragView) {
     // gLastDragView is non-null between -[ChildView mouseDown:] and -[ChildView mouseUp:].
     // If we get here with gLastDragView being null, that means that the mouse button has already
