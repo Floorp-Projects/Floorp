@@ -21,33 +21,65 @@ static const uint8_t kCommandLengths[] = {3, 3, 3, 3, 2, 2, 3};
 // messages is variable, so we just put zero since it won't be checked anyways.
 // Taken from MIDI Spec v1.0, Pg. 105, Table 5
 static const uint8_t kSystemLengths[] = {0, 2, 3, 2, 1, 1, 1, 1};
+static const uint8_t kReservedStatuses[] = {0xf4, 0xf5, 0xf9, 0xfd};
 
 namespace mozilla::dom::MIDIUtils {
+
+static bool IsSystemRealtimeMessage(uint8_t aByte) {
+  return (aByte & kSystemRealtimeMessage) == kSystemRealtimeMessage;
+}
+
+static bool IsCommandByte(uint8_t aByte) {
+  return (aByte & kCommandByte) == kCommandByte;
+}
+
+static bool IsReservedStatus(uint8_t aByte) {
+  for (const auto& msg : kReservedStatuses) {
+    if (aByte == msg) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // Checks validity of MIDIMessage passed to it. Throws debug warnings and
 // returns false if message is not valid.
 bool IsValidMessage(const MIDIMessage* aMsg) {
-  if (NS_WARN_IF(!aMsg)) {
+  if (aMsg->data().Length() == 0) {
     return false;
   }
-  // Assert on parser problems
-  MOZ_ASSERT(aMsg->data().Length() > 0,
-             "Created a MIDI Message of Length 0. This should never happen!");
+
   uint8_t cmd = aMsg->data()[0];
   // If first byte isn't a command, something is definitely wrong.
-  MOZ_ASSERT((cmd & kCommandByte) == kCommandByte,
-             "Constructed a MIDI packet where first byte is not command!");
+  if (!IsCommandByte(cmd)) {
+    NS_WARNING("Constructed a MIDI packet where first byte is not command!");
+    return false;
+  }
+
+  if (IsReservedStatus(cmd)) {
+    NS_WARNING("Using a reserved message");
+    return false;
+  }
+
   if (cmd == kSysexMessageStart) {
-    // All we can do with sysex is make sure it starts and  ends with the
-    // correct command bytes.
+    // All we can do with sysex is make sure it starts and ends with the
+    // correct command bytes and that it does not contain other command bytes.
     if (aMsg->data()[aMsg->data().Length() - 1] != kSysexMessageEnd) {
       NS_WARNING("Last byte of Sysex Message not 0xF7!");
       return false;
     }
+
+    for (size_t i = 1; i < aMsg->data().Length() - 2; i++) {
+      if (IsCommandByte(aMsg->data()[i])) {
+        return false;
+      }
+    }
+
     return true;
   }
   // For system realtime messages, the length should always be 1.
-  if ((cmd & kSystemRealtimeMessage) == kSystemRealtimeMessage) {
+  if (IsSystemRealtimeMessage(cmd)) {
     return aMsg->data().Length() == 1;
   }
   // Otherwise, just use the correct array for testing lengths. We can't tell
@@ -72,44 +104,66 @@ bool IsValidMessage(const MIDIMessage* aMsg) {
   return aMsg->data().Length() == kCommandLengths[cmdIndex];
 }
 
-uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
-                       const TimeStamp& aTimestamp,
-                       nsTArray<MIDIMessage>& aMsgArray) {
+bool ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
+                   const TimeStamp& aTimestamp,
+                   nsTArray<MIDIMessage>& aMsgArray) {
   uint32_t bytesRead = 0;
   bool inSysexMessage = false;
-  UniquePtr<MIDIMessage> currentMsg;
+  UniquePtr<MIDIMessage> currentMsg = nullptr;
   for (const auto& byte : aByteBuffer) {
     bytesRead++;
-    if ((byte & kSystemRealtimeMessage) == kSystemRealtimeMessage) {
+
+    if (IsSystemRealtimeMessage(byte)) {
       MIDIMessage rt_msg;
       rt_msg.data().AppendElement(byte);
       rt_msg.timestamp() = aTimestamp;
+      if (!IsValidMessage(&rt_msg)) {
+        return false;
+      }
       aMsgArray.AppendElement(rt_msg);
       continue;
     }
+
     if (byte == kSysexMessageEnd) {
       if (!inSysexMessage) {
-        MOZ_ASSERT(inSysexMessage);
         NS_WARNING(
             "Got sysex message end with no sysex message being processed!");
+        return false;
       }
       inSysexMessage = false;
-    } else if (byte & kCommandByte) {
-      if (currentMsg && IsValidMessage(currentMsg.get())) {
+    } else if (IsCommandByte(byte)) {
+      if (currentMsg) {
+        if (!IsValidMessage(currentMsg.get())) {
+          return false;
+        }
+
         aMsgArray.AppendElement(*currentMsg);
       }
+
       currentMsg = MakeUnique<MIDIMessage>();
       currentMsg->timestamp() = aTimestamp;
     }
+
+    if (!currentMsg) {
+      NS_WARNING("No command byte has been encountered yet!");
+      return false;
+    }
+
     currentMsg->data().AppendElement(byte);
+
     if (byte == kSysexMessageStart) {
       inSysexMessage = true;
     }
   }
-  if (currentMsg && IsValidMessage(currentMsg.get())) {
+
+  if (currentMsg) {
+    if (!IsValidMessage(currentMsg.get())) {
+      return false;
+    }
     aMsgArray.AppendElement(*currentMsg);
   }
-  return bytesRead;
+
+  return true;
 }
 
 bool IsSysexMessage(const MIDIMessage& aMsg) {
