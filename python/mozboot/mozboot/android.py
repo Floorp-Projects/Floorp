@@ -47,9 +47,9 @@ AVD_MANIFEST_ARM64 = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "android-avds/arm64.json")
 )
 
-JAVA_VERSION_MAJOR = "8"
-JAVA_VERSION_MINOR = "u312"
-JAVA_VERSION_PATCH = "b07"
+JAVA_VERSION_MAJOR = "17"
+JAVA_VERSION_MINOR = "0.1"
+JAVA_VERSION_PATCH = "12"
 
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
@@ -840,8 +840,12 @@ def ensure_java(os_name, os_arch):
     else:
         os_tag = os_name
 
-    # One we migrate to Java 17 we will be able to use native arm64 binaries
-    arch = "x64"
+    if os_arch == "x86_64":
+        arch = "x64"
+    elif os_arch == "arm64":
+        arch = "aarch64"
+    else:
+        arch = os_arch
 
     ext = "zip" if os_name == "windows" else "tar.gz"
 
@@ -850,12 +854,12 @@ def ensure_java(os_name, os_arch):
         raise NotImplementedError(f"Could not bootstrap java for {os_name}.")
 
     if not os.path.exists(java_path):
-        # e.g. https://github.com/adoptium/temurin8-binaries/releases/
-        #      download/jdk8u312-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u312b07.tar.gz
+        # e.g. https://github.com/adoptium/temurin17-binaries/releases/
+        #      download/jdk-17.0.1%2B12/OpenJDK17U-jdk_x64_linux_hotspot_17.0.1_12.tar.gz
         java_url = (
             "https://github.com/adoptium/temurin{major}-binaries/releases/"
-            "download/jdk{major}{minor}-{patch}/"
-            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}{minor}{patch}.{ext}"
+            "download/jdk-{major}.{minor}%2B{patch}/"
+            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}.{minor}_{patch}.{ext}"
         ).format(
             major=JAVA_VERSION_MAJOR,
             minor=JAVA_VERSION_MINOR,
@@ -869,7 +873,8 @@ def ensure_java(os_name, os_arch):
 
 
 def java_bin_path(os_name, toolchain_path):
-    jdk_folder = "jdk{major}{minor}-{patch}".format(
+    # Like jdk-17.0.1+12
+    jdk_folder = "jdk-{major}.{minor}+{patch}".format(
         major=JAVA_VERSION_MAJOR, minor=JAVA_VERSION_MINOR, patch=JAVA_VERSION_PATCH
     )
 

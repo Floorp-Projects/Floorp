@@ -114,7 +114,7 @@ linux64-jdk-repack:
         toolchain-artifact: project/gecko/jdk/jdk-linux.tar.zst
         toolchain-alias: linux64-jdk
         toolchain-env:
-            JAVA_HOME: "/builds/worker/fetches/jdk/jdk8u312-b07"
+            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.1+12"
 
 linux64-android-sdk-linux-repack:
     description: "Android SDK (Linux) repack toolchain build"
@@ -194,6 +194,8 @@ linux64-android-gradle-dependencies:
     fetches:
         fetch:
             - sonatype-nexus
+            # Nexus needs Java 8
+            - jdk-8-linux64
         toolchain:
             # Aliases aren't allowed for toolchains depending on toolchains.
             - linux64-android-sdk-linux-repack
@@ -222,6 +224,8 @@ linux64-android-gradle-dependencies-lite:
     fetches:
         fetch:
             - sonatype-nexus
+            # Nexus needs Java 8
+            - jdk-8-linux64
         toolchain:
             # Aliases aren't allowed for toolchains depending on toolchains.
             - linux64-android-sdk-linux-repack
