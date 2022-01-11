@@ -110,8 +110,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
         binding.hostnameText.requestFocus()
         val imm =
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        @Suppress("DEPRECATION")
-        imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+        imm.showSoftInput(binding.hostnameText, InputMethodManager.SHOW_IMPLICIT)
 
         binding.clearHostnameTextButton.setOnClickListener {
             binding.hostnameText.text?.clear()
