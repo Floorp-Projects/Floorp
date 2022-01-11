@@ -202,41 +202,49 @@ TEST(SanitizeRenderer, TestAdreno512)
 }
 
 // -
-// Keep gtests for our known CI RENDERER strings (see test_renderer_strings.html)
-// otherwise the first time we know we messed up is in CI results after an hour,
-// instead of after running gtests locally.
+// Keep gtests for our known CI RENDERER strings (see
+// test_renderer_strings.html) otherwise the first time we know we messed up is
+// in CI results after an hour, instead of after running gtests locally.
 
-TEST(SanitizeRenderer, TestCiAndroid) {
+TEST(SanitizeRenderer, TestCiAndroid)
+{
   const std::string renderer("Adreno (TM) 540");
   const std::string expectation("Adreno (TM) 540");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
 
-TEST(SanitizeRenderer, TestCiLinux) {
+TEST(SanitizeRenderer, TestCiLinux)
+{
   const std::string renderer("llvmpipe (LLVM 10.0.0, 256 bits)");
   const std::string expectation("llvmpipe");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
 
-TEST(SanitizeRenderer, TestCiMac) {
+TEST(SanitizeRenderer, TestCiMac)
+{
   const std::string renderer("Intel(R) UHD Graphics 630");
   const std::string expectation("Intel(R) HD Graphics 400");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
 
-TEST(SanitizeRenderer, TestCiMac2) {
+TEST(SanitizeRenderer, TestCiMac2)
+{
   const std::string renderer("Apple M1");
   const std::string expectation("Apple M1");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
 
-TEST(SanitizeRenderer, TestCiWindows) {
-  const std::string renderer("ANGLE (NVIDIA, NVIDIA Tesla M60 Direct3D11 vs_5_0 ps_5_0, D3D11-23.21.13.9181)");
-  const std::string expectation("ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0)");
+TEST(SanitizeRenderer, TestCiWindows)
+{
+  const std::string renderer(
+      "ANGLE (NVIDIA, NVIDIA Tesla M60 Direct3D11 vs_5_0 ps_5_0, "
+      "D3D11-23.21.13.9181)");
+  const std::string expectation(
+      "ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0)");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
