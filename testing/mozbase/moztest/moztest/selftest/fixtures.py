@@ -74,7 +74,6 @@ def setup_test_harness(request, flavor="plain"):
                         os.symlink(files_dir, test_root)
                     else:
                         shutil.copytree(files_dir, test_root)
-            return test_root
 
         elif "TEST_HARNESS_ROOT" in os.environ:
             # The mochitest tests will run regardless of whether a build exists or not.
