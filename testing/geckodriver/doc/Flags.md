@@ -174,3 +174,5 @@ argument is passed to geckodriver.
 Increases the logging verbosity by to debug level when passing
 a single `-v`, or to trace level if `-vv` is passed.  This is
 analogous to passing `--log debug` and `--log trace`, respectively.
+
+[Marionette]: /testing/marionette/index.rst
