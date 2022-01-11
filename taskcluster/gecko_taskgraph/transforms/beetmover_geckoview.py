@@ -18,12 +18,11 @@ from gecko_taskgraph.util.attributes import (
     release_level,
 )
 from gecko_taskgraph.util.declarative_artifacts import (
-    get_geckoview_template_vars,
+    get_geckoview_artifact_map,
     get_geckoview_upstream_artifacts,
     get_geckoview_artifact_id,
 )
 from gecko_taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
-from gecko_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 from gecko_taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -72,6 +71,17 @@ def resolve_keys(config, jobs):
 
 
 @transforms.add
+def split_maven_packages(config, jobs):
+    for job in jobs:
+        dep_job = job["primary-dependency"]
+        attributes = copy_attributes_from_dependent_job(dep_job)
+        for package in attributes["maven_packages"]:
+            package_job = deepcopy(job)
+            package_job["maven-package"] = package
+            yield package_job
+
+
+@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job["primary-dependency"]
@@ -79,7 +89,6 @@ def make_task_description(config, jobs):
         attributes.update(job.get("attributes", {}))
 
         treeherder = job.get("treeherder", {})
-        treeherder.setdefault("symbol", "BM-gv")
         dep_th_platform = (
             dep_job.task.get("extra", {})
             .get("treeherder", {})
@@ -89,6 +98,8 @@ def make_task_description(config, jobs):
         treeherder.setdefault("platform", f"{dep_th_platform}/opt")
         treeherder.setdefault("tier", 2)
         treeherder.setdefault("kind", "build")
+        package = job["maven-package"]
+        treeherder.setdefault("symbol", f"BM-{package}")
         label = job["label"]
         description = (
             "Beetmover submission for geckoview"
@@ -107,7 +118,7 @@ def make_task_description(config, jobs):
         attributes["run_on_hg_branches"] = job["run-on-hg-branches"]
 
         task = {
-            "label": label,
+            "label": f"{package}-{label}",
             "description": description,
             "worker-type": "beetmover",
             "scopes": [
@@ -119,6 +130,7 @@ def make_task_description(config, jobs):
             "run-on-projects": job["run-on-projects"],
             "treeherder": treeherder,
             "shipping-phase": job["shipping-phase"],
+            "maven-package": package,
         }
 
         yield task
@@ -128,19 +140,14 @@ def make_task_description(config, jobs):
 def make_task_worker(config, jobs):
     for job in jobs:
         job["worker"] = {
-            "artifact-map": generate_beetmover_artifact_map(
-                config,
-                job,
-                **get_geckoview_template_vars(
-                    config,
-                    job["attributes"]["build_platform"],
-                    job["attributes"].get("update-channel"),
-                ),
-            ),
+            "artifact-map": get_geckoview_artifact_map(config, job),
             "implementation": "beetmover-maven",
             "release-properties": craft_release_properties(config, job),
-            "upstream-artifacts": get_geckoview_upstream_artifacts(config, job),
+            "upstream-artifacts": get_geckoview_upstream_artifacts(
+                config, job, job["maven-package"]
+            ),
         }
+        del job["maven-package"]
 
         yield job
 
@@ -151,6 +158,7 @@ def craft_release_properties(config, job):
     release_properties["artifact-id"] = get_geckoview_artifact_id(
         config,
         job["attributes"]["build_platform"],
+        job["maven-package"],
         job["attributes"].get("update-channel"),
     )
     release_properties["app-name"] = "geckoview"
