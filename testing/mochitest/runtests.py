@@ -1177,9 +1177,7 @@ class MochitestDesktop(object):
             testURL = "about:blank"
         return testURL
 
-    def getTestsByScheme(
-        self, options, testsToFilter=None, disabled=True, manifestToFilter=None
-    ):
+    def getTestsByScheme(self, options, testsToFilter=None, disabled=True):
         """Build the url path to the specific test harness and test file or directory
         Build a manifest of tests to run and write out a json file for the harness to read
         testsToFilter option is used to filter/keep the tests provided in the list
@@ -1192,18 +1190,6 @@ class MochitestDesktop(object):
         paths = []
         for test in tests:
             if testsToFilter and (test["path"] not in testsToFilter):
-                continue
-            # If we are running a specific manifest, the previously computed set of active
-            # tests should be filtered out based on the manifest that contains that entry.
-            #
-            # This is especially important when a test file is listed in multiple
-            # manifests (e.g. because the same test runs under a different configuration,
-            # and so it is being included in multiple manifests), without filtering the
-            # active tests based on the current manifest (configuration) that we are
-            # running for each of the N manifests we would be executing the active tests
-            # exactly N times (and so NxN runs instead of the expected N runs, one for each
-            # manifest).
-            if manifestToFilter and (test["manifest"] not in manifestToFilter):
                 continue
             paths.append(test)
 
@@ -2661,7 +2647,7 @@ toolbar#nav-bar {
                 norm_paths.append(p)
         return norm_paths
 
-    def runMochitests(self, options, testsToRun, manifestToFilter=None):
+    def runMochitests(self, options, testsToRun):
         "This is a base method for calling other methods in this class for --bisect-chunk."
         # Making an instance of bisect class for --bisect-chunk option.
         bisect = bisection.Bisect(self)
@@ -2681,7 +2667,7 @@ toolbar#nav-bar {
                     )
                     bisection_log = 1
 
-            result = self.doTests(options, testsToRun, manifestToFilter)
+            result = self.doTests(options, testsToRun)
             if options.bisectChunk:
                 status = bisect.post_test(options, self.expectedError, self.result)
             else:
@@ -2968,7 +2954,7 @@ toolbar#nav-bar {
             # by the user, since we need to create a new directory for each run. We would face
             # problems if we use the directory provided by the user.
             tests_in_manifest = [t["path"] for t in tests if t["manifest"] == m]
-            res = self.runMochitests(options, tests_in_manifest, manifestToFilter=m)
+            res = self.runMochitests(options, tests_in_manifest)
             result = result or res
 
             # Dump the logging buffer
@@ -3047,7 +3033,7 @@ toolbar#nav-bar {
             if self.profiler_tempdir:
                 shutil.rmtree(self.profiler_tempdir)
 
-    def doTests(self, options, testsToFilter=None, manifestToFilter=None):
+    def doTests(self, options, testsToFilter=None):
         # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
         # since we need to initialize variables for each loop.
         if options.bisectChunk or options.runByManifest:
@@ -3177,9 +3163,7 @@ toolbar#nav-bar {
 
             # testsToFilter parameter is used to filter out the test list that
             # is sent to getTestsByScheme
-            for (scheme, tests) in self.getTestsByScheme(
-                options, testsToFilter, True, manifestToFilter
-            ):
+            for (scheme, tests) in self.getTestsByScheme(options, testsToFilter):
                 # read the number of tests here, if we are not going to run any,
                 # terminate early
                 if not tests:
