@@ -93,3 +93,5 @@ redirects:
     tools/static-analysis/index.html: code-quality/static-analysis.html
     xpcom/xpcom: xpcom
 
+fatal warnings:
+    - "WARNING: '([^']*)' reference target not found:"
