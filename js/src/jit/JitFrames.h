@@ -176,7 +176,8 @@ struct ResumeFromException {
 };
 
 #if defined(JS_CODEGEN_ARM64)
-  static_assert(sizeof(ResumeFromException) % 16 == 0, "ResumeFromException should be aligned");
+static_assert(sizeof(ResumeFromException) % 16 == 0,
+              "ResumeFromException should be aligned");
 #endif
 
 void HandleException(ResumeFromException* rfe);
