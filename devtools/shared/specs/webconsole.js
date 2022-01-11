@@ -96,6 +96,7 @@ const webconsoleSpecPrototype = {
     documentEvent: {
       name: Option(0, "string"),
       time: Option(0, "string"),
+      hasNativeConsoleAPI: Option(0, "boolean"),
     },
   },
 
