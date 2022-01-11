@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global XPCNativeWrapper */
-
 // protocol.js uses objects as exceptions in order to define
 // error packets.
 /* eslint-disable no-throw-literal */
@@ -159,9 +157,6 @@ const windowGlobalTargetPrototype = {
    *    This event contains the following attributes:
    *     * url (string)
    *       The new URI being loaded.
-   *     * nativeConsoleAPI (boolean)
-   *       `false` if the console API of the page has been overridden (e.g. by Firebug)
-   *       `true`  if the Gecko implementation is used
    *     * state (string)
    *       `start` if we just start requesting the new URL
    *       `stop`  if the new URL is done loading
@@ -1535,7 +1530,6 @@ const windowGlobalTargetPrototype = {
     if (!this.followWindowGlobalLifeCycle) {
       this.emit("tabNavigated", {
         url: newURI,
-        nativeConsoleAPI: true,
         state: "start",
         isFrameSwitching,
       });
@@ -1586,32 +1580,9 @@ const windowGlobalTargetPrototype = {
     this.emit("tabNavigated", {
       url: this.url,
       title: this.title,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
       state: "stop",
       isFrameSwitching: isFrameSwitching,
     });
-  },
-
-  /**
-   * Tells if the window.console object is native or overwritten by script in
-   * the page.
-   *
-   * @param nsIDOMWindow window
-   *        The window object you want to check.
-   * @return boolean
-   *         True if the window.console object is native, or false otherwise.
-   */
-  hasNativeConsoleAPI(window) {
-    let isNative = false;
-    try {
-      // We are very explicitly examining the "console" property of
-      // the non-Xrayed object here.
-      const console = window.wrappedJSObject.console;
-      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
-    } catch (ex) {
-      // ignore
-    }
-    return isNative;
   },
 
   /**
