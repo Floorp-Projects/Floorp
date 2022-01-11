@@ -266,7 +266,9 @@ class UniqueBuffer final {
 
   UniqueBuffer() = default;
 
-  ~UniqueBuffer() { reset(); }
+  ~UniqueBuffer() {
+    reset();
+  }
 
   UniqueBuffer(UniqueBuffer&& rhs) { *this = std::move(rhs); }
 

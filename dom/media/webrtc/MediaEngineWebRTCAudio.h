@@ -266,8 +266,9 @@ class AudioInputTrack : public ProcessedMediaTrack {
   }
   // Get the data in [aFrom, aTo) from aPort->GetSource() to aOutput. aOutput
   // needs to be empty.
-  void GetInputSourceData(AudioSegment& aOutput, const MediaInputPort* aPort,
-                          GraphTime aFrom, GraphTime aTo) const;
+  void GetInputSourceData(AudioSegment& aOutput,
+                          const MediaInputPort* aPort, GraphTime aFrom,
+                          GraphTime aTo) const;
 
   // Any thread
   AudioInputTrack* AsAudioInputTrack() override { return this; }
