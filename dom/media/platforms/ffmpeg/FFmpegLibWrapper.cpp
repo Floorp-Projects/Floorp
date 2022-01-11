@@ -163,6 +163,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION(av_frame_get_color_range, AV_FUNC_AVUTIL_ALL)
 #ifdef MOZ_WAYLAND
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_codec_iterate, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_codec_is_decoder, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_init, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_alloc, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_buffer_ref, AV_FUNC_AVUTIL_58)
