@@ -65,7 +65,6 @@
 #include "nsXPCOMPrivate.h"
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
-#include "XPCPrefableContextOptions.h"
 #include "XPCSelfHostedShmem.h"
 
 #if defined(XP_MACOSX)
@@ -165,8 +164,6 @@ template <>
 struct PrefTraits<bool> {
   using PrefValueType = bool;
 
-  static const PrefValueType kDefaultValue = false;
-
   static inline PrefValueType Get(const char* aPref) {
     AssertIsOnMainThread();
     return Preferences::GetBool(aPref);
@@ -194,8 +191,7 @@ struct PrefTraits<int32_t> {
 };
 
 template <typename T>
-T GetWorkerPref(const nsACString& aPref,
-                const T aDefault = PrefTraits<T>::kDefaultValue,
+T GetWorkerPref(const nsACString& aPref, const T aDefault,
                 bool* aPresent = nullptr) {
   AssertIsOnMainThread();
 
@@ -228,23 +224,6 @@ T GetWorkerPref(const nsACString& aPref,
   return result;
 }
 
-// Optimized version for bool that receives already-concatenated pref names.
-//
-// Used by xpc::SetPrefableContextOptions.
-bool GetWorkerBoolPref(const char* jsPref, const char* workerPref) {
-  using PrefHelper = PrefTraits<bool>;
-
-  if (PrefHelper::Exists(workerPref)) {
-    return PrefHelper::Get(workerPref);
-  }
-
-  if (PrefHelper::Exists(jsPref)) {
-    return PrefHelper::Get(jsPref);
-  }
-
-  return PrefHelper::kDefaultValue;
-}
-
 void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   AssertIsOnMainThread();
 
@@ -275,7 +254,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
 #endif
 
   JS::ContextOptions contextOptions;
-  xpc::SetPrefableContextOptions(contextOptions, GetWorkerBoolPref);
+  xpc::SetPrefableContextOptions(contextOptions);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {

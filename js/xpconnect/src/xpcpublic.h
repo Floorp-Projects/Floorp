@@ -55,6 +55,7 @@ struct nsXPTInterfaceInfo;
 
 namespace JS {
 class Compartment;
+class ContextOptions;
 class Realm;
 class RealmOptions;
 class Value;
@@ -581,6 +582,7 @@ class MOZ_RAII AutoScriptActivity {
 bool ShouldDiscardSystemSource();
 
 void SetPrefableRealmOptions(JS::RealmOptions& options);
+void SetPrefableContextOptions(JS::ContextOptions& options);
 
 class ErrorBase {
  public:
