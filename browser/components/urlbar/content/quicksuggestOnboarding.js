@@ -22,7 +22,6 @@ const VARIATION_MAP = {
     },
   },
   b: {
-    introductionCloseButton: true,
     l10nUpdates: {
       onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
       "introduction-title": "firefox-suggest-onboarding-introduction-title-2",
@@ -48,7 +47,6 @@ const VARIATION_MAP = {
     },
   },
   d: {
-    introductionCloseButton: true,
     l10nUpdates: {
       onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
       "introduction-title": "firefox-suggest-onboarding-introduction-title-4",
@@ -62,7 +60,6 @@ const VARIATION_MAP = {
   },
   e: {
     logoType: "firefox",
-    introductionCloseButton: true,
     l10nUpdates: {
       onboardingNext: "firefox-suggest-onboarding-introduction-next-button-1",
       "introduction-title": "firefox-suggest-onboarding-introduction-title-5",
@@ -75,7 +72,6 @@ const VARIATION_MAP = {
     },
   },
   f: {
-    introductionCloseButton: true,
     l10nUpdates: {
       onboardingNext: "firefox-suggest-onboarding-introduction-next-button-2",
       "introduction-title": "firefox-suggest-onboarding-introduction-title-6",
@@ -144,6 +140,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  addSubmitListener(document.getElementById("onboardingClose"), () => {
+    window.arguments[0].choice = ONBOARDING_CHOICE.CLOSE_1;
+    window.close();
+  });
   addSubmitListener(document.getElementById("onboardingNext"), () => {
     document.getElementById("introduction-section").classList.add("inactive");
     document.getElementById("main-section").classList.add("active");
@@ -203,15 +203,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function applyVariation(variation) {
-  if (variation.introductionCloseButton) {
-    const onboardingClose = document.getElementById("onboardingClose");
-    onboardingClose.classList.add("active");
-    addSubmitListener(onboardingClose, () => {
-      window.arguments[0].choice = ONBOARDING_CHOICE.CLOSE_1;
-      window.close();
-    });
-  }
-
   if (variation.logoType) {
     for (const logo of document.querySelectorAll(".logo")) {
       logo.classList.add(variation.logoType);
