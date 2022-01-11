@@ -513,7 +513,7 @@ publishing {
     }
     repositories {
         maven {
-            url = "${project.buildDir}/maven"
+            url = "${topobjdir}/gradle/maven"
         }
     }
 }

@@ -104,7 +104,7 @@ def (mozconfig, topobjdir) = rootProject.ext.get(LOAD_MOZCONFIG_CACHE)
 repositories {
     maven {
         name "Local GeckoView Maven repository"
-        url "${topobjdir}/gradle/build/mobile/android/geckoview/maven"
+        url "${topobjdir}/gradle/maven"
     }
 }
 
