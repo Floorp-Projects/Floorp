@@ -1383,16 +1383,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
   }
 #endif
 
-  // If we got here we are going to return false, so set the error context
-  const char* utf8Filename;
-  if (mozilla::IsUtf8(mozilla::MakeStringSpan(aFilename))) {
-    utf8Filename = aFilename;
-  } else {
-    utf8Filename = "(invalid UTF-8 filename)";
-  }
-  JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                           JSMSG_UNSAFE_FILENAME, utf8Filename);
-
   // Presently we are only enforcing restrictions for the script filename
   // on Nightly.  On all channels we are reporting Telemetry. In the future we
   // will assert in debug builds and return false to prevent execution in
