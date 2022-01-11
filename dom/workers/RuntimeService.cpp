@@ -131,7 +131,6 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 
 // Prefixes for observing preference changes.
 #define PREF_JS_OPTIONS_PREFIX "javascript.options."
-#define PREF_WORKERS_OPTIONS_PREFIX PREF_WORKERS_PREFIX "options."
 #define PREF_MEM_OPTIONS_PREFIX "mem."
 #define PREF_GCZEAL "gczeal"
 
@@ -1461,9 +1460,7 @@ nsresult RuntimeService::Init() {
       WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
       WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
       NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
-          LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
-      NS_FAILED(Preferences::RegisterPrefixCallback(LoadContextOptions,
-                                                    PREF_JS_OPTIONS_PREFIX))) {
+          LoadContextOptions, PREF_JS_OPTIONS_PREFIX))) {
     NS_WARNING("Failed to register pref callbacks!");
   }
 
@@ -1725,8 +1722,6 @@ void RuntimeService::Cleanup() {
   if (mObserved) {
     if (NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadContextOptions, PREF_JS_OPTIONS_PREFIX)) ||
-        NS_FAILED(Preferences::UnregisterPrefixCallback(
-            LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
         WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
         WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
         WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
