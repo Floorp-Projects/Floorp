@@ -55,6 +55,7 @@ class JS_PUBLIC_API ContextOptions {
         changeArrayByCopy_(false),
  #endif
         ergonomicBrandChecks_(false),
+        classStaticBlocks_(false),
         importAssertions_(false) {
   }
   // clang-format on
