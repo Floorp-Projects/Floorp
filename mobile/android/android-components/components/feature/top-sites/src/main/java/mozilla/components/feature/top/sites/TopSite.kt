@@ -6,37 +6,55 @@ package mozilla.components.feature.top.sites
 
 /**
  * A top site.
- *
- * @property id Unique ID of this top site.
- * @property title The title of the top site.
- * @property url The URL of the top site.
- * @property createdAt The optional date the top site was added.
- * @property type The type of a top site.
  */
-data class TopSite(
-    val id: Long?,
-    val title: String?,
-    val url: String,
-    val createdAt: Long?,
-    val type: Type
-) {
+sealed class TopSite {
+    abstract val id: Long?
+    abstract val title: String?
+    abstract val url: String
+    abstract val createdAt: Long?
+
     /**
-     * The type of a [TopSite].
+     * This top site was added as a default by the application.
+     *
+     * @property id Unique ID of this top site.
+     * @property title The title of the top site.
+     * @property url The URL of the top site.
+     * @property createdAt The optional date the top site was added.
      */
-    enum class Type {
-        /**
-         * This top site was added as a default by the application.
-         */
-        DEFAULT,
+    data class Default(
+        override val id: Long?,
+        override val title: String?,
+        override val url: String,
+        override val createdAt: Long?,
+    ) : TopSite()
 
-        /**
-         * This top site was pinned by an user.
-         */
-        PINNED,
+    /**
+     * This top site was pinned by an user.
+     *
+     * @property id Unique ID of this top site.
+     * @property title The title of the top site.
+     * @property url The URL of the top site.
+     * @property createdAt The optional date the top site was added.
+     */
+    data class Pinned(
+        override val id: Long?,
+        override val title: String?,
+        override val url: String,
+        override val createdAt: Long?,
+    ) : TopSite()
 
-        /**
-         * This top site is auto-generated from the history storage based on the most frecent site.
-         */
-        FRECENT
-    }
+    /**
+     * This top site is auto-generated from the history storage based on the most frecent site.
+     *
+     * @property id Unique ID of this top site.
+     * @property title The title of the top site.
+     * @property url The URL of the top site.
+     * @property createdAt The optional date the top site was added.
+     */
+    data class Frecent(
+        override val id: Long?,
+        override val title: String?,
+        override val url: String,
+        override val createdAt: Long?,
+    ) : TopSite()
 }

@@ -9,17 +9,16 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TopSiteKtTest {
+class TopSiteTest {
 
     @Test
     fun hasUrl() {
         val topSites = listOf(
-            TopSite(
+            TopSite.Frecent(
                 id = 1,
                 title = "Mozilla",
                 url = "https://mozilla.com",
-                createdAt = 1,
-                type = TopSite.Type.FRECENT
+                createdAt = 1
             )
         )
 

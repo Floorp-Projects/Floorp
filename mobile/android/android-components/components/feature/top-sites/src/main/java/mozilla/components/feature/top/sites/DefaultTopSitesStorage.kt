@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.FrecencyThresholdOption
-import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.ext.hasUrl
 import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
@@ -58,7 +57,7 @@ class DefaultTopSitesStorage(
 
     override fun removeTopSite(topSite: TopSite) {
         scope.launch {
-            if (topSite.type != FRECENT) {
+            if (topSite is TopSite.Default || topSite is TopSite.Pinned) {
                 pinnedSitesStorage.removePinnedSite(topSite)
             }
 
@@ -72,7 +71,7 @@ class DefaultTopSitesStorage(
 
     override fun updateTopSite(topSite: TopSite, title: String, url: String) {
         scope.launch {
-            if (topSite.type != FRECENT) {
+            if (topSite is TopSite.Default || topSite is TopSite.Pinned) {
                 pinnedSitesStorage.updatePinnedSite(topSite, title, url)
             }
 

@@ -5,8 +5,6 @@
 package mozilla.components.feature.top.sites
 
 import kotlinx.coroutines.runBlocking
-import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
-import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import mozilla.components.feature.top.sites.db.PinnedSiteDao
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
@@ -72,8 +70,8 @@ class PinnedSitesStorageTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
-        storage.removePinnedSite(TopSite(1, "Mozilla", "https://www.mozilla.org", 1, PINNED))
-        storage.removePinnedSite(TopSite(2, "Firefox", "https://www.firefox.com", 1, DEFAULT))
+        storage.removePinnedSite(TopSite.Pinned(1, "Mozilla", "https://www.mozilla.org", 1))
+        storage.removePinnedSite(TopSite.Default(2, "Firefox", "https://www.firefox.com", 1))
 
         verify(dao).deletePinnedSite(PinnedSiteEntity(1, "Mozilla", "https://www.mozilla.org", false, 1))
         verify(dao).deletePinnedSite(PinnedSiteEntity(2, "Firefox", "https://www.firefox.com", true, 1))
@@ -103,7 +101,6 @@ class PinnedSitesStorageTest {
             assertEquals(1L, id)
             assertEquals("Mozilla", title)
             assertEquals("https://www.mozilla.org", url)
-            assertEquals(PINNED, type)
             assertEquals(10L, createdAt)
         }
 
@@ -111,7 +108,6 @@ class PinnedSitesStorageTest {
             assertEquals(2L, id)
             assertEquals("Firefox", title)
             assertEquals("https://www.firefox.com", url)
-            assertEquals(DEFAULT, type)
             assertEquals(10L, createdAt)
         }
     }
@@ -121,7 +117,7 @@ class PinnedSitesStorageTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
-        val site = TopSite(1, "Mozilla", "https://www.mozilla.org", 1, PINNED)
+        val site = TopSite.Pinned(1, "Mozilla", "https://www.mozilla.org", 1)
         storage.updatePinnedSite(site, "Mozilla (IT)", "https://www.mozilla.org/it")
 
         verify(dao).updatePinnedSite(PinnedSiteEntity(1, "Mozilla (IT)", "https://www.mozilla.org/it", false, 1))
