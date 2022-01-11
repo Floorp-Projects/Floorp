@@ -17,6 +17,8 @@ interface nsIWindowsUIUtils : nsISupports
 
   void setWindowIcon(in mozIDOMWindowProxy aWindow, in imgIContainer aSmallIcon, in imgIContainer aLargeIcon);
 
+  void setWindowIconNoData(in mozIDOMWindowProxy aWindow);
+
   /**
    * Whether the OS is currently in tablet mode. Always false on
    * non-Windows and on versions of Windows before win10
