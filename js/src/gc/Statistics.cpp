@@ -1240,19 +1240,11 @@ void Statistics::endSlice() {
     auto mutatorStartTime = phaseStartTimes[Phase::MUTATOR];
     auto mutatorTime = phaseTimes[Phase::MUTATOR];
 
-    for (mozilla::TimeStamp& t : phaseStartTimes) {
-      t = TimeStamp();
-    }
+    phaseStartTimes = PhaseTimeStamps();
 #ifdef DEBUG
-    for (mozilla::TimeStamp& t : phaseEndTimes) {
-      t = TimeStamp();
-    }
+    phaseEndTimes = PhaseTimeStamps();
 #endif
-
-    for (TimeDuration& duration : phaseTimes) {
-      duration = TimeDuration();
-      MOZ_ASSERT(duration.IsZero());
-    }
+    phaseTimes = PhaseTimes();
 
     phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
     phaseTimes[Phase::MUTATOR] = mutatorTime;
@@ -1488,10 +1480,12 @@ void Statistics::recordParallelPhase(PhaseKind phaseKind,
     return;
   }
 
-  // Record the maximum task time for each phase. Don't record times for parent
-  // phases.
-  TimeDuration& time = slices_.back().maxParallelTimes[phaseKind];
-  time = std::max(time, duration);
+  slices_.back().totalParallelTimes[phaseKind] += duration;
+
+  // Also record the maximum task time for each phase. Don't record times for
+  // parent phases.
+  TimeDuration& maxTime = slices_.back().maxParallelTimes[phaseKind];
+  maxTime = std::max(maxTime, duration);
 }
 
 TimeStamp Statistics::beginSCC() { return ReallyNow(); }
@@ -1563,8 +1557,8 @@ void Statistics::printProfileHeader() {
 
   fprintf(
       stderr,
-      "MajorGC: PID    Runtime        Timestamp  Reason               States "
-      "FSNR   budget total ");
+      "MajorGC: PID     Runtime        Timestamp  Reason               States "
+      "FSNR   budget total  bgwrk  ");
 #define PRINT_PROFILE_HEADER(name, text, phase) \
   fprintf(stderr, " %-6.6s", text);
   FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_HEADER)
@@ -1580,6 +1574,14 @@ void Statistics::printProfileTimes(const ProfileDurations& times) {
   fprintf(stderr, "\n");
 }
 
+static TimeDuration SumAllPhaseKinds(const Statistics::PhaseKindTimes& times) {
+  TimeDuration sum;
+  for (PhaseKind kind : AllPhaseKinds()) {
+    sum += times[kind];
+  }
+  return sum;
+}
+
 void Statistics::printSliceProfile() {
   const SliceData& slice = slices_.back();
 
@@ -1593,7 +1595,7 @@ void Statistics::printSliceProfile() {
   bool full = zoneStats.isFullCollection();
 
   fprintf(
-      stderr, "MajorGC: %6zu %14p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s  ",
+      stderr, "MajorGC: %7zu %14p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s  ",
       size_t(getpid()), gc->rt, ts.ToSeconds(), ExplainGCReason(slice.reason),
       int(slice.initialState), int(slice.finalState), full ? "F" : "",
       shrinking ? "S" : "", nonIncremental ? "N" : "", reset ? "R" : "");
@@ -1608,6 +1610,9 @@ void Statistics::printSliceProfile() {
   ProfileDurations times;
   times[ProfileKey::Total] = slice.duration();
   totalTimes_[ProfileKey::Total] += times[ProfileKey::Total];
+
+  times[ProfileKey::Background] = SumAllPhaseKinds(slice.totalParallelTimes);
+  totalTimes_[ProfileKey::Background] += times[ProfileKey::Background];
 
 #define GET_PROFILE_TIME(name, text, phase)                    \
   times[ProfileKey::name] = SumPhase(phase, slice.phaseTimes); \
