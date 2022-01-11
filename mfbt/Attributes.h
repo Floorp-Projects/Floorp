@@ -706,8 +706,9 @@
 
 #  if defined(MOZ_CLANG_PLUGIN) || defined(XGILL_PLUGIN)
 #    define MOZ_CAN_RUN_SCRIPT __attribute__((annotate("moz_can_run_script")))
-#    define MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION \
-      __attribute__((annotate("moz_can_run_script")))
+#    define MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION         \
+      __attribute__((annotate("moz_can_run_script"))) \
+      __attribute__((annotate("moz_can_run_script_for_definition")))
 #    define MOZ_CAN_RUN_SCRIPT_BOUNDARY \
       __attribute__((annotate("moz_can_run_script_boundary")))
 #    define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))

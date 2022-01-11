@@ -652,3 +652,7 @@ struct DisallowMozKnownLiveMemberNotFromKnownLive {
     foo(mMember->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mWhatever' is neither.}}
   }
 };
+
+void IncorrectlyUnmarkedEarlyDeclaration(); // expected-note {{The first declaration exists here}}
+
+MOZ_CAN_RUN_SCRIPT void IncorrectlyUnmarkedEarlyDeclaration() {}; // expected-error {{MOZ_CAN_RUN_SCRIPT must be put in front of the declaration, not the definition}}

@@ -244,6 +244,21 @@ void FuncSetCallback::run(const MatchFinder::MatchResult &Result) {
       return;
   } else {
     Func = Result.Nodes.getNodeAs<FunctionDecl>("canRunScriptFunction");
+
+    const char *ErrorAttrInDefinition =
+        "MOZ_CAN_RUN_SCRIPT must be put in front "
+        "of the declaration, not the definition";
+    const char *NoteAttrInDefinition = "The first declaration exists here";
+    if (!Func->isFirstDecl() &&
+        !hasCustomAttribute<moz_can_run_script_for_definition>(Func)) {
+      const FunctionDecl *FirstDecl = Func->getFirstDecl();
+      if (!hasCustomAttribute<moz_can_run_script>(FirstDecl)) {
+        Checker.diag(Func->getLocation(), ErrorAttrInDefinition,
+                     DiagnosticIDs::Error);
+        Checker.diag(FirstDecl->getLocation(), NoteAttrInDefinition,
+                     DiagnosticIDs::Note);
+      }
+    }
   }
 
   CanRunScriptFuncs.insert(Func);
