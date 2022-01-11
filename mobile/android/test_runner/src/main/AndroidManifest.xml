@@ -20,7 +20,8 @@
             android:name="androidx.multidex.MultiDexApplication">
         <uses-library android:name="android.test.runner" android:required="false"/>
         <activity android:name=".TestRunnerActivity" android:exported="true"/>
-        <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity">
+        <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="org.mozilla.geckoview.test_runner.XPCSHELL_TEST"/>
