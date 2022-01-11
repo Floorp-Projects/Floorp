@@ -143,6 +143,7 @@ pub struct SpatialNodeInfo<'a> {
 /// lighter subset of a full spatial node constructed and used for frame building
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(PartialEq)]
 pub struct SceneSpatialNode {
     /// Snapping scale/offset relative to the coordinate system. If None, then
     /// we should not snap entities bound to this spatial node.
