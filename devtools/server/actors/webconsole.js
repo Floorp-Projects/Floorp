@@ -1818,8 +1818,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        - dom-complete
    * @param {Number} time
    *        The time that the event is fired.
+   * @param {Boolean} hasNativeConsoleAPI
+   *        Tells if the window.console object is native or overwritten by script in the page.
+   *        Only passed when `name` is "dom-complete" (see devtools/server/actors/webconsole/listeners/document-events.js).
    */
-  onDocumentEvent: function(name, { time }) {
+  onDocumentEvent: function(name, { time, hasNativeConsoleAPI }) {
     // will-navigate event has been added in Fx91 and is only expected to be used
     // by DOCUMENT_EVENT watcher. For toolbox still not using watcher actor and DOCUMENT_EVENT watcher
     // will-navigate will be emitted based on target actor's will-navigate events.
@@ -1829,6 +1832,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.emit("documentEvent", {
       name,
       time,
+      hasNativeConsoleAPI,
     });
   },
 
