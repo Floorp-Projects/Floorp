@@ -14,6 +14,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/widget/WindowSurface.h"
 #include "Units.h"
+#include "mozilla/ScopeExit.h"
 
 #ifdef MOZ_X11
 #  include <X11/Xlib.h>  // for Window, Display, Visual, etc.
@@ -33,6 +34,7 @@ namespace widget {
 class WindowSurfaceProvider final {
  public:
   WindowSurfaceProvider();
+  ~WindowSurfaceProvider();
 
   /**
    * Initializes the WindowSurfaceProvider by giving it the window
@@ -62,8 +64,11 @@ class WindowSurfaceProvider final {
 
  private:
   RefPtr<WindowSurface> CreateWindowSurface();
+  void CleanupWindowSurface();
 
   RefPtr<WindowSurface> mWindowSurface;
+  // WindowSurface needs to be re-created as underlying window was changed.
+  mozilla::Atomic<bool> mWindowSurfaceValid;
 #ifdef MOZ_WAYLAND
   RefPtr<nsWindow> mWidget;
 #endif
