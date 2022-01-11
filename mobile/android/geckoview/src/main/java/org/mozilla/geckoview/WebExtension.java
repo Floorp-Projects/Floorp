@@ -121,7 +121,7 @@ public class WebExtension {
   @LongDef(
       flag = true,
       value = {Flags.NONE, Flags.ALLOW_CONTENT_MESSAGING})
-  /* package */ @interface WebExtensionFlags {}
+  public @interface WebExtensionFlags {}
 
   /* package */ WebExtension(final DelegateControllerProvider provider, final GeckoBundle bundle) {
     location = bundle.getString("locationURI");
@@ -193,7 +193,7 @@ public class WebExtension {
         BrowsingDataDelegate.Type.PASSWORDS
       },
       flag = true)
-  @interface BrowsingDataTypes {}
+  public @interface BrowsingDataTypes {}
 
   /**
    * This delegate is used to handle calls from the |browsingData| WebExtension API.
@@ -1094,7 +1094,7 @@ public class WebExtension {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ENV_TYPE_UNKNOWN, ENV_TYPE_EXTENSION, ENV_TYPE_CONTENT_SCRIPT})
-    /* package */ @interface EnvType {}
+    public @interface EnvType {}
     /* package */ static final int ENV_TYPE_UNKNOWN = 0;
     /** This sender originated inside a privileged extension context like a background script. */
     public static final int ENV_TYPE_EXTENSION = 1;
@@ -1259,7 +1259,7 @@ public class WebExtension {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TYPE_BROWSER_ACTION, TYPE_PAGE_ACTION})
-    /* package */ @interface ActionType {}
+    public @interface ActionType {}
 
     /* package */ final @ActionType int type;
 
@@ -1577,7 +1577,7 @@ public class WebExtension {
           ErrorCodes.ERROR_USER_CANCELED,
           ErrorCodes.ERROR_POSTPONED,
         })
-    /* package */ @interface Codes {}
+    public @interface Codes {}
 
     /** One of {@link ErrorCodes} that provides more information about this exception. */
     public final @Codes int code;
@@ -1655,7 +1655,7 @@ public class WebExtension {
     SignedStateFlags.SYSTEM,
     SignedStateFlags.PRIVILEGED
   })
-  @interface SignedState {}
+  public @interface SignedState {}
 
   /**
    * Describes the blocklist state for a {@link WebExtension}. See <a
@@ -1690,7 +1690,7 @@ public class WebExtension {
     BlocklistStateFlags.VULNERABLE_UPDATE_AVAILABLE,
     BlocklistStateFlags.VULNERABLE_NO_UPDATE
   })
-  @interface BlocklistState {}
+  public @interface BlocklistState {}
 
   public static class DisabledFlags {
     /** The extension has been disabled by the user */
@@ -1714,7 +1714,7 @@ public class WebExtension {
   @IntDef(
       flag = true,
       value = {DisabledFlags.USER, DisabledFlags.BLOCKLIST, DisabledFlags.APP})
-  @interface EnabledFlags {}
+  public @interface EnabledFlags {}
 
   /** Provides information about a {@link WebExtension}. */
   public class MetaData {
@@ -1949,8 +1949,7 @@ public class WebExtension {
         Context.TAB,
         Context.TOOLS_MENU
       })
-
-  /* package */ @interface ContextFlags {}
+  public @interface ContextFlags {}
 
   /**
    * Flags to determine which contexts a menu item should be shown in. See <a
@@ -2051,8 +2050,7 @@ public class WebExtension {
     @IntDef(
         flag = false,
         value = {MenuType.NORMAL, MenuType.CHECKBOX, MenuType.RADIO, MenuType.SEPARATOR})
-
-    /* package */ @interface Type {}
+    public @interface Type {}
 
     /** A set of constants that represents the display type of this menu item. */
     static class MenuType {
@@ -2586,7 +2584,7 @@ public class WebExtension {
     @IntDef(
         flag = true,
         value = {CONFLICT_ACTION_UNIQUIFY, CONFLICT_ACTION_OVERWRITE, CONFLICT_ACTION_PROMPT})
-    /* package */ @interface ConflictActionFlags {}
+    public @interface ConflictActionFlags {}
 
     /** The app should modify the filename to make it unique */
     public static final int CONFLICT_ACTION_UNIQUIFY = 0;

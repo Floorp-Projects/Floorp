@@ -800,7 +800,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
         SEND_COMPOSITION_NOTIFY_GECKO,
         SEND_COMPOSITION_KEEP_CURRENT
       })
-  /* package */ @interface CompositionFlags {}
+  public @interface CompositionFlags {}
 
   // If text has composing spans, treat the entire text as a Gecko composition,
   // instead of just the spanned part.

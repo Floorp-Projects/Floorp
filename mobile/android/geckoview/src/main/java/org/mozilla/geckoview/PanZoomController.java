@@ -43,7 +43,7 @@ public class PanZoomController {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({SCROLL_BEHAVIOR_SMOOTH, SCROLL_BEHAVIOR_AUTO})
-  /* package */ @interface ScrollBehaviorType {}
+  public @interface ScrollBehaviorType {}
 
   /** Specifies smooth scrolling which animates content to the desired scroll position. */
   public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
@@ -57,7 +57,7 @@ public class PanZoomController {
     INPUT_RESULT_HANDLED_CONTENT,
     INPUT_RESULT_IGNORED
   })
-  /* package */ @interface InputResult {}
+  public @interface InputResult {}
 
   /**
    * Specifies that an input event was not handled by the PanZoomController for a panning or zooming
@@ -93,7 +93,7 @@ public class PanZoomController {
         SCROLLABLE_FLAG_BOTTOM,
         SCROLLABLE_FLAG_LEFT
       })
-  /* package */ @interface ScrollableDirections {}
+  public @interface ScrollableDirections {}
   /**
    * Represents which directions can be scrolled in the scroll container where an input event was
    * handled. This value is only useful in the case of {@link
@@ -114,7 +114,7 @@ public class PanZoomController {
   @IntDef(
       flag = true,
       value = {OVERSCROLL_FLAG_NONE, OVERSCROLL_FLAG_HORIZONTAL, OVERSCROLL_FLAG_VERTICAL})
-  /* package */ @interface OverscrollDirections {}
+  public @interface OverscrollDirections {}
   /**
    * Represents which directions can be over-scrolled in the scroll container where an input event
    * was handled. This value is only useful in the case of {@link

@@ -142,7 +142,7 @@ public final class GeckoRuntime implements Parcelable {
         CRASHED_PROCESS_TYPE_FOREGROUND_CHILD,
         CRASHED_PROCESS_TYPE_BACKGROUND_CHILD
       })
-  /* package */ @interface CrashedProcessType {}
+  public @interface CrashedProcessType {}
 
   private final class LifecycleListener implements LifecycleObserver {
     private boolean mPaused = false;

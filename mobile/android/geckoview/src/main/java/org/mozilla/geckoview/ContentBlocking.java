@@ -1168,7 +1168,7 @@ public class ContentBlocking {
         AntiTracking.STP,
         AntiTracking.NONE
       })
-  /* package */ @interface CBAntiTracking {}
+  public @interface CBAntiTracking {}
 
   public static class SafeBrowsing {
     public static final int NONE = 0;
@@ -1199,7 +1199,7 @@ public class ContentBlocking {
         SafeBrowsing.HARMFUL, SafeBrowsing.PHISHING,
         SafeBrowsing.DEFAULT, SafeBrowsing.NONE
       })
-  /* package */ @interface CBSafeBrowsing {}
+  public @interface CBSafeBrowsing {}
 
   // Sync values with nsICookieService.idl.
   public static class CookieBehavior {
@@ -1242,7 +1242,7 @@ public class ContentBlocking {
     CookieBehavior.ACCEPT_NONE, CookieBehavior.ACCEPT_VISITED,
     CookieBehavior.ACCEPT_NON_TRACKERS
   })
-  /* package */ @interface CBCookieBehavior {}
+  public @interface CBCookieBehavior {}
 
   // Sync values with nsICookieService.idl.
   public static class CookieLifetime {
@@ -1260,11 +1260,11 @@ public class ContentBlocking {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({CookieLifetime.NORMAL, CookieLifetime.RUNTIME, CookieLifetime.DAYS})
-  /* package */ @interface CBCookieLifetime {}
+  public @interface CBCookieLifetime {}
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EtpLevel.NONE, EtpLevel.DEFAULT, EtpLevel.STRICT})
-  /* package */ @interface CBEtpLevel {}
+  public @interface CBEtpLevel {}
 
   /** Possible settings for ETP. */
   public static class EtpLevel {
