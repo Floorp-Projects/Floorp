@@ -128,7 +128,10 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
 }
 
 AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
-  AVCodec* decoder = mLib->avcodec_find_decoder(mCodecID);
+  AVCodec* decoder = FindHardwareAVCodec(mLib, mCodecID);
+  if (!decoder) {
+    FFMPEG_LOG("We're missing hardware accelerated decoder");
+  }
   for (int i = 0;; i++) {
     const AVCodecHWConfig* config = mLib->avcodec_get_hw_config(decoder, i);
     if (!config) {
@@ -140,7 +143,7 @@ AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
     }
   }
 
-  FFMPEG_LOG("Decoder does not support VAAPI device type");
+  FFMPEG_LOG("HW Decoder does not support VAAPI device type");
   return nullptr;
 }
 
