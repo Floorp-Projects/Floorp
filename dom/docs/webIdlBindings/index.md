@@ -1361,7 +1361,7 @@ Multiple `[Alias]` extended attribute can be used on the one method.
 global interface (such as `Window`).
 
 Aside from regular property names, the name of an alias can be
-[Symbol.iterator](/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#Well-known_symbols).
+[Symbol.iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/iterator).
 This is specified by writing `[Alias="@@iterator"]`.
 
 ### `[BindingAlias=propName]`
@@ -1757,7 +1757,7 @@ the cached value.
 ### `[Frozen]`
 
 Used to flag attributes that, when their getter is called, will call
-[`Object.freeze`](/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze)
+[`Object.freeze`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze)
 on the return value before returning it. This extended attribute is only
 allowed on attributes that return sequences, dictionaries and
 `MozMap`, and corresponds to returning a frozen `Array` (for the
@@ -2184,15 +2184,13 @@ interface MyNumber {
 };
 ```
 
-Next, create an XPCOM component that implements this interface. [Basic
-directions](/en-US/docs/How_to_Build_an_XPCOM_Component_in_Javascript)
-for how to do this can be found elsewhere on MDN. Use the same contract
-ID as you specified in the Web IDL file. The class ID doesn't matter,
-except that it should be a newly generated one. For `QueryInterface`,
-you only need to implement `nsISupports`, not anything corresponding
-to the Web IDL interface. The name you use for the XPCOM component should
-be distinct from the name of the interface, to avoid confusing error
-messages.
+Next, create an XPCOM component that implements this interface.  Use
+the same contract ID as you specified in the Web IDL file. The class
+ID doesn't matter, except that it should be a newly generated one. For
+`QueryInterface`, you only need to implement `nsISupports`, not
+anything corresponding to the Web IDL interface. The name you use for
+the XPCOM component should be distinct from the name of the interface,
+to avoid confusing error messages.
 
 Web IDL attributes are implemented as properties on the JS object or its
 prototype chain, whereas Web IDL methods are implemented as methods on
