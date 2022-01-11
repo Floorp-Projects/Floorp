@@ -1034,7 +1034,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({COLOR_SCHEME_LIGHT, COLOR_SCHEME_DARK, COLOR_SCHEME_SYSTEM})
-  /* package */ @interface ColorScheme {}
+  public @interface ColorScheme {}
 
   /** A light theme for web content is preferred. */
   public static final int COLOR_SCHEME_LIGHT = 0;
@@ -1198,7 +1198,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({ALLOW_ALL, HTTPS_ONLY_PRIVATE, HTTPS_ONLY})
-  /* package */ @interface HttpsOnlyMode {}
+  public @interface HttpsOnlyMode {}
 
   /** Allow all insecure connections */
   public static final int ALLOW_ALL = 0;

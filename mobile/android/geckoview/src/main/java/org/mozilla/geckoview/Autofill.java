@@ -95,7 +95,7 @@ public class Autofill {
     Notify.NODE_FOCUSED,
     Notify.NODE_BLURRED
   })
-  /* package */ @interface AutofillNotify {}
+  public @interface AutofillNotify {}
 
   public static final class Hint {
     private Hint() {}
@@ -130,7 +130,7 @@ public class Autofill {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({Hint.NONE, Hint.EMAIL_ADDRESS, Hint.PASSWORD, Hint.URI, Hint.USERNAME})
-  /* package */ @interface AutofillHint {}
+  public @interface AutofillHint {}
 
   public static final class InputType {
     private InputType() {}
@@ -162,7 +162,7 @@ public class Autofill {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({InputType.NONE, InputType.TEXT, InputType.NUMBER, InputType.PHONE})
-  /* package */ @interface AutofillInputType {}
+  public @interface AutofillInputType {}
 
   /** Represents an autofill session. A session holds the autofill nodes and state of a page. */
   public static final class Session {

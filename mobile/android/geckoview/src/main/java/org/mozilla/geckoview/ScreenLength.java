@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 public class ScreenLength {
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({PIXEL, VISUAL_VIEWPORT_WIDTH, VISUAL_VIEWPORT_HEIGHT, DOCUMENT_WIDTH, DOCUMENT_HEIGHT})
-  /* package */ @interface ScreenLengthType {}
+  public @interface ScreenLengthType {}
 
   /** Pixel units. */
   public static final int PIXEL = 0;
