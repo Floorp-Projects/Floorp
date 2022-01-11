@@ -433,6 +433,10 @@ This deliberately excludes builds that are implemented using the artifact build
 machinery, but are not primarily intended to short-circuit build time. In
 particular the Windows aarch64 builds are not marked this way.
 
+maven_packages
+===============
+List of maven packages produced by the build.
+
 supports-artifact-builds
 ========================
 
