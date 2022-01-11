@@ -193,6 +193,30 @@ struct PrefTraits<int32_t> {
 };
 
 template <typename T>
+T GetPref(const char* aFullPref,
+          const T aDefault = PrefTraits<T>::kDefaultValue,
+          bool* aPresent = nullptr) {
+  AssertIsOnMainThread();
+
+  using PrefHelper = PrefTraits<T>;
+
+  T result;
+  bool present = true;
+
+  if (PrefHelper::Exists(aFullPref)) {
+    result = PrefHelper::Get(aFullPref);
+  } else {
+    result = aDefault;
+    present = false;
+  }
+
+  if (aPresent) {
+    *aPresent = present;
+  }
+  return result;
+}
+
+template <typename T>
 T GetWorkerPref(const nsACString& aPref,
                 const T aDefault = PrefTraits<T>::kDefaultValue,
                 bool* aPresent = nullptr) {
@@ -242,10 +266,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   // another callback that will handle this change.
   if (StringBeginsWith(
           prefName,
-          nsLiteralCString(PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
-      StringBeginsWith(
-          prefName, nsLiteralCString(
-                        PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
+          nsLiteralCString(PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
     return;
   }
 
@@ -304,12 +325,11 @@ void LoadGCZealOptions(const char* /* aPrefName */, void* /* aClosure */) {
 #endif
 
 void UpdateCommonJSGCMemoryOption(RuntimeService* aRuntimeService,
-                                  const nsACString& aPrefName,
-                                  JSGCParamKey aKey) {
+                                  const char* aPrefName, JSGCParamKey aKey) {
   AssertIsOnMainThread();
-  NS_ASSERTION(!aPrefName.IsEmpty(), "Empty pref name!");
+  NS_ASSERTION(aPrefName, "Null pref name!");
 
-  int32_t prefValue = GetWorkerPref(aPrefName, -1);
+  int32_t prefValue = GetPref(aPrefName, -1);
   Maybe<uint32_t> value = (prefValue < 0 || prefValue >= 10000)
                               ? Nothing()
                               : Some(uint32_t(prefValue));
@@ -342,30 +362,31 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     return;
   }
 
-  constexpr auto jsPrefix = nsLiteralCString{PREF_JS_OPTIONS_PREFIX};
-  constexpr auto workersPrefix = nsLiteralCString{PREF_WORKERS_OPTIONS_PREFIX};
-
+  constexpr auto memPrefix =
+      nsLiteralCString{PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX};
   const nsDependentCString fullPrefName(aPrefName);
 
   // Pull out the string that actually distinguishes the parameter we need to
   // change.
   nsDependentCSubstring memPrefName;
-  if (StringBeginsWith(fullPrefName, jsPrefix)) {
-    memPrefName.Rebind(fullPrefName, jsPrefix.Length());
-  } else if (StringBeginsWith(fullPrefName, workersPrefix)) {
-    memPrefName.Rebind(fullPrefName, workersPrefix.Length());
+  if (StringBeginsWith(fullPrefName, memPrefix)) {
+    memPrefName.Rebind(fullPrefName, memPrefix.Length());
   } else {
     NS_ERROR("Unknown pref name!");
     return;
   }
 
   struct WorkerGCPref {
-    nsLiteralCString name;
+    nsLiteralCString memName;
+    const char* fullName;
     JSGCParamKey key;
   };
 
-#define PREF(suffix_, key_) \
-  { nsLiteralCString(PREF_MEM_OPTIONS_PREFIX suffix_), key_ }
+#define PREF(suffix_, key_)                                          \
+  {                                                                  \
+    nsLiteralCString(PREF_MEM_OPTIONS_PREFIX suffix_),               \
+        PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX suffix_, key_ \
+  }
   constexpr WorkerGCPref kWorkerPrefs[] = {
       PREF("max", JSGC_MAX_BYTES),
       PREF("gc_high_frequency_time_limit_ms", JSGC_HIGH_FREQUENCY_TIME_LIMIT),
@@ -395,12 +416,12 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
 
   if (gRuntimeServiceDuringInit) {
     // During init, we want to update every pref in kWorkerPrefs.
-    MOZ_ASSERT(memPrefName.EqualsLiteral(PREF_MEM_OPTIONS_PREFIX),
+    MOZ_ASSERT(memPrefName.IsEmpty(),
                "Pref branch prefix only expected during init");
   } else {
     // Otherwise, find the single pref that changed.
     while (pref != end) {
-      if (pref->name == memPrefName) {
+      if (pref->memName == memPrefName) {
         end = pref + 1;
         break;
       }
@@ -419,7 +440,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
   while (pref != end) {
     switch (pref->key) {
       case JSGC_MAX_BYTES: {
-        int32_t prefValue = GetWorkerPref(pref->name, -1);
+        int32_t prefValue = GetPref(pref->fullName, -1);
         Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 0x1000)
                                     ? Nothing()
                                     : Some(uint32_t(prefValue) * 1024 * 1024);
@@ -427,7 +448,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
         break;
       }
       case JSGC_SLICE_TIME_BUDGET_MS: {
-        int32_t prefValue = GetWorkerPref(pref->name, -1);
+        int32_t prefValue = GetPref(pref->fullName, -1);
         Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 100000)
                                     ? Nothing()
                                     : Some(uint32_t(prefValue));
@@ -436,7 +457,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       }
       case JSGC_COMPACTING_ENABLED: {
         bool present;
-        bool prefValue = GetWorkerPref(pref->name, false, &present);
+        bool prefValue = GetPref(pref->fullName, false, &present);
         Maybe<uint32_t> value = present ? Some(prefValue ? 1 : 0) : Nothing();
         UpdateOtherJSGCMemoryOption(rts, pref->key, value);
         break;
@@ -454,7 +475,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       case JSGC_URGENT_THRESHOLD_MB:
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
-        UpdateCommonJSGCMemoryOption(rts, pref->name, pref->key);
+        UpdateCommonJSGCMemoryOption(rts, pref->fullName, pref->key);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unknown JSGCParamKey value");
@@ -1467,12 +1488,9 @@ nsresult RuntimeService::Init() {
 #define WORKER_PREF(name, callback) \
   NS_FAILED(Preferences::RegisterCallbackAndCall(callback, name))
 
-  if (NS_FAILED(Preferences::RegisterPrefixCallback(
+  if (NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
           LoadJSGCMemoryOptions,
           PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
-      NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
-          LoadJSGCMemoryOptions,
-          PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
 #ifdef JS_GC_ZEAL
       NS_FAILED(Preferences::RegisterCallback(
           LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
@@ -1762,10 +1780,7 @@ void RuntimeService::Cleanup() {
 #endif
         NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadJSGCMemoryOptions,
-            PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
-        NS_FAILED(Preferences::UnregisterPrefixCallback(
-            LoadJSGCMemoryOptions,
-            PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
+            PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
       NS_WARNING("Failed to unregister pref callbacks!");
     }
 
