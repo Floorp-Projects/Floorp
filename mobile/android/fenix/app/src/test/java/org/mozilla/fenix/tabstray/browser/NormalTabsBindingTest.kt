@@ -49,7 +49,7 @@ class NormalTabsBindingTest {
 
         assertTrue(store.state.normalTabs.isNotEmpty())
 
-        verify { tray.updateTabs(capture(slotTabs), "1") }
+        verify { tray.updateTabs(capture(slotTabs), null, "1") }
         assertEquals(expectedTabs, slotTabs.captured)
     }
 
@@ -63,6 +63,6 @@ class NormalTabsBindingTest {
 
         assertTrue(store.state.normalTabs.isEmpty())
 
-        verify { tray.updateTabs(emptyList(), "1") }
+        verify { tray.updateTabs(emptyList(), null, "1") }
     }
 }

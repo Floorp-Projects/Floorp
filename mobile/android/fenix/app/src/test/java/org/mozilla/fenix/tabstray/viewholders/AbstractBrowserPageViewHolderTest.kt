@@ -48,7 +48,7 @@ class AbstractBrowserPageViewHolderTest {
         viewHolder.bind(adapter)
         viewHolder.attachedToWindow()
 
-        adapter.updateTabs(listOf(createTab(url = "url", id = "tab1")), "tab1")
+        adapter.updateTabs(listOf(createTab(url = "url", id = "tab1")), null, "tab1")
 
         assertTrue(trayList.visibility == VISIBLE)
         assertTrue(emptyList.visibility == GONE)
@@ -65,7 +65,7 @@ class AbstractBrowserPageViewHolderTest {
         viewHolder.bind(adapter)
         viewHolder.attachedToWindow()
 
-        adapter.updateTabs(emptyList(), "")
+        adapter.updateTabs(emptyList(), null, "")
 
         assertTrue(trayList.visibility == GONE)
         assertTrue(emptyList.visibility == VISIBLE)

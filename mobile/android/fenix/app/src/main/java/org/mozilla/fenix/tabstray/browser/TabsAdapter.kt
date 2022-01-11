@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsTray
@@ -29,7 +30,7 @@ abstract class TabsAdapter<T : TabViewHolder>(
     protected var styling: TabsTrayStyling = TabsTrayStyling()
 
     @CallSuper
-    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
+    override fun updateTabs(tabs: List<TabSessionState>, tabPartition: TabPartition?, selectedTabId: String?) {
         this.selectedTabId = selectedTabId
 
         submitList(tabs)

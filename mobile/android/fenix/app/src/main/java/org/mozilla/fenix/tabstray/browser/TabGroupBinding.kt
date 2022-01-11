@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.TabsTrayState
@@ -20,10 +21,10 @@ class TabGroupBinding(
     private val tray: (List<TabGroup>) -> Unit
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
-        flow.map { it.searchTermGroups }
+        flow.map { it.searchTermPartition?.tabGroups ?: emptyList() }
             .ifChanged()
             .collect {
-                tray.invoke(it)
+                tray.invoke(it.filter { tabGroup -> tabGroup.tabIds.isNotEmpty() })
             }
     }
 }

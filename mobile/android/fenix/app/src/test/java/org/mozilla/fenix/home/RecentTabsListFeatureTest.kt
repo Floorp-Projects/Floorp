@@ -14,6 +14,8 @@ import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LastMediaAccessState
+import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
@@ -35,6 +37,7 @@ import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentAction.RecentTabsChange
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
 
 class RecentTabsListFeatureTest {
 
@@ -407,9 +410,11 @@ class RecentTabsListFeatureTest {
             )
         )
         val tabs = listOf(tab1, tab2)
+        val tabGroup = TabGroup("Test search term", "", listOf(tab1.id, tab2.id))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = tabs,
+                tabPartitions = mapOf(Pair(SEARCH_TERM_TAB_GROUPS, TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(tabGroup)))),
                 selectedTabId = "1"
             )
         )
@@ -438,7 +443,7 @@ class RecentTabsListFeatureTest {
             id = "1",
             historyMetadata = HistoryMetadataKey(
                 url = "https://www.mozilla.org",
-                searchTerm = "test search term",
+                searchTerm = "Test search term",
                 referrerUrl = "https://www.mozilla.org"
             )
         )
@@ -448,15 +453,17 @@ class RecentTabsListFeatureTest {
             id = "2",
             historyMetadata = HistoryMetadataKey(
                 url = "https://www.mozilla.org",
-                searchTerm = "test search term",
+                searchTerm = "Test search term",
                 referrerUrl = "https://www.mozilla.org"
             )
         )
         val tab3 = createTab(url = "https://www.mozilla.org/firefox", id = "3")
         val tabs = listOf(tab1, tab2, tab3)
+        val tabGroup = TabGroup("Test search term", "", listOf(tab1.id, tab2.id))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = tabs,
+                tabPartitions = mapOf(Pair(SEARCH_TERM_TAB_GROUPS, TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(tabGroup)))),
                 selectedTabId = "1"
             )
         )
@@ -542,9 +549,11 @@ class RecentTabsListFeatureTest {
             )
         )
         val tabs = listOf(tab1, tab2, tab3)
+        val tabGroup = TabGroup("test search term", "", listOf(tab2.id, tab3.id))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = tabs,
+                tabPartitions = mapOf(Pair(SEARCH_TERM_TAB_GROUPS, TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(tabGroup)))),
                 selectedTabId = "1"
             )
         )
@@ -561,7 +570,7 @@ class RecentTabsListFeatureTest {
         assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
         assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
         val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
-        assertEquals(searchGroup.searchTerm, "Test search term")
+        assertEquals(searchGroup.searchTerm, "test search term")
         assertEquals(searchGroup.tabId, "2")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
         assertEquals(searchGroup.thumbnail, null)
@@ -593,9 +602,11 @@ class RecentTabsListFeatureTest {
             thumbnail = thumbnail,
             historyMetadata = historyMetadataKey
         )
+        val searchTermTabGroup = TabGroup(historyMetadataKey.searchTerm!!, "", listOf(searchTermTab1.id, searchTermTab2.id))
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(mediaTab, selectedTab, searchTermTab1, searchTermTab2),
+                tabPartitions = mapOf(Pair(SEARCH_TERM_TAB_GROUPS, TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(searchTermTabGroup)))),
                 selectedTabId = "43"
             )
         )
@@ -611,7 +622,7 @@ class RecentTabsListFeatureTest {
         assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
         assertEquals(selectedTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
         val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
-        assertEquals(searchGroup.searchTerm, "Test search term")
+        assertEquals(searchGroup.searchTerm, "test search term")
         assertEquals(searchGroup.tabId, "44")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
         assertEquals(searchGroup.thumbnail, thumbnail)

@@ -27,7 +27,7 @@ class PrivateTabsBinding(
             .ifChanged()
             .collect {
                 // Getting the selectedTabId from the BrowserStore at a different time might lead to a race.
-                tray.updateTabs(it, browserStore.state.selectedTabId)
+                tray.updateTabs(it, null, browserStore.state.selectedTabId)
             }
     }
 }

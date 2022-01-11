@@ -37,14 +37,15 @@ class TabsTrayMiddleware(
                     metrics.track(Event.TabsTrayHasInactiveTabs(action.tabs.size))
                 }
             }
-            is TabsTrayAction.UpdateSearchGroupTabs -> {
+            is TabsTrayAction.UpdateTabPartitions -> {
                 if (shouldReportSearchGroupMetrics) {
                     shouldReportSearchGroupMetrics = false
+                    val tabGroups = action.tabPartition?.tabGroups ?: emptyList()
 
-                    metrics.track(Event.SearchTermGroupCount(action.groups.size))
+                    metrics.track(Event.SearchTermGroupCount(tabGroups.size))
 
-                    if (action.groups.isNotEmpty()) {
-                        val tabsPerGroup = action.groups.map { it.tabs.size }
+                    if (tabGroups.isNotEmpty()) {
+                        val tabsPerGroup = tabGroups.map { it.tabIds.size }
                         val averageTabsPerGroup = tabsPerGroup.average()
                         metrics.track(Event.AverageTabsPerSearchTermGroup(averageTabsPerGroup))
 

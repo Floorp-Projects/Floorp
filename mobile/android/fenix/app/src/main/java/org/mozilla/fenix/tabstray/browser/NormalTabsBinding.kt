@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.lib.state.helpers.AbstractBinding
@@ -23,11 +22,10 @@ class NormalTabsBinding(
     private val tabsTray: TabsTray
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
-        flow.map { it.normalTabs }
-            .ifChanged()
+        flow.ifChanged { Pair(it.normalTabs, it.searchTermPartition) }
             .collect {
                 // Getting the selectedTabId from the BrowserStore at a different time might lead to a race.
-                tabsTray.updateTabs(it, browserStore.state.selectedTabId)
+                tabsTray.updateTabs(it.normalTabs, it.searchTermPartition, browserStore.state.selectedTabId)
             }
     }
 }

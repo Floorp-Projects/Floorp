@@ -7,6 +7,8 @@ package org.mozilla.fenix.tabstray.browser
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabSessionState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabGroupItemBinding
@@ -36,12 +38,12 @@ class TabGroupViewHolder(
     private lateinit var groupListAdapter: TabGroupListAdapter
 
     fun bind(
-        group: TabGroup,
+        tabGroup: TabGroup,
     ) {
         val selectedTabId = itemView.context.components.core.store.state.selectedTabId
-        val selectedIndex = group.tabs.indexOfFirst { it.id == selectedTabId }
+        val selectedIndex = tabGroup.tabIds.indexOfFirst { it == selectedTabId }
 
-        binding.tabGroupTitle.text = group.searchTerm
+        binding.tabGroupTitle.text = tabGroup.id
         binding.tabGroupList.apply {
             layoutManager = LinearLayoutManager(itemView.context, orientation, false)
             groupListAdapter = TabGroupListAdapter(
@@ -54,7 +56,11 @@ class TabGroupViewHolder(
 
             adapter = groupListAdapter
 
-            groupListAdapter.submitList(group.tabs)
+            val tabGroupTabs = itemView.context.components.core.store.state.normalTabs.filter {
+                tabGroup.tabIds.contains(it.id)
+            }
+
+            groupListAdapter.submitList(tabGroupTabs)
             scrollToPosition(selectedIndex)
         }
     }

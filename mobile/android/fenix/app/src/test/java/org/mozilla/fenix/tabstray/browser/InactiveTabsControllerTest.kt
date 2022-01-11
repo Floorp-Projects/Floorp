@@ -50,7 +50,7 @@ class InactiveTabsControllerTest {
 
         appStore.waitUntilIdle()
 
-        verify { tray.updateTabs(capture(tabsSlot), any()) }
+        verify { tray.updateTabs(capture(tabsSlot), null, any()) }
 
         assertEquals(2, tabsSlot.captured.size)
         assertEquals("1", tabsSlot.captured.first().id)

@@ -71,6 +71,6 @@ class InactiveTabsController(
     @VisibleForTesting
     internal fun refreshInactiveTabsSection() {
         val tabs = tabsTrayStore.state.inactiveTabs
-        tray.updateTabs(tabs, null)
+        tray.updateTabs(tabs, null, null)
     }
 }

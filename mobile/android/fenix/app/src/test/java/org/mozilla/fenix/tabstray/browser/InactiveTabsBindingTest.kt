@@ -40,7 +40,7 @@ class InactiveTabsBindingTest {
 
         assertTrue(store.state.inactiveTabs.isNotEmpty())
 
-        verify { tray.updateTabs(any(), any()) }
+        verify { tray.updateTabs(any(), any(), any()) }
     }
 
     @Test
@@ -53,6 +53,6 @@ class InactiveTabsBindingTest {
 
         assertTrue(store.state.inactiveTabs.isEmpty())
 
-        verify { tray.updateTabs(emptyList(), null) }
+        verify { tray.updateTabs(emptyList(), null, null) }
     }
 }

@@ -25,7 +25,7 @@ class InactiveTabsBinding(
             .ifChanged()
             .collect {
                 // We pass null for the selected tab id here, because inactive tabs doesn't care.
-                tray.updateTabs(it, null)
+                tray.updateTabs(it, null, null)
             }
     }
 }

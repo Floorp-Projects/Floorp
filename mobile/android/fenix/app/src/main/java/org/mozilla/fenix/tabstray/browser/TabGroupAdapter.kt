@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
 import androidx.recyclerview.widget.RecyclerView.VERTICAL
+import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.components.Components
@@ -76,15 +78,15 @@ class TabGroupAdapter(
     /**
      * Not implemented; implementation is handled [List<Tab>.toSearchGroups]
      */
-    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) =
+    override fun updateTabs(tabs: List<TabSessionState>, tabPartition: TabPartition?, selectedTabId: String?) =
         throw UnsupportedOperationException("Use submitList instead.")
 
     private object DiffCallback : DiffUtil.ItemCallback<TabGroup>() {
-        override fun areItemsTheSame(oldItem: TabGroup, newItem: TabGroup) = oldItem.searchTerm == newItem.searchTerm
+        override fun areItemsTheSame(oldItem: TabGroup, newItem: TabGroup) = oldItem.id == newItem.id
         override fun areContentsTheSame(oldItem: TabGroup, newItem: TabGroup) = oldItem == newItem
     }
 }
 
 internal fun TabGroup.containsTabId(tabId: String): Boolean {
-    return tabs.firstOrNull { it.id == tabId } != null
+    return tabIds.contains(tabId)
 }

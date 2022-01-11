@@ -5,12 +5,15 @@
 package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.mockk
+import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -34,7 +37,7 @@ class OtherHeaderBindingTest {
 
     @Test
     fun `WHEN tabs for only groups THEN show no header`() {
-        val store = TabsTrayStore(TabsTrayState(searchTermGroups = listOf(mockk())))
+        val store = TabsTrayStore(TabsTrayState(searchTermPartition = mockk()))
         var result: Boolean? = null
         val binding = OtherHeaderBinding(store) { result = it }
 
@@ -60,14 +63,20 @@ class OtherHeaderBindingTest {
 
     @Test
     fun `WHEN normal tabs and groups exist THEN show header`() {
-        val store = TabsTrayStore(TabsTrayState(normalTabs = listOf(mockk()), searchTermGroups = listOf(mockk())))
-        var result: Boolean? = null
+        val tabGroup = TabGroup("test", "", listOf("1", "2"))
+        val store = TabsTrayStore(
+            TabsTrayState(
+                normalTabs = listOf(mockk()),
+                searchTermPartition = TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(tabGroup))
+            )
+        )
+        var result = false
         val binding = OtherHeaderBinding(store) { result = it }
 
         binding.start()
 
         store.waitUntilIdle()
 
-        assertTrue(result!!)
+        assertTrue(result)
     }
 }

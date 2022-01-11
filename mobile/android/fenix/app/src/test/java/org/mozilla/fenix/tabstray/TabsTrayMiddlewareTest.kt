@@ -7,13 +7,14 @@ package org.mozilla.fenix.tabstray
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.tabstray.browser.TabGroup
 
 class TabsTrayMiddlewareTest {
 
@@ -35,21 +36,21 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the average tabs per group`() {
-        store.dispatch(TabsTrayAction.UpdateSearchGroupTabs(generateSearchTermTabGroupsForAverage()))
+        store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForAverage()))
         store.waitUntilIdle()
         verify { metrics.track(Event.AverageTabsPerSearchTermGroup(5.0)) }
     }
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the distribution of tab sizes`() {
-        store.dispatch(TabsTrayAction.UpdateSearchGroupTabs(generateSearchTermTabGroupsForDistribution()))
+        store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForDistribution()))
         store.waitUntilIdle()
         verify { metrics.track(Event.SearchTermGroupSizeDistribution(listOf(3L, 2L, 1L, 4L))) }
     }
 
     @Test
     fun `WHEN search term groups are updated THEN report the count of search term tab groups`() {
-        store.dispatch(TabsTrayAction.UpdateSearchGroupTabs(emptyList()))
+        store.dispatch(TabsTrayAction.UpdateTabPartitions(null))
         store.waitUntilIdle()
         verify { metrics.track(Event.SearchTermGroupCount(0)) }
     }
@@ -79,29 +80,29 @@ class TabsTrayMiddlewareTest {
         assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(50))
     }
 
-    private fun generateSearchTermTabGroupsForAverage(): List<TabGroup> {
-        val group1 = TabGroup("", mockk(relaxed = true), 0L)
-        val group2 = TabGroup("", mockk(relaxed = true), 0L)
-        val group3 = TabGroup("", mockk(relaxed = true), 0L)
+    private fun generateSearchTermTabGroupsForAverage(): TabPartition {
+        val group1 = TabGroup("", "", mockk(relaxed = true))
+        val group2 = TabGroup("", "", mockk(relaxed = true))
+        val group3 = TabGroup("", "", mockk(relaxed = true))
 
-        every { group1.tabs.size } returns 8
-        every { group2.tabs.size } returns 4
-        every { group3.tabs.size } returns 3
+        every { group1.tabIds.size } returns 8
+        every { group2.tabIds.size } returns 4
+        every { group3.tabIds.size } returns 3
 
-        return listOf(group1, group2, group3)
+        return TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(group1, group2, group3))
     }
 
-    private fun generateSearchTermTabGroupsForDistribution(): List<TabGroup> {
-        val group1 = TabGroup("", mockk(relaxed = true), 0L)
-        val group2 = TabGroup("", mockk(relaxed = true), 0L)
-        val group3 = TabGroup("", mockk(relaxed = true), 0L)
-        val group4 = TabGroup("", mockk(relaxed = true), 0L)
+    private fun generateSearchTermTabGroupsForDistribution(): TabPartition {
+        val group1 = TabGroup("", "", mockk(relaxed = true))
+        val group2 = TabGroup("", "", mockk(relaxed = true))
+        val group3 = TabGroup("", "", mockk(relaxed = true))
+        val group4 = TabGroup("", "", mockk(relaxed = true))
 
-        every { group1.tabs.size } returns 8
-        every { group2.tabs.size } returns 4
-        every { group3.tabs.size } returns 2
-        every { group4.tabs.size } returns 12
+        every { group1.tabIds.size } returns 8
+        every { group2.tabIds.size } returns 4
+        every { group3.tabIds.size } returns 2
+        every { group4.tabIds.size } returns 12
 
-        return listOf(group1, group2, group3, group4)
+        return TabPartition(SEARCH_TERM_TAB_GROUPS, listOf(group1, group2, group3, group4))
     }
 }

@@ -51,6 +51,6 @@ class InactiveTabsAutoCloseDialogController(
     @VisibleForTesting
     internal fun refreshInactiveTabsSection() {
         val tabs = browserStore.state.tabs.filter(tabFilter)
-        tray.updateTabs(tabs, browserStore.state.selectedTabId)
+        tray.updateTabs(tabs, null, browserStore.state.selectedTabId)
     }
 }

@@ -4,18 +4,19 @@
 
 package org.mozilla.fenix.ext
 
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tabs.ext.hasMediaPlayed
 import org.mozilla.fenix.home.recenttabs.RecentTab
-import org.mozilla.fenix.tabstray.browser.TabGroup
-import org.mozilla.fenix.tabstray.ext.isNormalTabActiveWithSearchTerm
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS_MIN_SIZE
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 /**
  * The time until which a tab is considered in-active (in days).
@@ -41,7 +42,7 @@ fun BrowserState.asRecentTabs(): List<RecentTab> {
         } else {
             listOf(selectedNormalTab)
                 .plus(normalTabs.sortedByDescending { it.lastAccess })
-                .minus(lastTabGroup?.tabs ?: emptyList())
+                .filterNot { lastTabGroup?.tabIds?.contains(it?.id) ?: false }
                 .firstOrNull()
         }
 
@@ -80,7 +81,8 @@ val BrowserState.inProgressMediaTab: TabSessionState?
  * Result will be `null` if the currently open normal tabs are not part of a search group.
  */
 val BrowserState.lastTabGroup: TabGroup?
-    get() = normalTabs.toSearchGroup().first.lastOrNull()
+    get() = tabPartitions[SEARCH_TERM_TAB_GROUPS]?.tabGroups
+        ?.lastOrNull { it.tabIds.size >= SEARCH_TERM_TAB_GROUPS_MIN_SIZE }
 
 /**
  * Get the most recent search term group.
@@ -88,54 +90,17 @@ val BrowserState.lastTabGroup: TabGroup?
 val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
     get() {
         val tabGroup = lastTabGroup ?: return null
-        val firstTab = tabGroup.tabs.firstOrNull() ?: return null
+        val firstTabId = tabGroup.tabIds.firstOrNull() ?: return null
+        val firstTab = findTab(firstTabId) ?: return null
 
         return RecentTab.SearchGroup(
-            tabGroup.searchTerm,
-            firstTab.id,
+            tabGroup.id,
+            firstTabId,
             firstTab.content.url,
             firstTab.content.thumbnail,
-            tabGroup.tabs.count()
+            tabGroup.tabIds.size
         )
     }
-
-/**
- * Returns a pair containing a list of search term groups sorted by last access time, and "remainder" tabs that have
- * search terms but should not be in groups (because the group is of size one).
- */
-fun List<TabSessionState>.toSearchGroup(
-    groupSet: Set<String> = emptySet()
-): Pair<List<TabGroup>, List<TabSessionState>> {
-    val data = filter {
-        it.isNormalTabActiveWithSearchTerm(maxActiveTime)
-    }.groupBy {
-        when {
-            it.content.searchTerms.isNotBlank() -> it.content.searchTerms
-            else -> it.historyMetadata?.searchTerm ?: ""
-        }.lowercase()
-    }
-
-    val groupings = data.map { mapEntry ->
-        val searchTerm = mapEntry.key.replaceFirstChar(Char::uppercase)
-        val groupTabs = mapEntry.value
-        val groupMax = groupTabs.fold(0L) { acc, tab ->
-            max(tab.lastAccess, acc)
-        }
-
-        TabGroup(
-            searchTerm = searchTerm,
-            tabs = groupTabs,
-            lastAccess = groupMax
-        )
-    }
-
-    val groups = groupings
-        .filter { it.tabs.size > 1 || groupSet.contains(it.searchTerm) }
-        .sortedBy { it.lastAccess }
-    val remainderTabs = (groupings - groups).flatMap { it.tabs }
-
-    return groups to remainderTabs
-}
 
 /**
  * List of all inactive tabs based on [maxActiveTime].

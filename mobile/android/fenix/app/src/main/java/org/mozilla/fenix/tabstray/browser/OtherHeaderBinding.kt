@@ -6,8 +6,9 @@ package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import mozilla.components.browser.state.state.isNotEmpty
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -19,9 +20,12 @@ class OtherHeaderBinding(
     private val showHeader: (Boolean) -> Unit
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
-        flow.ifAnyChanged { arrayOf(it.normalTabs, it.searchTermGroups) }
+        flow.ifChanged { Pair(it.normalTabs, it.searchTermPartition) }
             .collect {
-                if (it.searchTermGroups.isNotEmpty() && it.normalTabs.isNotEmpty()) {
+                if (
+                    it.normalTabs.isNotEmpty() &&
+                    it.searchTermPartition.isNotEmpty()
+                ) {
                     showHeader(true)
                 } else {
                     showHeader(false)

@@ -40,6 +40,7 @@ class BrowserTabsAdapterTest {
             listOf(
                 createTab(url = "url", id = "tab1")
             ),
+            null,
             selectedTabId = "tab1"
         )
 
@@ -79,6 +80,7 @@ class BrowserTabsAdapterTest {
 
         adapter.updateTabs(
             listOf(tab),
+            null,
             selectedTabId = "tab1"
         )
 

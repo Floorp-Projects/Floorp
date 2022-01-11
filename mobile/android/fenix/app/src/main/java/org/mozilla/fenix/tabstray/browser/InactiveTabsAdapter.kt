@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.components.Components
@@ -82,7 +83,7 @@ class InactiveTabsAdapter(
         }
     }
 
-    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
+    override fun updateTabs(tabs: List<TabSessionState>, tabPartition: TabPartition?, selectedTabId: String?) {
         inActiveTabsCount = tabs.size
 
         // Early return with an empty list to remove the header/footer items.

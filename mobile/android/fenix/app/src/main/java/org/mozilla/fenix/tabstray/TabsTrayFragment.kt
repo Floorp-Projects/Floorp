@@ -253,6 +253,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     tabsTrayStore
                 ),
                 store = requireContext().components.core.store,
+                defaultTabPartitionsFilter = { tabPartitions -> tabPartitions[SEARCH_TERM_TAB_GROUPS] }
             ),
             owner = this,
             view = view
