@@ -6555,6 +6555,17 @@
     mirror: always
 #endif
 
+#if defined(ENABLE_WASM_SIMD)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+  # Enables AVX instructions support on X86/X64 platforms.
+  # Changing these prefs requires a restart.
+-   name: javascript.options.wasm_simd_avx
+    type: bool
+    value: false
+    mirror: always
+#endif
+#endif
+
 #if defined(ENABLE_WASM_MEMORY64)
 -   name: javascript.options.wasm_memory64
     type: bool
