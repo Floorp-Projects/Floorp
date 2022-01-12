@@ -817,10 +817,14 @@ class WorkerFetchResponseEndRunnable final : public MainThreadWorkerRunnable,
   }
 
   nsresult Cancel() override {
+    // We need to check first if cancel is called twice
+    nsresult rv = WorkerRunnable::Cancel();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Execute Run anyway to make sure we cleanup our promise proxy to avoid
     // leaking the worker thread
     Run();
-    return WorkerRunnable::Cancel();
+    return NS_OK;
   }
 };
 
