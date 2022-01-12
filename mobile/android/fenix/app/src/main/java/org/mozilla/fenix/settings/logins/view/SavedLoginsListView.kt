@@ -62,6 +62,9 @@ class SavedLoginsListView(
             binding.savedLoginsList.isVisible = state.loginList.isNotEmpty()
             binding.savedPasswordsEmptyView.isVisible = state.loginList.isEmpty()
         }
-        loginsAdapter.submitList(state.filteredItems)
+        loginsAdapter.submitList(state.filteredItems) {
+            // Reset scroll position to the first item after submitted list was committed.
+            binding.savedLoginsList.scrollToPosition(0)
+        }
     }
 }
