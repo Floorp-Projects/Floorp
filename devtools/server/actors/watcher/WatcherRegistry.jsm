@@ -41,8 +41,8 @@ const { SUPPORTED_DATA } = SessionDataHelpers;
 // It is keyed by WatcherActor ID and values contains following attributes:
 // - targets: Set of strings, refering to target types to be listened to
 // - resources: Set of strings, refering to resource types to be observed
-// - sessionContext: WatcherActor's session context. Describe what the watcher should be debugging.
-//            See watcher actor constructor for more info.
+// - sessionContext Object, The Session Context to help know what is debugged.
+//     See devtools/server/actors/watcher/session-context.js
 // - connectionPrefix: The DevToolsConnection prefix of the watcher actor. Used to compute new actor ID in the content processes.
 //
 // Unfortunately, `sharedData` is subject to race condition and may have side effect
