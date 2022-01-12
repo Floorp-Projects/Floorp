@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNativeBasicThemeCocoa.h"
+#include "ThemeCocoa.h"
 
 #include "cocoa/MacThemeGeometryType.h"
 #include "gfxPlatform.h"
@@ -12,13 +12,13 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/ServoStyleConsts.h"
 
-using ScrollbarDrawingCocoa = mozilla::widget::ScrollbarDrawingCocoa;
-using namespace mozilla::gfx;
+namespace mozilla::widget {
 
 NS_IMETHODIMP
-nsNativeBasicThemeCocoa::GetMinimumWidgetSize(
-    nsPresContext* aPresContext, nsIFrame* aFrame, StyleAppearance aAppearance,
-    mozilla::LayoutDeviceIntSize* aResult, bool* aIsOverridable) {
+ThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                 StyleAppearance aAppearance,
+                                 LayoutDeviceIntSize* aResult,
+                                 bool* aIsOverridable) {
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     auto size = ScrollbarDrawingCocoa::GetScrollbarSize(
         StyleScrollbarWidth::Auto, /* aOverlay = */ false,
@@ -27,11 +27,11 @@ nsNativeBasicThemeCocoa::GetMinimumWidgetSize(
     return NS_OK;
   }
 
-  return nsNativeBasicTheme::GetMinimumWidgetSize(
-      aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+  return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
+                                     aIsOverridable);
 }
 
-nsITheme::ThemeGeometryType nsNativeBasicThemeCocoa::ThemeGeometryTypeForWidget(
+nsITheme::ThemeGeometryType ThemeCocoa::ThemeGeometryTypeForWidget(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Tooltip:
@@ -39,17 +39,18 @@ nsITheme::ThemeGeometryType nsNativeBasicThemeCocoa::ThemeGeometryTypeForWidget(
     default:
       break;
   }
-  return nsNativeBasicTheme::ThemeGeometryTypeForWidget(aFrame, aAppearance);
+  return Theme::ThemeGeometryTypeForWidget(aFrame, aAppearance);
 }
 
-bool nsNativeBasicThemeCocoa::ThemeSupportsWidget(nsPresContext* aPc,
-                                                  nsIFrame* aFrame,
-                                                  StyleAppearance aAppearance) {
+bool ThemeCocoa::ThemeSupportsWidget(nsPresContext* aPc, nsIFrame* aFrame,
+                                     StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Tooltip:
       return true;
     default:
       break;
   }
-  return nsNativeBasicTheme::ThemeSupportsWidget(aPc, aFrame, aAppearance);
+  return Theme::ThemeSupportsWidget(aPc, aFrame, aAppearance);
 }
+
+}  // namespace mozilla::widget

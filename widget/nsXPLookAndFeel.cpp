@@ -16,7 +16,7 @@
 #include "nsFont.h"
 #include "nsIFrame.h"
 #include "nsIXULRuntime.h"
-#include "nsNativeBasicTheme.h"
+#include "Theme.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -354,7 +354,7 @@ nsXPLookAndFeel* nsXPLookAndFeel::GetInstance() {
     *lnf = {};
   }
 
-  nsNativeBasicTheme::Init();
+  widget::Theme::Init();
   return sInstance;
 }
 
@@ -371,7 +371,7 @@ void nsXPLookAndFeel::Shutdown() {
   // This keeps strings alive, so need to clear to make leak checking happy.
   sFontCache.Clear();
 
-  nsNativeBasicTheme::Shutdown();
+  widget::Theme::Shutdown();
 }
 
 static void IntPrefChanged() {
@@ -1320,7 +1320,7 @@ void LookAndFeel::GetThemeInfo(nsACString& aOut) {
 // static
 void LookAndFeel::Refresh() {
   nsLookAndFeel::GetInstance()->RefreshImpl();
-  nsNativeBasicTheme::LookAndFeelChanged();
+  widget::Theme::LookAndFeelChanged();
 }
 
 // static

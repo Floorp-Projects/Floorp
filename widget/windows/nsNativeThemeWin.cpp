@@ -32,30 +32,27 @@
 #include "nsLookAndFeel.h"
 #include "nsMenuFrame.h"
 #include "nsNameSpaceManager.h"
-#include "nsNativeBasicTheme.h"
+#include "Theme.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsStyleConsts.h"
 #include "nsTransform2D.h"
-#include "nsUXThemeData.h"
-#include "nsUXThemeConstants.h"
 #include "nsWindow.h"
 #include "prinrval.h"
 #include "WinUtils.h"
+#include "ScrollbarDrawingWin.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-using ScrollbarDrawingWin = mozilla::widget::ScrollbarDrawingWin;
-
 extern mozilla::LazyLogModule gWindowsLog;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
+namespace mozilla::widget {
 
 nsNativeThemeWin::nsNativeThemeWin()
-    : nsNativeBasicTheme(DefaultPlatformScrollbarStyle()),
+    : Theme(DefaultPlatformScrollbarStyle()),
       mProgressDeterminateTimeStamp(TimeStamp::Now()),
       mProgressIndeterminateTimeStamp(TimeStamp::Now()),
       mBorderCacheValid(),
@@ -77,8 +74,7 @@ auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
 
   // We only know how to draw light widgets, so we defer to the non-native
   // theme when appropriate.
-  if (nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
-                                              aAppearance) &&
+  if (Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame, aAppearance) &&
       LookAndFeel::ColorSchemeForFrame(aFrame) ==
           LookAndFeel::ColorScheme::Dark) {
     return NonNative::BecauseColorMismatch;
@@ -1501,8 +1497,8 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::DrawWidgetBackground(
-        aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
+    return Theme::DrawWidgetBackground(aContext, aFrame, aAppearance, aRect,
+                                       aDirtyRect, aDrawOverflow);
   }
 
   if (IsWidgetScrollbarPart(aAppearance)) {
@@ -1902,7 +1898,7 @@ bool nsNativeThemeWin::CreateWebRenderCommandsForWidget(
     layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
+    return Theme::CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
   }
   return false;
@@ -2159,8 +2155,8 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::GetWidgetOverflow(aContext, aFrame, aAppearance,
-                                                 aOverflowRect);
+    return Theme::GetWidgetOverflow(aContext, aFrame, aAppearance,
+                                    aOverflowRect);
   }
 
   /* This is disabled for now, because it causes invalidation problems --
@@ -2214,8 +2210,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicTheme::GetMinimumWidgetSize(
-        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance,
+                                       aResult, aIsOverridable);
   }
 
   aResult->width = aResult->height = 0;
@@ -2535,8 +2531,7 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicTheme::ThemeSupportsWidget(aPresContext, aFrame,
-                                                   aAppearance);
+    return Theme::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
 
   HANDLE theme = nullptr;
@@ -2568,7 +2563,7 @@ bool nsNativeThemeWin::WidgetIsContainer(StyleAppearance aAppearance) {
 bool nsNativeThemeWin::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
                                                 StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
+    return Theme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
   switch (aAppearance) {
     case StyleAppearance::Menulist:
@@ -2616,7 +2611,7 @@ nsITheme::ThemeGeometryType nsNativeThemeWin::ThemeGeometryTypeForWidget(
 nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
+    return Theme::GetWidgetTransparency(aFrame, aAppearance);
   }
 
   if (auto transparency = GetScrollbarDrawing().GetScrollbarPartTransparency(
@@ -4110,6 +4105,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
   }
   return true;
 }
+
+}  // namespace mozilla::widget
 
 ///////////////////////////////////////////
 // Creation Routine
