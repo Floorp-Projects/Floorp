@@ -76,15 +76,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *
    * @param {DevToolsServerConnection} conn
    *        The connection to use in order to communicate back to the client.
-   * @param {Object} sessionContext
-   *        Mandatory argument to define the debugged context of this actor.
-   *        Note that as this object is passed to other processes and thread,
-   *        this should be a serializable object.
-   * @param {String} sessionContext.type: The type of debugged context.
-   *        Can be:
-   *        - "all", to debug everything in the browser.
-   *        - "browser-element", to focus on one given <browser> element
-   *          and all its children resources (workers, iframes,...)
+   * @param {object} sessionContext
+   *        The Session Context to help know what is debugged.
+   *        See devtools/server/actors/watcher/session-context.js
    * @param {Number} sessionContext.browserId: If this is a "browser-element" context type,
    *        the "browserId" of the <browser> element we would like to debug.
    * @param {Boolean} sessionContext.isServerTargetSwitchingEnabled: Flag to to know if we should

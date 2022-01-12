@@ -38,9 +38,8 @@ var TargetActorRegistry = {
    * Return the first target actor matching the passed watcher's session context. Returns null if
    * no matching target actors could be found.
    *
-   * @param {Object} sessionContext: WatcherActor's session context. To only retrieve targets related
-   *                          to the scope of this watcher actor.
-   *                          See watcher actor constructor for more info.
+   * @param {Object} sessionContext: The Session Context to help know what is debugged.
+   *                                 See devtools/server/actors/watcher/session-context.js
    * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {TargetActor|null}
@@ -78,9 +77,8 @@ var TargetActorRegistry = {
    * In some scenarios, the registry can have multiple target actors for a given
    * browserId (e.g. the regular DevTools content toolbox + DevTools WebExtensions targets).
    *
-   * @param {Object} sessionContext: WatcherActor's session context. To only retrieve targets related
-   *                          to the scope of this watcher actor.
-   *                          See watcher actor constructor for more info.
+   * @param {Object} sessionContext: The Session Context to help know what is debugged.
+   *                                 See devtools/server/actors/watcher/session-context.js
    * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {Array<TargetActor>}
