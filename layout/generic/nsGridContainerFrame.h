@@ -558,6 +558,10 @@ class nsGridContainerFrame final : public nsContainerFrame {
     CachedBAxisMeasurement() = default;
 
     bool IsValidFor(const nsIFrame* aFrame, const LogicalSize& aCBSize) const {
+      if (aFrame->IsSubtreeDirty()) {
+        return false;
+      }
+
       if (!CanCacheMeasurement(aFrame, aCBSize)) {
         return false;
       }
