@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// TODO: Add padding/maxNameLen tests after support is added in bug 1677181.
-
 #include "secerr.h"
 #include "ssl.h"
 
@@ -14,6 +12,7 @@
 #include "tls_agent.h"
 #include "tls_connect.h"
 #include "util.h"
+#include "tls13ech.h"
 
 namespace nss_test {
 
@@ -245,34 +244,44 @@ static void CheckCertVerifyPublicName(TlsAgent* agent) {
   }
 }
 
-static SECStatus AuthCompleteSuccess(TlsAgent* agent, PRBool, PRBool) {
-  CheckCertVerifyPublicName(agent);
-  return SECSuccess;
-}
-
 static SECStatus AuthCompleteFail(TlsAgent* agent, PRBool, PRBool) {
   CheckCertVerifyPublicName(agent);
   return SECFailure;
+}
+
+// Given two EchConfigList structures, e.g. from GenerateEchConfig, construct
+// a single list containing all entries.
+static DataBuffer MakeEchConfigList(DataBuffer config1, DataBuffer config2) {
+  DataBuffer sizedConfigListBuffer;
+
+  sizedConfigListBuffer.Write(2, config1.data() + 2, config1.len() - 2);
+  sizedConfigListBuffer.Write(sizedConfigListBuffer.len(), config2.data() + 2,
+                              config2.len() - 2);
+  sizedConfigListBuffer.Write(0, sizedConfigListBuffer.len() - 2, 2);
+
+  PR_ASSERT(sizedConfigListBuffer.len() == config1.len() + config2.len() - 2);
+  return sizedConfigListBuffer;
 }
 
 TEST_P(TlsAgentEchTest, EchConfigsSupportedYesNo) {
   if (variant_ == ssl_variant_datagram) {
     GTEST_SKIP();
   }
-
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
   // ECHConfig 2 cipher_suites are unsupported.
-  const std::string mixed =
-      "0088FE0A004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA"
-      "7783B6B457F756000800010003000100010064000B7075626C69632E6E616D650000FE0A"
-      "004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA7783B6B4"
-      "57F75600080001FFFFFFFF00010064000B7075626C69632E6E616D650000";
-  std::vector<uint8_t> config = hex_string_to_bytes(mixed);
-  DataBuffer echconfig(config.data(), config.size());
-
+  DataBuffer config1;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config1, pub, priv);
+  DataBuffer config2;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kBogusSuite,
+                                        kPublicName, 100, config2, pub, priv);
   EnsureInit();
   EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(agent_->ssl_fd(),
                                                  PR_FALSE));  // Don't GREASE
-  InstallEchConfig(echconfig, 0);
+
+  DataBuffer sizedConfigListBuffer = MakeEchConfigList(config1, config2);
+  InstallEchConfig(sizedConfigListBuffer, 0);
   auto filter = MakeTlsFilter<TlsExtensionCapture>(
       agent_, ssl_tls13_encrypted_client_hello_xtn);
   agent_->Handshake();
@@ -284,20 +293,20 @@ TEST_P(TlsAgentEchTest, EchConfigsSupportedNoYes) {
   if (variant_ == ssl_variant_datagram) {
     GTEST_SKIP();
   }
-
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer config2;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config2, pub, priv);
+  DataBuffer config1;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kBogusSuite,
+                                        kPublicName, 100, config1, pub, priv);
   // ECHConfig 1 cipher_suites are unsupported.
-  const std::string mixed =
-      "0088FE0A004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA"
-      "7783B6B457F75600080001FFFFFFFF00010064000B7075626C69632E6E616D650000FE0A"
-      "004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA7783B6B4"
-      "57F756000800010003000100010064000B7075626C69632E6E616D650000";
-  std::vector<uint8_t> config = hex_string_to_bytes(mixed);
-  DataBuffer echconfig(config.data(), config.size());
-
+  DataBuffer sizedConfigListBuffer = MakeEchConfigList(config1, config2);
   EnsureInit();
   EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(agent_->ssl_fd(),
                                                  PR_FALSE));  // Don't GREASE
-  InstallEchConfig(echconfig, 0);
+  InstallEchConfig(sizedConfigListBuffer, 0);
   auto filter = MakeTlsFilter<TlsExtensionCapture>(
       agent_, ssl_tls13_encrypted_client_hello_xtn);
   agent_->Handshake();
@@ -310,19 +319,20 @@ TEST_P(TlsAgentEchTest, EchConfigsSupportedNoNo) {
     GTEST_SKIP();
   }
 
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer config2;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kBogusSuite,
+                                        kPublicName, 100, config2, pub, priv);
+  DataBuffer config1;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kBogusSuite,
+                                        kPublicName, 100, config1, pub, priv);
   // ECHConfig 1 and 2 cipher_suites are unsupported.
-  const std::string unsupported =
-      "0088FE0A004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA"
-      "7783B6B457F75600080001FFFF0001FFFF0064000B7075626C69632E6E616D650000FE0A"
-      "004000002000203BB6D46C201B820F1AE4AFD4DEC304444156E4E04D1BF0FFDA7783B6B4"
-      "57F7560008FFFF0003FFFF00010064000B7075626C69632E6E616D650000";
-  std::vector<uint8_t> config = hex_string_to_bytes(unsupported);
-  DataBuffer echconfig(config.data(), config.size());
-
+  DataBuffer sizedConfigListBuffer = MakeEchConfigList(config1, config2);
   EnsureInit();
   EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(agent_->ssl_fd(),
                                                  PR_FALSE));  // Don't GREASE
-  InstallEchConfig(echconfig, SEC_ERROR_INVALID_ARGS);
+  InstallEchConfig(sizedConfigListBuffer, SEC_ERROR_INVALID_ARGS);
   auto filter = MakeTlsFilter<TlsExtensionCapture>(
       agent_, ssl_tls13_encrypted_client_hello_xtn);
   agent_->Handshake();
@@ -644,21 +654,95 @@ TEST_F(TlsConnectStreamTls13Ech, EchFixedConfig) {
 TEST_F(TlsConnectStreamTls13Ech, EchOuterExtensionsReferencesMissing) {
   // Construct this by prepending 0xabcd to ssl_tls13_outer_extensions_xtn.
   std::string ch =
-      "01000200030341a6813ccf3eefc2deb9c78f7627715ae343f5236e7224f454c723c93e0b"
-      "d875000006130113031302010001d100000010000e00000b7075626c69632e6e616d65ff"
+      "010001fc030390901d039ca83262d9115a5f98f43ddb2553241a8de5c46d9f118c4c29c2"
+      "64bc000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
       "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
-      "00200573a70286658ad4bc166d8f5f237f035714ba5ae4e838c077677ccb6d619813002b"
+      "00206df5f908d1c02320e246694c765d5ec1c0f7d7aef2b1b00b17c36331623d332d002b"
       "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
-      "020101001c00024001001500aa0000000000000000000000000000000000000000000000"
+      "020101001c00024001fe0d00f900000100034d00209a4f67b0744d1fba23aa4bacfadb2a"
+      "c706562dae04d80a83ae668a6f2dd6ef2700cfab1671182341df246d66c3aca873e8c714"
+      "bc2b1c3b576653609533c486df0bdcf63ab4e4e7d0b67fadf4e3504eec96f72e6778b15d"
+      "69c9a9594a041348a7130f67a1a7cac796a0e6d6fca505438355278a9a8fd55e44218441"
+      "9927a1e084ac7d7adeb2f0c19faafba430876bf0cdf4d195b2d06428b3de13120f65748a"
+      "468f8997a2c3bf1dd7f3996a0f2c70dea6c88149df182b3c3b78a8da8bb709a9ed9d77c6"
+      "5dc09accdfeb66c90db26b99a35052a8cbaf7bb9307a1e17d90a7aa9f768f5f446559d08"
+      "69bccc83eda9d2b347a00015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
+                             SSL_ERROR_RX_MALFORMED_ECH_EXTENSION,
+                             SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchOuterExtensionsInsideInner) {
+  // Construct this by appending ssl_tls13_outer_extensions_xtn to the
+  // references in
+  // ssl_tls13_outer_extensions_xtn.
+  std::string ch =
+      "010001fc03035e2268bc7133079cd33eb088253393e561d80c5ee6f9a238aff022e1e10d"
+      "4c82000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
+      "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
+      "00200e071fd982854d50236ed0e4e7981460840f03d03fd84b44c409fe486203b252002b"
+      "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
+      "020101001c00024001fe0d00f900000100034d002099a032502ea4fd3c85b858ae1c59df"
+      "6a374f3698ed6bca188cf75c432c78cf5a00cf28dde32de7ade40abb16d550c1eec3dad4"
+      "a03c85efb95ec605837deae92a419285116e5cb8223ea53cff2b605e66f28e96d37e9b4e"
+      "3035fb1cfa125fa053d6770091b5731c9fb03e872a82991dfdd24ad8399fcc76db7fadba"
+      "029e064beb02c1282684a93e777bcefbca3dd143dfc225d2e65c80dbf3819ebda288e32c"
+      "3a1f8a27bb3aa9480dee2a4307073da3e15ee03dba386223d9399ad796af80c646f85406"
+      "282c34fd9406d25752087f08140e1be834e8a149f0bebfc2b3db16ccba83c37051e2e75d"
+      "e8a4e999ef385c74c96d0015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
+                             SSL_ERROR_RX_MALFORMED_ECH_EXTENSION,
+                             SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchOuterExtensionsDuplicateReference) {
+  // Construct this by altering tls13_ConstructInnerExtensionsFromOuter to have
+  // each extension inserted in the reference list twice and running the
+  // EchFixedConfig test.
+  std::string ch =
+      "010001fc0303d8717df80286fcd8b4242ed846995c6473e290678231046bb1bfc7848460"
+      "b122000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
+      "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
+      "00206f21d5fdf7bf81943939a03656c1195ad347cec453bf7a16d0773ffef481d22f002b"
+      "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
+      "020101001c00024001fe0d011900000100034d002027eb9b641ba8ffc3a4028d00d1f5bd"
+      "e190736b1ea5a79513dee0a551cc6fe55200efc2ed6bf501f100896eb91221ce512c20c3"
+      "c5c110e7be6a5d340854ff5ac0175312631b021fd5a5c9841549989f415c4041a4b384b1"
+      "dba1d6b4182cc48904f993a15eab6bf7787b267ca65acef51c019508e0c9b382086a71d8"
+      "517cf19644d66d396efc066a4d37916d67b0e5fe08d52dd94d068dd85b9a245aaffac4ff"
+      "66d9a5221fd5805473bb7584eb7f218357c00aff890d2f2edf1c092c648c888b5cba1ca6"
+      "26817fda7765fcedfbc418b90b1841d878ed443593cafb61fa8fb708c53977615b45f545"
+      "2a8236cab3ec121cdc91a2de6a79437cae9d09e781339fddcac005ce62fd65d50e33faa2"
+      "2366955a0374001500220000000000000000000000000000000000000000000000000000"
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
+                             SSL_ERROR_RX_MALFORMED_ECH_EXTENSION,
+                             SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchOuterExtensionsOutOfOrder) {
+  // Construct this by altering tls13_ConstructInnerExtensionsFromOuter to leave
+  // a gap at the start and insert a 'late' extension there.
+  std::string ch =
+      "010001fc0303fabff6caf4d8b1eb1db5945c96badefec4b33188b97121e6a206e82b74bd"
+      "a855000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
+      "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
+      "00208fe970fc0c908f0c51734f18467e640df1d45a6ace2948b5c4bf73ee52ab3160002b"
+      "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
+      "020101001c00024001fe0d00f900000100034d00203339239f8925c3f9b89f4ced17c3b3"
+      "1c649299d7e10b3cdbc115de2a57d90d2200cf006e62866516380e8a16763bee5b2a75a8"
+      "74e8698c459f474d0e952c2fd3300bef1decd6f259b8ac2912684ef69b7a7be2520fbf15"
+      "5e0c3f88998789976ca1fbcaa40616fc513e3353540db091da76ca98007532974550d3da"
+      "aaddb799baf60adbc5800df30e187251427fe9de707d18a270352ee44f6eb37f0d8c72a1"
+      "5f9ffb5dd4bbb6045473c8d99b7a5c2c8cc59027f346cbe6ef240d5cf1919f58a998d427"
+      "0f8c882d03d22ec4df4079e15a639452ea4c24023f6bcad89566ce6a32b1dad6ddf6b436"
+      "3e6759bd48bed1b30a840015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000fe0a0095000100034d00209c68779a77e4bac0e9f39c2974b1900de044ae1510bf"
-      "d34fb5120a2a9d039607006c76c4571099733157eb8614ef2ad6049372e9fdf740f8ad4f"
-      "d24723702c9104a38ecc366eea78b0285422b3f119fc057e2282433a74d8c56b2135c785"
-      "bd5d01f89b2dbb42aa9a609eb1c6dd89252fa04cf8fbc4097e9c85da1e3eeebc188bbe16"
-      "db1166f6df1a0c7c6e0dce71";
+      "0000000000000000";
   ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
                              SSL_ERROR_RX_MALFORMED_ECH_EXTENSION,
                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
@@ -668,24 +752,24 @@ TEST_F(TlsConnectStreamTls13Ech, EchOuterExtensionsReferencesMissing) {
 TEST_F(TlsConnectStreamTls13Ech, EchVersion12Inner) {
   // Construct this by removing ssl_tls13_supported_versions_xtn entirely.
   std::string ch =
-      "010002000303baf30ea25e5056b659a4d55233922c4ee261a04e6d84c8200713edca2f55"
-      "d434000006130113031302010001d100000010000e00000b7075626c69632e6e616d65ff"
+      "010001fc030338e9ebcde2b87ef779c4d9a9b9870aef3978130b254fbf168a92644c97c1"
+      "c5cb000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
       "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
-      "002081908a3cf3ed9ebf6d6b1f7082d77bb3bf8ff309c3c1255421720c4172548762002b"
+      "002081b3ea444fd631f9264e01276bcc1a6771aed3b5a8a396446467d1c820e52b25002b"
       "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
-      "020101001c00024001001500b30000000000000000000000000000000000000000000000"
+      "020101001c00024001fe0d00f900000100034d00205864042b43f4d4d544558fbcba410f"
+      "ebfb78ddfc5528672a7f7d9e70abc3eb6300cf6ff3271da628139bddc4a58ee92db26170"
+      "7310dee54d88c8a96a8d998b8608d5f10260b7e201e5dc8cafa13917a3fdfdf399082959"
+      "8adf3c291decf640f696e64c4e22bafb81565587c50dd829ccad68bd00babeaba7d8a7a5"
+      "400ad3200dbae674c549953ca6d3298ed751a9bc215a33be444fe908bf1c6f374cc139f9"
+      "98339f58b8fd3510a670e4102e3f7de21586ebd70c3fb1df8bb6b9e5dbc0db147dbac6d0"
+      "72dfc6cdf17ecee5c019c311b37ef9f5ceabb7edbdf87a4a04041c4d8b512a16517c5380"
+      "e8d4f6e3b2412b4a6c030015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000fe0a008c000100034d0020305bc263a664387b90a6975b2a"
-      "3aa1e4358e80a8ca0841237035d2475628582d006352a2b49912a61543dfa045c1429582"
-      "540c8c7019968867fde698eb37667f9aa9c23d02757492a4580fb027bbe4ba7615eea118"
-      "ad3bf7f02a88f8372cfa01888e7be0c55616f846e902bbdfc7edf56994d6398f5a965d9e"
-      "c4b1bc7afc580b28b0ac91d8";
-  ReplayChWithMalformedInner(ch, kTlsAlertProtocolVersion,
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
                              SSL_ERROR_UNSUPPORTED_VERSION,
-                             SSL_ERROR_PROTOCOL_VERSION_ALERT);
+                             SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
 // Use CHInner supported_versions to negotiate 1.2.
@@ -693,116 +777,271 @@ TEST_F(TlsConnectStreamTls13Ech, EchVersion12InnerSupportedVersions) {
   // Construct this by changing ssl_tls13_supported_versions_xtn to write
   // TLS 1.2 instead of TLS 1.3.
   std::string ch =
-      "0100020003036c4a7f6f6b5479a5c1f769c7b04c082ba40b514522d193df855df8bea933"
-      "b565000006130113031302010001d100000010000e00000b7075626c69632e6e616d65ff"
+      "010001fc0303f7146bdc88c399feb49c62b796db2f8b1330e25292a889edf7c65231d0be"
+      "b95f000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
       "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
-      "0020ee721b8fe89260f8987d0d21b628db136c6155793fa63f4f546b244ee5357761002b"
+      "0020d31f8eb204efba49dbdbf40bb046b1e0b90fa3f034260d60f351d4b15e614e7f002b"
       "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
-      "020101001c00024001001500ac0000000000000000000000000000000000000000000000"
+      "020101001c00024001fe0d00f900000100034d0020eaa25e92721e65fd405577bf2fd322"
+      "857e60f8766a595929fc404c9a01ef441200cf04992c693fbc8eac87726b336a11abc411"
+      "541ceff50d533d4cf4d6e1078479acb5446675b652f22d6db04daf0c3640ec2429ba4f51"
+      "99c00daa43e9a7d85bd6733041feeca0b38ee6ca07042c7e67d40cd3e236499f3f9d92ab"
+      "e4642e483c75d77c247b0228bc773c09551d15845c35663afd1805c5b3adb136ffa6d94f"
+      "b7cbfe93d5d33c894b2a6437ad9a2278d5863ed20db652a6084c9e95a8dfaf821d0b474a"
+      "7efc2839f110edb4a73376ecab629b26b1eea63304899c49a07157fbbee67c786686cb04"
+      "a53666a74e1e003aefc70015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "0000000000fe0a0093000100034d00205de27fe39481bfb370ee8441f12e28296bc5c8fe"
-      "b6a6198ddc6ab03b2d024638006a9e9f57c3f39c0ad1c3427549a77f301d01d718e09da4"
-      "5497df178c95fd598bf0c9098d68dfba80a05eeeabc84dc0bb3225cee4a74688d520c632"
-      "73612f98be847dea4f040a8d9b2b92bb4a44273d0cafafbfe1ee4ed69448bc243b4359c6"
-      "e1eb3971e125fbfb016245fa";
+      "0000000000000000";
   ReplayChWithMalformedInner(ch, kTlsAlertProtocolVersion,
                              SSL_ERROR_UNSUPPORTED_VERSION,
                              SSL_ERROR_PROTOCOL_VERSION_ALERT);
 }
 
-// Replay a CH for which CHInner lacks the required ech_is_inner extension.
+// Replay a CH for which CHInner lacks the required ech xtn of inner type
 TEST_F(TlsConnectStreamTls13Ech, EchInnerMissing) {
-  // Construct by omitting ssl_tls13_ech_is_inner_xtn.
+  // Construct by omitting the ech inner extension
   std::string ch =
-      "010002000303912d293136b843248ffeecdde6ef0d5bc5d0adb4d356b985c2fcec8fe2b0"
-      "8f5d000006130113031302010001d100000010000e00000b7075626c69632e6e616d65ff"
+      "010001fc0303fa9cd9cf5b77bb4083f69a1d169d44b356faea0d6a0aee6d50412de6fef7"
+      "8d22000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
       "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
-      "00209222e6b0c672fd1e564fbca5889155e9126e3b006a8ff77ff61898dd56a08429002b"
+      "0020c329f1dde4d51b50f68c21053b545290b250af527b2832d3acf2c6af9b8b8d5c002b"
       "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
-      "020101001c00024001001500b00000000000000000000000000000000000000000000000"
+      "020101001c00024001fe0d00f900000100034d00207e2a0397b7d2776ae468057d630243"
+      "b01388cf80680b074323adf4091aba7b4c00cff4b649fb5b3a0719c1e085c7006a95eaad"
+      "32375b717a42d009c075e6246342fdc1e847c528495f90378ff5b4912da5190f7e8bfa1c"
+      "c9744b50e9e469cd7cd12bcb5f6534b7d617459d2efa4d796ad244567c49f1d22feb08a5"
+      "8e8ebdce059c28883dd69ca401e189f3ef438c3f0bf3d377e6727a1f6abf3a8a8cc149ee"
+      "60a1aa5ba4a50e99d2519216762558e9613a238bd630b5822f549575d9402f8da066aaef"
+      "2e0e6a7a04583b041925e0ef4575107c4436f9af26e561c0ab733cd88bee6a20e6414128"
+      "ea0ba1c73612bb62c1e90015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000fe0a008f000100034d0020e1bc83c066a251621c4b055779789a2c"
-      "6ac4b9a3850366b2ea0d32a8e041181c0066a4e9cc6912b8bc6c1b54a2c6c40428ab01a3"
-      "0e4621ec65320df2beff846a606618429c108fdfe24a6fad5053f53fb36082bf7d80d6f4"
-      "73131a3d6c04e182595606070ac4e0be078ada56456c02d37a2fee7cb17accd273cbd810"
-      "30ee0dbe139e51ba1d2a471f";
+      "0000000000000000";
   ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
                              SSL_ERROR_MISSING_ECH_EXTENSION,
                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
-// Replay a CH for which CHInner contains both an ECH and ech_is_inner
-// extension.
+TEST_F(TlsConnectStreamTls13Ech, EchInnerWrongSize) {
+  // Construct by including ech inner with wrong size
+  std::string ch =
+      "010001fc03035f8410dab9e49b0833d13390f3fe0b3c6321d842961c9cc46b59a0b5b8e1"
+      "4e0b000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
+      "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
+      "0020526a56087d685e574accb0e87d6781bc553612479e56460fe6a497fa1cd74e2e002b"
+      "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
+      "020101001c00024001fe0d00f900000100034d00200d096bf6ac0c3bcb79d70677da0e0d"
+      "249b40bc5ba6b8727654619fe6567d0b0700cfd13e136d2d041e3cd993b252386d97e98d"
+      "c972d29d28e0281a210fa56156b95e4371a6610a0b3e65f1b842875fb456de9b9c0e03f8"
+      "aa4d1055057ac3e20e5fa45b837ccbb06ef3856c71f1f63e91b60bfb5f3415f26e9a0d3c"
+      "4d404d5d5aaa6dca8d57cf2e6b4aaf399fa7271b0c1eedbfdd85fbc9711b0446eb9c9535"
+      "a74f3e5a71e2e22dc8d89980f96233ec9b80fbe4f295ff7903bade407fc544c8d76df4fb"
+      "ce4b8d79cea0ff7e0b0736ecbeaf5a146a4f81a930e788ae144cf2219e90dc3594165a7e"
+      "2a0b64f6189a87a348840015004200000000000000000000000000000000000000000000"
+      "000000000000000000000000000000000000000000000000000000000000000000000000"
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertDecodeError,
+                             SSL_ERROR_RX_MALFORMED_ESNI_EXTENSION,
+                             SSL_ERROR_DECODE_ERROR_ALERT);
+}
+
 TEST_F(TlsConnectStreamTls13Ech, InnerWithEchAndEchIsInner) {
-  // Construct by appending an empty ssl_tls13_encrypted_client_hello_xtn to
+  // Construct by appending an empty ssl_tls13_encrypted_client_hello_xtn of
+  // type outer to
   // CHInner.
   std::string ch =
-      "010002000303b690bc4090ecfd7ad167de639b1d1ea7682588ffefae1164179d370f6cd3"
-      "0864000006130113031302010001d100000010000e00000b7075626c69632e6e616d65ff"
+      "010001fc0303527df5a8dbcf390c184c5274295283fdba78d05784170d8f3cb8c7d84747"
+      "afb5000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
       "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
-      "00200c3c15b0e9884d5f593634a168b70a62ae18c8d69a68f8e29c826fbabcd99b22002b"
+      "002099461dcfcdc7804a0f34bf3ca49ac39776a7ef4d8edd30fab3599ff59b09f826002b"
       "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
-      "020101001c00024001001500a80000000000000000000000000000000000000000000000"
+      "020101001c00024001fe0d00f900000100034d00201da1341e8ba21ff90e025d2438d4e5"
+      "b4e8b376befc57cf8c9afb484e6f051b2f00cff747491b810705e5cc8d8a1302468000d9"
+      "8660d659d8382a6fc23ca1a582def728eabb363771328035565048213b1d725b20f757be"
+      "63d6956cd861aa9d33adcc913de2443695f70e130af96fd2b078dd662478a29bd17a4479"
+      "715c949b5fc118456d0243c9d1819cecd0f5fbd1c78dadd6fcd09abe41ca97a00c97efb3"
+      "894c9d4bab60dcd150b55608f6260723a08e112e39e6a43f645f85a08085054f27f269bc"
+      "1acb9ff5007b04eaef3414767666472e4e24c2a2953f5dc68aeb5207d556f1b872a810b6"
+      "686cf83a09db8b474df70015004200000000000000000000000000000000000000000000"
       "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "000000000000000000000000000000000000000000000000000000000000000000000000"
-      "00fe0a0097000100034d0020d46cc9042eff6efee046a5ff653d1b6a60cfd5786afef5ce"
-      "43300bc515ef5f09006ea6bf626854596df74b2d8f81a479a6d2fef13295a81e0571008a"
-      "12fc92f82170fdb899cd22ebadc33a3147c2801619f7621ffe8684c96918443e3fbe9b17"
-      "34fbf678ba0b2abad7ab6b018bccc1034b9537a5d399fdb9a5ccb92360bde4a94a2f2509"
-      "0e7313dd9254eae3603e1fee";
+      "0000000000000000";
   ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
-                             SSL_ERROR_RX_MALFORMED_CLIENT_HELLO,
+                             SSL_ERROR_RX_UNEXPECTED_EXTENSION,
                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
-TEST_F(TlsConnectStreamTls13, OuterWithEchAndEchIsInner) {
-  static uint8_t empty_buf[1] = {0};
-  DataBuffer empty(empty_buf, 0);
+TEST_F(TlsConnectStreamTls13, EchWithInnerExtNotSplit) {
+  static uint8_t type_val[1] = {1};
+  DataBuffer type_buffer(type_val, sizeof(type_val));
 
   EnsureTlsSetup();
-  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE));
   MakeTlsFilter<TlsExtensionAppender>(client_, kTlsHandshakeClientHello,
-                                      ssl_tls13_ech_is_inner_xtn, empty);
+                                      ssl_tls13_encrypted_client_hello_xtn,
+                                      type_buffer);
   ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
   server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
 }
 
-// Apply two ECHConfigs on the server. They are identical with the exception
-// of the public key: the first ECHConfig contains a public key for which we
-// lack the private value. Use an SSLInt function to zero all the config_ids
-// (client and server), then confirm that trial decryption works.
+/* Parameters
+ * Length of SNI for first connection
+ * Length of SNI for second connection
+ * Use GREASE for first connection?
+ * Use GREASE for second connection?
+ * For both connections, SNI length to pad to.
+ */
+class EchCHPaddingTest : public TlsConnectStreamTls13,
+                         public testing::WithParamInterface<
+                             std::tuple<int, int, bool, bool, int>> {};
+
+TEST_P(EchCHPaddingTest, EchChPaddingEqual) {
+  auto parameters = GetParam();
+  std::string name_str1 = std::string(std::get<0>(parameters), 'a');
+  std::string name_str2 = std::string(std::get<1>(parameters), 'a');
+  const char* name1 = name_str1.c_str();
+  const char* name2 = name_str2.c_str();
+  bool grease_mode1 = std::get<2>(parameters);
+  bool grease_mode2 = std::get<3>(parameters);
+  uint8_t max_name_len = std::get<4>(parameters);
+
+  // Connection 1
+  EnsureTlsSetup();
+  SSL_SetURL(client_->ssl_fd(), name1);
+  if (grease_mode1) {
+    EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+    client_->ExpectEch(false);
+    server_->ExpectEch(false);
+  } else {
+    SetupEch(client_, server_, HpkeDhKemX25519Sha256, true, true, true,
+             max_name_len);
+  }
+  auto filter1 = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  Connect();
+  size_t echXtnLen1 = filter1->extension().len();
+
+  Reset();
+
+  // Connection 2
+  EnsureTlsSetup();
+  SSL_SetURL(client_->ssl_fd(), name2);
+  if (grease_mode2) {
+    EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+    client_->ExpectEch(false);
+    server_->ExpectEch(false);
+  } else {
+    SetupEch(client_, server_, HpkeDhKemX25519Sha256, true, true, true,
+             max_name_len);
+  }
+  auto filter2 = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  Connect();
+  size_t echXtnLen2 = filter2->extension().len();
+
+  // We always expect an ECH extension.
+  ASSERT_TRUE(echXtnLen2 > 0 && echXtnLen1 > 0);
+  // We expect the ECH extension to round to the same multiple of 32.
+  // Note: It will not be 0 % 32 because we pad the Payload, but have a number
+  // of extra bytes from the rest of the ECH extension (e.g. ciphersuite)
+  ASSERT_EQ(echXtnLen1 % 32, echXtnLen2 % 32);
+  // Where both connections used the same effective maximum length and both
+  // SNIs are below that maximum, we expect the same size length.
+  PRUint8 effective_len1 =
+      grease_mode1 ? TLS13_ECH_GREASE_SNI_LEN : max_name_len;
+  PRUint8 effective_len2 =
+      grease_mode2 ? TLS13_ECH_GREASE_SNI_LEN : max_name_len;
+  if (effective_len1 == effective_len2 && name_str1.size() <= effective_len1 &&
+      name_str2.size() <= effective_len2) {
+    ASSERT_EQ(echXtnLen1, echXtnLen2);
+  }
+}
+
+#define ECH_PADDING_TEST_INSTANTIATE(name, values)                           \
+  INSTANTIATE_TEST_SUITE_P(name, EchCHPaddingTest,                           \
+                           testing::Combine(values, values, testing::Bool(), \
+                                            testing::Bool(), values))
+
+const int kExtremalSNILengths[] = {1, 128, 255};
+const int kNormalSNILengths[] = {17, 24, 100};
+const int kLongSNILengths[] = {90, 167, 214};
+
+/* Each invocation with N lengths, results in 4N^3 test cases, so we test
+ * 3 lots of (4*3^3) rather than all permutations. */
+ECH_PADDING_TEST_INSTANTIATE(extremal, testing::ValuesIn(kExtremalSNILengths));
+ECH_PADDING_TEST_INSTANTIATE(normal, testing::ValuesIn(kNormalSNILengths));
+ECH_PADDING_TEST_INSTANTIATE(lengthy, testing::ValuesIn(kLongSNILengths));
+
+// Check the server rejects ClientHellos with bad padding
+TEST_F(TlsConnectStreamTls13Ech, EchChPaddingChecked) {
+  // Generate this string by changing the padding in
+  // tls13_GenPaddingClientHelloInner
+  std::string ch =
+      "010001fc03037473367a6eb6773391081b403908fc0c0026aac706889c59ca694d0c1188"
+      "c4b3000006130113031302010001cd00000010000e00000b7075626c69632e6e616d65ff"
+      "01000100000a00140012001d00170018001901000101010201030104003300260024001d"
+      "0020f7d8ad5fea0165e115e984e11c43f1d8f255bd8f772b893432d8d7721e91785a002b"
+      "0003020304000d0018001604030503060302030804080508060401050106010201002d00"
+      "020101001c00024001fe0d00f900000100034d00207e0ad8e83f8a9c89e1ae4fd65b8091"
+      "01e496bbb5f29ce20b299ce58937e2563300cff471a787585e15ae5aff5e4fee7ec988ba"
+      "72f8a95db41e793568b0301d553251f0826dc0c3ff658e4e029ef840ae86fa80af4b11b5"
+      "3a33fab99887bf8df18bc87abbb1f578f7964848d91a2023cbe7609fcc31bd721865009c"
+      "ad68c09e438d677f7c56af76e62c168bdb373bb88962471dacc4ddf654e435cd903f6555"
+      "4c9a93ffd2541cd7bce520e7215d15495184b781ca8c138cedd573fbdef1d40e5de82c33"
+      "5c9c43370102ecb0b66dd27efc719a9a54589b6e6b599b1b0146e121eae0ab5b2070c12f"
+      "4f4f2b099808294a459f0015004200000000000000000000000000000000000000000000"
+      "000000000000000000000000000000000000000000000000000000000000000000000000"
+      "0000000000000000";
+  ReplayChWithMalformedInner(ch, kTlsAlertIllegalParameter,
+                             SSL_ERROR_RX_MALFORMED_ECH_EXTENSION,
+                             SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchConfigList) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  EnsureTlsSetup();
+
+  DataBuffer config1;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config1, pub, priv);
+  DataBuffer config2;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config2, pub, priv);
+  DataBuffer configList = MakeEchConfigList(config1, config2);
+  SECStatus rv =
+      SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                              configList.data(), configList.len());
+  printf("%u", rv);
+  ASSERT_EQ(rv, SECSuccess);
+}
+
 TEST_F(TlsConnectStreamTls13Ech, EchConfigsTrialDecrypt) {
+  // Apply two ECHConfigs on the server. They are identical with the exception
+  // of the public key: the first ECHConfig contains a public key for which we
+  // lack the private value. Use an SSLInt function to zero all the config_ids
+  // (client and server), then confirm that trial decryption works.
   ScopedSECKEYPublicKey pub;
   ScopedSECKEYPrivateKey priv;
   EnsureTlsSetup();
   ImportFixedEchKeypair(pub, priv);
-
-  const std::string two_configs_str =
-      "0080FE0A003C000020002011111111111111111111111111111111111111111111111111"
-      "111111111111110004000100010064000B7075626C69632E6E616D650000FE0A003C0000"
-      "2000208756E2580C07C1D2FFCB662F5FADC6D6FF13DA85ABD7ADFECF984AAA102C126900"
-      "04000100010064000B7075626C69632E6E616D650000";
-  const std::string second_config_str =
-      "0040FE0A003C00002000208756E2580C07C1D2FFCB662F5FADC6D6FF13DA85ABD7ADFECF"
-      "984AAA102C12690004000100010064000B7075626C69632E6E616D650000";
-  std::vector<uint8_t> two_configs = hex_string_to_bytes(two_configs_str);
-  std::vector<uint8_t> second_config = hex_string_to_bytes(second_config_str);
+  ScopedSECKEYPublicKey pub2;
+  ScopedSECKEYPrivateKey priv2;
+  DataBuffer config2;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config2, pub, priv);
+  DataBuffer config1;
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kSuiteAes,
+                                        kPublicName, 100, config1, pub2, priv2);
+  // Zero the config id for both, only public key differs.
+  config2.Write(7, (uint32_t)0, 1);
+  config1.Write(7, (uint32_t)0, 1);
+  // Server only knows private key for conf2
+  DataBuffer configList = MakeEchConfigList(config1, config2);
   ASSERT_EQ(SECSuccess,
             SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
-                                    two_configs.data(), two_configs.size()));
-  ASSERT_EQ(SECSuccess,
-            SSL_SetClientEchConfigs(client_->ssl_fd(), second_config.data(),
-                                    second_config.size()));
-
+                                    configList.data(), configList.len()));
+  ASSERT_EQ(SECSuccess, SSL_SetClientEchConfigs(client_->ssl_fd(),
+                                                config2.data(), config2.len()));
   client_->ExpectEch();
   server_->ExpectEch();
   Connect();
@@ -811,12 +1050,8 @@ TEST_F(TlsConnectStreamTls13Ech, EchConfigsTrialDecrypt) {
 TEST_F(TlsConnectStreamTls13Ech, EchAcceptBasic) {
   EnsureTlsSetup();
   SetupEch(client_, server_);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
-
   auto c_filter_sni =
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
-
   Connect();
   ASSERT_TRUE(c_filter_sni->captured());
   CheckSniExtension(c_filter_sni->extension(), kPublicName);
@@ -825,7 +1060,6 @@ TEST_F(TlsConnectStreamTls13Ech, EchAcceptBasic) {
 TEST_F(TlsConnectStreamTls13, EchAcceptWithResume) {
   EnsureTlsSetup();
   SetupEch(client_, server_);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
@@ -841,20 +1075,20 @@ TEST_F(TlsConnectStreamTls13, EchAcceptWithResume) {
   Handshake();
   CheckConnected();
   // Make sure that the PSK extension is only in CHInner.
-  ASSERT_FALSE(filter->captured());
+  ASSERT_TRUE(filter->captured());
 }
 
 TEST_F(TlsConnectStreamTls13, EchAcceptWithExternalPsk) {
+  static const std::string kPskId = "testing123";
   EnsureTlsSetup();
   SetupEch(client_, server_);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
 
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   ASSERT_TRUE(!!slot);
   ScopedPK11SymKey key(
       PK11_KeyGen(slot.get(), CKM_HKDF_KEY_GEN, nullptr, 16, nullptr));
   ASSERT_TRUE(!!key);
-  AddPsk(key, std::string("foo"), ssl_hash_sha256);
+  AddPsk(key, kPskId, ssl_hash_sha256);
 
   // Not permitted in outer.
   auto filter =
@@ -864,8 +1098,22 @@ TEST_F(TlsConnectStreamTls13, EchAcceptWithExternalPsk) {
   CheckConnected();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_psk, ssl_sig_none);
-  // Make sure that the PSK extension is only in CHInner.
-  ASSERT_FALSE(filter->captured());
+  // The PSK extension is present in CHOuter.
+  ASSERT_TRUE(filter->captured());
+
+  // But the PSK in CHOuter is completely different.
+  // (Failure/collision chance means kPskId needs to be longish.)
+  uint32_t v = 0;
+  ASSERT_TRUE(filter->extension().Read(0, 2, &v));
+  ASSERT_EQ(v, kPskId.size() + 2 + 4) << "check size of identities";
+  ASSERT_TRUE(filter->extension().Read(2, 2, &v));
+  ASSERT_EQ(v, kPskId.size()) << "check size of identity";
+  bool different = false;
+  for (size_t i = 0; i < kPskId.size(); ++i) {
+    ASSERT_TRUE(filter->extension().Read(i + 4, 1, &v));
+    different |= v != static_cast<uint8_t>(kPskId[i]);
+  }
+  ASSERT_TRUE(different);
 }
 
 // If an earlier version is negotiated, False Start must be disabled.
@@ -921,12 +1169,13 @@ TEST_F(TlsConnectStreamTls13, EchAcceptWithHrr) {
                                     echconfig.len()));
   client_->ExpectEch();
   server_->ExpectEch();
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
 
   size_t cb_called = 0;
   EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
                             server_->ssl_fd(), RetryEchHello, &cb_called));
 
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
   // Start the handshake.
   client_->StartConnect();
   server_->StartConnect();
@@ -938,11 +1187,125 @@ TEST_F(TlsConnectStreamTls13, EchAcceptWithHrr) {
                                     echconfig.data(), echconfig.len()));
   client_->ExpectEch();
   server_->ExpectEch();
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   Handshake();
+  ASSERT_TRUE(server_hrr_ech_xtn->captured());
   EXPECT_EQ(1U, cb_called);
   CheckConnected();
   SendReceive();
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchGreaseSize) {
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+
+  auto greased_ext = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  Connect();
+  ASSERT_TRUE(greased_ext->captured());
+
+  Reset();
+  EnsureTlsSetup();
+
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  ImportFixedEchKeypair(pub, priv);
+  SetMutualEchConfigs(pub, priv);
+
+  auto real_ext = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+
+  ASSERT_TRUE(real_ext->captured());
+  ASSERT_EQ(real_ext->extension().len(), greased_ext->extension().len());
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchGreaseClientDisable) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  EnsureTlsSetup();
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kDefaultSuites,
+                                        kPublicName, 100, echconfig, pub, priv);
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE));
+
+  auto c_filter_esni = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+
+  Connect();
+  ASSERT_TRUE(!c_filter_esni->captured());
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchHrrGreaseServerDisable) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_FALSE));
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  MakeNewServer();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_FALSE));
+  Handshake();
+  ASSERT_TRUE(!server_hrr_ech_xtn->captured());
+  EXPECT_EQ(1U, cb_called);
+  CheckConnected();
+  SendReceive();
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchGreaseSizePsk) {
+  // Original connection without ECH
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+
+  // Resumption with only GREASE
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+
+  auto greased_ext = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  Connect();
+  SendReceive();
+  ASSERT_TRUE(greased_ext->captured());
+
+  // Finally, resume with ECH enabled
+  // ECH state does not determine whether resumption succeeds
+  // or is attempted, so this should work fine.
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET, 2);
+
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  ImportFixedEchKeypair(pub, priv);
+  SetMutualEchConfigs(pub, priv);
+
+  auto real_ext = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  ASSERT_TRUE(real_ext->captured());
+
+  ASSERT_EQ(real_ext->extension().len(), greased_ext->extension().len());
 }
 
 // Send GREASE ECH in CH1. CH2 must send exactly the same GREASE ECH contents.
@@ -979,6 +1342,165 @@ TEST_F(TlsConnectStreamTls13, GreaseEchHrrMatches) {
   server_->StartConnect();
   Handshake();
   CheckConnected();
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchRejectMisizedEchXtn) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_TRUE));
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+  auto server_hrr_ext_xtn_fake = MakeTlsFilter<TlsExtensionResizer>(
+      server_, ssl_tls13_encrypted_client_hello_xtn, 34);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  // Process the hello retry.
+  server_->ExpectReceiveAlert(kTlsAlertDecodeError, kTlsAlertFatal);
+  client_->ExpectSendAlert(kTlsAlertDecodeError);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_ECH_EXTENSION);
+  server_->CheckErrorCode(SSL_ERROR_DECODE_ERROR_ALERT);
+  EXPECT_EQ(1U, cb_called);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchRejectDroppedEchXtn) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kDefaultSuites,
+                                        kPublicName, 100, echconfig, pub, priv);
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  ASSERT_EQ(SECSuccess,
+            SSL_SetClientEchConfigs(client_->ssl_fd(), echconfig.data(),
+                                    echconfig.len()));
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+  auto server_hrr_ext_xtn_fake = MakeTlsFilter<TlsExtensionDropper>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  MakeNewServer();
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  // Process the hello retry.
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  EXPECT_EQ(1U, cb_called);
+}
+
+// Generate an HRR on CHInner. Mangle the Hrr Xtn causing client to reject ECH
+// which then causes a MAC mismatch.
+TEST_F(TlsConnectStreamTls13Ech, EchRejectMangledHrrXtn) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kDefaultSuites,
+                                        kPublicName, 100, echconfig, pub, priv);
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  ASSERT_EQ(SECSuccess,
+            SSL_SetClientEchConfigs(client_->ssl_fd(), echconfig.data(),
+                                    echconfig.len()));
+
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionDamager>(
+      server_, ssl_tls13_encrypted_client_hello_xtn, 4);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  MakeNewServer();
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  EXPECT_EQ(1U, cb_called);
+}
+
+// First capture an ECH CH Xtn.
+// Start new connection, inject ECH CH Xtn.
+// Server will respond with ECH HRR Xtn.
+// Check Client correctly panics.
+TEST_F(TlsConnectStreamTls13Ech, EchClientRejectSpuriousHrrXtn) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kDefaultSuites,
+                                        kPublicName, 100, echconfig, pub, priv);
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  auto client_ech_xtn_capture = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  Connect();
+  ASSERT_TRUE(client_ech_xtn_capture->captured());
+
+  // Now configure client without ECH. Server with ECH.
+  Reset();
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE));
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+
+  // Inject CH ECH Xtn into CH.
+  DataBuffer buff = DataBuffer(client_ech_xtn_capture->extension());
+  auto client_ech_xtn = MakeTlsFilter<TlsExtensionAppender>(
+      client_, kTlsHandshakeClientHello, ssl_tls13_encrypted_client_hello_xtn,
+      buff);
+
+  // Connect and check we see the HRR extension and alert.
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  server_hrr_ech_xtn->SetHandshakeTypes({kTlsHandshakeHelloRetryRequest});
+
+  ConnectExpectAlert(client_, kTlsAlertUnsupportedExtension);
+
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT);
+  ASSERT_TRUE(server_hrr_ech_xtn->captured());
 }
 
 // Fail to decrypt CH2. Unlike CH1, this generates an alert.
@@ -1071,9 +1593,9 @@ TEST_F(TlsConnectStreamTls13, EchHrrChangeCipherSuite) {
   server_->Handshake();
   MakeNewServer();
 
-  // Damage the first byte of the ciphersuite (offset 0)
+  // Damage the first byte of the ciphersuite (offset 1)
   MakeTlsFilter<TlsExtensionDamager>(client_,
-                                     ssl_tls13_encrypted_client_hello_xtn, 0);
+                                     ssl_tls13_encrypted_client_hello_xtn, 1);
 
   ExpectAlert(server_, kTlsAlertIllegalParameter);
   Handshake();
@@ -1152,22 +1674,120 @@ TEST_F(TlsConnectStreamTls13Ech, EchRejectWithHrr) {
   size_t cb_called = 0;
   EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
                             server_->ssl_fd(), RetryEchHello, &cb_called));
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
-
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_TRUE));
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
   // Start the handshake.
   client_->StartConnect();
   server_->StartConnect();
   client_->Handshake();
   server_->Handshake();
   MakeNewServer();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_TRUE));
   client_->ExpectEch(false);
   server_->ExpectEch(false);
   ExpectAlert(client_, kTlsAlertEchRequired);
   Handshake();
+  ASSERT_TRUE(server_hrr_ech_xtn->captured());
   client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
   server_->ExpectReceiveAlert(kTlsAlertEchRequired, kTlsAlertFatal);
   server_->Handshake();
   EXPECT_EQ(1U, cb_called);
+}
+
+// Server can't change its mind on ECH after HRR. We change the confirmation
+// value and the server panics accordingly.
+TEST_F(TlsConnectStreamTls13Ech, EchHrrServerYN) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  TlsConnectTestBase::GenerateEchConfig(HpkeDhKemX25519Sha256, kDefaultSuites,
+                                        kPublicName, 100, echconfig, pub, priv);
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  ASSERT_EQ(SECSuccess,
+            SSL_SetClientEchConfigs(client_->ssl_fd(), echconfig.data(),
+                                    echconfig.len()));
+  client_->ExpectEch();
+  server_->ExpectEch();
+
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+
+  auto server_hrr_ech_xtn = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  MakeNewServer();
+  ASSERT_EQ(SECSuccess,
+            SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                    echconfig.data(), echconfig.len()));
+  client_->ExpectEch();
+  server_->ExpectEch();
+  client_->ExpectSendAlert(kTlsAlertIllegalParameter);
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  auto server_random_damager = MakeTlsFilter<ServerHelloRandomChanger>(server_);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  ASSERT_TRUE(server_hrr_ech_xtn->captured());
+  EXPECT_EQ(1U, cb_called);
+}
+
+// Client sends GREASE'd ECH Xtn, server reponds with HRR in GREASE mode
+// Check HRR responses are present and differ.
+TEST_F(TlsConnectStreamTls13Ech, EchHrrServerGreaseChanges) {
+  ScopedSECKEYPublicKey pub;
+  ScopedSECKEYPrivateKey priv;
+  DataBuffer echconfig;
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_TRUE));
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+
+  auto server_hrr_ech_xtn_1 = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  ASSERT_TRUE(server_hrr_ech_xtn_1->captured());
+  EXPECT_EQ(1U, cb_called);
+
+  /* Run the connection again */
+  Reset();
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(server_->ssl_fd(), PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_TRUE));
+  cb_called = 0;
+  EXPECT_EQ(SECSuccess, SSL_HelloRetryRequestCallback(
+                            server_->ssl_fd(), RetryEchHello, &cb_called));
+
+  auto server_hrr_ech_xtn_2 = MakeTlsFilter<TlsExtensionCapture>(
+      server_, ssl_tls13_encrypted_client_hello_xtn);
+  // Start the handshake.
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  ASSERT_TRUE(server_hrr_ech_xtn_2->captured());
+  EXPECT_EQ(1U, cb_called);
+
+  ASSERT_TRUE(server_hrr_ech_xtn_1->extension().len() ==
+              server_hrr_ech_xtn_2->extension().len());
+  ASSERT_TRUE(memcmp(server_hrr_ech_xtn_1->extension().data(),
+                     server_hrr_ech_xtn_2->extension().data(),
+                     server_hrr_ech_xtn_1->extension().len()));
 }
 
 // Reject ECH on CH1 and CH2. PSKs are no longer allowed
@@ -1297,7 +1917,6 @@ TEST_F(TlsConnectStreamTls13, EchZeroRttRejectSecond) {
 
   // Setup ECH only on the client.
   SetupEch(client_, server_, HpkeDhKemX25519Sha256, false, true, false);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
 
   ExpectResumption(RESUME_NONE);
   ExpectAlert(client_, kTlsAlertEchRequired);
@@ -1382,7 +2001,6 @@ TEST_F(TlsConnectStreamTls13, EchRejectUnknownCriticalExtension) {
 TEST_F(TlsConnectStreamTls13, EchRejectAuthCertSuccessNoRetries) {
   EnsureTlsSetup();
   SetupEch(client_, server_, HpkeDhKemX25519Sha256, false, true, false);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   ExpectAlert(client_, kTlsAlertEchRequired);
   ConnectExpectFailOneSide(TlsAgent::CLIENT);
   client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
@@ -1397,7 +2015,6 @@ TEST_F(TlsConnectStreamTls13, EchRejectAuthCertSuccessNoRetries) {
 TEST_F(TlsConnectStreamTls13, EchRejectSuppressClientCert) {
   EnsureTlsSetup();
   SetupEch(client_, server_, HpkeDhKemX25519Sha256, false, true, false);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   auto cert_capture =
@@ -1445,7 +2062,6 @@ TEST_F(TlsConnectStreamTls13, EchRejectAuthCertSuccessIncompatibleRetries) {
                                                        &server_rec.data()[2],
                                                        server_rec.len() - 2));
 
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   ExpectAlert(client_, kTlsAlertEchRequired);
   ConnectExpectFailOneSide(TlsAgent::CLIENT);
   client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITHOUT_ECH);
@@ -1558,7 +2174,6 @@ TEST_F(TlsConnectStreamTls13Ech, EchMismatchHpkeCiphersRetry) {
             SSL_SetClientEchConfigs(client_->ssl_fd(), client_rec.data(),
                                     client_rec.len()));
 
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   ExpectAlert(client_, kTlsAlertEchRequired);
   ConnectExpectFailOneSide(TlsAgent::CLIENT);
   client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITH_ECH);
@@ -1590,7 +2205,6 @@ TEST_F(TlsConnectStreamTls13Ech, EchMismatchKeysRetry) {
             SSL_SetClientEchConfigs(client_->ssl_fd(), client_rec.data(),
                                     client_rec.len()));
 
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   client_->ExpectSendAlert(kTlsAlertEchRequired);
   ConnectExpectFailOneSide(TlsAgent::CLIENT);
   client_->CheckErrorCode(SSL_ERROR_ECH_RETRY_WITH_ECH);
@@ -1677,13 +2291,28 @@ TEST_F(TlsConnectStreamTls13, EchBadCiphertext) {
 TEST_F(TlsConnectStreamTls13, EchOuterBinding) {
   EnsureTlsSetup();
   SetupEch(client_, server_);
-  client_->SetAuthCertificateCallback(AuthCompleteSuccess);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_3);
 
   static const uint8_t supported_vers_13[] = {0x02, 0x03, 0x04};
   DataBuffer buf(supported_vers_13, sizeof(supported_vers_13));
   MakeTlsFilter<TlsExtensionReplacer>(client_, ssl_tls13_supported_versions_xtn,
+                                      buf);
+  client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  server_->ExpectSendAlert(kTlsAlertBadRecordMac);
+  ConnectExpectFail();
+}
+
+// Altering the CH after the Ech Xtn should also cause a failure.
+TEST_F(TlsConnectStreamTls13, EchOuterBindingAfterXtn) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+
+  static const uint8_t supported_vers_13[] = {0x02, 0x03, 0x04};
+  DataBuffer buf(supported_vers_13, sizeof(supported_vers_13));
+  MakeTlsFilter<TlsExtensionAppender>(client_, kTlsHandshakeClientHello, 5044,
                                       buf);
   client_->ExpectSendAlert(kTlsAlertBadRecordMac);
   server_->ExpectSendAlert(kTlsAlertBadRecordMac);
@@ -1697,7 +2326,7 @@ TEST_F(TlsConnectStreamTls13, EchBadCiphersuite) {
   SetupEch(client_, server_);
   /* Make KDF unknown */
   MakeTlsFilter<TlsExtensionDamager>(client_,
-                                     ssl_tls13_encrypted_client_hello_xtn, 0);
+                                     ssl_tls13_encrypted_client_hello_xtn, 1);
   client_->ExpectSendAlert(kTlsAlertBadRecordMac);
   server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   ConnectExpectFail();
@@ -1707,7 +2336,7 @@ TEST_F(TlsConnectStreamTls13, EchBadCiphersuite) {
   SetupEch(client_, server_);
   /* Make AEAD unknown */
   MakeTlsFilter<TlsExtensionDamager>(client_,
-                                     ssl_tls13_encrypted_client_hello_xtn, 3);
+                                     ssl_tls13_encrypted_client_hello_xtn, 4);
   client_->ExpectSendAlert(kTlsAlertBadRecordMac);
   server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   ConnectExpectFail();
@@ -1787,6 +2416,333 @@ TEST_F(TlsConnectStreamTls13, EchOuterExtensionsInCHOuter) {
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
 }
 
+static SECStatus NoopExtensionHandler(PRFileDesc* fd, SSLHandshakeType message,
+                                      const PRUint8* data, unsigned int len,
+                                      SSLAlertDescription* alert, void* arg) {
+  return SECSuccess;
+}
+
+static PRBool EmptyExtensionWriter(PRFileDesc* fd, SSLHandshakeType message,
+                                   PRUint8* data, unsigned int* len,
+                                   unsigned int maxLen, void* arg) {
+  return true;
+}
+
+static PRBool LargeExtensionWriter(PRFileDesc* fd, SSLHandshakeType message,
+                                   PRUint8* data, unsigned int* len,
+                                   unsigned int maxLen, void* arg) {
+  unsigned int length = 1024;
+  PR_ASSERT(length <= maxLen);
+  memset(data, 0, length);
+  *len = length;
+  return true;
+}
+
+static PRBool OuterOnlyExtensionWriter(PRFileDesc* fd, SSLHandshakeType message,
+                                       PRUint8* data, unsigned int* len,
+                                       unsigned int maxLen, void* arg) {
+  if (message == ssl_hs_ech_outer_client_hello) {
+    return LargeExtensionWriter(fd, message, data, len, maxLen, arg);
+  }
+  return false;
+}
+
+static PRBool InnerOnlyExtensionWriter(PRFileDesc* fd, SSLHandshakeType message,
+                                       PRUint8* data, unsigned int* len,
+                                       unsigned int maxLen, void* arg) {
+  if (message == ssl_hs_client_hello) {
+    return LargeExtensionWriter(fd, message, data, len, maxLen, arg);
+  }
+  return false;
+}
+
+static PRBool InnerOuterDiffExtensionWriter(PRFileDesc* fd,
+                                            SSLHandshakeType message,
+                                            PRUint8* data, unsigned int* len,
+                                            unsigned int maxLen, void* arg) {
+  unsigned int length = 1024;
+  PR_ASSERT(length <= maxLen);
+  memset(data, (message == ssl_hs_client_hello) ? 1 : 0, length);
+  *len = length;
+  return true;
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriter) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, EmptyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriterOuterOnly) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, OuterOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriterInnerOnly) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, InnerOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+}
+
+// Write different values to inner and outer CH.
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriterDifferent) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess,
+            SSL_InstallExtensionHooks(client_->ssl_fd(), 62028,
+                                      InnerOuterDiffExtensionWriter, nullptr,
+                                      NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  ASSERT_TRUE(filter->extension().len() > 1024);
+}
+
+// Test that basic compression works
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriterCompressionBasic) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  size_t echXtnLen = filter->extension().len();
+  ASSERT_TRUE(echXtnLen > 0 && echXtnLen < 1024);
+}
+
+// Test that compression works when things change.
+TEST_F(TlsConnectStreamTls13Ech,
+       EchCustomExtensionWriterCompressSomeDifferent) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  // This can't be.
+  EXPECT_EQ(SECSuccess,
+            SSL_InstallExtensionHooks(client_->ssl_fd(), 62029,
+                                      InnerOuterDiffExtensionWriter, nullptr,
+                                      NoopExtensionHandler, nullptr));
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62030, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  auto echXtnLen = filter->extension().len();
+  /* Exactly one custom xtn plus change */
+  ASSERT_TRUE(echXtnLen > 1024 && echXtnLen < 2048);
+}
+
+// An outer-only extension stops compression.
+TEST_F(TlsConnectStreamTls13Ech,
+       EchCustomExtensionWriterCompressSomeOuterOnly) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  // This can't be as it appears in the outer only.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62029, OuterOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  // This will be compressed
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62030, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  size_t echXtnLen = filter->extension().len();
+  ASSERT_TRUE(echXtnLen > 0 && echXtnLen < 1024);
+}
+
+// An inner only extension does not stop compression.
+TEST_F(TlsConnectStreamTls13Ech, EchCustomExtensionWriterCompressAllInnerOnly) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  // This can't be as it appears in the inner only.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62029, InnerOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  // This will be compressed.
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62030, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_tls13_encrypted_client_hello_xtn);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+  size_t echXtnLen = filter->extension().len();
+  ASSERT_TRUE(echXtnLen > 1024 && echXtnLen < 2048);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchAcceptCustomXtn) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            server_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(server_, 62028);
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+}
+
+// Test that we reject Outer Xtn in SH if accepting ECH Inner
+TEST_F(TlsConnectStreamTls13Ech, EchRejectOuterXtnOnInner) {
+  EnsureTlsSetup();
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, OuterOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  // Put the same extension on the Server Hello
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            server_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(server_, 62028);
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
+  // The server will be expecting an alert encrypted under a different key.
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  ConnectExpectFail();
+  ASSERT_TRUE(filter->captured());
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+}
+
+// Test that we reject Inner Xtn in SH if accepting ECH Outer
+TEST_F(TlsConnectStreamTls13Ech, EchRejectInnerXtnOnOuter) {
+  EnsureTlsSetup();
+
+  // Setup ECH only on the client
+  SetupEch(client_, server_, HpkeDhKemX25519Sha256, false, true, false);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, InnerOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  // Put the same extension on the Server Hello
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            server_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(server_, 62028);
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
+  // The server will be expecting an alert encrypted under a different key.
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  ConnectExpectFail();
+  ASSERT_TRUE(filter->captured());
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+}
+
+// Test that we reject an Inner Xtn in SH, if accepting Ech Inner and
+// we didn't advertise it on SH Outer.
+TEST_F(TlsConnectStreamTls13Ech, EchRejectInnerXtnNotOnOuter) {
+  EnsureTlsSetup();
+
+  // Setup ECH only on the client
+  SetupEch(client_, server_);
+
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            client_->ssl_fd(), 62028, InnerOnlyExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+
+  EXPECT_EQ(SECSuccess,
+            SSL_CallExtensionWriterOnEchInner(client_->ssl_fd(), true));
+
+  // Put the same extension on the Server Hello
+  EXPECT_EQ(SECSuccess, SSL_InstallExtensionHooks(
+                            server_->ssl_fd(), 62028, LargeExtensionWriter,
+                            nullptr, NoopExtensionHandler, nullptr));
+  auto filter = MakeTlsFilter<TlsExtensionCapture>(server_, 62028);
+  client_->ExpectEch(false);
+  server_->ExpectEch(false);
+  client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
+  // The server will be expecting an alert encrypted under a different key.
+  server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+  ConnectExpectFail();
+  ASSERT_TRUE(filter->captured());
+  client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+}
+
 // At draft-09: If a CH containing the ech_is_inner extension is received, the
 // server acts as backend server in split-mode by responding with the ECH
 // acceptance signal. The signal value itself depends on the handshake secret,
@@ -1794,14 +2750,15 @@ TEST_F(TlsConnectStreamTls13, EchOuterExtensionsInCHOuter) {
 // server negotiates ech_is_inner (which is what triggers sending the signal).
 TEST_F(TlsConnectStreamTls13, EchBackendAcceptance) {
   DataBuffer ch_buf;
-  static uint8_t empty_buf[1] = {0};
-  DataBuffer empty(empty_buf, 0);
+  static uint8_t inner_value[1] = {1};
+  DataBuffer inner_buffer(inner_value, sizeof(inner_value));
 
   EnsureTlsSetup();
   StartConnect();
   EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE));
   MakeTlsFilter<TlsExtensionAppender>(client_, kTlsHandshakeClientHello,
-                                      ssl_tls13_ech_is_inner_xtn, empty);
+                                      ssl_tls13_encrypted_client_hello_xtn,
+                                      inner_buffer);
 
   EXPECT_EQ(SECSuccess, SSL_EnableTls13BackendEch(server_->ssl_fd(), PR_TRUE));
   client_->Handshake();
@@ -1810,8 +2767,9 @@ TEST_F(TlsConnectStreamTls13, EchBackendAcceptance) {
   ExpectAlert(client_, kTlsAlertBadRecordMac);
   client_->Handshake();
   EXPECT_EQ(TlsAgent::STATE_ERROR, client_->state());
-  EXPECT_EQ(PR_TRUE, SSLInt_ExtensionNegotiated(server_->ssl_fd(),
-                                                ssl_tls13_ech_is_inner_xtn));
+  EXPECT_EQ(PR_TRUE,
+            SSLInt_ExtensionNegotiated(server_->ssl_fd(),
+                                       ssl_tls13_encrypted_client_hello_xtn));
   server_->ExpectReceiveAlert(kTlsAlertCloseNotify, kTlsAlertWarning);
 }
 

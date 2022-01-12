@@ -30,7 +30,7 @@
         {
           'msvs_cygwin_shell': 0,
           'action': [
-            'python',
+            '<(python)',
             '../certdata.py',
             'certdata-testlib.txt',
             '<@(_outputs)',

@@ -1,0 +1,77 @@
+.. _mozilla_projects_nss_nss_3_74_release_notes:
+
+NSS 3.74 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.74 was released on **6 January 2022**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_74_RTM. NSS 3.74 requires NSPR 4.32 or newer.
+
+   NSS 3.74 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_74_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.74:
+
+`Changes in NSS 3.74 <#changes_in_nss_3.74>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 966856 - mozilla::pkix: support SHA-2 hashes in CertIDs in OCSP responses.
+   - Bug 1553612 - Ensure clients offer consistent ciphersuites after HRR.
+   - Bug 1721426 - NSS does not properly restrict server keys based on policy.
+   - Bug 1733003 - Set nssckbi version number to 2.54.
+   - Bug 1735407 - Replace Google Trust Services LLC (GTS) R4 root certificate in NSS.
+   - Bug 1735407 - Replace Google Trust Services LLC (GTS) R3 root certificate in NSS.
+   - Bug 1735407 - Replace Google Trust Services LLC (GTS) R2 root certificate in NSS.
+   - Bug 1735407 - Replace Google Trust Services LLC (GTS) R1 root certificate in NSS.
+   - Bug 1735407 - Replace GlobalSign ECC Root CA R4 in NSS.
+   - Bug 1733560 - Remove Expired Root Certificates from NSS - DST Root CA X3.
+   - Bug 1740807 - Remove Expiring Cybertrust Global Root and GlobalSign root certificates from NSS.
+   - Bug 1741930 - Add renewed Autoridad de Certificacion Firmaprofesional CIF A62634068 root certificate to NSS.
+   - Bug 1740095 - Add iTrusChina ECC root certificate to NSS.
+   - Bug 1740095 - Add iTrusChina RSA root certificate to NSS.
+   - Bug 1738805 - Add ISRG Root X2 root certificate to NSS.
+   - Bug 1733012 - Add Chunghwa Telecom's HiPKI Root CA - G1 root certificate to NSS.
+   - Bug 1738028 - Avoid a clang 13 unused variable warning in opt build.
+   - Bug 1735028 - Check for missing signedData field.
+   - Bug 1737470 - Ensure DER encoded signatures are within size limits.
+
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.74 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

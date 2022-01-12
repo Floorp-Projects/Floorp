@@ -552,7 +552,9 @@ main(int argc, char **argv)
 
     nickname = strdup(addbuiltin.options[opt_Nickname].arg);
 
-    NSS_NoDB_Init(NULL);
+    if (NSS_NoDB_Init(NULL) != SECSuccess) {
+        exit(1);
+    }
 
     if (addbuiltin.options[opt_Distrust].activated ||
         addbuiltin.options[opt_DistrustCRL].activated) {
