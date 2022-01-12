@@ -30,8 +30,8 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
  * @param {BrowsingContext} browsingContext
  *        The browsing context we want to check if it is part of debugged context
  * @param {Object} sessionContext
- *        WatcherActor's session context. This helps know what is the overall debugged scope.
- *        See watcher actor constructor for more info.
+ *        The Session Context to help know what is debugged.
+ *        See devtools/server/actors/watcher/session-context.js
  * @param {Object} options
  *        Optional arguments passed via a dictionary.
  * @param {Boolean} options.forceAcceptTopLevelTarget
@@ -169,8 +169,8 @@ function isBrowsingContextPartOfContext(
  * @param {WindowGlobalParent|WindowGlobalChild} windowGlobal
  *        The WindowGlobal we want to check if it is part of debugged context
  * @param {Object} sessionContext
- *        WatcherActor's session context. This helps know what is the overall debugged scope.
- *        See watcher actor constructor for more info.
+ *        The Session Context to help know what is debugged.
+ *        See devtools/server/actors/watcher/session-context.js
  * @param {Object} options
  *        Optional arguments passed via a dictionary.
  *        See `isBrowsingContextPartOfContext` jsdoc.
@@ -232,8 +232,8 @@ function _validateWindowGlobal(
  * @param {WindowGlobalParent|WindowGlobalChild} windowGlobal
  *        The WindowGlobal we want to check if it is part of debugged context
  * @param {Object} sessionContext
- *        WatcherActor's session context. This helps know what is the overall debugged scope.
- *        See watcher actor constructor for more info.
+ *        The Session Context to help know what is debugged.
+ *        See devtools/server/actors/watcher/session-context.js
  * @param {Object} options
  *        Optional arguments passed via a dictionary.
  *        See `isBrowsingContextPartOfContext` jsdoc.
@@ -258,8 +258,8 @@ function isWindowGlobalPartOfContext(windowGlobal, sessionContext, options) {
  * - For all nested browsing context. We fetch the contexts recursively.
  *
  * @param {Object} sessionContext
- *        WatcherActor's session context. This helps know what is the overall debugged scope.
- *        See watcher actor constructor for more info.
+ *        The Session Context to help know what is debugged.
+ *        See devtools/server/actors/watcher/session-context.js
  * @param {Object} options
  *        Optional arguments passed via a dictionary.
  * @param {Boolean} options.acceptSameProcessIframes
