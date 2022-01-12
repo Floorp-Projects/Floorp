@@ -72,8 +72,7 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
         if (aResponseReason.isSome()) {
           promise->MaybeRejectWithAbortError("Internal communication error!");
         } else {
-          promise->MaybeRejectWithInvalidStateError(
-              "No matching adapter found!");
+          promise->MaybeResolve(JS::NullHandleValue);
         }
       });
 

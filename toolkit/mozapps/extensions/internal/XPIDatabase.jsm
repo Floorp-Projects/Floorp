@@ -1493,15 +1493,22 @@ const updatedAddonFluentIds = new Map([
     ) {
       // Built-in themes are localized with Fluent instead of the WebExtension API.
       let addonIdPrefix = addon.id.replace("@mozilla.org", "");
-      if (addonIdPrefix.endsWith("colorway")) {
-        // Colorway themes combine an unlocalized color name with a localized
-        // variant name. Their ids have the format
-        // {colorName}-{variantName}-colorway@mozilla.org.
+      const colorwaySuffix = "colorway";
+      if (addonIdPrefix.endsWith(colorwaySuffix)) {
         if (aProp == "description") {
           // Colorway themes do not have a description.
           return null;
         }
+        // Colorway themes combine an unlocalized color name with a localized
+        // variant name. Their ids have the format
+        // {colorName}-{variantName}-colorway@mozilla.org. The variant name may
+        // be omitted ({colorName}-colorway@mozilla.org), in which case the
+        // unlocalized name from the theme's manifest will be used.
         let [colorName, variantName] = addonIdPrefix.split("-", 2);
+        if (variantName == colorwaySuffix) {
+          // This theme doesn't have a localized variant name.
+          return addon.defaultLocale.name;
+        }
         // We're not using toLocaleUpperCase because these color names are
         // always in English.
         colorName = colorName[0].toUpperCase() + colorName.slice(1);

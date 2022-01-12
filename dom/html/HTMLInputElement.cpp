@@ -2914,15 +2914,15 @@ HTMLInputElement* HTMLInputElement::GetSelectedRadioButton() const {
   return selected;
 }
 
-nsresult HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
+void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
   if (!mForm) {
     // Nothing to do here.
-    return NS_OK;
+    return;
   }
 
   RefPtr<PresShell> presShell = aPresContext->GetPresShell();
   if (!presShell) {
-    return NS_OK;
+    return;
   }
 
   // Get the default submit element
@@ -2937,8 +2937,6 @@ nsresult HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
     RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
     form->MaybeSubmit(nullptr);
   }
-
-  return NS_OK;
 }
 
 void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
@@ -3570,10 +3568,12 @@ bool HTMLInputElement::StepsInputValue(
   return true;
 }
 
-static bool ActivatesWithKeyboard(FormControlType aType) {
+static bool ActivatesWithKeyboard(FormControlType aType, uint32_t aKeyCode) {
   switch (aType) {
     case FormControlType::InputCheckbox:
     case FormControlType::InputRadio:
+      // Checkbox and Radio try to submit on Enter press
+      return aKeyCode != NS_VK_RETURN;
     case FormControlType::InputButton:
     case FormControlType::InputReset:
     case FormControlType::InputSubmit:
@@ -3730,14 +3730,9 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       FireChangeEventIfNeeded();
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     } else if (!preventDefault) {
-      // Checkbox and Radio try to submit on Enter press
-      if (aVisitor.mEvent->mMessage == eKeyPress &&
-          (mType == FormControlType::InputCheckbox ||
-           mType == FormControlType::InputRadio) &&
-          keyEvent->mKeyCode == NS_VK_RETURN && aVisitor.mPresContext) {
-        MaybeSubmitForm(aVisitor.mPresContext);
-      } else if (ActivatesWithKeyboard(mType)) {
-        // Otherwise we maybe dispatch a synthesized click.
+      if (keyEvent && ActivatesWithKeyboard(mType, keyEvent->mKeyCode) &&
+          keyEvent->IsTrusted()) {
+        // We maybe dispatch a synthesized click for keyboard activation.
         HandleKeyboardActivation(aVisitor);
       }
 
@@ -3829,14 +3824,18 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
            *     not submit, period.
            */
 
-          if (keyEvent->mKeyCode == NS_VK_RETURN &&
+          if (keyEvent->mKeyCode == NS_VK_RETURN && keyEvent->IsTrusted() &&
               (IsSingleLineTextControl(false, mType) ||
-               mType == FormControlType::InputNumber ||
-               IsDateTimeInputType(mType))) {
-            FireChangeEventIfNeeded();
+               IsDateTimeInputType(mType) ||
+               mType == FormControlType::InputCheckbox ||
+               mType == FormControlType::InputRadio)) {
+            if (IsSingleLineTextControl(false, mType) ||
+                IsDateTimeInputType(mType)) {
+              FireChangeEventIfNeeded();
+            }
+
             if (aVisitor.mPresContext) {
-              rv = MaybeSubmitForm(aVisitor.mPresContext);
-              NS_ENSURE_SUCCESS(rv, rv);
+              MaybeSubmitForm(aVisitor.mPresContext);
             }
           }
 

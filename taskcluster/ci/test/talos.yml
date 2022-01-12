@@ -114,7 +114,7 @@ talos-damp:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central, autoland]
+                    (linux1804-64|windows10-64|macosx1015)-shippable-qr/opt: [mozilla-central, autoland]
                     # Bug 1657864 - Disabled on macos for high frequency intermittents
                     default: []
             fission-webrender-sw:
@@ -188,7 +188,7 @@ talos-flex:
     variants: [fission]
     run-on-projects:
         by-variant:
-            fission: []
+            fission: [mozilla-central]
             default:
                 by-test-platform:
                     windows.*-32.*: []
@@ -330,7 +330,7 @@ talos-g4:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux1804-64|windows10-64)-shippable-qr/opt: [mozilla-central, autoland]
+                    (linux1804-64|windows10-64|macosx1015)-shippable-qr/opt: [mozilla-central, autoland]
                     default: []
             fission-webrender-sw:
                 by-test-platform:
@@ -800,6 +800,7 @@ talos-webgl:
     try-name: webgl
     treeherder-symbol: T(webgl)
     variants:
+        - fission
         - webgl-ipc
         - fission-webrender-sw
         - webrender-sw

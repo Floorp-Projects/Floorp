@@ -17,7 +17,7 @@ default = []
 [dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "1e593a6"
+rev = "6bc896f"
 #Note: "replay" shouldn't ideally be needed,
 # but it allows us to serialize everything across IPC.
 features = ["replay", "trace", "serial-pass"]
@@ -25,12 +25,12 @@ features = ["replay", "trace", "serial-pass"]
 [dependencies.wgt]
 package = "wgpu-types"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "1e593a6"
+rev = "6bc896f"
 
 [dependencies.wgh]
 package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "1e593a6"
+rev = "6bc896f"
 
 [dependencies]
 bincode = "1"

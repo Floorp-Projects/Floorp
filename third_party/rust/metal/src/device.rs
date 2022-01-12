@@ -52,6 +52,7 @@ pub enum MTLFeatureSet {
 
 #[repr(i64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[non_exhaustive]
 pub enum MTLGPUFamily {
     Common1 = 3001,
     Common2 = 3002,
@@ -62,6 +63,9 @@ pub enum MTLGPUFamily {
     Apple4 = 1004,
     Apple5 = 1005,
     Apple6 = 1006,
+    Apple7 = 1007,
+    Apple8 = 1008,
+    Apple9 = 1009,
     Mac1 = 2001,
     Mac2 = 2002,
     MacCatalyst1 = 4001,
@@ -1391,10 +1395,17 @@ pub enum MTLSparseTextureRegionAlignmentMode {
 }
 
 bitflags! {
-    struct MTLPipelineOption: NSUInteger {
+    /// Options that determine how Metal prepares the pipeline.
+    pub struct MTLPipelineOption: NSUInteger {
+        /// Do not provide any reflection information.
         const None                      = 0;
+        /// An option that requests argument information for buffers, textures, and threadgroup memory.
         const ArgumentInfo              = 1 << 0;
+        /// An option that requests detailed buffer type information for buffer arguments.
         const BufferTypeInfo            = 1 << 1;
+        /// An option that specifies that Metal should create the pipeline state object only if the
+        /// compiled shader is present inside the binary archive.
+        ///
         /// Only available on (macos(11.0), ios(14.0))
         const FailOnBinaryArchiveMiss   = 1 << 2;
     }
@@ -1809,44 +1820,27 @@ impl DeviceRef {
         }
     }
 
+    /// Synchronously creates a render pipeline state object and associated reflection information.
     pub fn new_render_pipeline_state_with_reflection(
         &self,
         descriptor: &RenderPipelineDescriptorRef,
-        reflection: &RenderPipelineReflectionRef,
-    ) -> Result<RenderPipelineState, String> {
+        reflection_options: MTLPipelineOption,
+    ) -> Result<(RenderPipelineState, RenderPipelineReflection), String> {
         unsafe {
-            let reflection_options =
-                MTLPipelineOption::ArgumentInfo | MTLPipelineOption::BufferTypeInfo;
-
+            let mut reflection: *mut Object = ptr::null_mut();
             let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
                 msg_send![self, newRenderPipelineStateWithDescriptor:descriptor
                                                              options:reflection_options
-                                                          reflection:reflection
+                                                          reflection:&mut reflection
                                                                error:&mut err]
             };
 
-            Ok(RenderPipelineState::from_ptr(pipeline_state))
-        }
-    }
+            let state = RenderPipelineState::from_ptr(pipeline_state);
 
-    /// Useful for debugging binary archives.
-    pub fn new_render_pipeline_state_with_fail_on_binary_archive_miss(
-        &self,
-        descriptor: &RenderPipelineDescriptorRef,
-    ) -> Result<RenderPipelineState, String> {
-        unsafe {
-            let pipeline_options = MTLPipelineOption::FailOnBinaryArchiveMiss;
+            let () = msg_send![reflection, retain];
+            let reflection = RenderPipelineReflection::from_ptr(reflection as _);
 
-            let reflection: *mut MTLRenderPipelineReflection = std::ptr::null_mut();
-
-            let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
-                msg_send![self, newRenderPipelineStateWithDescriptor:descriptor
-                                                             options:pipeline_options
-                                                          reflection:reflection
-                                                               error:&mut err]
-            };
-
-            Ok(RenderPipelineState::from_ptr(pipeline_state))
+            Ok((state, reflection))
         }
     }
 
@@ -1889,6 +1883,31 @@ impl DeviceRef {
             };
 
             Ok(ComputePipelineState::from_ptr(pipeline_state))
+        }
+    }
+
+    /// Synchronously creates a compute pipeline state object and associated reflection information,
+    /// using a compute pipeline descriptor.
+    pub fn new_compute_pipeline_state_with_reflection(
+        &self,
+        descriptor: &ComputePipelineDescriptorRef,
+        reflection_options: MTLPipelineOption,
+    ) -> Result<(ComputePipelineState, ComputePipelineReflection), String> {
+        unsafe {
+            let mut reflection: *mut Object = ptr::null_mut();
+            let pipeline_state: *mut MTLComputePipelineState = try_objc! { err =>
+                msg_send![self, newComputePipelineStateWithDescriptor:descriptor
+                                                             options:reflection_options
+                                                          reflection:&mut reflection
+                                                               error:&mut err]
+            };
+
+            let state = ComputePipelineState::from_ptr(pipeline_state);
+
+            let () = msg_send![reflection, retain];
+            let reflection = ComputePipelineReflection::from_ptr(reflection as _);
+
+            Ok((state, reflection))
         }
     }
 

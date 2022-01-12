@@ -3,7 +3,17 @@
 - License, v. 2.0. If a copy of the MPL was not distributed with this file,
 - You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- #filter substitution -->
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2" xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap uap2 uap3 uap10 rescap">
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap2 uap3 uap10 rescap">
+
   <Identity Name="@APPX_IDENTITY@" Publisher="@APPX_PUBLISHER@" Version="@APPX_VERSION@" ProcessorArchitecture="@APPX_ARCH@" />
   <Properties>
     <DisplayName>@APPX_DISPLAYNAME@</DisplayName>
@@ -29,6 +39,11 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\LargeTile.png" Square71x71Logo="Assets\SmallTile.png" />
       </uap:VisualElements>
       <Extensions>
+        <uap3:Extension Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication" Executable="VFS\ProgramFiles\@APPX_INSTDIR@\@MOZ_APP_NAME@.exe">
+          <uap3:AppExecutionAlias>
+            <desktop:ExecutionAlias Alias="@MOZ_APP_NAME@.exe" />
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
         <uap3:Extension Category="windows.fileTypeAssociation">
           <uap3:FileTypeAssociation Name="htm">
             <uap:SupportedFileTypes>

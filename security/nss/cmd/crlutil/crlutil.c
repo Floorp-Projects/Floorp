@@ -1044,7 +1044,10 @@ main(int argc, char **argv)
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     if (showFileCRL) {
-        NSS_NoDB_Init(NULL);
+        rv = NSS_NoDB_Init(NULL);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     } else {
         secstatus = NSS_Initialize(SECU_ConfigDirectory(NULL), dbPrefix, dbPrefix,
                                    "secmod.db", readonly ? NSS_INIT_READONLY : 0);

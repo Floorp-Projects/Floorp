@@ -136,6 +136,7 @@
     'coverage%': 0,
     'softfp_cflags%': '',
     'enable_draft_hpke%': 0,
+    'force_integrated_as%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.

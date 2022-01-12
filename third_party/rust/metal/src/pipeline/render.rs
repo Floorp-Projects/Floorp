@@ -193,12 +193,52 @@ impl RenderPipelineReflection {
 }
 
 impl RenderPipelineReflectionRef {
-    pub fn fragment_arguments(&self) -> &Array<Argument> {
+    /// An array of objects that describe the arguments of a fragment function.
+    pub fn fragment_arguments(&self) -> &ArgumentArrayRef {
         unsafe { msg_send![self, fragmentArguments] }
     }
 
-    pub fn vertex_arguments(&self) -> &Array<Argument> {
+    /// An array of objects that describe the arguments of a vertex function.
+    pub fn vertex_arguments(&self) -> &ArgumentArrayRef {
         unsafe { msg_send![self, vertexArguments] }
+    }
+
+    /// An array of objects that describe the arguments of a tile shading function.
+    pub fn tile_arguments(&self) -> &ArgumentArrayRef {
+        unsafe { msg_send![self, tileArguments] }
+    }
+}
+
+pub enum MTLArgumentArray {}
+
+foreign_obj_type! {
+    type CType = MTLArgumentArray;
+    pub struct ArgumentArray;
+    pub struct ArgumentArrayRef;
+}
+
+impl ArgumentArrayRef {
+    pub fn object_at(&self, index: NSUInteger) -> Option<&ArgumentRef> {
+        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
+    }
+
+    pub fn count(&self) -> NSUInteger {
+        unsafe { msg_send![self, count] }
+    }
+}
+
+pub enum MTLComputePipelineReflection {}
+
+foreign_obj_type! {
+    type CType = MTLComputePipelineReflection;
+    pub struct ComputePipelineReflection;
+    pub struct ComputePipelineReflectionRef;
+}
+
+impl ComputePipelineReflectionRef {
+    /// An array of objects that describe the arguments of a compute function.
+    pub fn arguments(&self) -> &ArgumentArrayRef {
+        unsafe { msg_send![self, arguments] }
     }
 }
 
