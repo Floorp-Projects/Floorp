@@ -269,6 +269,7 @@ let JSWINDOWACTORS = {
       "about:pocket-saved*",
       "about:pocket-signup*",
       "about:pocket-home*",
+      "about:pocket-style-guide*",
     ],
   },
 
