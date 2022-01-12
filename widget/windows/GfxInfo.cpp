@@ -1281,6 +1281,9 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
     // We can mostly assume that ANGLE will work
     case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
+    // Remote WebGL is needed for Win32k Lockdown, so it should be enabled
+    // regardless of HW support or not
+    case nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS:
       return false;
     default:
       return true;
