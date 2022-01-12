@@ -119,9 +119,9 @@ class CacheFile final : public CacheFileChunkListener,
   nsresult OnFetched();
 
   bool DataSize(int64_t* aSize);
-  void Key(nsACString& aKey);
+  void Key(nsACString& aKey) { aKey = mKey; }
   bool IsDoomed();
-  bool IsPinned();
+  bool IsPinned() const { return mPinned; }
   // Returns true when there is a potentially unfinished write operation.
   bool IsWriteInProgress();
   bool EntryWouldExceedLimit(int64_t aOffset, int64_t aSize, bool aIsAltData);

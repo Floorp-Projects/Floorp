@@ -216,7 +216,7 @@ class CacheStorageService final : public nsICacheStorageService,
   // These are helpers for telemetry monitoring of the memory pools.
   void TelemetryPrune(TimeStamp& now);
   void TelemetryRecordEntryCreation(CacheEntry const* entry);
-  void TelemetryRecordEntryRemoval(CacheEntry* entry);
+  void TelemetryRecordEntryRemoval(CacheEntry const* entry);
 
  private:
   // Following methods are thread safe to call.
