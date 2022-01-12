@@ -22,44 +22,45 @@ function checkAllowed(event)
 {
   let clipboardData = event.clipboardData;
 
-  let exception;
-  try {
-    clipboardData.setData("application/x-moz-file", "Test");
-  } catch(ex) {
-    exception = ex;
-  }
-  is(String(exception).indexOf("SecurityError"), 0, "Cannot set file");
+  let disallowedTypes = [
+    "application/x-moz-file",
+    "application/x-moz-file-promise",
+    "application/x-moz-file-promise-url",
+    "application/x-moz-file-promise-dest-filename",
+    "application/x-moz-file-promise-dir",
+    "application/x-moz-nativeimage",
+    "text/x-moz-requestmime",
+    "text/x-moz-place",
+    "text/x-moz-place-container",
+    "text/x-moz-some-made-up-type",
+  ];
 
-  exception = null;
-  try {
-    clipboardData.setData("application/x-moz-file-promise", "Test");
-  } catch(ex) {
-    exception = ex;
+  for (let type of disallowedTypes) {
+    let exception;
+    try {
+      clipboardData.setData(type, "Test");
+    } catch(ex) {
+      exception = ex;
+    }
+    is(String(exception).indexOf("SecurityError"), 0, "Cannot set " + type);
   }
-  is(String(exception).indexOf("SecurityError"), 0, "Cannot set file promise");
 
-  exception = null;
-  try {
-    clipboardData.setData("text/x-moz-place", "Test");
-  } catch(ex) {
-    exception = ex;
-  }
-  is(String(exception).indexOf("SecurityError"), 0, "Cannot set place");
-  exception = null;
-  try {
-    clipboardData.setData("text/x-moz-place-container", "Test");
-  } catch(ex) {
-    exception = ex;
-  }
-  is(String(exception).indexOf("SecurityError"), 0, "Cannot set place container");
+  let allowedTypes = [
+    "application/something",
+    "x-moz-/something",
+    "something/ax-moz-",
+  ];
 
-  exception = null;
-  try {
-    clipboardData.setData("application/something", "This is data");
-  } catch(ex) {
-    exception = ex;
+  for (let type of allowedTypes) {
+    let exception = null;
+    try {
+      clipboardData.setData(type, "This is data");
+    } catch(ex) {
+      exception = ex;
+    }
+    is(exception, null, "Can set " + type);
   }
-  is(exception, null, "Can set custom data to a string");
+
   SimpleTest.finish();
 }
 
