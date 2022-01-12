@@ -702,10 +702,6 @@ UntrustedModulesProcessor::SendGetModulesTrust(ModulePaths&& aModules,
                                             std::move(aModules), runNormal);
     }
     case GeckoProcessType_Socket: {
-      printf_stderr(
-          "!!!! UntrustedModulesProcessor::SendGetModulesTrust for Socket - "
-          "%llu\n",
-          aModules.mModuleNtPaths.as<ModulePaths::SetType>().Count());
       return ::mozilla::SendGetModulesTrust(
           net::SocketProcessChild::GetSingleton(), std::move(aModules),
           runNormal);
