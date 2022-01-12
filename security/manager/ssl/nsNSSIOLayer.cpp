@@ -2236,30 +2236,11 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
 }
 
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::IsChainValid(
-    const DERArray& certArray, Time, const CertPolicyId&) {
-  mBuiltChain = UniqueCERTCertList(CERT_NewCertList());
-  if (!mBuiltChain) {
+    const DERArray& certChain, Time, const CertPolicyId&) {
+  if (ConstructCERTCertListFromReversedDERArray(certChain, mBuiltChain) !=
+      SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
-
-  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());  // non-owning
-
-  size_t numCerts = certArray.GetLength();
-  for (size_t i = 0; i < numCerts; ++i) {
-    SECItem certDER(UnsafeMapInputToSECItem(*certArray.GetDER(i)));
-    UniqueCERTCertificate cert(
-        CERT_NewTempCertificate(certDB, &certDER, nullptr, false, true));
-    if (!cert) {
-      return MapPRErrorCodeToResult(PR_GetError());
-    }
-    // certArray is ordered with the root first, but we want the resulting
-    // certList to have the root last.
-    if (CERT_AddCertToListHead(mBuiltChain.get(), cert.get()) != SECSuccess) {
-      return MapPRErrorCodeToResult(PR_GetError());
-    }
-    Unused << cert.release();  // cert is now owned by mBuiltChain.
-  }
-
   return Success;
 }
 
@@ -2413,7 +2394,7 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   if (cars) {
     nsCString rememberedDBKey;
     bool found;
-    nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(mServerCert));
+    nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::Create(mServerCert));
     nsresult rv = cars->HasRememberedDecision(
         hostname, mInfo.OriginAttributesRef(), cert, rememberedDBKey, &found);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2465,7 +2446,10 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
 
   for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
-    nsCOMPtr<nsIX509Cert> tempCert = new nsNSSCertificate(node->cert);
+    nsCOMPtr<nsIX509Cert> tempCert = nsNSSCertificate::Create(node->cert);
+    if (NS_WARN_IF(!tempCert)) {
+      return;
+    }
     nsresult rv = certArray->AppendElement(tempCert);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
@@ -2506,10 +2490,10 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   }
 
   if (cars && wantRemember) {
-    nsCOMPtr<nsIX509Cert> serverCert(new nsNSSCertificate(mServerCert));
+    nsCOMPtr<nsIX509Cert> serverCert(nsNSSCertificate::Create(mServerCert));
     nsCOMPtr<nsIX509Cert> clientCert;
     if (certChosen) {
-      clientCert = new nsNSSCertificate(mSelectedCertificate.get());
+      clientCert = nsNSSCertificate::Create(mSelectedCertificate.get());
     }
     rv = cars->RememberDecision(hostname, mInfo.OriginAttributesRef(),
                                 serverCert, clientCert);

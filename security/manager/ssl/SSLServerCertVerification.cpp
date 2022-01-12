@@ -948,7 +948,11 @@ PRErrorCode AuthCertificateParseResults(
     if (overrideService) {
       bool haveOverride;
       bool isTemporaryOverride;  // we don't care
-      RefPtr<nsIX509Cert> nssCert(new nsNSSCertificate(aCert.get()));
+      RefPtr<nsIX509Cert> nssCert(nsNSSCertificate::Create(aCert.get()));
+      if (!nssCert) {
+        MOZ_ASSERT(false, "nsNSSCertificate::Create failed");
+        return SEC_ERROR_NO_MEMORY;
+      }
       nsresult rv = overrideService->HasMatchingOverride(
           aHostName, aPort, aOriginAttributes, nssCert, &overrideBits,
           &isTemporaryOverride, &haveOverride);
@@ -1086,7 +1090,7 @@ SSLServerCertVerificationJob::Run() {
       mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
-  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(mCert.get());
+  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
