@@ -15,6 +15,7 @@ browser.jar:
   content/pocket/panels/home.html (content/panels/home.html)
   content/pocket/panels/saved.html (content/panels/saved.html)
   content/pocket/panels/signup.html (content/panels/signup.html)
+  content/pocket/panels/style-guide.html (content/panels/style-guide.html)
   content/pocket/panels/js/main.bundle.js (content/panels/js/main.bundle.js)
   content/pocket/panels/js/tmpl.js (content/panels/js/tmpl.js)
   content/pocket/panels/js/vendor (content/panels/js/vendor/*)
