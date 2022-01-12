@@ -581,6 +581,7 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
 
   CompressedGlyph extendCluster = CompressedGlyph::MakeComplex(false, true);
 
+  const char16_t* const stringStart = aString;
   ClusterIterator iter(aString, aLength);
 
   // the ClusterIterator won't be able to tell us if the string
@@ -596,9 +597,20 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
   }
 
   const char16_t kIdeographicSpace = 0x3000;
+  // Special case for Bengali: although Virama normally clusters with the
+  // preceding letter, we *also* want to cluster it with a following Ya
+  // so that when the Virama+Ya form ya-phala, this is not separated from the
+  // preceding letter by any letter-spacing or justification.
+  const char16_t kBengaliVirama = 0x09CD;
+  const char16_t kBengaliYa = 0x09AF;
   while (!iter.AtEnd()) {
     if (*iter == char16_t(' ') || *iter == kIdeographicSpace) {
       glyphs->SetIsSpace();
+    } else if (*iter == kBengaliYa) {
+      // Unless we're at the start, check for a preceding virama.
+      if (aString > stringStart && *(aString - 1) == kBengaliVirama) {
+        *glyphs = extendCluster;
+      }
     }
     // advance iter to the next cluster-start (or end of text)
     iter.Next();
