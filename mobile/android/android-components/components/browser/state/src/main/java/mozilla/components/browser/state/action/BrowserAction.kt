@@ -268,7 +268,8 @@ sealed class TabGroupAction : BrowserAction() {
      * @property partition the ID of the partition the group belongs to. If the corresponding
      * partition doesn't exist it will be created.
      * @property group the ID of the group.
-     * @property tabId the ID of the tab to add to the group.
+     * @property tabId the ID of the tab to add to the group. If the corresponding tab is
+     * already in the group, it won't be added again.
      */
     data class AddTabAction(
         val partition: String,
@@ -282,7 +283,8 @@ sealed class TabGroupAction : BrowserAction() {
      * @property partition the ID of the partition the group belongs to. If the corresponding
      * partition doesn't exist it will be created.
      * @property group the ID of the group.
-     * @property tabIds the IDs of the tabs to add to the group.
+     * @property tabIds the IDs of the tabs to add to the group. If a tab is already in the
+     * group, it won't be added again.
      */
     data class AddTabsAction(
         val partition: String,

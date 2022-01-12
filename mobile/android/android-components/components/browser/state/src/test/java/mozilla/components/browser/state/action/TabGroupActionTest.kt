@@ -144,6 +144,29 @@ class TabGroupActionTest {
     }
 
     @Test
+    fun `AddTabAction - Doesn't add tab if already in group`() {
+        val tabGroup = TabGroup("test1", tabIds = listOf("tab1"))
+        val tabPartition = TabPartition("testFeaturePartition", tabGroups = listOf(tabGroup))
+        val tab = createTab(id = "tab1", url = "https://firefox.com")
+
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab),
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
+            )
+        )
+
+        store.dispatch(TabGroupAction.AddTabAction(tabPartition.id, tabGroup.id, tab.id)).joinBlocking()
+
+        val expectedPartition = store.state.tabPartitions[tabPartition.id]
+        assertNotNull(expectedPartition)
+        val expectedGroup = expectedPartition!!.getGroupById(tabGroup.id)
+        assertNotNull(expectedGroup)
+        assertTrue(expectedGroup!!.tabIds.contains(tab.id))
+        assertEquals(1, expectedGroup.tabIds.size)
+    }
+
+    @Test
     fun `AddTabsAction - Adds provided tab to groups`() {
         val tabGroup = TabGroup("test1", tabIds = emptyList())
         val tabPartition = TabPartition("testFeaturePartition", tabGroups = listOf(tabGroup))
@@ -192,6 +215,57 @@ class TabGroupActionTest {
         assertNotNull(expectedGroup)
         assertTrue(expectedGroup!!.tabIds.contains(tab1.id))
         assertTrue(expectedGroup.tabIds.contains(tab2.id))
+    }
+
+    @Test
+    fun `AddTabsAction - Doesn't add tabs if already in group`() {
+        val tabGroup = TabGroup("test1", tabIds = listOf("tab1"))
+        val tabPartition = TabPartition("testFeaturePartition", tabGroups = listOf(tabGroup))
+        val tab1 = createTab(id = "tab1", url = "https://firefox.com")
+        val tab2 = createTab(id = "tab2", url = "https://mozilla.org")
+
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab1, tab2),
+                tabPartitions = mapOf("testFeaturePartition" to tabPartition)
+            )
+        )
+
+        store.dispatch(
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id))
+        ).joinBlocking()
+
+        val expectedPartition = store.state.tabPartitions[tabPartition.id]
+        assertNotNull(expectedPartition)
+        val expectedGroup = expectedPartition!!.getGroupById(tabGroup.id)
+        assertNotNull(expectedGroup)
+        assertTrue(expectedGroup!!.tabIds.contains(tab1.id))
+        assertTrue(expectedGroup.tabIds.contains(tab2.id))
+        assertEquals(2, expectedGroup.tabIds.size)
+    }
+
+    @Test
+    fun `AddTabsAction - Creates partition if needed but only adds distinct tabs`() {
+        val tabGroup = TabGroup("test1", tabIds = emptyList())
+        val tabPartition = TabPartition("testFeaturePartition")
+        val tab1 = createTab(id = "tab1", url = "https://firefox.com")
+
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab1)
+            )
+        )
+
+        store.dispatch(
+            TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab1.id))
+        ).joinBlocking()
+
+        val expectedPartition = store.state.tabPartitions[tabPartition.id]
+        assertNotNull(expectedPartition)
+        val expectedGroup = expectedPartition!!.getGroupById(tabGroup.id)
+        assertNotNull(expectedGroup)
+        assertTrue(expectedGroup!!.tabIds.contains(tab1.id))
+        assertEquals(1, expectedGroup.tabIds.size)
     }
 
     @Test
