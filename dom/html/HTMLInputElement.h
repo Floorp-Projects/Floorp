@@ -1000,7 +1000,7 @@ class HTMLInputElement final : public TextControlElement,
    * MaybeSubmitForm looks for a submit input or a single text control
    * and submits the form if either is present.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult MaybeSubmitForm(nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT void MaybeSubmitForm(nsPresContext* aPresContext);
 
   /**
    * Update mFileList with the currently selected file.
