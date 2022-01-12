@@ -52,6 +52,10 @@ using SizingConstraint = nsGridContainerFrame::SizingConstraint;
 using GridItemCachedBAxisMeasurement =
     nsGridContainerFrame::CachedBAxisMeasurement;
 
+static mozilla::LazyLogModule gGridContainerLog("GridContainer");
+#define GRID_LOG(...) \
+  MOZ_LOG(gGridContainerLog, LogLevel::Debug, (__VA_ARGS__));
+
 static const int32_t kMaxLine = StyleMAX_GRID_LINE;
 static const int32_t kMinLine = StyleMIN_GRID_LINE;
 // The maximum line number, in the zero-based translated grid.
@@ -5032,6 +5036,8 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
       childSize.ISize(wm) = aChild->ISize(wm);
       nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
                                           LogicalPoint(wm), nsSize(), flags);
+      GRID_LOG("[perf] MeasuringReflow accepted cached value=%d, child=%p",
+               cachedMeasurement.BSize(), aChild);
       return cachedMeasurement.BSize();
     }
   }
@@ -5054,12 +5060,22 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
                                                        childSize.BSize(wm));
       aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
                           cachedMeasurement);
+      GRID_LOG("[perf] MeasuringReflow created new cached value=%d, child=%p",
+               cachedMeasurement.BSize(), aChild);
     } else if (found) {
       if (GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild,
                                                               aCBSize)) {
         cachedMeasurement.Update(aChild, aCBSize, childSize.BSize(wm));
+        GRID_LOG(
+            "[perf] MeasuringReflow rejected but updated cached value=%d, "
+            "child=%p",
+            cachedMeasurement.BSize(), aChild);
       } else {
         aChild->RemoveProperty(GridItemCachedBAxisMeasurement::Prop());
+        GRID_LOG(
+            "[perf] MeasuringReflow rejected and removed cached value, "
+            "child=%p",
+            aChild);
       }
     }
   }
