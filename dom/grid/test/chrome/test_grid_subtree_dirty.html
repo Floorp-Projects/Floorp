@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+  #grid {
+    display: grid;
+    width: 100px;
+    height: 100px;
+  }
+
+  #initiallyHidden {
+    display: none;
+    width: 100px;
+    height: 100px;
+    background: lime;
+  }
+</style>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  const grid = document.getElementById("grid");
+  const initiallyHidden = document.getElementById("initiallyHidden");
+  document.documentElement.offsetHeight; // Flush layout to be sure we have grid-item sizes cached
+
+  grid.getGridFragments(); // This marks the grid and its descendants as dirty
+
+  document.documentElement.offsetHeight; // Flush layout again. In buggy builds, this layout will fail to reflow/clear-dirty-bits on the grid item.
+
+  initiallyHidden.style.display = "block"; // This should trigger a reflow.
+  let height = getComputedStyle(initiallyHidden).height;
+  is(height, "100px", "initiallyHidden element should get a reflow and arrive at the expected height after we toggle its display");
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+  <div id="grid">
+    <div>
+      <div>
+        <div>
+          <div id="initiallyHidden">
+            PASS
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
