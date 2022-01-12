@@ -94,17 +94,62 @@ void ReadableStreamDefaultController::SetStream(ReadableStream* aStream) {
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
 static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
     ReadableStreamDefaultController* aController) {
-  // Step 1.
+  // Step 1. Let state be controller.[[stream]].[[state]].
   ReadableStream::ReaderState state = aController->GetStream()->State();
 
-  // Step 2.
+  // Step 2. If controller.[[closeRequested]] is false and state is "readable",
+  // return true.
   if (!aController->CloseRequested() &&
       state == ReadableStream::ReaderState::Readable) {
     return true;
   }
 
-  // Step 3.
+  // Step 3. Return false.
   return false;
+}
+
+enum class CloseOrEnqueue { Close, Enqueue };
+
+// https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
+// This is a variant of ReadableStreamDefaultControllerCanCloseOrEnqueue
+// that also throws when the function would return false to improve error
+// messages.
+static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+    ReadableStreamDefaultController* aController,
+    CloseOrEnqueue aCloseOrEnqueue, ErrorResult& aRv) {
+  // Step 1. Let state be controller.[[stream]].[[state]].
+  ReadableStream::ReaderState state = aController->GetStream()->State();
+
+  nsCString prefix;
+  if (aCloseOrEnqueue == CloseOrEnqueue::Close) {
+    prefix = "Cannot close a readable stream that "_ns;
+  } else {
+    prefix = "Cannot enqueue into a readable stream that "_ns;
+  }
+
+  switch (state) {
+    case ReadableStream::ReaderState::Readable:
+      // Step 2. If controller.[[closeRequested]] is false and
+      // state is "readable", return true.
+      // Note: We don't error/check for [[closeRequest]] first, because
+      // [[closedRequest]] is still true even after the state is "closed".
+      // This doesn't cause any spec observable difference.
+      if (!aController->CloseRequested()) {
+        return true;
+      }
+
+      // Step 3. Return false.
+      aRv.ThrowTypeError(prefix + "has already been requested to close."_ns);
+      return false;
+
+    case ReadableStream::ReaderState::Closed:
+      aRv.ThrowTypeError(prefix + "is already closed."_ns);
+      return false;
+
+    case ReadableStream::ReaderState::Errored:
+      aRv.ThrowTypeError(prefix + "has errored."_ns);
+      return false;
+  }
 }
 
 static Nullable<double> ReadableStreamDefaultControllerGetDesiredSize(
@@ -158,6 +203,7 @@ void ReadableStreamDefaultControllerClose(
   if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(aController)) {
     return;
   }
+
   // Step 2.
   ReadableStream* stream = aController->GetStream();
 
@@ -177,10 +223,11 @@ void ReadableStreamDefaultControllerClose(
 // https://streams.spec.whatwg.org/#rs-default-controller-close
 void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   // Step 1.
-  if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(this)) {
-    aRv.ThrowTypeError("Cannot Close");
+  if (!ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+          this, CloseOrEnqueue::Close, aRv)) {
     return;
   }
+
   // Step 2.
   ReadableStreamDefaultControllerClose(aCx, this, aRv);
 }
@@ -280,8 +327,8 @@ void ReadableStreamDefaultController::Enqueue(JSContext* aCx,
                                               JS::Handle<JS::Value> aChunk,
                                               ErrorResult& aRv) {
   // Step 1.
-  if (!ReadableStreamDefaultControllerCanCloseOrEnqueue(this)) {
-    aRv.ThrowTypeError("Cannot Enqueue");
+  if (!ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
+          this, CloseOrEnqueue::Enqueue, aRv)) {
     return;
   }
 
