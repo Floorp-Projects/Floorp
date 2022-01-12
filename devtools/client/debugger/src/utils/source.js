@@ -61,6 +61,60 @@ export function shouldBlackbox(source) {
 }
 
 /**
+ * Checks if the frame is within a line ranges which are blackboxed
+ * in the source.
+ *
+ * @param {Object}  frame
+ *                  The current frame
+ * @param {Object}  source
+ *                  The source related to the frame
+ * @param {Object}  blackboxedRanges
+ *                  The currently blackboxedRanges for all the sources.
+ * @param {Boolean} isFrameBlackBoxed
+ *                  If the frame is within the blackboxed range
+ *                  or not.
+ */
+export function isFrameBlackBoxed(frame, source, blackboxedRanges) {
+  return (
+    !!source?.isBlackBoxed &&
+    (!blackboxedRanges[source.url].length ||
+      !!findBlackBoxRange(source, blackboxedRanges, {
+        start: frame.location.line,
+        end: frame.location.line,
+      }))
+  );
+}
+
+/**
+ * Checks if a blackbox range exist for the line range.
+ * That is if any start and end lines overlap any of the
+ * blackbox ranges
+ *
+ * @param {Object}  source
+ *                  The current selected source
+ * @param {Object}  blackboxedRanges
+ *                  The store of blackboxedRanges
+ * @param {Object}  lineRange
+ *                  The start/end line range `{ start: <Number>, end: <Number> }`
+ * @return {Object} blackboxRange
+ *                  The first matching blackbox range that all or part of the
+ *                  specified lineRange sits within.
+ */
+export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
+  const ranges = blackboxedRanges[source.url];
+  if (!ranges || !ranges.length) {
+    return null;
+  }
+
+  return ranges.find(
+    range =>
+      (lineRange.start >= range.start.line &&
+        lineRange.start <= range.end.line) ||
+      (lineRange.end >= range.start.line && lineRange.end <= range.end.line)
+  );
+}
+
+/**
  * Returns true if the specified url and/or content type are specific to
  * javascript files.
  *

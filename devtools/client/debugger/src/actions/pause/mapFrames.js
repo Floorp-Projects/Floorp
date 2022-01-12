@@ -2,24 +2,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getFrames, getSource, getSelectedFrame } from "../../selectors";
+import {
+  getFrames,
+  getBlackBoxRanges,
+  getSource,
+  getSelectedFrame,
+} from "../../selectors";
+
+import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
 
 import { isGeneratedId } from "devtools-source-map";
 
-function isFrameBlackboxed(state, frame) {
-  const source = getSource(state, frame.location.sourceId);
-  return !!source?.isBlackBoxed;
-}
-
 function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
-  if (selectedFrame && !isFrameBlackboxed(state, selectedFrame)) {
+  const blackboxedRanges = getBlackBoxRanges(state);
+
+  if (
+    selectedFrame &&
+    !isFrameBlackBoxed(
+      selectedFrame,
+      getSource(state, selectedFrame.location.sourceId),
+      blackboxedRanges
+    )
+  ) {
     return selectedFrame.id;
   }
 
-  selectedFrame = frames.find(frame => !isFrameBlackboxed(state, frame));
+  selectedFrame = frames.find(frame => {
+    const frameSource = getSource(state, frame.location.sourceId);
+    return !isFrameBlackBoxed(frame, frameSource, blackboxedRanges);
+  });
   return selectedFrame?.id;
 }
 

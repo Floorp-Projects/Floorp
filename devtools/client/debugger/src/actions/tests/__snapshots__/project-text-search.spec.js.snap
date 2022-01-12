@@ -41,8 +41,6 @@ Array [
 
 exports[`project text search should clear all the search results 2`] = `Array []`;
 
-exports[`project text search should clear all the search results 3`] = `Array []`;
-
 exports[`project text search should close project search 1`] = `
 Array [
   Object {
