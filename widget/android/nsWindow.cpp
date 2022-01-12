@@ -2585,7 +2585,8 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
 
 void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
-  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(mWidgetId);
+  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(
+      mWidgetId, GetClientSize());
 }
 
 bool nsWindow::WidgetPaintsBackground() {
