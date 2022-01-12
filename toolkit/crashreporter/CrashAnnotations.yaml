@@ -965,6 +965,11 @@ useragent_locale:
     User-agent locale.
   type: string
 
+UtilityProcessStatus:
+  description: >
+    Status of the Utility process, can be set to "Running" or "Destroyed"
+  type: string
+
 Vendor:
   description: >
     Application vendor (e.g. Mozilla).

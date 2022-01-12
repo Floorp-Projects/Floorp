@@ -66,6 +66,12 @@ EXPORTS.mozilla.ipc += [
     "Transport.h",
     "TransportSecurityInfoUtils.h",
     "URIUtils.h",
+    "UtilityProcessChild.h",
+    "UtilityProcessHost.h",
+    "UtilityProcessImpl.h",
+    "UtilityProcessManager.h",
+    "UtilityProcessParent.h",
+    "UtilityProcessSandboxing.h",
     "WindowsMessageLoop.h",
 ]
 
@@ -192,6 +198,11 @@ UNIFIED_SOURCES += [
     "StringUtil.cpp",
     "TransportSecurityInfoUtils.cpp",
     "URIUtils.cpp",
+    "UtilityProcessChild.cpp",
+    "UtilityProcessHost.cpp",
+    "UtilityProcessImpl.cpp",
+    "UtilityProcessManager.cpp",
+    "UtilityProcessParent.cpp",
 ]
 
 SOURCES += [
@@ -221,6 +232,10 @@ LOCAL_INCLUDES += [
     "/third_party/libwebrtc",
     "/third_party/libwebrtc/third_party/abseil-cpp",
     "/xpcom/build",
+]
+
+PREPROCESSED_IPDL_SOURCES = [
+    "PUtilityProcess.ipdl",
 ]
 
 IPDL_SOURCES = [
@@ -277,6 +292,9 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
         "/security/sandbox/chromium-shim",
         "/security/sandbox/win/src/sandboxbroker",
     ]
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["test/gtest"]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

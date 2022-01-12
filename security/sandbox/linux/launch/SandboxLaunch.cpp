@@ -265,6 +265,8 @@ static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
       // GetEffectiveSocketProcessSandboxLevel is main-thread-only due to prefs.
       MOZ_ASSERT(NS_IsMainThread());
       return GetEffectiveSocketProcessSandboxLevel();
+    case GeckoProcessType_Utility:
+      return PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX") == nullptr ? 1 : 0;
     default:
       return 0;
   }

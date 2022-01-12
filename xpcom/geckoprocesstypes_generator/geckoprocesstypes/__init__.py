@@ -30,6 +30,9 @@ from collections import namedtuple
 #  toolkit/crashreporter/CrashAnnotations.yaml
 #   - Add new Xxx*Status entry for your new process type description
 #
+#  toolkit/components/telemetry/Histograms.json
+#   - Add entry in PROCESS_CRASH_SUBMIT_ATTEMPT
+#
 #  toolkit/locales/en-US/toolkit/global/processTypes.ftl
 #   - Add a user-facing localizable name for your process, if needed
 #
@@ -322,5 +325,16 @@ process_types = [
         "ForkServer",
         "FORKSERVER",
         False,
+    ),
+    GeckoProcessType(
+        11,
+        "Utility",
+        "utility",
+        "Utility",
+        "Self",
+        "Utility",
+        "Utility",
+        "UTILITY",
+        True,
     ),
 ]

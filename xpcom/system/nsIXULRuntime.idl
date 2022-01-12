@@ -193,6 +193,7 @@ interface nsIXULRuntime : nsISupports
   const unsigned long PROCESS_TYPE_SOCKET = 8;
   const unsigned long PROCESS_TYPE_REMOTESANDBOXBROKER = 9;
   const unsigned long PROCESS_TYPE_FORKSERVER = 10;
+  const unsigned long PROCESS_TYPE_UTILITY = 11;
 
   /**
    * The type of the caller's process.  Returns one of the values above.

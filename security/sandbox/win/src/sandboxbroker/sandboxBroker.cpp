@@ -1244,6 +1244,111 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
   return true;
 }
 
+bool SandboxBroker::SetSecurityLevelForUtilityProcess(
+    mozilla::ipc::SandboxingKind aSandbox) {
+  if (!mPolicy) {
+    return false;
+  }
+
+  auto result =
+      SetJobLevel(mPolicy, sandbox::JOB_LOCKDOWN, 0 /* ui_exceptions */);
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "SetJobLevel should never fail with these arguments, what happened?");
+
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  sandbox::USER_LOCKDOWN);
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "SetTokenLevel should never fail with these arguments, what happened?");
+
+  result = mPolicy->SetAlternateDesktop(true);
+  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+          ::GetLastError());
+  }
+
+  result = mPolicy->SetIntegrityLevel(sandbox::INTEGRITY_LEVEL_LOW);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "SetIntegrityLevel should never fail with these "
+                         "arguments, what happened?");
+
+  result =
+      mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "SetDelayedIntegrityLevel should never fail with "
+                         "these arguments, what happened?");
+
+  mPolicy->SetLockdownDefaultDacl();
+  mPolicy->AddRestrictingRandomSid();
+
+  sandbox::MitigationFlags mitigations =
+      sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
+      sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+      sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
+
+  const Maybe<Vector<const wchar_t*>>& exceptionModules =
+      GetPrespawnCigExceptionModules();
+  if (exceptionModules.isSome()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
+
+  result = mPolicy->SetProcessMitigations(mitigations);
+  SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
+
+  if (exceptionModules.isSome()) {
+    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
+    // because of DCHECK in PolicyBase::AddRuleInternal.
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
+
+  result = AddWin32kLockdownPolicy(mPolicy, false);
+  SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
+
+  mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
+                sandbox::MITIGATION_DLL_SEARCH_ORDER;
+
+  if (exceptionModules.isNothing()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
+
+  result = mPolicy->SetDelayedProcessMitigations(mitigations);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "Invalid flags for SetDelayedProcessMitigations.");
+
+  // Add the policy for the client side of a pipe. It is just a file
+  // in the \pipe\ namespace. We restrict it to pipes that start with
+  // "chrome." so the sandboxed process cannot connect to system services.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\chrome.*");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
+  // Add the policy for the client side of the crash server pipe.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\gecko-crash-server-pipe.*");
+  SANDBOX_ENSURE_SUCCESS(
+      result,
+      "With these static arguments AddRule should never fail, what happened?");
+
+  switch (aSandbox) {
+    case mozilla::ipc::SandboxingKind::GENERIC_UTILITY:
+      // Nothing specific to perform yet?
+      break;
+
+    default:
+      MOZ_ASSERT(false, "Invalid SandboxingKind");
+      break;
+  }
+
+  return true;
+}
+
 bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
                                                 bool aIsRemoteLaunch) {
   if (!mPolicy) {
