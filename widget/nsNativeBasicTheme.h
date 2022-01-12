@@ -19,55 +19,6 @@ namespace mozilla {
 
 enum class StyleSystemColor : uint8_t;
 
-namespace widget {
-
-static constexpr gfx::sRGBColor sColorGrey10(
-    gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
-static constexpr gfx::sRGBColor sColorGrey10Alpha50(
-    gfx::sRGBColor::UnusualFromARGB(0x7fe9e9ed));
-static constexpr gfx::sRGBColor sColorGrey20(
-    gfx::sRGBColor::UnusualFromARGB(0xffd0d0d7));
-static constexpr gfx::sRGBColor sColorGrey30(
-    gfx::sRGBColor::UnusualFromARGB(0xffb1b1b9));
-static constexpr gfx::sRGBColor sColorGrey40(
-    gfx::sRGBColor::UnusualFromARGB(0xff8f8f9d));
-static constexpr gfx::sRGBColor sColorGrey40Alpha50(
-    gfx::sRGBColor::UnusualFromARGB(0x7f8f8f9d));
-static constexpr gfx::sRGBColor sColorGrey50(
-    gfx::sRGBColor::UnusualFromARGB(0xff676774));
-static constexpr gfx::sRGBColor sColorGrey60(
-    gfx::sRGBColor::UnusualFromARGB(0xff484851));
-
-static constexpr gfx::sRGBColor sColorMeterGreen10(
-    gfx::sRGBColor::UnusualFromARGB(0xff00ab60));
-static constexpr gfx::sRGBColor sColorMeterGreen20(
-    gfx::sRGBColor::UnusualFromARGB(0xff056139));
-static constexpr gfx::sRGBColor sColorMeterYellow10(
-    gfx::sRGBColor::UnusualFromARGB(0xffffbd4f));
-static constexpr gfx::sRGBColor sColorMeterYellow20(
-    gfx::sRGBColor::UnusualFromARGB(0xffd2811e));
-static constexpr gfx::sRGBColor sColorMeterRed10(
-    gfx::sRGBColor::UnusualFromARGB(0xffe22850));
-static constexpr gfx::sRGBColor sColorMeterRed20(
-    gfx::sRGBColor::UnusualFromARGB(0xff810220));
-
-static const CSSCoord kMinimumColorPickerHeight = 32.0f;
-static const CSSCoord kMinimumRangeThumbSize = 20.0f;
-static const CSSCoord kMinimumDropdownArrowButtonWidth = 18.0f;
-static const CSSCoord kMinimumSpinnerButtonWidth = 18.0f;
-static const CSSCoord kMinimumSpinnerButtonHeight = 9.0f;
-static const CSSCoord kButtonBorderWidth = 1.0f;
-static const CSSCoord kMenulistBorderWidth = 1.0f;
-static const CSSCoord kTextFieldBorderWidth = 1.0f;
-static const CSSCoord kRangeHeight = 6.0f;
-static const CSSCoord kProgressbarHeight = 6.0f;
-static const CSSCoord kMeterHeight = 12.0f;
-
-// nsCheckboxRadioFrame takes the bottom of the content box as the baseline.
-// This border-width makes its baseline 2px under the bottom, which is nice.
-static constexpr CSSCoord kCheckboxRadioBorderWidth = 2.0f;
-
-}  // namespace widget
 }  // namespace mozilla
 
 class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
