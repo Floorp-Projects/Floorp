@@ -20,7 +20,7 @@ AndroidCompositorWidget::AndroidCompositorWidget(
       mWidgetId(aInitData.widgetId()),
       mNativeWindow(nullptr),
       mFormat(WINDOW_FORMAT_RGBA_8888),
-      mClientSize(0, 0) {}
+      mClientSize(aInitData.clientSize()) {}
 
 AndroidCompositorWidget::~AndroidCompositorWidget() {
   if (mNativeWindow) {
