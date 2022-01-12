@@ -1561,7 +1561,7 @@ Decimal HTMLInputElement::StringToDecimal(const nsAString& aValue) {
     return Decimal::nan();
   }
   NS_LossyConvertUTF16toASCII asciiString(aValue);
-  std::string stdString = asciiString.get();
+  std::string stdString(asciiString.get(), asciiString.Length());
   return Decimal::fromString(stdString);
 }
 
