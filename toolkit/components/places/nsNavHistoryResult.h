@@ -702,6 +702,8 @@ class nsNavHistoryQueryResultNode final
                        const nsACString& aNewParentGUID, uint16_t aSource,
                        const nsACString& aURI);
   nsresult OnItemTagsChanged(int64_t aItemId, const nsAString& aURL);
+  nsresult OnItemTitleChanged(int64_t aItemId, const nsACString& aGUID,
+                              const nsACString& aTitle, PRTime aLastModified);
   nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,
                             const nsACString& aURL, PRTime aLastModified);
 
