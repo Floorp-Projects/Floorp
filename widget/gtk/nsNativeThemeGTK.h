@@ -80,8 +80,6 @@ class nsNativeThemeGTK final : public mozilla::widget::Theme {
 
   bool ThemeNeedsComboboxDropmarker() override;
   Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
 
   nsNativeThemeGTK();
 
