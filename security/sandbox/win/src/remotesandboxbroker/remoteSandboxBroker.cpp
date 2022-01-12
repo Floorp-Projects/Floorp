@@ -158,6 +158,12 @@ bool RemoteSandboxBroker::SetSecurityLevelForSocketProcess() {
       "RemoteSandboxBroker::SetSecurityLevelForSocketProcess not Implemented");
 }
 
+bool RemoteSandboxBroker::SetSecurityLevelForUtilityProcess(
+    mozilla::ipc::SandboxingKind aSandbox) {
+  MOZ_CRASH(
+      "RemoteSandboxBroker::SetSecurityLevelForUtilityProcess not Implemented");
+}
+
 AbstractSandboxBroker* CreateRemoteSandboxBroker() {
   return new RemoteSandboxBroker();
 }

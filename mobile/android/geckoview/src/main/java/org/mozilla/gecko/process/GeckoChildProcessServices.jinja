@@ -10,6 +10,7 @@ public class GeckoChildProcessServices {
     public static final class gmplugin extends GeckoServiceChildProcess {}
     public static final class socket extends GeckoServiceChildProcess {}
     public static final class gpu extends GeckoServiceGpuProcess {}
+    public static final class utility extends GeckoServiceChildProcess {}
 
 {% for id in range(0, MOZ_ANDROID_CONTENT_SERVICE_COUNT | int) %}
     public static final class tab{{ id }} extends GeckoServiceChildProcess {}

@@ -17,6 +17,7 @@ const ProcessType = Object.freeze({
     tab: "process-type-tab",
     rdd: "process-type-rdd",
     socket: "process-type-socket",
+    utility: "process-type-utility",
 
     // Keys defined in dom/ipc/RemoteType.h
     extension: "process-type-extension",

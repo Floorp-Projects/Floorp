@@ -121,6 +121,9 @@ static CommandLineArg<uint64_t> sPrefMapSize{"-prefMapSize", "prefmapsize"};
 
 static CommandLineArg<uint64_t> sChildID{"-childID", "childid"};
 
+static CommandLineArg<uint64_t> sSandboxingKind{"-sandboxingKind",
+                                                "sandboxingkind"};
+
 static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
 
 static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};

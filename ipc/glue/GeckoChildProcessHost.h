@@ -39,6 +39,10 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
+#if defined(MOZ_SANDBOX)
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
+#endif
+
 struct _MacSandboxInfo;
 typedef _MacSandboxInfo MacSandboxInfo;
 
@@ -232,6 +236,10 @@ class GeckoChildProcessHost : public ChildProcessHost,
   int32_t mSandboxLevel;
 #  endif
 #endif  // XP_WIN
+
+#if defined(MOZ_SANDBOX)
+  SandboxingKind mSandbox;
+#endif
 
   ProcessHandle mChildProcessHandle;
 #if defined(OS_MACOSX)
