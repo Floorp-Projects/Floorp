@@ -382,7 +382,8 @@ void WinWindowOcclusionTracker::Enable(nsBaseWidget* aWindow, HWND aHwnd) {
     return;
   }
 
-  mHwndRootWindowMap.emplace(aHwnd, aWindow);
+  nsWeakPtr weak = do_GetWeakReference(aWindow);
+  mHwndRootWindowMap.emplace(aHwnd, weak);
 
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<WindowOcclusionCalculator>(
@@ -623,9 +624,13 @@ void WinWindowOcclusionTracker::UpdateOcclusionState(
     } else if (aShowAllWindows) {
       occlState = OcclusionState::VISIBLE;
     }
-    it->second->NotifyOcclusionState(occlState);
-
-    if (it->second->SizeMode() != nsSizeMode_Minimized) {
+    nsCOMPtr<nsIWidget> widget = do_QueryReferent(it->second);
+    if (!widget) {
+      continue;
+    }
+    auto* baseWidget = static_cast<nsBaseWidget*>(widget.get());
+    baseWidget->NotifyOcclusionState(occlState);
+    if (baseWidget->SizeMode() != nsSizeMode_Minimized) {
       mNumVisibleRootWindows++;
     }
   }
@@ -688,11 +693,16 @@ void WinWindowOcclusionTracker::MarkNonIconicWindowsOccluded() {
 
   // Set all visible root windows as occluded. If not visible,
   // set them as hidden.
-  for (auto& [hwnd, window] : mHwndRootWindowMap) {
-    auto state = (window->SizeMode() == nsSizeMode_Minimized)
+  for (auto& [hwnd, weak] : mHwndRootWindowMap) {
+    nsCOMPtr<nsIWidget> widget = do_QueryReferent(weak);
+    if (!widget) {
+      continue;
+    }
+    auto* baseWidget = static_cast<nsBaseWidget*>(widget.get());
+    auto state = (baseWidget->SizeMode() == nsSizeMode_Minimized)
                      ? OcclusionState::HIDDEN
                      : OcclusionState::OCCLUDED;
-    window->NotifyOcclusionState(state);
+    baseWidget->NotifyOcclusionState(state);
   }
 }
 

@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "nsIWeakReferenceUtils.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/widget/WindowOcclusionState.h"
 #include "mozilla/widget/WinEventObserver.h"
@@ -284,7 +285,7 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
   // Map of HWND to widget. Maintained on main thread, and used to send
   // occlusion state notifications to Windows from
   // mRootWindowHwndsOcclusionState.
-  std::unordered_map<HWND, nsBaseWidget*> mHwndRootWindowMap;
+  std::unordered_map<HWND, nsWeakPtr> mHwndRootWindowMap;
 
   // This is set by UpdateOcclusionState(). It is currently only used by tests.
   int mNumVisibleRootWindows = 0;
