@@ -26,6 +26,7 @@ bool IsContentSandboxEnabled();
 enum class ContentWin32kLockdownState : int32_t {
   LockdownEnabled = 1,
   MissingWebRender,
+  MissingRemoteWebGL,
   OperatingSystemNotSupported,
   PrefNotSet,
 };
