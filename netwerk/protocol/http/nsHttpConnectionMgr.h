@@ -208,15 +208,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   //-------------------------------------------------------------------------
 
   ReentrantMonitor mReentrantMonitor{"nsHttpConnectionMgr.mReentrantMonitor"};
-  // This is used as a flag that we're shut down, and no new events should be
-  // dispatched.
-  nsCOMPtr<nsIEventTarget> mSocketThreadTarget GUARDED_BY(mReentrantMonitor);
+  nsCOMPtr<nsIEventTarget> mSocketThreadTarget;
 
-  Atomic<bool, mozilla::Relaxed> mIsShuttingDown{false};
-
-  //-------------------------------------------------------------------------
-  // NOTE: these members are only accessed on the socket transport thread
-  //-------------------------------------------------------------------------
   // connection limits
   uint16_t mMaxUrgentExcessiveConns{0};
   uint16_t mMaxConns{0};
@@ -232,6 +225,11 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   uint32_t mThrottleHoldTime{0};
   TimeDuration mThrottleMaxTime;
   bool mBeConservativeForProxy{true};
+  Atomic<bool, mozilla::Relaxed> mIsShuttingDown{false};
+
+  //-------------------------------------------------------------------------
+  // NOTE: these members are only accessed on the socket transport thread
+  //-------------------------------------------------------------------------
 
   [[nodiscard]] bool ProcessPendingQForEntry(ConnectionEntry*,
                                              bool considerAll);
