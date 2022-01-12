@@ -31,9 +31,9 @@ class LoginsAdapter(
 
     private object DiffCallback : DiffUtil.ItemCallback<SavedLogin>() {
         override fun areItemsTheSame(oldItem: SavedLogin, newItem: SavedLogin) =
-            oldItem.origin == newItem.origin
+            oldItem.guid == newItem.guid
 
         override fun areContentsTheSame(oldItem: SavedLogin, newItem: SavedLogin) =
-            oldItem == newItem
+            oldItem.origin == newItem.origin && oldItem.username == newItem.username
     }
 }
