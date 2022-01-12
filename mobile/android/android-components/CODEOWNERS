@@ -28,47 +28,47 @@
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
 /taskcluster/ @mozilla-mobile/releng @mozilla-mobile/act
 
-/components/browser/awesomebar/             @pocmo
+/components/browser/awesomebar/             @mozilla-mobile/act
 /components/browser/domains/                @csadilek
-/components/browser/engine-gecko-beta/      @pocmo @csadilek @amejia481
-/components/browser/engine-gecko-nightly/   @pocmo @csadilek @amejia481
-/components/browser/engine-gecko/           @pocmo @csadilek @amejia481
+/components/browser/engine-gecko-beta/      @csadilek @amejia481
+/components/browser/engine-gecko-nightly/   @csadilek @amejia481
+/components/browser/engine-gecko/           @csadilek @amejia481
 /components/browser/engine-system/          @amejia481
 /components/browser/errorpages/             @mozilla-mobile/act
-/components/browser/icons/                  @pocmo
+/components/browser/icons/                  @mozilla-mobile/act
 /components/browser/menu/                   @mozilla-mobile/act
 /components/browser/menu2/                  @jonalmeida
-/components/browser/search/                 @pocmo
-/components/browser/state/                  @pocmo @csadilek
+/components/browser/search/                 @mozilla-mobile/act
+/components/browser/state/                  @csadilek
 /components/browser/storage-sync/           @grigoryk
 /components/browser/tabstray/               @jonalmeida
 /components/browser/thumbnails/             @jonalmeida @gabrielluong
-/components/browser/toolbar/                @pocmo
+/components/browser/toolbar/                @mozilla-mobile/act
 
-/components/concept/awesomebar/             @pocmo @csadilek
-/components/concept/base/                   @pocmo
-/components/concept/engine/                 @pocmo @csadilek
-/components/concept/fetch/                  @pocmo @csadilek
+/components/concept/awesomebar/             @csadilek
+/components/concept/base/                   @mozilla-mobile/act
+/components/concept/engine/                 @csadilek
+/components/concept/fetch/                  @csadilek
 /components/concept/menu/                   @mozilla-mobile/act
 /components/concept/push/                   @jonalmeida
 /components/concept/storage/                @grigoryk
 /components/concept/sync/                   @grigoryk
 /components/concept/tabstray/               @jonalmeida
-/components/concept/toolbar/                @pocmo
+/components/concept/toolbar/                @mozilla-mobile/act
 
 /components/feature/accounts-push/          @jonalmeida
 /components/feature/accounts/               @grigoryk
 /components/feature/addons/                 @csadilek @amejia481
 /components/feature/app-links/              @rocketsroger
-/components/feature/autofill/               @pocmo @grigoryk
+/components/feature/autofill/               @grigoryk
 /components/feature/awesomebar/             @csadilek
 /components/feature/containers/             @gabrielluong
-/components/feature/contextmenu/            @pocmo
+/components/feature/contextmenu/            @mozilla-mobile/act
 /components/feature/customtabs/             @jonalmeida
 /components/feature/downloads/              @Amejia481 @csadilek
 /components/feature/findinpage/             @Amejia481
 /components/feature/intent/                 @mozilla-mobile/act
-/components/feature/media/                  @pocmo @rocketsroger
+/components/feature/media/                  @rocketsroger
 /components/feature/privatemode/            @mozilla-mobile/act
 /components/feature/prompts/                @amejia481
 /components/feature/push/                   @jonalmeida @grigoryk
@@ -76,54 +76,54 @@
 /components/feature/qr/                     @csadilek
 /components/feature/readerview/             @csadilek
 /components/feature/recentlyclosed/         @mozilla-mobile/act
-/components/feature/search/                 @pocmo
-/components/feature/session/                @pocmo @csadilek
+/components/feature/search/                 @mozilla-mobile/act
+/components/feature/session/                @csadilek
 /components/feature/share/                  @mozilla-mobile/act
 /components/feature/sitepermissions/        @amejia481
 /components/feature/syncedtabs/             @jonalmeida
-/components/feature/tab-collections/        @pocmo
+/components/feature/tab-collections/        @mozilla-mobile/act
 /components/feature/tabs/                   @jonalmeida
-/components/feature/toolbar/                @pocmo
+/components/feature/toolbar/                @mozilla-mobile/act
 /components/feature/top-sites/              @gabrielluong @grigoryk
 /components/feature/webcompat-reporter/     @mozilla-mobile/Webcompat
 /components/feature/webcompat/              @mozilla-mobile/Webcompat
 /components/feature/webnotifications/       @jonalmeida @rocketsroger
 
-/components/lib/crash/                      @pocmo @rocketsroger
+/components/lib/crash/                      @rocketsroger
 /components/lib/dataprotect/                @grigoryk
-/components/lib/fetch-httpurlconnection/    @pocmo
-/components/lib/fetch-okhttp/               @pocmo
-/components/lib/jexl/                       @pocmo
-/components/lib/publicsuffixlist/           @pocmo
+/components/lib/fetch-httpurlconnection/    @mozilla-mobile/act
+/components/lib/fetch-okhttp/               @mozilla-mobile/act
+/components/lib/jexl/                       @mozilla-mobile/act
+/components/lib/publicsuffixlist/           @mozilla-mobile/act
 /components/lib/push-amazon/                @jonalmeida
 /components/lib/push-firebase/              @jonalmeida
-/components/lib/state/                      @pocmo @csadilek
+/components/lib/state/                      @csadilek
 
 /components/service/digitalassetlinks/      @mozilla-mobile/act
 /components/service/experiments/            @mozilla-mobile/telemetry
 /components/service/firefox-accounts/       @grigoryk
-/components/service/fretboard/              @pocmo
+/components/service/fretboard/              @mozilla-mobile/act
 /components/service/glean/                  @mozilla-mobile/telemetry
-/components/service/location/               @pocmo
+/components/service/location/               @mozilla-mobile/act
 /components/service/nimbus/                 @mozilla-mobile/telemetry @mozilla-mobile/ast
 /components/service/pocket/                 @Mugurell
 /components/service/sync-autofill/          @gabrielluong
 /components/service/sync-logins/            @grigoryk
 
 /components/support/android-test/           @amejia481
-/components/support/base/                   @pocmo @amejia481
+/components/support/base/                   @amejia481
 /components/support/images/                 @mozilla-mobile/act
 /components/support/ktx/                    @amejia481
 /components/support/locale/                 @amejia481
-/components/support/migration/              @pocmo @grigoryk
+/components/support/migration/              @grigoryk
 /components/support/rusthttp/               @mozilla-mobile/ast
 /components/support/rustlog/                @mozilla-mobile/ast
 /components/support/sync-telemetry/         @grigoryk
-/components/support/test-appservices/       @pocmo
-/components/support/test-libstate/          @pocmo @csadilek
+/components/support/test-appservices/       @mozilla-mobile/act
+/components/support/test-libstate/          @csadilek
 /components/support/test/                   @amejia481
 /components/support/utils/                  @mozilla-mobile/act
-/components/support/webextensions/          @csadilek @amejia481 @psymoon
+/components/support/webextensions/          @csadilek @amejia481
 
 /components/tooling/detekt/
 /components/tooling/fetch-tests/            @csadilek
@@ -138,13 +138,13 @@
 /components/ui/widgets/                     @mozilla-mobile/act
 
 /samples/browser/                           @csadilek @amejia481
-/samples/crash/                             @pocmo @rocketsroger
+/samples/crash/                             @rocketsroger
 /samples/dataprotect/                       @mozilla-mobile/act
 /samples/firefox-accounts/                  @grigoryk
 /samples/glean/                             @mozilla-mobile/telemetry
 /samples/sync-logins/                       @grigoryk
 /samples/sync/                              @grigoryk
-/samples/toolbar/                           @pocmo
+/samples/toolbar/                           @mozilla-mobile/act
 
 # Bot owned files
 strings.xml                                 @MickeyMoz
