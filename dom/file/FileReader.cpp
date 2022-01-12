@@ -501,6 +501,14 @@ JSObject* FileReader::WrapObject(JSContext* aCx,
 }
 
 void FileReader::StartProgressEventTimer() {
+  if (!NS_IsMainThread() && !mWeakWorkerRef) {
+    // The worker is possibly shutting down if dispatching a DOM event right
+    // before this call triggered an InterruptCallback call.
+    // XXX Note, the check is limited to workers for now, since it is unclear
+    // in the spec how FileReader should behave in this case on the main thread.
+    return;
+  }
+
   if (!mProgressNotifier) {
     mProgressNotifier = NS_NewTimer(mTarget);
   }
