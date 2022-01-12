@@ -8,6 +8,7 @@
 function fuzzyEqual(attributeName, dateString, expectedTime) {
   info(`${attributeName}: ${dateString}`);
   let absTimeDiff = Math.abs(expectedTime - Date.parse(dateString));
+  ok(!isNaN(absTimeDiff), `Parse "${dateString}" as a date`);
   const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
   lessOrEqual(
     absTimeDiff,
