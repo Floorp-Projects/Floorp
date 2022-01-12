@@ -208,11 +208,15 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
   }
 
   nsresult Cancel() override {
+    // We need to check first if cancel is called twice
+    nsresult rv = WorkerRunnable::Cancel();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIDiscardableRunnable> doomed =
         do_QueryInterface(mWrappedRunnable);
     MOZ_ASSERT(doomed);  // We checked this earlier!
     doomed->OnDiscard();
-    return WorkerRunnable::Cancel();
+    return NS_OK;
   }
 };
 
