@@ -16,6 +16,8 @@
 #include "nsXULAppAPI.h"
 #include "nsISupportsImpl.h"
 
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
+
 namespace sandbox {
 class BrokerServices;
 class TargetPolicy;
@@ -45,6 +47,8 @@ class AbstractSandboxBroker {
       int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) = 0;
   virtual bool SetSecurityLevelForRDDProcess() = 0;
   virtual bool SetSecurityLevelForSocketProcess() = 0;
+  virtual bool SetSecurityLevelForUtilityProcess(
+      mozilla::ipc::SandboxingKind aSandbox) = 0;
 
   enum SandboxLevel { LockDown, Restricted };
   virtual bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
@@ -96,6 +100,8 @@ class SandboxBroker : public AbstractSandboxBroker {
   bool SetSecurityLevelForSocketProcess() override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
                                    bool aIsRemoteLaunch = false) override;
+  bool SetSecurityLevelForUtilityProcess(
+      mozilla::ipc::SandboxingKind aSandbox) override;
 
   // File system permissions
   bool AllowReadFile(wchar_t const* file) override;

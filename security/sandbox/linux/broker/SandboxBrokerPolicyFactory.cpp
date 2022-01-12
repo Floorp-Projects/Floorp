@@ -878,4 +878,57 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   return policy;
 }
 
+/* static */ UniquePtr<SandboxBroker::Policy>
+SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(int aPid) {
+  auto policy = MakeUnique<SandboxBroker::Policy>();
+
+  policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/proc/cpuinfo");
+  policy->AddPath(rdonly, "/proc/meminfo");
+  policy->AddDir(rdonly, "/sys/devices/cpu");
+  policy->AddDir(rdonly, "/sys/devices/system/cpu");
+  policy->AddDir(rdonly, "/lib");
+  policy->AddDir(rdonly, "/lib64");
+  policy->AddDir(rdonly, "/usr/lib");
+  policy->AddDir(rdonly, "/usr/lib32");
+  policy->AddDir(rdonly, "/usr/lib64");
+  policy->AddDir(rdonly, "/usr/share");
+  policy->AddDir(rdonly, "/usr/local/share");
+  policy->AddDir(rdonly, "/etc");
+
+  // glibc will try to stat64("/") while populating nsswitch database
+  // https://sourceware.org/git/?p=glibc.git;a=blob;f=nss/nss_database.c;h=cf0306adc47f12d9bc761ab1b013629f4482b7e6;hb=9826b03b747b841f5fc6de2054bf1ef3f5c4bdf3#l396
+  // denying will make getaddrinfo() return ENONAME
+  policy->AddDir(access, "/");
+
+  AddLdconfigPaths(policy.get());
+
+  // Utility process sandbox needs to allow shmem in order to support
+  // profiling.  See Bug 1626385.
+  AddSharedMemoryPaths(policy.get(), aPid);
+
+  // Bug 1647957: memory reporting.
+  AddMemoryReporting(policy.get(), aPid);
+
+  // Firefox binary dir.
+  // Note that unlike the previous cases, we use NS_GetSpecialDirectory
+  // instead of GetSpecialSystemDirectory. The former requires a working XPCOM
+  // system, which may not be the case for some tests. For querying for the
+  // location of XPCOM things, we can use it anyway.
+  nsCOMPtr<nsIFile> ffDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(ffDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = ffDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdonly, tmpPath.get());
+    }
+  }
+
+  if (policy->IsEmpty()) {
+    policy = nullptr;
+  }
+  return policy;
+}
+
 }  // namespace mozilla

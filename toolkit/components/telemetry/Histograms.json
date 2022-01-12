@@ -13416,7 +13416,9 @@
       "rdd-crash",
       "rdd-hang",
       "socket-crash",
-      "socket-hang"
+      "socket-hang",
+      "utility-crash",
+      "utility-hang"
     ],
     "releaseChannelCollection": "opt-out",
     "description": "An attempt to submit a crash. Keyed on the CrashManager Crash.type."

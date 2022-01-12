@@ -12,6 +12,8 @@
 #include "nsXULAppAPI.h"
 #include <vector>
 
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
+
 // This defines the entry points for a content process to start
 // sandboxing itself.  See also SandboxInfo.h for what parts of
 // sandboxing are enabled/supported.
@@ -62,6 +64,8 @@ MOZ_EXPORT void SetMediaPluginSandbox(const char* aFilePath);
 MOZ_EXPORT void SetRemoteDataDecoderSandbox(int aBroker);
 
 MOZ_EXPORT void SetSocketProcessSandbox(int aBroker);
+
+MOZ_EXPORT void SetUtilitySandbox(int aBroker, ipc::SandboxingKind aKind);
 
 // We want to turn on/off crashing on error when running some tests
 // This will return current value and set the aValue we pass

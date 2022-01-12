@@ -45,7 +45,6 @@ class SandboxTestingChild : public PSandboxTestingChild {
   // absence of test report as a failure.
   inline void ReportNoTests();
 
-#ifdef XP_UNIX
   // For test cases that return an error number or 0, like newer POSIX APIs.
   void PosixTest(const nsCString& aName, bool aExpectSuccess, int aStatus);
 
@@ -60,7 +59,6 @@ class SandboxTestingChild : public PSandboxTestingChild {
   template <typename F>
   void ErrnoValueTest(const nsCString& aName, bool aExpectEquals,
                       int aExpectedErrno, F&& aFunction);
-#endif
 
  private:
   explicit SandboxTestingChild(SandboxTestingThread* aThread,

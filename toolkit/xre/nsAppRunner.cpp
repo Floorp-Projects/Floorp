@@ -986,7 +986,7 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult) {
 #undef GECKO_PROCESS_TYPE
 
 // .. and ensure that that is all of them:
-static_assert(GeckoProcessType_ForkServer + 1 == GeckoProcessType_End,
+static_assert(GeckoProcessType_Utility + 1 == GeckoProcessType_End,
               "Did not find the final GeckoProcessType");
 
 NS_IMETHODIMP
@@ -5681,7 +5681,7 @@ bool XRE_IsE10sParentProcess() {
 
 bool XRE_UseNativeEventProcessing() {
 #if defined(XP_MACOSX) || defined(XP_WIN)
-  if (XRE_IsRDDProcess() || XRE_IsSocketProcess()) {
+  if (XRE_IsRDDProcess() || XRE_IsSocketProcess() || XRE_IsUtilityProcess()) {
     return false;
   }
 #endif

@@ -8,6 +8,8 @@
 #include "SandboxTestingChildTests.h"
 #include "SandboxTestingThread.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
 
 #ifdef XP_LINUX
 #  include "mozilla/Sandbox.h"
@@ -79,6 +81,20 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     RunTestsSocket(this);
   }
 
+  if (XRE_IsUtilityProcess()) {
+    RefPtr<ipc::UtilityProcessChild> s = ipc::UtilityProcessChild::Get();
+    MOZ_ASSERT(s, "Unable to grab a UtilityProcessChild");
+    switch (s->mSandbox) {
+      case ipc::SandboxingKind::GENERIC_UTILITY:
+        RunTestsUtility(this);
+        break;
+
+      default:
+        MOZ_ASSERT(false, "Invalid SandboxingKind");
+        break;
+    }
+  }
+
 #ifdef XP_LINUX
   SetSandboxCrashOnError(sandboxCrashOnError);
 #endif
@@ -111,7 +127,6 @@ void SandboxTestingChild::ReportNoTests() {
                         "The test framework fails if there are no cases."_ns);
 }
 
-#ifdef XP_UNIX
 template <typename F>
 void SandboxTestingChild::ErrnoTest(const nsCString& aName, bool aExpectSuccess,
                                     F&& aFunction) {
@@ -140,6 +155,5 @@ void SandboxTestingChild::PosixTest(const nsCString& aName, bool aExpectSuccess,
 
   SendReportTestResults(aName, aExpectSuccess, succeeded, message);
 }
-#endif  // XP_UNIX
 
 }  // namespace mozilla

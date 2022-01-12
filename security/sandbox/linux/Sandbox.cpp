@@ -716,6 +716,37 @@ void SetSocketProcessSandbox(int aBroker) {
   SetCurrentProcessSandbox(GetSocketProcessSandboxPolicy(sBroker));
 }
 
+void SetUtilitySandbox(int aBroker, ipc::SandboxingKind aKind) {
+  if (!SandboxInfo::Get().Test(SandboxInfo::kHasSeccompBPF) ||
+      PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
+    if (aBroker >= 0) {
+      close(aBroker);
+    }
+    return;
+  }
+
+  gSandboxReporterClient =
+      new SandboxReporterClient(SandboxReport::ProcType::UTILITY);
+
+  static SandboxBrokerClient* sBroker;
+  if (aBroker >= 0) {
+    sBroker = new SandboxBrokerClient(aBroker);
+  }
+
+  UniquePtr<sandbox::bpf_dsl::Policy> policy;
+  switch (aKind) {
+    case ipc::SandboxingKind::GENERIC_UTILITY:
+      policy = GetUtilitySandboxPolicy(sBroker);
+      break;
+
+    default:
+      MOZ_ASSERT(false, "Invalid SandboxingKind");
+      break;
+  }
+
+  SetCurrentProcessSandbox(std::move(policy));
+}
+
 bool SetSandboxCrashOnError(bool aValue) {
   bool oldValue = gSandboxCrashOnError;
   gSandboxCrashOnError = aValue;

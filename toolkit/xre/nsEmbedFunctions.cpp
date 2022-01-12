@@ -63,6 +63,7 @@
 #include "mozilla/FilePreferences.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/RDDProcessImpl.h"
+#include "mozilla/ipc/UtilityProcessImpl.h"
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
@@ -575,6 +576,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     case GeckoProcessType_VR:
     case GeckoProcessType_RDD:
     case GeckoProcessType_Socket:
+    case GeckoProcessType_Utility:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
@@ -647,6 +649,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
         case GeckoProcessType_Socket:
           ioInterposerGuard.emplace();
           process = MakeUnique<net::SocketProcessImpl>(parentPID);
+          break;
+
+        case GeckoProcessType_Utility:
+          process = MakeUnique<ipc::UtilityProcessImpl>(parentPID);
           break;
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)

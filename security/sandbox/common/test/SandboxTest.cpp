@@ -16,6 +16,9 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/RDDChild.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "GMPService.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -196,6 +199,29 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
           }
           return processPromise->Reject(NS_ERROR_FAILURE, __func__);
         });
+        break;
+      }
+
+      case GeckoProcessType_Utility: {
+        RefPtr<UtilityProcessManager> utilityProc =
+            UtilityProcessManager::GetSingleton();
+        utilityProc->LaunchProcess(SandboxingKind::GENERIC_UTILITY)
+            ->Then(
+                GetMainThreadSerialEventTarget(), __func__,
+                [processPromise, utilityProc]() {
+                  UtilityProcessParent* utilityParent =
+                      utilityProc ? utilityProc->GetProcessParent() : nullptr;
+                  if (utilityParent) {
+                    return InitializeSandboxTestingActors(utilityParent,
+                                                          processPromise);
+                  }
+                  return processPromise->Reject(NS_ERROR_FAILURE, __func__);
+                },
+                [processPromise](nsresult aError) {
+                  MOZ_ASSERT_UNREACHABLE(
+                      "SandboxTest; failure to get Utility process");
+                  return processPromise->Reject(aError, __func__);
+                });
         break;
       }
 
