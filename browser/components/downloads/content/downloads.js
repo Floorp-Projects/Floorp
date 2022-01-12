@@ -467,6 +467,10 @@ var DownloadsPanel = {
    * pasted item can be resolved to a URI.
    */
   _onKeyDown(aEvent) {
+    if (DownloadsView.richListBox.hasAttribute("disabled")) {
+      this._handlePotentiallySpammyDownloadActivation(aEvent);
+      return;
+    }
     // If the user has pressed the tab, up, or down cursor key, start keyboard
     // navigation, thus enabling focusrings in the panel.  Keyboard navigation
     // is automatically disabled if the user moves the mouse on the panel, or
@@ -582,20 +586,47 @@ var DownloadsPanel = {
   },
 
   _delayPopupItems() {
-    let delay = Services.prefs.getIntPref("security.dialog_enable_delay");
-    let richListBox = DownloadsView.richListBox;
-    richListBox.setAttribute("disabled", true);
+    DownloadsView.richListBox.setAttribute("disabled", true);
+    this._startWatchingForSpammyDownloadActivation();
 
+    this._refreshDelayTimer();
+  },
+
+  _refreshDelayTimer() {
     // If timeout already exists, overwrite it to avoid multiple timeouts.
     if (this._delayTimeout) {
       clearTimeout(this._delayTimeout);
     }
 
+    let delay = Services.prefs.getIntPref("security.dialog_enable_delay");
     this._delayTimeout = setTimeout(() => {
-      richListBox.removeAttribute("disabled");
+      DownloadsView.richListBox.removeAttribute("disabled");
+      this._stopWatchingForSpammyDownloadActivation();
       this._focusPanel();
       this._delayTimeout = null;
     }, delay);
+  },
+
+  _startWatchingForSpammyDownloadActivation() {
+    Services.els.addSystemEventListener(window, "keydown", this, true);
+  },
+
+  _lastBeepTime: 0,
+  _handlePotentiallySpammyDownloadActivation(aEvent) {
+    if (aEvent.key == "Enter" || aEvent.key == " ") {
+      // Throttle our beeping to a maximum of once per second, otherwise it
+      // appears on Win10 that beeps never make it through at all.
+      if (Date.now() - this._lastBeepTime > 1000) {
+        Cc["@mozilla.org/sound;1"].getService(Ci.nsISound).beep();
+        this._lastBeepTime = Date.now();
+      }
+
+      this._refreshDelayTimer();
+    }
+  },
+
+  _stopWatchingForSpammyDownloadActivation() {
+    Services.els.removeSystemEventListener(window, "keydown", this, true);
   },
 
   /**
