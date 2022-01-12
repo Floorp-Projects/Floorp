@@ -3928,8 +3928,9 @@ class AddonList extends HTMLElement {
     }
 
     // Sort the add-ons in each section.
-    for (let section of sectionedAddons) {
-      section.sort(this.sortByFn);
+    for (let [index, section] of sectionedAddons.entries()) {
+      let sortByFn = this.sections[index].sortByFn || this.sortByFn;
+      section.sort(sortByFn);
     }
 
     return sectionedAddons;
@@ -4641,8 +4642,6 @@ gViewController.defineView("list", async type => {
 
   // If monochromatic themes are enabled and any are builtin to Firefox, we
   // display those themes together in a separate subsection.
-  const isMonochromaticTheme = addon =>
-    addon.id.endsWith("-colorway@mozilla.org");
 
   let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
@@ -4662,7 +4661,7 @@ gViewController.defineView("list", async type => {
         !isPending(addon, "uninstall") &&
         // For performance related details about this check see the
         // documentation for themeIsExpired in BuiltInThemeConfig.jsm.
-        (!isMonochromaticTheme(addon) ||
+        (!BuiltInThemes.isMonochromaticTheme(addon.id) ||
           BuiltInThemes.isRetainedExpiredTheme(addon.id)),
     },
   ];
@@ -4672,7 +4671,8 @@ gViewController.defineView("list", async type => {
   const areColorwayThemesInstalled = async () =>
     (await AddonManager.getAllAddons()).some(
       addon =>
-        isMonochromaticTheme(addon) && !BuiltInThemes.themeIsExpired(addon.id)
+        BuiltInThemes.isMonochromaticTheme(addon.id) &&
+        !BuiltInThemes.themeIsExpired(addon.id)
     );
   if (type == "theme" && (await areColorwayThemesInstalled())) {
     let monochromaticList = document.createElement("addon-list");
@@ -4684,8 +4684,14 @@ gViewController.defineView("list", async type => {
         subheadingId: type + "-monochromatic-subheading",
         filterFn: addon =>
           !addon.hidden &&
-          isMonochromaticTheme(addon) &&
+          BuiltInThemes.isMonochromaticTheme(addon.id) &&
           !BuiltInThemes.themeIsExpired(addon.id),
+        sortByFn: (theme1, theme2) => {
+          return (
+            BuiltInThemes.monochromaticSortIndices.get(theme1.id) -
+            BuiltInThemes.monochromaticSortIndices.get(theme2.id)
+          );
+        },
       },
     ]);
     frag.appendChild(monochromaticList);
