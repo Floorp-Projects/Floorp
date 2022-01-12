@@ -94,9 +94,6 @@ class nsNativeThemeWin : public Theme {
   ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
                                                StyleAppearance) override;
 
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
-
   nsNativeThemeWin();
 
  protected:
@@ -125,9 +122,6 @@ class nsNativeThemeWin : public Theme {
                                   StyleAppearance aAppearance);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
-  bool MayDrawCustomScrollbarPart(gfxContext* aContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance,
-                                  const nsRect& aRect, const nsRect& aClipRect);
   uint32_t GetWidgetNativeDrawingFlags(StyleAppearance aAppearance);
   int32_t StandardGetState(nsIFrame* aFrame, StyleAppearance aAppearance,
                            bool wantFocused);
