@@ -2914,15 +2914,15 @@ HTMLInputElement* HTMLInputElement::GetSelectedRadioButton() const {
   return selected;
 }
 
-nsresult HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
+void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
   if (!mForm) {
     // Nothing to do here.
-    return NS_OK;
+    return;
   }
 
   RefPtr<PresShell> presShell = aPresContext->GetPresShell();
   if (!presShell) {
-    return NS_OK;
+    return;
   }
 
   // Get the default submit element
@@ -2937,8 +2937,6 @@ nsresult HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
     RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
     form->MaybeSubmit(nullptr);
   }
-
-  return NS_OK;
 }
 
 void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
@@ -3835,8 +3833,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                IsDateTimeInputType(mType))) {
             FireChangeEventIfNeeded();
             if (aVisitor.mPresContext) {
-              rv = MaybeSubmitForm(aVisitor.mPresContext);
-              NS_ENSURE_SUCCESS(rv, rv);
+              MaybeSubmitForm(aVisitor.mPresContext);
             }
           }
 
