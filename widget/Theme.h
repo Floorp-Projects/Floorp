@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsNativeBasicTheme_h
-#define nsNativeBasicTheme_h
+#ifndef mozilla_widget_Theme_h
+#define mozilla_widget_Theme_h
 
 #include "Units.h"
 #include "mozilla/gfx/2D.h"
@@ -19,33 +19,21 @@ namespace mozilla {
 
 enum class StyleSystemColor : uint8_t;
 
-}  // namespace mozilla
+namespace widget {
 
-class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
+class Theme : protected nsNativeTheme, public nsITheme {
  protected:
-  using sRGBColor = mozilla::gfx::sRGBColor;
-  using CSSCoord = mozilla::CSSCoord;
-  using CSSPoint = mozilla::CSSPoint;
-  using CSSIntCoord = mozilla::CSSIntCoord;
-  using ComputedStyle = mozilla::ComputedStyle;
-  using EventStates = mozilla::EventStates;
-  using DrawTarget = mozilla::gfx::DrawTarget;
-  using Path = mozilla::gfx::Path;
-  using Rect = mozilla::gfx::Rect;
-  using Point = mozilla::gfx::Point;
-  using RectCornerRadii = mozilla::gfx::RectCornerRadii;
-  using LayoutDeviceCoord = mozilla::LayoutDeviceCoord;
-  using LayoutDeviceRect = mozilla::LayoutDeviceRect;
-  using Colors = mozilla::widget::ThemeColors;
-  using AccentColor = mozilla::widget::ThemeAccentColor;
-  using ScrollbarDrawing = mozilla::widget::ScrollbarDrawing;
-  using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
-  using LookAndFeel = mozilla::LookAndFeel;
-  using ThemeChangeKind = mozilla::widget::ThemeChangeKind;
+  using sRGBColor = gfx::sRGBColor;
+  using DrawTarget = gfx::DrawTarget;
+  using Path = gfx::Path;
+  using Rect = gfx::Rect;
+  using Point = gfx::Point;
+  using RectCornerRadii = gfx::RectCornerRadii;
+  using Colors = ThemeColors;
+  using AccentColor = ThemeAccentColor;
 
  public:
-  explicit nsNativeBasicTheme(
-      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
+  explicit Theme(UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
       : mScrollbarDrawing(std::move(aScrollbarDrawing)) {
     mScrollbarDrawing->RecomputeScrollbarParams();
   }
@@ -54,7 +42,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static void Shutdown();
   static void LookAndFeelChanged();
 
-  using DPIRatio = mozilla::CSSToLayoutDeviceScale;
+  using DPIRatio = CSSToLayoutDeviceScale;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -65,11 +53,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                   DrawOverflow) override;
 
   bool CreateWebRenderCommandsForWidget(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager, nsIFrame*,
-      StyleAppearance, const nsRect& aRect) override;
+      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+      const layers::StackingContextHelper& aSc,
+      layers::RenderRootStateManager* aManager, nsIFrame*, StyleAppearance,
+      const nsRect& aRect) override;
 
   // PaintBackendData will be either a DrawTarget, or a WebRenderBackendData.
   //
@@ -87,8 +74,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame*, StyleAppearance,
                          nsRect* aOverflowRect) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame*,
-                                  StyleAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  StyleAppearance, LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
   Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
   NS_IMETHOD WidgetStateChanged(nsIFrame*, StyleAppearance, nsAtom* aAttribute,
@@ -109,11 +95,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   nscoord GetCheckboxRadioPrefSize() override;
 
-  static mozilla::UniquePtr<ScrollbarDrawing> DefaultPlatformScrollbarStyle();
-  static mozilla::UniquePtr<ScrollbarDrawing> ScrollbarStyle();
+  static UniquePtr<ScrollbarDrawing> DefaultPlatformScrollbarStyle();
+  static UniquePtr<ScrollbarDrawing> ScrollbarStyle();
 
  protected:
-  virtual ~nsNativeBasicTheme() = default;
+  virtual ~Theme() = default;
 
   static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
@@ -209,14 +195,16 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
     LookAndFeel::NotifyChangedAllWindows(ThemeChangeKind::Layout);
   }
 
-  void SetScrollbarDrawing(
-      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing) {
+  void SetScrollbarDrawing(UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing) {
     mScrollbarDrawing = std::move(aScrollbarDrawing);
   }
   ScrollbarDrawing& GetScrollbarDrawing() const { return *mScrollbarDrawing; }
-  mozilla::UniquePtr<ScrollbarDrawing> mScrollbarDrawing;
+  UniquePtr<ScrollbarDrawing> mScrollbarDrawing;
 
   bool ThemeSupportsScrollbarButtons() override;
 };
+
+}  // namespace widget
+}  // namespace mozilla
 
 #endif
