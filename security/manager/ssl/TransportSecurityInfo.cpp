@@ -985,11 +985,7 @@ static nsresult CreateCertChain(nsTArray<RefPtr<nsIX509Cert>>& aOutput,
   nsTArray<nsTArray<uint8_t>> certList = std::move(aCertList);
   aOutput.Clear();
   for (auto& certBytes : certList) {
-    RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-        BitwiseCast<char*, uint8_t*>(certBytes.Elements()), certBytes.Length());
-    if (!cert) {
-      return NS_ERROR_FAILURE;
-    }
+    RefPtr<nsIX509Cert> cert = new nsNSSCertificate(std::move(certBytes));
     aOutput.AppendElement(cert);
   }
   return NS_OK;
