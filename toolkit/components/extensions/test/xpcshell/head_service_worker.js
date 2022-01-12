@@ -4,8 +4,20 @@
 
 /* exported TestWorkerWatcher */
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
+});
+
+// Ensure that the profile-after-change message has been notified,
+// so that ServiceWokerRegistrar is going to be initialized,
+// otherwise tests using a background service worker will fail.
+// in debug builds because of an assertion failure triggered
+// by ServiceWorkerRegistrar.cpp (due to not being initialized
+// automatically on startup as in a real Firefox instance).
+Services.obs.notifyObservers(
+  null,
+  "profile-after-change",
+  "force-serviceworkerrestart-init"
 );
 
 // A test utility class used in the test case to watch for a given extension
