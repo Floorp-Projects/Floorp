@@ -169,6 +169,19 @@ async function checkEventsForNode(test, inspector) {
       ok
     );
 
+    const checkbox = header.querySelector("input[type=checkbox]");
+    ok(checkbox, "The event toggling checkbox is displayed");
+    const disabled = checkbox.hasAttribute("disabled");
+    // We can't disable React/jQuery events at the moment, so ensure that for those,
+    // the checkbox is disabled.
+    const shouldBeDisabled =
+      expected[i].attributes?.includes("React") ||
+      expected[i].attributes?.includes("jQuery");
+    ok(
+      disabled === shouldBeDisabled,
+      `The checkbox is ${shouldBeDisabled ? "disabled" : "enabled"}\n`
+    );
+
     info(`${label} END`);
   }
 
