@@ -2518,10 +2518,7 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result) {
   *result = false;
 
 #ifdef DEBUG
-  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
-  if (!nsc) {
-    return NS_ERROR_FAILURE;
-  }
+  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(cert);
   nsAutoString certHash;
   nsresult rv = nsc->GetSha256Fingerprint(certHash);
   if (NS_FAILED(rv)) {
