@@ -96,6 +96,14 @@ gyp_vars["use_system_sqlite"] = 1
 gyp_vars["sqlite_libs"] = "sqlite"
 gyp_vars["enable_draft_hpke"] = 1
 
+# Clang can build NSS with its integrated assembler since version 9.
+if (
+    CONFIG["CPU_ARCH"] == "x86_64"
+    and CONFIG["CC_TYPE"] == "clang"
+    and int(CONFIG["CC_VERSION"].split(".")[0]) >= 9
+):
+    gyp_vars["force_integrated_as"] = 1
+
 
 if CONFIG["MOZ_SYSTEM_NSPR"]:
     gyp_vars["nspr_include_dir"] = "%" + CONFIG["NSPR_INCLUDE_DIR"]
