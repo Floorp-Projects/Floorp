@@ -82,20 +82,20 @@ git = "https://github.com/hsivonen/chardetng"
 replace-with = "vendored-sources"
 rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
 
-[source."https://github.com/grovesNL/glow"]
-git = "https://github.com/grovesNL/glow"
-replace-with = "vendored-sources"
-rev = "5851ca6"
-
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
 replace-with = "vendored-sources"
-rev = "1e593a6"
+rev = "6bc896f"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "8ffd6ba"
+rev = "c0b7ac7"
+
+[source."https://github.com/gfx-rs/metal-rs"]
+git = "https://github.com/gfx-rs/metal-rs"
+replace-with = "vendored-sources"
+rev = "140c8f4"
 
 [source."https://github.com/chris-zen/coremidi.git"]
 git = "https://github.com/chris-zen/coremidi.git"
