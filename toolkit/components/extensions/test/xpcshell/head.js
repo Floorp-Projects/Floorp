@@ -1,7 +1,7 @@
 "use strict";
 
-/* exported createHttpServer, cleanupDir, clearCache, optionalPermissionsPromptHandler, promiseConsoleOutput,
-            promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
+/* exported createHttpServer, cleanupDir, clearCache, isInBackgroundServiceWorkerTests, 
+            promiseConsoleOutput, promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput */
 
 var { AppConstants } = ChromeUtils.import(

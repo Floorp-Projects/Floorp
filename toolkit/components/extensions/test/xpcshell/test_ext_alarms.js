@@ -3,26 +3,32 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
-add_task(async function test_alarm_without_permissions() {
-  function backgroundScript() {
-    browser.test.assertTrue(
-      !browser.alarms,
-      "alarm API is not available when the alarm permission is not required"
-    );
-    browser.test.notifyPass("alarms_permission");
+add_task(
+  {
+    // TODO(Bug 1725478): remove the skip if once webidl API bindings will be hidden based on permissions.
+    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
+  },
+  async function test_alarm_without_permissions() {
+    function backgroundScript() {
+      browser.test.assertTrue(
+        !browser.alarms,
+        "alarm API is not available when the alarm permission is not required"
+      );
+      browser.test.notifyPass("alarms_permission");
+    }
+
+    let extension = ExtensionTestUtils.loadExtension({
+      background: `(${backgroundScript})()`,
+      manifest: {
+        permissions: [],
+      },
+    });
+
+    await extension.startup();
+    await extension.awaitFinish("alarms_permission");
+    await extension.unload();
   }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: [],
-    },
-  });
-
-  await extension.startup();
-  await extension.awaitFinish("alarms_permission");
-  await extension.unload();
-});
+);
 
 add_task(async function test_alarm_clear_non_matching_name() {
   async function backgroundScript() {
@@ -50,33 +56,39 @@ add_task(async function test_alarm_clear_non_matching_name() {
   await extension.unload();
 });
 
-add_task(async function test_alarm_get_and_clear_single_argument() {
-  async function backgroundScript() {
-    browser.alarms.create({ when: Date.now() + 2000000 });
+add_task(
+  {
+    // TODO(Bug 1748714): remove once alarms.create accepts also a single parameter.
+    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
+  },
+  async function test_alarm_get_and_clear_single_argument() {
+    async function backgroundScript() {
+      browser.alarms.create({ when: Date.now() + 2000000 });
 
-    let alarm = await browser.alarms.get();
-    browser.test.assertEq("", alarm.name, "expected alarm returned");
+      let alarm = await browser.alarms.get();
+      browser.test.assertEq("", alarm.name, "expected alarm returned");
 
-    let wasCleared = await browser.alarms.clear();
-    browser.test.assertTrue(wasCleared, "alarm was cleared");
+      let wasCleared = await browser.alarms.clear();
+      browser.test.assertTrue(wasCleared, "alarm was cleared");
 
-    let alarms = await browser.alarms.getAll();
-    browser.test.assertEq(0, alarms.length, "alarm was removed");
+      let alarms = await browser.alarms.getAll();
+      browser.test.assertEq(0, alarms.length, "alarm was removed");
 
-    browser.test.notifyPass("alarm-single-arg");
+      browser.test.notifyPass("alarm-single-arg");
+    }
+
+    let extension = ExtensionTestUtils.loadExtension({
+      background: `(${backgroundScript})()`,
+      manifest: {
+        permissions: ["alarms"],
+      },
+    });
+
+    await extension.startup();
+    await extension.awaitFinish("alarm-single-arg");
+    await extension.unload();
   }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
-    manifest: {
-      permissions: ["alarms"],
-    },
-  });
-
-  await extension.startup();
-  await extension.awaitFinish("alarm-single-arg");
-  await extension.unload();
-});
+);
 
 add_task(async function test_get_get_all_clear_all_alarms() {
   async function backgroundScript() {
