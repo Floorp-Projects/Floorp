@@ -1985,7 +1985,7 @@ static char FeatureCategory(uint32_t aFeature) {
   return 'x';
 }
 
-static void PrintUsageThenExit(int aExitCode) {
+static void PrintUsage() {
   PrintToConsole(
       "\n"
       "Profiler environment variable usage:\n"
@@ -2088,8 +2088,6 @@ static void PrintUsageThenExit(int aExitCode) {
       "does not support"
 #endif
   );
-
-  exit(aExitCode);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2461,8 +2459,8 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
 #undef PARSE_FEATURE_BIT
 
   PrintToConsole("\nUnrecognized feature \"%s\".\n\n", aFeature);
-  // Since we may have an old feature we don't implement anymore, don't exit
-  PrintUsageThenExit(0);
+  // Since we may have an old feature we don't implement anymore, don't exit.
+  PrintUsage();
   return 0;
 }
 
@@ -2576,7 +2574,8 @@ void profiler_init(void* aStackTop) {
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
   if (getenv("MOZ_BASE_PROFILER_HELP")) {
-    PrintUsageThenExit(0);  // terminates execution
+    PrintUsage();
+    exit(0);
   }
 
   SharedLibraryInfo::Initialize();
@@ -2652,7 +2651,8 @@ void profiler_init(void* aStackTop) {
         PrintToConsole(
             "- MOZ_PROFILER_STARTUP_ENTRIES unit must be one of the "
             "following: KB, KiB, MB, MiB, GB, GiB");
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
 
       // `long` could be 32 or 64 bits, so we force a 64-bit comparison with
@@ -2667,7 +2667,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
                        startupCapacity);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2685,7 +2686,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
                        startupDuration);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2701,7 +2703,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
                        startupInterval);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2718,7 +2721,8 @@ void profiler_init(void* aStackTop) {
         PrintToConsole(
             "- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
             startupFeaturesBitfield);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     } else {
       const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
