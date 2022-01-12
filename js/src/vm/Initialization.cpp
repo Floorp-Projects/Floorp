@@ -20,6 +20,7 @@
 #include "builtin/TestingFunctions.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
+#include "jit/Assembler.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Ion.h"
 #include "jit/JitCommon.h"
@@ -331,3 +332,8 @@ JS_PUBLIC_API bool JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
   return true;
 #endif
 }
+
+#if defined(ENABLE_WASM_SIMD) && \
+    (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
+void JS::SetAVXEnabled() { js::jit::CPUInfo::SetAVXEnabled(); }
+#endif
