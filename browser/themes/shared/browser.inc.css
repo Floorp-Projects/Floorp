@@ -6,9 +6,6 @@
 %include addons/extension-controlled.inc.css
 
 %filter substitution
-%define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
-%define urlbarBreakoutExtend 2px
-
 :root {
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
@@ -68,6 +65,8 @@
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
   --lwt-brighttext-url-color: #00ddff;
+
+  --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
 }
 
 @media (prefers-contrast) {
@@ -179,7 +178,7 @@ panel .text-link:-moz-lwtheme:not(:hover) {
 }
 
 :root[sessionrestored] #nav-bar:-moz-lwtheme {
-  transition: @themeTransition@;
+  transition: var(--ext-theme-background-transition);
 }
 
 /* Places tooltips */
@@ -199,7 +198,7 @@ panel .text-link:-moz-lwtheme:not(:hover) {
 }
 
 :root[sessionrestored] #PersonalToolbar:not(.instant) {
-  transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, var(--ext-theme-background-transition);
 }
 
 #PersonalToolbar[collapsed=true] {
