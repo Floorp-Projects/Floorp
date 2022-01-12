@@ -2517,6 +2517,21 @@ nsresult nsNavHistoryQueryResultNode::OnItemTagsChanged(int64_t aItemId,
   return NS_OK;
 }
 
+nsresult nsNavHistoryQueryResultNode::OnItemTitleChanged(
+    int64_t aItemId, const nsACString& aGUID, const nsACString& aTitle,
+    PRTime aLastModified) {
+  // Update ourselves first.
+  nsresult rv = nsNavHistoryResultNode::OnItemTitleChanged(
+      aItemId, aGUID, aTitle, aLastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS) {
+    return Refresh();
+  }
+
+  return NS_OK;
+}
+
 nsresult nsNavHistoryQueryResultNode::OnItemUrlChanged(int64_t aItemId,
                                                        const nsACString& aGUID,
                                                        const nsACString& aURL,
