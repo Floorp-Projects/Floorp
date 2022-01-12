@@ -35,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text"
-        tools:text="@string/onboarding_tracking_protection_description_3" />
+        tools:text="@string/onboarding_tracking_protection_description_4" />
 
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton

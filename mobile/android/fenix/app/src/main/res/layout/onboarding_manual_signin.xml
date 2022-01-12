@@ -33,14 +33,14 @@
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
         app:layout_constraintBottom_toBottomOf="@id/avatar_icon"
         android:layout_marginStart="52dp"
-        tools:text="@string/onboarding_account_sign_in_header_1" />
+        tools:text="@string/onboarding_account_sign_in_header_2" />
 
     <TextView
         android:id="@+id/description_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="@string/onboarding_manual_sign_in_description"
+        android:text="@string/onboarding_manual_sign_in_description_2"
         android:textAppearance="@style/Body14TextStyle"
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
         app:layout_constraintTop_toBottomOf="@id/header_text" />

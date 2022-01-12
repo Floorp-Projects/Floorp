@@ -33,6 +33,14 @@ class HomeOnboardingDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentOnboardingHomeDialogBinding.bind(view)
 
+        val appName = requireContext().getString(R.string.app_name)
+        binding.welcomeTitle.text =
+            requireContext().getString(R.string.onboarding_home_screen_title_3, appName)
+        binding.homeTitle.text = requireContext().getString(
+            R.string.onboarding_home_screen_section_home_title_3,
+            appName
+        )
+
         binding.finishButton.setOnClickListener {
             context?.settings()?.let { settings ->
                 settings.hasShownHomeOnboardingDialog = true

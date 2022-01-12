@@ -114,7 +114,8 @@ class StudiesView(
     @VisibleForTesting
     internal fun bindDescription() {
         val sumoUrl = SupportUtils.getGenericSumoURLForTopic(OPT_OUT_STUDIES)
-        val description = context.getString(R.string.studies_description)
+        val appName = context.getString(R.string.app_name)
+        val description = context.getString(R.string.studies_description_2, appName)
         val learnMore = context.getString(R.string.studies_learn_more)
         val rawText = "$description <a href=\"$sumoUrl\">$learnMore</a>"
         val text = HtmlCompat.fromHtml(rawText, HtmlCompat.FROM_HTML_MODE_COMPACT)

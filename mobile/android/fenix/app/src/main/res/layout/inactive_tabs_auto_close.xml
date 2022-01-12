@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
                 android:padding="8dp"
-                android:text="@string/tab_tray_inactive_auto_close_body"
+                android:text="@string/tab_tray_inactive_auto_close_body_2"
                 android:textAppearance="@style/Body14TextStyle"
                 app:layout_constraintTop_toBottomOf="@id/banner_info_message"
                 app:layout_constraintStart_toStartOf="parent" />

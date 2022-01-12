@@ -27,8 +27,9 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
         standardTrackingProtection = binding.trackingProtectionStandardOption
         strictTrackingProtection = binding.trackingProtectionStrictDefault
 
+        val appName = view.context.getString(R.string.app_name)
         binding.descriptionText.text = view.context.getString(
-            R.string.onboarding_tracking_protection_description_3
+            R.string.onboarding_tracking_protection_description_4, appName
         )
 
         val isTrackingProtectionEnabled = view.context.settings().shouldUseTrackingProtection

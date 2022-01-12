@@ -13,7 +13,7 @@
         android:id="@+id/button_search_widget_new_tab_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:contentDescription="@string/search_widget_content_description"
+        android:contentDescription="@string/search_widget_content_description_2"
         android:scaleType="centerInside" />
 
     <ImageView

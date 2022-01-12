@@ -34,7 +34,9 @@ class OnboardingTrackingProtectionViewHolderTest {
         every { testContext.components.settings } returns Settings(testContext)
         OnboardingTrackingProtectionViewHolder(binding.root)
 
-        val string = testContext.getString(R.string.onboarding_tracking_protection_description_3)
+        val appName = testContext.getString(R.string.app_name)
+        val string =
+            testContext.getString(R.string.onboarding_tracking_protection_description_4, appName)
         assertEquals(string, binding.descriptionText.text)
     }
 }

@@ -176,6 +176,12 @@ class SearchWidgetProvider : AppWidgetProvider() {
                 )?.toBitmap()
             )
         }
+
+        val appName = context.getString(R.string.app_name)
+        setContentDescription(
+            R.id.button_search_widget_new_tab_icon,
+            context.getString(R.string.search_widget_content_description_2, appName)
+        )
     }
 
     // Cell sizes obtained from the actual dimensions listed in search widget specs

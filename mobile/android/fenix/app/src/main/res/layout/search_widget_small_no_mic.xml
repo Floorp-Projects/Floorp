@@ -15,5 +15,5 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center"
-        android:contentDescription="@string/search_widget_content_description" />
+        android:contentDescription="@string/search_widget_content_description_2" />
 </FrameLayout>

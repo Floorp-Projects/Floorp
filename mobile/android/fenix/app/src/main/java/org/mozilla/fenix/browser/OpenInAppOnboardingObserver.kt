@@ -93,9 +93,10 @@ class OpenInAppOnboardingObserver(
 
     @VisibleForTesting
     internal fun createInfoBanner(): DynamicInfoBanner {
+        val appName = context.getString(R.string.app_name)
         return DynamicInfoBanner(
             context = context,
-            message = context.getString(R.string.open_in_app_cfr_info_message),
+            message = context.getString(R.string.open_in_app_cfr_info_message_2, appName),
             dismissText = context.getString(R.string.open_in_app_cfr_negative_button_text),
             actionText = context.getString(R.string.open_in_app_cfr_positive_button_text),
             container = container,

@@ -51,7 +51,8 @@ class OnboardingManualSignInViewHolderTest {
     @Test
     fun `bind header text`() {
         OnboardingManualSignInViewHolder(binding.root).bind()
-        val string = testContext.getString(R.string.onboarding_account_sign_in_header_1)
+        val appName = testContext.getString(R.string.app_name)
+        val string = testContext.getString(R.string.onboarding_account_sign_in_header_2, appName)
         assertEquals(
             string,
             binding.headerText.text
