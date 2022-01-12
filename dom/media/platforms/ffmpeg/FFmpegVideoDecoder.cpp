@@ -128,7 +128,11 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
 }
 
 AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
-  AVCodec* decoder = mLib->avcodec_find_decoder(mCodecID);
+  AVCodec* decoder = FindHardwareAVCodec(mLib, mCodecID);
+  if (!decoder) {
+    FFMPEG_LOG("  We're missing hardware accelerated decoder");
+    return nullptr;
+  }
   for (int i = 0;; i++) {
     const AVCodecHWConfig* config = mLib->avcodec_get_hw_config(decoder, i);
     if (!config) {
@@ -140,7 +144,7 @@ AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
     }
   }
 
-  FFMPEG_LOG("Decoder does not support VAAPI device type");
+  FFMPEG_LOG("  HW Decoder does not support VAAPI device type");
   return nullptr;
 }
 
@@ -223,20 +227,21 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
   if (!mLib->IsVAAPIAvailable()) {
-    FFMPEG_LOG("libva library or symbols are missing.");
+    FFMPEG_LOG("  libva library or symbols are missing.");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   AVCodec* codec = FindVAAPICodec();
   if (!codec) {
-    FFMPEG_LOG("Couldn't find ffmpeg VA-API decoder");
+    FFMPEG_LOG("  couldn't find ffmpeg VA-API decoder");
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
+  FFMPEG_LOG("  codec %s : %s", codec->name, codec->long_name);
 
   StaticMutexAutoLock mon(sMutex);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
-    FFMPEG_LOG("Couldn't init VA-API ffmpeg context");
+    FFMPEG_LOG("  couldn't init VA-API ffmpeg context");
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mCodecContext->opaque = this;
@@ -245,7 +250,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
 
   if (!CreateVAAPIDeviceContext()) {
     mLib->av_freep(&mCodecContext);
-    FFMPEG_LOG("Failed to create VA-API device context");
+    FFMPEG_LOG("  Failed to create VA-API device context");
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
 
@@ -259,11 +264,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
     mLib->av_freep(&mCodecContext);
-    FFMPEG_LOG("Couldn't initialise VA-API decoder");
+    FFMPEG_LOG("  Couldn't initialise VA-API decoder");
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
 
-  FFMPEG_LOG("VA-API FFmpeg init successful");
+  FFMPEG_LOG("  VA-API FFmpeg init successful");
   return NS_OK;
 }
 
