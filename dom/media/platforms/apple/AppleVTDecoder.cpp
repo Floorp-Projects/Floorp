@@ -45,6 +45,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                       ? *aConfig.mColorSpace
                       : DefaultColorSpace({mPictureWidth, mPictureHeight})),
       mColorRange(aConfig.mColorRange),
+      mColorDepth(aConfig.mColorDepth),
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
                   : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9
                                                          : StreamType::Unknown),
@@ -607,10 +608,13 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
 
 #ifndef MOZ_WIDGET_UIKIT
   // Output format type:
+  bool is10Bit = (gfx::BitDepthForColorDepth(mColorDepth) == 10);
   SInt32 PixelFormatTypeValue =
       mColorRange == gfx::ColorRange::FULL
-          ? kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
-          : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+          ? (is10Bit ? kCVPixelFormatType_420YpCbCr10BiPlanarFullRange
+                     : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
+          : (is10Bit ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+                     : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
   AutoCFRelease<CFNumberRef> PixelFormatTypeNumber = CFNumberCreate(
       kCFAllocatorDefault, kCFNumberSInt32Type, &PixelFormatTypeValue);
   // Construct IOSurface Properties
