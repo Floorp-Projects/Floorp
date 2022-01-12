@@ -104,12 +104,18 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     ]
     if CONFIG['MOZ_WAYLAND']:
         SOURCES += [
+            'atsc_a53.c',
+            'libdav1d.c',
             'vaapi_av1.c',
             'vaapi_decode.c',
             'vaapi_vp8.c',
             'vaapi_vp9.c',
         ]
-        USE_LIBS += ['mozva']
+        USE_LIBS += [
+          'dav1d',
+          'media_libdav1d_asm',
+          'mozva'
+        ]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [

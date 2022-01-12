@@ -65,6 +65,10 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'timecode.c',
         'video_enc_params.c'
     ]
+    if CONFIG["MOZ_WAYLAND"]:
+        SOURCES += [
+            'mastering_display_metadata.c',
+        ]
 
 SYMBOLS_FILE =  'avutil.symbols'
 NoVisibilityFlags()
