@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -54,7 +54,7 @@
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Yang Baru</string>
-    <string name="menu_settings">Setelan</string>
+    <string name="menu_settings">Pengaturan</string>
     <string name="menu_about">Tentang</string>
     <string name="menu_help">Bantuan</string>
     <string name="menu_rights">Hak Anda</string>
@@ -194,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Untuk Situs teratas</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Aktifkan untuk melengkapi secara otomatis lebih dari 450 URL populer di bilah alamat.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Aktifkan agar %s melengkapi otomatis lebih dari 450 URL populer di bilah alamat.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Untuk Situs yang Anda Tambahkan</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Aktikan lengkapi otomatis untuk lebih dari 450 URL populer di bilah alamat.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Aktifkan %s melengkapi otomatis URL favorit Anda.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Kelola situs</string>
@@ -288,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Hanya blokir kuki pelacak pihak ke-3</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blokir kuki lintas situs</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ya</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -309,7 +312,7 @@
     <string name="preference_category_security">Keamanan</string>
 
     <string name="preference_category_performance">Kinerja</string>
-    <string name="preference_performance_block_webfonts">Blokir fon Web</string>
+    <string name="preference_performance_block_webfonts">Blokir web fonts</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
 
@@ -496,7 +499,7 @@
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Pencarian Anda, cara Anda</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">Mencari sesuatu yang berbeda? Pilih mesin pencari baku lainnya di Setelan.</string>
+    <string name="firstrun_search_text">Mencari sesuatu yang berbeda? Pilih mesin pencari baku lainnya di Pengaturan.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Tambahkan pintasan ke layar Beranda</string>
@@ -632,8 +635,50 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Alat pengembang</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Buka tautan di aplikasi</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Lanjutan</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Izin situs</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Putar Otomatis</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Izinkan suara dan video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokir suara saja</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Disarankan</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokir suara dan video</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Kajian</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox dapat memasang dan menjalankan kajian dari waktu ke waktu.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Pelajari lebih lanjut</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Aplikasi akan berhenti untuk menerapkan perubahan</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Hapus</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktif</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Selesai</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Pengawakutuan jarak jauh melalui USB/Wi-Fi</string>
@@ -727,7 +772,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Mengapa ya, kami tampilan berbeda sekarang!\n Baca selengkapnya tentang ini dan pembaruan %1$s lainnya.</string>
+    <string name="tip_fresh_look">Tentu saja, kami tampil berbeda sekarang!\n Baca selengkapnya tentang hal ini dan pembaruan %1$s lainnya.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
@@ -744,11 +789,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_open_new_tab">Alihkan tautan langsung ke tab baru</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Penjelajahan Aman</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Penjelajahan Aman</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokir situs yang mungkin berbahaya serta penipuan</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Blokir situs penipuan dan penyerangan yang dilaporkan, situs malware, dan situs perangkat lunak yang tidak diinginkan.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Mode Hanya HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Secara otomatis mencoba untuk terhubung ke situs menggunakan HTTPS untuk meningkatkan keamanan. Koneksi HTTPS menyediakan koneksi yang aman dan terenkripsi ke situs web yang Anda kunjungi.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Pengecualian</string>
@@ -812,6 +862,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Hapus</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Ubah Nama</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Ubah Nama</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Nama pintasan</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Gambar yang disimpan dan dibagikan &lt;b&gt;tidak akan dihapus&lt;/b&gt; ketika Anda menghapus riwayat %1$s.</string>
@@ -828,4 +885,12 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Ikuti tema peranti</string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Situs yang Anda minta tidak mendukung HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Secara baku, %1$s mencoba tersambung menggunakan HTTPS untuk meningkatkan keamanan. Untuk mengubah pengaturan ini atau untuk mempelajari lebih lanjut, buka Pengaturan &gt; Privasi &amp; Keamanan &gt; Keamanan.</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Tutup tab</string>
 </resources>

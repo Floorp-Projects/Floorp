@@ -637,6 +637,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Lisäasetukset</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Sivustojen käyttöoikeudet</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automaattinen toisto</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Salli ääni ja video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Estä vain ääni</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Suositeltu</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Estä ääni ja video</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Tutkimukset</string>
 
@@ -761,6 +779,9 @@
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Vain HTTPS -tila</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Yrittää automaattisesti muodostaa yhteyden sivustoihin käyttämällä HTTPS:ää turvallisuuden parantamiseksi. HTTPS-yhteydet tarjoavat suojatun, salatun yhteyden vierailemillesi verkkosivustoille.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Poikkeukset</string>
     <!-- Description for the exceptions preference screen-->
@@ -821,6 +842,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Poista</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Nimeä uudelleen</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Nimeä uudelleen</string>
 
@@ -840,6 +863,12 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Pyytämäsi sivusto ei tue HTTPS:ää</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Oletusarvoisesti %1$s yrittää muodostaa yhteyden HTTPS:llä paremman tietoturvan vuoksi. Voit muuttaa tämän asetuksen ja saada lisätietoja siirtymällä kohtaan Asetukset &gt; Tietosuoja ja turvallisuus &gt; Turvallisuus.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
