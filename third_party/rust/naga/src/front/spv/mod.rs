@@ -499,6 +499,11 @@ struct BlockContext<'function> {
     parameter_sampling: &'function mut [image::SamplingFlags],
 }
 
+enum SignAnchor {
+    Result,
+    Operand,
+}
+
 pub struct Parser<I> {
     data: I,
     data_offset: usize,
@@ -849,9 +854,63 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Ok(())
     }
 
+    /// A more complicated version of the unary op,
+    /// where we force the operand to have the same type as the result.
+    fn parse_expr_unary_op_sign_adjusted(
+        &mut self,
+        ctx: &mut BlockContext,
+        emitter: &mut super::Emitter,
+        block: &mut crate::Block,
+        block_id: spirv::Word,
+        body_idx: usize,
+        op: crate::UnaryOperator,
+    ) -> Result<(), Error> {
+        let start = self.data_offset;
+        let result_type_id = self.next()?;
+        let result_id = self.next()?;
+        let p1_id = self.next()?;
+        let span = self.span_from_with_op(start);
+
+        let p1_lexp = self.lookup_expression.lookup(p1_id)?;
+        let left = self.get_expr_handle(p1_id, p1_lexp, ctx, emitter, block, body_idx);
+
+        let result_lookup_ty = self.lookup_type.lookup(result_type_id)?;
+        let kind = ctx.type_arena[result_lookup_ty.handle]
+            .inner
+            .scalar_kind()
+            .unwrap();
+
+        let expr = crate::Expression::Unary {
+            op,
+            expr: if p1_lexp.type_id == result_type_id {
+                left
+            } else {
+                ctx.expressions.append(
+                    crate::Expression::As {
+                        expr: left,
+                        kind,
+                        convert: None,
+                    },
+                    span,
+                )
+            },
+        };
+
+        self.lookup_expression.insert(
+            result_id,
+            LookupExpression {
+                handle: ctx.expressions.append(expr, span),
+                type_id: result_type_id,
+                block_id,
+            },
+        );
+        Ok(())
+    }
+
     /// A more complicated version of the binary op,
     /// where we force the operand to have the same type as the result.
     /// This is mostly needed for "i++" and "i--" coming from GLSL.
+    #[allow(clippy::too_many_arguments)]
     fn parse_expr_binary_op_sign_adjusted(
         &mut self,
         ctx: &mut BlockContext,
@@ -860,6 +919,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         block_id: spirv::Word,
         body_idx: usize,
         op: crate::BinaryOperator,
+        // For arithmetic operations, we need the sign of operands to match the result.
+        // For boolean operations, however, the operands need to match the signs, but
+        // result is always different - a boolean.
+        anchor: SignAnchor,
     ) -> Result<(), Error> {
         let start = self.data_offset;
         let result_type_id = self.next()?;
@@ -872,15 +935,20 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let left = self.get_expr_handle(p1_id, p1_lexp, ctx, emitter, block, body_idx);
         let p2_lexp = self.lookup_expression.lookup(p2_id)?;
         let right = self.get_expr_handle(p2_id, p2_lexp, ctx, emitter, block, body_idx);
-        let result_lookup_ty = self.lookup_type.lookup(result_type_id)?;
-        let kind = ctx.type_arena[result_lookup_ty.handle]
+
+        let expected_type_id = match anchor {
+            SignAnchor::Result => result_type_id,
+            SignAnchor::Operand => p1_lexp.type_id,
+        };
+        let expected_lookup_ty = self.lookup_type.lookup(expected_type_id)?;
+        let kind = ctx.type_arena[expected_lookup_ty.handle]
             .inner
             .scalar_kind()
             .unwrap();
 
         let expr = crate::Expression::Binary {
             op,
-            left: if p1_lexp.type_id == result_type_id {
+            left: if p1_lexp.type_id == expected_type_id {
                 left
             } else {
                 ctx.expressions.append(
@@ -892,7 +960,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     span,
                 )
             },
-            right: if p2_lexp.type_id == result_type_id {
+            right: if p2_lexp.type_id == expected_type_id {
                 right
             } else {
                 ctx.expressions.append(
@@ -1076,6 +1144,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         selections: &[spirv::Word],
         type_arena: &UniqueArena<crate::Type>,
         expressions: &mut Arena<crate::Expression>,
+        constants: &Arena<crate::Constant>,
         span: crate::Span,
     ) -> Result<Handle<crate::Expression>, Error> {
         let selection = match selections.first() {
@@ -1092,7 +1161,29 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     .ok_or(Error::InvalidAccessType(root_type_id))?;
                 (members.len(), child_member.type_id)
             }
-            // crate::TypeInner::Array //TODO?
+            crate::TypeInner::Array { size, .. } => {
+                let size = match size {
+                    crate::ArraySize::Constant(handle) => match constants[handle] {
+                        crate::Constant {
+                            specialization: Some(_),
+                            ..
+                        } => return Err(Error::UnsupportedType(root_lookup.handle)),
+                        ref unspecialized => unspecialized
+                            .to_array_length()
+                            .ok_or(Error::InvalidArraySize(handle))?,
+                    },
+                    // A runtime sized array is not a composite type
+                    crate::ArraySize::Dynamic => {
+                        return Err(Error::InvalidAccessType(root_type_id))
+                    }
+                };
+
+                let child_type_id = root_lookup
+                    .base_id
+                    .ok_or(Error::InvalidAccessType(root_type_id))?;
+
+                (size as usize, child_type_id)
+            }
             crate::TypeInner::Vector { size, .. }
             | crate::TypeInner::Matrix { columns: size, .. } => {
                 let child_type_id = root_lookup
@@ -1121,6 +1212,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             &selections[1..],
             type_arena,
             expressions,
+            constants,
             span,
         )?;
 
@@ -1595,7 +1687,24 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let root_handle = get_expr_handle!(composite_id, root_lexp);
                     let root_type_lookup = self.lookup_type.lookup(root_lexp.type_id)?;
                     let index_lexp = self.lookup_expression.lookup(index_id)?;
-                    let index_handle = get_expr_handle!(index_id, index_lexp);
+                    let mut index_handle = get_expr_handle!(index_id, index_lexp);
+                    let index_type = self.lookup_type.lookup(index_lexp.type_id)?.handle;
+
+                    // SPIR-V allows signed and unsigned indices but naga's is strict about
+                    // types and since the `index_constants` are all signed integers, we need
+                    // to cast the index to a signed integer if it's unsigned.
+                    if let Some(crate::ScalarKind::Uint) =
+                        ctx.type_arena[index_type].inner.scalar_kind()
+                    {
+                        index_handle = ctx.expressions.append(
+                            crate::Expression::As {
+                                expr: index_handle,
+                                kind: crate::ScalarKind::Sint,
+                                convert: None,
+                            },
+                            span,
+                        )
+                    }
 
                     let num_components = match ctx.type_arena[root_type_lookup.handle].inner {
                         crate::TypeInner::Vector { size, .. } => size as usize,
@@ -1720,6 +1829,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         &selections,
                         ctx.type_arena,
                         ctx.expressions,
+                        ctx.const_arena,
                         span,
                     )?;
 
@@ -1832,9 +1942,24 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 // Arithmetic Instructions +, -, *, /, %
                 Op::SNegate | Op::FNegate => {
                     inst.expect(4)?;
-                    parse_expr_op!(crate::UnaryOperator::Negate, UNARY)?;
+                    self.parse_expr_unary_op_sign_adjusted(
+                        ctx,
+                        &mut emitter,
+                        &mut block,
+                        block_id,
+                        body_idx,
+                        crate::UnaryOperator::Negate,
+                    )?;
                 }
-                Op::IAdd | Op::ISub => {
+                Op::IAdd
+                | Op::ISub
+                | Op::IMul
+                | Op::BitwiseOr
+                | Op::BitwiseXor
+                | Op::BitwiseAnd
+                | Op::SDiv
+                | Op::SMod
+                | Op::SRem => {
                     inst.expect(5)?;
                     let operator = map_binary_operator(inst.op)?;
                     self.parse_expr_binary_op_sign_adjusted(
@@ -1844,6 +1969,20 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         block_id,
                         body_idx,
                         operator,
+                        SignAnchor::Result,
+                    )?;
+                }
+                Op::IEqual | Op::INotEqual => {
+                    inst.expect(5)?;
+                    let operator = map_binary_operator(inst.op)?;
+                    self.parse_expr_binary_op_sign_adjusted(
+                        ctx,
+                        &mut emitter,
+                        &mut block,
+                        block_id,
+                        body_idx,
+                        operator,
+                        SignAnchor::Operand,
                     )?;
                 }
                 Op::FAdd => {
@@ -1854,15 +1993,15 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(5)?;
                     parse_expr_op!(crate::BinaryOperator::Subtract, BINARY)?;
                 }
-                Op::IMul | Op::FMul => {
+                Op::FMul => {
                     inst.expect(5)?;
                     parse_expr_op!(crate::BinaryOperator::Multiply, BINARY)?;
                 }
-                Op::SDiv | Op::UDiv | Op::FDiv => {
+                Op::UDiv | Op::FDiv => {
                     inst.expect(5)?;
                     parse_expr_op!(crate::BinaryOperator::Divide, BINARY)?;
                 }
-                Op::SMod | Op::UMod | Op::FMod | Op::SRem | Op::FRem => {
+                Op::UMod | Op::FMod | Op::FRem => {
                     inst.expect(5)?;
                     parse_expr_op!(crate::BinaryOperator::Modulo, BINARY)?;
                 }
@@ -2097,19 +2236,14 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 // Bitwise instructions
                 Op::Not => {
                     inst.expect(4)?;
-                    parse_expr_op!(crate::UnaryOperator::Not, UNARY)?;
-                }
-                Op::BitwiseOr => {
-                    inst.expect(5)?;
-                    parse_expr_op!(crate::BinaryOperator::InclusiveOr, BINARY)?;
-                }
-                Op::BitwiseXor => {
-                    inst.expect(5)?;
-                    parse_expr_op!(crate::BinaryOperator::ExclusiveOr, BINARY)?;
-                }
-                Op::BitwiseAnd => {
-                    inst.expect(5)?;
-                    parse_expr_op!(crate::BinaryOperator::And, BINARY)?;
+                    self.parse_expr_unary_op_sign_adjusted(
+                        ctx,
+                        &mut emitter,
+                        &mut block,
+                        block_id,
+                        body_idx,
+                        crate::UnaryOperator::Not,
+                    )?;
                 }
                 Op::ShiftRightLogical => {
                     inst.expect(5)?;
@@ -2400,7 +2534,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let expr = crate::Expression::As {
                         expr: get_expr_handle!(value_id, value_lexp),
                         kind,
-                        convert: if inst.op == Op::Bitcast {
+                        convert: if kind == crate::ScalarKind::Bool {
+                            Some(crate::BOOL_WIDTH)
+                        } else if inst.op == Op::Bitcast {
                             None
                         } else {
                             Some(width)
@@ -2475,157 +2611,115 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let inst_id = self.next()?;
                     let gl_op = Glo::from_u32(inst_id).ok_or(Error::UnsupportedExtInst(inst_id))?;
 
-                    if gl_op == Glo::Radians || gl_op == Glo::Degrees {
-                        inst.expect(base_wc + 1)?;
-                        let arg = {
-                            let arg_id = self.next()?;
-                            let lexp = self.lookup_expression.lookup(arg_id)?;
-                            get_expr_handle!(arg_id, lexp)
-                        };
+                    let fun = match gl_op {
+                        Glo::Round => Mf::Round,
+                        Glo::RoundEven => Mf::Round,
+                        Glo::Trunc => Mf::Trunc,
+                        Glo::FAbs | Glo::SAbs => Mf::Abs,
+                        Glo::FSign | Glo::SSign => Mf::Sign,
+                        Glo::Floor => Mf::Floor,
+                        Glo::Ceil => Mf::Ceil,
+                        Glo::Fract => Mf::Fract,
+                        Glo::Sin => Mf::Sin,
+                        Glo::Cos => Mf::Cos,
+                        Glo::Tan => Mf::Tan,
+                        Glo::Asin => Mf::Asin,
+                        Glo::Acos => Mf::Acos,
+                        Glo::Atan => Mf::Atan,
+                        Glo::Sinh => Mf::Sinh,
+                        Glo::Cosh => Mf::Cosh,
+                        Glo::Tanh => Mf::Tanh,
+                        Glo::Atan2 => Mf::Atan2,
+                        Glo::Asinh => Mf::Asinh,
+                        Glo::Acosh => Mf::Acosh,
+                        Glo::Atanh => Mf::Atanh,
+                        Glo::Radians => Mf::Radians,
+                        Glo::Degrees => Mf::Degrees,
+                        Glo::Pow => Mf::Pow,
+                        Glo::Exp => Mf::Exp,
+                        Glo::Log => Mf::Log,
+                        Glo::Exp2 => Mf::Exp2,
+                        Glo::Log2 => Mf::Log2,
+                        Glo::Sqrt => Mf::Sqrt,
+                        Glo::InverseSqrt => Mf::InverseSqrt,
+                        Glo::MatrixInverse => Mf::Inverse,
+                        Glo::Determinant => Mf::Determinant,
+                        Glo::Modf => Mf::Modf,
+                        Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
+                        Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
+                        Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
+                        Glo::FMix => Mf::Mix,
+                        Glo::Step => Mf::Step,
+                        Glo::SmoothStep => Mf::SmoothStep,
+                        Glo::Fma => Mf::Fma,
+                        Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
+                        Glo::Ldexp => Mf::Ldexp,
+                        Glo::Length => Mf::Length,
+                        Glo::Distance => Mf::Distance,
+                        Glo::Cross => Mf::Cross,
+                        Glo::Normalize => Mf::Normalize,
+                        Glo::FaceForward => Mf::FaceForward,
+                        Glo::Reflect => Mf::Reflect,
+                        Glo::Refract => Mf::Refract,
+                        Glo::PackUnorm4x8 => Mf::Pack4x8unorm,
+                        Glo::PackSnorm4x8 => Mf::Pack4x8snorm,
+                        Glo::PackHalf2x16 => Mf::Pack2x16float,
+                        Glo::PackUnorm2x16 => Mf::Pack2x16unorm,
+                        Glo::PackSnorm2x16 => Mf::Pack2x16snorm,
+                        Glo::UnpackUnorm4x8 => Mf::Unpack4x8unorm,
+                        Glo::UnpackSnorm4x8 => Mf::Unpack4x8snorm,
+                        Glo::UnpackHalf2x16 => Mf::Unpack2x16float,
+                        Glo::UnpackUnorm2x16 => Mf::Unpack2x16unorm,
+                        Glo::UnpackSnorm2x16 => Mf::Unpack2x16snorm,
+                        Glo::FindILsb => Mf::FindLsb,
+                        Glo::FindUMsb | Glo::FindSMsb => Mf::FindMsb,
+                        _ => return Err(Error::UnsupportedExtInst(inst_id)),
+                    };
 
-                        let constant_handle = ctx.const_arena.fetch_or_append(
-                            crate::Constant {
-                                name: None,
-                                specialization: None,
-                                inner: crate::ConstantInner::Scalar {
-                                    width: 4,
-                                    value: crate::ScalarValue::Float(match gl_op {
-                                        Glo::Radians => std::f64::consts::PI / 180.0,
-                                        Glo::Degrees => 180.0 / std::f64::consts::PI,
-                                        _ => unreachable!(),
-                                    }),
-                                },
-                            },
-                            Default::default(),
-                        );
-
-                        let expr_handle = ctx.expressions.append(
-                            crate::Expression::Constant(constant_handle),
-                            Default::default(),
-                        );
-
-                        self.lookup_expression.insert(
-                            result_id,
-                            LookupExpression {
-                                handle: ctx.expressions.append(
-                                    crate::Expression::Binary {
-                                        op: crate::BinaryOperator::Multiply,
-                                        left: arg,
-                                        right: expr_handle,
-                                    },
-                                    span,
-                                ),
-                                type_id: result_type_id,
-                                block_id,
-                            },
-                        );
+                    let arg_count = fun.argument_count();
+                    inst.expect(base_wc + arg_count as u16)?;
+                    let arg = {
+                        let arg_id = self.next()?;
+                        let lexp = self.lookup_expression.lookup(arg_id)?;
+                        get_expr_handle!(arg_id, lexp)
+                    };
+                    let arg1 = if arg_count > 1 {
+                        let arg_id = self.next()?;
+                        let lexp = self.lookup_expression.lookup(arg_id)?;
+                        Some(get_expr_handle!(arg_id, lexp))
                     } else {
-                        let fun = match gl_op {
-                            Glo::Round => Mf::Round,
-                            Glo::RoundEven => Mf::Round,
-                            Glo::Trunc => Mf::Trunc,
-                            Glo::FAbs | Glo::SAbs => Mf::Abs,
-                            Glo::FSign | Glo::SSign => Mf::Sign,
-                            Glo::Floor => Mf::Floor,
-                            Glo::Ceil => Mf::Ceil,
-                            Glo::Fract => Mf::Fract,
-                            Glo::Sin => Mf::Sin,
-                            Glo::Cos => Mf::Cos,
-                            Glo::Tan => Mf::Tan,
-                            Glo::Asin => Mf::Asin,
-                            Glo::Acos => Mf::Acos,
-                            Glo::Atan => Mf::Atan,
-                            Glo::Sinh => Mf::Sinh,
-                            Glo::Cosh => Mf::Cosh,
-                            Glo::Tanh => Mf::Tanh,
-                            Glo::Atan2 => Mf::Atan2,
-                            Glo::Asinh => Mf::Asinh,
-                            Glo::Acosh => Mf::Acosh,
-                            Glo::Atanh => Mf::Atanh,
-                            Glo::Pow => Mf::Pow,
-                            Glo::Exp => Mf::Exp,
-                            Glo::Log => Mf::Log,
-                            Glo::Exp2 => Mf::Exp2,
-                            Glo::Log2 => Mf::Log2,
-                            Glo::Sqrt => Mf::Sqrt,
-                            Glo::InverseSqrt => Mf::InverseSqrt,
-                            Glo::MatrixInverse => Mf::Inverse,
-                            Glo::Determinant => Mf::Determinant,
-                            Glo::Modf => Mf::Modf,
-                            Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
-                            Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
-                            Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
-                            Glo::FMix => Mf::Mix,
-                            Glo::Step => Mf::Step,
-                            Glo::SmoothStep => Mf::SmoothStep,
-                            Glo::Fma => Mf::Fma,
-                            Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
-                            Glo::Ldexp => Mf::Ldexp,
-                            Glo::Length => Mf::Length,
-                            Glo::Distance => Mf::Distance,
-                            Glo::Cross => Mf::Cross,
-                            Glo::Normalize => Mf::Normalize,
-                            Glo::FaceForward => Mf::FaceForward,
-                            Glo::Reflect => Mf::Reflect,
-                            Glo::Refract => Mf::Refract,
-                            Glo::PackUnorm4x8 => Mf::Pack4x8unorm,
-                            Glo::PackSnorm4x8 => Mf::Pack4x8snorm,
-                            Glo::PackHalf2x16 => Mf::Pack2x16float,
-                            Glo::PackUnorm2x16 => Mf::Pack2x16unorm,
-                            Glo::PackSnorm2x16 => Mf::Pack2x16snorm,
-                            Glo::UnpackUnorm4x8 => Mf::Unpack4x8unorm,
-                            Glo::UnpackSnorm4x8 => Mf::Unpack4x8snorm,
-                            Glo::UnpackHalf2x16 => Mf::Unpack2x16float,
-                            Glo::UnpackUnorm2x16 => Mf::Unpack2x16unorm,
-                            Glo::UnpackSnorm2x16 => Mf::Unpack2x16snorm,
-                            _ => return Err(Error::UnsupportedExtInst(inst_id)),
-                        };
+                        None
+                    };
+                    let arg2 = if arg_count > 2 {
+                        let arg_id = self.next()?;
+                        let lexp = self.lookup_expression.lookup(arg_id)?;
+                        Some(get_expr_handle!(arg_id, lexp))
+                    } else {
+                        None
+                    };
+                    let arg3 = if arg_count > 3 {
+                        let arg_id = self.next()?;
+                        let lexp = self.lookup_expression.lookup(arg_id)?;
+                        Some(get_expr_handle!(arg_id, lexp))
+                    } else {
+                        None
+                    };
 
-                        let arg_count = fun.argument_count();
-                        inst.expect(base_wc + arg_count as u16)?;
-                        let arg = {
-                            let arg_id = self.next()?;
-                            let lexp = self.lookup_expression.lookup(arg_id)?;
-                            get_expr_handle!(arg_id, lexp)
-                        };
-                        let arg1 = if arg_count > 1 {
-                            let arg_id = self.next()?;
-                            let lexp = self.lookup_expression.lookup(arg_id)?;
-                            Some(get_expr_handle!(arg_id, lexp))
-                        } else {
-                            None
-                        };
-                        let arg2 = if arg_count > 2 {
-                            let arg_id = self.next()?;
-                            let lexp = self.lookup_expression.lookup(arg_id)?;
-                            Some(get_expr_handle!(arg_id, lexp))
-                        } else {
-                            None
-                        };
-                        let arg3 = if arg_count > 3 {
-                            let arg_id = self.next()?;
-                            let lexp = self.lookup_expression.lookup(arg_id)?;
-                            Some(get_expr_handle!(arg_id, lexp))
-                        } else {
-                            None
-                        };
-
-                        let expr = crate::Expression::Math {
-                            fun,
-                            arg,
-                            arg1,
-                            arg2,
-                            arg3,
-                        };
-                        self.lookup_expression.insert(
-                            result_id,
-                            LookupExpression {
-                                handle: ctx.expressions.append(expr, span),
-                                type_id: result_type_id,
-                                block_id,
-                            },
-                        );
-                    }
+                    let expr = crate::Expression::Math {
+                        fun,
+                        arg,
+                        arg1,
+                        arg2,
+                        arg3,
+                    };
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: ctx.expressions.append(expr, span),
+                            type_id: result_type_id,
+                            block_id,
+                        },
+                    );
                 }
                 // Relational and Logical Instructions
                 Op::LogicalNot => {
@@ -2640,12 +2734,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(5)?;
                     parse_expr_op!(crate::BinaryOperator::LogicalAnd, BINARY)?;
                 }
-                Op::IEqual
-                | Op::INotEqual
-                | Op::SGreaterThan
-                | Op::SGreaterThanEqual
-                | Op::SLessThan
-                | Op::SLessThanEqual => {
+                Op::SGreaterThan | Op::SGreaterThanEqual | Op::SLessThan | Op::SLessThanEqual => {
                     inst.expect(5)?;
                     self.parse_expr_int_comparison(
                         ctx,
@@ -2769,8 +2858,15 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         get_expr_handle!(condition_id, lexp)
                     };
 
+                    block.extend(emitter.finish(ctx.expressions));
+                    ctx.blocks.insert(block_id, block);
+                    let body = &mut ctx.bodies[body_idx];
+                    body.data.push(BodyFragment::BlockId(block_id));
+
                     let true_id = self.next()?;
                     let false_id = self.next()?;
+
+                    let same_target = true_id == false_id;
 
                     // Start a body block for the `accept` branch.
                     let accept = ctx.bodies.len();
@@ -2780,11 +2876,27 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     // merge or continue block, then put a `Break` or `Continue`
                     // statement in this new body block.
                     if let Some(info) = ctx.mergers.get(&true_id) {
-                        merger(&mut accept_block, info)
+                        merger(
+                            match same_target {
+                                true => &mut ctx.bodies[body_idx],
+                                false => &mut accept_block,
+                            },
+                            info,
+                        )
                     } else {
                         // Note the body index for the block we're branching to.
-                        let prev = ctx.body_for_label.insert(true_id, accept);
+                        let prev = ctx.body_for_label.insert(
+                            true_id,
+                            match same_target {
+                                true => body_idx,
+                                false => accept,
+                            },
+                        );
                         debug_assert!(prev.is_none());
+                    }
+
+                    if same_target {
+                        return Ok(());
                     }
 
                     ctx.bodies.push(accept_block);
@@ -2802,17 +2914,17 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     ctx.bodies.push(reject_block);
 
-                    block.extend(emitter.finish(ctx.expressions));
-                    ctx.blocks.insert(block_id, block);
                     let body = &mut ctx.bodies[body_idx];
-                    // Make sure the vector has space for at least two more allocations
-                    body.data.reserve(2);
-                    body.data.push(BodyFragment::BlockId(block_id));
                     body.data.push(BodyFragment::If {
                         condition,
                         accept,
                         reject,
                     });
+
+                    // Consume branch weights
+                    for _ in 4..inst.wc {
+                        let _ = self.next()?;
+                    }
 
                     return Ok(());
                 }
@@ -3105,6 +3217,24 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     } else {
                         log::warn!("Unsupported barrier execution scope: {}", exec_scope);
                     }
+                }
+                Op::CopyObject => {
+                    inst.expect(4)?;
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let operand_id = self.next()?;
+
+                    let lookup = self.lookup_expression.lookup(operand_id)?;
+                    let handle = get_expr_handle!(operand_id, lookup);
+
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle,
+                            type_id: result_type_id,
+                            block_id,
+                        },
+                    );
                 }
                 _ => return Err(Error::UnsupportedInstruction(self.state, inst.op)),
             }

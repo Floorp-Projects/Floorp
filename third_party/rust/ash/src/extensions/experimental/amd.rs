@@ -25,7 +25,10 @@
  *
  **********************************************************************************************************************/
 
+#[cfg(feature = "debug")]
+use crate::prelude::debug_flags;
 use crate::vk::*;
+
 use std::fmt;
 use std::os::raw::*;
 
@@ -34,15 +37,8 @@ use std::os::raw::*;
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GpaSqShaderStageFlags(pub(crate) Flags);
-vk_bitflags_wrapped!(
-    GpaSqShaderStageFlags,
-    0b1111111111111111111111111111111,
-    Flags
-);
-// ignore clippy::use_self false positives
-// changing GpaSqShaderStageFlags::PS.0 to Self::PS.0 as suggested by clippy generates:
-// error[E0401]: can't use generic parameters from outer function
-#[allow(clippy::use_self)]
+vk_bitflags_wrapped!(GpaSqShaderStageFlags, Flags);
+#[cfg(feature = "debug")]
 impl fmt::Debug for GpaSqShaderStageFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
@@ -75,7 +71,8 @@ impl StructureType {
     pub const GPA_DEVICE_CLOCK_MODE_INFO_AMD: Self = Self(1000133004);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[repr(transparent)]
 pub struct GpaDeviceClockModeAmd(pub(crate) i32);
 impl GpaDeviceClockModeAmd {
@@ -95,7 +92,8 @@ impl GpaDeviceClockModeAmd {
     pub const PEAK: Self = Self(5);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[repr(transparent)]
 pub struct GpaPerfBlockAmd(pub(crate) i32);
 impl GpaPerfBlockAmd {
@@ -141,7 +139,8 @@ impl GpaPerfBlockAmd {
     pub const RMI: Self = Self(31);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[repr(transparent)]
 pub struct GpaSampleTypeAmd(pub(crate) i32);
 impl GpaSampleTypeAmd {
@@ -161,7 +160,8 @@ impl GpaSampleTypeAmd {
 handle_nondispatchable!(GpaSessionAmd, UNKNOWN);
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct GpaSessionCreateInfoAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -169,7 +169,8 @@ pub struct GpaSessionCreateInfoAmd {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct GpaPerfBlockPropertiesAmd {
     pub block_type: GpaPerfBlockAmd,
     pub flags: Flags,
@@ -181,7 +182,8 @@ pub struct GpaPerfBlockPropertiesAmd {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct PhysicalDeviceGpaFeaturesAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -192,7 +194,8 @@ pub struct PhysicalDeviceGpaFeaturesAmd {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct PhysicalDeviceGpaPropertiesAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -250,7 +253,8 @@ impl<'a> PhysicalDeviceGpaPropertiesAmdBuilder<'a> {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct GpaPerfCounterAmd {
     pub block_type: GpaPerfBlockAmd,
     pub block_instance: u32,
@@ -258,7 +262,8 @@ pub struct GpaPerfCounterAmd {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct GpaSampleBeginInfoAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -279,7 +284,8 @@ pub struct GpaSampleBeginInfoAmd {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct GpaDeviceClockModeInfoAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -638,7 +644,8 @@ impl StructureType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct PhysicalDeviceWaveLimitPropertiesAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,
@@ -698,7 +705,8 @@ impl<'a> PhysicalDeviceWaveLimitPropertiesAmdBuilder<'a> {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct PipelineShaderStageCreateInfoWaveLimitAmd {
     pub s_type: StructureType,
     pub p_next: *const c_void,

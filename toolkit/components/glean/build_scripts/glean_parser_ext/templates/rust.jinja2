@@ -89,12 +89,13 @@ pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
 
     use super::{id_for_extra_key, extra_keys_len};
+    use crate::HashState;
     use crate::private::*;
     use once_cell::sync::Lazy;
 
 {% for typ, metrics in metric_by_type.items() %}
-    pub static {{typ.0}}: Lazy<HashMap<MetricId, &Lazy<{{typ.1}}>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity({{metrics|length}});
+    pub static {{typ.0}}: Lazy<HashMap<MetricId, &Lazy<{{typ.1}}>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher({{metrics|length}}, HashState);
         {% for metric in metrics %}
         map.insert({{metric.0}}.into(), &super::{{metric.1}});
         {% endfor %}
@@ -259,14 +260,14 @@ pub(crate) mod __glean_metric_maps {
 
         pub(crate) const MIN_LABELED_SUBMETRIC_ID: u32 = {{min_submetric_id}};
         pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new(MIN_LABELED_SUBMETRIC_ID);
-        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
 
 {% for typ, metrics in metric_by_type.items() %}
 {% if typ.0 in ('BOOLEAN_MAP', 'COUNTER_MAP', 'STRING_MAP') %}
-        pub static {{typ.0}}: Lazy<RwLock<HashMap<MetricId, Labeled{{typ.1}}>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub static {{typ.0}}: Lazy<RwLock<HashMap<MetricId, Labeled{{typ.1}}, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
 {% endif %}
 {% endfor%}

@@ -48,8 +48,7 @@ const ClearFlags = [
   [
     // DOM_STORAGES
     1 << 4,
-    Ci.nsIClearDataService.CLEAR_APPCACHE |
-      Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
+    Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
       Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
       Ci.nsIClearDataService.CLEAR_REPORTS,
   ],

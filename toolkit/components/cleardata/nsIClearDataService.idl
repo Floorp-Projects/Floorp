@@ -186,94 +186,89 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_MEDIA_DEVICES = 1 << 6;
 
   /**
-   * AppCache.
-   */
-  const uint32_t CLEAR_APPCACHE = 1 << 7;
-
-  /**
    * LocalStorage, IndexedDB, ServiceWorkers, DOM Cache and so on.
    */
-  const uint32_t CLEAR_DOM_QUOTA = 1 << 8;
+  const uint32_t CLEAR_DOM_QUOTA = 1 << 7;
 
   /**
    * Predictor network data
    */
-  const uint32_t CLEAR_PREDICTOR_NETWORK_DATA = 1 << 9;
+  const uint32_t CLEAR_PREDICTOR_NETWORK_DATA = 1 << 8;
 
   /**
    * DOM Push notifications
    */
-  const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 10;
+  const uint32_t CLEAR_DOM_PUSH_NOTIFICATIONS = 1 << 9;
 
   /**
    * Places history
    */
-  const uint32_t CLEAR_HISTORY = 1 << 11;
+  const uint32_t CLEAR_HISTORY = 1 << 10;
 
   /**
    * Session history
    */
-  const uint32_t CLEAR_SESSION_HISTORY = 1 << 12;
+  const uint32_t CLEAR_SESSION_HISTORY = 1 << 11;
 
   /**
    * Auth tokens
    */
-  const uint32_t CLEAR_AUTH_TOKENS = 1 << 13;
+  const uint32_t CLEAR_AUTH_TOKENS = 1 << 12;
 
   /**
    * Login cache
    */
-  const uint32_t CLEAR_AUTH_CACHE = 1 << 14;
+  const uint32_t CLEAR_AUTH_CACHE = 1 << 13;
 
   /**
    * Site permissions
    */
-  const uint32_t CLEAR_PERMISSIONS = 1 << 15;
+  const uint32_t CLEAR_PERMISSIONS = 1 << 14;
 
   /**
    * Site preferences
    */
-  const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 16;
+  const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 15;
 
   /**
    * Secure site settings
    */
-  const uint32_t CLEAR_SECURITY_SETTINGS = 1 << 17;
+  const uint32_t CLEAR_SECURITY_SETTINGS = 1 << 16;
 
   /**
    * Media plugin data
    */
-  const uint32_t CLEAR_EME = 1 << 18;
+  const uint32_t CLEAR_EME = 1 << 17;
 
   /**
    * Reporting API reports.
    */
-  const uint32_t CLEAR_REPORTS = 1 << 19;
+  const uint32_t CLEAR_REPORTS = 1 << 18;
 
   /**
    * StorageAccessAPI flag, which indicates user interaction.
    */
-  const uint32_t CLEAR_STORAGE_ACCESS = 1 << 20;
+  const uint32_t CLEAR_STORAGE_ACCESS = 1 << 19;
 
   /**
    * Clear Cert Exceptions.
    */
-  const uint32_t CLEAR_CERT_EXCEPTIONS = 1 << 21;
+  const uint32_t CLEAR_CERT_EXCEPTIONS = 1 << 20;
 
   /**
    * Clear entries in the content blocking database.
    */
-  const uint32_t CLEAR_CONTENT_BLOCKING_RECORDS = 1 << 22;
+  const uint32_t CLEAR_CONTENT_BLOCKING_RECORDS = 1 << 21;
 
   /**
    * Clear the in-memory CSS cache.
    */
-  const uint32_t CLEAR_CSS_CACHE = 1 << 23;
+  const uint32_t CLEAR_CSS_CACHE = 1 << 22;
 
   /**
    * Clear the CORS preflight cache.
    */
-  const uint32_t CLEAR_PREFLIGHT_CACHE = 1 << 24;
+  const uint32_t CLEAR_PREFLIGHT_CACHE = 1 << 23;
 
   /**
    * Use this value to delete all the data.
@@ -294,8 +289,7 @@ interface nsIClearDataService : nsISupports
   /**
    * Delete all DOM storages
    */
-  const uint32_t CLEAR_DOM_STORAGES = CLEAR_APPCACHE | CLEAR_DOM_QUOTA |
-    CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_REPORTS;
+  const uint32_t CLEAR_DOM_STORAGES = CLEAR_DOM_QUOTA | CLEAR_DOM_PUSH_NOTIFICATIONS | CLEAR_REPORTS;
 
   /**
    * Helper flag for forget about site

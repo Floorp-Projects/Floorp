@@ -102,11 +102,14 @@ def runtests(setup_test_harness, binary, parser, request):
     def inner(*tests, **opts):
         assert len(tests) > 0
 
-        manifest = TestManifest()
-        # pylint --py3k: W1636
-        manifest.tests.extend(list(map(normalize, tests)))
-        options["manifestFile"] = manifest
-        options.update(opts)
+        # Inject a TestManifest in the runtests option if one
+        # has not been already included by the caller.
+        if not isinstance(options["manifestFile"], TestManifest):
+            manifest = TestManifest()
+            options["manifestFile"] = manifest
+            # pylint --py3k: W1636
+            manifest.tests.extend(list(map(normalize, tests)))
+            options.update(opts)
 
         result = runtests.run_test_harness(parser, Namespace(**options))
         out = json.loads("[" + ",".join(buf.getvalue().splitlines()) + "]")

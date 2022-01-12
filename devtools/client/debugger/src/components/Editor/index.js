@@ -19,7 +19,11 @@ import {
   breakpointItemActions,
 } from "./menus/breakpoints";
 
-import { continueToHereItem, editorItemActions } from "./menus/editor";
+import {
+  continueToHereItem,
+  editorItemActions,
+  blackBoxLineMenuItem,
+} from "./menus/editor";
 
 import {
   getActiveSearch,
@@ -34,6 +38,7 @@ import {
   getInlinePreview,
   getEditorWrapping,
   getHighlightedCalls,
+  getBlackBoxRanges,
 } from "../../selectors";
 
 // Redux actions
@@ -127,6 +132,7 @@ class Editor extends PureComponent {
       inlinePreviewEnabled: PropTypes.bool,
       editorWrappingEnabled: PropTypes.bool,
       skipPausing: PropTypes.bool,
+      blackboxedRanges: PropTypes.object,
     };
   }
 
@@ -381,6 +387,7 @@ class Editor extends PureComponent {
       isPaused,
       conditionalPanelLocation,
       closeConditionalPanel,
+      blackboxedRanges,
     } = this.props;
     const { editor } = this.state;
     if (!selectedSource || !editor) {
@@ -413,6 +420,15 @@ class Editor extends PureComponent {
         ...createBreakpointItems(cx, location, breakpointActions, lineText),
         { type: "separator" },
         continueToHereItem(cx, location, isPaused, editorActions),
+        { type: "separator" },
+        blackBoxLineMenuItem(
+          cx,
+          selectedSource,
+          editorActions,
+          editor,
+          blackboxedRanges,
+          line
+        ),
       ]);
     }
 
@@ -710,6 +726,7 @@ const mapStateToProps = state => {
     inlinePreviewEnabled: getInlinePreview(state),
     editorWrappingEnabled: getEditorWrapping(state),
     highlightedCalls: getHighlightedCalls(state, getCurrentThread(state)),
+    blackboxedRanges: getBlackBoxRanges(state),
   };
 };
 

@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "ash"
-version = "0.33.3+1.2.191"
+version = "0.35.0+1.2.203"
 authors = ["maik klein <maikklein@googlemail.com>"]
 description = "Vulkan bindings for Rust"
 documentation = "https://docs.rs/ash"
@@ -21,6 +20,10 @@ readme = "../README.md"
 keywords = ["vulkan", "graphic"]
 license = "MIT"
 repository = "https://github.com/MaikKlein/ash"
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [package.metadata.release]
 no-dev-version = true
 [dependencies.libloading]
@@ -28,4 +31,7 @@ version = "0.7"
 optional = true
 
 [features]
-default = ["libloading"]
+debug = []
+default = ["loaded", "debug"]
+linked = []
+loaded = ["libloading"]

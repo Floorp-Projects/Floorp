@@ -28,7 +28,6 @@
 #include "nsGkAtoms.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
-#include "nsNativeBasicTheme.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -403,7 +402,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa(
     mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingCocoa)
-    : nsNativeBasicThemeCocoa(std::move(aScrollbarDrawingCocoa)) {
+    : ThemeCocoa(std::move(aScrollbarDrawingCocoa)) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   kMaxFocusRingWidth = 7;
@@ -3157,8 +3156,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
   *aIsOverridable = true;
 
   if (IsWidgetScrollbarPart(aAppearance)) {
-    return nsNativeBasicThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
-                                                         aIsOverridable);
+    return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
+                                            aIsOverridable);
   }
 
   switch (aAppearance) {
@@ -3292,8 +3291,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
     }
 
     case StyleAppearance::MozMenulistArrowButton:
-      return nsNativeBasicThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance,
-                                                           aResult, aIsOverridable);
+      return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance, aResult,
+                                              aIsOverridable);
 
     case StyleAppearance::Resizer: {
       HIThemeGrowBoxDrawInfo drawInfo;

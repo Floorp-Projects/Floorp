@@ -112,6 +112,75 @@ function findBlackBoxRange(source, blackboxedRanges, line) {
   );
 }
 
+export const blackBoxLineMenuItem = (
+  cx,
+  selectedSource,
+  editorActions,
+  editor,
+  blackboxedRanges,
+  // the clickedLine is passed when the context menu
+  // is opened from the gutter, it is not available when the
+  // the context menu is opened from the editor.
+  clickedLine = null
+) => {
+  const { codeMirror } = editor;
+  const from = codeMirror.getCursor("from");
+  const to = codeMirror.getCursor("to");
+
+  const startLine = clickedLine ?? toSourceLine(selectedSource.id, from.line);
+  const endLine = clickedLine ?? toSourceLine(selectedSource.id, to.line);
+
+  const blackboxRange = findBlackBoxRange(selectedSource, blackboxedRanges, {
+    start: startLine,
+    end: endLine,
+  });
+
+  const selectedLineIsBlackBoxed = !!blackboxRange;
+
+  const isSingleLine = selectedLineIsBlackBoxed
+    ? blackboxRange.start.line == blackboxRange.end.line
+    : startLine == endLine;
+
+  // The ignore/unignore line context menu item should be disabled when
+  // 1) The whole source is blackboxed or
+  // 2) Multiple lines are blackboxed or
+  // 3) Multiple lines are selected in the editor
+  const shouldDisable =
+    (selectedSource.isBlackBoxed &&
+      !blackboxedRanges[selectedSource.url].length) ||
+    !isSingleLine;
+
+  return {
+    id: "node-menu-blackbox-line",
+    label: !selectedLineIsBlackBoxed
+      ? L10N.getStr("ignoreContextItem.ignoreLine")
+      : L10N.getStr("ignoreContextItem.unignoreLine"),
+    accesskey: !selectedLineIsBlackBoxed
+      ? L10N.getStr("ignoreContextItem.ignoreLine.accesskey")
+      : L10N.getStr("ignoreContextItem.unignoreLine.accesskey"),
+    disabled: shouldDisable,
+    click: () => {
+      const selectionRange = {
+        start: {
+          line: startLine,
+          column: clickedLine == null ? from.ch : 0,
+        },
+        end: {
+          line: endLine,
+          column: clickedLine == null ? to.ch : 0,
+        },
+      };
+
+      editorActions.toggleBlackBox(
+        cx,
+        selectedSource,
+        !selectedLineIsBlackBoxed,
+        selectedLineIsBlackBoxed ? [blackboxRange] : [selectionRange]
+      );
+    },
+  };
+};
+
 const blackBoxLinesMenuItem = (
   cx,
   selectedSource,
@@ -126,23 +195,22 @@ const blackBoxLinesMenuItem = (
   const startLine = toSourceLine(selectedSource.id, from.line);
   const endLine = toSourceLine(selectedSource.id, to.line);
 
-  const shouldDisable =
-    selectedSource.isBlackBoxed && !blackboxedRanges[selectedSource.url].length;
-
   const blackboxRange = findBlackBoxRange(selectedSource, blackboxedRanges, {
     start: startLine,
     end: endLine,
   });
 
+  const selectedLinesAreBlackBoxed = !!blackboxRange;
+
   return {
     id: "node-menu-blackbox-lines",
-    label: !blackboxRange
+    label: !selectedLinesAreBlackBoxed
       ? L10N.getStr("ignoreContextItem.ignoreLines")
       : L10N.getStr("ignoreContextItem.unignoreLines"),
-    accesskey: !blackboxRange
+    accesskey: !selectedLinesAreBlackBoxed
       ? L10N.getStr("ignoreContextItem.ignoreLines.accesskey")
       : L10N.getStr("ignoreContextItem.unignoreLines.accesskey"),
-    disabled: shouldDisable,
+    disabled: false,
     click: () => {
       const selectionRange = {
         start: {
@@ -156,15 +224,13 @@ const blackBoxLinesMenuItem = (
       };
 
       // removes the current selection
-      editor.codeMirror.replaceSelection(
-        editor.codeMirror.getSelection(),
-        "start"
-      );
+      codeMirror.replaceSelection(codeMirror.getSelection(), "start");
+
       editorActions.toggleBlackBox(
         cx,
         selectedSource,
-        !blackboxRange,
-        blackboxRange ? [blackboxRange] : [selectionRange]
+        !selectedLinesAreBlackBoxed,
+        selectedLinesAreBlackBoxed ? [blackboxRange] : [selectionRange]
       );
     },
   };
@@ -262,15 +328,44 @@ export function editorMenuItems({
   );
 
   if (features.blackboxLines) {
-    items.push(
-      blackBoxLinesMenuItem(
-        cx,
-        selectedSource,
-        editorActions,
-        editor,
-        blackboxedRanges
-      )
+    const startLine = toSourceLine(
+      selectedSource.id,
+      editor.codeMirror.getCursor("from").line
     );
+    const endLine = toSourceLine(
+      selectedSource.id,
+      editor.codeMirror.getCursor("to").line
+    );
+
+    // Find any blackbox ranges that exist for the selected lines
+    const blackboxRange = findBlackBoxRange(selectedSource, blackboxedRanges, {
+      start: startLine,
+      end: endLine,
+    });
+
+    const isMultiLineSelection = blackboxRange
+      ? blackboxRange.start.line !== blackboxRange.end.line
+      : startLine !== endLine;
+
+    const theWholeSourceIsBlackBoxed =
+      selectedSource.isBlackBoxed &&
+      !blackboxedRanges[selectedSource.url].length;
+
+    if (!theWholeSourceIsBlackBoxed) {
+      const blackBoxSourceLinesMenuItem = isMultiLineSelection
+        ? blackBoxLinesMenuItem
+        : blackBoxLineMenuItem;
+
+      items.push(
+        blackBoxSourceLinesMenuItem(
+          cx,
+          selectedSource,
+          editorActions,
+          editor,
+          blackboxedRanges
+        )
+      );
+    }
   }
 
   if (isTextSelected) {

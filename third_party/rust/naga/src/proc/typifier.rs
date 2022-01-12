@@ -472,6 +472,24 @@ impl<'a> ResolveContext<'a> {
                     return Err(ResolveError::InvalidPointer(pointer));
                 }
             },
+            crate::Expression::ImageSample {
+                image,
+                gather: Some(_),
+                ..
+            } => match *past(image).inner_with(types) {
+                Ti::Image { class, .. } => TypeResolution::Value(Ti::Vector {
+                    kind: match class {
+                        crate::ImageClass::Sampled { kind, multi: _ } => kind,
+                        _ => crate::ScalarKind::Float,
+                    },
+                    width: 4,
+                    size: crate::VectorSize::Quad,
+                }),
+                ref other => {
+                    log::error!("Image type {:?}", other);
+                    return Err(ResolveError::InvalidImage(image));
+                }
+            },
             crate::Expression::ImageSample { image, .. }
             | crate::Expression::ImageLoad { image, .. } => match *past(image).inner_with(types) {
                 Ti::Image { class, .. } => TypeResolution::Value(match class {
@@ -683,6 +701,8 @@ impl<'a> ResolveContext<'a> {
                     Mf::Asinh |
                     Mf::Acosh |
                     Mf::Atanh |
+                    Mf::Radians |
+                    Mf::Degrees |
                     // decomposition
                     Mf::Ceil |
                     Mf::Floor |
@@ -785,6 +805,16 @@ impl<'a> ResolveContext<'a> {
                     Mf::ReverseBits |
                     Mf::ExtractBits |
                     Mf::InsertBits => res_arg.clone(),
+                    Mf::FindLsb |
+                    Mf::FindMsb => match *res_arg.inner_with(types)  {
+                        Ti::Scalar { kind: _, width } =>
+                            TypeResolution::Value(Ti::Scalar { kind: crate::ScalarKind::Sint, width }),
+                        Ti::Vector { size, kind: _, width } =>
+                            TypeResolution::Value(Ti::Vector { size, kind: crate::ScalarKind::Sint, width }),
+                        ref other => return Err(ResolveError::IncompatibleOperands(
+                                format!("{:?}({:?})", fun, other)
+                            )),
+                    },
                     // data packing
                     Mf::Pack4x8snorm |
                     Mf::Pack4x8unorm |

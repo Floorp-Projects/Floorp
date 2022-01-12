@@ -322,7 +322,7 @@ MOZ_CAN_RUN_SCRIPT void ExtensionTest::AssertThrows(
   }
 
   if (NS_WARN_IF(!AssertMatchInternal(aCx, exn, aExpectedError,
-                                      u"Function did throw, expected error"_ns,
+                                      u"Function threw, expecting error"_ns,
                                       aMessage, nullptr, aRv))) {
     ThrowUnexpectedError(aCx, aRv);
   }

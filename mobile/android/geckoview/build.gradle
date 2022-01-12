@@ -392,6 +392,10 @@ group = 'org.mozilla.geckoview'
 def getArtifactId() {
     def id = "geckoview" + project.ext.artifactSuffix
 
+    if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        id += "-omni"
+    }
+
     if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
         // In automation, per-architecture artifacts identify
         // the architecture; multi-architecture artifacts don't.

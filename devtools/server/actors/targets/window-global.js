@@ -256,8 +256,8 @@ const windowGlobalTargetPrototype = {
    *          If true, the actor will only focus on the passed docShell and not on the whole
    *          docShell tree. This should be enabled when we have targets for all documents.
    *        - sessionContext Object
-   *          WatcherActor's session context. This helps know what is the overall debugged scope.
-   *          See watcher actor constructor for more info.
+   *          The Session Context to help know what is debugged.
+   *          See devtools/server/actors/watcher/session-context.js
    */
   initialize: function(
     connection,

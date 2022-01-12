@@ -19,6 +19,9 @@ const {
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
+const {
+  createWebExtensionSessionContext,
+} = require("devtools/server/actors/watcher/session-context");
 
 loader.lazyImporter(
   this,
@@ -109,15 +112,17 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       if (!this.watcher) {
         // Ensure connecting to the webextension frame in order to populate this._form
         await this._extensionFrameConnect();
-        this.watcher = new WatcherActor(this.conn, {
-          type: "webextension",
-          addonId: this.addonId,
-          addonBrowsingContextID: this._form.browsingContextID,
-          addonInnerWindowId: this._form.innerWindowId,
-          // For now, there is only one target (WebExtensionTargetActor), it is never replaced,
-          // and is only created via WebExtensionDescriptor.getTarget (and never by the watcher actor).
-          isServerTargetSwitchingEnabled: config.isServerTargetSwitchingEnabled,
-        });
+        this.watcher = new WatcherActor(
+          this.conn,
+          createWebExtensionSessionContext(
+            {
+              addonId: this.addonId,
+              browsingContextID: this._form.browsingContextID,
+              innerWindowId: this._form.innerWindowId,
+            },
+            config
+          )
+        );
         this.manage(this.watcher);
       }
       return this.watcher;

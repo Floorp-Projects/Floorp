@@ -8,8 +8,10 @@
 #define nss_scoped_ptrs_h__
 
 #include <memory>
+
 #include "cert.h"
 #include "keyhi.h"
+#include "nss.h"
 #include "p12.h"
 #include "pk11hpke.h"
 #include "pk11pqg.h"
@@ -54,6 +56,7 @@ struct ScopedDelete {
   void operator()(SEC_PKCS12DecoderContext* dcx) {
     SEC_PKCS12DecoderFinish(dcx);
   }
+  void operator()(NSSInitContext* init) { NSS_ShutdownContext(init); }
 };
 
 template <class T>
@@ -75,6 +78,7 @@ SCOPED(CERTDistNames);
 SCOPED(CERTName);
 SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(HpkeContext);
+SCOPED(NSSInitContext);
 SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(PK11SlotInfo);

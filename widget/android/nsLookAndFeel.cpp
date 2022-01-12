@@ -6,7 +6,7 @@
 #include "nsStyleConsts.h"
 #include "nsXULAppAPI.h"
 #include "nsLookAndFeel.h"
-#include "nsNativeBasicTheme.h"
+#include "Theme.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
