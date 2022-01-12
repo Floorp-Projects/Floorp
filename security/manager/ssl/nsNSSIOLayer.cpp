@@ -2236,11 +2236,30 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
 }
 
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::IsChainValid(
-    const DERArray& certChain, Time, const CertPolicyId&) {
-  if (ConstructCERTCertListFromReversedDERArray(certChain, mBuiltChain) !=
-      SECSuccess) {
+    const DERArray& certArray, Time, const CertPolicyId&) {
+  mBuiltChain = UniqueCERTCertList(CERT_NewCertList());
+  if (!mBuiltChain) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
+
+  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());  // non-owning
+
+  size_t numCerts = certArray.GetLength();
+  for (size_t i = 0; i < numCerts; ++i) {
+    SECItem certDER(UnsafeMapInputToSECItem(*certArray.GetDER(i)));
+    UniqueCERTCertificate cert(
+        CERT_NewTempCertificate(certDB, &certDER, nullptr, false, true));
+    if (!cert) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    // certArray is ordered with the root first, but we want the resulting
+    // certList to have the root last.
+    if (CERT_AddCertToListHead(mBuiltChain.get(), cert.get()) != SECSuccess) {
+      return MapPRErrorCodeToResult(PR_GetError());
+    }
+    Unused << cert.release();  // cert is now owned by mBuiltChain.
+  }
+
   return Success;
 }
 
