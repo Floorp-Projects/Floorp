@@ -2173,7 +2173,7 @@ void CacheStorageService::TelemetryRecordEntryCreation(
                                  timeStamp, TimeStamp::NowLoRes());
 }
 
-void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry* entry) {
+void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry const* entry) {
   MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
 
   // Doomed entries must not be considered, we are only interested in purged

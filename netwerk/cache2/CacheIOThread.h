@@ -113,8 +113,6 @@ class CacheIOThread final : public nsIThreadObserver {
 
   mozilla::Monitor mMonitor{"CacheIOThread"};
   PRThread* mThread{nullptr};
-  // Only set in Init(), before the thread is started, which reads it but never
-  // writes
   UniquePtr<detail::BlockingIOWatcher> mBlockingIOWatcher;
   Atomic<nsIThread*> mXPCOMThread{nullptr};
   Atomic<uint32_t, Relaxed> mLowestLevelWaiting{LAST_LEVEL};
@@ -128,7 +126,7 @@ class CacheIOThread final : public nsIThreadObserver {
   // Raised when nsIEventTarget.Dispatch() is called on this thread
   Atomic<bool, Relaxed> mHasXPCOMEvents{false};
   // See YieldAndRerun() above
-  bool mRerunCurrentEvent{false};  // Only accessed on the cache thread
+  bool mRerunCurrentEvent{false};
   // Signal to process all pending events and then shutdown
   // Synchronized by mMonitor
   bool mShutdown{false};
