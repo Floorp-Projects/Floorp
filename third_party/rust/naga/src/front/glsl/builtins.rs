@@ -4,9 +4,9 @@ use super::{
     Error, ErrorKind, Parser, Result,
 };
 use crate::{
-    BinaryOperator, Block, Constant, ConstantInner, DerivativeAxis, Expression, Handle, ImageClass,
+    BinaryOperator, Block, Constant, DerivativeAxis, Expression, Handle, ImageClass,
     ImageDimension, ImageQuery, MathFunction, Module, RelationalFunction, SampleLevel,
-    ScalarKind as Sk, ScalarValue, Span, Type, TypeInner, VectorSize,
+    ScalarKind as Sk, Span, Type, TypeInner, VectorSize,
 };
 
 impl Module {
@@ -535,8 +535,8 @@ pub fn inject_builtin(declaration: &mut FunctionDeclaration, module: &mut Module
                         "asinh" => MacroCall::MathFunction(MathFunction::Asinh),
                         "acosh" => MacroCall::MathFunction(MathFunction::Acosh),
                         "atanh" => MacroCall::MathFunction(MathFunction::Atanh),
-                        "radians" => MacroCall::ConstMultiply(std::f64::consts::PI / 180.0),
-                        "degrees" => MacroCall::ConstMultiply(180.0 / std::f64::consts::PI),
+                        "radians" => MacroCall::MathFunction(MathFunction::Radians),
+                        "degrees" => MacroCall::MathFunction(MathFunction::Degrees),
                         "floatBitsToInt" => MacroCall::BitCast(Sk::Sint),
                         "floatBitsToUint" => MacroCall::BitCast(Sk::Uint),
                         "dFdx" | "dFdxFine" | "dFdxCoarse" => {
@@ -630,12 +630,15 @@ pub fn inject_builtin(declaration: &mut FunctionDeclaration, module: &mut Module
                 ))
             }
         }
-        "bitCount" | "bitfieldReverse" | "bitfieldExtract" | "bitfieldInsert" => {
+        "bitCount" | "bitfieldReverse" | "bitfieldExtract" | "bitfieldInsert" | "findLSB"
+        | "findMSB" => {
             let fun = match name {
                 "bitCount" => MathFunction::CountOneBits,
                 "bitfieldReverse" => MathFunction::ReverseBits,
                 "bitfieldExtract" => MathFunction::ExtractBits,
                 "bitfieldInsert" => MathFunction::InsertBits,
+                "findLSB" => MathFunction::FindLsb,
+                "findMSB" => MathFunction::FindMsb,
                 _ => unreachable!(),
             };
 
@@ -1548,7 +1551,6 @@ pub enum MacroCall {
     Splatted(MathFunction, Option<VectorSize>, usize),
     MixBoolean,
     Clamp(Option<VectorSize>),
-    ConstMultiply(f64),
     BitCast(Sk),
     Derivate(DerivativeAxis),
 }
@@ -1865,30 +1867,6 @@ impl MacroCall {
                     body,
                 ))
             }
-            MacroCall::ConstMultiply(value) => {
-                let constant = parser.module.constants.fetch_or_append(
-                    Constant {
-                        name: None,
-                        specialization: None,
-                        inner: ConstantInner::Scalar {
-                            width: 4,
-                            value: ScalarValue::Float(value),
-                        },
-                    },
-                    Span::default(),
-                );
-                let right =
-                    ctx.add_expression(Expression::Constant(constant), Span::default(), body);
-                Ok(ctx.add_expression(
-                    Expression::Binary {
-                        op: BinaryOperator::Multiply,
-                        left: args[0],
-                        right,
-                    },
-                    Span::default(),
-                    body,
-                ))
-            }
             MacroCall::BitCast(kind) => Ok(ctx.add_expression(
                 Expression::As {
                     expr: args[0],
@@ -1930,6 +1908,7 @@ fn texture_call(
             Expression::ImageSample {
                 image,
                 sampler,
+                gather: None, //TODO
                 coordinate: comps.coordinate,
                 array_index,
                 offset,

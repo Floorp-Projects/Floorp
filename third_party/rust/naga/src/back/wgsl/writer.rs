@@ -1239,6 +1239,7 @@ impl<W: Write> Writer<W> {
             Expression::ImageSample {
                 image,
                 sampler,
+                gather: None,
                 coordinate,
                 array_index,
                 offset,
@@ -1297,6 +1298,54 @@ impl<W: Write> Writer<W> {
                         write!(self.out, ", ")?;
                         self.write_expr(module, y, func_ctx)?;
                     }
+                }
+
+                if let Some(offset) = offset {
+                    write!(self.out, ", ")?;
+                    self.write_constant(module, offset)?;
+                }
+
+                write!(self.out, ")")?;
+            }
+            Expression::ImageSample {
+                image,
+                sampler,
+                gather: Some(component),
+                coordinate,
+                array_index,
+                offset,
+                level: _,
+                depth_ref,
+            } => {
+                let suffix_cmp = match depth_ref {
+                    Some(_) => "Compare",
+                    None => "",
+                };
+
+                write!(self.out, "textureGather{}(", suffix_cmp)?;
+                match *func_ctx.info[image].ty.inner_with(&module.types) {
+                    TypeInner::Image {
+                        class: crate::ImageClass::Depth { multi: _ },
+                        ..
+                    } => {}
+                    _ => {
+                        write!(self.out, "{}, ", component as u8)?;
+                    }
+                }
+                self.write_expr(module, image, func_ctx)?;
+                write!(self.out, ", ")?;
+                self.write_expr(module, sampler, func_ctx)?;
+                write!(self.out, ", ")?;
+                self.write_expr(module, coordinate, func_ctx)?;
+
+                if let Some(array_index) = array_index {
+                    write!(self.out, ", ")?;
+                    self.write_expr(module, array_index, func_ctx)?;
+                }
+
+                if let Some(depth_ref) = depth_ref {
+                    write!(self.out, ", ")?;
+                    self.write_expr(module, depth_ref, func_ctx)?;
                 }
 
                 if let Some(offset) = offset {
@@ -1478,6 +1527,8 @@ impl<W: Write> Writer<W> {
                     Mf::Asinh => Function::Asincosh { is_sin: true },
                     Mf::Acosh => Function::Asincosh { is_sin: false },
                     Mf::Atanh => Function::Atanh,
+                    Mf::Radians => Function::Regular("radians"),
+                    Mf::Degrees => Function::Regular("degrees"),
                     // decomposition
                     Mf::Ceil => Function::Regular("ceil"),
                     Mf::Floor => Function::Regular("floor"),
@@ -1517,6 +1568,8 @@ impl<W: Write> Writer<W> {
                     Mf::ReverseBits => Function::Regular("reverseBits"),
                     Mf::ExtractBits => Function::Regular("extractBits"),
                     Mf::InsertBits => Function::Regular("insertBits"),
+                    Mf::FindLsb => Function::Regular("findLsb"),
+                    Mf::FindMsb => Function::Regular("findMsb"),
                     // data packing
                     Mf::Pack4x8snorm => Function::Regular("pack4x8snorm"),
                     Mf::Pack4x8unorm => Function::Regular("pack4x8unorm"),
