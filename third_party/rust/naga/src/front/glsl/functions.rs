@@ -195,14 +195,39 @@ impl Parser {
                 (value, expr_meta),
                 meta,
             )?,
-            TypeInner::Struct { .. } | TypeInner::Array { .. } => ctx.add_expression(
-                Expression::Compose {
-                    ty,
-                    components: vec![value],
-                },
-                meta,
-                body,
-            ),
+            TypeInner::Struct { ref members, .. } => {
+                let scalar_components = members
+                    .get(0)
+                    .and_then(|member| scalar_components(&self.module.types[member.ty].inner));
+                if let Some((kind, width)) = scalar_components {
+                    ctx.implicit_conversion(self, &mut value, expr_meta, kind, width)?;
+                }
+
+                ctx.add_expression(
+                    Expression::Compose {
+                        ty,
+                        components: vec![value],
+                    },
+                    meta,
+                    body,
+                )
+            }
+
+            TypeInner::Array { base, .. } => {
+                let scalar_components = scalar_components(&self.module.types[base].inner);
+                if let Some((kind, width)) = scalar_components {
+                    ctx.implicit_conversion(self, &mut value, expr_meta, kind, width)?;
+                }
+
+                ctx.add_expression(
+                    Expression::Compose {
+                        ty,
+                        components: vec![value],
+                    },
+                    meta,
+                    body,
+                )
+            }
             _ => {
                 self.errors.push(Error {
                     kind: ErrorKind::SemanticError("Bad type constructor".into()),
@@ -535,6 +560,26 @@ impl Parser {
             TypeInner::Vector { size, kind, width } => {
                 return self.vector_constructor(ctx, body, ty, size, kind, width, &args, meta)
             }
+            TypeInner::Array { base, .. } => {
+                for (mut arg, meta) in args.iter().copied() {
+                    let scalar_components = scalar_components(&self.module.types[base].inner);
+                    if let Some((kind, width)) = scalar_components {
+                        ctx.implicit_conversion(self, &mut arg, meta, kind, width)?;
+                    }
+
+                    components.push(arg)
+                }
+            }
+            TypeInner::Struct { ref members, .. } => {
+                for ((mut arg, meta), member) in args.iter().copied().zip(members.iter()) {
+                    let scalar_components = scalar_components(&self.module.types[member.ty].inner);
+                    if let Some((kind, width)) = scalar_components {
+                        ctx.implicit_conversion(self, &mut arg, meta, kind, width)?;
+                    }
+
+                    components.push(arg)
+                }
+            }
             _ => {
                 return Err(Error {
                     kind: ErrorKind::SemanticError("Constructor: Too many arguments".into()),
@@ -756,8 +801,6 @@ impl Parser {
                     // If the argument is to be passed as a pointer but the type of the
                     // expression returns a vector it must mean that it was for example
                     // swizzled and it must be spilled into a local before calling
-                    // TODO: this part doesn't work because of #1385 once that's sorted out
-                    // revisit this part.
                     TypeInner::Vector { size, kind, width } => (
                         self.module.types.insert(
                             Type {
@@ -829,7 +872,40 @@ impl Parser {
                 arguments.push(temp_expr);
                 // Register the temporary local to be written back to it's original
                 // place after the function call
-                proxy_writes.push((handle, temp_expr));
+                if let Expression::Swizzle {
+                    size,
+                    mut vector,
+                    pattern,
+                } = ctx.expressions[value]
+                {
+                    if let Expression::Load { pointer } = ctx.expressions[vector] {
+                        vector = pointer;
+                    }
+
+                    for (i, component) in pattern.iter().take(size as usize).enumerate() {
+                        let original = ctx.add_expression(
+                            Expression::AccessIndex {
+                                base: vector,
+                                index: *component as u32,
+                            },
+                            Span::default(),
+                            body,
+                        );
+
+                        let temp = ctx.add_expression(
+                            Expression::AccessIndex {
+                                base: temp_expr,
+                                index: i as u32,
+                            },
+                            Span::default(),
+                            body,
+                        );
+
+                        proxy_writes.push((original, temp));
+                    }
+                } else {
+                    proxy_writes.push((handle, temp_expr));
+                }
                 continue;
             }
 
@@ -1058,6 +1134,82 @@ impl Parser {
         });
     }
 
+    /// Helper function for building the input/output interface of the entry point
+    ///
+    /// Calls `f` with the data of the entry point argument, flattening composite types
+    /// recursively
+    ///
+    /// The passed arguments to the callback are:
+    /// - The name
+    /// - The pointer expression to the global storage
+    /// - The handle to the type of the entry point argument
+    /// - The binding of the entry point argument
+    /// - The expression arena
+    fn arg_type_walker(
+        &self,
+        name: Option<String>,
+        binding: crate::Binding,
+        pointer: Handle<Expression>,
+        ty: Handle<Type>,
+        expressions: &mut Arena<Expression>,
+        f: &mut impl FnMut(
+            Option<String>,
+            Handle<Expression>,
+            Handle<Type>,
+            crate::Binding,
+            &mut Arena<Expression>,
+        ),
+    ) {
+        match self.module.types[ty].inner {
+            TypeInner::Struct { ref members, .. } => {
+                let mut location = match binding {
+                    crate::Binding::Location { location, .. } => location,
+                    _ => return,
+                };
+
+                for (i, member) in members.iter().enumerate() {
+                    let member_pointer = expressions.append(
+                        Expression::AccessIndex {
+                            base: pointer,
+                            index: i as u32,
+                        },
+                        crate::Span::default(),
+                    );
+
+                    let binding = match member.binding.clone() {
+                        Some(binding) => binding,
+                        None => {
+                            let interpolation = self.module.types[member.ty]
+                                .inner
+                                .scalar_kind()
+                                .map(|kind| match kind {
+                                    ScalarKind::Float => crate::Interpolation::Perspective,
+                                    _ => crate::Interpolation::Flat,
+                                });
+                            let binding = crate::Binding::Location {
+                                location,
+                                interpolation,
+                                sampling: None,
+                            };
+                            location += 1;
+                            binding
+                        }
+                    };
+
+                    self.arg_type_walker(
+                        member.name.clone(),
+                        binding,
+                        member_pointer,
+                        member.ty,
+                        expressions,
+                        f,
+                    )
+                }
+            }
+            _ => f(name, pointer, ty, binding, expressions),
+        }
+    }
+
     pub(crate) fn add_entry_point(
         &mut self,
         function: Handle<Function>,
@@ -1079,20 +1231,29 @@ impl Parser {
                 continue;
             }
 
-            let ty = self.module.global_variables[arg.handle].ty;
-            let idx = arguments.len() as u32;
-
-            arguments.push(FunctionArgument {
-                name: arg.name.clone(),
-                ty,
-                binding: Some(arg.binding.clone()),
-            });
-
             let pointer =
                 expressions.append(Expression::GlobalVariable(arg.handle), Default::default());
-            let value = expressions.append(Expression::FunctionArgument(idx), Default::default());
 
-            body.push(Statement::Store { pointer, value }, Default::default());
+            self.arg_type_walker(
+                arg.name.clone(),
+                arg.binding.clone(),
+                pointer,
+                self.module.global_variables[arg.handle].ty,
+                &mut expressions,
+                &mut |name, pointer, ty, binding, expressions| {
+                    let idx = arguments.len() as u32;
+
+                    arguments.push(FunctionArgument {
+                        name,
+                        ty,
+                        binding: Some(binding),
+                    });
+
+                    let value =
+                        expressions.append(Expression::FunctionArgument(idx), Default::default());
+                    body.push(Statement::Store { pointer, value }, Default::default());
+                },
+            )
         }
 
         body.extend_block(global_init_body);
@@ -1115,26 +1276,34 @@ impl Parser {
                 continue;
             }
 
-            let ty = self.module.global_variables[arg.handle].ty;
-
-            members.push(StructMember {
-                name: arg.name.clone(),
-                ty,
-                binding: Some(arg.binding.clone()),
-                offset: span,
-            });
-
-            span += self.module.types[ty].inner.span(&self.module.constants);
-
             let pointer =
                 expressions.append(Expression::GlobalVariable(arg.handle), Default::default());
-            let len = expressions.len();
-            let load = expressions.append(Expression::Load { pointer }, Default::default());
-            body.push(
-                Statement::Emit(expressions.range_from(len)),
-                Default::default(),
-            );
-            components.push(load)
+
+            self.arg_type_walker(
+                arg.name.clone(),
+                arg.binding.clone(),
+                pointer,
+                self.module.global_variables[arg.handle].ty,
+                &mut expressions,
+                &mut |name, pointer, ty, binding, expressions| {
+                    members.push(StructMember {
+                        name,
+                        ty,
+                        binding: Some(binding),
+                        offset: span,
+                    });
+
+                    span += self.module.types[ty].inner.span(&self.module.constants);
+
+                    let len = expressions.len();
+                    let load = expressions.append(Expression::Load { pointer }, Default::default());
+                    body.push(
+                        Statement::Emit(expressions.range_from(len)),
+                        Default::default(),
+                    );
+                    components.push(load)
+                },
+            )
         }
 
         let (ty, value) = if !components.is_empty() {

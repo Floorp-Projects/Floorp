@@ -1242,7 +1242,6 @@ void PresShell::Destroy() {
       Telemetry::Accumulate(Telemetry::WEBFONT_PER_PAGE, 0);
       Telemetry::Accumulate(Telemetry::WEBFONT_SIZE_PER_PAGE, 0);
     }
-    mPresContext->CancelManagedPostRefreshObservers();
   }
 
 #ifdef MOZ_REFLOW_PERF

@@ -38,6 +38,11 @@ def getNDKDirectory() {
     return null
 }
 
+def hasCompileArtifacts() {
+    return project.mozconfig.substs.COMPILE_ENVIRONMENT
+        || project.mozconfig.substs.MOZ_ARTIFACT_BUILDS
+}
+
 // Get the LLVM bin folder, either from the currently used toolchain or, if
 // this is an artifact build, from the Android NDK.
 @Memoized
@@ -193,7 +198,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     def distDir = "${topobjdir}/dist/geckoview"
 
     def syncOmnijarFromDistDir
-    if (mozconfig.substs.COMPILE_ENVIRONMENT) {
+    if (hasCompileArtifacts()) {
         syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
             onlyIf {
                 if (source.empty) {
@@ -249,7 +254,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     } }()
 
     syncLibsFromDistDir.onlyIf { task ->
-        if (!mozconfig.substs.COMPILE_ENVIRONMENT && !mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+        if (!hasCompileArtifacts()) {
             // We won't have JNI libraries if we're not compiling and we're not downloading
             // artifacts.  Such a configuration is used for running lints, generating docs, etc.
             return true
@@ -267,7 +272,7 @@ ext.configureVariantWithGeckoBinaries = { variant ->
         }
     }
 
-    if (mozconfig.substs.COMPILE_ENVIRONMENT) {
+    if (hasCompileArtifacts()) {
         // Local (read, not 'official') builds want to reflect developer changes to
         // the omnijar sources, and (when compiling) to reflect developer changes to
         // the native binaries.  To do this, the Gradle build calls out to the

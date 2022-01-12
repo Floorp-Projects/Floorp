@@ -60,16 +60,16 @@ fn main() {
 
         println!("{:?}", desc);
 
-        #[cfg(features = "private")]
-        let _reflection = unsafe {
-            RenderPipelineReflection::new(
-                desc.serialize_vertex_data(),
-                desc.serialize_fragment_data(),
-                vertex_desc.serialize_descriptor(),
-                &device,
-                0x8,
-                0x0,
-            )
-        };
+        let reflect_options = MTLPipelineOption::ArgumentInfo | MTLPipelineOption::BufferTypeInfo;
+        let (_, reflection) = device
+            .new_render_pipeline_state_with_reflection(&desc, reflect_options)
+            .unwrap();
+
+        println!("Vertex arguments: ");
+        let vertex_arguments = reflection.vertex_arguments();
+        for index in 0..vertex_arguments.count() {
+            let argument = vertex_arguments.object_at(index).unwrap();
+            println!("{:?}", argument);
+        }
     });
 }

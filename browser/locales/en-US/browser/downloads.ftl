@@ -89,6 +89,9 @@ downloads-cmd-clear-list =
     .accesskey = a
 downloads-cmd-clear-downloads =
     .label = Clear Downloads
+    .accesskey = C
+downloads-cmd-delete-file =
+    .label = Delete
     .accesskey = D
 
 # This command is shown in the context menu when downloads are blocked.

@@ -7,9 +7,12 @@ from __future__ import absolute_import
 import os
 from functools import partial
 
+from manifestparser import TestManifest
+
 import mozunit
 import pytest
 from moztest.selftest.output import get_mozharness_status, filter_action
+from conftest import setup_args
 
 from mozharness.base.log import INFO, WARNING, ERROR
 from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
@@ -28,6 +31,22 @@ def test_name(request):
             return f"test_{name}.html"
         elif flavor == "browser-chrome":
             return f"browser_{name}.js"
+
+    return inner
+
+
+@pytest.fixture
+def test_manifest(setup_test_harness, request):
+    flavor = request.getfixturevalue("flavor")
+    test_root = setup_test_harness(*setup_args, flavor=flavor)
+    assert test_root
+
+    def inner(manifestFileNames):
+        return TestManifest(
+            manifests=[os.path.join(test_root, name) for name in manifestFileNames],
+            strict=False,
+            rootdir=test_root,
+        )
 
     return inner
 
@@ -214,6 +233,44 @@ def test_output_leak(flavor, runFailures, runtests, test_name):
         assert lt["objects"] == ["IntentionallyLeakedObject"]
 
     assert found_leaks, "At least one process should have leaked"
+
+
+@pytest.mark.parametrize("flavor", ["plain"])
+def test_output_testfile_in_dupe_manifests(flavor, runtests, test_name, test_manifest):
+    results = {
+        "status": 0,
+        "tbpl_status": TBPL_SUCCESS,
+        "log_level": (INFO, WARNING),
+        "line_status": "PASS",
+        # We expect the test to be executed exactly 2 times,
+        # once for each manifest where the test file has been included.
+        "lines": 2,
+    }
+
+    # Explicitly provide a manifestFile property that includes the
+    # two manifest files that share the same test file.
+    extra_opts = {
+        "manifestFile": test_manifest(
+            [
+                "mochitest-dupemanifest-1.ini",
+                "mochitest-dupemanifest-2.ini",
+            ]
+        ),
+        "runByManifest": True,
+    }
+
+    # Execute mochitest by explicitly request the test file listed
+    # in two manifest files to be executed.
+    status, lines = runtests(test_name("pass"), **extra_opts)
+    assert status == results["status"]
+
+    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level in results["log_level"]
+
+    lines = filter_action("test_status", lines)
+    assert len(lines) == results["lines"]
+    assert lines[0]["status"] == results["line_status"]
 
 
 if __name__ == "__main__":

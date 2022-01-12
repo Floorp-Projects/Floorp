@@ -68,10 +68,6 @@ sslkeylogfile=1
 gyp_params=(--depth="$cwd" --generator-output=".")
 ninja_params=()
 
-# Assume that the target architecture is the same as the host by default.
-host_arch=$(python "$cwd/coreconf/detect_host_arch.py")
-target_arch=$host_arch
-
 # Assume that MSVC is wanted if this is running on windows.
 platform=$(uname -s)
 if [ "${platform%-*}" = "MINGW32_NT" -o "${platform%-*}" = "MINGW64_NT" ]; then
@@ -132,11 +128,23 @@ while [ $# -gt 0 ]; do
         --disable-keylog) sslkeylogfile=0 ;;
         --enable-legacy-db) gyp_params+=(-Ddisable_dbm=0) ;;
         --mozilla-central) gyp_params+=(-Dmozilla_central=1) ;;
+	--python) python="$2"; shift ;;
+	--python=*) python="${1#*=}" ;;
         -D*) gyp_params+=("$1") ;;
         *) show_help; exit 2 ;;
     esac
     shift
 done
+
+if [ -n "$python" ]; then
+    gyp_params+=(-Dpython="$python")
+fi
+
+if [ -z "$target_arch" ]; then
+    # Assume that the target architecture is the same as the host by default.
+    host_arch=$(${python:-python} "$cwd/coreconf/detect_host_arch.py")
+    target_arch=$host_arch
+fi
 
 # Set the target architecture and build type.
 gyp_params+=(-Dtarget_arch="$target_arch")

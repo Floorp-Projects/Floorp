@@ -3974,7 +3974,7 @@
 # Is support for form-associated custom element enabled?
 - name: dom.webcomponents.formAssociatedCustomElement.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for the Web GPU API enabled?

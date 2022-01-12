@@ -385,9 +385,11 @@ class DOMEventCollector extends MainEventCollector {
       }
 
       const eventInfo = {
+        nsIEventListenerInfo: listener,
         capturing: listener.capturing,
         type: listener.type,
         handler: handler,
+        enabled: listener.enabled,
       };
 
       handlers.push(eventInfo);
@@ -820,16 +822,20 @@ class EventCollector {
    *
    * @param  {DOMNode} node
    *         The node for which events are to be gathered.
-   * @return {Array}
+   * @return {Array<Object>}
    *         An array containing objects in the following format:
    *         {
-   *           type: type,        // e.g. "click"
-   *           handler: handler,  // The function called when event is triggered.
-   *           tags: "jQuery",    // Comma separated list of tags displayed
-   *                              // inside event bubble.
-   *           hide: {            // Flags for hiding certain properties.
-   *             capturing: true,
+   *           {String} type: The event type, e.g. "click"
+   *           {Function} handler: The function called when event is triggered.
+   *           {Boolean} enabled: Whether the listener is enabled or not (event listeners can
+   *                     be disabled via the inspector)
+   *           {String} tags: Comma separated list of tags displayed inside event bubble (e.g. "JQuery")
+   *           {Object} hide: Flags for hiding certain properties.
+   *             {Boolean} capturing
    *           }
+   *           {Boolean} native
+   *           {String|undefined} sourceActor: The sourceActor id of the event listener
+   *           {nsIEventListenerInfo|undefined} nsIEventListenerInfo
    *         }
    */
   getEventListeners(node) {
@@ -895,7 +901,10 @@ class EventCollector {
    *             hide: {
    *               capturing: true
    *             },
-   *             native: false
+   *             native: false,
+   *             enabled: true
+   *             sourceActor: "sourceActor.1234",
+   *             nsIEventListenerInfo: nsIEventListenerInfo {…},
    *           }
    */
   // eslint-disable-next-line complexity
@@ -923,6 +932,7 @@ class EventCollector {
       const tags = listener.tags || "";
       const type = listener.type || "";
       let isScriptBoundToNonScriptElement = false;
+      const enabled = !!listener.enabled;
       let functionSource = handler.toString();
       let line = 0;
       let column = null;
@@ -1039,6 +1049,8 @@ class EventCollector {
         hide: typeof override.hide !== "undefined" ? override.hide : hide,
         native,
         sourceActor,
+        nsIEventListenerInfo: listener.nsIEventListenerInfo,
+        enabled,
       };
 
       // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are

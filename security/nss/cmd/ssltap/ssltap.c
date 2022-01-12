@@ -2580,6 +2580,8 @@ main(int argc, char *argv[])
                    get_time_string());
     } while (looparound); /* accept connection and process it. */
     PR_Close(s_rend);
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+        return 1;
+    }
     return 0;
 }

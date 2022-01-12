@@ -19,53 +19,41 @@
 
 namespace nss_test {
 
-static const CK_MECHANISM_TYPE kMech = CKM_NSS_CHACHA20_POLY1305;
-static const CK_MECHANISM_TYPE kMechXor = CKM_NSS_CHACHA20_CTR;
+static const CK_MECHANISM_TYPE kMech = CKM_CHACHA20_POLY1305;
+static const CK_MECHANISM_TYPE kMechLegacy = CKM_NSS_CHACHA20_POLY1305;
+static const CK_MECHANISM_TYPE kMechXor = CKM_CHACHA20;
+static const CK_MECHANISM_TYPE kMechXorLegacy = CKM_NSS_CHACHA20_CTR;
 // Some test data for simple tests.
 static const uint8_t kKeyData[32] = {'k'};
-static const uint8_t kCtrNonce[16] = {'c', 0, 0, 0, 'n'};
+static const uint8_t kXorParamsLegacy[16] = {'c', 0, 0, 0, 'n'};
+static const uint8_t kCounter[4] = {'c', 0};
+static const uint8_t kNonce[12] = {'n', 0};
+static const CK_CHACHA20_PARAMS kXorParams{
+    /* pBlockCounter */ const_cast<CK_BYTE_PTR>(kCounter),
+    /* blockCounterBits */ sizeof(kCounter) * 8,
+    /* pNonce */ const_cast<CK_BYTE_PTR>(kNonce),
+    /* ulNonceBits */ sizeof(kNonce) * 8,
+};
 static const uint8_t kData[16] = {'d'};
+static const uint8_t kExpectedXor[sizeof(kData)] = {
+    0xd8, 0x15, 0xd3, 0xb3, 0xe9, 0x34, 0x3b, 0x7a,
+    0x24, 0xf6, 0x5f, 0xd7, 0x95, 0x3d, 0xd3, 0x51};
+static const size_t kTagLen = 16;
 
 class Pkcs11ChaCha20Poly1305Test
     : public ::testing::TestWithParam<ChaChaTestVector> {
  public:
   void EncryptDecrypt(const ScopedPK11SymKey& key, const bool invalid_iv,
                       const bool invalid_tag, const uint8_t* data,
-                      size_t data_len, const uint8_t* aad, size_t aad_len,
-                      const uint8_t* iv, size_t iv_len,
+                      size_t data_len, CK_MECHANISM_TYPE mech, SECItem* params,
+                      std::vector<uint8_t>* nonce, std::vector<uint8_t>* aad,
                       const uint8_t* ct = nullptr, size_t ct_len = 0) {
-    // Prepare AEAD params.
-    CK_NSS_AEAD_PARAMS aead_params;
-    aead_params.pNonce = toUcharPtr(iv);
-    aead_params.ulNonceLen = iv_len;
-    aead_params.pAAD = toUcharPtr(aad);
-    aead_params.ulAADLen = aad_len;
-    aead_params.ulTagLen = 16;
-
-    SECItem params = {siBuffer, reinterpret_cast<unsigned char*>(&aead_params),
-                      sizeof(aead_params)};
-
-    // Encrypt with bad parameters (TagLen is too long).
+    std::vector<uint8_t> encrypted(data_len + kTagLen);
     unsigned int encrypted_len = 0;
-    std::vector<uint8_t> encrypted(data_len + aead_params.ulTagLen);
-    aead_params.ulTagLen = 158072;
-    SECStatus rv =
-        PK11_Encrypt(key.get(), kMech, &params, encrypted.data(),
-                     &encrypted_len, encrypted.size(), data, data_len);
-    EXPECT_EQ(SECFailure, rv);
-    EXPECT_EQ(0U, encrypted_len);
-
-    // Encrypt with bad parameters (TagLen is too short).
-    aead_params.ulTagLen = 2;
-    rv = PK11_Encrypt(key.get(), kMech, &params, encrypted.data(),
-                      &encrypted_len, encrypted.size(), data, data_len);
-    EXPECT_EQ(SECFailure, rv);
-    EXPECT_EQ(0U, encrypted_len);
-
     // Encrypt.
-    aead_params.ulTagLen = 16;
-    rv = PK11_Encrypt(key.get(), kMech, &params, encrypted.data(),
-                      &encrypted_len, encrypted.size(), data, data_len);
+    SECStatus rv =
+        PK11_Encrypt(key.get(), mech, params, encrypted.data(), &encrypted_len,
+                     encrypted.size(), data, data_len);
 
     // Return if encryption failure was expected due to invalid IV.
     // Without valid ciphertext, all further tests can be skipped.
@@ -92,7 +80,7 @@ class Pkcs11ChaCha20Poly1305Test
     // passed to a subsequent decryption call (for AEAD we
     // must authenticate even when the pt is zero-length).
     unsigned int decrypt_bytes_needed = 0;
-    rv = PK11_Decrypt(key.get(), kMech, &params, nullptr, &decrypt_bytes_needed,
+    rv = PK11_Decrypt(key.get(), mech, params, nullptr, &decrypt_bytes_needed,
                       0, encrypted.data(), encrypted_len);
     EXPECT_EQ(rv, SECSuccess);
     EXPECT_GT(decrypt_bytes_needed, data_len);
@@ -100,9 +88,8 @@ class Pkcs11ChaCha20Poly1305Test
     // Now decrypt it
     std::vector<uint8_t> decrypted(decrypt_bytes_needed);
     unsigned int decrypted_len = 0;
-    rv = PK11_Decrypt(key.get(), kMech, &params, decrypted.data(),
-                      &decrypted_len, decrypted.size(), encrypted.data(),
-                      encrypted.size());
+    rv = PK11_Decrypt(key.get(), mech, params, decrypted.data(), &decrypted_len,
+                      decrypted.size(), encrypted.data(), encrypted.size());
     EXPECT_EQ(rv, SECSuccess);
 
     // Check the plaintext.
@@ -115,7 +102,7 @@ class Pkcs11ChaCha20Poly1305Test
       decrypted_len = 0;
       std::vector<uint8_t> bogus_ciphertext(encrypted);
       bogus_ciphertext[0] ^= 0xff;
-      rv = PK11_Decrypt(key.get(), kMech, &params, decrypted.data(),
+      rv = PK11_Decrypt(key.get(), mech, params, decrypted.data(),
                         &decrypted_len, decrypted.size(),
                         bogus_ciphertext.data(), encrypted_len);
       EXPECT_EQ(rv, SECFailure);
@@ -128,52 +115,100 @@ class Pkcs11ChaCha20Poly1305Test
       decrypted_len = 0;
       std::vector<uint8_t> bogus_tag(encrypted);
       bogus_tag[encrypted_len - 1] ^= 0xff;
-      rv = PK11_Decrypt(key.get(), kMech, &params, decrypted.data(),
+      rv = PK11_Decrypt(key.get(), mech, params, decrypted.data(),
                         &decrypted_len, decrypted.size(), bogus_tag.data(),
                         encrypted_len);
       EXPECT_EQ(rv, SECFailure);
       EXPECT_EQ(0U, decrypted_len);
     }
 
-    // Decrypt with bogus IV.
-    // iv_len == 0 is invalid and should be caught earlier.
-    // Still skip, if there's no IV to modify.
-    if (iv_len != 0) {
-      decrypted_len = 0;
-      SECItem bogus_params(params);
-      CK_NSS_AEAD_PARAMS bogusAeadParams(aead_params);
-      bogus_params.data = reinterpret_cast<unsigned char*>(&bogusAeadParams);
-
-      std::vector<uint8_t> bogusIV(iv, iv + iv_len);
-      bogusAeadParams.pNonce = toUcharPtr(bogusIV.data());
-      bogusIV[0] ^= 0xff;
-
-      rv = PK11_Decrypt(key.get(), kMech, &bogus_params, decrypted.data(),
-                        &decrypted_len, data_len, encrypted.data(),
-                        encrypted.size());
-      EXPECT_EQ(rv, SECFailure);
-      EXPECT_EQ(0U, decrypted_len);
-    }
+    // Decrypt with bogus nonce.
+    // A nonce length of 0 is invalid and should be caught earlier.
+    ASSERT_NE(0U, nonce->size());
+    decrypted_len = 0;
+    nonce->data()[0] ^= 0xff;
+    rv = PK11_Decrypt(key.get(), mech, params, decrypted.data(), &decrypted_len,
+                      data_len, encrypted.data(), encrypted.size());
+    EXPECT_EQ(rv, SECFailure);
+    EXPECT_EQ(0U, decrypted_len);
+    nonce->data()[0] ^= 0xff;  // restore value
 
     // Decrypt with bogus additional data.
     // Skip when AAD was empty and can't be modified.
     // Alternatively we could generate random aad.
-    if (aad_len != 0) {
+    if (aad->size() != 0) {
       decrypted_len = 0;
-      SECItem bogus_params(params);
-      CK_NSS_AEAD_PARAMS bogus_aead_params(aead_params);
-      bogus_params.data = reinterpret_cast<unsigned char*>(&bogus_aead_params);
+      aad->data()[0] ^= 0xff;
 
-      std::vector<uint8_t> bogus_aad(aad, aad + aad_len);
-      bogus_aead_params.pAAD = toUcharPtr(bogus_aad.data());
-      bogus_aad[0] ^= 0xff;
-
-      rv = PK11_Decrypt(key.get(), kMech, &bogus_params, decrypted.data(),
+      rv = PK11_Decrypt(key.get(), mech, params, decrypted.data(),
                         &decrypted_len, data_len, encrypted.data(),
                         encrypted.size());
       EXPECT_EQ(rv, SECFailure);
       EXPECT_EQ(0U, decrypted_len);
     }
+  }
+
+  void EncryptDecrypt(const ScopedPK11SymKey& key, const bool invalid_iv,
+                      const bool invalid_tag, const uint8_t* data,
+                      size_t data_len, const uint8_t* aad_ptr, size_t aad_len,
+                      const uint8_t* iv_ptr, size_t iv_len,
+                      const uint8_t* ct = nullptr, size_t ct_len = 0) {
+    std::vector<uint8_t> nonce(iv_ptr, iv_ptr + iv_len);
+    std::vector<uint8_t> aad(aad_ptr, aad_ptr + aad_len);
+    // Prepare AEAD params.
+    CK_SALSA20_CHACHA20_POLY1305_PARAMS aead_params;
+    aead_params.pNonce = toUcharPtr(nonce.data());
+    aead_params.ulNonceLen = nonce.size();
+    aead_params.pAAD = toUcharPtr(aad.data());
+    aead_params.ulAADLen = aad.size();
+
+    SECItem params = {siBuffer, reinterpret_cast<unsigned char*>(&aead_params),
+                      sizeof(aead_params)};
+
+    EncryptDecrypt(key, invalid_iv, invalid_tag, data, data_len, kMech, &params,
+                   &nonce, &aad, ct, ct_len);
+  }
+
+  void EncryptDecryptLegacy(const ScopedPK11SymKey& key, const bool invalid_iv,
+                            const bool invalid_tag, const uint8_t* data,
+                            size_t data_len, const uint8_t* aad_ptr,
+                            size_t aad_len, const uint8_t* iv_ptr,
+                            size_t iv_len, const uint8_t* ct = nullptr,
+                            size_t ct_len = 0) {
+    std::vector<uint8_t> nonce(iv_ptr, iv_ptr + iv_len);
+    std::vector<uint8_t> aad(aad_ptr, aad_ptr + aad_len);
+    // Prepare AEAD params.
+    CK_NSS_AEAD_PARAMS aead_params;
+    aead_params.pNonce = toUcharPtr(nonce.data());
+    aead_params.ulNonceLen = nonce.size();
+    aead_params.pAAD = toUcharPtr(aad.data());
+    aead_params.ulAADLen = aad.size();
+    aead_params.ulTagLen = kTagLen;
+
+    SECItem params = {siBuffer, reinterpret_cast<unsigned char*>(&aead_params),
+                      sizeof(aead_params)};
+
+    // Encrypt with bad parameters (TagLen is too long).
+    unsigned int encrypted_len = 0;
+    std::vector<uint8_t> encrypted(data_len + aead_params.ulTagLen);
+    aead_params.ulTagLen = 158072;
+    SECStatus rv =
+        PK11_Encrypt(key.get(), kMechLegacy, &params, encrypted.data(),
+                     &encrypted_len, encrypted.size(), data, data_len);
+    EXPECT_EQ(SECFailure, rv);
+    EXPECT_EQ(0U, encrypted_len);
+
+    // Encrypt with bad parameters (TagLen is too short).
+    aead_params.ulTagLen = 2;
+    rv = PK11_Encrypt(key.get(), kMechLegacy, &params, encrypted.data(),
+                      &encrypted_len, encrypted.size(), data, data_len);
+    EXPECT_EQ(SECFailure, rv);
+    EXPECT_EQ(0U, encrypted_len);
+
+    // Encrypt.
+    aead_params.ulTagLen = kTagLen;
+    EncryptDecrypt(key, invalid_iv, invalid_tag, data, data_len, kMechLegacy,
+                   &params, &nonce, &aad, ct, ct_len);
   }
 
   void EncryptDecrypt(const ChaChaTestVector testvector) {
@@ -203,7 +238,7 @@ class Pkcs11ChaCha20Poly1305Test
         PK11_KeyGen(slot.get(), mech, nullptr, 32, nullptr));
     ASSERT_NE(nullptr, sym_key);
 
-    int tagSize = 16;
+    int tagSize = kTagLen;
     int cipher_simulated_size;
     int output_len_message = 0;
     int output_len_simulated = 0;
@@ -218,8 +253,8 @@ class Pkcs11ChaCha20Poly1305Test
     std::vector<uint8_t> cipher_simulated(33);
     std::vector<uint8_t> cipher_v24(33);
     std::vector<uint8_t> aad(16);
-    std::vector<uint8_t> tag_message(16);
-    std::vector<uint8_t> tag_simulated(16);
+    std::vector<uint8_t> tag_message(kTagLen);
+    std::vector<uint8_t> tag_simulated(kTagLen);
 
     // Prepare AEAD v2.40 params.
     CK_SALSA20_CHACHA20_POLY1305_PARAMS chacha_params;
@@ -387,10 +422,6 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateEncryptDecrypt) {
 }
 
 TEST_F(Pkcs11ChaCha20Poly1305Test, Xor) {
-  static const uint8_t kExpected[sizeof(kData)] = {
-      0xd8, 0x15, 0xd3, 0xb3, 0xe9, 0x34, 0x3b, 0x7a,
-      0x24, 0xf6, 0x5f, 0xd7, 0x95, 0x3d, 0xd3, 0x51};
-
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   SECItem keyItem = {siBuffer, toUcharPtr(kKeyData),
                      static_cast<unsigned int>(sizeof(kKeyData))};
@@ -398,30 +429,66 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, Xor) {
       slot.get(), kMechXor, PK11_OriginUnwrap, CKA_ENCRYPT, &keyItem, nullptr));
   EXPECT_TRUE(!!key);
 
-  SECItem ctrNonceItem = {siBuffer, toUcharPtr(kCtrNonce),
-                          static_cast<unsigned int>(sizeof(kCtrNonce))};
+  SECItem params = {siBuffer,
+                    toUcharPtr(reinterpret_cast<const uint8_t*>(&kXorParams)),
+                    static_cast<unsigned int>(sizeof(kXorParams))};
   uint8_t encrypted[sizeof(kData)];
   unsigned int encrypted_len = 88;  // This should be overwritten.
   SECStatus rv =
-      PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
-                   &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
+      PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                   sizeof(encrypted), kData, sizeof(kData));
   ASSERT_EQ(SECSuccess, rv);
-  ASSERT_EQ(sizeof(kExpected), static_cast<size_t>(encrypted_len));
-  EXPECT_EQ(0, memcmp(kExpected, encrypted, sizeof(kExpected)));
+  ASSERT_EQ(sizeof(kExpectedXor), static_cast<size_t>(encrypted_len));
+  EXPECT_EQ(0, memcmp(kExpectedXor, encrypted, sizeof(kExpectedXor)));
 
   // Decrypting has the same effect.
-  rv = PK11_Decrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
+  rv = PK11_Decrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                    sizeof(encrypted), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kData), static_cast<size_t>(encrypted_len));
+  EXPECT_EQ(0, memcmp(kExpectedXor, encrypted, sizeof(kExpectedXor)));
+
+  // Operating in reverse too.
+  rv = PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                    sizeof(encrypted), kExpectedXor, sizeof(kExpectedXor));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kExpectedXor), static_cast<size_t>(encrypted_len));
+  EXPECT_EQ(0, memcmp(kData, encrypted, sizeof(kData)));
+}
+
+TEST_F(Pkcs11ChaCha20Poly1305Test, XorLegacy) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  SECItem keyItem = {siBuffer, toUcharPtr(kKeyData),
+                     static_cast<unsigned int>(sizeof(kKeyData))};
+  ScopedPK11SymKey key(PK11_ImportSymKey(slot.get(), kMechXorLegacy,
+                                         PK11_OriginUnwrap, CKA_ENCRYPT,
+                                         &keyItem, nullptr));
+  EXPECT_TRUE(!!key);
+
+  SECItem ctrNonceItem = {siBuffer, toUcharPtr(kXorParamsLegacy),
+                          static_cast<unsigned int>(sizeof(kXorParamsLegacy))};
+  uint8_t encrypted[sizeof(kData)];
+  unsigned int encrypted_len = 88;  // This should be overwritten.
+  SECStatus rv =
+      PK11_Encrypt(key.get(), kMechXorLegacy, &ctrNonceItem, encrypted,
+                   &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kExpectedXor), static_cast<size_t>(encrypted_len));
+  EXPECT_EQ(0, memcmp(kExpectedXor, encrypted, sizeof(kExpectedXor)));
+
+  // Decrypting has the same effect.
+  rv = PK11_Decrypt(key.get(), kMechXorLegacy, &ctrNonceItem, encrypted,
                     &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
   ASSERT_EQ(SECSuccess, rv);
   ASSERT_EQ(sizeof(kData), static_cast<size_t>(encrypted_len));
-  EXPECT_EQ(0, memcmp(kExpected, encrypted, sizeof(kExpected)));
+  EXPECT_EQ(0, memcmp(kExpectedXor, encrypted, sizeof(kExpectedXor)));
 
   // Operating in reverse too.
-  rv = PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
-                    &encrypted_len, sizeof(encrypted), kExpected,
-                    sizeof(kExpected));
+  rv = PK11_Encrypt(key.get(), kMechXorLegacy, &ctrNonceItem, encrypted,
+                    &encrypted_len, sizeof(encrypted), kExpectedXor,
+                    sizeof(kExpectedXor));
   ASSERT_EQ(SECSuccess, rv);
-  ASSERT_EQ(sizeof(kExpected), static_cast<size_t>(encrypted_len));
+  ASSERT_EQ(sizeof(kExpectedXor), static_cast<size_t>(encrypted_len));
   EXPECT_EQ(0, memcmp(kData, encrypted, sizeof(kData)));
 }
 
@@ -429,18 +496,45 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, Xor) {
 // function.  The result is random and therefore cannot be checked.
 TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateXor) {
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
+  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMechXor, nullptr, 32, nullptr));
   EXPECT_TRUE(!!key);
 
   std::vector<uint8_t> iv(16);
   SECStatus rv = PK11_GenerateRandomOnSlot(slot.get(), iv.data(), iv.size());
   EXPECT_EQ(SECSuccess, rv);
 
-  SECItem ctrNonceItem = {siBuffer, toUcharPtr(iv.data()),
-                          static_cast<unsigned int>(iv.size())};
+  CK_CHACHA20_PARAMS chacha_params;
+  chacha_params.pBlockCounter = iv.data();
+  chacha_params.blockCounterBits = 32;
+  chacha_params.pNonce = iv.data() + 4;
+  chacha_params.ulNonceBits = 96;
+
+  SECItem params = {
+      siBuffer, toUcharPtr(reinterpret_cast<const uint8_t*>(&chacha_params)),
+      static_cast<unsigned int>(sizeof(chacha_params))};
   uint8_t encrypted[sizeof(kData)];
   unsigned int encrypted_len = 88;  // This should be overwritten.
-  rv = PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
+  rv = PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                    sizeof(encrypted), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kData), static_cast<size_t>(encrypted_len));
+}
+
+TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateXorLegacy) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ScopedPK11SymKey key(
+      PK11_KeyGen(slot.get(), kMechXorLegacy, nullptr, 32, nullptr));
+  EXPECT_TRUE(!!key);
+
+  std::vector<uint8_t> iv(16);
+  SECStatus rv = PK11_GenerateRandomOnSlot(slot.get(), iv.data(), iv.size());
+  EXPECT_EQ(SECSuccess, rv);
+
+  SECItem params = {siBuffer, toUcharPtr(iv.data()),
+                    static_cast<unsigned int>(iv.size())};
+  uint8_t encrypted[sizeof(kData)];
+  unsigned int encrypted_len = 88;  // This should be overwritten.
+  rv = PK11_Encrypt(key.get(), kMechXorLegacy, &params, encrypted,
                     &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
   ASSERT_EQ(SECSuccess, rv);
   ASSERT_EQ(sizeof(kData), static_cast<size_t>(encrypted_len));
@@ -451,18 +545,40 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, XorInvalidParams) {
   ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
   EXPECT_TRUE(!!key);
 
-  SECItem ctrNonceItem = {siBuffer, toUcharPtr(kCtrNonce),
-                          static_cast<unsigned int>(sizeof(kCtrNonce)) - 1};
+  SECItem params = {siBuffer,
+                    toUcharPtr(reinterpret_cast<const uint8_t*>(&kXorParams)),
+                    static_cast<unsigned int>(sizeof(kXorParams)) - 1};
   uint8_t encrypted[sizeof(kData)];
   unsigned int encrypted_len = 88;
   SECStatus rv =
-      PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
-                   &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
+      PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                   sizeof(encrypted), kData, sizeof(kData));
   EXPECT_EQ(SECFailure, rv);
 
-  ctrNonceItem.data = nullptr;
-  rv = PK11_Encrypt(key.get(), kMechXor, &ctrNonceItem, encrypted,
-                    &encrypted_len, sizeof(encrypted), kData, sizeof(kData));
+  params.data = nullptr;
+  rv = PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                    sizeof(encrypted), kData, sizeof(kData));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+}
+
+TEST_F(Pkcs11ChaCha20Poly1305Test, XorLegacyInvalidParams) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
+  EXPECT_TRUE(!!key);
+
+  SECItem params = {siBuffer, toUcharPtr(kXorParamsLegacy),
+                    static_cast<unsigned int>(sizeof(kXorParamsLegacy)) - 1};
+  uint8_t encrypted[sizeof(kData)];
+  unsigned int encrypted_len = 88;
+  SECStatus rv =
+      PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                   sizeof(encrypted), kData, sizeof(kData));
+  EXPECT_EQ(SECFailure, rv);
+
+  params.data = nullptr;
+  rv = PK11_Encrypt(key.get(), kMechXor, &params, encrypted, &encrypted_len,
+                    sizeof(encrypted), kData, sizeof(kData));
   EXPECT_EQ(SECFailure, rv);
   EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
 }
