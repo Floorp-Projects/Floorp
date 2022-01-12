@@ -9,6 +9,7 @@ import {
   getRawSourceURL,
   getFilename,
   shouldBlackbox,
+  findBlackBoxRange,
 } from "../../../utils/source";
 import { toSourceLine } from "../../../utils/editor";
 import { downloadFile } from "../../../utils/utils";
@@ -90,27 +91,6 @@ const blackBoxMenuItem = (cx, selectedSource, editorActions) => ({
   disabled: !shouldBlackbox(selectedSource),
   click: () => editorActions.toggleBlackBox(cx, selectedSource),
 });
-/**
- * Checks if a blackbox range exist for the line range.
- * That is if any start and end lines overlap any of the
- * blackbox ranges
- *
- * @param {Object} source - The current selected source
- * @param {Object} blackboxedRanges - the store of blackboxedRanges
- * @param {Object} line - The start and end line range
- */
-function findBlackBoxRange(source, blackboxedRanges, line) {
-  const ranges = blackboxedRanges[source.url];
-  if (!ranges || !ranges.length) {
-    return null;
-  }
-
-  return ranges.find(
-    range =>
-      (line.start >= range.start.line && line.start <= range.end.line) ||
-      (line.end >= range.start.line && line.end <= range.end.line)
-  );
-}
 
 export const blackBoxLineMenuItem = (
   cx,
