@@ -1005,6 +1005,8 @@ void nsPresContext::DetachPresShell() {
 
   mPresShell = nullptr;
 
+  CancelManagedPostRefreshObservers();
+
   if (mAnimationEventDispatcher) {
     mAnimationEventDispatcher->Disconnect();
     mAnimationEventDispatcher = nullptr;
