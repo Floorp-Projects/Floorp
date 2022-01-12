@@ -10,6 +10,7 @@ const BOOKMARKS_COUNT = 4;
 const TEST_PARENT_FOLDER = "testParentFolder";
 const TEST_SIF_URL = "http://testsif.example.com/";
 const TEST_SIF_TITLE = "TestSIF";
+const TEST_NEW_TITLE = "NewTestSIF";
 
 function assertBookmarks(searchValue) {
   let found = 0;
@@ -38,7 +39,7 @@ function assertBookmarks(searchValue) {
   is(found, BOOKMARKS_COUNT, "found expected site");
 }
 
-function showInFolder(aSearchStr, aParentFolderGuid) {
+async function showInFolder(aSearchStr, aParentFolderGuid) {
   let searchBox = sidebar.contentDocument.getElementById("search-box");
 
   searchBox.value = aSearchStr;
@@ -70,9 +71,20 @@ function showInFolder(aSearchStr, aParentFolderGuid) {
     TEST_SIF_URL,
     "The searched bookmark URL matches selected node"
   );
+
+  info("Check the title will be applied the item when changing it");
+  await PlacesUtils.bookmarks.update({
+    guid: theNode.bookmarkGuid,
+    title: TEST_NEW_TITLE,
+  });
+  Assert.equal(
+    treeNode.title,
+    TEST_NEW_TITLE,
+    "New title is applied to the node"
+  );
 }
 
-add_task(async function test() {
+add_task(async function testTree() {
   // Add bookmarks and tags.
   for (let i = 0; i < BOOKMARKS_COUNT; i++) {
     let url = Services.io.newURI(TEST_URI + i);
@@ -94,9 +106,10 @@ add_task(async function test() {
 
   // Cleanup before testing Show in Folder.
   await PlacesUtils.bookmarks.eraseEverything();
+});
 
+add_task(async function testShowInFolder() {
   // Now test Show in Folder
-  info("Test Show in Folder");
   let parentFolder = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -109,10 +122,68 @@ add_task(async function test() {
     url: TEST_SIF_URL,
   });
 
-  await withSidebarTree("bookmarks", function() {
-    showInFolder(TEST_SIF_TITLE, parentFolder.guid);
+  await withSidebarTree("bookmarks", async function() {
+    await showInFolder(TEST_SIF_TITLE, parentFolder.guid);
   });
 
   // Cleanup
+  await PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(async function testRenameOnQueryResult() {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: TEST_SIF_TITLE,
+    url: TEST_SIF_URL,
+  });
+
+  await withSidebarTree("bookmarks", async function() {
+    const searchBox = sidebar.contentDocument.getElementById("search-box");
+
+    searchBox.value = TEST_SIF_TITLE;
+    searchBox.doCommand();
+
+    const tree = sidebar.contentDocument.getElementById("bookmarks-view");
+    const theNode = tree.view._getNodeForRow(0);
+
+    info("Check the found bookmark");
+    Assert.equal(theNode.uri, TEST_SIF_URL, "URI of bookmark found is correct");
+    Assert.equal(
+      theNode.title,
+      TEST_SIF_TITLE,
+      "Title of bookmark found is correct"
+    );
+
+    info("Check the title will be applied the item when changing it");
+    await PlacesUtils.bookmarks.update({
+      guid: theNode.bookmarkGuid,
+      title: TEST_NEW_TITLE,
+    });
+    // As the query result is refreshed once then the node also is regenerated,
+    // need to get the result node from the tree again.
+    const newNode = tree.view._getNodeForRow(0);
+    Assert.equal(
+      newNode.bookmarkGuid,
+      theNode.bookmarkGuid,
+      "GUID of node regenerated is correct"
+    );
+    Assert.equal(
+      newNode.uri,
+      theNode.uri,
+      "URI of node regenerated is correct"
+    );
+    Assert.equal(
+      newNode.parentGuid,
+      theNode.parentGuid,
+      "parentGuid of node regenerated is correct"
+    );
+    Assert.equal(
+      newNode.title,
+      TEST_NEW_TITLE,
+      "New title is applied to the node"
+    );
+  });
+
+  // Cleanup before testing Show in Folder.
   await PlacesUtils.bookmarks.eraseEverything();
 });
