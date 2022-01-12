@@ -42,8 +42,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsWindow.h"
 #include "nsLayoutUtils.h"
-#include "nsNativeBasicTheme.h"
-#include "ScrollbarDrawingGTK.h"
+#include "Theme.h"
 
 #ifdef MOZ_X11
 #  ifdef CAIRO_HAS_XLIB_SURFACE
@@ -57,7 +56,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
-using ScrollbarDrawingGTK = mozilla::widget::ScrollbarDrawingGTK;
 
 static int gLastGdkError;
 
@@ -96,8 +94,7 @@ static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
   return GetMonitorScaleFactor(aFrame->PresContext());
 }
 
-nsNativeThemeGTK::nsNativeThemeGTK()
-    : nsNativeBasicTheme(DefaultPlatformScrollbarStyle()) {
+nsNativeThemeGTK::nsNativeThemeGTK() : Theme(DefaultPlatformScrollbarStyle()) {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;
@@ -1007,7 +1004,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::DrawWidgetBackground(
+    return Theme::DrawWidgetBackground(
         aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
   }
 
@@ -1137,7 +1134,7 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
+    return Theme::CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
   }
   return false;
@@ -1347,7 +1344,7 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::GetWidgetOverflow(aContext, aFrame, aAppearance,
+    return Theme::GetWidgetOverflow(aContext, aFrame, aAppearance,
                                                  aOverflowRect);
   }
 
@@ -1376,7 +1373,7 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
     return NonNative::Always;
   }
   // We can't draw light widgets if the current GTK theme is dark or vice versa.
-  if (nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
+  if (Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
                                               aAppearance) &&
       LookAndFeel::ColorSchemeForFrame(aFrame) !=
           LookAndFeel::ColorSchemeForChrome()) {
@@ -1392,7 +1389,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicTheme::GetMinimumWidgetSize(
+    return Theme::GetMinimumWidgetSize(
         aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
   }
 
@@ -1641,7 +1638,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   *aShouldRepaint = false;
 
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::WidgetStateChanged(
+    return Theme::WidgetStateChanged(
         aFrame, aAppearance, aAttribute, aShouldRepaint, aOldValue);
   }
 
@@ -1752,7 +1749,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return nsNativeBasicTheme::ThemeSupportsWidget(aPresContext, aFrame,
+    return Theme::ThemeSupportsWidget(aPresContext, aFrame,
                                                    aAppearance);
   }
 
@@ -1886,7 +1883,7 @@ nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
 bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
                                                 StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
+    return Theme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
   switch (aAppearance) {
     case StyleAppearance::Button:
@@ -1907,7 +1904,7 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
+    return Theme::GetWidgetTransparency(aFrame, aAppearance);
   }
 
   switch (aAppearance) {
@@ -1934,7 +1931,7 @@ auto nsNativeThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
                                          StyleScrollbarWidth aWidth,
                                          Overlay aOverlay) -> ScrollbarSizes {
   if (StaticPrefs::widget_non_native_theme_enabled()) {
-    return nsNativeBasicTheme::GetScrollbarSizes(aPresContext, aWidth,
+    return Theme::GetScrollbarSizes(aPresContext, aWidth,
                                                  aOverlay);
   }
 
@@ -1960,8 +1957,7 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
 
   if (!inst) {
     if (gfxPlatform::IsHeadless()) {
-      inst = new nsNativeBasicTheme(
-          nsNativeBasicTheme::DefaultPlatformScrollbarStyle());
+      inst = new Theme(Theme::DefaultPlatformScrollbarStyle());
     } else {
       inst = new nsNativeThemeGTK();
     }

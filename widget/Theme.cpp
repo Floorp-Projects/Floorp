@@ -3,10 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNativeBasicTheme.h"
-#include "nsNativeBasicThemeCocoa.h"
+#include "Theme.h"
+#include "ThemeCocoa.h"
 
-#include "gfxBlur.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Document.h"
@@ -30,14 +29,16 @@
 #include "ScrollbarDrawingWin.h"
 #include "ScrollbarDrawingWin11.h"
 
+#ifdef XP_WIN
+#  include "mozilla/WindowsVersion.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNativeBasicTheme, nsNativeTheme, nsITheme)
-
-namespace mozilla::widget {
+namespace {
 
 static constexpr gfx::sRGBColor sColorGrey10(
     gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
@@ -85,10 +86,6 @@ static const CSSCoord kMeterHeight = 12.0f;
 // This border-width makes its baseline 2px under the bottom, which is nice.
 static constexpr CSSCoord kCheckboxRadioBorderWidth = 2.0f;
 
-}  // namespace mozilla::widget
-
-namespace {
-
 static constexpr sRGBColor sTransparent = sRGBColor::White(0.0);
 
 // This pushes and pops a clip rect to the draw target.
@@ -110,19 +107,18 @@ struct MOZ_RAII AutoClipRect {
   DrawTarget& mDt;
 };
 
-}  // namespace
-
 static StaticRefPtr<nsITheme> gInstance;
 static StaticRefPtr<nsITheme> gRDMInstance;
 
+}  // namespace
+
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   if (MOZ_UNLIKELY(!gInstance)) {
-    UniquePtr<ScrollbarDrawing> scrollbarDrawing =
-        nsNativeBasicTheme::ScrollbarStyle();
+    UniquePtr<ScrollbarDrawing> scrollbarDrawing = Theme::ScrollbarStyle();
 #ifdef MOZ_WIDGET_COCOA
-    gInstance = new nsNativeBasicThemeCocoa(std::move(scrollbarDrawing));
+    gInstance = new ThemeCocoa(std::move(scrollbarDrawing));
 #else
-    gInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
+    gInstance = new Theme(std::move(scrollbarDrawing));
 #endif
     ClearOnShutdown(&gInstance);
   }
@@ -138,12 +134,15 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
 
 already_AddRefed<nsITheme> do_GetRDMThemeDoNotUseDirectly() {
   if (MOZ_UNLIKELY(!gRDMInstance)) {
-    gRDMInstance =
-        new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingAndroid>());
+    gRDMInstance = new Theme(MakeUnique<ScrollbarDrawingAndroid>());
     ClearOnShutdown(&gRDMInstance);
   }
   return do_AddRef(gRDMInstance);
 }
+
+namespace mozilla::widget {
+
+NS_IMPL_ISUPPORTS_INHERITED(Theme, nsNativeTheme, nsITheme)
 
 static constexpr nsLiteralCString kPrefs[] = {
     "widget.non-native-theme.use-theme-accent"_ns,
@@ -152,32 +151,32 @@ static constexpr nsLiteralCString kPrefs[] = {
     "widget.non-native-theme.scrollbar.style"_ns,
 };
 
-void nsNativeBasicTheme::Init() {
+void Theme::Init() {
   for (const auto& pref : kPrefs) {
     Preferences::RegisterCallback(PrefChangedCallback, pref);
   }
   LookAndFeelChanged();
 }
 
-void nsNativeBasicTheme::Shutdown() {
+void Theme::Shutdown() {
   for (const auto& pref : kPrefs) {
     Preferences::UnregisterCallback(PrefChangedCallback, pref);
   }
 }
 
 /* static */
-void nsNativeBasicTheme::LookAndFeelChanged() {
+void Theme::LookAndFeelChanged() {
   ThemeColors::RecomputeAccentColors();
-  auto* basicTheme = static_cast<nsNativeBasicTheme*>(gInstance.get());
+  auto* basicTheme = static_cast<Theme*>(gInstance.get());
   if (basicTheme) {
-    basicTheme->SetScrollbarDrawing(nsNativeBasicTheme::ScrollbarStyle());
+    basicTheme->SetScrollbarDrawing(Theme::ScrollbarStyle());
     basicTheme->GetScrollbarDrawing().RecomputeScrollbarParams();
   }
 }
 
 /* static */
-auto nsNativeBasicTheme::GetDPIRatio(nsPresContext* aPc,
-                                     StyleAppearance aAppearance) -> DPIRatio {
+auto Theme::GetDPIRatio(nsPresContext* aPc, StyleAppearance aAppearance)
+    -> DPIRatio {
   // Widgets react to zoom, except scrollbars.
   if (IsWidgetScrollbarPart(aAppearance)) {
     return ScrollbarDrawing::GetDPIRatioForScrollbarPart(aPc);
@@ -186,8 +185,8 @@ auto nsNativeBasicTheme::GetDPIRatio(nsPresContext* aPc,
 }
 
 /* static */
-auto nsNativeBasicTheme::GetDPIRatio(nsIFrame* aFrame,
-                                     StyleAppearance aAppearance) -> DPIRatio {
+auto Theme::GetDPIRatio(nsIFrame* aFrame, StyleAppearance aAppearance)
+    -> DPIRatio {
   return GetDPIRatio(aFrame->PresContext(), aAppearance);
 }
 
@@ -200,7 +199,7 @@ static LayoutDeviceRect CheckBoxRadioRect(const LayoutDeviceRect& aRect) {
   return LayoutDeviceRect(position, LayoutDeviceSize(size, size));
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeCheckboxColors(
     const EventStates& aState, StyleAppearance aAppearance,
     const Colors& aColors) {
   MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
@@ -229,8 +228,8 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
   return ComputeTextfieldColors(aState, aColors, OutlineCoversBorder::No);
 }
 
-sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
-                                                    const Colors& aColors) {
+sRGBColor Theme::ComputeCheckmarkColor(const EventStates& aState,
+                                       const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.System(StyleSystemColor::Selecteditemtext);
   }
@@ -240,9 +239,9 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
   return aColors.Accent().GetForeground();
 }
 
-sRGBColor nsNativeBasicTheme::ComputeBorderColor(
-    const EventStates& aState, const Colors& aColors,
-    OutlineCoversBorder aOutlineCoversBorder) {
+sRGBColor Theme::ComputeBorderColor(const EventStates& aState,
+                                    const Colors& aColors,
+                                    OutlineCoversBorder aOutlineCoversBorder) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   if (aColors.HighContrast()) {
     return aColors.System(isDisabled ? StyleSystemColor::Graytext
@@ -274,7 +273,7 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(
   return sColorGrey40;
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeButtonColors(
     const EventStates& aState, const Colors& aColors, nsIFrame* aFrame) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
@@ -305,7 +304,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeTextfieldColors(
     const EventStates& aState, const Colors& aColors,
     OutlineCoversBorder aOutlineCoversBorder) {
   nscolor backgroundColor = [&] {
@@ -326,7 +325,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
   return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeRangeProgressColors(
     const EventStates& aState, const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Selecteditem,
@@ -348,7 +347,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
   return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeRangeTrackColors(
     const EventStates& aState, const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Window,
@@ -368,7 +367,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
   return std::make_pair(sColorGrey10, sColorGrey40);
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeRangeThumbColors(
     const EventStates& aState, const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Selecteditemtext,
@@ -397,7 +396,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
   return std::make_pair(backgroundColor, borderColor);
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeProgressColors(
     const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Selecteditem,
@@ -406,7 +405,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
   return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeProgressTrackColors(
     const Colors& aColors) {
   if (aColors.HighContrast()) {
     return aColors.SystemPair(StyleSystemColor::Buttonface,
@@ -415,7 +414,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
   return std::make_pair(sColorGrey10, sColorGrey40);
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
+std::pair<sRGBColor, sRGBColor> Theme::ComputeMeterchunkColors(
     const EventStates& aMeterState, const Colors& aColors) {
   if (aColors.HighContrast()) {
     return ComputeProgressColors(aColors);
@@ -434,8 +433,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
   return std::make_pair(chunkColor, borderColor);
 }
 
-std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
-    const Colors& aColors) {
+std::array<sRGBColor, 3> Theme::ComputeFocusRectColors(const Colors& aColors) {
   if (aColors.HighContrast()) {
     return {aColors.System(StyleSystemColor::Selecteditem),
             aColors.System(StyleSystemColor::Buttontext),
@@ -450,12 +448,10 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
 static const CSSCoord kInnerFocusOutlineWidth = 2.0f;
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
-                                               const LayoutDeviceRect& aRect,
-                                               const Colors& aColors,
-                                               DPIRatio aDpiRatio,
-                                               CSSCoord aRadius,
-                                               CSSCoord aOffset) {
+void Theme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
+                                  const LayoutDeviceRect& aRect,
+                                  const Colors& aColors, DPIRatio aDpiRatio,
+                                  CSSCoord aRadius, CSSCoord aOffset) {
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak
   // the GetWidgetOverflow path for FocusOutline.
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors(aColors);
@@ -500,11 +496,10 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
       strokeRadius, aDpiRatio);
 }
 
-void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
-                                              const LayoutDeviceRect& aRect,
-                                              const EventStates& aState,
-                                              const Colors& aColors,
-                                              DPIRatio aDpiRatio) {
+void Theme::PaintCheckboxControl(DrawTarget& aDrawTarget,
+                                 const LayoutDeviceRect& aRect,
+                                 const EventStates& aState,
+                                 const Colors& aColors, DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Checkbox, aColors);
   {
@@ -533,10 +528,9 @@ constexpr CSSCoord kCheckboxRadioContentBoxSize = 10.0f;
 constexpr CSSCoord kCheckboxRadioBorderBoxSize =
     kCheckboxRadioContentBoxSize + kCheckboxRadioBorderWidth * 2.0f;
 
-void nsNativeBasicTheme::PaintCheckMark(DrawTarget& aDrawTarget,
-                                        const LayoutDeviceRect& aRect,
-                                        const EventStates& aState,
-                                        const Colors& aColors) {
+void Theme::PaintCheckMark(DrawTarget& aDrawTarget,
+                           const LayoutDeviceRect& aRect,
+                           const EventStates& aState, const Colors& aColors) {
   // Points come from the coordinates on a 14X14 (kCheckboxRadioBorderBoxSize)
   // unit box centered at 0,0
   const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
@@ -561,10 +555,10 @@ void nsNativeBasicTheme::PaintCheckMark(DrawTarget& aDrawTarget,
   aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
-                                                const LayoutDeviceRect& aRect,
-                                                const EventStates& aState,
-                                                const Colors& aColors) {
+void Theme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
+                                   const LayoutDeviceRect& aRect,
+                                   const EventStates& aState,
+                                   const Colors& aColors) {
   const CSSCoord borderWidth = 2.0f;
   const float scale =
       ThemeDrawing::ScaleToFillRect(aRect, kCheckboxRadioBorderBoxSize);
@@ -580,25 +574,23 @@ void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintStrokedCircle(PaintBackendData& aPaintData,
-                                            const LayoutDeviceRect& aRect,
-                                            const sRGBColor& aBackgroundColor,
-                                            const sRGBColor& aBorderColor,
-                                            const CSSCoord aBorderWidth,
-                                            DPIRatio aDpiRatio) {
+void Theme::PaintStrokedCircle(PaintBackendData& aPaintData,
+                               const LayoutDeviceRect& aRect,
+                               const sRGBColor& aBackgroundColor,
+                               const sRGBColor& aBorderColor,
+                               const CSSCoord aBorderWidth,
+                               DPIRatio aDpiRatio) {
   auto radius = LayoutDeviceCoord(aRect.Size().width) / aDpiRatio;
   ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, aRect, aBackgroundColor,
                                            aBorderColor, aBorderWidth, radius,
                                            aDpiRatio);
 }
 
-void nsNativeBasicTheme::PaintCircleShadow(WebRenderBackendData& aWrData,
-                                           const LayoutDeviceRect& aBoxRect,
-                                           const LayoutDeviceRect& aClipRect,
-                                           float aShadowAlpha,
-                                           const CSSPoint& aShadowOffset,
-                                           CSSCoord aShadowBlurStdDev,
-                                           DPIRatio aDpiRatio) {
+void Theme::PaintCircleShadow(WebRenderBackendData& aWrData,
+                              const LayoutDeviceRect& aBoxRect,
+                              const LayoutDeviceRect& aClipRect,
+                              float aShadowAlpha, const CSSPoint& aShadowOffset,
+                              CSSCoord aShadowBlurStdDev, DPIRatio aDpiRatio) {
   const bool kBackfaceIsVisible = true;
   const LayoutDeviceCoord stdDev = aShadowBlurStdDev * aDpiRatio;
   const LayoutDevicePoint shadowOffset = aShadowOffset * aDpiRatio;
@@ -618,13 +610,11 @@ void nsNativeBasicTheme::PaintCircleShadow(WebRenderBackendData& aWrData,
       wr::BoxShadowClipMode::Outset);
 }
 
-void nsNativeBasicTheme::PaintCircleShadow(DrawTarget& aDrawTarget,
-                                           const LayoutDeviceRect& aBoxRect,
-                                           const LayoutDeviceRect& aClipRect,
-                                           float aShadowAlpha,
-                                           const CSSPoint& aShadowOffset,
-                                           CSSCoord aShadowBlurStdDev,
-                                           DPIRatio aDpiRatio) {
+void Theme::PaintCircleShadow(DrawTarget& aDrawTarget,
+                              const LayoutDeviceRect& aBoxRect,
+                              const LayoutDeviceRect& aClipRect,
+                              float aShadowAlpha, const CSSPoint& aShadowOffset,
+                              CSSCoord aShadowBlurStdDev, DPIRatio aDpiRatio) {
   Float stdDev = aShadowBlurStdDev * aDpiRatio;
   Point offset = (aShadowOffset * aDpiRatio).ToUnknownPoint();
 
@@ -667,11 +657,10 @@ void nsNativeBasicTheme::PaintCircleShadow(DrawTarget& aDrawTarget,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
-                                           const LayoutDeviceRect& aRect,
-                                           const EventStates& aState,
-                                           const Colors& aColors,
-                                           DPIRatio aDpiRatio) {
+void Theme::PaintRadioControl(PaintBackendData& aPaintData,
+                              const LayoutDeviceRect& aRect,
+                              const EventStates& aState, const Colors& aColors,
+                              DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Radio, aColors);
   {
@@ -700,11 +689,10 @@ void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintTextField(PaintBackendData& aPaintData,
-                                        const LayoutDeviceRect& aRect,
-                                        const EventStates& aState,
-                                        const Colors& aColors,
-                                        DPIRatio aDpiRatio) {
+void Theme::PaintTextField(PaintBackendData& aPaintData,
+                           const LayoutDeviceRect& aRect,
+                           const EventStates& aState, const Colors& aColors,
+                           DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] =
       ComputeTextfieldColors(aState, aColors, OutlineCoversBorder::Yes);
 
@@ -722,11 +710,10 @@ void nsNativeBasicTheme::PaintTextField(PaintBackendData& aPaintData,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintListbox(PaintBackendData& aPaintData,
-                                      const LayoutDeviceRect& aRect,
-                                      const EventStates& aState,
-                                      const Colors& aColors,
-                                      DPIRatio aDpiRatio) {
+void Theme::PaintListbox(PaintBackendData& aPaintData,
+                         const LayoutDeviceRect& aRect,
+                         const EventStates& aState, const Colors& aColors,
+                         DPIRatio aDpiRatio) {
   const CSSCoord radius = 2.0f;
   auto [backgroundColor, borderColor] =
       ComputeTextfieldColors(aState, aColors, OutlineCoversBorder::Yes);
@@ -742,11 +729,10 @@ void nsNativeBasicTheme::PaintListbox(PaintBackendData& aPaintData,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintMenulist(PaintBackendData& aDrawTarget,
-                                       const LayoutDeviceRect& aRect,
-                                       const EventStates& aState,
-                                       const Colors& aColors,
-                                       DPIRatio aDpiRatio) {
+void Theme::PaintMenulist(PaintBackendData& aDrawTarget,
+                          const LayoutDeviceRect& aRect,
+                          const EventStates& aState, const Colors& aColors,
+                          DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aColors);
 
@@ -760,10 +746,9 @@ void nsNativeBasicTheme::PaintMenulist(PaintBackendData& aDrawTarget,
   }
 }
 
-void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
-                                                  DrawTarget& aDrawTarget,
-                                                  const LayoutDeviceRect& aRect,
-                                                  const EventStates& aState) {
+void Theme::PaintMenulistArrowButton(nsIFrame* aFrame, DrawTarget& aDrawTarget,
+                                     const LayoutDeviceRect& aRect,
+                                     const EventStates& aState) {
   const float kPolygonX[] = {-4.0f, -0.5f, 0.5f, 4.0f,  4.0f,
                              3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
   const float kPolygonY[] = {-1,    3.0f, 3.0f, -1.0f, -2.0f,
@@ -777,10 +762,11 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
                            kPolygonSize, ArrayLength(kPolygonX), arrowColor);
 }
 
-void nsNativeBasicTheme::PaintSpinnerButton(
-    nsIFrame* aFrame, DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
-    const EventStates& aState, StyleAppearance aAppearance,
-    const Colors& aColors, DPIRatio aDpiRatio) {
+void Theme::PaintSpinnerButton(nsIFrame* aFrame, DrawTarget& aDrawTarget,
+                               const LayoutDeviceRect& aRect,
+                               const EventStates& aState,
+                               StyleAppearance aAppearance,
+                               const Colors& aColors, DPIRatio aDpiRatio) {
   auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aColors);
 
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
@@ -803,12 +789,10 @@ void nsNativeBasicTheme::PaintSpinnerButton(
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
-                                    PaintBackendData& aPaintData,
-                                    const LayoutDeviceRect& aRect,
-                                    const EventStates& aState,
-                                    const Colors& aColors, DPIRatio aDpiRatio,
-                                    bool aHorizontal) {
+void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
+                       const LayoutDeviceRect& aRect, const EventStates& aState,
+                       const Colors& aColors, DPIRatio aDpiRatio,
+                       bool aHorizontal) {
   nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
   if (!rangeFrame) {
     return;
@@ -890,12 +874,10 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
-                                       PaintBackendData& aPaintData,
-                                       const LayoutDeviceRect& aRect,
-                                       const EventStates& aState,
-                                       const Colors& aColors,
-                                       DPIRatio aDpiRatio, bool aIsMeter) {
+void Theme::PaintProgress(nsIFrame* aFrame, PaintBackendData& aPaintData,
+                          const LayoutDeviceRect& aRect,
+                          const EventStates& aState, const Colors& aColors,
+                          DPIRatio aDpiRatio, bool aIsMeter) {
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = aIsMeter ? 6.0f : 3.0f;
 
@@ -989,12 +971,10 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame,
-                                     PaintBackendData& aPaintData,
-                                     const LayoutDeviceRect& aRect,
-                                     const EventStates& aState,
-                                     const Colors& aColors,
-                                     DPIRatio aDpiRatio) {
+void Theme::PaintButton(nsIFrame* aFrame, PaintBackendData& aPaintData,
+                        const LayoutDeviceRect& aRect,
+                        const EventStates& aState, const Colors& aColors,
+                        DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] =
       ComputeButtonColors(aState, aColors, aFrame);
@@ -1010,11 +990,10 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame,
 }
 
 NS_IMETHODIMP
-nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
-                                         StyleAppearance aAppearance,
-                                         const nsRect& aRect,
-                                         const nsRect& /* aDirtyRect */,
-                                         DrawOverflow aDrawOverflow) {
+Theme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
+                            StyleAppearance aAppearance, const nsRect& aRect,
+                            const nsRect& /* aDirtyRect */,
+                            DrawOverflow aDrawOverflow) {
   if (!DoDrawWidgetBackground(*aContext->GetDrawTarget(), aFrame, aAppearance,
                               aRect, aDrawOverflow)) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1022,7 +1001,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   return NS_OK;
 }
 
-bool nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
+bool Theme::CreateWebRenderCommandsForWidget(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
@@ -1050,11 +1029,11 @@ static LayoutDeviceRect ToSnappedRect(const nsRect& aRect,
 }
 
 template <typename PaintBackendData>
-bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
-                                                nsIFrame* aFrame,
-                                                StyleAppearance aAppearance,
-                                                const nsRect& aRect,
-                                                DrawOverflow aDrawOverflow) {
+bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
+                                   nsIFrame* aFrame,
+                                   StyleAppearance aAppearance,
+                                   const nsRect& aRect,
+                                   DrawOverflow aDrawOverflow) {
   static_assert(std::is_same_v<PaintBackendData, DrawTarget> ||
                 std::is_same_v<PaintBackendData, WebRenderBackendData>);
 
@@ -1231,11 +1210,10 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
 }
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
-                                               PaintBackendData& aPaintData,
-                                               const LayoutDeviceRect& aRect,
-                                               const Colors& aColors,
-                                               DPIRatio aDpiRatio) {
+void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
+                                  PaintBackendData& aPaintData,
+                                  const LayoutDeviceRect& aRect,
+                                  const Colors& aColors, DPIRatio aDpiRatio) {
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors(aColors);
   Unused << middleColor;
   Unused << outerColor;
@@ -1295,8 +1273,9 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
   }
 }
 
-LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
-    nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
+LayoutDeviceIntMargin Theme::GetWidgetBorder(nsDeviceContext* aContext,
+                                             nsIFrame* aFrame,
+                                             StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
@@ -1308,7 +1287,7 @@ LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
       // Return the border size from the UA sheet, even though what we paint
       // doesn't actually match that. We know this is the UA sheet border
       // because we disable native theming when different border widths are
-      // specified by authors, see nsNativeBasicTheme::IsWidgetStyled.
+      // specified by authors, see Theme::IsWidgetStyled.
       //
       // The Rounded() bit is technically redundant, but needed to appease the
       // type system, we should always end up with full device pixels due to
@@ -1329,10 +1308,9 @@ LayoutDeviceIntMargin nsNativeBasicTheme::GetWidgetBorder(
   }
 }
 
-bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
-                                          nsIFrame* aFrame,
-                                          StyleAppearance aAppearance,
-                                          LayoutDeviceIntMargin* aResult) {
+bool Theme::GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
+                             StyleAppearance aAppearance,
+                             LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
@@ -1347,10 +1325,9 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
   return false;
 }
 
-bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
-                                           nsIFrame* aFrame,
-                                           StyleAppearance aAppearance,
-                                           nsRect* aOverflowRect) {
+bool Theme::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
+                              StyleAppearance aAppearance,
+                              nsRect* aOverflowRect) {
   nsIntMargin overflow;
   switch (aAppearance) {
     case StyleAppearance::FocusOutline:
@@ -1391,19 +1368,19 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
   return true;
 }
 
-auto nsNativeBasicTheme::GetScrollbarSizes(nsPresContext* aPresContext,
-                                           StyleScrollbarWidth aWidth,
-                                           Overlay aOverlay) -> ScrollbarSizes {
+auto Theme::GetScrollbarSizes(nsPresContext* aPresContext,
+                              StyleScrollbarWidth aWidth, Overlay aOverlay)
+    -> ScrollbarSizes {
   return GetScrollbarDrawing().GetScrollbarSizes(aPresContext, aWidth,
                                                  aOverlay);
 }
 
-nscoord nsNativeBasicTheme::GetCheckboxRadioPrefSize() {
+nscoord Theme::GetCheckboxRadioPrefSize() {
   return CSSPixel::ToAppUnits(kCheckboxRadioContentBoxSize);
 }
 
 /* static */
-UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::ScrollbarStyle() {
+UniquePtr<ScrollbarDrawing> Theme::ScrollbarStyle() {
   switch (StaticPrefs::widget_non_native_theme_scrollbar_style()) {
     case 1:
       return MakeUnique<ScrollbarDrawingCocoa>();
@@ -1421,8 +1398,7 @@ UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::ScrollbarStyle() {
 }
 
 /* static */
-UniquePtr<ScrollbarDrawing>
-nsNativeBasicTheme::DefaultPlatformScrollbarStyle() {
+UniquePtr<ScrollbarDrawing> Theme::DefaultPlatformScrollbarStyle() {
   // Default to native scrollbar style for each platform.
 #ifdef XP_WIN
   if (IsWin11OrLater()) {
@@ -1441,11 +1417,10 @@ nsNativeBasicTheme::DefaultPlatformScrollbarStyle() {
 }
 
 NS_IMETHODIMP
-nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
-                                         nsIFrame* aFrame,
-                                         StyleAppearance aAppearance,
-                                         LayoutDeviceIntSize* aResult,
-                                         bool* aIsOverridable) {
+Theme::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
+                            StyleAppearance aAppearance,
+                            LayoutDeviceIntSize* aResult,
+                            bool* aIsOverridable) {
   DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   aResult->width = aResult->height = 0;
@@ -1482,7 +1457,7 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsITheme::Transparency nsNativeBasicTheme::GetWidgetTransparency(
+nsITheme::Transparency Theme::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   return GetScrollbarDrawing()
       .GetScrollbarPartTransparency(aFrame, aAppearance)
@@ -1490,10 +1465,9 @@ nsITheme::Transparency nsNativeBasicTheme::GetWidgetTransparency(
 }
 
 NS_IMETHODIMP
-nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
-                                       StyleAppearance aAppearance,
-                                       nsAtom* aAttribute, bool* aShouldRepaint,
-                                       const nsAttrValue* aOldValue) {
+Theme::WidgetStateChanged(nsIFrame* aFrame, StyleAppearance aAppearance,
+                          nsAtom* aAttribute, bool* aShouldRepaint,
+                          const nsAttrValue* aOldValue) {
   if (!aAttribute) {
     // Hover/focus/active changed.  Always repaint.
     *aShouldRepaint = true;
@@ -1516,21 +1490,19 @@ nsNativeBasicTheme::WidgetStateChanged(nsIFrame* aFrame,
 }
 
 NS_IMETHODIMP
-nsNativeBasicTheme::ThemeChanged() { return NS_OK; }
+Theme::ThemeChanged() { return NS_OK; }
 
-bool nsNativeBasicTheme::WidgetAppearanceDependsOnWindowFocus(
-    StyleAppearance aAppearance) {
+bool Theme::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) {
   return IsWidgetScrollbarPart(aAppearance);
 }
 
-nsITheme::ThemeGeometryType nsNativeBasicTheme::ThemeGeometryTypeForWidget(
+nsITheme::ThemeGeometryType Theme::ThemeGeometryTypeForWidget(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   return eThemeGeometryTypeUnknown;
 }
 
-bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
-                                             nsIFrame* aFrame,
-                                             StyleAppearance aAppearance) {
+bool Theme::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
@@ -1568,7 +1540,7 @@ bool nsNativeBasicTheme::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 }
 
-bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
+bool Theme::WidgetIsContainer(StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Radio:
@@ -1579,12 +1551,14 @@ bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
   }
 }
 
-bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) {
+bool Theme::ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) {
   return true;
 }
 
-bool nsNativeBasicTheme::ThemeNeedsComboboxDropmarker() { return true; }
+bool Theme::ThemeNeedsComboboxDropmarker() { return true; }
 
-bool nsNativeBasicTheme::ThemeSupportsScrollbarButtons() {
+bool Theme::ThemeSupportsScrollbarButtons() {
   return GetScrollbarDrawing().ShouldDrawScrollbarButtons();
 }
+
+}  // namespace mozilla::widget

@@ -11,13 +11,8 @@
 
 #include "mozilla/Variant.h"
 
-#include "LookAndFeel.h"
 #include "nsITheme.h"
-#include "nsCOMPtr.h"
-#include "nsAtom.h"
-#include "nsNativeTheme.h"
-#include "nsNativeBasicThemeCocoa.h"
-#include "ScrollbarDrawingCocoa.h"
+#include "ThemeCocoa.h"
 
 @class MOZCellDrawWindow;
 @class MOZCellDrawView;
@@ -33,9 +28,9 @@ class DrawTarget;
 }  // namespace gfx
 }  // namespace mozilla
 
-class nsNativeThemeCocoa : public nsNativeBasicThemeCocoa {
- protected:
-  using ScrollbarDrawingCocoa = mozilla::widget::ScrollbarDrawingCocoa;
+class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
+  using ThemeCocoa = mozilla::widget::ThemeCocoa;
+  using ScrollbarDrawing = mozilla::widget::ScrollbarDrawing;
 
  public:
   enum class MenuIcon : uint8_t {
@@ -312,7 +307,7 @@ class nsNativeThemeCocoa : public nsNativeBasicThemeCocoa {
     enum Widget mWidget;
   };
 
-  explicit nsNativeThemeCocoa(mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingCocoa);
+  explicit nsNativeThemeCocoa(mozilla::UniquePtr<mozilla::widget::ScrollbarDrawing>&&);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -426,7 +421,7 @@ class nsNativeThemeCocoa : public nsNativeBasicThemeCocoa {
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
                                bool aSelectionIsActive);
 
-  void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::LookAndFeel::ColorScheme,
+  void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::ColorScheme,
                     mozilla::gfx::DrawTarget& aDrawTarget, const mozilla::gfx::Rect& aWidgetRect,
                     const mozilla::gfx::Rect& aDirtyRect, float aScale);
 

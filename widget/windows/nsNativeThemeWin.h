@@ -9,33 +9,19 @@
 
 #include <windows.h>
 
-#include "gfxTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
-#include "nsAtom.h"
-#include "nsCOMPtr.h"
-#include "nsITheme.h"
-#include "nsNativeBasicTheme.h"
-#include "nsNativeTheme.h"
-#include "nsSize.h"
-#include "nsStyleConsts.h"
+#include "Theme.h"
 #include "nsUXThemeConstants.h"
 #include "nsUXThemeData.h"
-#include "ScrollbarDrawingWin.h"
 
 namespace mozilla::widget {
 
-class nsNativeThemeWin : public nsNativeBasicTheme {
+class nsNativeThemeWin : public Theme {
  protected:
-  using ScrollbarDrawingWin = mozilla::widget::ScrollbarDrawingWin;
   virtual ~nsNativeThemeWin();
 
  public:
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-
-  NS_DECL_ISUPPORTS_INHERITED
-
   // Whether we draw a non-native widget.
   //
   // We always draw scrollbars as non-native so that all of Firefox has
@@ -56,11 +42,12 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
                                   const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
-  bool CreateWebRenderCommandsForWidget(
-      mozilla::wr::DisplayListBuilder&, mozilla::wr::IpcResourceUpdateQueue&,
-      const mozilla::layers::StackingContextHelper&,
-      mozilla::layers::RenderRootStateManager*, nsIFrame*, StyleAppearance,
-      const nsRect&) override;
+  bool CreateWebRenderCommandsForWidget(wr::DisplayListBuilder&,
+                                        wr::IpcResourceUpdateQueue&,
+                                        const layers::StackingContextHelper&,
+                                        layers::RenderRootStateManager*,
+                                        nsIFrame*, StyleAppearance,
+                                        const nsRect&) override;
 
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
@@ -76,7 +63,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  mozilla::LayoutDeviceIntSize* aResult,
+                                  LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
   virtual Transparency GetWidgetTransparency(
@@ -113,7 +100,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
   nsNativeThemeWin();
 
  protected:
-  mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
+  Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
   HANDLE GetTheme(StyleAppearance aAppearance);
   nsresult GetThemePartAndState(nsIFrame* aFrame, StyleAppearance aAppearance,
                                 int32_t& aPart, int32_t& aState);
@@ -132,7 +119,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
                                LayoutDeviceIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
-                                       mozilla::LayoutDeviceIntSize* aResult,
+                                       LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
   bool ClassicThemeSupportsWidget(nsIFrame* aFrame,
                                   StyleAppearance aAppearance);
@@ -161,7 +148,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
                                       StyleAppearance aAppearance,
                                       int32_t aPart, int32_t aState,
                                       THEMESIZE aSizeReq,
-                                      mozilla::LayoutDeviceIntSize* aResult);
+                                      LayoutDeviceIntSize* aResult);
 
   SIZE GetCachedGutterSize(HANDLE theme);
 
@@ -181,11 +168,11 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
       mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   // See the above not for mBorderCache and friends. However
-  // mozilla::LayoutDeviceIntSize is half the size of nsIntMargin, making the
+  // LayoutDeviceIntSize is half the size of nsIntMargin, making the
   // cache roughly half as large. In total the caches should come to about 18KB.
   uint8_t mMinimumWidgetSizeCacheValid
       [(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
-  mozilla::LayoutDeviceIntSize
+  LayoutDeviceIntSize
       mMinimumWidgetSizeCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   bool mGutterSizeCacheValid;
