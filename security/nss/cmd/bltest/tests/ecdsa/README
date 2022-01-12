@@ -1,4 +1,5 @@
-0 nistp256
-1 nistp384
-# the following tests are not yet implemented
-2 nistp521
+The files in this directory contain test-vectors for ECDSA using NIST P-256 Curve (the test-vectors from 0 to 6 included), using NIST P-384 Curve (the test-vectors from 7 to 13 included) and using NIST P-521 Curve (the test-vectors from 14 to 20 included). 
+
+The key files used for the signature contain a curve, a private key and a public key. Each key is represented as follows: Base64(len (curveID), curveID, len(privateKey), privateKey, len(publicKey), publicKey). The length is 4 bytes long. The curveID is a DER encoded OID (as stated in http://www.secg.org/sec2-v2.pdf). A public key (a point) is encoded as 0x4 || x coordinate || y coordinate, where (x, y) computed using the base point. The private key is generated randomly. To generate the test-vectors we were using Sage Math system. 
+
+The random nonces (sigseed) and the plaintexts (already as hashes) are generated randomly and encoded using Base64 encoding. The resulted ciphertexts are presented in the ciphertext files and encoded using Base64 encoding. 

@@ -38,7 +38,9 @@ struct TLSExtensionDataStr {
 
     /* Keep track of the extensions that are advertised or negotiated. */
     PRUint16 numAdvertised;
-    PRUint16 *advertised; /* Allocated dynamically. */
+    PRUint16 *advertised;      /* Allocated dynamically. */
+    PRUint16 echNumAdvertised; /* Tracks Xtns offered in ClientHelloInner. */
+    PRUint16 *echAdvertised;
     PRUint16 numNegotiated;
     PRUint16 negotiated[SSL_MAX_EXTENSIONS];
 
@@ -97,6 +99,7 @@ struct TLSExtensionDataStr {
 
     PRUint16 dtlsSRTPCipherSuite; /* 0 if not selected */
 
+    unsigned int echXtnOffset;  /* The start of the ECH Xtn (if any) */
     unsigned int lastXtnOffset; /* Where to insert any other extensions.
                                  * 0 = end, otherwise base of PSK xtn. */
     PRCList remoteKeyShares;    /* The other side's public keys (TLS 1.3) */
@@ -200,5 +203,8 @@ SECStatus SSLExp_GetExtensionSupport(PRUint16 type,
 SECStatus SSLExp_InstallExtensionHooks(
     PRFileDesc *fd, PRUint16 extension, SSLExtensionWriter writer,
     void *writerArg, SSLExtensionHandler handler, void *handlerArg);
+sslCustomExtensionHooks *ssl_FindCustomExtensionHooks(sslSocket *ss, PRUint16 extension);
+SECStatus ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
+                                         SSLHandshakeType message);
 
 #endif
