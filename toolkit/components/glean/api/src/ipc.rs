@@ -3,6 +3,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //! IPC Implementation, Rust part
+//!
+//! ## Implementation note
+//!
+//! We can't rely on a system-provided random number generator here,
+//! as the sandbox a child process runs in might be severely restricted
+//! (see [bug 1746254] for details).
+//! That means avoiding the default `RandomState` on hash maps and use `HashState` instead.
+//!
+//! [bug 1746254]: https://bugzilla.mozilla.org/show_bug.cgi?id=1746254
 
 use crate::private::MetricId;
 use once_cell::sync::Lazy;
@@ -15,6 +24,7 @@ use std::sync::Mutex;
 #[cfg(feature = "with_gecko")]
 use {std::convert::TryInto, std::sync::atomic::AtomicU32, xpcom::interfaces::nsIXULRuntime};
 
+use super::HashState;
 use super::metrics::__glean_metric_maps;
 
 type EventRecord = (u64, HashMap<i32, String>);
@@ -23,16 +33,16 @@ type EventRecord = (u64, HashMap<i32, String>);
 /// process.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IPCPayload {
-    pub counters: HashMap<MetricId, i32>,
-    pub custom_samples: HashMap<MetricId, Vec<i64>>,
-    pub denominators: HashMap<MetricId, i32>,
-    pub events: HashMap<MetricId, Vec<EventRecord>>,
-    pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
-    pub memory_samples: HashMap<MetricId, Vec<u64>>,
-    pub numerators: HashMap<MetricId, i32>,
-    pub rates: HashMap<MetricId, (i32, i32)>,
-    pub string_lists: HashMap<MetricId, Vec<String>>,
-    pub timing_samples: HashMap<MetricId, Vec<u64>>,
+    pub counters: HashMap<MetricId, i32, HashState>,
+    pub custom_samples: HashMap<MetricId, Vec<i64>, HashState>,
+    pub denominators: HashMap<MetricId, i32, HashState>,
+    pub events: HashMap<MetricId, Vec<EventRecord>, HashState>,
+    pub labeled_counters: HashMap<MetricId, HashMap<String, i32>, HashState>,
+    pub memory_samples: HashMap<MetricId, Vec<u64>, HashState>,
+    pub numerators: HashMap<MetricId, i32, HashState>,
+    pub rates: HashMap<MetricId, (i32, i32), HashState>,
+    pub string_lists: HashMap<MetricId, Vec<String>, HashState>,
+    pub timing_samples: HashMap<MetricId, Vec<u64>, HashState>,
 }
 
 /// Global singleton: pending IPC payload.
