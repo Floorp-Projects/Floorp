@@ -72,13 +72,14 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::AllocateExtraData() {
 // Note: This doesn't run on the ffmpeg TaskQueue, it runs on some other media
 // taskqueue
 MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
-  FFMPEG_LOG("Initialising FFmpeg decoder.");
+  FFMPEG_LOG("Initialising FFmpeg decoder");
 
   AVCodec* codec = FindAVCodec(mLib, mCodecID);
   if (!codec) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't find ffmpeg decoder"));
   }
+  FFMPEG_LOG("  codec %s : %s", codec->name, codec->long_name);
 
   StaticMutexAutoLock mon(sMutex);
 
@@ -115,7 +116,7 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
                        RESULT_DETAIL("Couldn't initialise ffmpeg decoder"));
   }
 
-  FFMPEG_LOG("FFmpeg init successful.");
+  FFMPEG_LOG("  FFmpeg decoder init successful.");
   return NS_OK;
 }
 
@@ -270,5 +271,19 @@ AVFrame* FFmpegDataDecoder<LIBAV_VER>::PrepareFrame() {
     FFmpegLibWrapper* aLib, AVCodecID aCodec) {
   return aLib->avcodec_find_decoder(aCodec);
 }
+
+#ifdef MOZ_WAYLAND
+/* static */ AVCodec* FFmpegDataDecoder<LIBAV_VER>::FindHardwareAVCodec(
+    FFmpegLibWrapper* aLib, AVCodecID aCodec) {
+  void* opaque = nullptr;
+  while (AVCodec* codec = aLib->av_codec_iterate(&opaque)) {
+    if (codec->id == aCodec && aLib->av_codec_is_decoder(codec) &&
+        aLib->avcodec_get_hw_config(codec, 0)) {
+      return codec;
+    }
+  }
+  return nullptr;
+}
+#endif
 
 }  // namespace mozilla
