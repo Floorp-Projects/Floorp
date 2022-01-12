@@ -237,10 +237,6 @@ def getArtifactSuffix() {
         suffix += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
     }
 
-    if (!substs.MOZ_ANDROID_GECKOVIEW_LITE) {
-        suffix += "-omni"
-    }
-
     return suffix
 }
 
