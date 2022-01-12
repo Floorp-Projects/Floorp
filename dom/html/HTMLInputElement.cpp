@@ -3730,7 +3730,8 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       FireChangeEventIfNeeded();
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     } else if (!preventDefault) {
-      if (keyEvent && ActivatesWithKeyboard(mType, keyEvent->mKeyCode)) {
+      if (keyEvent && ActivatesWithKeyboard(mType, keyEvent->mKeyCode) &&
+          keyEvent->IsTrusted()) {
         // We maybe dispatch a synthesized click for keyboard activation.
         HandleKeyboardActivation(aVisitor);
       }
@@ -3823,7 +3824,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
            *     not submit, period.
            */
 
-          if (keyEvent->mKeyCode == NS_VK_RETURN &&
+          if (keyEvent->mKeyCode == NS_VK_RETURN && keyEvent->IsTrusted() &&
               (IsSingleLineTextControl(false, mType) ||
                IsDateTimeInputType(mType) ||
                mType == FormControlType::InputCheckbox ||
