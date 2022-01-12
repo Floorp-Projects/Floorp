@@ -417,7 +417,9 @@ def android_geckoview_docs(
         "mobile",
         "android",
         "geckoview",
-        "libs",
+        "docs",
+        "javadoc",
+        "withGeckoBinaries-debug",
         "geckoview-javadoc.jar",
     )
     dst_path = mozpath.join(repo_path, javadoc_path.format(**fmt))
