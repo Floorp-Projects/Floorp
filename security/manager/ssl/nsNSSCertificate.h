@@ -8,6 +8,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsISerializable.h"
@@ -33,10 +34,12 @@ class nsNSSCertificate final : public nsIX509Cert,
   virtual ~nsNSSCertificate() = default;
 
   nsTArray<uint8_t> mDER;
-  mozilla::UniqueCERTCertificate mCert;
+  mozilla::Maybe<mozilla::UniqueCERTCertificate> mCert;
   uint32_t mCertType;
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
+
+  nsresult InstantiateCert();
 };
 
 #define NS_X509CERT_CID                              \
