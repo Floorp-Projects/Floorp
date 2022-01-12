@@ -38,6 +38,9 @@ av_color_space_name
 av_color_transfer_name
 av_compare_mod
 av_compare_ts
+#ifdef MOZ_WAYLAND
+av_content_light_metadata_create_side_data
+#endif
 av_cpu_count
 av_crc
 av_crc_get_table
@@ -112,6 +115,9 @@ av_frame_is_writable
 av_frame_make_writable
 av_frame_move_ref
 av_frame_new_side_data
+#ifdef MOZ_WAYLAND
+av_frame_new_side_data_from_buf
+#endif
 av_frame_ref
 av_frame_remove_side_data
 av_frame_set_best_effort_timestamp
@@ -195,6 +201,9 @@ av_log_set_flags
 av_log_set_level
 av_malloc
 av_mallocz
+#ifdef MOZ_WAYLAND
+av_mastering_display_metadata_create_side_data
+#endif
 av_match_list
 av_match_name
 av_max_alloc
