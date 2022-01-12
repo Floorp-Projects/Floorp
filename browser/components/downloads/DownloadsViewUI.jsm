@@ -225,6 +225,11 @@ var DownloadsViewUI = {
     let mimeInfo = DownloadsCommon.getMimeInfo(download);
     let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
 
+    // Hide the "Delete" item if there's no file data to delete.
+    contextMenu.querySelector(".downloadDeleteFileMenuItem").hidden = !(
+      download.target?.exists || download.target?.partFileExists
+    );
+
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
     let useSystemViewerItem = contextMenu.querySelector(
@@ -972,7 +977,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_alwaysOpenSimilarFiles":
         // This property is false if the download did not succeed.
         return this.download.target.exists;
+
       case "downloadsCmd_show":
+      case "downloadsCmd_deleteFile":
         let { target } = this.download;
         return target.exists || target.partFileExists;
 
@@ -1063,6 +1070,21 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
   cmd_delete() {
     DownloadsCommon.deleteDownload(this.download).catch(Cu.reportError);
+  },
+
+  async downloadsCmd_deleteFile() {
+    let { download } = this;
+    let { path } = download.target;
+    let { succeeded } = download;
+    // Remove the download from the session and history downloads, delete part files.
+    await DownloadsCommon.deleteDownload(download);
+    // Delete final files.
+    if (succeeded) {
+      // Temp files are made "read-only" by DownloadIntegration.downloadDone, so reset the permission bits to read/write.
+      // This won't be necessary after 1733587 since Downloads won't ever be temporary.
+      await IOUtils.setPermissions(path, 0o660);
+      await IOUtils.remove(path, { ignoreAbsent: true });
+    }
   },
 
   downloadsCmd_openInSystemViewer() {

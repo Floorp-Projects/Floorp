@@ -46,6 +46,8 @@
            oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
   <command id="downloadsCmd_alwaysOpenSimilarFiles"
            oncommand="goDoCommand('downloadsCmd_alwaysOpenSimilarFiles')"/>
+  <command id="downloadsCmd_deleteFile"
+           oncommand="goDoCommand('downloadsCmd_deleteFile')"/>
 </commandset>
 
 <!-- For accessibility to screen readers, we use a label on the panel instead
@@ -102,6 +104,9 @@
 
     <menuseparator/>
 
+    <menuitem command="downloadsCmd_deleteFile"
+              class="downloadDeleteFileMenuItem"
+              data-l10n-id="downloads-cmd-delete-file"/>
     <menuitem command="cmd_delete"
               class="downloadRemoveFromHistoryMenuItem"
               data-l10n-id="downloads-cmd-remove-from-history"/>
