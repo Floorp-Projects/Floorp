@@ -330,7 +330,12 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
 
   RefPtr<nsIX509Cert> clientCert;
   if (aClientCert) {
-    clientCert = new nsNSSCertificate(std::move(aClientCert->data()));
+    clientCert = nsNSSCertificate::ConstructFromDER(
+        BitwiseCast<char*, uint8_t*>(aClientCert->data().Elements()),
+        aClientCert->data().Length());
+    if (!clientCert) {
+      return IPC_OK();
+    }
   }
 
   ClientAuthInfo info(aHostName, aOriginAttributes, aPort, aProviderFlags,

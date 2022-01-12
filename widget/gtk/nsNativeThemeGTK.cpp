@@ -896,8 +896,8 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return Theme::DrawWidgetBackground(
-        aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
+    return Theme::DrawWidgetBackground(aContext, aFrame, aAppearance, aRect,
+                                       aDirtyRect, aDrawOverflow);
   }
 
   GtkWidgetState state;
@@ -1207,7 +1207,7 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                          nsRect* aOverflowRect) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return Theme::GetWidgetOverflow(aContext, aFrame, aAppearance,
-                                                 aOverflowRect);
+                                    aOverflowRect);
   }
 
   nsIntMargin extraSize;
@@ -1232,8 +1232,7 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
     return NonNative::Always;
   }
   // We can't draw light widgets if the current GTK theme is dark or vice versa.
-  if (Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
-                                              aAppearance) &&
+  if (Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame, aAppearance) &&
       LookAndFeel::ColorSchemeForFrame(aFrame) !=
           LookAndFeel::ColorSchemeForChrome()) {
     return NonNative::BecauseColorMismatch;
@@ -1248,8 +1247,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return Theme::GetMinimumWidgetSize(
-        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+    return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance,
+                                       aResult, aIsOverridable);
   }
 
   aResult->width = aResult->height = 0;
@@ -1449,8 +1448,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   *aShouldRepaint = false;
 
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
-    return Theme::WidgetStateChanged(
-        aFrame, aAppearance, aAttribute, aShouldRepaint, aOldValue);
+    return Theme::WidgetStateChanged(aFrame, aAppearance, aAttribute,
+                                     aShouldRepaint, aOldValue);
   }
 
   // Some widget types just never change state.
@@ -1519,8 +1518,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 
   if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
-    return Theme::ThemeSupportsWidget(aPresContext, aFrame,
-                                                   aAppearance);
+    return Theme::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
 
   switch (aAppearance) {
