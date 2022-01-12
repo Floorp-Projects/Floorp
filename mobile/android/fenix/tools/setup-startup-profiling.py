@@ -23,7 +23,7 @@ PRODUCTS = [PROD_FENIX, PROD_GVE]
 GV_CONFIG = b'''env:
   MOZ_PROFILER_STARTUP: 1
   MOZ_PROFILER_STARTUP_INTERVAL: 5
-  MOZ_PROFILER_STARTUP_FEATURES: threads,js,stackwalk,leaf,screenshots,ipcmessages,java,cpu
+  MOZ_PROFILER_STARTUP_FEATURES: js,stackwalk,leaf,screenshots,ipcmessages,java,cpu
   MOZ_PROFILER_STARTUP_FILTERS: GeckoMain,Compositor,Renderer,IPDL Background
 '''
 
