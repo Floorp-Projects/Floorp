@@ -186,7 +186,7 @@ class _RemoteL10n {
     if (useRemoteL10n && !L10nRegistry.getInstance().hasSource("cfr")) {
       const appLocale = Services.locale.appLocaleAsBCP47;
       const l10nFluentDir = PathUtils.join(
-        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+        Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
         "settings",
         "main",
         "ms-language-packs"
