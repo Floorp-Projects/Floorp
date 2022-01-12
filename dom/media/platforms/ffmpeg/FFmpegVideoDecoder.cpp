@@ -13,6 +13,9 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
+#  include "AOMDecoder.h"
+#endif
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
@@ -636,7 +639,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
 #endif
-#if defined(MOZ_AV1) && defined(FFVPX_VERSION)
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
       || mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
 #endif
   ) {
@@ -830,6 +833,12 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
 #if LIBAVCODEC_VERSION_MAJOR >= 55
   if (VPXDecoder::IsVP9(aMimeType)) {
     return AV_CODEC_ID_VP9;
+  }
+#endif
+
+#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
+  if (AOMDecoder::IsAV1(aMimeType)) {
+    return AV_CODEC_ID_AV1;
   }
 #endif
 
