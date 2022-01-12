@@ -396,110 +396,111 @@ pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
 
     use super::{id_for_extra_key, extra_keys_len};
+    use crate::HashState;
     use crate::private::*;
     use once_cell::sync::Lazy;
 
-    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<BooleanMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(1.into(), &super::test::boolean_metric);
         map
     });
 
-    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledBooleanMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
+    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledBooleanMetric>>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(2, HashState);
         map.insert(2.into(), &super::test::labeled_boolean_metric);
         map.insert(3.into(), &super::test::labeled_boolean_metric_labels);
         map
     });
 
-    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<CounterMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(4.into(), &super::test::counter_metric);
         map
     });
 
-    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledCounterMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
+    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledCounterMetric>>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(2, HashState);
         map.insert(5.into(), &super::test::labeled_counter_metric);
         map.insert(6.into(), &super::test::labeled_counter_metric_labels);
         map
     });
 
-    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(7.into(), &super::test::string_metric);
         map
     });
 
-    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledStringMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
+    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledStringMetric>>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(2, HashState);
         map.insert(8.into(), &super::test::labeled_string_metric);
         map.insert(9.into(), &super::test::labeled_string_metric_labels);
         map
     });
 
-    pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(10.into(), &super::test::string_list_metric);
         map
     });
 
-    pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static TIMESPAN_MAP: Lazy<HashMap<MetricId, &Lazy<TimespanMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(11.into(), &super::test::timespan_metric);
         map
     });
 
-    pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<TimingDistributionMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<TimingDistributionMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(12.into(), &super::test::timing_distribution_metric);
         map
     });
 
-    pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(13.into(), &super::test::memory_distribution_metric);
         map
     });
 
-    pub static CUSTOM_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<CustomDistributionMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static CUSTOM_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<CustomDistributionMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(14.into(), &super::test::custom_distribution_metric);
         map
     });
 
-    pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(15.into(), &super::test_nested::uuid_metric);
         map
     });
 
-    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(16.into(), &super::test_nested::datetime_metric);
         map
     });
 
-    pub static QUANTITY_MAP: Lazy<HashMap<MetricId, &Lazy<QuantityMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static QUANTITY_MAP: Lazy<HashMap<MetricId, &Lazy<QuantityMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(19.into(), &super::test_nested::quantity_metric);
         map
     });
 
-    pub static RATE_MAP: Lazy<HashMap<MetricId, &Lazy<RateMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static RATE_MAP: Lazy<HashMap<MetricId, &Lazy<RateMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(20.into(), &super::test_nested::rate_metric);
         map
     });
 
-    pub static NUMERATOR_MAP: Lazy<HashMap<MetricId, &Lazy<NumeratorMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static NUMERATOR_MAP: Lazy<HashMap<MetricId, &Lazy<NumeratorMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(21.into(), &super::test_nested::rate_with_external_denominator);
         map
     });
 
-    pub static DENOMINATOR_MAP: Lazy<HashMap<MetricId, &Lazy<DenominatorMetric>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(1);
+    pub static DENOMINATOR_MAP: Lazy<HashMap<MetricId, &Lazy<DenominatorMetric>, HashState>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity_and_hasher(1, HashState);
         map.insert(22.into(), &super::test_nested::external_denominator);
         map
     });
@@ -683,18 +684,18 @@ pub(crate) mod __glean_metric_maps {
 
         pub(crate) const MIN_LABELED_SUBMETRIC_ID: u32 = 134217729;
         pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new(MIN_LABELED_SUBMETRIC_ID);
-        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
 
-        pub static BOOLEAN_MAP: Lazy<RwLock<HashMap<MetricId, LabeledBooleanMetric>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub static BOOLEAN_MAP: Lazy<RwLock<HashMap<MetricId, LabeledBooleanMetric, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
-        pub static COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, LabeledCounterMetric>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub static COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, LabeledCounterMetric, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
-        pub static STRING_MAP: Lazy<RwLock<HashMap<MetricId, LabeledStringMetric>>> = Lazy::new(||
-            RwLock::new(HashMap::new())
+        pub static STRING_MAP: Lazy<RwLock<HashMap<MetricId, LabeledStringMetric, HashState>>> = Lazy::new(||
+            RwLock::new(HashMap::with_hasher(HashState))
         );
     }
 }
