@@ -231,7 +231,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "includes", "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
       "findIndex", "copyWithin", "fill", Symbol.iterator, Symbol.unscopables, "entries", "keys",
-      "values", "constructor", "flat", "flatMap", "at", "groupBy", "groupByToMap"];
+      "values", "constructor", "flat", "flatMap", "at"];
+  if (isNightlyBuild) {
+    gPrototypeProperties['Array'].push("groupBy");
+    gPrototypeProperties['Array'].push("groupByToMap");
+  }
   gConstructorProperties['Array'] =
     constructorProps(["isArray", "from", "of", Symbol.species]);
   for (var c of typedArrayClasses) {
