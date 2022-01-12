@@ -8,6 +8,7 @@ use crate::{
     Label, LifeGuard, RefCount, Stored,
 };
 
+use smallvec::SmallVec;
 use thiserror::Error;
 
 use std::{borrow::Borrow, num::NonZeroU8, ops::Range, ptr::NonNull};
@@ -179,6 +180,19 @@ impl<A: hal::Api> TextureInner<A> {
 }
 
 #[derive(Debug)]
+pub enum TextureClearMode<A: hal::Api> {
+    BufferCopy,
+    // View for clear via RenderPass for every subsurface (mip/layer/slice)
+    RenderPass {
+        clear_views: SmallVec<[A::TextureView; 1]>,
+        is_color: bool,
+    },
+    // Texture can't be cleared, attempting to do so will cause panic.
+    // (either because it is impossible for the type of texture or it is being destroyed)
+    None,
+}
+
+#[derive(Debug)]
 pub struct Texture<A: hal::Api> {
     pub(crate) inner: TextureInner<A>,
     pub(crate) device_id: Stored<DeviceId>,
@@ -188,6 +202,32 @@ pub struct Texture<A: hal::Api> {
     pub(crate) initialization_status: TextureInitTracker,
     pub(crate) full_range: TextureSelector,
     pub(crate) life_guard: LifeGuard,
+    pub(crate) clear_mode: TextureClearMode<A>,
+}
+
+impl<A: hal::Api> Texture<A> {
+    pub(crate) fn get_clear_view(&self, mip_level: u32, depth_or_layer: u32) -> &A::TextureView {
+        match self.clear_mode {
+            TextureClearMode::BufferCopy => {
+                panic!("Given texture is cleared with buffer copies, not render passes")
+            }
+            TextureClearMode::None => {
+                panic!("Given texture can't be cleared")
+            }
+            TextureClearMode::RenderPass {
+                ref clear_views, ..
+            } => {
+                let index = if self.desc.dimension == wgt::TextureDimension::D3 {
+                    (0..mip_level).fold(0, |acc, mip| {
+                        acc + (self.desc.size.depth_or_array_layers >> mip).max(1)
+                    })
+                } else {
+                    mip_level * self.desc.size.depth_or_array_layers
+                } + depth_or_layer;
+                &clear_views[index as usize]
+            }
+        }
+    }
 }
 
 impl<G: GlobalIdentityHandlerFactory> Global<G> {
@@ -259,9 +299,13 @@ pub enum CreateTextureError {
     EmptyUsage,
     #[error(transparent)]
     InvalidDimension(#[from] TextureDimensionError),
-    #[error("texture descriptor mip level count ({0}) is invalid")]
-    InvalidMipLevelCount(u32),
-    #[error("The texture usages {0:?} are not allowed on a texture of type {1:?}")]
+    #[error("Depth texture kind {0:?} of format {0:?} can't be created")]
+    InvalidDepthKind(wgt::TextureDimension, wgt::TextureFormat),
+    #[error(
+        "Texture descriptor mip level count {requested} is invalid, maximum allowed is {maximum}"
+    )]
+    InvalidMipLevelCount { requested: u32, maximum: u32 },
+    #[error("Texture usages {0:?} are not allowed on a texture of type {1:?}")]
     InvalidUsages(wgt::TextureUsages, wgt::TextureFormat),
     #[error("Texture format {0:?} can't be used")]
     MissingFeatures(wgt::TextureFormat, #[source] MissingFeatures),
@@ -340,6 +384,8 @@ pub enum CreateTextureViewError {
         view: wgt::TextureViewDimension,
         texture: wgt::TextureDimension,
     },
+    #[error("Invalid texture view dimension `{0:?}` of a multisampled texture")]
+    InvalidMultisampledTextureViewDimension(wgt::TextureViewDimension),
     #[error("Invalid texture depth `{depth}` for texture view of dimension `Cubemap`. Cubemap views must use images of size 6.")]
     InvalidCubemapTextureDepth { depth: u32 },
     #[error("Invalid texture depth `{depth}` for texture view of dimension `CubemapArray`. Cubemap views must use images with sizes which are a multiple of 6.")]

@@ -286,7 +286,7 @@ impl super::Adapter {
 
         let mut features = wgt::Features::empty()
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-            | wgt::Features::CLEAR_COMMANDS;
+            | wgt::Features::CLEAR_TEXTURE;
         features.set(
             wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER,
             extensions.contains("GL_EXT_texture_border_clamp"),
@@ -442,7 +442,8 @@ impl super::Adapter {
         let r = renderer.to_lowercase();
         // Check for Mesa sRGB clear bug. See
         // [`super::PrivateCapabilities::MESA_I915_SRGB_SHADER_CLEAR`].
-        if r.contains("mesa")
+        if context.is_owned()
+            && r.contains("mesa")
             && r.contains("intel")
             && r.split(&[' ', '(', ')'][..])
                 .any(|substr| substr.len() == 3 && substr.chars().nth(2) == Some('l'))
@@ -575,9 +576,11 @@ impl crate::Adapter<super::Api> for super::Adapter {
     ) -> crate::TextureFormatCapabilities {
         use crate::TextureFormatCapabilities as Tfc;
         use wgt::TextureFormat as Tf;
+
         // The storage types are sprinkled based on section
         // "TEXTURE IMAGE LOADS AND STORES" of GLES-3.2 spec.
-        let unfiltered_color = Tfc::SAMPLED | Tfc::COLOR_ATTACHMENT;
+        let unfiltered_color =
+            Tfc::SAMPLED | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE | Tfc::MULTISAMPLE_RESOLVE;
         let filtered_color = unfiltered_color | Tfc::SAMPLED_LINEAR | Tfc::COLOR_ATTACHMENT_BLEND;
         match format {
             Tf::R8Unorm | Tf::R8Snorm => filtered_color,

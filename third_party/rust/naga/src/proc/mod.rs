@@ -221,6 +221,8 @@ impl super::MathFunction {
             Self::Asinh => 1,
             Self::Acosh => 1,
             Self::Atanh => 1,
+            Self::Radians => 1,
+            Self::Degrees => 1,
             // decomposition
             Self::Ceil => 1,
             Self::Floor => 1,
@@ -262,6 +264,8 @@ impl super::MathFunction {
             Self::ReverseBits => 1,
             Self::ExtractBits => 3,
             Self::InsertBits => 4,
+            Self::FindLsb => 1,
+            Self::FindMsb => 1,
             // data packing
             Self::Pack4x8snorm => 1,
             Self::Pack4x8unorm => 1,
