@@ -117,7 +117,7 @@ class LoginsFragmentStoreTest {
             baseState.copy(
                 isLoading = true,
                 searchedForText = null,
-                sortingStrategy = SortingStrategy.Alphabetically(mockk()),
+                sortingStrategy = SortingStrategy.Alphabetically,
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
                 loginList = loginList
             )
@@ -139,7 +139,7 @@ class LoginsFragmentStoreTest {
             baseState.copy(
                 isLoading = true,
                 searchedForText = "example",
-                sortingStrategy = SortingStrategy.Alphabetically(mockk()),
+                sortingStrategy = SortingStrategy.Alphabetically,
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
                 loginList = loginList
             )

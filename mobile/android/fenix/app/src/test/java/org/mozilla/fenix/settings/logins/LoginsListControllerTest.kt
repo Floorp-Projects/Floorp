@@ -7,8 +7,6 @@ package org.mozilla.fenix.settings.logins
 import androidx.navigation.NavController
 import io.mockk.mockk
 import io.mockk.verifyAll
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
@@ -24,8 +22,7 @@ import org.mozilla.fenix.utils.Settings
 class LoginsListControllerTest {
     private val store: LoginsFragmentStore = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
-    private val publicSuffixList = PublicSuffixList(testContext)
-    private val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically(publicSuffixList)
+    private val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically
     private val navController: NavController = mockk(relaxed = true)
     private val browserNavigator: (String, Boolean, BrowserDirection) -> Unit = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -43,11 +40,7 @@ class LoginsListControllerTest {
         controller.handleSort(sortingStrategy)
 
         verifyAll {
-            store.dispatch(
-                LoginsAction.SortLogins(
-                    SortingStrategy.Alphabetically(publicSuffixList)
-                )
-            )
+            store.dispatch(LoginsAction.SortLogins(SortingStrategy.Alphabetically))
             settings.savedLoginsSortingStrategy = sortingStrategy
         }
     }

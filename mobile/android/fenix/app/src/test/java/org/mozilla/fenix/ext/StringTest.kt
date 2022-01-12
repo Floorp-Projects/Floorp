@@ -23,13 +23,6 @@ class StringTest {
     private val publicSuffixList = PublicSuffixList(testContext)
 
     @Test
-    fun `Url To Trimmed Host`() {
-        val urlTest = "http://www.example.com:1080/docs/resource1.html"
-        val new = urlTest.urlToTrimmedHost(publicSuffixList)
-        assertEquals(new, "example")
-    }
-
-    @Test
     fun `Simplified Url`() {
         val urlTest = "https://www.amazon.com"
         val new = urlTest.simplifiedUrl()

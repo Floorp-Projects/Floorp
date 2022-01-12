@@ -4,15 +4,12 @@
 
 package org.mozilla.fenix.settings.logins
 
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
-import org.mozilla.fenix.ext.urlToTrimmedHost
-
 sealed class SortingStrategy {
     abstract operator fun invoke(logins: List<SavedLogin>): List<SavedLogin>
 
-    data class Alphabetically(private val publicSuffixList: PublicSuffixList) : SortingStrategy() {
+    object Alphabetically : SortingStrategy() {
         override fun invoke(logins: List<SavedLogin>): List<SavedLogin> {
-            return logins.sortedBy { it.origin.urlToTrimmedHost(publicSuffixList) }
+            return logins.sortedBy { it.origin }
         }
     }
 

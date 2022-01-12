@@ -12,7 +12,6 @@ import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 
 class SavedLoginsSortingStrategyMenu(
@@ -51,7 +50,7 @@ class SavedLoginsSortingStrategyMenu(
                 effect = if (itemToHighlight == Item.AlphabeticallySort) highlight else null
             ) {
                 savedLoginsInteractor.onSortingStrategyChanged(
-                    SortingStrategy.Alphabetically(context.components.publicSuffixList)
+                    SortingStrategy.Alphabetically
                 )
             },
             TextMenuCandidate(
