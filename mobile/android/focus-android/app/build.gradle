@@ -25,7 +25,7 @@ android {
         targetSdkVersion 30
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "97.0"
+        versionName "98.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
 
