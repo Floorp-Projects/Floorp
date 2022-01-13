@@ -393,10 +393,30 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/ClickHandlerChild.jsm",
       events: {
-        click: { capture: true, mozSystemGroup: true, wantUntrusted: true },
-        auxclick: { capture: true, mozSystemGroup: true, wantUntrusted: true },
+        chromelinkclick: { capture: true, mozSystemGroup: true },
       },
     },
+
+    allFrames: true,
+  },
+
+  /* Note: this uses the same JSMs as ClickHandler, but because it
+   * relies on "normal" click events anywhere on the page (not just
+   * links) and is expensive, and only does something for the
+   * small group of people who have the feature enabled, it is its
+   * own actor which is only registered if the pref is enabled.
+   */
+  MiddleMousePasteHandler: {
+    parent: {
+      moduleURI: "resource:///actors/ClickHandlerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/ClickHandlerChild.jsm",
+      events: {
+        auxclick: { capture: true, mozSystemGroup: true },
+      },
+    },
+    enablePreference: "middlemouse.contentLoadURL",
 
     allFrames: true,
   },
