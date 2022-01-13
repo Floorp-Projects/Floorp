@@ -44,6 +44,10 @@ struct DecompressParams {
   bool allow_partial_files = false;
   // Allow even more progression.
   bool allow_more_progressive_steps = false;
+
+  // Internal test-only setting: whether or not to use the slow rendering
+  // pipeline.
+  bool use_slow_render_pipeline = false;
 };
 
 }  // namespace jxl

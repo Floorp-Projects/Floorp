@@ -17,8 +17,8 @@ namespace jxl {
 // pointer to &in.
 // Returns false if color transform fails.
 Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
-                         ThreadPool* pool, ImageBundle* store,
-                         const ImageBundle** out);
+                         const JxlCmsInterface& cms, ThreadPool* pool,
+                         ImageBundle* store, const ImageBundle** out);
 
 }  // namespace jxl
 

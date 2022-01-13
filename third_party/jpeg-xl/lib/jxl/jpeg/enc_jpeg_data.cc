@@ -207,6 +207,10 @@ Status SetBlobsFromJpegData(const jpeg::JPEGData& jpeg_data, Blobs* blobs) {
   return true;
 }
 
+static inline bool IsJPG(const Span<const uint8_t> bytes) {
+  return bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
+}
+
 }  // namespace
 
 Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
@@ -290,6 +294,7 @@ Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes) {
 }
 
 Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
+  if (!IsJPG(bytes)) return false;
   io->frames.clear();
   io->frames.reserve(1);
   io->frames.emplace_back(&io->metadata.m);
@@ -361,8 +366,7 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
   io->Main().color_transform =
       (!is_rgb || nbcomp == 1) ? ColorTransform::kYCbCr : ColorTransform::kNone;
 
-  io->metadata.m.SetIntensityTarget(
-      io->target_nits != 0 ? io->target_nits : kDefaultIntensityTarget);
+  io->metadata.m.SetIntensityTarget(kDefaultIntensityTarget);
   io->metadata.m.SetUintSamples(BITS_IN_JSAMPLE);
   io->SetFromImage(Image3F(jpeg_data->width, jpeg_data->height),
                    io->metadata.m.color_encoding);

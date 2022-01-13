@@ -710,8 +710,8 @@ void DownsampleImage2_Iterative(Image3F* opsin) {
 
 Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     PassesEncoderState* enc_state, ModularFrameEncoder* modular_frame_encoder,
-    const ImageBundle* original_pixels, Image3F* opsin, ThreadPool* pool,
-    AuxOut* aux_out) {
+    const ImageBundle* original_pixels, Image3F* opsin,
+    const JxlCmsInterface& cms, ThreadPool* pool, AuxOut* aux_out) {
   PROFILER_ZONE("JxlLossyFrameHeuristics uninstrumented");
 
   CompressParams& cparams = enc_state->cparams;
@@ -781,7 +781,10 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
 
   // Find and subtract splines.
   if (cparams.speed_tier <= SpeedTier::kSquirrel) {
-    shared.image_features.splines = FindSplines(*opsin);
+    // If we do already have them, they were passed upstream to EncodeFile.
+    if (!shared.image_features.splines.HasAny()) {
+      shared.image_features.splines = FindSplines(*opsin);
+    }
     JXL_RETURN_IF_ERROR(shared.image_features.splines.InitializeDrawCache(
         opsin->xsize(), opsin->ysize(), shared.cmap));
     shared.image_features.splines.SubtractFrom(opsin);
@@ -790,7 +793,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
   // Find and subtract patches/dots.
   if (ApplyOverride(cparams.patches,
                     cparams.speed_tier <= SpeedTier::kSquirrel)) {
-    FindBestPatchDictionary(*opsin, enc_state, pool, aux_out);
+    FindBestPatchDictionary(*opsin, enc_state, cms, pool, aux_out);
     PatchDictionaryEncoder::SubtractFrom(shared.image_features.patches, opsin);
   }
 
@@ -830,7 +833,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     *opsin = Image3F(RoundUpToBlockDim(original_pixels->xsize()),
                      RoundUpToBlockDim(original_pixels->ysize()));
     opsin->ShrinkTo(original_pixels->xsize(), original_pixels->ysize());
-    ToXYB(*original_pixels, pool, opsin, /*linear=*/nullptr);
+    ToXYB(*original_pixels, pool, opsin, cms, /*linear=*/nullptr);
     PadImageToBlockMultipleInPlace(opsin);
   }
 
@@ -866,7 +869,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
   cfl_heuristics.Init(*opsin);
   acs_heuristics.Init(*opsin, enc_state);
 
-  auto process_tile = [&](size_t tid, size_t thread) {
+  auto process_tile = [&](const uint32_t tid, const size_t thread) {
     size_t n_enc_tiles =
         DivCeil(enc_state->shared.frame_dim.xsize_blocks, kEncTileDimInBlocks);
     size_t tx = tid % n_enc_tiles;
@@ -913,7 +916,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
           &enc_state->shared.cmap);
     }
   };
-  RunOnPool(
+  JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0,
       DivCeil(enc_state->shared.frame_dim.xsize_blocks, kEncTileDimInBlocks) *
           DivCeil(enc_state->shared.frame_dim.ysize_blocks,
@@ -923,7 +926,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
         cfl_heuristics.PrepareForThreads(num_threads);
         return true;
       },
-      process_tile, "Enc Heuristics");
+      process_tile, "Enc Heuristics"));
 
   acs_heuristics.Finalize(aux_out);
   if (cparams.speed_tier <= SpeedTier::kHare) {
@@ -935,7 +938,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
                           &enc_state->shared.matrices);
 
   // Refine quantization levels.
-  FindBestQuantizer(original_pixels, *opsin, enc_state, pool, aux_out);
+  FindBestQuantizer(original_pixels, *opsin, enc_state, cms, pool, aux_out);
 
   // Choose a context model that depends on the amount of quantization for AC.
   if (cparams.speed_tier < SpeedTier::kFalcon) {

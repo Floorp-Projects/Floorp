@@ -9,6 +9,7 @@
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/dec_xyb.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -27,7 +28,7 @@ TEST(OpsinInverseTest, LinearInverseInverts) {
   io.SetFromImage(CopyImage(linear), io.metadata.m.color_encoding);
   ThreadPool* null_pool = nullptr;
   Image3F opsin(io.xsize(), io.ysize());
-  (void)ToXYB(io.Main(), null_pool, &opsin);
+  (void)ToXYB(io.Main(), null_pool, &opsin, GetJxlCms());
 
   OpsinParams opsin_params;
   opsin_params.Init(/*intensity_target=*/255.0f);
@@ -42,8 +43,9 @@ TEST(OpsinInverseTest, YcbCrInverts) {
 
   ThreadPool* null_pool = nullptr;
   Image3F ycbcr(rgb.xsize(), rgb.ysize());
-  RgbToYcbcr(rgb.Plane(0), rgb.Plane(1), rgb.Plane(2), &ycbcr.Plane(1),
-             &ycbcr.Plane(0), &ycbcr.Plane(2), null_pool);
+  EXPECT_TRUE(RgbToYcbcr(rgb.Plane(0), rgb.Plane(1), rgb.Plane(2),
+                         &ycbcr.Plane(1), &ycbcr.Plane(0), &ycbcr.Plane(2),
+                         null_pool));
 
   Image3F rgb2(rgb.xsize(), rgb.ysize());
   YcbcrToRgb(ycbcr, &rgb2, Rect(rgb));

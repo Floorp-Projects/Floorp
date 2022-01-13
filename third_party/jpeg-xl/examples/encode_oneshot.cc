@@ -183,13 +183,17 @@ bool EncodeJxlOneshot(const std::vector<float>& pixels, const uint32_t xsize,
     return false;
   }
 
+  JxlEncoderFrameSettings* frame_settings =
+      JxlEncoderFrameSettingsCreate(enc.get(), nullptr);
+
   if (JXL_ENC_SUCCESS !=
-      JxlEncoderAddImageFrame(JxlEncoderOptionsCreate(enc.get(), nullptr),
-                              &pixel_format, (void*)pixels.data(),
+      JxlEncoderAddImageFrame(frame_settings, &pixel_format,
+                              (void*)pixels.data(),
                               sizeof(float) * pixels.size())) {
     fprintf(stderr, "JxlEncoderAddImageFrame failed\n");
     return false;
   }
+  JxlEncoderCloseInput(enc.get());
 
   compressed->resize(64);
   uint8_t* next_out = compressed->data();

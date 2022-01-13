@@ -86,7 +86,12 @@ G_DECLARE_FINAL_TYPE(GdkPixbufJxlAnimationIter, gdk_pixbuf_jxl_animation_iter,
 G_DEFINE_TYPE(GdkPixbufJxlAnimationIter, gdk_pixbuf_jxl_animation_iter,
               GDK_TYPE_PIXBUF_ANIMATION_ITER);
 
-static void gdk_pixbuf_jxl_animation_init(GdkPixbufJxlAnimation *obj) {}
+static void gdk_pixbuf_jxl_animation_init(GdkPixbufJxlAnimation *obj) {
+  // Suppress "unused function" warnings.
+  (void)glib_autoptr_cleanup_GdkPixbufJxlAnimation;
+  (void)GDK_JXL_ANIMATION;
+  (void)GDK_IS_JXL_ANIMATION;
+}
 
 static gboolean gdk_pixbuf_jxl_animation_is_static_image(
     GdkPixbufAnimation *anim) {
@@ -154,6 +159,9 @@ static void gdk_pixbuf_jxl_animation_class_init(
 }
 
 static void gdk_pixbuf_jxl_animation_iter_init(GdkPixbufJxlAnimationIter *obj) {
+  (void)glib_autoptr_cleanup_GdkPixbufJxlAnimationIter;
+  (void)GDK_JXL_ANIMATION_ITER;
+  (void)GDK_IS_JXL_ANIMATION_ITER;
 }
 
 static int gdk_pixbuf_jxl_animation_iter_get_delay_time(

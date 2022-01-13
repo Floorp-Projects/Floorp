@@ -139,8 +139,8 @@ class Quantizer {
   JXL_INLINE const float* InvMulDC() const { return inv_mul_dc_; }
 
   JXL_INLINE void ClearDCMul() {
-    std::fill(mul_dc_, mul_dc_ + 4, 1);
-    std::fill(inv_mul_dc_, inv_mul_dc_ + 4, 1);
+    std::fill(mul_dc_, mul_dc_ + 4, 1.f);
+    std::fill(inv_mul_dc_, inv_mul_dc_ + 4, 1.f);
   }
 
   void ComputeGlobalScaleAndQuant(float quant_dc, float quant_median,

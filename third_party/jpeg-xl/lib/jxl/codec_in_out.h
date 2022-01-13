@@ -69,11 +69,6 @@ struct Blobs {
   PaddedBytes xmp;
 };
 
-// For Codec::kJPG, convert between JPEG and pixels or between JPEG and
-// quantized DCT coefficients
-// For pixel data, the nominal range is 0..1.
-enum class DecodeTarget { kPixels, kQuantizedCoeffs };
-
 // Holds a preview, a main image or one or more frames, plus the inputs/outputs
 // to/from decoding/encoding.
 class CodecInOut {
@@ -135,13 +130,13 @@ class CodecInOut {
   }
 
   // Calls TransformTo for each ImageBundle (preview/frames).
-  Status TransformTo(const ColorEncoding& c_desired,
+  Status TransformTo(const ColorEncoding& c_desired, const JxlCmsInterface& cms,
                      ThreadPool* pool = nullptr) {
     if (metadata.m.have_preview) {
-      JXL_RETURN_IF_ERROR(preview_frame.TransformTo(c_desired, pool));
+      JXL_RETURN_IF_ERROR(preview_frame.TransformTo(c_desired, cms, pool));
     }
     for (ImageBundle& ib : frames) {
-      JXL_RETURN_IF_ERROR(ib.TransformTo(c_desired, pool));
+      JXL_RETURN_IF_ERROR(ib.TransformTo(c_desired, cms, pool));
     }
     return true;
   }
@@ -162,27 +157,6 @@ class CodecInOut {
   // -- DECODER INPUT:
 
   SizeConstraints constraints;
-  // Decode to pixels or keep JPEG as quantized DCT coefficients
-  DecodeTarget dec_target = DecodeTarget::kPixels;
-
-  // Intended white luminance, in nits (cd/m^2).
-  // It is used by codecs that do not know the absolute luminance of their
-  // images. For those codecs, decoders map from white to this luminance. There
-  // is no other way of knowing the target brightness for those codecs - depends
-  // on source material. 709 typically targets 100 nits, BT.2100 PQ up to 10K,
-  // but HDR content is more typically mastered to 4K nits. Codecs that do know
-  // the absolute luminance of their images will typically ignore it as a
-  // decoder input. The corresponding decoder output and encoder input is the
-  // intensity target in the metadata. ALL decoders MUST set that metadata
-  // appropriately, but it does not have to be identical to this hint. Encoders
-  // for codecs that do not encode absolute luminance levels should use that
-  // metadata to decide on what to map to white. Encoders for codecs that *do*
-  // encode absolute luminance levels may use it to decide on encoding values,
-  // but not in a way that would affect the range of interpreted luminance.
-  //
-  // 0 means that it is up to the codec to decide on a reasonable value to use.
-
-  float target_nits = 0;
 
   // -- DECODER OUTPUT:
 

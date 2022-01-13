@@ -80,7 +80,7 @@ bool SamePixels(const Image3<T>& image1, const Image3<T>& image2) {
 }
 
 // Use for floating-point images with fairly large numbers; tolerates small
-// absolute errors and/or small relative errors. Returns max_relative.
+// absolute errors and/or small relative errors.
 template <typename T>
 void VerifyRelativeError(const Plane<T>& expected, const Plane<T>& actual,
                          const double threshold_l1,
