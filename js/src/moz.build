@@ -563,6 +563,12 @@ DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "util", "wasm
 if CONFIG["CC_TYPE"] == "clang":
     CXXFLAGS += ["-fstandalone-debug"]
 
+# Bug 1722102 - This should never be enabled in Release without explicit
+# security and SpiderMonkey review.
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1722102#c16
+if CONFIG["NIGHTLY_BUILD"] and CONFIG["INTEL_ARCHITECTURE"]:
+    DIRS += ["intgemm"]
+
 if CONFIG["JS_JITSPEW"]:
     DIRS += ["zydis"]
 
