@@ -19,6 +19,8 @@ struct PRLibrary;
 #ifdef MOZ_WAYLAND
 struct AVCodecHWConfig;
 struct AVBufferRef;
+struct AVVAAPIHWConfig;
+struct AVHWFramesConstraints;
 #endif
 
 namespace mozilla {
@@ -121,6 +123,10 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
                                                   int index);
   AVBufferRef* (*av_hwdevice_ctx_alloc)(int);
   int (*av_hwdevice_ctx_init)(AVBufferRef* ref);
+  AVVAAPIHWConfig* (*av_hwdevice_hwconfig_alloc)(AVBufferRef* device_ctx);
+  AVHWFramesConstraints* (*av_hwdevice_get_hwframe_constraints)(
+      AVBufferRef* ref, const void* hwconfig);
+  void (*av_hwframe_constraints_free)(AVHWFramesConstraints** constraints);
 
   AVBufferRef* (*av_buffer_ref)(AVBufferRef* buf);
   void (*av_buffer_unref)(AVBufferRef** buf);
@@ -132,6 +138,8 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   int (*av_dict_set)(AVDictionary** pm, const char* key, const char* value,
                      int flags);
   void (*av_dict_free)(AVDictionary** m);
+  const char* (*avcodec_get_name)(int id);
+  char* (*av_get_pix_fmt_string)(char* buf, int buf_size, int pix_fmt);
 
   int (*vaExportSurfaceHandle)(void*, unsigned int, uint32_t, uint32_t, void*);
   int (*vaSyncSurface)(void*, unsigned int);

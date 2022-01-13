@@ -167,6 +167,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION_SILENT(av_codec_is_decoder, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_init, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_alloc, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_hwconfig_alloc, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_get_hwframe_constraints, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwframe_constraints_free, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_buffer_ref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_buffer_unref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_hwframe_transfer_get_formats, AV_FUNC_58)
@@ -174,6 +177,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION_SILENT(av_hwframe_ctx_alloc, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_dict_set, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_dict_free, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_get_pix_fmt_string, AV_FUNC_AVUTIL_58)
 #endif
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
@@ -305,11 +310,15 @@ bool FFmpegLibWrapper::IsVAAPIAvailable() {
   return VA_FUNC_LOADED(avcodec_get_hw_config) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_alloc) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_init) &&
+         VA_FUNC_LOADED(av_hwdevice_hwconfig_alloc) &&
+         VA_FUNC_LOADED(av_hwdevice_get_hwframe_constraints) &&
+         VA_FUNC_LOADED(av_hwframe_constraints_free) &&
          VA_FUNC_LOADED(av_buffer_ref) && VA_FUNC_LOADED(av_buffer_unref) &&
          VA_FUNC_LOADED(av_hwframe_transfer_get_formats) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_create_derived) &&
          VA_FUNC_LOADED(av_hwframe_ctx_alloc) && VA_FUNC_LOADED(av_dict_set) &&
-         VA_FUNC_LOADED(av_dict_free) &&
+         VA_FUNC_LOADED(av_dict_free) && VA_FUNC_LOADED(avcodec_get_name) &&
+         VA_FUNC_LOADED(av_get_pix_fmt_string) &&
          VA_FUNC_LOADED(vaExportSurfaceHandle) &&
          VA_FUNC_LOADED(vaSyncSurface) && VA_FUNC_LOADED(vaInitialize) &&
          VA_FUNC_LOADED(vaTerminate) &&
