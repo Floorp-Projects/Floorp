@@ -31,14 +31,16 @@
           class="title"
           aria-live="polite"
           data-l10n-id="firefox-suggest-onboarding-introduction-title-1"></h1>
-      <button id="onboardingNext"
-              class="primary"
-              tabindex="1"
-              data-l10n-id="firefox-suggest-onboarding-introduction-next-button-1">
-      </button>
-      <div class="pager">
-        <span class="current"></span>
-        <span></span>
+      <div class="buttonBox">
+        <button id="onboardingNext"
+                class="primary"
+                tabindex="1"
+                data-l10n-id="firefox-suggest-onboarding-introduction-next-button-1">
+        </button>
+        <div class="pager">
+          <span class="current"></span>
+          <span></span>
+        </div>
       </div>
     </section>
     <section id="main-section">
@@ -57,12 +59,11 @@
             data-l10n-id="firefox-suggest-onboarding-main-privacy-first"></h2>
       </div>
       <div class="option accept">
-        <label for="onboardingAccept"></label>
         <input id="onboardingAccept"
                type="radio"
                tabindex="3"
                name="search-experience"></input>
-        <div>
+        <label for="onboardingAccept">
           <div class="option-label"
                data-l10n-id="firefox-suggest-onboarding-main-accept-option-label">
             <a id="onboardingLearnMore"
@@ -73,15 +74,14 @@
                class="option-description"
                data-l10n-id="firefox-suggest-onboarding-main-accept-option-description-1">
           </div>
-        </div>
+        </label>
       </div>
       <div class="option reject">
-        <label for="onboardingReject"></label>
         <input id="onboardingReject"
                type="radio"
                tabindex="5"
                name="search-experience"></input>
-        <div>
+        <label for="onboardingReject">
           <div class="option-label"
                data-l10n-id="firefox-suggest-onboarding-main-reject-option-label">
           </div>
@@ -89,19 +89,21 @@
                class="option-description"
                data-l10n-id="firefox-suggest-onboarding-main-reject-option-description-1">
           </div>
-        </div>
+        </label>
       </div>
-      <button id="onboardingSubmit"
-              class="primary"
-              disabled="true"
-              tabindex="6"
-              data-l10n-id="firefox-suggest-onboarding-main-submit-button"></button>
-      <a id="onboardingSkipLink"
-         tabindex="7"
-         data-l10n-id="firefox-suggest-onboarding-main-skip-link"></a>
-      <div class="pager">
-        <span></span>
-        <span class="current"></span>
+      <div class="buttonBox">
+        <button id="onboardingSubmit"
+                class="primary"
+                disabled="true"
+                tabindex="6"
+                data-l10n-id="firefox-suggest-onboarding-main-submit-button"></button>
+        <a id="onboardingSkipLink"
+           tabindex="7"
+           data-l10n-id="firefox-suggest-onboarding-main-skip-link"></a>
+        <div class="pager">
+          <span></span>
+          <span class="current"></span>
+        </div>
       </div>
     </section>
   </body>
