@@ -124,30 +124,11 @@ class WordBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 /**
  * Grapheme cluster break iterator for UTF-16 text.
  */
-class GraphemeClusterBreakIteratorUtf16 {
+class GraphemeClusterBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
  public:
-  GraphemeClusterBreakIteratorUtf16(const char16_t* aText, uint32_t aLength)
-      : mPos(aText),
-        mLimit(aText + aLength)
-#ifdef DEBUG
-        ,
-        mText(aText)
-#endif
-  {
-  }
+  explicit GraphemeClusterBreakIteratorUtf16(Span<const char16_t> aText);
 
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos >= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
-#ifdef DEBUG
-  const char16_t* mText;
-#endif
+  Maybe<uint32_t> Next() override;
 };
 
 /**
@@ -156,21 +137,13 @@ class GraphemeClusterBreakIteratorUtf16 {
  * Note: The reverse iterator doesn't handle conjoining Jamo and emoji. Use it
  * at your own risk.
  */
-class GraphemeClusterBreakReverseIteratorUtf16 {
+class GraphemeClusterBreakReverseIteratorUtf16 final
+    : public SegmentIteratorUtf16 {
  public:
-  GraphemeClusterBreakReverseIteratorUtf16(const char16_t* aText,
-                                           uint32_t aLength)
-      : mPos(aText + aLength), mLimit(aText) {}
+  explicit GraphemeClusterBreakReverseIteratorUtf16(Span<const char16_t> aText);
 
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos <= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
+  Maybe<uint32_t> Next() override;
+  Maybe<uint32_t> Seek(uint32_t aPos) override;
 };
 
 /**

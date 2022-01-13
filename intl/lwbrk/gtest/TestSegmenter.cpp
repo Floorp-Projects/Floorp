@@ -51,11 +51,48 @@ TEST(IntlSegmenter, TestWordBreakIteratorUtf16)
   ASSERT_EQ(segIter->Seek(0u), Nothing());
 }
 
-TEST(IntlSegmenter, TestGraphemeBreakIteratorUtf16)
+TEST(IntlSegmenter, TestGraphemeClusterBreakIteratorUtf16)
 {
   SegmenterOptions options{SegmenterGranularity::Grapheme};
   auto result = Segmenter::TryCreate("en", options);
-  ASSERT_TRUE(result.isErr());
+  ASSERT_TRUE(result.isOk());
+  auto graphemeClusterSegmenter = result.unwrap();
+
+  const char16_t text[] = u"hello world";
+  UniquePtr<SegmentIteratorUtf16> segIter =
+      graphemeClusterSegmenter->Segment(MakeStringSpan(text));
+
+  // Seek to the space between "hello" and "world"
+  ASSERT_EQ(segIter->Seek(5u), Some(6u));
+
+  ASSERT_EQ(segIter->Next(), Some(7u));
+  ASSERT_EQ(segIter->Next(), Some(8u));
+  ASSERT_EQ(segIter->Next(), Some(9u));
+  ASSERT_EQ(segIter->Next(), Some(10u));
+  ASSERT_EQ(segIter->Next(), Some(11u));
+  ASSERT_EQ(segIter->Next(), Nothing());
+
+  // Same as calling Next().
+  ASSERT_EQ(segIter->Seek(0u), Nothing());
+}
+
+TEST(IntlSegmenter, TestGraphemeClusterBreakReverseIteratorUtf16)
+{
+  const char16_t text[] = u"hello world";
+  GraphemeClusterBreakReverseIteratorUtf16 segIter(MakeStringSpan(text));
+
+  // Seek to the space between "hello" and "world"
+  ASSERT_EQ(segIter.Seek(6u), Some(5u));
+
+  ASSERT_EQ(segIter.Next(), Some(4u));
+  ASSERT_EQ(segIter.Next(), Some(3u));
+  ASSERT_EQ(segIter.Next(), Some(2u));
+  ASSERT_EQ(segIter.Next(), Some(1u));
+  ASSERT_EQ(segIter.Next(), Some(0u));
+  ASSERT_EQ(segIter.Next(), Nothing());
+
+  // Same as calling Next().
+  ASSERT_EQ(segIter.Seek(0u), Nothing());
 }
 
 TEST(IntlSegmenter, TestSentenceBreakIteratorUtf16)
