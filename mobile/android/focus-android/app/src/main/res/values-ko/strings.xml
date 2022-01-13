@@ -637,6 +637,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">고급</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">사이트 권한</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">자동 재생</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">오디오 및 비디오 허용</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">오디오만 차단</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">추천</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">오디오 및 비디오 차단</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">연구</string>
 
@@ -776,8 +794,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS 전용 모드</string>
 
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS는 %1$s와 사용자가 방문한 웹 사이트 간에 안전한 암호화된 연결을 제공합니다. 대부분의 웹 사이트는 HTTPS를 지원하며, HTTPS 전용 모드를 사용하도록 설정한 경우 %1$s는 모든 연결을 HTTPS로 업그레이드합니다.</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">보안 강화를 위해 HTTPS 를 사용하여 사이트에 자동 연결을 시도합니다. HTTPS 연결은 방문하시는 웹사이트에 대해 안전하고 암호화된 연결을 제공합니다.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">예외</string>
@@ -842,8 +860,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">제거</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">이름 변경</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">이름 변경</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">바로 가기 이름</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -861,6 +884,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">기기 테마 따르기</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">요청하신 사이트는 HTTPS를 지원하지 않습니다</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">기본적으로, %1$s는 보안 강화를 위해 HTTPS를 사용한 연결을 시도합니다. 이 설정을 변경하시거나 자세히 알아보려면 설정 &gt; 개인 정보 및 보안 &gt; 보안으로 이동하십시오.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
