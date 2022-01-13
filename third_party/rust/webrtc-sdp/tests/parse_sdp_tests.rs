@@ -687,3 +687,97 @@ fn parse_and_serialize_sdp_with_unusual_attributes() {
 
     check_parse_and_serialize(sdp_str);
 }
+
+#[test]
+fn serialize_complex_sdp_and_validate_no_empty_lines() {
+    let sdp = "v=0\r\n
+o=- 3836772544440436510 2 IN IP4 127.0.0.1\r\n
+s=-\r\n
+t=0 0\r\n
+a=group:BUNDLE audio video\r\n
+a=msid-semantic: WMS HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP\r\n
+m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 126\r\n
+c=IN IP4 0.0.0.0\r\n
+a=rtcp:9 IN IP4 0.0.0.0\r\n
+a=ice-ufrag:A4by\r\n
+a=ice-pwd:Gfvb2rbYMiW0dZz8ZkEsXICs\r\n
+a=fingerprint:sha-256 15:B0:92:1F:C7:40:EE:22:A6:AF:26:EF:EA:FF:37:1D:B3:EF:11:0B:8B:73:4F:01:7D:C9:AE:26:4F:87:E0:95\r\n
+a=setup:actpass\r\n
+a=mid:audio\r\n
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n
+a=sendrecv\r\n
+a=rtcp-mux\r\n
+a=rtcp-mux-only\r\n
+a=rtpmap:111 opus/48000/2\r\n
+a=rtcp-fb:111 transport-cc\r\n
+a=fmtp:111 minptime=10;useinbandfec=1\r\n
+a=rtpmap:103 ISAC/16000\r\n
+a=rtpmap:104 ISAC/32000\r\n
+a=rtpmap:9 G722/8000\r\n
+a=rtpmap:0 PCMU/8000\r\n
+a=rtpmap:8 PCMA/8000\r\n
+a=rtpmap:106 CN/32000\r\n
+a=rtpmap:105 CN/16000\r\n
+a=rtpmap:13 CN/8000\r\n
+a=rtpmap:126 telephone-event/8000\r\n
+a=ssrc:162559313 cname:qPTZ+BI+42mgbOi+\r\n
+a=ssrc:162559313 msid:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP f6188af5-d8d6-462c-9c75-f12bc41fe322\r\n
+a=ssrc:162559313 mslabel:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP\r\n
+a=ssrc:162559313 label:f6188af5-d8d6-462c-9c75-f12bc41fe322\r\n
+m=video 9 UDP/TLS/RTP/SAVPF 100 101 107 116 117 96 97 99 98\r\n
+c=IN IP4 0.0.0.0\r\n
+a=rtcp:9 IN IP4 0.0.0.0\r\n
+a=ice-ufrag:A4by\r\n
+a=ice-pwd:Gfvb2rbYMiW0dZz8ZkEsXICs\r\n
+a=fingerprint:sha-256 15:B0:92:1F:C7:40:EE:22:A6:AF:26:EF:EA:FF:37:1D:B3:EF:11:0B:8B:73:4F:01:7D:C9:AE:26:4F:87:E0:95\r\n
+a=setup:actpass\r\n
+a=mid:video\r\n
+a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r\n
+a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n
+a=extmap:4 urn:3gpp:video-orientation\r\n
+a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r\n
+a=sendrecv\r\n
+a=rtcp-mux\r\n
+a=rtcp-rsize\r\n
+a=rtpmap:100 VP8/90000\r\n
+a=rtcp-fb:100 ccm fir\r\n
+a=rtcp-fb:100 nack\r\n
+a=rtcp-fb:100 nack pli\r\n
+a=rtcp-fb:100 goog-remb\r\n
+a=rtcp-fb:100 transport-cc\r\n
+a=rtpmap:101 VP9/90000\r\n
+a=rtcp-fb:101 ccm fir\r\n
+a=rtcp-fb:101 nack\r\n
+a=rtcp-fb:101 nack pli\r\n
+a=rtcp-fb:101 goog-remb\r\n
+a=rtcp-fb:101 transport-cc\r\n
+a=rtpmap:107 H264/90000\r\n
+a=rtcp-fb:107 ccm fir\r\n
+a=rtcp-fb:107 nack\r\n
+a=rtcp-fb:107 nack pli\r\n
+a=rtcp-fb:107 goog-remb\r\n
+a=rtcp-fb:107 transport-cc\r\n
+a=fmtp:107 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\n
+a=rtpmap:116 red/90000\r\n
+a=rtpmap:117 ulpfec/90000\r\n
+a=rtpmap:96 rtx/90000\r\n
+a=fmtp:96 apt=100\r\n
+a=rtpmap:97 rtx/90000\r\n
+a=fmtp:97 apt=101\r\n
+a=rtpmap:99 rtx/90000\r\n
+a=fmtp:99 apt=107\r\n
+a=rtpmap:98 rtx/90000\r\n
+a=fmtp:98 apt=116\r\n
+a=ssrc-group:FID 3156517279 2673335628\r\n
+a=ssrc:3156517279 cname:qPTZ+BI+42mgbOi+\r\n
+a=ssrc:3156517279 msid:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP b6ec5178-c611-403f-bbec-3833ed547c09\r\n
+a=ssrc:3156517279 mslabel:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP\r\n
+a=ssrc:3156517279 label:b6ec5178-c611-403f-bbec-3833ed547c09\r\n
+a=ssrc:2673335628 cname:qPTZ+BI+42mgbOi+\r\n
+a=ssrc:2673335628 msid:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP b6ec5178-c611-403f-bbec-3833ed547c09\r\n
+a=ssrc:2673335628 mslabel:HWpbmTmXleVSnlssQd80bPuw9cxQFroDkkBP\r\n
+a=ssrc:2673335628 label:b6ec5178-c611-403f-bbec-3833ed547c09\r\n";
+    let parsed_sdp = webrtc_sdp::parse_sdp(sdp, true).unwrap();
+    assert!(!parsed_sdp.to_string().contains("\r\n\r\n"));
+}
