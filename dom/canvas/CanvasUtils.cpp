@@ -86,25 +86,12 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return true;
   }
 
-  dom::Document* topLevelDocument =
-      aDocument->GetTopLevelContentDocumentIfSameProcess();
-  nsIURI* topLevelDocURI =
-      topLevelDocument ? topLevelDocument->GetDocumentURI() : nullptr;
-  nsCString topLevelDocURISpec;
-  if (topLevelDocURI) {
-    topLevelDocURI->GetSpec(topLevelDocURISpec);
-  }
-
-  // Load Third Party Util service.
-  nsresult rv;
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, false);
-
   // Block all third-party attempts to extract canvas.
-  bool isThirdParty = true;
-  rv = thirdPartyUtil->IsThirdPartyURI(topLevelDocURI, docURI, &isThirdParty);
-  NS_ENSURE_SUCCESS(rv, false);
+  MOZ_ASSERT(aDocument->GetWindowContext());
+  bool isThirdParty =
+      aDocument->GetWindowContext()
+          ? aDocument->GetWindowContext()->GetIsThirdPartyWindow()
+          : false;
   if (isThirdParty) {
     nsAutoString message;
     message.AppendPrintf("Blocked third party %s from extracting canvas data.",
@@ -115,6 +102,7 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   }
 
   // Load Permission Manager service.
+  nsresult rv;
   nsCOMPtr<nsIPermissionManager> permissionManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, false);
