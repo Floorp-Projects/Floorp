@@ -21,3 +21,8 @@ TEST_DIRS += [
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "IPC")
+
+SPHINX_TREES["/ipc"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
