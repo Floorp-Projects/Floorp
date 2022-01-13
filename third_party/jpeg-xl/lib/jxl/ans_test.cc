@@ -87,9 +87,9 @@ TEST(ANSTest, SingleSymbolRoundtrip) {
 
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
-constexpr size_t kReps = 3;
-#else
 constexpr size_t kReps = 10;
+#else
+constexpr size_t kReps = 100;
 #endif
 
 void RoundtripRandomStream(int alphabet_size, size_t reps = kReps,

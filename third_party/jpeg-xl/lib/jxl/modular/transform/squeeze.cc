@@ -15,7 +15,7 @@
 
 namespace jxl {
 
-Status InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
+void InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   JXL_ASSERT(c < input.channel.size());
   JXL_ASSERT(rc < input.channel.size());
   const Channel &chin = input.channel[c];
@@ -27,7 +27,7 @@ Status InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   if (chin_residual.w == 0) {
     // Short-circuit: output channel has same dimensions as input.
     input.channel[c].hshift--;
-    return true;
+    return;
   }
 
   // Note: chin.w >= chin_residual.w and at most 1 different.
@@ -40,12 +40,12 @@ Status InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   if (chin_residual.h == 0) {
     // Short-circuit: channel with no pixels.
     input.channel[c] = std::move(chout);
-    return true;
+    return;
   }
 
-  JXL_RETURN_IF_ERROR(RunOnPool(
-      pool, 0, chin.h, ThreadPool::NoInit,
-      [&](const uint32_t task, size_t /* thread */) {
+  RunOnPool(
+      pool, 0, chin.h, ThreadPool::SkipInit(),
+      [&](const int task, const int thread) {
         const size_t y = task;
         const pixel_type *JXL_RESTRICT p_residual = chin_residual.Row(y);
         const pixel_type *JXL_RESTRICT p_avg = chin.Row(y);
@@ -77,12 +77,11 @@ Status InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
         }
         if (chout.w & 1) p_out[chout.w - 1] = p_avg[chin.w - 1];
       },
-      "InvHorizontalSqueeze"));
+      "InvHorizontalSqueeze");
   input.channel[c] = std::move(chout);
-  return true;
 }
 
-Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
+void InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   JXL_ASSERT(c < input.channel.size());
   JXL_ASSERT(rc < input.channel.size());
   const Channel &chin = input.channel[c];
@@ -94,7 +93,7 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   if (chin_residual.h == 0) {
     // Short-circuit: output channel has same dimensions as input.
     input.channel[c].vshift--;
-    return true;
+    return;
   }
 
   // Note: chin.h >= chin_residual.h and at most 1 different.
@@ -108,15 +107,15 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   if (chin_residual.w == 0) {
     // Short-circuit: channel with no pixels.
     input.channel[c] = std::move(chout);
-    return true;
+    return;
   }
 
   intptr_t onerow_in = chin.plane.PixelsPerRow();
   intptr_t onerow_out = chout.plane.PixelsPerRow();
   constexpr int kColsPerThread = 64;
-  JXL_RETURN_IF_ERROR(RunOnPool(
-      pool, 0, DivCeil(chin.w, kColsPerThread), ThreadPool::NoInit,
-      [&](const uint32_t task, size_t /* thread */) {
+  RunOnPool(
+      pool, 0, DivCeil(chin.w, kColsPerThread), ThreadPool::SkipInit(),
+      [&](const int task, const int thread) {
         const size_t x0 = task * kColsPerThread;
         const size_t x1 = std::min((size_t)(task + 1) * kColsPerThread, chin.w);
         // We only iterate up to std::min(chin_residual.h, chin.h) which is
@@ -146,7 +145,7 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
           }
         }
       },
-      "InvVertSqueeze"));
+      "InvVertSqueeze");
 
   if (chout.h & 1) {
     size_t y = chin.h - 1;
@@ -157,7 +156,6 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
     }
   }
   input.channel[c] = std::move(chout);
-  return true;
 }
 
 void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
@@ -315,9 +313,9 @@ Status InvSqueeze(Image &input, std::vector<SqueezeParams> parameters,
         return JXL_FAILURE("Corrupted squeeze transform");
       }
       if (horizontal) {
-        JXL_RETURN_IF_ERROR(InvHSqueeze(input, c, rc, pool));
+        InvHSqueeze(input, c, rc, pool);
       } else {
-        JXL_RETURN_IF_ERROR(InvVSqueeze(input, c, rc, pool));
+        InvVSqueeze(input, c, rc, pool);
       }
     }
     input.channel.erase(input.channel.begin() + offset,

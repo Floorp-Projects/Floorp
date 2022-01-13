@@ -22,8 +22,7 @@ namespace jxl {
 
 class JxlButteraugliComparator : public Comparator {
  public:
-  explicit JxlButteraugliComparator(const ButteraugliParams& params,
-                                    const JxlCmsInterface& cms);
+  explicit JxlButteraugliComparator(const ButteraugliParams& params);
 
   Status SetReferenceImage(const ImageBundle& ref) override;
 
@@ -35,7 +34,6 @@ class JxlButteraugliComparator : public Comparator {
 
  private:
   ButteraugliParams params_;
-  JxlCmsInterface cms_;
   std::unique_ptr<ButteraugliComparator> comparator_;
   size_t xsize_ = 0;
   size_t ysize_ = 0;
@@ -45,12 +43,12 @@ class JxlButteraugliComparator : public Comparator {
 // If distmap is not null, it must be the same size as rgb0 and rgb1.
 float ButteraugliDistance(const ImageBundle& rgb0, const ImageBundle& rgb1,
                           const ButteraugliParams& params,
-                          const JxlCmsInterface& cms, ImageF* distmap = nullptr,
+                          ImageF* distmap = nullptr,
                           ThreadPool* pool = nullptr);
 
 float ButteraugliDistance(const CodecInOut& rgb0, const CodecInOut& rgb1,
                           const ButteraugliParams& params,
-                          const JxlCmsInterface& cms, ImageF* distmap = nullptr,
+                          ImageF* distmap = nullptr,
                           ThreadPool* pool = nullptr);
 
 }  // namespace jxl

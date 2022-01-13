@@ -30,8 +30,7 @@ class ModularFrameEncoder {
                              Image3F* JXL_RESTRICT color,
                              const std::vector<ImageF>& extra_channels,
                              PassesEncoderState* JXL_RESTRICT enc_state,
-                             const JxlCmsInterface& cms, ThreadPool* pool,
-                             AuxOut* aux_out, bool do_color);
+                             ThreadPool* pool, AuxOut* aux_out, bool do_color);
   // Encodes global info (tree + histograms) in the `writer`.
   Status EncodeGlobalInfo(BitWriter* writer, AuxOut* aux_out);
   // Encodes a specific modular image (identified by `stream`) in the `writer`,
