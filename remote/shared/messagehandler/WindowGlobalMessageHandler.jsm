@@ -97,6 +97,12 @@ class WindowGlobalMessageHandler extends MessageHandler {
         });
       }
     }
+
+    // With the session data applied the handler is now ready to be used.
+    this.emitEvent("window-global-handler-created", {
+      contextId: this._contextId,
+      innerWindowId: this._innerWindowId,
+    });
   }
 
   forwardCommand(command) {
