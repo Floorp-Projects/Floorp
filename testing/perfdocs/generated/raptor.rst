@@ -15319,8 +15319,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm6-linux-firefox-microsoft.manifest
-   * **playback version**: 6.0.2
+   * **playback pageset manifest**: mitm7-linux-firefox-microsoft.manifest
+   * **playback version**: 7.0.4
    * **secondary url**: `<https://support.microsoft.com/en-us>`__
    * **test url**: `<https://www.microsoft.com/en-us/>`__
    * **type**: pageload
