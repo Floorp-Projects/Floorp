@@ -215,21 +215,26 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   const PrincipalHandle principal2 =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
-  // Total 3840 frames. It's easier to test with frames of multiples of 480.
+  // Total 4800 frames. It's easier to test with frames of multiples of 480.
   nsTArray<std::pair<TrackTime, PrincipalHandle>> framesWithPrincipal = {
       {100, principal1},
       {200, PRINCIPAL_HANDLE_NONE},
       {300, principal2},
       {400, principal1},
-      {200, PRINCIPAL_HANDLE_NONE},
+      {440, PRINCIPAL_HANDLE_NONE},
+      // 3 packet-size above.
       {480, principal1},
       {480, principal2},
       {480, PRINCIPAL_HANDLE_NONE},
+      // 3 packet-size above.
       {500, principal2},
-      {400, principal1},
-      {300, principal1}};
+      {490, principal1},
+      {600, principal1},
+      {330, principal1}
+      // 4 packet-size above.
+  };
 
-  // Generate 3840 frames of data with different principals.
+  // Generate 4800 frames of data with different principals.
   AudioSegment input;
   {
     for (const auto& [duration, principal] : framesWithPrincipal) {
@@ -268,18 +273,18 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
       // Trim the prebuffering silence.
 
       AudioSegment data;
-      aip->Process(graph, 0, 3840, &input, &data);
-      EXPECT_EQ(input.GetDuration(), 3840);
-      EXPECT_EQ(data.GetDuration(), 3840);
+      aip->Process(graph, 0, 4800, &input, &data);
+      EXPECT_EQ(input.GetDuration(), 4800);
+      EXPECT_EQ(data.GetDuration(), 4800);
 
       AudioSegment dummy;
       dummy.AppendNullData(480);
       aip->Process(graph, 0, 480, &dummy, &data);
       EXPECT_EQ(dummy.GetDuration(), 480);
-      EXPECT_EQ(data.GetDuration(), 480 + 3840);
+      EXPECT_EQ(data.GetDuration(), 480 + 4800);
 
       // Ignore the pre-buffering data
-      output.AppendSlice(data, 480, 480 + 3840);
+      output.AppendSlice(data, 480, 480 + 4800);
     }
 
     verifyPrincipals(output);
@@ -289,9 +294,9 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   aip->SetPassThrough(graph, true);
   {
     AudioSegment output;
-    aip->Process(graph, 0, 3840, &input, &output);
-    EXPECT_EQ(input.GetDuration(), 3840);
-    EXPECT_EQ(output.GetDuration(), 3840);
+    aip->Process(graph, 0, 4800, &input, &output);
+    EXPECT_EQ(input.GetDuration(), 4800);
+    EXPECT_EQ(output.GetDuration(), 4800);
 
     verifyPrincipals(output);
   }

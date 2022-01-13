@@ -880,6 +880,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   // Principal-labelling logic still holds.
   for (AudioSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
        iter.Next()) {
+    MOZ_ASSERT(iter->mDuration > 0);
     mChunksInPacketizer.emplace_back(
         std::make_pair(iter->mDuration, iter->mPrincipalHandle));
   }
@@ -1019,6 +1020,9 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
 
     auto getAudioChunk = [&](TrackTime aStart, TrackTime aEnd,
                              const PrincipalHandle& aPrincipalHandle) {
+      if (aStart == aEnd) {
+        return AudioChunk();
+      }
       RefPtr<SharedBuffer> other = buffer;
       AudioChunk c =
           AudioChunk(other.forget(), processedOutputChannelPointersConst,
@@ -1038,11 +1042,13 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     while (!mChunksInPacketizer.empty()) {
       auto& [frames, principal] = mChunksInPacketizer.front();
       const TrackTime end = start + frames;
-      // If the left unlabelled frames are part of this chunk, then we
-      // need to adjust the number of frames in the chunk.
       if (end > len) {
-        mSegment.AppendAndConsumeChunk(getAudioChunk(start, len, principal));
-        frames -= len - start;
+        // If the left unlabelled frames are part of this chunk, then we need to
+        // adjust the number of frames in the chunk.
+        if (len > start) {
+          mSegment.AppendAndConsumeChunk(getAudioChunk(start, len, principal));
+          frames -= len - start;
+        }
         break;
       }
       // Otherwise, the number of unlabelled frames is larger than or equal to
