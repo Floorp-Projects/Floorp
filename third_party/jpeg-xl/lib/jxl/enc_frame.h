@@ -20,6 +20,9 @@ namespace jxl {
 
 // Information needed for encoding a frame that is not contained elsewhere and
 // does not belong to `cparams`.
+// TODO(lode): if possible, it might be better to replace FrameInfo and several
+// fields from ImageBundle (such as frame name and duration) by direct usage of
+// jxl::FrameHeader itself.
 struct FrameInfo {
   // TODO(veluca): consider adding more parameters, such as custom patches.
   bool save_before_color_transform = false;
@@ -35,6 +38,26 @@ struct FrameInfo {
   bool is_preview = false;
   // Information for storing this frame for future use (only for non-DC frames).
   size_t save_as_reference = 0;
+  // The source frame for blending of a next frame, matching the
+  // save_as_reference value of a previous frame. Animated frames can use
+  // save_as_reference values 1, 2 and 3, while composite still frames can use
+  // save_as_reference values 0, 1, 2 and 3. The current C++ encoder
+  // implementation is assuming and using 1 for all frames of animations, so
+  // using that as the default value here.
+  // Corresponds to BlendingInfo::source from the FrameHeader.
+  size_t source = 1;
+  // Corresponds to BlendingInfo::clamp from the FrameHeader.
+  size_t clamp = 1;
+  // Corresponds to BlendingInfo::alpha_channel from the FrameHeader, or set to
+  // -1 to automatically choose it as the index of the first extra channel of
+  // type alpha.
+  int alpha_channel = -1;
+
+  // If non-empty, uses this blending info for the extra channels, otherwise
+  // automatically chooses it. The encoder API will fill this vector with the
+  // extra channel info and allows more options. The non-API cjxl leaves it
+  // empty and relies on the default behavior.
+  std::vector<BlendingInfo> extra_channel_blending_info;
 };
 
 // Encodes a single frame (including its header) into a byte stream.  Groups may
@@ -44,7 +67,8 @@ struct FrameInfo {
 Status EncodeFrame(const CompressParams& cparams_orig,
                    const FrameInfo& frame_info, const CodecMetadata* metadata,
                    const ImageBundle& ib, PassesEncoderState* passes_enc_state,
-                   ThreadPool* pool, BitWriter* writer, AuxOut* aux_out);
+                   const JxlCmsInterface& cms, ThreadPool* pool,
+                   BitWriter* writer, AuxOut* aux_out);
 
 }  // namespace jxl
 

@@ -41,6 +41,11 @@ struct OutputEncodingInfo {
   Status Set(const CodecMetadata& metadata, const ColorEncoding& default_enc);
   bool all_default_opsin = true;
   bool color_encoding_is_original = false;
+  // Luminances of color_encoding's primaries, used for the HLG inverse OOTF.
+  // Default to sRGB's.
+  float luminances[3] = {0.2126, 0.7152, 0.0722};
+  // Also used for the HLG inverse OOTF.
+  float intensity_target;
 };
 
 // Converts `inout` (not padded) from opsin to linear sRGB in-place. Called from

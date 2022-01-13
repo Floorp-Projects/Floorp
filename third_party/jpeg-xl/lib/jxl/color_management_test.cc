@@ -132,20 +132,21 @@ class ColorManagementTest
   static void VerifyPixelRoundTrip(const ColorEncoding& c) {
     Globals* g = Globals::GetInstance();
     const ColorEncoding& c_native = c.IsGray() ? g->c_gray : g->c_native;
-    ColorSpaceTransform xform_fwd;
-    ColorSpaceTransform xform_rev;
-    ASSERT_TRUE(xform_fwd.Init(c_native, c, kDefaultIntensityTarget, kWidth,
+    const JxlCmsInterface& cms = GetJxlCms();
+    ColorSpaceTransform xform_fwd(cms);
+    ColorSpaceTransform xform_rev(cms);
+    const float intensity_target =
+        c.tf.IsHLG() ? 1000 : kDefaultIntensityTarget;
+    ASSERT_TRUE(xform_fwd.Init(c_native, c, intensity_target, kWidth,
                                g->pool.NumThreads()));
-    ASSERT_TRUE(xform_rev.Init(c, c_native, kDefaultIntensityTarget, kWidth,
+    ASSERT_TRUE(xform_rev.Init(c, c_native, intensity_target, kWidth,
                                g->pool.NumThreads()));
 
     const size_t thread = 0;
     const ImageF& in = c.IsGray() ? g->in_gray : g->in_color;
     ImageF* JXL_RESTRICT out = c.IsGray() ? &g->out_gray : &g->out_color;
-    DoColorSpaceTransform(&xform_fwd, thread, in.Row(0),
-                          xform_fwd.BufDst(thread));
-    DoColorSpaceTransform(&xform_rev, thread, xform_fwd.BufDst(thread),
-                          out->Row(0));
+    ASSERT_TRUE(xform_fwd.Run(thread, in.Row(0), xform_fwd.BufDst(thread)));
+    ASSERT_TRUE(xform_rev.Run(thread, xform_fwd.BufDst(thread), out->Row(0)));
 
 #if JPEGXL_ENABLE_SKCMS
     double max_l1 = 7E-4;
@@ -222,18 +223,18 @@ TEST_F(ColorManagementTest, D2700ToSRGB) {
   ColorEncoding sRGB_D2700;
   ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc)));
 
-  ColorSpaceTransform transform;
+  ColorSpaceTransform transform(GetJxlCms());
   ASSERT_TRUE(transform.Init(sRGB_D2700, ColorEncoding::SRGB(),
                              kDefaultIntensityTarget, 1, 1));
   const float sRGB_D2700_values[3] = {0.863, 0.737, 0.490};
   float sRGB_values[3];
-  DoColorSpaceTransform(&transform, 0, sRGB_D2700_values, sRGB_values);
+  ASSERT_TRUE(transform.Run(0, sRGB_D2700_values, sRGB_values));
   EXPECT_THAT(sRGB_values,
               ElementsAre(FloatNear(0.914, 1e-3), FloatNear(0.745, 1e-3),
                           FloatNear(0.601, 1e-3)));
 }
 
-TEST_F(ColorManagementTest, P3HLGTo2020HLG) {
+TEST_F(ColorManagementTest, P3HlgTo2020Hlg) {
   ColorEncoding p3_hlg;
   p3_hlg.SetColorSpace(ColorSpace::kRGB);
   p3_hlg.white_point = WhitePoint::kD65;
@@ -245,14 +246,75 @@ TEST_F(ColorManagementTest, P3HLGTo2020HLG) {
   rec2020_hlg.primaries = Primaries::k2100;
   ASSERT_TRUE(rec2020_hlg.CreateICC());
 
-  ColorSpaceTransform transform;
+  ColorSpaceTransform transform(GetJxlCms());
   ASSERT_TRUE(transform.Init(p3_hlg, rec2020_hlg, 1000, 1, 1));
   const float p3_hlg_values[3] = {0., 0.75, 0.};
   float rec2020_hlg_values[3];
-  DoColorSpaceTransform(&transform, 0, p3_hlg_values, rec2020_hlg_values);
+  ASSERT_TRUE(transform.Run(0, p3_hlg_values, rec2020_hlg_values));
   EXPECT_THAT(rec2020_hlg_values,
               ElementsAre(FloatNear(0.3973, 1e-4), FloatNear(0.7382, 1e-4),
                           FloatNear(0.1183, 1e-4)));
+}
+
+TEST_F(ColorManagementTest, HlgOotf) {
+  ColorEncoding p3_hlg;
+  p3_hlg.SetColorSpace(ColorSpace::kRGB);
+  p3_hlg.white_point = WhitePoint::kD65;
+  p3_hlg.primaries = Primaries::kP3;
+  p3_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  ASSERT_TRUE(p3_hlg.CreateICC());
+
+  ColorSpaceTransform transform_to_1000(GetJxlCms());
+  ASSERT_TRUE(
+      transform_to_1000.Init(p3_hlg, ColorEncoding::LinearSRGB(), 1000, 1, 1));
+  // HDR reference white: https://www.itu.int/pub/R-REP-BT.2408-4-2021
+  float p3_hlg_values[3] = {0.75, 0.75, 0.75};
+  float linear_srgb_values[3];
+  ASSERT_TRUE(transform_to_1000.Run(0, p3_hlg_values, linear_srgb_values));
+  // On a 1000-nit display, HDR reference white should be 203 cd/m² which is
+  // 0.203 times the maximum.
+  EXPECT_THAT(linear_srgb_values,
+              ElementsAre(FloatNear(0.203, 1e-3), FloatNear(0.203, 1e-3),
+                          FloatNear(0.203, 1e-3)));
+
+  ColorSpaceTransform transform_to_400(GetJxlCms());
+  ASSERT_TRUE(
+      transform_to_400.Init(p3_hlg, ColorEncoding::LinearSRGB(), 400, 1, 1));
+  ASSERT_TRUE(transform_to_400.Run(0, p3_hlg_values, linear_srgb_values));
+  // On a 400-nit display, it should be 100 cd/m².
+  EXPECT_THAT(linear_srgb_values,
+              ElementsAre(FloatNear(0.250, 1e-3), FloatNear(0.250, 1e-3),
+                          FloatNear(0.250, 1e-3)));
+
+  p3_hlg_values[2] = 0.50;
+  ASSERT_TRUE(transform_to_1000.Run(0, p3_hlg_values, linear_srgb_values));
+  EXPECT_THAT(linear_srgb_values,
+              ElementsAre(FloatNear(0.201, 1e-3), FloatNear(0.201, 1e-3),
+                          FloatNear(0.050, 1e-3)));
+
+  ColorSpaceTransform transform_from_400(GetJxlCms());
+  ASSERT_TRUE(
+      transform_from_400.Init(ColorEncoding::LinearSRGB(), p3_hlg, 400, 1, 1));
+  linear_srgb_values[0] = linear_srgb_values[1] = linear_srgb_values[2] = 0.250;
+  ASSERT_TRUE(transform_from_400.Run(0, linear_srgb_values, p3_hlg_values));
+  EXPECT_THAT(p3_hlg_values,
+              ElementsAre(FloatNear(0.75, 1e-3), FloatNear(0.75, 1e-3),
+                          FloatNear(0.75, 1e-3)));
+
+  ColorEncoding grayscale_hlg;
+  grayscale_hlg.SetColorSpace(ColorSpace::kGray);
+  grayscale_hlg.white_point = WhitePoint::kD65;
+  grayscale_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  ASSERT_TRUE(grayscale_hlg.CreateICC());
+
+  ColorSpaceTransform grayscale_transform(GetJxlCms());
+  ASSERT_TRUE(grayscale_transform.Init(
+      grayscale_hlg, ColorEncoding::LinearSRGB(/*is_gray=*/true), 1000, 1, 1));
+  const float grayscale_hlg_value = 0.75;
+  float linear_grayscale_value;
+  ASSERT_TRUE(grayscale_transform.Run(0, &grayscale_hlg_value,
+                                      &linear_grayscale_value));
+  EXPECT_THAT(linear_grayscale_value, FloatNear(0.203, 1e-3));
 }
 
 }  // namespace

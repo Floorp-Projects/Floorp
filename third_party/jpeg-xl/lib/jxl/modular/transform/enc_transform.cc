@@ -15,7 +15,7 @@ Status TransformForward(Transform &t, Image &input,
                         const weighted::Header &wp_header, ThreadPool *pool) {
   switch (t.id) {
     case TransformId::kRCT:
-      return FwdRCT(input, t.begin_c, t.rct_type);
+      return FwdRCT(input, t.begin_c, t.rct_type, pool);
     case TransformId::kSqueeze:
       return FwdSqueeze(input, t.squeezes, pool);
     case TransformId::kPalette:
