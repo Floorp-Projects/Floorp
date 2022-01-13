@@ -103,7 +103,11 @@ class gfxDWriteFont final : public gfxFont {
   // Used to record the sUseClearType setting at the time mAzureScaledFont
   // was set up, so we can tell if it's stale and needs to be re-created.
   bool mAzureScaledFontUsedClearType;
-  bool mAzureScaledFontForcedGDI;
+
+  // Cache the GDI version of the ScaledFont so that font keys and other
+  // meta-data can remain stable even if there is thrashing between GDI and
+  // non-GDI usage.
+  RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFontGDI;
 
   bool UsingClearType() {
     return mozilla::gfx::gfxVars::SystemTextQuality() == CLEARTYPE_QUALITY;
