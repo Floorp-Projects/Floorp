@@ -126,6 +126,7 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
 import kotlin.math.min
@@ -390,15 +391,19 @@ class HomeFragment : Fragment() {
 
         requireContext().components.analytics.experiments.recordExposureEvent(FeatureId.HOME_PAGE)
 
+        if (shouldEnableWallpaper()) {
+            val wallpaperManger = requireComponents.wallpaperManager
+            // We only want to update the wallpaper when it's different from the default one
+            // as the default is applied already on xml by default.
+            if (wallpaperManger.currentWallpaper != Wallpaper.NONE) {
+                wallpaperManger.updateWallpaper(binding.homeLayout, wallpaperManger.currentWallpaper)
+            }
+        }
+
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
             MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "HomeFragment.onCreateView",
         )
-
-        if (shouldEnableWallpaper()) {
-            val wallpaperManger = requireComponents.wallpaperManager
-            wallpaperManger.updateWallpaper(binding.homeLayout, wallpaperManger.currentWallpaper)
-        }
 
         return binding.root
     }
