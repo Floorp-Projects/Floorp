@@ -1531,6 +1531,16 @@ var PlacesControllerDragHelper = {
             parentId = PlacesUtils.bookmarks.getFolderIdForItem(parentId);
           }
         }
+
+        // Disallow the dropping of multiple bookmarks if they include
+        // a javascript: bookmarklet
+        if (
+          !flavor.startsWith("text/x-moz-place") &&
+          (nodes.length > 1 || dropCount > 1) &&
+          nodes.some(n => n.uri?.startsWith("javascript:"))
+        ) {
+          return false;
+        }
       }
     }
     return true;
@@ -1597,6 +1607,16 @@ var PlacesControllerDragHelper = {
       } else {
         throw new Error("bogus data was passed as a tab");
       }
+    }
+
+    // If a multiple urls are being dropped from the urlbar or an external source,
+    // and they include javascript url, not bookmark any of them
+    if (
+      externalDrag &&
+      (nodes.length > 1 || dropCount > 1) &&
+      nodes.some(n => n.uri?.startsWith("javascript:"))
+    ) {
+      throw new Error("Javascript bookmarklet passed with uris");
     }
 
     // If a single javascript url is being dropped from the urlbar or an external source,
