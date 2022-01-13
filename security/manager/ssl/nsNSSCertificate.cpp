@@ -119,7 +119,7 @@ nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot) {
   NS_ENSURE_ARG(aIsBuiltInRoot);
 
   pkix::Input certInput;
-  pkix::Result rv = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  pkix::Result rv = certInput.Init(mDER.Elements(), mDER.Length());
   if (rv != pkix::Result::Success) {
     return NS_ERROR_FAILURE;
   }
@@ -136,7 +136,7 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey) {
   static_assert(sizeof(uint32_t) == 4, "type size consistency check");
 
   pkix::Input certInput;
-  pkix::Result result = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  pkix::Result result = certInput.Init(mDER.Elements(), mDER.Length());
   if (result != pkix::Result::Success) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -399,8 +399,8 @@ nsresult nsNSSCertificate::GetCertificateHash(nsAString& aFingerprint,
                                               SECOidTag aHashAlg) {
   aFingerprint.Truncate();
   nsTArray<uint8_t> digestArray;
-  nsresult rv = Digest::DigestBuf(aHashAlg, mCert->derCert.data,
-                                  mCert->derCert.len, digestArray);
+  nsresult rv =
+      Digest::DigestBuf(aHashAlg, mDER.Elements(), mDER.Length(), digestArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -454,7 +454,7 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
   aSha256SPKIDigest.Truncate();
 
   pkix::Input certInput;
-  pkix::Result result = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  pkix::Result result = certInput.Init(mDER.Elements(), mDER.Length());
   if (result != pkix::Result::Success) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -473,7 +473,7 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
     return rv;
   }
   rv = Base64Encode(nsDependentCSubstring(
-                        BitwiseCast<char*, uint8_t*>(digestArray.Elements()),
+                        reinterpret_cast<const char*>(digestArray.Elements()),
                         digestArray.Length()),
                     aSha256SPKIDigest);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -484,25 +484,19 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(
 
 NS_IMETHODIMP
 nsNSSCertificate::GetRawDER(nsTArray<uint8_t>& aArray) {
-  if (mCert) {
-    aArray.SetLength(mCert->derCert.len);
-    memcpy(aArray.Elements(), mCert->derCert.data, mCert->derCert.len);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  aArray.SetLength(mDER.Length());
+  memcpy(aArray.Elements(), mDER.Elements(), mDER.Length());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSCertificate::GetBase64DERString(nsACString& base64DERString) {
   nsDependentCSubstring derString(
-      reinterpret_cast<const char*>(mCert->derCert.data), mCert->derCert.len);
-
+      reinterpret_cast<const char*>(mDER.Elements()), mDER.Length());
   nsresult rv = Base64Encode(derString, base64DERString);
-
   if (NS_FAILED(rv)) {
     return rv;
   }
-
   return NS_OK;
 }
 
@@ -513,11 +507,8 @@ CERTCertificate* nsNSSCertificate::GetCert() {
 NS_IMETHODIMP
 nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity) {
   NS_ENSURE_ARG(aValidity);
-  if (!mCert) {
-    return NS_ERROR_FAILURE;
-  }
   pkix::Input certInput;
-  pkix::Result rv = certInput.Init(mCert->derCert.data, mCert->derCert.len);
+  pkix::Result rv = certInput.Init(mDER.Elements(), mDER.Length());
   if (rv != pkix::Success) {
     return NS_ERROR_FAILURE;
   }
@@ -536,12 +527,11 @@ nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = aStream->Write32(mCert->derCert.len);
+  rv = aStream->Write32(mDER.Length());
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return aStream->WriteBytes(
-      AsBytes(Span(mCert->derCert.data, mCert->derCert.len)));
+  return aStream->WriteBytes(Span(mDER));
 }
 
 // NB: Any updates (except disk-only fields) must be kept in sync with
