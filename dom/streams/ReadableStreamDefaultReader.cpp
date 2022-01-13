@@ -110,7 +110,9 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
   // https://streams.spec.whatwg.org/#set-up-readable-stream-default-reader
   // Step 1.
   if (aStream.Locked()) {
-    aRv.ThrowTypeError("Stream is Locked");
+    aRv.ThrowTypeError(
+        "Cannot create a new reader for a readable stream already locked by "
+        "another reader.");
     return nullptr;
   }
 
@@ -244,9 +246,8 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
                                                             ErrorResult& aRv) {
   // Step 1.
   if (!mStream) {
-    RefPtr<Promise> rejected = Promise::Create(GetParentObject(), aRv);
-    rejected->MaybeRejectWithTypeError("Stream is Undefined");
-    return rejected.forget();
+    aRv.ThrowTypeError("Reading is not possible after calling releaseLock.");
+    return nullptr;
   }
 
   // Step 2.
@@ -305,7 +306,8 @@ void ReadableStreamDefaultReader::ReleaseLock(ErrorResult& aRv) {
 
   // Step 2.
   if (!mReadRequests.isEmpty()) {
-    aRv.ThrowTypeError("Pending read requests");
+    aRv.ThrowTypeError(
+        "Cannot release lock while read requests are still pending.");
     return;
   }
 
@@ -336,16 +338,14 @@ static already_AddRefed<Promise> ReadableStreamGenericReaderCancel(
 
 already_AddRefed<Promise> ReadableStreamGenericReader::Cancel(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
-  // Step 1.
+  // Step 1. If this.[[stream]] is undefined,
+  // return a promise rejected with a TypeError exception.
   if (!mStream) {
-    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Cancel reader with undefined stream");
-    return promise.forget();
+    aRv.ThrowTypeError("Canceling is not possible after calling releaseLock.");
+    return nullptr;
   }
 
+  // Step 2. Return ! ReadableStreamReaderGenericCancel(this, reason).
   return ReadableStreamGenericReaderCancel(aCx, this, aReason, aRv);
 }
 
@@ -356,8 +356,9 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
                                       ErrorResult& aRv) {
   // Step 1.
   if (IsReadableStreamLocked(aStream)) {
-    aRv.ThrowTypeError("Locked Stream");
-    return;
+    return aRv.ThrowTypeError(
+        "Cannot get a new reader for a readable stream already locked by "
+        "another reader.");
   }
 
   // Step 2.
