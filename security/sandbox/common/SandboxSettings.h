@@ -23,11 +23,15 @@ int GetEffectiveSocketProcessSandboxLevel();
 // Checks whether the effective content sandbox level is > 0.
 bool IsContentSandboxEnabled();
 
+// If you update this enum, don't forget to raise the limit in
+// TelemetryEnvironmentTesting.jsm and record the new value in
+// environment.rst 
 enum class ContentWin32kLockdownState : int32_t {
   LockdownEnabled = 1,
   MissingWebRender,
   OperatingSystemNotSupported,
   PrefNotSet,
+  MissingRemoteWebGL,
 };
 
 const char* ContentWin32kLockdownStateToString(
