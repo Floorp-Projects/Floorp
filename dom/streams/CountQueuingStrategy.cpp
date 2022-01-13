@@ -8,18 +8,26 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "nsCOMPtr.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 namespace dom {
 
-// Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CountQueuingStrategy, mGlobal)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(CountQueuingStrategy)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(CountQueuingStrategy)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CountQueuingStrategy)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_IMPL_CYCLE_COLLECTION(BaseQueuingStrategy, mGlobal)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BaseQueuingStrategy)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BaseQueuingStrategy)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BaseQueuingStrategy)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CountQueuingStrategy)
+NS_IMPL_ADDREF_INHERITED(CountQueuingStrategy, BaseQueuingStrategy)
+NS_IMPL_RELEASE_INHERITED(CountQueuingStrategy, BaseQueuingStrategy)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CountQueuingStrategy)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_INTERFACE_MAP_END_INHERITING(BaseQueuingStrategy)
 
 /* static */
 already_AddRefed<CountQueuingStrategy> CountQueuingStrategy::Constructor(
@@ -29,7 +37,7 @@ already_AddRefed<CountQueuingStrategy> CountQueuingStrategy::Constructor(
   return strategy.forget();
 }
 
-nsIGlobalObject* CountQueuingStrategy::GetParentObject() const {
+nsIGlobalObject* BaseQueuingStrategy::GetParentObject() const {
   return mGlobal;
 }
 
