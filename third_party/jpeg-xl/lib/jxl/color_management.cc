@@ -3,12 +3,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Defined by build system; this avoids IDE warnings. Must come before
-// color_management.h (affects header definitions).
-#ifndef JPEGXL_ENABLE_SKCMS
-#define JPEGXL_ENABLE_SKCMS 0
-#endif
-
 #include "lib/jxl/color_management.h"
 
 #include <math.h>

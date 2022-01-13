@@ -23,12 +23,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    the non-coalesced case.
  - decoder API: new function `JxlDecoderGetExtraChannelBlendInfo` to get
    the blending information for extra channels in the non-coalesced case.
+ - encoder API: added ability to set several encoder options to frames using
+   `JxlEncoderFrameSettingsSetOption`
+ - encoder API: new functions `JxlEncoderSetFrameHeader` and
+   `JxlEncoderSetExtraChannelBlendInfo` to set animation
+   and blending parameters of the frame, and `JxlEncoderInitFrameHeader` and
+   `JxlEncoderInitBlendInfo` to initialize the structs to set.
+ - decoder/encoder API: add two fields to `JXLBasicInfo`: `intrinsic_xsize`
+   and `intrinsic_ysize` to signal the intrinsic size.
+ - encoder API: ability to encode arbitrary extra channels:
+  `JxlEncoderInitExtraChannelInfo`, `JxlEncoderSetExtraChannelInfo`,
+  `JxlEncoderSetExtraChannelName` and `JxlEncoderSetExtraChannelBuffer`.
 
 ### Changed
 - decoder API: using `JxlDecoderCloseInput` at the end of all input is required
   when using JXL_DEC_BOX, and is now also encouraged in other cases, but not
   required in those other cases for backwards compatiblity.
 - encoder API: `JxlEncoderCloseInput` now closes both frames and boxes input.
+
+### Deprecated
+- encoder API: `JxlEncoderOptions`: use `JxlEncoderFrameSettings` instead
+- encoder API: `JxlEncoderOptionsCreate`: use `JxlEncoderFrameSettingsCreate`
+  instead
+- encoder API: `JxlEncoderOptionsSetDistance`: use `JxlEncoderSetFrameDistance`
+  instead
+- encoder API: `JxlEncoderOptionsSetLossless`: use `JxlEncoderSetFrameLossless`
+  instead
+- encoder API: `JxlEncoderOptionsSetEffort`: use `JxlEncoderFrameSettingsSetOption(
+  frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, effort)` instead.
+- encoder API: `JxlEncoderOptionsSetDecodingSpeed`: use
+  `JxlEncoderFrameSettingsSetOption(frame_settings,
+  JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier)` instead.
+- encoder API: deprecated `JXL_ENC_NOT_SUPPORTED`, the encoder returns
+  `JXL_ENC_ERROR` instead and there is no need to handle
+  `JXL_ENC_NOT_SUPPORTED`.
 
 ## [0.6.1] - 2021-10-29
 ### Changed

@@ -96,13 +96,13 @@ class PatchDictionaryEncoder {
 
 void FindBestPatchDictionary(const Image3F& opsin,
                              PassesEncoderState* JXL_RESTRICT state,
-                             ThreadPool* pool, AuxOut* aux_out,
-                             bool is_xyb = true);
+                             const JxlCmsInterface& cms, ThreadPool* pool,
+                             AuxOut* aux_out, bool is_xyb = true);
 
 void RoundtripPatchFrame(Image3F* reference_frame,
                          PassesEncoderState* JXL_RESTRICT state, int idx,
-                         CompressParams& cparams, ThreadPool* pool,
-                         bool subtract);
+                         CompressParams& cparams, const JxlCmsInterface& cms,
+                         ThreadPool* pool, bool subtract);
 
 }  // namespace jxl
 

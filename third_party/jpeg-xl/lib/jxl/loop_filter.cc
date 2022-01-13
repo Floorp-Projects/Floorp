@@ -29,14 +29,26 @@ Status LoopFilter::VisitFields(Visitor* JXL_RESTRICT visitor) {
           visitor->F16(1.1 * 0.104699568f, &gab_x_weight1));
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->F16(1.1 * 0.055680538f, &gab_x_weight2));
+      if (std::abs(1.0f + (gab_x_weight1 + gab_x_weight2) * 4) < 1e-8) {
+        return JXL_FAILURE(
+            "Gaborish x weights lead to near 0 unnormalized kernel");
+      }
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->F16(1.1 * 0.104699568f, &gab_y_weight1));
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->F16(1.1 * 0.055680538f, &gab_y_weight2));
+      if (std::abs(1.0f + (gab_y_weight1 + gab_y_weight2) * 4) < 1e-8) {
+        return JXL_FAILURE(
+            "Gaborish y weights lead to near 0 unnormalized kernel");
+      }
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->F16(1.1 * 0.104699568f, &gab_b_weight1));
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->F16(1.1 * 0.055680538f, &gab_b_weight2));
+      if (std::abs(1.0f + (gab_b_weight1 + gab_b_weight2) * 4) < 1e-8) {
+        return JXL_FAILURE(
+            "Gaborish b weights lead to near 0 unnormalized kernel");
+      }
     }
   }
 

@@ -53,88 +53,91 @@ struct Symbol {
 // Reading from output gives the same values.
 TEST(BitReaderTest, TestRoundTrip) {
   ThreadPoolInternal pool(8);
-  pool.Run(0, 1000, ThreadPool::SkipInit(),
-           [](const int task, const int /* thread */) {
-             constexpr size_t kMaxBits = 8000;
-             BitWriter writer;
-             BitWriter::Allotment allotment(&writer, kMaxBits);
+  EXPECT_TRUE(RunOnPool(
+      &pool, 0, 1000, ThreadPool::NoInit,
+      [](const uint32_t task, size_t /* thread */) {
+        constexpr size_t kMaxBits = 8000;
+        BitWriter writer;
+        BitWriter::Allotment allotment(&writer, kMaxBits);
 
-             std::vector<Symbol> symbols;
-             symbols.reserve(1000);
+        std::vector<Symbol> symbols;
+        symbols.reserve(1000);
 
-             Rng rng(55537 + 129 * task);
+        Rng rng(55537 + 129 * task);
 
-             for (;;) {
-               const uint32_t num_bits = rng.UniformU(1, 33);
-               if (writer.BitsWritten() + num_bits > kMaxBits) break;
-               const uint32_t value = rng.UniformU(0, 1ULL << num_bits);
-               symbols.push_back({num_bits, value});
-               writer.Write(num_bits, value);
-             }
+        for (;;) {
+          const uint32_t num_bits = rng.UniformU(1, 33);
+          if (writer.BitsWritten() + num_bits > kMaxBits) break;
+          const uint32_t value = rng.UniformU(0, 1ULL << num_bits);
+          symbols.push_back({num_bits, value});
+          writer.Write(num_bits, value);
+        }
 
-             writer.ZeroPadToByte();
-             ReclaimAndCharge(&writer, &allotment, 0, nullptr);
-             BitReader reader(writer.GetSpan());
-             for (const Symbol& s : symbols) {
-               EXPECT_EQ(s.value, reader.ReadBits(s.num_bits));
-             }
-             EXPECT_TRUE(reader.Close());
-           });
+        writer.ZeroPadToByte();
+        ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+        BitReader reader(writer.GetSpan());
+        for (const Symbol& s : symbols) {
+          EXPECT_EQ(s.value, reader.ReadBits(s.num_bits));
+        }
+        EXPECT_TRUE(reader.Close());
+      },
+      "TestTBitReaderRoundTrip"));
 }
 
 // SkipBits is the same as reading that many bits.
 TEST(BitReaderTest, TestSkip) {
   ThreadPoolInternal pool(8);
-  pool.Run(0, 96, ThreadPool::SkipInit(),
-           [](const int task, const int /* thread */) {
-             constexpr size_t kSize = 100;
+  EXPECT_TRUE(RunOnPool(
+      &pool, 0, 96, ThreadPool::NoInit,
+      [](const uint32_t task, size_t /* thread */) {
+        constexpr size_t kSize = 100;
 
-             for (size_t skip = 0; skip < 128; ++skip) {
-               BitWriter writer;
-               BitWriter::Allotment allotment(&writer, kSize * kBitsPerByte);
-               // Start with "task" 1-bits.
-               for (int i = 0; i < task; ++i) {
-                 writer.Write(1, 1);
-               }
+        for (size_t skip = 0; skip < 128; ++skip) {
+          BitWriter writer;
+          BitWriter::Allotment allotment(&writer, kSize * kBitsPerByte);
+          // Start with "task" 1-bits.
+          for (size_t i = 0; i < task; ++i) {
+            writer.Write(1, 1);
+          }
 
-               // Write 0-bits that we will skip over
-               for (size_t i = 0; i < skip; ++i) {
-                 writer.Write(1, 0);
-               }
+          // Write 0-bits that we will skip over
+          for (size_t i = 0; i < skip; ++i) {
+            writer.Write(1, 0);
+          }
 
-               // Write terminator bits '101'
-               writer.Write(3, 5);
-               EXPECT_EQ(task + skip + 3, writer.BitsWritten());
-               writer.ZeroPadToByte();
-               AuxOut aux_out;
-               ReclaimAndCharge(&writer, &allotment, 0, &aux_out);
-               EXPECT_LT(aux_out.layers[0].total_bits, kSize * 8);
+          // Write terminator bits '101'
+          writer.Write(3, 5);
+          EXPECT_EQ(task + skip + 3, writer.BitsWritten());
+          writer.ZeroPadToByte();
+          AuxOut aux_out;
+          ReclaimAndCharge(&writer, &allotment, 0, &aux_out);
+          EXPECT_LT(aux_out.layers[0].total_bits, kSize * 8);
 
-               BitReader reader1(writer.GetSpan());
-               BitReader reader2(writer.GetSpan());
-               // Verify initial 1-bits
-               for (int i = 0; i < task; ++i) {
-                 EXPECT_EQ(1u, reader1.ReadBits(1));
-                 EXPECT_EQ(1u, reader2.ReadBits(1));
-               }
+          BitReader reader1(writer.GetSpan());
+          BitReader reader2(writer.GetSpan());
+          // Verify initial 1-bits
+          for (size_t i = 0; i < task; ++i) {
+            EXPECT_EQ(1u, reader1.ReadBits(1));
+            EXPECT_EQ(1u, reader2.ReadBits(1));
+          }
 
-               // SkipBits or manually read "skip" bits
-               reader1.SkipBits(skip);
-               for (size_t i = 0; i < skip; ++i) {
-                 EXPECT_EQ(0u, reader2.ReadBits(1))
-                     << " skip=" << skip << " i=" << i;
-               }
-               EXPECT_EQ(reader1.TotalBitsConsumed(),
-                         reader2.TotalBitsConsumed());
+          // SkipBits or manually read "skip" bits
+          reader1.SkipBits(skip);
+          for (size_t i = 0; i < skip; ++i) {
+            EXPECT_EQ(0u, reader2.ReadBits(1))
+                << " skip=" << skip << " i=" << i;
+          }
+          EXPECT_EQ(reader1.TotalBitsConsumed(), reader2.TotalBitsConsumed());
 
-               // Ensure both readers see the terminator bits.
-               EXPECT_EQ(5u, reader1.ReadBits(3));
-               EXPECT_EQ(5u, reader2.ReadBits(3));
+          // Ensure both readers see the terminator bits.
+          EXPECT_EQ(5u, reader1.ReadBits(3));
+          EXPECT_EQ(5u, reader2.ReadBits(3));
 
-               EXPECT_TRUE(reader1.Close());
-               EXPECT_TRUE(reader2.Close());
-             }
-           });
+          EXPECT_TRUE(reader1.Close());
+          EXPECT_TRUE(reader2.Close());
+        }
+      },
+      "TestSkip"));
 }
 
 // Verifies byte order and different groupings of bits.

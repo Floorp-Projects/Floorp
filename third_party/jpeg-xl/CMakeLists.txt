@@ -39,6 +39,7 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-fsanitize=fuzzer-no-link" CXX_FUZZERS_SUPPORTED)
 check_cxx_compiler_flag("-Xclang -mconstructor-aliases" CXX_CONSTRUCTOR_ALIASES_SUPPORTED)
 check_cxx_compiler_flag("-fmacro-prefix-map=OLD=NEW" CXX_MACRO_PREFIX_MAP)
+check_cxx_compiler_flag("-fno-rtti" CXX_NO_RTTI_SUPPORTED)
 
 # Enabled PIE binaries by default if supported.
 include(CheckPIESupported OPTIONAL RESULT_VARIABLE CHECK_PIE_SUPPORTED)
@@ -73,6 +74,12 @@ endif()
 
 set(WARNINGS_AS_ERRORS_DEFAULT false)
 
+if((SANITIZER STREQUAL "msan") OR JPEGXL_EMSCRIPTEN)
+  set(BUNDLE_LIBPNG_DEFAULT YES)
+else()
+  set(BUNDLE_LIBPNG_DEFAULT NO)
+endif()
+
 # Standard cmake naming for building shared libraries.
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static ones" ON)
 
@@ -88,6 +95,8 @@ set(JPEGXL_ENABLE_BENCHMARK true CACHE BOOL
     "Build JPEGXL benchmark tools.")
 set(JPEGXL_ENABLE_EXAMPLES true CACHE BOOL
     "Build JPEGXL library usage examples.")
+set(JPEGXL_BUNDLE_LIBPNG ${BUNDLE_LIBPNG_DEFAULT} CACHE BOOL
+    "Build libpng from source and link it statically.")
 set(JPEGXL_ENABLE_JNI true CACHE BOOL
     "Build JPEGXL JNI Java wrapper, if Java dependencies are installed.")
 set(JPEGXL_ENABLE_SJPEG true CACHE BOOL
@@ -214,6 +223,10 @@ if ("${CXX_MACRO_PREFIX_MAP}")
   add_compile_options(-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.)
 endif()
 
+if (CXX_NO_RTTI_SUPPORTED)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+endif()
+
 if (MSVC)
 # TODO(janwas): add flags
 else ()
@@ -230,12 +243,6 @@ add_definitions(
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
-
-if("${JPEGXL_ENABLE_FUZZERS}" OR "${JPEGXL_ENABLE_COVERAGE}")
-  add_definitions(
-    -DJXL_ENABLE_FUZZERS
-  )
-endif()  # JPEGXL_ENABLE_FUZZERS
 
 # In CMake before 3.12 it is problematic to pass repeated flags like -Xclang.
 # For this reason we place them in CMAKE_CXX_FLAGS instead.
