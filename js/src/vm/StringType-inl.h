@@ -119,7 +119,7 @@ MOZ_ALWAYS_INLINE bool JSString::validateLengthInternal(JSContext* maybecx,
                                                         size_t length) {
   if (MOZ_UNLIKELY(length > JSString::MAX_LENGTH)) {
     if constexpr (allowGC) {
-      js::ReportAllocationOverflow(maybecx);
+      js::ReportOversizedAllocation(maybecx, JSMSG_ALLOC_OVERFLOW);
     }
     return false;
   }
