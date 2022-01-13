@@ -68,11 +68,11 @@ exclude: true
   the application of a preview image URL.
 
 [95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
-[95.2]: {{javadoc_uri}/ContentBlockingController.html
-[95.3]: {{javadoc_uri}/StorageController.java
-[95.4]: {{javadoc_uri}/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING
-[95.5]: {{javadoc_uri}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List-
-[95.6]: {{javadoc_uri}/StorageController.html#setPrivateBrowsingPermanentPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
+[95.2]: {{javadoc_uri}}/ContentBlockingController.html
+[95.3]: {{javadoc_uri}}/StorageController.java
+[95.4]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING
+[95.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List-
+[95.6]: {{javadoc_uri}}/StorageController.html#setPrivateBrowsingPermanentPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
 [95.7]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpiseRootsEnabled-boolean-
 [95.8]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled-boolean-
 [95.9]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPreviewImage-org.mozilla.geckoview.GeckoSession-java.lang.String-
