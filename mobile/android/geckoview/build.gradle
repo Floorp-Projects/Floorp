@@ -328,7 +328,7 @@ android.libraryVariants.all { variant ->
 
     def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
         archiveClassifier = 'javadoc'
-        destinationDirectory = javadoc.destinationDir
+        from javadoc.destinationDir
     }
 
     // This task is used by `mach android geckoview-docs`.
