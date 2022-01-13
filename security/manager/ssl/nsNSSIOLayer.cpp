@@ -2413,7 +2413,7 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   if (cars) {
     nsCString rememberedDBKey;
     bool found;
-    nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::Create(mServerCert));
+    nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(mServerCert));
     nsresult rv = cars->HasRememberedDecision(
         hostname, mInfo.OriginAttributesRef(), cert, rememberedDBKey, &found);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2465,10 +2465,7 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
 
   for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
-    nsCOMPtr<nsIX509Cert> tempCert = nsNSSCertificate::Create(node->cert);
-    if (NS_WARN_IF(!tempCert)) {
-      return;
-    }
+    nsCOMPtr<nsIX509Cert> tempCert = new nsNSSCertificate(node->cert);
     nsresult rv = certArray->AppendElement(tempCert);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
@@ -2509,10 +2506,10 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   }
 
   if (cars && wantRemember) {
-    nsCOMPtr<nsIX509Cert> serverCert(nsNSSCertificate::Create(mServerCert));
+    nsCOMPtr<nsIX509Cert> serverCert(new nsNSSCertificate(mServerCert));
     nsCOMPtr<nsIX509Cert> clientCert;
     if (certChosen) {
-      clientCert = nsNSSCertificate::Create(mSelectedCertificate.get());
+      clientCert = new nsNSSCertificate(mSelectedCertificate.get());
     }
     rv = cars->RememberDecision(hostname, mInfo.OriginAttributesRef(),
                                 serverCert, clientCert);

@@ -63,57 +63,24 @@ extern LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsNSSCertificate, nsIX509Cert, nsISerializable, nsIClassInfo)
 
-/*static*/
-nsNSSCertificate* nsNSSCertificate::Create(CERTCertificate* cert) {
-  if (cert)
-    return new nsNSSCertificate(cert);
-  else
-    return new nsNSSCertificate();
-}
-
-nsNSSCertificate* nsNSSCertificate::ConstructFromDER(char* certDER,
-                                                     int derLen) {
-  nsNSSCertificate* newObject = nsNSSCertificate::Create();
-  if (newObject && !newObject->InitFromDER(certDER, derLen)) {
-    delete newObject;
-    newObject = nullptr;
-  }
-
-  return newObject;
-}
-
-bool nsNSSCertificate::InitFromDER(char* certDER, int derLen) {
-  if (!certDER || !derLen) return false;
-
-  CERTCertificate* aCert = CERT_DecodeCertFromPackage(certDER, derLen);
-
-  if (!aCert) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    if (XRE_GetProcessType() == GeckoProcessType_Content) {
-      MOZ_CRASH_UNSAFE_PRINTF("CERT_DecodeCertFromPackage failed in child: %d",
-                              PR_GetError());
-    }
-#endif
-    return false;
-  }
-
-  if (!aCert->dbhandle) {
-    aCert->dbhandle = CERT_GetDefaultCertDB();
-  }
-
-  mCert.reset(aCert);
-  return true;
-}
+nsNSSCertificate::nsNSSCertificate()
+    : mCert(nullptr), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {}
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert)
     : mCert(nullptr), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {
   if (cert) {
     mCert.reset(CERT_DupCertificate(cert));
+    mDER.AppendElements(mCert->derCert.data, mCert->derCert.len);
   }
 }
 
-nsNSSCertificate::nsNSSCertificate()
-    : mCert(nullptr), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {}
+nsNSSCertificate::nsNSSCertificate(nsTArray<uint8_t>&& der)
+    : mDER(std::move(der)), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {
+  SECItem derItem = {siBuffer, mDER.Elements(),
+                     static_cast<unsigned int>(mDER.Length())};
+  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
+                                      nullptr, false, true));
+}
 
 static uint32_t getCertType(CERTCertificate* cert) {
   nsNSSCertTrust trust(cert->trust);
@@ -596,15 +563,14 @@ nsNSSCertificate::Read(nsIObjectInputStream* aStream) {
     return rv;
   }
 
-  nsCString str;
-  rv = aStream->ReadBytes(len, getter_Copies(str));
+  rv = aStream->ReadByteArray(len, mDER);
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  if (!InitFromDER(const_cast<char*>(str.get()), len)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  SECItem derItem = {siBuffer, mDER.Elements(),
+                     static_cast<unsigned int>(mDER.Length())};
+  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
+                                      nullptr, false, true));
 
   return NS_OK;
 }
@@ -617,10 +583,7 @@ void nsNSSCertificate::SerializeToIPC(IPC::Message* aMsg) {
     return;
   }
 
-  const nsDependentCSubstring certBytes(
-      reinterpret_cast<char*>(mCert->derCert.data), mCert->derCert.len);
-
-  WriteParam(aMsg, certBytes);
+  WriteParam(aMsg, mDER);
 }
 
 bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
@@ -634,18 +597,15 @@ bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
     return true;
   }
 
-  nsCString derBytes;
-  if (!ReadParam(aMsg, aIter, &derBytes)) {
+  if (!ReadParam(aMsg, aIter, &mDER)) {
     return false;
   }
+  SECItem derItem = {siBuffer, mDER.Elements(),
+                     static_cast<unsigned int>(mDER.Length())};
+  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
+                                      nullptr, false, true));
 
-  if (derBytes.Length() == 0) {
-    return false;
-  }
-
-  // NSS accepts a |char*| here, but doesn't modify the contents of the array
-  // and casts it back to an |unsigned char*|.
-  return InitFromDER(const_cast<char*>(derBytes.get()), derBytes.Length());
+  return true;
 }
 
 NS_IMETHODIMP
