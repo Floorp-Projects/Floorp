@@ -19,7 +19,6 @@ import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -303,14 +302,6 @@ class BrowserRobot {
             verifyUrl(url.toString())
         }.openThreeDotMenu {
         }.bookmarkPage { }
-    }
-
-    fun clickLinkMatchingText(expectedText: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(Until.findObject(text(expectedText)), waitingTime)
-
-        val element = mDevice.findObject(text(expectedText))
-        element.click()
     }
 
     fun longClickMatchingText(expectedText: String) {
@@ -651,6 +642,19 @@ class BrowserRobot {
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
         }
+
+        fun clickDownloadLink(title: String, interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            val downloadLink = mDevice.findObject(UiSelector().textContains(title))
+
+            assertTrue(
+                "$title download link not found",
+                downloadLink.waitForExists(waitingTime)
+            )
+            downloadLink.click()
+
+            DownloadRobot().interact()
+            return DownloadRobot.Transition()
+        }
     }
 }
 
@@ -666,9 +670,9 @@ fun searchBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 fun homeScreenButton() = onView(withContentDescription(R.string.browser_toolbar_home))
 
 private fun assertHomeScreenButton() =
-    homeScreenButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    homeScreenButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertSearchBar() = searchBar().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertSearchBar() = searchBar().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertNavURLBar() = assertTrue(navURLBar().waitForExists(waitingTime))
 
@@ -676,14 +680,14 @@ private fun assertNavURLBarHidden() = assertTrue(navURLBar().waitUntilGone(waiti
 
 private fun assertSecureConnectionLockIcon() {
     onView(withId(R.id.mozac_browser_toolbar_security_indicator))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun menuButton() = onView(withId(R.id.icon))
 
 private fun assertMenuButton() {
     menuButton()
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun tabsCounter() = mDevice.findObject(By.res("$packageName:id/counter_root"))

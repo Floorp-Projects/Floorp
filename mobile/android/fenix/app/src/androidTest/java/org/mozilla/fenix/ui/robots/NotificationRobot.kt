@@ -12,15 +12,12 @@ import androidx.test.uiautomator.Until
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class NotificationRobot {
 
     fun verifySystemNotificationExists(notificationMessage: String) {
-        fun notificationTray() = UiScrollable(
-            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
-        )
-
         var notificationFound = false
 
         do {
@@ -54,13 +51,20 @@ class NotificationRobot {
         assertPrivateTabsNotification()
     }
 
-    fun clickMediaSystemNotificationControlButton(action: String) {
+    fun clickSystemNotificationControlButton(action: String) {
         mediaSystemNotificationButton(action).waitForExists(waitingTime)
         mediaSystemNotificationButton(action).click()
     }
 
     fun verifyMediaSystemNotificationButtonState(action: String) {
-        mediaSystemNotificationButton(action).waitForExists(waitingTime)
+        assertTrue(mediaSystemNotificationButton(action).waitForExists(waitingTime))
+    }
+
+    fun expandNotificationMessage() {
+        while (!notificationHeader.exists()) {
+            notificationTray().scrollForward()
+        }
+        notificationHeader.click()
     }
 
     class Transition {
@@ -93,4 +97,15 @@ private fun mediaSystemNotificationButton(action: String) =
         UiSelector()
             .resourceId("android:id/action0")
             .descriptionContains(action)
+    )
+
+private fun notificationTray() = UiScrollable(
+    UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
+)
+
+private val notificationHeader =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("android:id/app_name_text")
+            .text(appName)
     )

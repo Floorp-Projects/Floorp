@@ -32,12 +32,10 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestAssetHelper.downloadFileName
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
-import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.returnToBrowser
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
@@ -46,7 +44,6 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
 import org.mozilla.fenix.ui.robots.collectionRobot
 import org.mozilla.fenix.ui.robots.customTabScreen
-import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -132,8 +129,6 @@ class SmokeTest {
         if (recentlyClosedTabsListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
         }
-
-        deleteDownloadFromStorage(downloadFileName)
 
         if (bookmarksListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
@@ -735,40 +730,6 @@ class SmokeTest {
     }
 
     @Test
-    /* Verifies downloads in the Downloads Menu:
-      - downloads appear in the list
-      - deleting a download from device storage, removes it from the Downloads Menu too
-    */
-    fun manageDownloadsInDownloadsMenuTest() {
-        val downloadWebPage = TestAssetHelper.getDownloadAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadWebPage.url) {
-            mDevice.waitForIdle()
-        }
-
-        downloadRobot {
-            verifyDownloadPrompt()
-        }.clickDownload {
-            mDevice.waitForIdle()
-            verifyDownloadNotificationPopup()
-        }
-
-        browserScreen {
-        }.openThreeDotMenu {
-        }.openDownloadsManager {
-            waitForDownloadsListToExist()
-            verifyDownloadedFileName(downloadFileName)
-            verifyDownloadedFileIcon()
-            deleteDownloadFromStorage(downloadFileName)
-        }.exitDownloadsManagerToBrowser {
-        }.openThreeDotMenu {
-        }.openDownloadsManager {
-            verifyEmptyDownloadsList()
-        }
-    }
-
-    @Test
     fun createFirstCollectionTest() {
         // disabling these features to have better visibility of Collections
         featureSettingsHelper.setRecentTabsFeatureEnabled(false)
@@ -1243,7 +1204,7 @@ class SmokeTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists(audioTestPage.title)
-            clickMediaSystemNotificationControlButton("Pause")
+            clickSystemNotificationControlButton("Pause")
             verifyMediaSystemNotificationButtonState("Play")
         }
 
