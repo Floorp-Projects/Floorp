@@ -55,6 +55,10 @@ Maybe<uint32_t> WordBreakIteratorUtf16::Next() {
   return Some(mPos);
 }
 
+GraphemeClusterBreakIteratorUtf16::GraphemeClusterBreakIteratorUtf16(
+    Span<const char16_t> aText)
+    : SegmentIteratorUtf16(aText) {}
+
 enum HSType {
   HST_NONE = U_HST_NOT_APPLICABLE,
   HST_L = U_HST_LEADING_JAMO,
@@ -69,22 +73,23 @@ static HSType GetHangulSyllableType(uint32_t aCh) {
       aCh, UnicodeProperties::IntProperty::HangulSyllableType));
 }
 
-void GraphemeClusterBreakIteratorUtf16::Next() {
-  if (AtEnd()) {
-    NS_WARNING("ClusterIterator has already reached the end");
-    return;
+Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Next() {
+  const auto len = mText.Length();
+  if (mPos >= len) {
+    // The iterator has already reached the end.
+    return Nothing();
   }
 
-  uint32_t ch = *mPos++;
+  uint32_t ch = mText[mPos++];
 
-  if (mPos < mLimit && NS_IS_SURROGATE_PAIR(ch, *mPos)) {
-    ch = SURROGATE_TO_UCS4(ch, *mPos++);
+  if (mPos < len && NS_IS_SURROGATE_PAIR(ch, mText[mPos])) {
+    ch = SURROGATE_TO_UCS4(ch, mText[mPos++]);
   } else if ((ch & ~0xff) == 0x1100 || (ch >= 0xa960 && ch <= 0xa97f) ||
              (ch >= 0xac00 && ch <= 0xd7ff)) {
     // Handle conjoining Jamo that make Hangul syllables
     HSType hangulState = GetHangulSyllableType(ch);
-    while (mPos < mLimit) {
-      ch = *mPos;
+    while (mPos < len) {
+      ch = mText[mPos];
       HSType hangulType = GetHangulSyllableType(ch);
       switch (hangulType) {
         case HST_L:
@@ -127,21 +132,21 @@ void GraphemeClusterBreakIteratorUtf16::Next() {
 
   bool baseIsEmoji = (GetEmojiPresentation(ch) == EmojiDefault) ||
                      (GetEmojiPresentation(ch) == TextDefault &&
-                      ((mPos < mLimit && *mPos == kVS16) ||
-                       (mPos + 1 < mLimit && *mPos == kFitzpatrickHigh &&
-                        *(mPos + 1) >= kFitzpatrickLowFirst &&
-                        *(mPos + 1) <= kFitzpatrickLowLast)));
+                      ((mPos < len && mText[mPos] == kVS16) ||
+                       (mPos + 1 < len && mText[mPos] == kFitzpatrickHigh &&
+                        mText[mPos + 1] >= kFitzpatrickLowFirst &&
+                        mText[mPos + 1] <= kFitzpatrickLowLast)));
   bool prevWasZwj = false;
 
-  while (mPos < mLimit) {
-    ch = *mPos;
+  while (mPos < len) {
+    ch = mText[mPos];
     size_t chLen = 1;
 
     // Check for surrogate pairs; note that isolated surrogates will just
     // be treated as generic (non-cluster-extending) characters here,
     // which is fine for cluster-iterating purposes
-    if (mPos < mLimit - 1 && NS_IS_SURROGATE_PAIR(ch, *(mPos + 1))) {
-      ch = SURROGATE_TO_UCS4(ch, *(mPos + 1));
+    if (mPos < len - 1 && NS_IS_SURROGATE_PAIR(ch, mText[mPos + 1])) {
+      ch = SURROGATE_TO_UCS4(ch, mText[mPos + 1]);
       chLen = 2;
     }
 
@@ -149,8 +154,8 @@ void GraphemeClusterBreakIteratorUtf16::Next() {
         IsClusterExtender(ch) ||
         (baseIsEmoji && prevWasZwj &&
          ((GetEmojiPresentation(ch) == EmojiDefault) ||
-          (GetEmojiPresentation(ch) == TextDefault && mPos + chLen < mLimit &&
-           *(mPos + chLen) == kVS16)));
+          (GetEmojiPresentation(ch) == TextDefault && mPos + chLen < len &&
+           mText[mPos + chLen] == kVS16)));
     if (!extendCluster) {
       break;
     }
@@ -159,39 +164,49 @@ void GraphemeClusterBreakIteratorUtf16::Next() {
     mPos += chLen;
   }
 
-  NS_ASSERTION(mText < mPos && mPos <= mLimit,
-               "ClusterIterator::Next has overshot the string!");
+  MOZ_ASSERT(mPos <= len, "Next() has overshot the string!");
+  return Some(mPos);
 }
 
-void GraphemeClusterBreakReverseIteratorUtf16::Next() {
-  if (AtEnd()) {
-    NS_WARNING("ClusterReverseIterator has already reached the end");
-    return;
+GraphemeClusterBreakReverseIteratorUtf16::
+    GraphemeClusterBreakReverseIteratorUtf16(Span<const char16_t> aText)
+    : SegmentIteratorUtf16(aText) {
+  mPos = mText.Length();
+}
+
+Maybe<uint32_t> GraphemeClusterBreakReverseIteratorUtf16::Next() {
+  if (mPos == 0) {
+    return Nothing();
   }
 
   uint32_t ch;
   do {
-    ch = *--mPos;
+    ch = mText[--mPos];
 
-    if (mPos > mLimit && NS_IS_SURROGATE_PAIR(*(mPos - 1), ch)) {
-      ch = SURROGATE_TO_UCS4(*--mPos, ch);
+    if (mPos > 0 && NS_IS_SURROGATE_PAIR(mText[mPos - 1], ch)) {
+      ch = SURROGATE_TO_UCS4(mText[--mPos], ch);
     }
 
     if (!IsClusterExtender(ch)) {
       break;
     }
-  } while (mPos > mLimit);
+  } while (mPos > 0);
 
   // XXX May need to handle conjoining Jamo
 
-  NS_ASSERTION(mPos >= mLimit,
-               "ClusterReverseIterator::Next has overshot the string!");
+  return Some(mPos);
+}
+
+Maybe<uint32_t> GraphemeClusterBreakReverseIteratorUtf16::Seek(uint32_t aPos) {
+  if (mPos > aPos) {
+    mPos = aPos;
+  }
+  return Next();
 }
 
 Result<UniquePtr<Segmenter>, ICUError> Segmenter::TryCreate(
     Span<const char> aLocale, const SegmenterOptions& aOptions) {
-  if (aOptions.mGranularity == SegmenterGranularity::Grapheme ||
-      aOptions.mGranularity == SegmenterGranularity::Sentence) {
+  if (aOptions.mGranularity == SegmenterGranularity::Sentence) {
     // Grapheme and Sentence iterator are not yet implemented.
     return Err(ICUError::InternalError);
   }
@@ -202,6 +217,7 @@ UniquePtr<SegmentIteratorUtf16> Segmenter::Segment(
     Span<const char16_t> aText) const {
   switch (mOptions.mGranularity) {
     case SegmenterGranularity::Grapheme:
+      return MakeUnique<GraphemeClusterBreakIteratorUtf16>(aText);
     case SegmenterGranularity::Sentence:
       MOZ_ASSERT_UNREACHABLE("Unimplemented yet!");
       return nullptr;
