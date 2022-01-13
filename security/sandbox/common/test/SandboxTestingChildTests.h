@@ -6,6 +6,7 @@
 
 #include "SandboxTestingChild.h"
 
+#include "mozilla/StaticPrefs_security.h"
 #include "nsXULAppAPI.h"
 
 #ifdef XP_UNIX
@@ -107,14 +108,22 @@ void RunTestsContent(SandboxTestingChild* child) {
   });
 
   // An abstract socket that does starts with /, so we do want it to work.
-  // Checking ECONNREFUSED because this is what the broker should get when
-  // trying to establish the connect call for us.
-  child->ErrnoValueTest("connect_abstract_permit"_ns, ECONNREFUSED, [&] {
+  // Checking ECONNREFUSED because this is what the broker should get
+  // when trying to establish the connect call for us if it's allowed;
+  // otherwise we get EACCES, meaning that it was passed to the broker
+  // (unlike the previous test) but rejected.
+  const int errorForX =
+      StaticPrefs::security_sandbox_content_headless_AtStartup() ? EACCES
+                                                                 : ECONNREFUSED;
+  child->ErrnoValueTest("connect_abstract_permit"_ns, errorForX, [&] {
     int sockfd;
     struct sockaddr_un addr;
     // we re-use actual X path, because this is what is allowed within
     // SandboxBrokerPolicyFactory::InitContentPolicy()
     // We can't just use any random path allowed, but one with CONNECT allowed.
+
+    // (Note that the real X11 sockets have names like `X0` for
+    // display `:0`; there shouldn't be anything named just `X`.)
 
     // Abstract socket requires first byte to be NULL
     char str[] = "\0/tmp/.X11-unix/X";
