@@ -528,20 +528,6 @@ pref("browser.urlbar.autocomplete.enabled", true);
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
 
-// initial web feed readers list
-pref("browser.contentHandlers.types.0.title", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.0.uri", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.0.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.1.title", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.1.uri", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.1.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.2.title", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.2.uri", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.2.type", "application/vnd.mozilla.maybe.feed");
-pref("browser.contentHandlers.types.3.title", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.3.uri", "chrome://browser/locale/region.properties");
-pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
-
 // Shortnumber matching needed for e.g. Brazil:
 // 01187654321 can be found with 87654321
 pref("dom.phonenumber.substringmatching.BR", 8);

@@ -22,8 +22,6 @@ function run_test() {
     Ci.nsIEnvironment
   );
 
-  const rootPrefBranch = prefSvc.getBranch("");
-
   let noMailto = false;
   if (mozinfo.os == "win") {
     // Check mailto handler from registry.
@@ -119,18 +117,6 @@ function run_test() {
   Assert.equal(handlerInfo.hasDefaultHandler, false);
   Assert.equal(handlerInfo.defaultDescription, "");
 
-  // test some default protocol info properties
-  var haveDefaultHandlersVersion = false;
-  try {
-    // If we have a defaultHandlersVersion pref, then assume that we're in the
-    // firefox tree and that we'll also have default handlers.
-    // Bug 395131 has been filed to make this test work more generically
-    // by providing our own prefs for this test rather than this icky
-    // special casing.
-    rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
-    haveDefaultHandlersVersion = true;
-  } catch (ex) {}
-
   const kExternalWarningDefault =
     "network.protocol-handler.warn-external-default";
   prefSvc.setBoolPref(kExternalWarningDefault, true);
@@ -169,11 +155,7 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: false
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  if (haveDefaultHandlersVersion) {
-    Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
-  } else {
-    Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
-  }
+  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
 
   // Win7+ or Linux's GIO might not have a default mailto: handler
   if (noMailto) {
@@ -185,32 +167,25 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: true
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  if (haveDefaultHandlersVersion) {
-    Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
-    // Win7+ or Linux's GIO may have no default mailto: handler, so we'd ask
-    // anyway. Otherwise, the default handlers will not have stored preferred
-    // actions etc., so re-requesting them after the warning pref has changed
-    // will use the updated pref value. So both when we have and do not have
-    // a default mailto: handler, we'll ask:
-    Assert.ok(protoInfo.alwaysAskBeforeHandling);
-    // As soon as anyone actually stores updated defaults into the profile
-    // database, that default will stop tracking the warning pref.
-  } else {
-    Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
-    Assert.ok(protoInfo.alwaysAskBeforeHandling);
-  }
+  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+  // Win7+ or Linux's GIO may have no default mailto: handler, so we'd ask
+  // anyway. Otherwise, the default handlers will not have stored preferred
+  // actions etc., so re-requesting them after the warning pref has changed
+  // will use the updated pref value. So both when we have and do not have
+  // a default mailto: handler, we'll ask:
+  Assert.ok(protoInfo.alwaysAskBeforeHandling);
+  // As soon as anyone actually stores updated defaults into the profile
+  // database, that default will stop tracking the warning pref.
 
-  if (haveDefaultHandlersVersion) {
-    // Now set the value stored in RDF to true, and the pref to false, to make
-    // sure we still get the right value. (Basically, same thing as above but
-    // with the values reversed.)
-    prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
-    protoInfo.alwaysAskBeforeHandling = true;
-    handlerSvc.store(protoInfo);
-    protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-    Assert.equal(2, protoInfo.possibleApplicationHandlers.length);
-    Assert.ok(protoInfo.alwaysAskBeforeHandling);
-  }
+  // Now set the value stored in RDF to true, and the pref to false, to make
+  // sure we still get the right value. (Basically, same thing as above but
+  // with the values reversed.)
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
+  protoInfo.alwaysAskBeforeHandling = true;
+  handlerSvc.store(protoInfo);
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+  Assert.ok(protoInfo.alwaysAskBeforeHandling);
 
   //* *************************************************************************//
   // Test Round-Trip Data Integrity
@@ -244,11 +219,7 @@ function run_test() {
   var handlerInfo2 = mimeSvc.getFromTypeAndExtension("nonexistent/type2", null);
   handlerSvc.store(handlerInfo2);
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
-  if (haveDefaultHandlersVersion) {
-    handlerTypes.push("mailto");
-    handlerTypes.push("irc");
-    handlerTypes.push("ircs");
-  }
+  handlerTypes.push("mailto");
   for (let handler of handlerSvc.enumerate()) {
     Assert.notEqual(handlerTypes.indexOf(handler.type), -1);
     handlerTypes.splice(handlerTypes.indexOf(handler.type), 1);
