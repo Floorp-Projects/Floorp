@@ -28,7 +28,7 @@ android-geckoview-docs/opt:
             GECKOVIEW_DOCS_UPLOAD_SECRET: "project/releng/gecko/build/level-{level}/geckoview-docs-upload"
         artifacts:
             - name: public/android/geckoview-docs/geckoview-javadoc.jar
-              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/docs/javadoc/withGeckoBinaries-debug/geckoview-javadoc.jar
+              path: /builds/worker/workspace/obj-build/mobile/android/geckoview/docs/javadoc/withGeckoBinaries-debug/geckoview-javadoc.jar
               type: file
         max-run-time: 7200
     run:
