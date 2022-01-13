@@ -323,8 +323,15 @@ nsresult nsCertOverrideService::Read(const MutexAutoLock& aProofOfLock) {
 
     Tokenizer parser(buffer);
     nsDependentCSubstring host;
-    if (!parser.ReadUntil(Tokenizer::Token::Char(':'), host) ||
-        host.Length() == 0) {
+    if (parser.CheckChar('[')) {  // this is a IPv6 address
+      parser.Record(Tokenizer::INCLUDE_LAST);
+      if (!parser.ReadUntil(Tokenizer::Token::Char(']'), host) ||
+          host.Length() == 0 || !parser.CheckChar(':')) {
+        continue;
+      }
+      parser.Claim(host);
+    } else if (!parser.ReadUntil(Tokenizer::Token::Char(':'), host) ||
+               host.Length() == 0) {
       continue;
     }
     int32_t port = -1;

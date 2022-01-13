@@ -48,6 +48,10 @@ function run_test() {
       cert2.sha256Fingerprint +
       "\tU\t" +
       cert2.dbKey,
+    "[::1]:443:\tOID.2.16.840.1.101.3.4.2.1\t" + // IPv6
+      cert2.sha256Fingerprint +
+      "\tM\t" +
+      cert2.dbKey,
     "old.example.com:443\tOID.2.16.840.1.101.3.4.2.1\t" + // missing attributes (defaulted)
       cert1.sha256Fingerprint +
       "\tM\t" +
@@ -127,6 +131,13 @@ function run_test() {
       port: 443,
       cert: cert2,
       bits: Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+      attributes: {},
+    },
+    {
+      host: "[::1]",
+      port: 443,
+      cert: cert2,
+      bits: Ci.nsICertOverrideService.ERROR_MISMATCH,
       attributes: {},
     },
     {
