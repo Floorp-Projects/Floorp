@@ -24,6 +24,7 @@ using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
+using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
 
 const double growthRate = 1.2;
 
@@ -1001,7 +1002,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
       int32_t newLength = aInString.Length();
       if (i > 0)  // skip the first element?
       {
-        mozilla::unicode::ClusterReverseIterator ri(rawInputString, i);
+        GraphemeClusterBreakReverseIteratorUtf16 ri(rawInputString, i);
         ri.Next();
         newOffset = ri;
         newLength = aInString.Length() - (ri - rawInputString);

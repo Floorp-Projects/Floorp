@@ -163,6 +163,31 @@ void GraphemeClusterBreakIteratorUtf16::Next() {
                "ClusterIterator::Next has overshot the string!");
 }
 
+void GraphemeClusterBreakReverseIteratorUtf16::Next() {
+  if (AtEnd()) {
+    NS_WARNING("ClusterReverseIterator has already reached the end");
+    return;
+  }
+
+  uint32_t ch;
+  do {
+    ch = *--mPos;
+
+    if (mPos > mLimit && NS_IS_SURROGATE_PAIR(*(mPos - 1), ch)) {
+      ch = SURROGATE_TO_UCS4(*--mPos, ch);
+    }
+
+    if (!IsClusterExtender(ch)) {
+      break;
+    }
+  } while (mPos > mLimit);
+
+  // XXX May need to handle conjoining Jamo
+
+  NS_ASSERTION(mPos >= mLimit,
+               "ClusterReverseIterator::Next has overshot the string!");
+}
+
 Result<UniquePtr<Segmenter>, ICUError> Segmenter::TryCreate(
     Span<const char> aLocale, const SegmenterOptions& aOptions) {
   if (aOptions.mGranularity == SegmenterGranularity::Grapheme ||

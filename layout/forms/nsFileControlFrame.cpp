@@ -21,6 +21,7 @@
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -30,8 +31,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsIFile.h"
-#include "nsUnicodeProperties.h"
-#include "mozilla/EventStates.h"
+#include "nsLayoutUtils.h"
 #include "nsTextNode.h"
 #include "nsTextFrame.h"
 
@@ -88,10 +88,10 @@ bool nsFileControlFrame::CropTextToWidth(gfxContext& aRenderingContext,
 
   // determine how much of the string will fit in the max width
   nscoord totalWidth = textWidth;
-  using mozilla::unicode::ClusterReverseIterator;
   intl::GraphemeClusterBreakIteratorUtf16 leftIter(aText.Data(),
                                                    aText.Length());
-  ClusterReverseIterator rightIter(aText.Data(), aText.Length());
+  intl::GraphemeClusterBreakReverseIteratorUtf16 rightIter(aText.Data(),
+                                                           aText.Length());
   const char16_t* leftPos = leftIter;
   const char16_t* rightPos = rightIter;
   const char16_t* pos;
