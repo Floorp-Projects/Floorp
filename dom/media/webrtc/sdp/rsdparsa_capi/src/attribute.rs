@@ -296,7 +296,7 @@ pub enum RustSdpSsrcGroupSemantic {
     Duplication,
     FlowIdentification,
     ForwardErrorCorrection,
-    ForwardErrorCorrectionFR,
+    ForwardErrorCorrectionFr,
     SIM,
 }
 
@@ -310,8 +310,8 @@ impl<'a> From<&'a SdpSsrcGroupSemantic> for RustSdpSsrcGroupSemantic {
             SdpSsrcGroupSemantic::ForwardErrorCorrection => {
                 RustSdpSsrcGroupSemantic::ForwardErrorCorrection
             }
-            SdpSsrcGroupSemantic::ForwardErrorCorrectionFR => {
-                RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFR
+            SdpSsrcGroupSemantic::ForwardErrorCorrectionFr => {
+                RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFr
             }
             SdpSsrcGroupSemantic::SIM => RustSdpSsrcGroupSemantic::SIM,
         }
