@@ -5,9 +5,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ClickHandlerParent"];
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var EXPORTED_SYMBOLS = ["ClickHandlerParent", "MiddleMousePasteHandlerParent"];
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -26,6 +24,22 @@ ChromeUtils.defineModuleGetter(
 );
 
 let gContentClickListeners = new Set();
+
+class MiddleMousePasteHandlerParent extends JSWindowActorParent {
+  receiveMessage(message) {
+    if (message.name == "MiddleClickPaste") {
+      // This is heavily based on contentAreaClick from browser.js (Bug 903016)
+      // The data is set up in a way to look like an Event.
+      let browser = this.manager.browsingContext.top.embedderElement;
+      if (!browser) {
+        // Can be null if the tab disappeared by the time we got the message.
+        // Just bail.
+        return;
+      }
+      browser.ownerGlobal.middleMousePaste(message.data);
+    }
+  }
+}
 
 class ClickHandlerParent extends JSWindowActorParent {
   static addContentClickListener(listener) {
@@ -61,17 +75,6 @@ class ClickHandlerParent extends JSWindowActorParent {
       return;
     }
     let window = browser.ownerGlobal;
-
-    if (!data.href) {
-      // Might be middle mouse navigation.
-      if (
-        Services.prefs.getBoolPref("middlemouse.contentLoadURL") &&
-        !Services.prefs.getBoolPref("general.autoScroll")
-      ) {
-        window.middleMousePaste(data);
-      }
-      return;
-    }
 
     // If the browser is not in a place where we can open links, bail out.
     // This can happen in osx sheets, dialogs, etc. that are not browser
