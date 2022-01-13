@@ -51,7 +51,7 @@ static void RunTestsSched(SandboxTestingChild* child) {
   });
 
   struct sched_param param_pid_Ntid = {};
-  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, false, EPERM, [&] {
+  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, EPERM, [&] {
     return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
   });
 }
@@ -86,7 +86,7 @@ void RunTestsContent(SandboxTestingChild* child) {
   // work.
   // Checking ENETUNREACH should be thrown by SandboxBrokerClient::Connect()
   // when it detects it does not starts with a '/'
-  child->ErrnoValueTest("connect_abstract_blocked"_ns, false, ENETUNREACH, [&] {
+  child->ErrnoValueTest("connect_abstract_blocked"_ns, ENETUNREACH, [&] {
     int sockfd;
     struct sockaddr_un addr;
     char str[] = "\0xyz";  // Abstract socket requires first byte to be NULL
@@ -109,7 +109,7 @@ void RunTestsContent(SandboxTestingChild* child) {
   // An abstract socket that does starts with /, so we do want it to work.
   // Checking ECONNREFUSED because this is what the broker should get when
   // trying to establish the connect call for us.
-  child->ErrnoValueTest("connect_abstract_permit"_ns, false, ECONNREFUSED, [&] {
+  child->ErrnoValueTest("connect_abstract_permit"_ns, ECONNREFUSED, [&] {
     int sockfd;
     struct sockaddr_un addr;
     // we re-use actual X path, because this is what is allowed within
@@ -162,7 +162,7 @@ void RunTestsContent(SandboxTestingChild* child) {
   CFDictionaryRef windowServerDict = CGSessionCopyCurrentDictionary();
   bool gotWindowServerDetails = (windowServerDict != nullptr);
   child->SendReportTestResults(
-      "CGSessionCopyCurrentDictionary"_ns, false, gotWindowServerDetails,
+      "CGSessionCopyCurrentDictionary"_ns, !gotWindowServerDetails,
       gotWindowServerDetails ? "Failed: dictionary unexpectedly returned"_ns
                              : "Succeeded: no dictionary returned"_ns);
   if (windowServerDict != nullptr) {
@@ -231,7 +231,7 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
 #ifdef XP_UNIX
 #  ifdef XP_LINUX
-  child->ErrnoValueTest("ioctl_tiocsti"_ns, false, ENOSYS, [&] {
+  child->ErrnoValueTest("ioctl_tiocsti"_ns, ENOSYS, [&] {
     int rv = ioctl(1, TIOCSTI, "x");
     return rv;
   });
@@ -242,12 +242,12 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return rv;
   });
 
-  child->ErrnoValueTest("unlink"_ns, false, ENOENT, [&] {
+  child->ErrnoValueTest("unlink"_ns, ENOENT, [&] {
     int rv = unlink("");
     return rv;
   });
 
-  child->ErrnoValueTest("unlinkat"_ns, false, ENOENT, [&] {
+  child->ErrnoValueTest("unlinkat"_ns, ENOENT, [&] {
     int rv = unlinkat(AT_FDCWD, "", 0);
     return rv;
   });
@@ -262,7 +262,7 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return uname(&uts);
   });
 
-  child->ErrnoValueTest("ioctl_dma_buf"_ns, false, ENOTTY, [] {
+  child->ErrnoValueTest("ioctl_dma_buf"_ns, ENOTTY, [] {
     // Apply the ioctl to the wrong kind of fd; it should fail with
     // ENOTTY (rather than ENOSYS if it were blocked).
     return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
@@ -326,7 +326,7 @@ void RunTestsUtility(SandboxTestingChild* child) {
 
 #ifdef XP_UNIX
 #  ifdef XP_LINUX
-  child->ErrnoValueTest("ioctl_tiocsti"_ns, false, ENOSYS, [&] {
+  child->ErrnoValueTest("ioctl_tiocsti"_ns, ENOSYS, [&] {
     int rv = ioctl(1, TIOCSTI, "x");
     return rv;
   });
@@ -339,14 +339,13 @@ void RunTestsUtility(SandboxTestingChild* child) {
 #  endif  // XP_LINUX
 #else     // XP_UNIX
 #  ifdef XP_WIN
-  child->ErrnoValueTest("write_only"_ns, true, EPERM, [&] {
+  child->ErrnoValueTest("write_only"_ns, EACCES, [&] {
     FILE* rv = fopen("test_sandbox.txt", "w");
-    int errno_copy = errno;
     if (rv != nullptr) {
       fclose(rv);
-      MOZ_ASSERT(!rv, "SHould have had a nullptr");
+      return 0;
     }
-    return errno_copy;
+    return -1;
   });
 #  else   // XP_WIN
   child->ReportNoTests();
