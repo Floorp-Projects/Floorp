@@ -23,6 +23,7 @@ const TEST_ADDON_INFO = [
     name: "Test Add-on",
     sourceURI: { scheme: "https", spec: "https://test.xpi" },
     icons: { 32: "test.png", 64: "test.png" },
+    type: "extension",
   },
 ];
 
@@ -133,9 +134,8 @@ add_task(async function test_rtamo_attribution() {
     // Expected selectors:
     [
       "div.onboardingContainer",
-      "div.brand-logo",
       "h2[data-l10n-id='return-to-amo-addon-title']",
-      "img[data-l10n-name='icon']",
+      "div.rtamo-icon",
       "button.primary",
       "button.secondary",
     ],

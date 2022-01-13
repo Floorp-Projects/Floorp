@@ -32,7 +32,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         order: 0,
         content: {
           title: "test title",
-          subtitle: "test subtitle",
+          hero_text: "test subtitle",
         },
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);

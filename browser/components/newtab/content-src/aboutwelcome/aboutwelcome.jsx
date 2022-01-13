@@ -63,9 +63,11 @@ class AboutWelcome extends React.PureComponent {
       return (
         <ReturnToAMO
           message_id={props.messageId}
+          type={props.type}
           name={props.name}
           url={props.url}
           iconURL={props.iconURL}
+          metricsFlowUri={this.state.metricsFlowUri}
         />
       );
     }
