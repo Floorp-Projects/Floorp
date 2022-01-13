@@ -96,8 +96,7 @@ class TabDiffUtilTest {
 
         assertEquals(
             CheckChanged(
-                shouldBeChecked = false,
-                shouldBeUnchecked = false,
+                shouldBeChecked = true,
                 shouldHideCheckBox = false
             ),
             payload
@@ -119,7 +118,6 @@ class TabDiffUtilTest {
         assertEquals(
             CheckChanged(
                 shouldBeChecked = true,
-                shouldBeUnchecked = false,
                 shouldHideCheckBox = false
             ),
             payload
@@ -141,7 +139,6 @@ class TabDiffUtilTest {
         assertEquals(
             CheckChanged(
                 shouldBeChecked = false,
-                shouldBeUnchecked = true,
                 shouldHideCheckBox = true
             ),
             payload
