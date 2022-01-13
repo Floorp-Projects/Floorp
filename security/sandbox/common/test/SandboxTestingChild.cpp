@@ -122,8 +122,7 @@ bool SandboxTestingChild::RecvShutDown() {
 }
 
 void SandboxTestingChild::ReportNoTests() {
-  SendReportTestResults("dummy_test"_ns, /* shouldSucceed */ true,
-                        /* didSucceed */ true,
+  SendReportTestResults("dummy_test"_ns, /* passed */ true,
                         "The test framework fails if there are no cases."_ns);
 }
 
@@ -136,24 +135,48 @@ void SandboxTestingChild::ErrnoTest(const nsCString& aName, bool aExpectSuccess,
 
 template <typename F>
 void SandboxTestingChild::ErrnoValueTest(const nsCString& aName,
-                                         bool aExpectEquals, int aExpectedErrno,
-                                         F&& aFunction) {
+                                         int aExpectedErrno, F&& aFunction) {
   int status = aFunction() >= 0 ? 0 : errno;
-  PosixTest(aName, aExpectEquals, status == aExpectedErrno);
+  PosixTest(aName, aExpectedErrno == 0, status, Some(aExpectedErrno));
 }
 
 void SandboxTestingChild::PosixTest(const nsCString& aName, bool aExpectSuccess,
-                                    int aStatus) {
-  bool succeeded = aStatus == 0;
+                                    int aStatus, Maybe<int> aExpectedError) {
   nsAutoCString message;
-  if (succeeded) {
+  bool passed;
+
+  // The "expected" arguments are a little redundant.
+  MOZ_ASSERT(!aExpectedError || aExpectSuccess == (*aExpectedError == 0));
+
+  // Decide whether the test passed, and stringify the actual result.
+  if (aStatus == 0) {
     message = "Succeeded"_ns;
+    passed = aExpectSuccess;
   } else {
     message = "Error: "_ns;
     message += strerror(aStatus);
+    if (aExpectedError) {
+      passed = aStatus == *aExpectedError;
+    } else {
+      passed = !aExpectSuccess;
+    }
   }
 
-  SendReportTestResults(aName, aExpectSuccess, succeeded, message);
+  // If something unexpected happened, mention the expected result.
+  if (!passed) {
+    message += "; expected ";
+    if (aExpectSuccess) {
+      message += "success";
+    } else {
+      message += "error";
+      if (aExpectedError) {
+        message += ": ";
+        message += strerror(*aExpectedError);
+      }
+    }
+  }
+
+  SendReportTestResults(aName, passed, message);
 }
 
 }  // namespace mozilla
