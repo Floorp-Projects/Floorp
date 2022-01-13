@@ -36,7 +36,6 @@
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsUnicodeProperties.h"
 #include "TextDrawTarget.h"
 
 #ifdef ACCESSIBILITY
@@ -616,7 +615,7 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
   }
 
   using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
-  using mozilla::unicode::ClusterReverseIterator;
+  using mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16;
 
   // ok crop things
   switch (mCropType) {
@@ -657,7 +656,8 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
     } break;
 
     case CropLeft: {
-      ClusterReverseIterator iter(mTitle.Data(), mTitle.Length());
+      GraphemeClusterBreakReverseIteratorUtf16 iter(mTitle.Data(),
+                                                    mTitle.Length());
       const char16_t* dataEnd = iter;
       const char16_t* prevPos = dataEnd;
       nscoord charWidth;
@@ -703,7 +703,8 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
       nscoord totalWidth = 0;
       GraphemeClusterBreakIteratorUtf16 leftIter(mTitle.Data(),
                                                  mTitle.Length());
-      ClusterReverseIterator rightIter(mTitle.Data(), mTitle.Length());
+      GraphemeClusterBreakReverseIteratorUtf16 rightIter(mTitle.Data(),
+                                                         mTitle.Length());
       const char16_t* dataBegin = leftIter;
       const char16_t* dataEnd = rightIter;
       const char16_t* leftPos = dataBegin;
