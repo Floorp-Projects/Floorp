@@ -32,6 +32,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -695,7 +696,7 @@ class GeckoPromptDelegateTest {
         })
         val login = createLogin()
         val saveOption = Autocomplete.LoginSaveOption(login.toLoginEntry())
-        val saveLoginPrompt = spy(geckoLoginSavePrompt(arrayOf(saveOption)))
+        val saveLoginPrompt = geckoLoginSavePrompt(arrayOf(saveOption))
 
         promptDelegate.onLoginSave(mock(), saveLoginPrompt)
 
@@ -1505,10 +1506,15 @@ class GeckoPromptDelegateTest {
         return prompt
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun geckoLoginSavePrompt(
         login: Array<Autocomplete.LoginSaveOption>
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption> {
-        val prompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption> = mock()
+        val prompt = Mockito.mock(
+            GeckoSession.PromptDelegate.AutocompleteRequest::class.java,
+            Mockito.RETURNS_DEEP_STUBS // for testing prompt.delegate
+        ) as GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>
+
         ReflectionUtils.setField(prompt, "options", login)
         return prompt
     }
