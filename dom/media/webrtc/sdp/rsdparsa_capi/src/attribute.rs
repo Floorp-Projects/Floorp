@@ -313,7 +313,7 @@ impl<'a> From<&'a SdpSsrcGroupSemantic> for RustSdpSsrcGroupSemantic {
             SdpSsrcGroupSemantic::ForwardErrorCorrectionFr => {
                 RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFr
             }
-            SdpSsrcGroupSemantic::SIM => RustSdpSsrcGroupSemantic::SIM,
+            SdpSsrcGroupSemantic::Sim => RustSdpSsrcGroupSemantic::SIM,
         }
     }
 }
