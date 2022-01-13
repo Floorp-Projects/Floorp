@@ -41,23 +41,6 @@ linux64-rust-1.57:
             '--target', 'wasm32-wasi',
             '--compiler-builtins-hack',
         ]
-    fetches:
-        toolchain:
-            - linux64-clang
-
-linux64-rust-1.58:
-    treeherder:
-        symbol: TL(rust)
-    run:
-        arguments: [
-            '--channel', '1.58.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-            '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
-        ]
         toolchain-alias: linux64-rust
     fetches:
         toolchain:
@@ -81,19 +64,19 @@ linux64-rust-dev:
         ]
     fetches:
         fetch:
-            - rust-1.59.0-dev
+            - rust-1.58.0-dev
         toolchain:
             - linux64-clang
             - linux64-binutils
 
 
-linux64-rust-cross-1.58:
+linux64-rust-cross-1.57:
     description: "rust repack with macos and windows cross support"
     treeherder:
         symbol: TL(rust-cross)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -110,13 +93,13 @@ linux64-rust-cross-1.58:
         ]
         toolchain-alias: linux64-rust-cross
 
-linux64-rust-static-1.58:
+linux64-rust-static-1.57:
     description: "rust repack with static linking support"
     treeherder:
         symbol: TL(rust-static)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-musl',
@@ -125,13 +108,13 @@ linux64-rust-static-1.58:
         ]
         toolchain-alias: linux64-rust-static
 
-linux64-rust-macos-1.58:
+linux64-rust-macos-1.57:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos-1.58)
+        symbol: TL(rust-macos-1.57)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -139,13 +122,13 @@ linux64-rust-macos-1.58:
         ]
         toolchain-alias: linux64-rust-macos
 
-linux64-rust-android-1.58:
+linux64-rust-android-1.57:
     description: "rust repack with android-cross support"
     treeherder:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -160,13 +143,13 @@ linux64-rust-android-1.58:
         toolchain:
             - linux64-clang
 
-linux64-rust-windows-1.58:
+linux64-rust-windows-1.57:
     description: "rust repack with windows-cross support"
     treeherder:
         symbol: TL(rust-win)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
@@ -174,12 +157,12 @@ linux64-rust-windows-1.58:
         ]
         toolchain-alias: linux64-rust-windows
 
-win64-rust-1.58:
+win64-rust-1.57:
     treeherder:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -187,23 +170,23 @@ win64-rust-1.58:
         ]
         toolchain-alias: win64-rust
 
-macosx64-rust-1.58:
+macosx64-rust-1.57:
     treeherder:
         symbol: TM(rust)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-apple-darwin',
             '--target', 'x86_64-apple-darwin',
         ]
         toolchain-alias: macosx64-rust
 
-mingw32-rust-1.58:
+mingw32-rust-1.57:
     treeherder:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.58.0',
+            '--channel', '1.57.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
