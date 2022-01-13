@@ -242,16 +242,8 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
     return;
   }
 
-  RefPtr<nsNSSCertificate> nssc = nsNSSCertificate::ConstructFromDER(
-      BitwiseCast<char*, uint8_t*>(info.mServerCertBytes.Elements()),
-      info.mServerCertBytes.Length());
-  if (!nssc) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("RebuildCertificateInfoFromSSLTokenCache failed to construct "
-             "server cert"));
-    return;
-  }
-
+  RefPtr<nsNSSCertificate> nssc =
+      new nsNSSCertificate(std::move(info.mServerCertBytes));
   SetServerCert(nssc, info.mEVStatus);
   SetCertificateTransparencyStatus(info.mCertificateTransparencyStatus);
   if (info.mSucceededCertChainBytes) {

@@ -6,9 +6,6 @@
 #ifndef nsNSSCertificate_h
 #define nsNSSCertificate_h
 
-#include <functional>
-#include <vector>
-
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "nsCOMPtr.h"
@@ -28,17 +25,16 @@ class nsNSSCertificate final : public nsIX509Cert,
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
-  explicit nsNSSCertificate(CERTCertificate* cert);
   nsNSSCertificate();
-  static nsNSSCertificate* Create(CERTCertificate* cert = nullptr);
-  static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);
+  explicit nsNSSCertificate(CERTCertificate* cert);
+  explicit nsNSSCertificate(nsTArray<uint8_t>&& der);
 
  private:
   virtual ~nsNSSCertificate() = default;
 
+  nsTArray<uint8_t> mDER;
   mozilla::UniqueCERTCertificate mCert;
   uint32_t mCertType;
-  bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
 };

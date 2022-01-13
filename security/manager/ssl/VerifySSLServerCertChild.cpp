@@ -35,7 +35,7 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
           ("[%p] VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess",
            this));
 
-  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
+  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(mCert.get());
   nsTArray<nsTArray<uint8_t>> certBytesArray;
   for (auto& cert : aBuiltCertChain) {
     certBytesArray.AppendElement(std::move(cert.data()));
@@ -56,7 +56,7 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
            "aCollectedErrors=%u",
            this, aFinalError, aCollectedErrors));
 
-  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
+  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(mCert.get());
   mResultTask->Dispatch(
       nsc, nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,

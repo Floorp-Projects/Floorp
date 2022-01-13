@@ -1107,7 +1107,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
             ("HandshakeCallback: couldn't rebuild verified certificate info"));
   }
 
-  RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
+  RefPtr<nsNSSCertificate> nssc(new nsNSSCertificate(cert.get()));
   if (rv == Success && evStatus == EVStatus::EV) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback using NEW cert %p (is EV)", nssc.get()));

@@ -79,10 +79,7 @@ nsNSSCertificateDB::FindCertByDBKey(const nsACString& aDBKey,
   if (!cert) {
     return NS_OK;
   }
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsCOMPtr<nsIX509Cert> nssCert = new nsNSSCertificate(cert.get());
   nssCert.forget(_cert);
   return NS_OK;
 }
@@ -387,10 +384,7 @@ nsresult nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
 
   for (CERTCertListNode* node = CERT_LIST_HEAD(aCertListIn.get());
        !CERT_LIST_END(node, aCertListIn.get()); node = CERT_LIST_NEXT(node)) {
-    RefPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
-    if (!cert) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    RefPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
     aCertListOut.AppendElement(cert);
   }
   return NS_OK;
@@ -406,7 +400,6 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
   }
 
   nsTArray<nsTArray<uint8_t>> certsArray;
-
   nsresult rv = getCertsFromPackage(certsArray, data, length);
   if (NS_FAILED(rv)) {
     return rv;
@@ -419,11 +412,7 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
 
   // Now let's create some certs to work with
   for (nsTArray<uint8_t>& certDER : certsArray) {
-    nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-        BitwiseCast<char*, uint8_t*>(certDER.Elements()), certDER.Length());
-    if (!cert) {
-      return NS_ERROR_FAILURE;
-    }
+    nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(std::move(certDER));
     nsresult rv = array->AppendElement(cert);
     if (NS_FAILED(rv)) {
       return rv;
@@ -568,7 +557,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
 
   UniquePK11SlotInfo slot(PK11_KeyForCertExists(cert.get(), nullptr, ctx));
   if (!slot) {
-    nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(cert.get());
+    nsCOMPtr<nsIX509Cert> certToShow = new nsNSSCertificate(cert.get());
     DisplayCertificateAlert(ctx, "UserCertIgnoredNoPrivateKey", certToShow);
     return NS_ERROR_FAILURE;
   }
@@ -590,7 +579,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
   slot = nullptr;
 
   {
-    nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(cert.get());
+    nsCOMPtr<nsIX509Cert> certToShow = new nsNSSCertificate(cert.get());
     DisplayCertificateAlert(ctx, "UserCertImported", certToShow);
   }
 
@@ -890,10 +879,7 @@ nsresult nsNSSCertificateDB::ConstructX509FromSpan(
     return (PORT_GetError() == SEC_ERROR_NO_MEMORY) ? NS_ERROR_OUT_OF_MEMORY
                                                     : NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsCOMPtr<nsIX509Cert> nssCert = new nsNSSCertificate(cert.get());
   nssCert.forget(_retval);
   return NS_OK;
 }
@@ -1295,13 +1281,8 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
   }
 
   if (result == mozilla::pkix::Success) {
-    for (const auto& certDER : resultChain) {
-      RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-          const_cast<char*>(reinterpret_cast<const char*>(certDER.Elements())),
-          static_cast<int>(certDER.Length()));
-      if (!cert) {
-        return NS_ERROR_FAILURE;
-      }
+    for (auto& certDER : resultChain) {
+      RefPtr<nsIX509Cert> cert = new nsNSSCertificate(std::move(certDER));
       aVerifiedChain.AppendElement(cert);
     }
 
