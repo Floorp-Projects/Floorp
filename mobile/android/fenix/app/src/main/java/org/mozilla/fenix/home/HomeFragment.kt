@@ -17,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.AccessibilityDelegate
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
@@ -822,26 +821,6 @@ class HomeFragment : Fragment() {
         // triggered to cause an automatic update on warm start (no tab selection occurs). So we
         // update it manually here.
         requireComponents.useCases.sessionUseCases.updateLastAccess()
-
-        if (shouldEnableWallpaper()) {
-            _binding?.sessionControlRecyclerView?.viewTreeObserver?.addOnGlobalLayoutListener(
-                homeLayoutListenerForLogoAnimation
-            )
-        }
-    }
-
-    // To try to find a good time to show the logo animation, we are waiting until all
-    // the sub-recyclerviews (recentBookmarks, collections, recentTabs,recentVisits
-    // and pocketStories) on the home screen have been layout.
-    private val homeLayoutListenerForLogoAnimation = object : ViewTreeObserver.OnGlobalLayoutListener {
-        override fun onGlobalLayout() {
-            _binding?.let { safeBindings ->
-                requireComponents.wallpaperManager.animateLogoIfNeeded(safeBindings.wordmark)
-                safeBindings.sessionControlRecyclerView.viewTreeObserver.removeOnGlobalLayoutListener(
-                    this
-                )
-            }
-        }
     }
 
     override fun onPause() {

@@ -189,7 +189,6 @@
 
     <!-- Wallpaper Settings -->
     <string name="pref_key_current_wallpaper" translatable="false">pref_key_current_wallpaper</string>
-    <string name="pref_key_show_logo_animation" translatable="false">pref_key_show_logo_animation</string>
 
     <string name="pref_key_encryption_key_generated" translatable="false">pref_key_encryption_key_generated</string>
 
