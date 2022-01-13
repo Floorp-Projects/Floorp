@@ -158,34 +158,6 @@ inline bool IsClusterExtender(uint32_t aCh) {
   return IsClusterExtender(aCh, GetGeneralCategory(aCh));
 }
 
-// A simple iterator for a string of char16_t codepoints that advances
-// by Unicode grapheme clusters
-class ClusterIterator {
- public:
-  ClusterIterator(const char16_t* aText, uint32_t aLength)
-      : mPos(aText),
-        mLimit(aText + aLength)
-#ifdef DEBUG
-        ,
-        mText(aText)
-#endif
-  {
-  }
-
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos >= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
-#ifdef DEBUG
-  const char16_t* mText;
-#endif
-};
-
 // Count the number of grapheme clusters in the given string
 uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 

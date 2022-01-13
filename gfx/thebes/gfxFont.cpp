@@ -10,6 +10,7 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGContextPaint.h"
@@ -582,9 +583,9 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
   CompressedGlyph extendCluster = CompressedGlyph::MakeComplex(false, true);
 
   const char16_t* const stringStart = aString;
-  ClusterIterator iter(aString, aLength);
+  intl::GraphemeClusterBreakIteratorUtf16 iter(aString, aLength);
 
-  // the ClusterIterator won't be able to tell us if the string
+  // GraphemeClusterBreakIteratorUtf16 won't be able to tell us if the string
   // _begins_ with a cluster-extender, so we handle that here
   if (aLength) {
     uint32_t ch = *aString;

@@ -13,6 +13,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "nsFontMetrics.h"
@@ -614,7 +615,7 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
     titleWidth = 0;
   }
 
-  using mozilla::unicode::ClusterIterator;
+  using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
   using mozilla::unicode::ClusterReverseIterator;
 
   // ok crop things
@@ -622,7 +623,7 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
     case CropAuto:
     case CropNone:
     case CropRight: {
-      ClusterIterator iter(mTitle.Data(), mTitle.Length());
+      GraphemeClusterBreakIteratorUtf16 iter(mTitle.Data(), mTitle.Length());
       const char16_t* dataBegin = iter;
       const char16_t* pos = dataBegin;
       nscoord charWidth;
@@ -700,7 +701,8 @@ nscoord nsTextBoxFrame::CalculateTitleForWidth(gfxContext& aRenderingContext,
       // determine how much of the string will fit in the max width
       nscoord charWidth = 0;
       nscoord totalWidth = 0;
-      ClusterIterator leftIter(mTitle.Data(), mTitle.Length());
+      GraphemeClusterBreakIteratorUtf16 leftIter(mTitle.Data(),
+                                                 mTitle.Length());
       ClusterReverseIterator rightIter(mTitle.Data(), mTitle.Length());
       const char16_t* dataBegin = leftIter;
       const char16_t* dataEnd = rightIter;
