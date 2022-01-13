@@ -335,4 +335,41 @@ TEST(AudioSegment, MemoizedOutputChannelCount)
   EXPECT_EQ(s.MaxChannelCount(), 1U) << "Memoized value was updated";
 }
 
+TEST(AudioSegment, AppendAndConsumeChunk)
+{
+  AudioChunk c;
+  fillChunk<float, 2>(&c, 10);
+  AudioChunk temp(c);
+  EXPECT_TRUE(c.mBuffer->IsShared());
+
+  AudioSegment s;
+  s.AppendAndConsumeChunk(std::move(temp));
+  EXPECT_FALSE(s.IsEmpty());
+  EXPECT_TRUE(c.mBuffer->IsShared());
+
+  s.Clear();
+  EXPECT_FALSE(c.mBuffer->IsShared());
+}
+
+TEST(AudioSegment, AppendAndConsumeEmptyChunk)
+{
+  AudioChunk c;
+  AudioSegment s;
+  s.AppendAndConsumeChunk(std::move(c));
+  EXPECT_TRUE(s.IsEmpty());
+}
+
+TEST(AudioSegment, AppendAndConsumeNonEmptyZeroDurationChunk)
+{
+  AudioChunk c;
+  fillChunk<float, 2>(&c, 0);
+  AudioChunk temp(c);
+  EXPECT_TRUE(c.mBuffer->IsShared());
+
+  AudioSegment s;
+  s.AppendAndConsumeChunk(std::move(temp));
+  EXPECT_TRUE(s.IsEmpty());
+  EXPECT_FALSE(c.mBuffer->IsShared());
+}
+
 }  // namespace audio_segment
