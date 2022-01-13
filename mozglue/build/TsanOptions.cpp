@@ -172,7 +172,7 @@ extern "C" const char* __tsan_default_suppressions() {
          // No Upstream Bug Filed!
          //
          // Probably benign - sqlite has a few optimizations where it does
-         // racy reads and then does properly synchornized integrity checks
+         // racy reads and then does properly synchronized integrity checks
          // afterwards. Some concern of compiler optimizations messing this
          // up due to "volatile" being too weak for this.
          "race:third_party/sqlite3/*\n"
@@ -184,7 +184,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // fix already up for review.
          "race:StrongRuleNode::ensure_child\n"
          // No Bug - permanent
-         // Upstream Bug: https://github.com/rayon-rs/rayon/issues/812
+         // Upstream Bugs:
+         //
+         //  * https://github.com/rayon-rs/rayon/issues/812
+         //  * https://github.com/crossbeam-rs/crossbeam/issues/589
          //
          // Probably a false-positive from crossbeam's deque not being
          // understood by tsan.
@@ -192,6 +195,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:crossbeam_deque*::push\n"
          "race:crossbeam_deque*::write\n"
          "race:crossbeam_deque*::read\n"
+         "race:crossbeam_deque*::steal\n"
 
 
 
