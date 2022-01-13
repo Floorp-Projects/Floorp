@@ -946,6 +946,89 @@ TODO:
 The Rest
 --------
 
+Nested messages
+~~~~~~~~~~~~~~~
+
+The ``Nested`` message annotations indicate the nesting type of the message.  They attempt to process messages in the nested order of the "conversation thread", as found in e.g. a mailing-list client.  This is an advanced concept that should be considered to be discouraged, legacy functionality.  Essentially, ``Nested`` messages can make other ``sync`` messages break the policy of blocking their thread -- nested messages are allowed to be received while a sync messagee is waiting for a response.  The rules for when a nested message can be handled are somewhat complex but they try to safely allow a ``sync`` message ``M`` to handle and respond to some special (nested) messages that may be needed for the other endpoint to finish processing ``M``.  There is a `comment in MessageChannel`_ with info on how the decision to handle nested messages is made.  For sync nested messages, note that this implies a relay between the endpoints, which could dramatically affect their throughput.
+
+Declaring messages to nest requires an annotation on the actor and one on the message itself.  The nesting annotations were listed in `Defining Actors`_ and `Declaring IPDL Messages`_.  We repeat them here.  The actor annotations specify the maximum priority level of messages in the actor.  It is validated by the IPDL compiler.  The annotations are:
+
+============================== ========================================================================
+``[NestedUpTo=inside_sync]``   Indicates that an actor contains messages of priority [Nested=inside_sync] or lower.
+``[NestedUpTo=inside_cpow]``   Indicates that an actor contains messages of priority [Nested=inside_cpow] or lower.
+============================== ========================================================================
+
+.. note::
+
+    The order of the nesting priorities is: (no nesting priority) < ``inside_sync`` < ``inside_cpow``.
+
+The message annotations are:
+
+============================== ========================================================================
+``[Nested=inside_sync]``       Indicates that the message can be handled while waiting for lower-priority, or in-message-thread, sync responses.
+``[Nested=inside_cpow]``       Indicates that the message can be handled while waiting for lower-priority, or in-message-thread, sync responses.
+                               Cannot be sent by the parent actor.
+============================== ========================================================================
+
+.. note::
+
+    ``[Nested=inside_sync]`` messages must be sync (this is enforced by the IPDL compiler) but ``[Nested=inside_cpow]`` may be async.
+
+Nested messages are obviously only interesting when sent to an actor that is performing a synchronous wait.  Therefore, we will assume we are in such a state.  Say ``actorX`` is waiting for a sync reply from ``actorY`` for message ``m1`` when ``actorY`` sends ``actorX`` a message ``m2``.  We distinguish two cases here: (1) when ``m2`` is sent while processing ``m1`` (so ``m2`` is sent by the ``RecvM1()`` method -- this is what we mean when we say "nested") and (2) when ``m2`` is unrelated to ``m1``.  Case (2) is easy; ``m2`` is only dispatched while ``m1`` waits if ``priority(m2) > priority(m1) > (no priority)`` and the message is being received by the parent, or if ``priority(m2) >= priority(m1) > (no priority)`` and the message is being received by the child.  Case (1) is less straightforward.
+
+To analyze case (1), we again distinguish the two possible ways we can end up in the nested case: (A) ``m1`` is sent by the parent to the child and ``m2`` is sent by the child to the parent, or (B) where the directions are reversed.  The following tables explain what happens in all cases:
+
+.. |strike| raw:: html
+
+   <strike>
+
+.. |endstrike| raw:: html
+
+   </strike>
+
+.. |br| raw:: html
+
+   <br/>
+
+.. table :: Case (A): Child sends message to a parent that is awaiting a sync response
+    :align: center
+
+    ==============================     ========================      ========================================================
+    sync ``m1`` type (from parent)     ``m2`` type (from child)      ``m2`` handled or rejected
+    ==============================     ========================      ========================================================
+    sync (no priority)                 \*                            IPDL compiler error: parent cannot send sync (no priority)
+    sync inside_sync                   async (no priority)           |strike| ``m2`` delayed until after ``m1`` completes |endstrike| |br|
+                                                                     Currently ``m2`` is handled during the sync wait (bug?)
+    sync inside_sync                   sync (no priority)            |strike| ``m2`` send fails: lower priority than ``m1`` |endstrike| |br|
+                                                                     Currently ``m2`` is handled during the sync wait (bug?)
+    sync inside_sync                   sync inside_sync              ``m2`` handled during ``m1`` sync wait: same message thread and same priority
+    sync inside_sync                   async inside_cpow             ``m2`` handled during ``m1`` sync wait: higher priority
+    sync inside_sync                   sync inside_cpow              ``m2`` handled during ``m1`` sync wait: higher priority
+    sync inside_cpow                   \*                            IPDL compiler error: parent cannot use inside_cpow priority
+    ==============================     ========================      ========================================================
+
+.. table :: Case (B): Parent sends message to a child that is awaiting a sync response
+    :align: center
+
+    =============================      =========================      ========================================================
+    sync ``m1`` type (from child)      ``m2`` type (from parent)      ``m2`` handled or rejected
+    =============================      =========================      ========================================================
+    \*                                 async (no priority)            ``m2`` delayed until after ``m1`` completes
+    \*                                 sync (no priority)             IPDL compiler error: parent cannot send sync (no priority)
+    sync (no priority)                 sync inside_sync               ``m2`` send fails: no-priority sync messages cannot handle
+                                                                      incoming messages during wait
+    sync inside_sync                   sync inside_sync               ``m2`` handled during ``m1`` sync wait: same message thread and same priority
+    sync inside_cpow                   sync inside_sync               ``m2`` send fails: lower priority than ``m1``
+    \*                                 async inside_cpow              IPDL compiler error: parent cannot use inside_cpow priority
+    \*                                 sync inside_cpow               IPDL compiler error: parent cannot use inside_cpow priority
+    =============================      =========================      ========================================================
+
+We haven't seen rule #2 from the `comment in MessageChannel`_ in action but, as the comment mentions, it is needed to break deadlocks in cases where both the parent and child are initiating message-threads simultaneously.  It accomplishes this by favoring the parent's sent messages over the child's when deciding which message-thread to pursue first (and blocks the other until the first completes).  Since this distinction is entirely thread-timing based, client code needs only to be aware that IPDL internals will not deadlock because of this type of race, and that this protection is limited to a single actor tree -- the parent/child messages are only well-ordered when under the same top-level actor so simultaneous sync messages across trees are still capable of deadlock.
+
+Clearly, tight control over these types of protocols is required to predict how they will coordinate within themselves and with the rest of the application objects.  Control flow, and hence state, can be very difficult to predict and are just as hard to maintain.  This is one of the key reasons why we have stressed that message priorities should be avoided whenever possible.
+
+.. _comment in MessageChannel: https://searchfox.org/mozilla-central/rev/077501b34cca91763ae04f4633a42fddd919fdbd/ipc/glue/MessageChannel.cpp#54-118
+
 .. _Message Logging:
 
 Message Logging
