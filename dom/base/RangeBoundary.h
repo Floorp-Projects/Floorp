@@ -239,7 +239,10 @@ class RangeBoundaryBase {
     }
 
     if (Ref()) {
-      return Ref()->GetParentNode() == Container();
+      // XXX mRef refers previous sibling of pointing child.  Therefore, it
+      //     seems odd that this becomes invalid due to its removal.  Should we
+      //     change RangeBoundaryBase to refer child at offset directly?
+      return Ref()->GetParentNode() == Container() && !Ref()->IsBeingRemoved();
     }
 
     MOZ_ASSERT(mOffset.isSome());

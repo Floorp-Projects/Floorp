@@ -764,7 +764,8 @@ class EditorDOMPointBase final {
       return false;
     }
 
-    if (mChild && mChild->GetParentNode() != mParent) {
+    if (mChild &&
+        (mChild->GetParentNode() != mParent || mChild->IsBeingRemoved())) {
       return false;
     }
     if (mOffset.isSome() && mOffset.value() > mParent->Length()) {

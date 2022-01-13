@@ -1587,6 +1587,17 @@ class nsINode : public mozilla::dom::EventTarget {
   nsIContent* GetPreviousSibling() const;
 
   /**
+   * Return true if the node is being removed from the parent, it means that
+   * the node still knows the container which it's disconnected from, but the
+   * node has already been removed from the child node chain of the container.
+   * I.e., Return true between a call of DisconnectChild of the parent and
+   * a call of UnbindFromTree of the node.
+   */
+  bool IsBeingRemoved() const {
+    return mParent && !mNextSibling && !mPreviousOrLastSibling;
+  }
+
+  /**
    * Get the next node in the pre-order tree traversal of the DOM.  If
    * aRoot is non-null, then it must be an ancestor of |this|
    * (possibly equal to |this|) and only nodes that are descendants of
