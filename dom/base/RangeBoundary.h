@@ -183,7 +183,9 @@ class RangeBoundaryBase {
 
         if (mParent) {
           DetermineOffsetFromReference();
-          return mOffset;
+          if (mOffset.isSome()) {
+            return mOffset;
+          }
         }
 
         return Some(kFallbackOffset);
@@ -202,10 +204,17 @@ class RangeBoundaryBase {
     MOZ_ASSERT(mParent);
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
+    MOZ_ASSERT(mOffset.isNothing());
 
     const Maybe<uint32_t> index = mParent->ComputeIndexOf(mRef);
+    // If mRef is **being** removed from mParent, ComputeIndexOf returns
+    // Nothing because mRef has already been removed from the child node chain
+    // of mParent.
+    if (index.isNothing()) {
+      return;
+    }
     MOZ_ASSERT(*index != UINT32_MAX);
-    mOffset.emplace(MOZ_LIKELY(index.isSome()) ? *index + 1u : 0u);
+    mOffset.emplace(*index + 1u);
   }
 
   void InvalidateOffset() {
