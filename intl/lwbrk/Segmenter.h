@@ -122,6 +122,35 @@ class WordBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 };
 
 /**
+ * Grapheme cluster break iterator for UTF-16 text.
+ */
+class GraphemeClusterBreakIteratorUtf16 {
+ public:
+  GraphemeClusterBreakIteratorUtf16(const char16_t* aText, uint32_t aLength)
+      : mPos(aText),
+        mLimit(aText + aLength)
+#ifdef DEBUG
+        ,
+        mText(aText)
+#endif
+  {
+  }
+
+  operator const char16_t*() const { return mPos; }
+
+  bool AtEnd() const { return mPos >= mLimit; }
+
+  void Next();
+
+ private:
+  const char16_t* mPos;
+  const char16_t* mLimit;
+#ifdef DEBUG
+  const char16_t* mText;
+#endif
+};
+
+/**
  * This component is a Mozilla-focused API for working with segmenters in
  * internationalization code.
  *

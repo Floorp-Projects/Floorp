@@ -5,6 +5,7 @@
 
 #include "mozilla/TextUtils.h"
 #include "mozTXTToHTMLConv.h"
+#include "mozilla/intl/Segmenter.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
@@ -22,6 +23,7 @@
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
+using mozilla::intl::GraphemeClusterBreakIteratorUtf16;
 
 const double growthRate = 1.2;
 
@@ -557,7 +559,7 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
   // find length of the char/cluster to be ignored
   int32_t ignoreLen = before == LT_IGNORE ? 0 : 1;
   if (ignoreLen) {
-    mozilla::unicode::ClusterIterator ci(aInString, aInLength);
+    GraphemeClusterBreakIteratorUtf16 ci(aInString, aInLength);
     ci.Next();
     ignoreLen = ci - aInString;
   }
@@ -591,7 +593,7 @@ uint32_t mozTXTToHTMLConv::NumberOfMatches(const char16_t* aInString,
   uint32_t result = 0;
 
   const char16_t* end = aInString + aInStringLength;
-  for (mozilla::unicode::ClusterIterator ci(aInString, aInStringLength);
+  for (GraphemeClusterBreakIteratorUtf16 ci(aInString, aInStringLength);
        !ci.AtEnd(); ci.Next()) {
     if (ItMatchesDelimited(ci, end - ci, rep, aRepLen, before, after)) {
       result++;
@@ -979,7 +981,7 @@ mozTXTToHTMLConv::ScanTXT(const nsAString& aInString, uint32_t whattodo,
   const char16_t* rawInputString = aInString.BeginReading();
   uint32_t inLength = aInString.Length();
 
-  for (mozilla::unicode::ClusterIterator ci(rawInputString, inLength);
+  for (GraphemeClusterBreakIteratorUtf16 ci(rawInputString, inLength);
        !ci.AtEnd();) {
     uint32_t i = ci - rawInputString;
     if (doGlyphSubstitution) {
