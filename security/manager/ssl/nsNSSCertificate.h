@@ -8,13 +8,13 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsISerializable.h"
 #include "nsIX509Cert.h"
 #include "nsStringFwd.h"
-
-class nsINSSComponent;
 
 class nsNSSCertificate final : public nsIX509Cert,
                                public nsISerializable,
@@ -31,12 +31,13 @@ class nsNSSCertificate final : public nsIX509Cert,
 
  private:
   virtual ~nsNSSCertificate() = default;
+  nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
+  mozilla::UniqueCERTCertificate GetOrInstantiateCert();
 
   nsTArray<uint8_t> mDER;
-  mozilla::UniqueCERTCertificate mCert;
-  uint32_t mCertType;
-
-  nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
+  // There may be multiple threads running when mCert is actually instantiated,
+  // so it must be protected by a mutex.
+  mozilla::DataMutex<mozilla::Maybe<mozilla::UniqueCERTCertificate>> mCert;
 };
 
 #define NS_X509CERT_CID                              \

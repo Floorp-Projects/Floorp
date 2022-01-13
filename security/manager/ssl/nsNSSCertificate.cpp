@@ -55,62 +55,77 @@ using namespace mozilla::psm;
 
 extern LazyLogModule gPIPNSSLog;
 
-// This is being stored in an uint32_t that can otherwise
-// only take values from nsIX509Cert's list of cert types.
-// As nsIX509Cert is frozen, we choose a value not contained
-// in the list to mean not yet initialized.
-#define CERT_TYPE_NOT_YET_INITIALIZED (1 << 30)
-
 NS_IMPL_ISUPPORTS(nsNSSCertificate, nsIX509Cert, nsISerializable, nsIClassInfo)
 
-nsNSSCertificate::nsNSSCertificate()
-    : mCert(nullptr), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {}
+nsNSSCertificate::nsNSSCertificate() : mCert("nsNSSCertificate::mCert") {}
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert)
-    : mCert(nullptr), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {
+    : mCert("nsNSSCertificate::mCert") {
   if (cert) {
-    mCert.reset(CERT_DupCertificate(cert));
-    mDER.AppendElements(mCert->derCert.data, mCert->derCert.len);
+    mDER.AppendElements(cert->derCert.data, cert->derCert.len);
+    auto lock = mCert.Lock();
+    auto& maybeCert = lock.ref();
+    maybeCert.emplace(UniqueCERTCertificate(CERT_DupCertificate(cert)));
   }
 }
 
 nsNSSCertificate::nsNSSCertificate(nsTArray<uint8_t>&& der)
-    : mDER(std::move(der)), mCertType(CERT_TYPE_NOT_YET_INITIALIZED) {
+    : mDER(std::move(der)), mCert("nsNSSCertificate::mCert") {}
+
+UniqueCERTCertificate nsNSSCertificate::GetOrInstantiateCert() {
+  auto lock = mCert.Lock();
+  auto& maybeCert = lock.ref();
+  if (maybeCert.isSome()) {
+    return UniqueCERTCertificate(CERT_DupCertificate((*maybeCert).get()));
+  }
   SECItem derItem = {siBuffer, mDER.Elements(),
                      static_cast<unsigned int>(mDER.Length())};
-  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
-                                      nullptr, false, true));
-}
+  UniqueCERTCertificate cert(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &derItem, nullptr, false, true));
+  if (!cert) {
+    return nullptr;
+  }
+  maybeCert.emplace(std::move(cert));
 
-static uint32_t getCertType(CERTCertificate* cert) {
-  nsNSSCertTrust trust(cert->trust);
-  if (cert->nickname && trust.HasAnyUser()) {
-    return nsIX509Cert::USER_CERT;
-  }
-  if (trust.HasAnyCA()) {
-    return nsIX509Cert::CA_CERT;
-  }
-  if (trust.HasPeer(true, false)) {
-    return nsIX509Cert::SERVER_CERT;
-  }
-  if (trust.HasPeer(false, true) && cert->emailAddr) {
-    return nsIX509Cert::EMAIL_CERT;
-  }
-  if (CERT_IsCACert(cert, nullptr)) {
-    return nsIX509Cert::CA_CERT;
-  }
-  if (cert->emailAddr) {
-    return nsIX509Cert::EMAIL_CERT;
-  }
-  return nsIX509Cert::UNKNOWN_CERT;
+  return UniqueCERTCertificate(CERT_DupCertificate((*maybeCert).get()));
 }
 
 nsresult nsNSSCertificate::GetCertType(uint32_t* aCertType) {
-  if (mCertType == CERT_TYPE_NOT_YET_INITIALIZED) {
-    // only determine cert type once and cache it
-    mCertType = getCertType(mCert.get());
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
   }
-  *aCertType = mCertType;
+  CERTCertTrust certTrust{0, 0, 0};
+  // If there is no stored trust information, CERT_GetCertTrust will return
+  // SECFailure. This isn't a failure. In this case, all trust bits will remain
+  // unset.
+  Unused << CERT_GetCertTrust(cert.get(), &certTrust);
+  nsNSSCertTrust trust(&certTrust);
+  if (cert->nickname && trust.HasAnyUser()) {
+    *aCertType = nsIX509Cert::USER_CERT;
+    return NS_OK;
+  }
+  if (trust.HasAnyCA()) {
+    *aCertType = nsIX509Cert::CA_CERT;
+    return NS_OK;
+  }
+  if (trust.HasPeer(true, false)) {
+    *aCertType = nsIX509Cert::SERVER_CERT;
+    return NS_OK;
+  }
+  if (trust.HasPeer(false, true) && cert->emailAddr) {
+    *aCertType = nsIX509Cert::EMAIL_CERT;
+    return NS_OK;
+  }
+  if (CERT_IsCACert(cert.get(), nullptr)) {
+    *aCertType = nsIX509Cert::CA_CERT;
+    return NS_OK;
+  }
+  if (cert->emailAddr) {
+    *aCertType = nsIX509Cert::EMAIL_CERT;
+    return NS_OK;
+  }
+  *aCertType = nsIX509Cert::UNKNOWN_CERT;
   return NS_OK;
 }
 
@@ -180,14 +195,14 @@ NS_IMETHODIMP
 nsNSSCertificate::GetDisplayName(nsAString& aDisplayName) {
   aDisplayName.Truncate();
 
-  MOZ_ASSERT(mCert, "mCert should not be null in GetDisplayName");
-  if (!mCert) {
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
     return NS_ERROR_FAILURE;
   }
 
-  UniquePORTString commonName(CERT_GetCommonName(&mCert->subject));
-  UniquePORTString organizationalUnitName(CERT_GetOrgUnitName(&mCert->subject));
-  UniquePORTString organizationName(CERT_GetOrgName(&mCert->subject));
+  UniquePORTString commonName(CERT_GetCommonName(&cert->subject));
+  UniquePORTString organizationalUnitName(CERT_GetOrgUnitName(&cert->subject));
+  UniquePORTString organizationName(CERT_GetOrgName(&cert->subject));
 
   bool isBuiltInRoot;
   nsresult rv = GetIsBuiltInRoot(&isBuiltInRoot);
@@ -208,7 +223,7 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName) {
   // (the subject really shouldn't be empty), an empty string is returned.
   nsAutoCString builtInRootNickname;
   if (isBuiltInRoot) {
-    nsAutoCString fullNickname(mCert->nickname);
+    nsAutoCString fullNickname(cert->nickname);
     int32_t index = fullNickname.Find(":");
     if (index != kNotFound) {
       // Substring will gracefully handle the case where index is the last
@@ -218,10 +233,12 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName) {
           Substring(fullNickname, AssertedCast<uint32_t>(index + 1));
     }
   }
-  const char* nameOptions[] = {
-      builtInRootNickname.get(),    commonName.get(),
-      organizationalUnitName.get(), organizationName.get(),
-      mCert->subjectName,           mCert->emailAddr};
+  const char* nameOptions[] = {builtInRootNickname.get(),
+                               commonName.get(),
+                               organizationalUnitName.get(),
+                               organizationName.get(),
+                               cert->subjectName,
+                               cert->emailAddr};
 
   for (auto nameOption : nameOptions) {
     if (nameOption) {
@@ -238,8 +255,12 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName) {
 
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress) {
-  if (mCert->emailAddr) {
-    CopyUTF8toUTF16(MakeStringSpan(mCert->emailAddr), aEmailAddress);
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  if (cert->emailAddr) {
+    CopyUTF8toUTF16(MakeStringSpan(cert->emailAddr), aEmailAddress);
   } else {
     GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
   }
@@ -248,16 +269,20 @@ nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress) {
 
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddresses(nsTArray<nsString>& aAddresses) {
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
   uint32_t length = 0;
-  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get()); aAddr;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
+  for (const char* aAddr = CERT_GetFirstEmailAddress(cert.get()); aAddr;
+       aAddr = CERT_GetNextEmailAddress(cert.get(), aAddr)) {
     ++(length);
   }
 
   aAddresses.SetCapacity(length);
 
-  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get()); aAddr;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
+  for (const char* aAddr = CERT_GetFirstEmailAddress(cert.get()); aAddr;
+       aAddr = CERT_GetNextEmailAddress(cert.get(), aAddr)) {
     CopyASCIItoUTF16(MakeStringSpan(aAddr), *aAddresses.AppendElement());
   }
 
@@ -270,8 +295,12 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString& aEmailAddress,
   NS_ENSURE_ARG(result);
   *result = false;
 
-  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get()); aAddr;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  for (const char* aAddr = CERT_GetFirstEmailAddress(cert.get()); aAddr;
+       aAddr = CERT_GetNextEmailAddress(cert.get(), aAddr)) {
     nsAutoString certAddr;
     LossyUTF8ToUTF16(aAddr, strlen(aAddr), certAddr);
     ToLowerCase(certAddr);
@@ -291,11 +320,13 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString& aEmailAddress,
 NS_IMETHODIMP
 nsNSSCertificate::GetCommonName(nsAString& aCommonName) {
   aCommonName.Truncate();
-  if (mCert) {
-    UniquePORTString commonName(CERT_GetCommonName(&mCert->subject));
-    if (commonName) {
-      LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString commonName(CERT_GetCommonName(&cert->subject));
+  if (commonName) {
+    LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
   }
   return NS_OK;
 }
@@ -303,12 +334,14 @@ nsNSSCertificate::GetCommonName(nsAString& aCommonName) {
 NS_IMETHODIMP
 nsNSSCertificate::GetOrganization(nsAString& aOrganization) {
   aOrganization.Truncate();
-  if (mCert) {
-    UniquePORTString organization(CERT_GetOrgName(&mCert->subject));
-    if (organization) {
-      LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
-                       aOrganization);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString organization(CERT_GetOrgName(&cert->subject));
+  if (organization) {
+    LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
+                     aOrganization);
   }
   return NS_OK;
 }
@@ -316,11 +349,13 @@ nsNSSCertificate::GetOrganization(nsAString& aOrganization) {
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerCommonName(nsAString& aCommonName) {
   aCommonName.Truncate();
-  if (mCert) {
-    UniquePORTString commonName(CERT_GetCommonName(&mCert->issuer));
-    if (commonName) {
-      LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString commonName(CERT_GetCommonName(&cert->issuer));
+  if (commonName) {
+    LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
   }
   return NS_OK;
 }
@@ -328,12 +363,14 @@ nsNSSCertificate::GetIssuerCommonName(nsAString& aCommonName) {
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization) {
   aOrganization.Truncate();
-  if (mCert) {
-    UniquePORTString organization(CERT_GetOrgName(&mCert->issuer));
-    if (organization) {
-      LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
-                       aOrganization);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString organization(CERT_GetOrgName(&cert->issuer));
+  if (organization) {
+    LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
+                     aOrganization);
   }
   return NS_OK;
 }
@@ -341,12 +378,14 @@ nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization) {
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerOrganizationUnit(nsAString& aOrganizationUnit) {
   aOrganizationUnit.Truncate();
-  if (mCert) {
-    UniquePORTString organizationUnit(CERT_GetOrgUnitName(&mCert->issuer));
-    if (organizationUnit) {
-      LossyUTF8ToUTF16(organizationUnit.get(), strlen(organizationUnit.get()),
-                       aOrganizationUnit);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString organizationUnit(CERT_GetOrgUnitName(&cert->issuer));
+  if (organizationUnit) {
+    LossyUTF8ToUTF16(organizationUnit.get(), strlen(organizationUnit.get()),
+                     aOrganizationUnit);
   }
   return NS_OK;
 }
@@ -354,12 +393,13 @@ nsNSSCertificate::GetIssuerOrganizationUnit(nsAString& aOrganizationUnit) {
 NS_IMETHODIMP
 nsNSSCertificate::GetOrganizationalUnit(nsAString& aOrganizationalUnit) {
   aOrganizationalUnit.Truncate();
-  if (mCert) {
-    UniquePORTString orgunit(CERT_GetOrgUnitName(&mCert->subject));
-    if (orgunit) {
-      LossyUTF8ToUTF16(orgunit.get(), strlen(orgunit.get()),
-                       aOrganizationalUnit);
-    }
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  UniquePORTString orgunit(CERT_GetOrgUnitName(&cert->subject));
+  if (orgunit) {
+    LossyUTF8ToUTF16(orgunit.get(), strlen(orgunit.get()), aOrganizationalUnit);
   }
   return NS_OK;
 }
@@ -367,8 +407,12 @@ nsNSSCertificate::GetOrganizationalUnit(nsAString& aOrganizationalUnit) {
 NS_IMETHODIMP
 nsNSSCertificate::GetSubjectName(nsAString& _subjectName) {
   _subjectName.Truncate();
-  if (mCert->subjectName) {
-    LossyUTF8ToUTF16(mCert->subjectName, strlen(mCert->subjectName),
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  if (cert->subjectName) {
+    LossyUTF8ToUTF16(cert->subjectName, strlen(cert->subjectName),
                      _subjectName);
   }
   return NS_OK;
@@ -377,8 +421,12 @@ nsNSSCertificate::GetSubjectName(nsAString& _subjectName) {
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerName(nsAString& _issuerName) {
   _issuerName.Truncate();
-  if (mCert->issuerName) {
-    LossyUTF8ToUTF16(mCert->issuerName, strlen(mCert->issuerName), _issuerName);
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  if (cert->issuerName) {
+    LossyUTF8ToUTF16(cert->issuerName, strlen(cert->issuerName), _issuerName);
   }
   return NS_OK;
 }
@@ -386,8 +434,12 @@ nsNSSCertificate::GetIssuerName(nsAString& _issuerName) {
 NS_IMETHODIMP
 nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber) {
   _serialNumber.Truncate();
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
   UniquePORTString tmpstr(
-      CERT_Hexify(&mCert->serialNumber, true /* use colon delimiters */));
+      CERT_Hexify(&cert->serialNumber, true /* use colon delimiters */));
   if (tmpstr) {
     _serialNumber = NS_ConvertASCIItoUTF16(tmpstr.get());
     return NS_OK;
@@ -429,8 +481,8 @@ nsNSSCertificate::GetSha1Fingerprint(nsAString& _sha1Fingerprint) {
 
 NS_IMETHODIMP
 nsNSSCertificate::GetTokenName(nsAString& aTokenName) {
-  MOZ_ASSERT(mCert);
-  if (!mCert) {
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  if (!cert) {
     return NS_ERROR_FAILURE;
   }
   UniquePK11SlotInfo internalSlot(PK11_GetInternalSlot());
@@ -438,7 +490,7 @@ nsNSSCertificate::GetTokenName(nsAString& aTokenName) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIPK11Token> token(
-      new nsPK11Token(mCert->slot ? mCert->slot : internalSlot.get()));
+      new nsPK11Token(cert->slot ? cert->slot : internalSlot.get()));
   nsAutoCString tmp;
   nsresult rv = token->GetTokenName(tmp);
   if (NS_FAILED(rv)) {
@@ -501,7 +553,8 @@ nsNSSCertificate::GetBase64DERString(nsACString& base64DERString) {
 }
 
 CERTCertificate* nsNSSCertificate::GetCert() {
-  return (mCert) ? CERT_DupCertificate(mCert.get()) : nullptr;
+  UniqueCERTCertificate cert(GetOrInstantiateCert());
+  return cert.release();  // caller takes ownership
 }
 
 NS_IMETHODIMP
@@ -521,7 +574,6 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity) {
 //     |SerializeToIPC|.
 NS_IMETHODIMP
 nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
-  NS_ENSURE_STATE(mCert);
   // This field used to be the cached EV status, but it is no longer necessary.
   nsresult rv = aStream->Write32(0);
   if (NS_FAILED(rv)) {
@@ -538,7 +590,11 @@ nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
 //     |DeserializeFromIPC|.
 NS_IMETHODIMP
 nsNSSCertificate::Read(nsIObjectInputStream* aStream) {
-  NS_ENSURE_STATE(!mCert);
+  auto lock = mCert.Lock();
+  auto& maybeCert = lock.ref();
+  if (!mDER.IsEmpty() || maybeCert.isSome()) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
 
   // This field is no longer used.
   uint32_t unusedCachedEVStatus;
@@ -557,16 +613,11 @@ nsNSSCertificate::Read(nsIObjectInputStream* aStream) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  SECItem derItem = {siBuffer, mDER.Elements(),
-                     static_cast<unsigned int>(mDER.Length())};
-  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
-                                      nullptr, false, true));
-
   return NS_OK;
 }
 
 void nsNSSCertificate::SerializeToIPC(IPC::Message* aMsg) {
-  bool hasCert = static_cast<bool>(mCert);
+  bool hasCert = !mDER.IsEmpty();
   WriteParam(aMsg, hasCert);
 
   if (!hasCert) {
@@ -578,6 +629,12 @@ void nsNSSCertificate::SerializeToIPC(IPC::Message* aMsg) {
 
 bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
                                           PickleIterator* aIter) {
+  auto lock = mCert.Lock();
+  auto& maybeCert = lock.ref();
+  if (!mDER.IsEmpty() || maybeCert.isSome()) {
+    return false;
+  }
+
   bool hasCert = false;
   if (!ReadParam(aMsg, aIter, &hasCert)) {
     return false;
@@ -590,11 +647,6 @@ bool nsNSSCertificate::DeserializeFromIPC(const IPC::Message* aMsg,
   if (!ReadParam(aMsg, aIter, &mDER)) {
     return false;
   }
-  SECItem derItem = {siBuffer, mDER.Elements(),
-                     static_cast<unsigned int>(mDER.Length())};
-  mCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
-                                      nullptr, false, true));
-
   return true;
 }
 
