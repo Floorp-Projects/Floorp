@@ -17,11 +17,16 @@ class Event extends Module {
    * Commands
    */
 
-  testEmitWindowGlobalInRootEvent(params, destination) {
-    this.messageHandler.emitMessageHandlerEvent(
-      "event.testWindowGlobalInRootEvent",
-      { text: `windowglobal-in-root event for ${destination.id}` }
-    );
+  testEmitInternalWindowGlobalInRootEvent(params, destination) {
+    this.emitEvent("internal-event-from-window-global-in-root", {
+      text: `internal windowglobal-in-root event for ${destination.id}`,
+    });
+  }
+
+  testEmitProtocolWindowGlobalInRootEvent(params, destination) {
+    this.emitProtocolEvent("event.testWindowGlobalInRootEvent", {
+      text: `protocol windowglobal-in-root event for ${destination.id}`,
+    });
   }
 }
 
