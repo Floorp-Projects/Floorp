@@ -40,9 +40,9 @@ class UtilityProcess : public ::testing::Test {
     appShell = do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
 #endif  // defined(MOZ_WIDGET_ANDROID) || defined(XP_MACOSX)
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+#ifdef XP_WIN
     mozilla::SandboxBroker::GeckoDependentInitialize();
-#endif  // defined(XP_WIN) && defined(MOZ_SANDBOX)
+#endif  // XP_WIN
 
     setupDone = true;
   }
