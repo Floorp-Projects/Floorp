@@ -14,7 +14,6 @@
 #include "APKOpen.h"
 
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -23,14 +22,12 @@
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
-#include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
 
 #include "mozilla/Likely.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Types.h"
-#include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
 #include "nsTHashMap.h"
 
@@ -39,11 +36,6 @@
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
 // #define DEBUG_ANDROID_WIDGET
-
-class nsPIDOMWindowOuter;
-
-typedef void* EGLSurface;
-class nsIRunnable;
 
 namespace mozilla {
 
@@ -104,17 +96,10 @@ class AndroidBridge final {
                               nsIHandlerApp** aDefaultApp = nullptr,
                               const nsAString& aAction = u""_ns);
 
-  bool HasHWVP8Encoder();
-  bool HasHWVP8Decoder();
-  bool HasHWH264();
-
   void GetMimeTypeFromExtensions(const nsACString& aFileExt,
                                  nsCString& aMimeType);
   void GetExtensionFromMimeType(const nsACString& aMimeType,
                                 nsACString& aFileExt);
-
-  gfx::Rect getScreenSize();
-  int GetScreenDepth();
 
   void Vibrate(const nsTArray<uint32_t>& aPattern);
 
