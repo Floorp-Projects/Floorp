@@ -168,8 +168,10 @@ struct AudioChunk {
 
   // Generic methods
   void SliceTo(TrackTime aStart, TrackTime aEnd) {
-    MOZ_ASSERT(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
-               "Slice out of bounds");
+    MOZ_ASSERT(aStart >= 0, "Slice out of bounds: invalid start");
+    MOZ_ASSERT(aStart < aEnd, "Slice out of bounds: invalid range");
+    MOZ_ASSERT(aEnd <= mDuration, "Slice out of bounds: invalid end");
+
     if (mBuffer) {
       MOZ_ASSERT(aStart < INT32_MAX,
                  "Can't slice beyond 32-bit sample lengths");
