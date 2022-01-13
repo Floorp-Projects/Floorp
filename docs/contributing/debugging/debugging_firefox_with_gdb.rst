@@ -31,8 +31,7 @@ The preferred method, is using the
 :ref:`mach` command-line tool to run the
 debugger, which can bypass several optional defaults. Use "mach help
 run" to get more details. If inside the source directory, you would use
-"./mach". If you have previously :ref:`added mach to your path <Adding_mach_to_your_shell>`,
-then just use "mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
+"./mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
 
 .. code:: bash
 
