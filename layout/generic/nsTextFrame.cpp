@@ -10481,7 +10481,7 @@ uint32_t nsTextFrame::CountGraphemeClusters() const {
   nsAutoString content;
   frag->AppendTo(content, AssertedCast<uint32_t>(GetContentOffset()),
                  AssertedCast<uint32_t>(GetContentLength()));
-  return unicode::CountGraphemeClusters(content.Data(), content.Length());
+  return unicode::CountGraphemeClusters(content);
 }
 
 bool nsTextFrame::HasNonSuppressedText() const {
