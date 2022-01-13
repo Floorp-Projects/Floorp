@@ -366,35 +366,44 @@ Status MakeFrameHeader(const CompressParams& cparams,
     // encoded in case a blend mode involving alpha is used and there are more
     // than one extra channels.
     size_t index = 0;
-    if (extra_channels.size() > 1) {
-      for (size_t i = 0; i < extra_channels.size(); i++) {
-        if (extra_channels[i].type == ExtraChannel::kAlpha) {
-          index = i;
-          break;
+    if (frame_info.alpha_channel == -1) {
+      if (extra_channels.size() > 1) {
+        for (size_t i = 0; i < extra_channels.size(); i++) {
+          if (extra_channels[i].type == ExtraChannel::kAlpha) {
+            index = i;
+            break;
+          }
         }
       }
+    } else {
+      index = static_cast<size_t>(frame_info.alpha_channel);
+      JXL_ASSERT(index == 0 || index < extra_channels.size());
     }
     frame_header->blending_info.alpha_channel = index;
     frame_header->blending_info.mode =
         ib.blend ? ib.blendmode : BlendMode::kReplace;
-    // previous frames are saved with ID 1.
-    frame_header->blending_info.source = 1;
+    frame_header->blending_info.source = frame_info.source;
+    frame_header->blending_info.clamp = frame_info.clamp;
+    const auto& extra_channel_info = frame_info.extra_channel_blending_info;
     for (size_t i = 0; i < extra_channels.size(); i++) {
-      frame_header->extra_channel_blending_info[i].alpha_channel = index;
-      BlendMode default_blend = ib.blendmode;
-      if (extra_channels[i].type != ExtraChannel::kBlack && i != index) {
-        // K needs to be blended, spot colors and other stuff gets added
-        default_blend = BlendMode::kAdd;
+      if (i < extra_channel_info.size()) {
+        frame_header->extra_channel_blending_info[i] = extra_channel_info[i];
+      } else {
+        frame_header->extra_channel_blending_info[i].alpha_channel = index;
+        BlendMode default_blend = ib.blendmode;
+        if (extra_channels[i].type != ExtraChannel::kBlack && i != index) {
+          // K needs to be blended, spot colors and other stuff gets added
+          default_blend = BlendMode::kAdd;
+        }
+        frame_header->extra_channel_blending_info[i].mode =
+            ib.blend ? default_blend : BlendMode::kReplace;
+        frame_header->extra_channel_blending_info[i].source = 1;
       }
-      frame_header->extra_channel_blending_info[i].mode =
-          ib.blend ? default_blend : BlendMode::kReplace;
-      frame_header->extra_channel_blending_info[i].source = 1;
     }
   }
 
   frame_header->animation_frame.duration = ib.duration;
-
-  // TODO(veluca): timecode.
+  frame_header->animation_frame.timecode = ib.timecode;
 
   return true;
 }
@@ -477,8 +486,9 @@ class LossyFrameEncoder {
   LossyFrameEncoder(const CompressParams& cparams,
                     const FrameHeader& frame_header,
                     PassesEncoderState* JXL_RESTRICT enc_state,
-                    ThreadPool* pool, AuxOut* aux_out)
-      : enc_state_(enc_state), pool_(pool), aux_out_(aux_out) {
+                    const JxlCmsInterface& cms, ThreadPool* pool,
+                    AuxOut* aux_out)
+      : enc_state_(enc_state), cms_(cms), pool_(pool), aux_out_(aux_out) {
     JXL_CHECK(InitializePassesSharedState(frame_header, &enc_state_->shared,
                                           /*encoder=*/true));
     enc_state_->cparams = cparams;
@@ -486,7 +496,8 @@ class LossyFrameEncoder {
   }
 
   Status ComputeEncodingData(const ImageBundle* linear,
-                             Image3F* JXL_RESTRICT opsin, ThreadPool* pool,
+                             Image3F* JXL_RESTRICT opsin,
+                             const JxlCmsInterface& cms, ThreadPool* pool,
                              ModularFrameEncoder* modular_frame_encoder,
                              BitWriter* JXL_RESTRICT writer,
                              FrameHeader* frame_header) {
@@ -506,10 +517,11 @@ class LossyFrameEncoder {
     }
 
     JXL_RETURN_IF_ERROR(enc_state_->heuristics->LossyFrameHeuristics(
-        enc_state_, modular_frame_encoder, linear, opsin, pool_, aux_out_));
+        enc_state_, modular_frame_encoder, linear, opsin, cms_, pool_,
+        aux_out_));
 
-    InitializePassesEncoder(*opsin, pool_, enc_state_, modular_frame_encoder,
-                            aux_out_);
+    JXL_RETURN_IF_ERROR(InitializePassesEncoder(
+        *opsin, cms, pool_, enc_state_, modular_frame_encoder, aux_out_));
 
     enc_state_->passes.resize(enc_state_->progressive_splitter.GetNumPasses());
     for (PassesEncoderState::PassData& pass : enc_state_->passes) {
@@ -523,7 +535,8 @@ class LossyFrameEncoder {
       group_caches_.resize(num_threads);
       return true;
     };
-    const auto tokenize_group = [&](const int group_index, const int thread) {
+    const auto tokenize_group = [&](const uint32_t group_index,
+                                    const size_t thread) {
       // Tokenize coefficients.
       const Rect rect = shared.BlockGroupRect(group_index);
       for (size_t idx_pass = 0; idx_pass < enc_state_->passes.size();
@@ -545,8 +558,9 @@ class LossyFrameEncoder {
             enc_state_->shared.block_ctx_map);
       }
     };
-    RunOnPool(pool_, 0, shared.frame_dim.num_groups, tokenize_group_init,
-              tokenize_group, "TokenizeGroup");
+    JXL_RETURN_IF_ERROR(RunOnPool(pool_, 0, shared.frame_dim.num_groups,
+                                  tokenize_group_init, tokenize_group,
+                                  "TokenizeGroup"));
 
     *frame_header = shared.frame_header;
     return true;
@@ -647,7 +661,7 @@ class LossyFrameEncoder {
             kScale * kZeroBiasDefault[c] *
             0.9999f;  // just epsilon less for better rounding
 
-        auto process_row = [&](int task, int thread) {
+        auto process_row = [&](const uint32_t task, const size_t thread) {
           size_t ty = task;
           int8_t* JXL_RESTRICT row_out = map->Row(ty);
           for (size_t tx = 0; tx < map->xsize(); ++tx) {
@@ -714,8 +728,9 @@ class LossyFrameEncoder {
           }
         };
 
-        RunOnPool(pool_, 0, map->ysize(), ThreadPool::SkipInit(), process_row,
-                  "FindCorrelation");
+        JXL_RETURN_IF_ERROR(RunOnPool(pool_, 0, map->ysize(),
+                                      ThreadPool::NoInit, process_row,
+                                      "FindCorrelation"));
       }
     }
     if (!frame_header->chroma_subsampling.Is444()) {
@@ -844,14 +859,16 @@ class LossyFrameEncoder {
 
     // disable DC frame for now
     shared.frame_header.UpdateFlag(false, FrameHeader::kUseDcFrame);
-    auto compute_dc_coeffs = [&](int group_index, int /* thread */) {
+    auto compute_dc_coeffs = [&](const uint32_t group_index,
+                                 size_t /* thread */) {
       modular_frame_encoder->AddVarDCTDC(dc, group_index, /*nl_dc=*/false,
                                          enc_state_, /*jpeg_transcode=*/true);
       modular_frame_encoder->AddACMetadata(group_index, /*jpeg_transcode=*/true,
                                            enc_state_);
     };
-    RunOnPool(pool_, 0, shared.frame_dim.num_dc_groups, ThreadPool::SkipInit(),
-              compute_dc_coeffs, "Compute DC coeffs");
+    JXL_RETURN_IF_ERROR(RunOnPool(pool_, 0, shared.frame_dim.num_dc_groups,
+                                  ThreadPool::NoInit, compute_dc_coeffs,
+                                  "Compute DC coeffs"));
 
     // Must happen before WriteFrameHeader!
     shared.frame_header.UpdateFlag(true, FrameHeader::kSkipAdaptiveDCSmoothing);
@@ -871,7 +888,8 @@ class LossyFrameEncoder {
       group_caches_.resize(num_threads);
       return true;
     };
-    const auto tokenize_group = [&](const int group_index, const int thread) {
+    const auto tokenize_group = [&](const uint32_t group_index,
+                                    const size_t thread) {
       // Tokenize coefficients.
       const Rect rect = shared.BlockGroupRect(group_index);
       for (size_t idx_pass = 0; idx_pass < enc_state_->passes.size();
@@ -893,8 +911,9 @@ class LossyFrameEncoder {
             enc_state_->shared.block_ctx_map);
       }
     };
-    RunOnPool(pool_, 0, shared.frame_dim.num_groups, tokenize_group_init,
-              tokenize_group, "TokenizeGroup");
+    JXL_RETURN_IF_ERROR(RunOnPool(pool_, 0, shared.frame_dim.num_groups,
+                                  tokenize_group_init, tokenize_group,
+                                  "TokenizeGroup"));
     *frame_header = shared.frame_header;
     doing_jpeg_recompression = true;
     return true;
@@ -1012,6 +1031,7 @@ class LossyFrameEncoder {
   }
 
   PassesEncoderState* JXL_RESTRICT enc_state_;
+  JxlCmsInterface cms_;
   ThreadPool* pool_;
   AuxOut* aux_out_;
   std::vector<EncCache> group_caches_;
@@ -1021,7 +1041,8 @@ class LossyFrameEncoder {
 Status EncodeFrame(const CompressParams& cparams_orig,
                    const FrameInfo& frame_info, const CodecMetadata* metadata,
                    const ImageBundle& ib, PassesEncoderState* passes_enc_state,
-                   ThreadPool* pool, BitWriter* writer, AuxOut* aux_out) {
+                   const JxlCmsInterface& cms, ThreadPool* pool,
+                   BitWriter* writer, AuxOut* aux_out) {
   ib.VerifyMetadata();
 
   passes_enc_state->special_frames.clear();
@@ -1118,7 +1139,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   // lambda type by making LossyFrameEncoder a template instead, but this is
   // simpler.
   const std::function<Status(size_t)> resize_aux_outs =
-      [&aux_outs, aux_out](size_t num_threads) -> Status {
+      [&aux_outs, aux_out](const size_t num_threads) -> Status {
     if (aux_out != nullptr) {
       size_t old_size = aux_outs.size();
       for (size_t i = num_threads; i < old_size; i++) {
@@ -1137,7 +1158,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   };
 
   LossyFrameEncoder lossy_frame_encoder(cparams, *frame_header,
-                                        passes_enc_state, pool, aux_out);
+                                        passes_enc_state, cms, pool, aux_out);
   std::unique_ptr<ModularFrameEncoder> modular_frame_encoder =
       jxl::make_unique<ModularFrameEncoder>(*frame_header, cparams);
 
@@ -1169,7 +1190,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
       // linear sRGB avoids a color conversion there). Otherwise, don't
       // fill it to reduce memory usage.
       ib_or_linear =
-          ToXYB(ib, pool, &opsin, want_linear ? &linear_storage : nullptr);
+          ToXYB(ib, pool, &opsin, cms, want_linear ? &linear_storage : nullptr);
     } else {  // RGB or YCbCr: don't do anything (forward YCbCr is not
               // implemented, this is only used when the input is already in
               // YCbCr)
@@ -1197,7 +1218,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     if (frame_header->encoding == FrameEncoding::kVarDCT) {
       PadImageToBlockMultipleInPlace(&opsin);
       JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
-          ib_or_linear, &opsin, pool, modular_frame_encoder.get(), writer,
+          ib_or_linear, &opsin, cms, pool, modular_frame_encoder.get(), writer,
           frame_header.get()));
     } else if (frame_header->upsampling != 1 && !cparams.already_downsampled) {
       // In VarDCT mode, LossyFrameHeuristics takes care of running downsampling
@@ -1206,7 +1227,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     }
   } else {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
-        &ib, &opsin, pool, modular_frame_encoder.get(), writer,
+        &ib, &opsin, cms, pool, modular_frame_encoder.get(), writer,
         frame_header.get()));
   }
   if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
@@ -1219,7 +1240,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   // needs to happen *AFTER* VarDCT-ComputeEncodingData.
   JXL_RETURN_IF_ERROR(modular_frame_encoder->ComputeEncodingData(
       *frame_header, *ib.metadata(), &opsin, *extra_channels,
-      lossy_frame_encoder.State(), pool, aux_out,
+      lossy_frame_encoder.State(), cms, pool, aux_out,
       /* do_color=*/frame_header->encoding == FrameEncoding::kModular));
 
   writer->AppendByteAligned(lossy_frame_encoder.State()->special_frames);
@@ -1282,7 +1303,8 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   JXL_RETURN_IF_ERROR(modular_frame_encoder->EncodeStream(
       get_output(0), aux_out, kLayerModularGlobal, ModularStreamId::Global()));
 
-  const auto process_dc_group = [&](const int group_index, const int thread) {
+  const auto process_dc_group = [&](const uint32_t group_index,
+                                    const size_t thread) {
     AuxOut* my_aux_out = aux_out ? &aux_outs[thread] : nullptr;
     BitWriter* output = get_output(group_index + 1);
     if (frame_header->encoding == FrameEncoding::kVarDCT &&
@@ -1312,8 +1334,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
           ModularStreamId::ACMetadata(group_index)));
     }
   };
-  RunOnPool(pool, 0, frame_dim.num_dc_groups, resize_aux_outs, process_dc_group,
-            "EncodeDCGroup");
+  JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, frame_dim.num_dc_groups,
+                                resize_aux_outs, process_dc_group,
+                                "EncodeDCGroup"));
 
   if (frame_header->encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.EncodeGlobalACInfo(
@@ -1321,7 +1344,8 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   }
 
   std::atomic<int> num_errors{0};
-  const auto process_group = [&](const int group_index, const int thread) {
+  const auto process_group = [&](const uint32_t group_index,
+                                 const size_t thread) {
     AuxOut* my_aux_out = aux_out ? &aux_outs[thread] : nullptr;
 
     for (size_t i = 0; i < num_passes; i++) {
@@ -1341,8 +1365,8 @@ Status EncodeFrame(const CompressParams& cparams_orig,
       }
     }
   };
-  RunOnPool(pool, 0, num_groups, resize_aux_outs, process_group,
-            "EncodeGroupCoefficients");
+  JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, num_groups, resize_aux_outs,
+                                process_group, "EncodeGroupCoefficients"));
 
   // Resizing aux_outs to 0 also Assimilates the array.
   static_cast<void>(resize_aux_outs(0));

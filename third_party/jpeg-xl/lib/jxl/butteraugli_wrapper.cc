@@ -17,6 +17,7 @@
 #include "lib/jxl/common.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_butteraugli_pnorm.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/memory_manager_internal.h"
@@ -77,6 +78,7 @@ struct JxlButteraugliApiStruct {
   // Number of nits that correspond to 1.0f input values.
   float intensity_target = jxl::kDefaultIntensityTarget;
 
+  JxlCmsInterface cms;
   JxlMemoryManager memory_manager;
   std::unique_ptr<jxl::ThreadPool> thread_pool{nullptr};
 };
@@ -92,6 +94,7 @@ JxlButteraugliApi* JxlButteraugliApiCreate(
   if (!alloc) return nullptr;
   // Placement new constructor on allocated memory
   JxlButteraugliApi* ret = new (alloc) JxlButteraugliApi();
+  ret->cms = jxl::GetJxlCms();
   ret->memory_manager = local_memory_manager;
   return ret;
 }
@@ -164,8 +167,8 @@ JxlButteraugliResult* JxlButteraugliCompute(
   result->params.hf_asymmetry = api->hf_asymmetry;
   result->params.xmul = api->xmul;
   result->params.intensity_target = api->intensity_target;
-  jxl::ButteraugliDistance(orig_ib, dist_ib, result->params, &result->distmap,
-                           api->thread_pool.get());
+  jxl::ButteraugliDistance(orig_ib, dist_ib, result->params, api->cms,
+                           &result->distmap, api->thread_pool.get());
 
   return result;
 }

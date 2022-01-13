@@ -979,5 +979,13 @@ Status WriteJpeg(const JPEGData& jpg, const JPEGOutput& out) {
   }
 }
 
+Status EncodeImageJPGCoefficients(const CodecInOut* io, PaddedBytes* bytes) {
+  auto write = [&bytes](const uint8_t* buf, size_t len) {
+    bytes->append(buf, buf + len);
+    return len;
+  };
+  return WriteJpeg(*io->Main().jpeg_data, write);
+}
+
 }  // namespace jpeg
 }  // namespace jxl

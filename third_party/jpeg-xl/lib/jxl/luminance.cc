@@ -11,10 +11,6 @@
 namespace jxl {
 
 void SetIntensityTarget(CodecInOut* io) {
-  if (io->target_nits != 0) {
-    io->metadata.m.SetIntensityTarget(io->target_nits);
-    return;
-  }
   if (io->metadata.m.color_encoding.tf.IsPQ()) {
     // Peak luminance of PQ as defined by SMPTE ST 2084:2014.
     io->metadata.m.SetIntensityTarget(10000);

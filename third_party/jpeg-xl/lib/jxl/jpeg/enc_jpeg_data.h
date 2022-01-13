@@ -21,7 +21,8 @@ Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
  * Decodes bytes containing JPEG codestream into a CodecInOut as coefficients
  * only, for lossless JPEG transcoding.
  */
-Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io);
+Status DecodeImageJPG(Span<const uint8_t> bytes, CodecInOut* io);
+
 }  // namespace jpeg
 }  // namespace jxl
 

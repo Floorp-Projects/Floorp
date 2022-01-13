@@ -6,6 +6,7 @@
 #include "benchmark/benchmark.h"
 #include "lib/extras/codec.h"
 #include "lib/extras/tone_mapping.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/testdata.h"
 
 namespace jxl {
@@ -24,7 +25,7 @@ static void BM_ToneMapping(benchmark::State& state) {
   linear_rec2020.white_point = WhitePoint::kD65;
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_CHECK(linear_rec2020.CreateICC());
-  JXL_CHECK(image.TransformTo(linear_rec2020));
+  JXL_CHECK(image.TransformTo(linear_rec2020, GetJxlCms()));
 
   for (auto _ : state) {
     state.PauseTiming();

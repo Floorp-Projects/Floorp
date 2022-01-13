@@ -10,6 +10,7 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -31,7 +32,7 @@ Status ToneMapFrame(const std::pair<float, float> display_nits,
   linear_rec2020.white_point = WhitePoint::kD65;
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_RETURN_IF_ERROR(linear_rec2020.CreateICC());
-  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, pool));
+  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, GetJxlCms(), pool));
 
   const auto eotf_inv = [&df](const V luminance) -> V {
     return TF_PQ().EncodedFromDisplay(df, luminance * Set(df, 1. / 10000));
@@ -69,8 +70,8 @@ Status ToneMapFrame(const std::pair<float, float> display_nits,
   const V inv_max_display_nits = Set(df, 1 / display_nits.second);
 
   JXL_RETURN_IF_ERROR(RunOnPool(
-      pool, 0, ib->ysize(), ThreadPool::SkipInit(),
-      [&](const int y, const int thread) {
+      pool, 0, ib->ysize(), ThreadPool::NoInit,
+      [&](const uint32_t y, size_t /* thread */) {
         float* const JXL_RESTRICT row_r = ib->color()->PlaneRow(0, y);
         float* const JXL_RESTRICT row_g = ib->color()->PlaneRow(1, y);
         float* const JXL_RESTRICT row_b = ib->color()->PlaneRow(2, y);
@@ -128,11 +129,11 @@ Status GamutMapFrame(ImageBundle* const ib, float preserve_saturation,
   linear_rec2020.white_point = WhitePoint::kD65;
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_RETURN_IF_ERROR(linear_rec2020.CreateICC());
-  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, pool));
+  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, GetJxlCms(), pool));
 
   JXL_RETURN_IF_ERROR(RunOnPool(
-      pool, 0, ib->ysize(), ThreadPool::SkipInit(),
-      [&](const int y, const int thread) {
+      pool, 0, ib->ysize(), ThreadPool::NoInit,
+      [&](const uint32_t y, size_t /* thread*/) {
         float* const JXL_RESTRICT row_r = ib->color()->PlaneRow(0, y);
         float* const JXL_RESTRICT row_g = ib->color()->PlaneRow(1, y);
         float* const JXL_RESTRICT row_b = ib->color()->PlaneRow(2, y);
