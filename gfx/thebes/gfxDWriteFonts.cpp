@@ -84,8 +84,7 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
       mMetrics(nullptr),
       mUseSubpixelPositions(false),
       mAllowManualShowGlyphs(true),
-      mAzureScaledFontUsedClearType(false),
-      mAzureScaledFontForcedGDI(false) {
+      mAzureScaledFontUsedClearType(false) {
   // If the IDWriteFontFace1 interface is available, we can use that for
   // faster glyph width retrieval.
   mFontFace->QueryInterface(__uuidof(IDWriteFontFace1),
@@ -754,12 +753,14 @@ void gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
 already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     const TextRunDrawParams& aRunParams) {
-  bool forceGDI = aRunParams.allowGDI && GetForceGDIClassic();
-  if (mAzureScaledFontUsedClearType != UsingClearType() ||
-      mAzureScaledFontForcedGDI != forceGDI) {
+  if (mAzureScaledFontUsedClearType != UsingClearType()) {
     mAzureScaledFont = nullptr;
+    mAzureScaledFontGDI = nullptr;
   }
-  if (!mAzureScaledFont) {
+  bool forceGDI = aRunParams.allowGDI && GetForceGDIClassic();
+  RefPtr<ScaledFont>& azureScaledFont =
+      forceGDI ? mAzureScaledFontGDI : mAzureScaledFont;
+  if (!azureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     bool useEmbeddedBitmap =
         (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
@@ -767,19 +768,17 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
         fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
 
     const gfxFontStyle* fontStyle = GetStyle();
-    mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
+    azureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
         useEmbeddedBitmap, forceGDI);
-    if (!mAzureScaledFont) {
+    if (!azureScaledFont) {
       return nullptr;
     }
-    InitializeScaledFont();
+    InitializeScaledFont(azureScaledFont);
     mAzureScaledFontUsedClearType = UsingClearType();
-    mAzureScaledFontForcedGDI = forceGDI;
   }
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
+  return do_AddRef(azureScaledFont);
 }
 
 bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {

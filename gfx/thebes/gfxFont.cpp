@@ -1552,14 +1552,15 @@ already_AddRefed<mozilla::gfx::ScaledFont> gfxFont::GetScaledFont(
   return GetScaledFont(params);
 }
 
-void gfxFont::InitializeScaledFont() {
-  if (!mAzureScaledFont) {
+void gfxFont::InitializeScaledFont(
+    const RefPtr<mozilla::gfx::ScaledFont>& aScaledFont) {
+  if (!aScaledFont) {
     return;
   }
 
   float angle = AngleForSyntheticOblique();
   if (angle != 0.0f) {
-    mAzureScaledFont->SetSyntheticObliqueAngle(angle);
+    aScaledFont->SetSyntheticObliqueAngle(angle);
   }
 }
 
