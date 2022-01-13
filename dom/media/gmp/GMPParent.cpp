@@ -14,6 +14,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -378,6 +379,12 @@ mozilla::ipc::IPCResult GMPParent::RecvPGMPContentChildDestroyed() {
   if (!IsUsed()) {
     CloseIfUnused();
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPParent::RecvFOGData(ByteBuf&& aBuf) {
+  GMP_PARENT_LOG_DEBUG("GMPParent RecvFOGData");
+  glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
 
