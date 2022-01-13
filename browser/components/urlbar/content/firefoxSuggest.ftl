@@ -110,6 +110,9 @@ firefox-suggest-onboarding-introduction-title-7 =
 
 ##
 
+firefox-suggest-onboarding-introduction-close-button =
+  .title = Close
+
 firefox-suggest-onboarding-introduction-next-button-1 = Find out how
 firefox-suggest-onboarding-introduction-next-button-2 = Find out more
 
