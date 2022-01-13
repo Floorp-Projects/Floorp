@@ -59,6 +59,8 @@ let deleteHandlerStore = async function() {
   await unloadHandlerStore();
 
   await OS.File.remove(jsonPath, { ignoreAbsent: true });
+
+  Services.prefs.clearUserPref("gecko.handlerService.defaultHandlersVersion");
 };
 
 /**
@@ -68,6 +70,8 @@ let copyTestDataToHandlerStore = async function() {
   await unloadHandlerStore();
 
   await OS.File.copy(do_get_file("handlers.json").path, jsonPath);
+
+  Services.prefs.setIntPref("gecko.handlerService.defaultHandlersVersion", 100);
 };
 
 /**

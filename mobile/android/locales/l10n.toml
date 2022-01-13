@@ -232,13 +232,3 @@ exclude-multi-locale = [
     path = "{l}mobile/android/defines.inc"
     key = "MOZ_LANGPACK_CONTRIBUTORS"
     action = "ignore"
-
-[[filters]]
-    path = "{l}mobile/chrome/region.properties"
-    key = [
-        "re:^browser\\.contentHandlers\\.types\\.[0-5]\\..*$",
-        "re:^gecko\\.handlerService\\.schemes\\..+$",
-        "re:^gecko\\.handlerService\\.defaultHandlersVersion$",
-        "re:^browser\\.suggestedsites\\..+$",
-    ]
-    action = "ignore"
