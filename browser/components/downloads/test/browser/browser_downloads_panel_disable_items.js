@@ -90,16 +90,39 @@ add_task(async function test_downloads_panel_new_download() {
 
   let newTab = await newTabPromise;
 
+  // Press enter 6 times at 100ms intervals.
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
-  DownloadsCommon.openDownload = async () => {
-    ok(true, "openDownload should have been called");
-  };
+  for (let i = 0; i < 5; i++) {
+    // There's no other way to allow some time to pass and ensure we're
+    // genuinely testing that these keypresses postpone the enabling of
+    // the items, so disable this check for this line:
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 100));
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+  }
+  // Measure when we finished.
+  let keyTime = Date.now();
 
-  await BrowserTestUtils.waitForCondition(
-    () => !downloadsListBox.getAttribute("disabled")
+  await BrowserTestUtils.waitForMutationCondition(
+    downloadsListBox,
+    { attributeFilter: ["disabled"] },
+    () => !downloadsListBox.hasAttribute("disabled")
   );
+  Assert.greater(
+    Date.now(),
+    keyTime + 750,
+    "Should have waited at least another 750ms after this keypress."
+  );
+  let openedDownload = new Promise(resolve => {
+    DownloadsCommon.openDownload = async () => {
+      ok(true, "openDownload should have been called");
+      resolve();
+    };
+  });
+
   info("All download items in the download panel should now be enabled");
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
+  await openedDownload;
 
   await task_resetState();
   DownloadsCommon.openDownload = originalOpenDownload;
