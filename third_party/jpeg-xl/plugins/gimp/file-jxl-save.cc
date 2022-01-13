@@ -758,14 +758,13 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
   }
 
   // set encoder options
-  JxlEncoderFrameSettings* frame_settings;
-  frame_settings = JxlEncoderFrameSettingsCreate(enc.get(), nullptr);
+  JxlEncoderOptions* enc_opts;
+  enc_opts = JxlEncoderOptionsCreate(enc.get(), nullptr);
 
-  JxlEncoderFrameSettingsSetOption(frame_settings, JXL_ENC_FRAME_SETTING_EFFORT,
-                                   jxl_save_opts.encoding_effort);
-  JxlEncoderFrameSettingsSetOption(frame_settings,
-                                   JXL_ENC_FRAME_SETTING_DECODING_SPEED,
-                                   jxl_save_opts.faster_decoding);
+  JxlEncoderOptionsSetInteger(enc_opts, JXL_ENC_OPTION_EFFORT,
+                              jxl_save_opts.encoding_effort);
+  JxlEncoderOptionsSetInteger(enc_opts, JXL_ENC_OPTION_DECODING_SPEED,
+                              jxl_save_opts.faster_decoding);
 
   // lossless mode
   if (jxl_save_opts.lossless || jxl_save_opts.distance < 0.01) {
@@ -773,16 +772,16 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
       // lossless mode doesn't work well with floating point
       jxl_save_opts.distance = 0.01;
       jxl_save_opts.lossless = false;
-      JxlEncoderSetFrameLossless(frame_settings, false);
-      JxlEncoderSetFrameDistance(frame_settings, 0.01);
+      JxlEncoderOptionsSetLossless(enc_opts, false);
+      JxlEncoderOptionsSetDistance(enc_opts, 0.01);
     } else {
-      JxlEncoderSetFrameDistance(frame_settings, 0);
-      JxlEncoderSetFrameLossless(frame_settings, true);
+      JxlEncoderOptionsSetDistance(enc_opts, 0);
+      JxlEncoderOptionsSetLossless(enc_opts, true);
     }
   } else {
     jxl_save_opts.lossless = false;
-    JxlEncoderSetFrameLossless(frame_settings, false);
-    JxlEncoderSetFrameDistance(frame_settings, jxl_save_opts.distance);
+    JxlEncoderOptionsSetLossless(enc_opts, false);
+    JxlEncoderOptionsSetDistance(enc_opts, jxl_save_opts.distance);
   }
 
   // this sets some basic_info properties
@@ -851,7 +850,7 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
 
     // send layer to encoder
     if (JXL_ENC_SUCCESS !=
-        JxlEncoderAddImageFrame(frame_settings, &jxl_save_opts.pixel_format,
+        JxlEncoderAddImageFrame(enc_opts, &jxl_save_opts.pixel_format,
                                 pixels_buffer_2, buffer_size)) {
       g_printerr(SAVE_PROC " Error: JxlEncoderAddImageFrame failed\n");
       return false;

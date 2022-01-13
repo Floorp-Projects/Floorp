@@ -11,7 +11,6 @@
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_file.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/testdata.h"
@@ -44,14 +43,12 @@ constexpr float kTolerance = 0.003125;
 std::vector<Spline> DequantizeSplines(const Splines& splines) {
   const auto& quantized_splines = splines.QuantizedSplines();
   const auto& starting_points = splines.StartingPoints();
-  JXL_CHECK(quantized_splines.size() == starting_points.size());
+  JXL_ASSERT(quantized_splines.size() == starting_points.size());
 
   std::vector<Spline> dequantized;
   for (size_t i = 0; i < quantized_splines.size(); ++i) {
-    dequantized.emplace_back();
-    JXL_CHECK(quantized_splines[i].Dequantize(starting_points[i],
-                                              kQuantizationAdjustment, kYToX,
-                                              kYToB, dequantized.back()));
+    dequantized.push_back(quantized_splines[i].Dequantize(
+        starting_points[i], kQuantizationAdjustment, kYToX, kYToB));
   }
   return dequantized;
 }
@@ -310,8 +307,7 @@ TEST(SplinesTest, Drawing) {
 
   CodecInOut io_actual;
   io_actual.SetFromImage(CopyImage(image), ColorEncoding::LinearSRGB());
-  ASSERT_TRUE(
-      io_actual.TransformTo(io_expected.Main().c_current(), GetJxlCms()));
+  ASSERT_TRUE(io_actual.TransformTo(io_expected.Main().c_current()));
 
   VerifyRelativeError(*io_expected.Main().color(), *io_actual.Main().color(),
                       1e-2f, 1e-1f);
@@ -328,8 +324,7 @@ TEST(SplinesTest, ClearedEveryFrame) {
       ReadTestData("jxl/spline_on_first_frame.jxl");
   ASSERT_TRUE(DecodeFile(DecompressParams(), bytes_actual, &io_actual,
                          /*pool=*/nullptr));
-
-  ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB(), GetJxlCms()));
+  ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB()));
   for (size_t c = 0; c < 3; ++c) {
     for (size_t y = 0; y < io_actual.ysize(); ++y) {
       float* const JXL_RESTRICT row = io_actual.Main().color()->PlaneRow(c, y);

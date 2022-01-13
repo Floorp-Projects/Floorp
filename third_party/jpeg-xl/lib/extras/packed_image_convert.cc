@@ -147,11 +147,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
     // uint case.
     io->metadata.m.bit_depth.bits_per_sample = io->Main().DetectRealBitdepth();
   }
-  if (ppf.info.intensity_target != 0) {
-    io->metadata.m.SetIntensityTarget(ppf.info.intensity_target);
-  } else {
-    SetIntensityTarget(io);
-  }
+  SetIntensityTarget(io);
   io->CheckMetadata();
   return true;
 }
