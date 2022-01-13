@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/StaticPrefs_webgl.h"
 
 #include "prenv.h"
 
@@ -38,6 +39,9 @@ const char* ContentWin32kLockdownStateToString(
 
     case ContentWin32kLockdownState::PrefNotSet:
       return "Win32k Lockdown disabled -- Preference not set";
+	
+	case ContentWin32kLockdownState::MissingRemoteWebGL:
+      return "Win32k Lockdown disabled -- Missing Remote WebGL";
   }
 
   MOZ_CRASH("Should never reach here");
@@ -59,6 +63,13 @@ ContentWin32kLockdownState GetContentWin32kLockdownState() {
       // without the user explicitly requesting unsupported behavior.
       if (!gfx::gfxVars::UseWebRender()) {
         return ContentWin32kLockdownState::MissingWebRender;
+      }
+
+      // Win32k Lockdown requires Remote WebGL, but it may be disabled on
+      // certain hardware or virtual machines.
+      if (!gfx::gfxVars::AllowWebglOop() ||
+          !StaticPrefs::webgl_out_of_process()) {
+        return ContentWin32kLockdownState::MissingRemoteWebGL;
       }
 
       // It's important that this goes last, as we'd like to know in
