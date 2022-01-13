@@ -71,6 +71,35 @@ interface nsICRLiteState : nsISupports {
 };
 
 /**
+ * An interface representing a set of certificates that are covered by a CRLite
+ * filter. The set is represented by a certificate transparency log ID and a
+ * pair of timestamps. The timestamps are such that the CRLite aggregator has
+ * seen every certificate from the specified log with an SCT between the two
+ * timestamps.
+ * b64LogID is a base 64-encoded RFC 6962 LogID.
+ * minTimestamp is the smallest timestamp that the CRLite filter covers.
+ * maxTimestamp is the largest timestamp that the CRLite filter covers.
+ */
+[scriptable, uuid(416453f7-29bd-4820-a039-9c2e055d3715)]
+interface nsICRLiteCoverage : nsISupports {
+    readonly attribute ACString b64LogID;
+    readonly attribute unsigned long long minTimestamp;
+    readonly attribute unsigned long long maxTimestamp;
+};
+
+/**
+ * An interface representing the id and timestamp fields from an RFC 6962
+ * SignedCertificateTimestamp struct.
+ * logID is the id field.
+ * timestamp is the timestamp field.
+ */
+[uuid(9676cfc4-6e84-11ec-a30d-d3cd0af86e01)]
+interface nsICRLiteTimestamp: nsISupports {
+    readonly attribute Array<octet> logID;
+    readonly attribute unsigned long long timestamp;
+};
+
+/**
  * An interface representing a certificate to add to storage. Consists of the
  * base64-encoded DER bytes of the certificate (cert), the base64-encoded DER
  * bytes of the subject distinguished name of the certificate (subject), and the
@@ -107,6 +136,7 @@ interface nsICertStorage : nsISupports {
   const short STATE_UNSET = 0;
   const short STATE_ENFORCE = 1;
   const short STATE_NOT_ENROLLED = 2;
+  const short STATE_NOT_COVERED = 3;
 
   /**
    * Asynchronously set the revocation states of a set of certificates.
@@ -162,34 +192,33 @@ interface nsICertStorage : nsISupports {
   short getCRLiteState(in Array<octet> subject, in Array<octet> spki);
 
   /**
-   * Given the contents of a CRLite filter and its creation date as seconds since the epoch,
-   * replaces any existing filter with the new one. Also clears any previously-set incremental
-   * revocation updates ("stashes").
+   * Given the contents of a new CRLite filter and a description of the new
+   * filter's coverage, replaces any existing filter with the new one.  Also
+   * clears any previously-set incremental revocation updates ("stashes").
    */
   [must_use]
-  void setFullCRLiteFilter(in Array<octet> filter, in uint64_t timestamp,
+  void setFullCRLiteFilter(in Array<octet> filter,
+                           in Array<nsICRLiteCoverage> coverage,
                            in nsICertStorageCallback callback);
 
   /**
    * Given the DER-encoded issuer distinguished name, DER-encoded issuer subject public key info,
-   * and the bytes of the value of the serial number (so, not including the DER tag and length) of a
-   * certificate, returns the result of looking up the corresponding entry in the currently-saved
-   * CRLite filter (if any). Returns STATE_ENFORCE if the lookup indicates the corresponding
-   * certificate is revoked via CRLite. Returns STATE_UNSET if the lookup indicates the
-   * corresponding certificate is not revoked via CRLite. Returns STATE_NOT_ENROLLED if the issuer
-   * certificate is not enrolled in CRLite and thus no lookup was made. Also returns the timestamp
-   * before which lookups will be valid. That is, if a certificate has a notBefore value after the
-   * returned filter timestamp, the lookup is not trustworthy because the certificate may have been
-   * created after the filter, and thus it may cause a false negative or positive. If no filter is
-   * available (it may not have been downloaded yet), validBefore will be 0. The timestamp is
-   * represented as seconds since the epoch (i.e. it returns what was most recently set via
-   * setFullCRLiteFilter).
+   * the bytes of the value of the serial number (so, not including the DER tag and length) of a
+   * certificate, and the timestamps from that certificate's embedded SCTs, returns the result of
+   * looking up the corresponding entry in the currently-saved CRLite filter (if any).
+   * Returns
+   *    - STATE_ENFORCE if the lookup indicates the certificate is revoked via CRLite,
+   *    - STATE_UNSET if the lookup indicates the certificate is not revoked via CRLite,
+   *    - STATE_NOT_ENROLLED if the issuer is not enrolled in CRLite, or
+   *    - STATE_NOT_COVERED if the issuer is enrolled but the provided timestamps indicate
+   *      that the serial number is not covered by the current CRLite filter.
+   * No lookup is performed in the STATE_NOT_ENROLLED and STATE_NOT_COVERED cases.
    */
   [must_use]
   short getCRLiteRevocationState(in Array<octet> issuer,
                                  in Array<octet> issuerSPKI,
                                  in Array<octet> serialNumber,
-                                 out uint64_t validBefore);
+                                 in Array<nsICRLiteTimestamp> timestamps);
 
   /**
    * Given the contents of a CRLite incremental revocation update ("stash"), adds the revocation
