@@ -231,9 +231,9 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_CONTENT_PREFERENCES = 1 << 15;
 
   /**
-   * Secure site settings
+   * Clear HSTS data
    */
-  const uint32_t CLEAR_SECURITY_SETTINGS = 1 << 16;
+    const uint32_t CLEAR_HSTS = 1 << 16;
 
   /**
    * Media plugin data
@@ -271,6 +271,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_PREFLIGHT_CACHE = 1 << 23;
 
   /**
+   * Forget descision about clients authentification certificate
+   */
+  const uint32_t CLEAR_CLIENT_AUTH_REMEMBER_SERVICE = 1 << 24;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFFFF;
@@ -284,7 +289,7 @@ interface nsIClearDataService : nsISupports
    * Delete all the possible caches.
    */
   const uint32_t CLEAR_ALL_CACHES = CLEAR_NETWORK_CACHE | CLEAR_IMAGE_CACHE |
-    CLEAR_CSS_CACHE | CLEAR_PREFLIGHT_CACHE;
+    CLEAR_CSS_CACHE | CLEAR_PREFLIGHT_CACHE | CLEAR_HSTS;
 
   /**
    * Delete all DOM storages
@@ -299,7 +304,7 @@ interface nsIClearDataService : nsISupports
     CLEAR_COOKIES | CLEAR_EME | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
     CLEAR_PERMISSIONS | CLEAR_DOM_STORAGES | CLEAR_CONTENT_PREFERENCES |
     CLEAR_PREDICTOR_NETWORK_DATA | CLEAR_DOM_PUSH_NOTIFICATIONS |
-    CLEAR_SECURITY_SETTINGS | CLEAR_REPORTS | CLEAR_CERT_EXCEPTIONS;
+    CLEAR_CLIENT_AUTH_REMEMBER_SERVICE | CLEAR_REPORTS | CLEAR_CERT_EXCEPTIONS;
 };
 
 /**
