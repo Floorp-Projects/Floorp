@@ -1626,14 +1626,8 @@ EnvironmentCache.prototype = {
       effectiveContentProcessLevel =
         sandboxSettings.effectiveContentSandboxLevel;
 
-      // See `ContentWin32kLockdownState` in
-      // <security/sandbox/common/SandboxSettings.h>
-      //
-      // Values:
-      // 1 = LockdownEnabled
-      // 2 = MissingWebRender
-      // 3 = OperatingSystemNotSupported
-      // 4 = PrefNotSet
+      // The possible values for this are defined in the ContentWin32kLockdownState
+      // enum in security/sandbox/common/SandboxSettings.h
       contentWin32kLockdownState = sandboxSettings.contentWin32kLockdownState;
     } catch (e) {}
     return {
