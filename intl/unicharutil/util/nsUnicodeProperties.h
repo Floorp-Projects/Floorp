@@ -182,24 +182,6 @@ bool IsCombiningDiacritic(uint32_t aCh);
 // Remove diacritics from a character
 uint32_t GetNaked(uint32_t aCh);
 
-// A simple reverse iterator for a string of char16_t codepoints that
-// advances by Unicode grapheme clusters
-class ClusterReverseIterator {
- public:
-  ClusterReverseIterator(const char16_t* aText, uint32_t aLength)
-      : mPos(aText + aLength), mLimit(aText) {}
-
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos <= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
-};
-
 }  // end namespace unicode
 
 }  // end namespace mozilla

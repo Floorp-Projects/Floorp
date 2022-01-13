@@ -151,6 +151,29 @@ class GraphemeClusterBreakIteratorUtf16 {
 };
 
 /**
+ * Grapheme cluster break reverse iterator for UTF-16 text.
+ *
+ * Note: The reverse iterator doesn't handle conjoining Jamo and emoji. Use it
+ * at your own risk.
+ */
+class GraphemeClusterBreakReverseIteratorUtf16 {
+ public:
+  GraphemeClusterBreakReverseIteratorUtf16(const char16_t* aText,
+                                           uint32_t aLength)
+      : mPos(aText + aLength), mLimit(aText) {}
+
+  operator const char16_t*() const { return mPos; }
+
+  bool AtEnd() const { return mPos <= mLimit; }
+
+  void Next();
+
+ private:
+  const char16_t* mPos;
+  const char16_t* mLimit;
+};
+
+/**
  * This component is a Mozilla-focused API for working with segmenters in
  * internationalization code.
  *
