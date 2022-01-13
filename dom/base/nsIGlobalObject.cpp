@@ -365,6 +365,16 @@ void nsIGlobalObject::SetCountQueuingStrategySizeFunction(
     mozilla::dom::Function* aFunction) {
   mCountQueuingStrategySizeFunction = aFunction;
 }
+
+already_AddRefed<mozilla::dom::Function>
+nsIGlobalObject::GetByteLengthQueuingStrategySizeFunction() {
+  return do_AddRef(mByteLengthQueuingStrategySizeFunction);
+}
+
+void nsIGlobalObject::SetByteLengthQueuingStrategySizeFunction(
+    mozilla::dom::Function* aFunction) {
+  mByteLengthQueuingStrategySizeFunction = aFunction;
+}
 #endif
 
 bool nsIGlobalObject::ShouldResistFingerprinting() const {
