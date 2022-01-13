@@ -10363,9 +10363,9 @@
   value: 12582912
   mirror: always
 
-# Enable http3 network priorization as described in
+# Enable http3 network priority as described in
 # https://httpwg.org/http-extensions/draft-ietf-httpbis-priority.html
-- name: network.http.http3.priorization
+- name: network.http.http3.priority
   type: RelaxedAtomicBool
   value: true
   mirror: always
@@ -10375,7 +10375,7 @@
 # improve performance when switching to an tab with a website using the same
 # QUIC connection. On the other hand it sends more data to the website and
 # might be a privacy concern.
-- name: network.http.http3.send_background_tabs_depriorization
+- name: network.http.http3.send_background_tabs_deprioritization
   type: RelaxedAtomicBool
   value: false
   mirror: always
