@@ -25,7 +25,7 @@ bool IsContentSandboxEnabled();
 
 // If you update this enum, don't forget to raise the limit in
 // TelemetryEnvironmentTesting.jsm and record the new value in
-// environment.rst 
+// environment.rst
 enum class ContentWin32kLockdownState : int32_t {
   LockdownEnabled = 1,
   MissingWebRender,
