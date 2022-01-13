@@ -1,0 +1,6 @@
+include protocol PMyManaged;
+
+struct MyActorPair {
+    PMyManaged actor1;
+    nullable PMyManaged actor2;
+};

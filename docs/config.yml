@@ -16,6 +16,7 @@ categories:
         - editor
         - layout
         - gfx
+        - ipc
         - devtools
         - toolkit
         - js
@@ -76,6 +77,7 @@ redirects:
     layout/layout: layout
     gfx/gfx: gfx
     intl/l10n/l10n: l10n
+    ipc/ipc: ipc
     modules/libpref/libpref: modules/libpref
     python/mach: mach
     python/python: python
