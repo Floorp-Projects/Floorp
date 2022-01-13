@@ -17,7 +17,6 @@ html {
 body {
   // sass-lint:disable no-color-literals
   --grey-subtitle-1: #696977;
-  --welcome-header-text-color-1: #20133A;
   --newtab-button-secondary-color: #0060DF;
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
@@ -27,7 +26,6 @@ body {
 
   &[lwt-newtab-brighttext] {
     --grey-subtitle-1: #FFF;
-    --welcome-header-text-color-1: #7542E5;
     --newtab-button-secondary-color: #FFF;
   }
 }
@@ -131,6 +129,10 @@ body {
       padding: unset;
       margin-top: 50px;
     }
+  }
+
+  .hide-rtamo-icon {
+    display: none;
   }
 
   .welcome-text {
@@ -709,6 +711,10 @@ body {
     line-height: 16px;
     padding: 11px 15px;
     transition: var(--transition);
+
+    &.rtamo {
+      margin-top: 24px;
+    }
   }
 
   // Styles specific to background noodles, with screen-by-screen positions
@@ -1212,86 +1218,6 @@ body {
         opacity: 0;
         translate: 0 calc(2 * var(--translate));
         transition-delay: 0.4s;
-      }
-    }
-  }
-
-  // Styles particular to the RTAMO flow
-  &.rtamo {
-    background-color: var(--newtab-background-color-1);
-    background: none;
-
-    .screen {
-      flex-flow: column nowrap;
-      align-items: center;
-    }
-
-    .brand-logo {
-      background: url('chrome://branding/content/about-logo.svg') top center / 112px no-repeat;
-      width: 112px;
-      padding: 112px 0 20px;
-    }
-
-    .welcome-text {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 20px;
-
-      h1,
-      h2 {
-        width: 860px;
-        @media (max-width: $break-point-large) {
-          width: 530px;
-        }
-
-        @media (max-width: $break-point-medium) {
-          width: 430px;
-        }
-      }
-
-      h1 {
-        font-size: 48px;
-        line-height: 56px;
-        font-weight: bold;
-        margin: 0 6px;
-        color: var(--welcome-header-text-color-1);
-      }
-
-      h2 {
-        font-size: 18px;
-        font-weight: normal;
-        margin: 10px 6px 0;
-        color: var(--grey-subtitle-1);
-        line-height: 28px;
-        max-width: 750px;
-        letter-spacing: -0.01em;
-      }
-
-      img {
-        margin-inline: 2px;
-        width: 20px;
-        height: 20px;
-      }
-
-      .primary {
-        font-size: 16px;
-        padding: 12px 20px;
-        margin: 20px 0 0;
-        font-weight: inherit;
-      }
-
-      .secondary {
-        background-color: initial;
-        padding: 0;
-        color: var(--newtab-button-secondary-color);
-        margin-top: 14px;
-        font-weight: inherit;
-
-        &:hover {
-          text-decoration: underline;
-        }
       }
     }
   }
