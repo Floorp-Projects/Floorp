@@ -227,17 +227,13 @@ linux64-clang-13-win-cross:
               dest: clang-cl
               extract: false
 
-macosx64-clang-13:
+macosx64-clang-13-raw:
     description: "Clang 13 toolchain build"
-    attributes:
-        local-toolchain: true
     treeherder:
-        symbol: TM(clang-13)
+        symbol: TM(clang-13-raw)
     worker-type: b-linux-large
     worker:
         max-run-time: 3600
-    run-on-projects:
-        - trunk
     run:
         script: build-clang.sh
         arguments:
@@ -246,7 +242,62 @@ macosx64-clang-13:
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13-macosx-cross
+            - macosx64-sdk-11.0
+            - wasm32-wasi-compiler-rt-13
+
+macosx64-clang-13:
+    description: "Clang 13 toolchain repack with MacOS Compiler RT libs"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TM(clang-13)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run-on-projects:
+        - trunk
+    run:
+        script: repack-clang-linux-macosx-cross.sh
         toolchain-alias: macosx64-clang
+        toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        macosx64-aarch64-compiler-rt-13: toolchain-macosx64-aarch64-compiler-rt-13
+        macosx64-x64-compiler-rt-13: toolchain-macosx64-x64-compiler-rt-13
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-13
+            - macosx64-clang-13-raw
+        macosx64-aarch64-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: aarch64
+        macosx64-x64-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: x86_64
+
+macosx64-aarch64-clang-13-raw:
+    description: "Clang 13 toolchain build"
+    treeherder:
+        symbol: TM(clang-13-aarch64-raw)
+    worker-type: b-linux-large
+    worker:
+        env:
+            OSX_ARCH: arm64
+        max-run-time: 3600
+    run:
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
+        resources:
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -258,36 +309,33 @@ macosx64-clang-13:
             - wasm32-wasi-compiler-rt-13
 
 macosx64-aarch64-clang-13:
-    description: "Clang 13 toolchain build"
+    description: "Clang 13 toolchain repack with MacOS Compiler RT libs"
     attributes:
         local-toolchain: true
     treeherder:
         symbol: TM(clang-13-aarch64)
-    worker-type: b-linux-large
+    worker-type: b-linux
     worker:
-        env:
-            OSX_ARCH: arm64
-        max-run-time: 3600
+        max-run-time: 600
     run-on-projects:
         - trunk
     run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-13.json'
-        resources:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-13.json'
+        script: repack-clang-linux-macosx-cross.sh
         toolchain-alias: macosx64-aarch64-clang
         toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        macosx64-aarch64-compiler-rt-13: toolchain-macosx64-aarch64-compiler-rt-13
+        macosx64-x64-compiler-rt-13: toolchain-macosx64-x64-compiler-rt-13
     fetches:
-        fetch:
-            - clang-13
         toolchain:
             - linux64-cctools-port-clang-13
-            - linux64-clang-13-macosx-cross
-            - macosx64-sdk-11.0
-            - wasm32-wasi-compiler-rt-13
+            - macosx64-aarch64-clang-13-raw
+        macosx64-aarch64-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: aarch64
+        macosx64-x64-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: x86_64
 
 win64-clang-13:
     description: "Clang-cl 13 toolchain build"
