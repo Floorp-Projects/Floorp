@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
@@ -68,6 +69,16 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
             requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_never)
         val openingScreenAfterFourHours =
             requirePreference<RadioButtonPreference>(R.string.pref_key_start_on_home_after_four_hours)
+
+        requirePreference<Preference>(R.string.pref_key_wallpapers).apply {
+            setOnPreferenceClickListener {
+                view?.findNavController()?.navigate(
+                    HomeSettingsFragmentDirections.actionHomeSettingsFragmentToWallpaperSettingsFragment()
+                )
+                true
+            }
+            isVisible = FeatureFlags.showWallpapers
+        }
 
         requirePreference<PreferenceCategory>(R.string.pref_key_start_on_home_category).isVisible =
             FeatureFlags.showStartOnHomeSettings

@@ -71,6 +71,7 @@ class WallpaperManager(private val settings: Settings) {
     ) {
         settings.shouldUseDarkTheme = useDarkTheme
         settings.shouldUseLightTheme = useLightTheme
+        settings.shouldFollowDeviceTheme = false
     }
 
     /**

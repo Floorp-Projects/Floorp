@@ -620,7 +620,19 @@
     <fragment
         android:id="@+id/homeSettingsFragment"
         android:name="org.mozilla.fenix.settings.HomeSettingsFragment"
-        android:label="@string/preferences_home_2" />
+        android:label="@string/preferences_home_2">
+        <action
+            android:id="@+id/action_homeSettingsFragment_to_wallpaperSettingsFragment"
+            app:destination="@id/wallpaperSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/wallpaperSettingsFragment"
+        android:name="org.mozilla.fenix.settings.wallpaper.WallpaperSettingsFragment"
+        android:label="@string/customize_wallpapers"/>
     <fragment
         android:id="@+id/dataChoicesFragment"
         android:name="org.mozilla.fenix.settings.DataChoicesFragment"

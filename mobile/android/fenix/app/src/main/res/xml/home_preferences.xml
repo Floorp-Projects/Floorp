@@ -29,6 +29,11 @@
         android:title="@string/customize_toggle_pocket"
         app:isPreferenceVisible="false" />
 
+    <androidx.preference.Preference
+        android:key="@string/pref_key_wallpapers"
+        android:title="@string/customize_wallpapers"
+        app:isPreferenceVisible="false" />
+
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_opening_screen"

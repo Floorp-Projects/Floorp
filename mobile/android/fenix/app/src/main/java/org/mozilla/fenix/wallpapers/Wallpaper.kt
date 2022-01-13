@@ -10,7 +10,7 @@ import org.mozilla.fenix.R
  * A enum that represents the available wallpapers and their states.
  */
 enum class Wallpaper(val drawable: Int, val isDark: Boolean) {
+    NONE(drawable = R.attr.homeBackground, isDark = false),
     FIRST(drawable = R.drawable.wallpaper_1, isDark = true),
-    SECOND(drawable = R.drawable.wallpaper_2, isDark = false),
-    NONE(drawable = R.attr.homeBackground, isDark = false);
+    SECOND(drawable = R.drawable.wallpaper_2, isDark = false);
 }
