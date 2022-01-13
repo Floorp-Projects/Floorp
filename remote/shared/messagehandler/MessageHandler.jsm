@@ -114,19 +114,27 @@ class MessageHandler extends EventEmitter {
   }
 
   /**
-   * Emit a message-handler-event. Such events should bubble up to the root of
-   * a MessageHandler network.
+   * Emit a message handler event.
    *
-   * @param {String} method
-   *     A string literal of the form [module name].[event name]. This is the
-   *     event name.
-   * @param {Object} params
-   *     The event parameters.
+   * Such events should bubble up to the root of a MessageHandler network.
+   *
+   * @param {String} name
+   *     Name of the event. Protocol level events should be of the
+   *     form [module name].[event name].
+   * @param {Object} data
+   *     The event's data.
+   * @param {Object=} options
+   * @param {boolean=} options.isProtocolEvent
+   *     Flag that indicates if it is a protocol or internal event.
+   *     Defaults to `false`.
    */
-  emitMessageHandlerEvent(method, params) {
+  emitEvent(name, data, options = {}) {
+    const { isProtocolEvent = false } = options;
+
     this.emit("message-handler-event", {
-      method,
-      params,
+      name,
+      data,
+      isProtocolEvent,
       sessionId: this.sessionId,
     });
   }

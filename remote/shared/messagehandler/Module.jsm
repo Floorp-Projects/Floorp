@@ -7,6 +7,8 @@
 const EXPORTED_SYMBOLS = ["Module"];
 
 class Module {
+  #messageHandler;
+
   /**
    * Create a new module instance.
    *
@@ -14,7 +16,7 @@ class Module {
    *     The MessageHandler instance which owns this Module instance.
    */
   constructor(messageHandler) {
-    this._messageHandler = messageHandler;
+    this.#messageHandler = messageHandler;
   }
 
   /**
@@ -27,6 +29,38 @@ class Module {
   }
 
   /**
+   * Emit a message handler event.
+   *
+   * Such events should bubble up to the root of a MessageHandler network.
+   *
+   * @param {String} name
+   *     Name of the event. Protocol level events should be of the
+   *     form [module name].[event name].
+   * @param {Object} data
+   *     The event's data.
+   */
+  emitEvent(name, data) {
+    this.messageHandler.emitEvent(name, data, { isProtocolEvent: false });
+  }
+
+  /**
+   * Emit a protocol specific message handler event.
+   *
+   * Such events should bubble up to the root of a MessageHandler network.
+   *
+   * @param {String} name
+   *     Name of the event. Protocol level events should be of the
+   *     form [module name].[event name].
+   * @param {Object} data
+   *     The event's data.
+   */
+  emitProtocolEvent(name, data) {
+    this.messageHandler.emitEvent(name, data, {
+      isProtocolEvent: true,
+    });
+  }
+
+  /**
    * Instance shortcut for supportsMethod to avoid reaching the constructor for
    * consumers which directly deal with an instance.
    */
@@ -35,7 +69,7 @@ class Module {
   }
 
   get messageHandler() {
-    return this._messageHandler;
+    return this.#messageHandler;
   }
 
   static get supportedEvents() {

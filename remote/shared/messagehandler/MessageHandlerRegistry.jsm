@@ -196,6 +196,12 @@ class MessageHandlerRegistry extends EventEmitter {
       this._context
     );
 
+    messageHandler.on(
+      "message-handler-destroyed",
+      this._onMessageHandlerDestroyed
+    );
+    messageHandler.on("message-handler-event", this._onMessageHandlerEvent);
+
     messageHandler.applyInitialSessionDataItems(sessionDataItems);
 
     this._messageHandlersMap.set(sessionId, messageHandler);
@@ -204,11 +210,6 @@ class MessageHandlerRegistry extends EventEmitter {
       `Created MessageHandler ${this._type} for session ${sessionId}`
     );
 
-    messageHandler.on(
-      "message-handler-destroyed",
-      this._onMessageHandlerDestroyed
-    );
-    messageHandler.on("message-handler-event", this._onMessageHandlerEvent);
     return messageHandler;
   }
 
