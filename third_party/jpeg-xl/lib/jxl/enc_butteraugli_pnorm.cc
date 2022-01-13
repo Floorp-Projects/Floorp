@@ -124,19 +124,22 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
 }
 
 // TODO(lode): take alpha into account when needed
-double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2) {
+double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
+                        const JxlCmsInterface& cms) {
   PROFILER_FUNC;
   // Convert to sRGB - closer to perception than linear.
   const Image3F* srgb1 = &ib1.color();
   Image3F copy1;
   if (!ib1.IsSRGB()) {
-    JXL_CHECK(ib1.CopyTo(Rect(ib1), ColorEncoding::SRGB(ib1.IsGray()), &copy1));
+    JXL_CHECK(
+        ib1.CopyTo(Rect(ib1), ColorEncoding::SRGB(ib1.IsGray()), cms, &copy1));
     srgb1 = &copy1;
   }
   const Image3F* srgb2 = &ib2.color();
   Image3F copy2;
   if (!ib2.IsSRGB()) {
-    JXL_CHECK(ib2.CopyTo(Rect(ib2), ColorEncoding::SRGB(ib2.IsGray()), &copy2));
+    JXL_CHECK(
+        ib2.CopyTo(Rect(ib2), ColorEncoding::SRGB(ib2.IsGray()), cms, &copy2));
     srgb2 = &copy2;
   }
 
@@ -196,8 +199,9 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
 }
 
 HWY_EXPORT(ComputeDistance2);
-double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2) {
-  return HWY_DYNAMIC_DISPATCH(ComputeDistance2)(ib1, ib2);
+double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
+                        const JxlCmsInterface& cms) {
+  return HWY_DYNAMIC_DISPATCH(ComputeDistance2)(ib1, ib2, cms);
 }
 
 }  // namespace jxl

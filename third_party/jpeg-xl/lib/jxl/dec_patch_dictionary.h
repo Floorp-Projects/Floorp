@@ -122,10 +122,14 @@ class PatchDictionary {
     ComputePatchCache();
   }
 
+  // Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
+  // to be located at position (x0, y) in the frame.
+  void AddOneRow(float* const* inout, size_t y, size_t x0, size_t xsize) const;
+
   // Only adds patches that belong to the `image_rect` area of the decoded
   // image, writing them to the `opsin_rect` area of `opsin`.
-  Status AddTo(Image3F* opsin, const Rect& opsin_rect,
-               float* const* extra_channels, const Rect& image_rect) const;
+  void AddTo(Image3F* opsin, const Rect& opsin_rect,
+             float* const* extra_channels, const Rect& image_rect) const;
 
   // Returns dependencies of this patch dictionary on reference frame ids as a
   // bit mask: bits 0-3 indicate reference frame 0-3.

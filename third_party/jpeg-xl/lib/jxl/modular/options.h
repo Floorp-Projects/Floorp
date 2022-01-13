@@ -37,7 +37,10 @@ enum class Predictor : uint32_t {
       15,  // Find the best decision tree for predictors/predictor per row
 };
 
-constexpr size_t kNumModularPredictors = static_cast<size_t>(Predictor::Best);
+constexpr size_t kNumModularPredictors =
+    static_cast<size_t>(Predictor::Average4) + 1;
+constexpr size_t kNumModularEncoderPredictors =
+    static_cast<size_t>(Predictor::Variable) + 1;
 
 static constexpr ssize_t kNumStaticProperties = 2;  // channel, group_id.
 

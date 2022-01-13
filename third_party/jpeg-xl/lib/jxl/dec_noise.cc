@@ -258,6 +258,15 @@ void RandomImage3(size_t seed, const Rect& rect, Image3F* JXL_RESTRICT noise) {
   RandomImage(&rng, rect, &noise->Plane(2));
 }
 
+void Random3Planes(size_t seed, const std::pair<ImageF*, Rect>& plane0,
+                   const std::pair<ImageF*, Rect>& plane1,
+                   const std::pair<ImageF*, Rect>& plane2) {
+  HWY_ALIGN Xorshift128Plus rng(seed);
+  RandomImage(&rng, plane0.second, plane0.first);
+  RandomImage(&rng, plane1.second, plane1.first);
+  RandomImage(&rng, plane2.second, plane2.first);
+}
+
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace jxl
@@ -277,6 +286,13 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
 HWY_EXPORT(RandomImage3);
 void RandomImage3(size_t seed, const Rect& rect, Image3F* JXL_RESTRICT noise) {
   return HWY_DYNAMIC_DISPATCH(RandomImage3)(seed, rect, noise);
+}
+
+HWY_EXPORT(Random3Planes);
+void Random3Planes(size_t seed, const std::pair<ImageF*, Rect>& plane0,
+                   const std::pair<ImageF*, Rect>& plane1,
+                   const std::pair<ImageF*, Rect>& plane2) {
+  return HWY_DYNAMIC_DISPATCH(Random3Planes)(seed, plane0, plane1, plane2);
 }
 
 void DecodeFloatParam(float precision, float* val, BitReader* br) {
