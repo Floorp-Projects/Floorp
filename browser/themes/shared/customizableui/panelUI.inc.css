@@ -1968,9 +1968,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 .PanelUI-profiler-button-link {
   appearance: none;
   font-size: inherit;
-  cursor: pointer;
   min-width: 0;
-  text-decoration: underline;
 }
 
 .PanelUI-profiler-button-link .button-text {
@@ -2057,7 +2055,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-description-title {
-  font-size: 16px;
+  font-size: 1.3em;
   font-weight: bold;
   margin: 6px 15px;
 }
@@ -2071,14 +2069,8 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #fff;
 }
 
-#PanelUI-profiler-learn-more:active {
+#PanelUI-profiler-learn-more:hover:active {
   color: #fffc;
-}
-
-#PanelUI-profiler-learn-more:focus {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 6px rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-  text-decoration: none;
 }
 
 #PanelUI-profiler-presets {
@@ -2087,38 +2079,24 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-profiler-content-edit-settings {
   margin: 0 15px;
-  color: #0046A4;
-  text-decoration: none;
-  font-size: 12px;
-}
-
-:root[lwt-popup-brighttext] #PanelUI-profiler-content-edit-settings {
-  color: #76B1FF;
-}
-
-#PanelUI-profiler-content-edit-settings:hover,
-#PanelUI-profiler-content-edit-settings:active,
-#PanelUI-profiler-content-edit-settings:focus {
-  text-decoration: underline;
+  font-size: .9em;
 }
 
 .PanelUI-profiler-content-label {
   font-weight: bold;
-  font-size: 13px;
   margin-inline: 15px;
   margin-block-start: 10px;
 }
 
 #PanelUI-profiler-content-description {
   margin: 4px 15px;
-  font-size: 12px;
+  font-size: .9em;
   color: var(--panel-description-color);
 }
 
 #PanelUI-profiler-content-recording {
-  padding-block: 28px;
-  padding-inline: 16px;
-  font-size: 16px;
+  padding: 28px 16px;
+  font-size: 1.3em;
 }
 
 .PanelUI-profiler-recording-icon {
@@ -2130,46 +2108,42 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 .PanelUI-profiler-recording-label {
-  margin-block: 9px;
-  margin-inline: 13px;
+  margin: 9px 13px;
 }
 
 .PanelUI-profiler-button {
   appearance: none;
-  background-color: #e0e0e1;
-  border-radius: 2px;
-  color: #000;
+  background-color: var(--button-bgcolor);
+  border-radius: 4px;
+  color: var(--button-color);
   padding: 8px;
   margin: 0 5px;
-  font-size: 13px;
 }
 
 .PanelUI-profiler-button:hover {
-  background-color: #c9c9ca;
+  background-color: var(--button-hover-bgcolor);
 }
 
-.PanelUI-profiler-button:active {
-  background-color: #b1b1b1;
+.PanelUI-profiler-button:hover:active {
+  background-color: var(--button-active-bgcolor);
 }
 
-.PanelUI-profiler-button:focus {
-  box-shadow:
-    0 0 0 1px #0a84ff inset,
-    0 0 0 1px #0a84ff,
-    0 0 0 4px rgba(10, 132, 255, 0.3);
+.PanelUI-profiler-button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .PanelUI-profiler-button-primary {
-  background-color: #0060DF;
-  color: #fff;
+  background-color: var(--button-primary-bgcolor);
+  color: var(--button-primary-color);
 }
 
 .PanelUI-profiler-button-primary:hover {
-  background-color: #003eaa;
+  background-color: var(--button-primary-hover-bgcolor);
 }
 
-.PanelUI-profiler-button-primary:active:hover {
-  background-color: #002275;
+.PanelUI-profiler-button-primary:hover:active {
+  background-color: var(--button-primary-active-bgcolor);
 }
 
 .PanelUI-profiler-shortcut {
