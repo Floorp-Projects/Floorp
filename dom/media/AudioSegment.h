@@ -421,9 +421,8 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   // be stored into aBuffer.
   size_t WriteToInterleavedBuffer(nsTArray<AudioDataValue>& aBuffer,
                                   uint32_t aChannels) const;
-  // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
-  // in the segment.
-  AudioChunk* AppendAndConsumeChunk(AudioChunk&& aChunk) {
+  // Consumes aChunk, and append it to the segment.
+  void AppendAndConsumeChunk(AudioChunk&& aChunk) {
     AudioChunk* chunk = AppendChunk(aChunk.mDuration);
     chunk->mBuffer = std::move(aChunk.mBuffer);
     chunk->mChannelData = std::move(aChunk.mChannelData);
@@ -434,7 +433,6 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
     chunk->mVolume = aChunk.mVolume;
     chunk->mBufferFormat = aChunk.mBufferFormat;
     chunk->mPrincipalHandle = std::move(aChunk.mPrincipalHandle);
-    return chunk;
   }
   void ApplyVolume(float aVolume);
   // Mix the segment into a mixer, interleaved. This is useful to output a
