@@ -197,14 +197,34 @@ TOOLS_GRADLE_FAILED = 10
 
 
 @Command(
+    "clang-tidy",
+    category="devenv",
+    description="Convenience alias for the static-analysis command",
+)
+def clang_tidy(command_context):
+    # If no arguments are provided, just print a help message.
+    """Detailed documentation:
+    https://firefox-source-docs.mozilla.org/code-quality/static-analysis/index.html
+    """
+    mach = Mach(os.getcwd())
+
+    def populate_context(key=None):
+        if key == "topdir":
+            return command_context.topsrcdir
+
+    mach.populate_context_handler = populate_context
+    mach.run(["static-analysis", "--help"])
+
+
+@Command(
     "static-analysis",
-    category="testing",
-    description="Run C++ static analysis checks",
+    category="devenv",
+    description="Run C++ static analysis checks using clang-tidy",
 )
 def static_analysis(command_context):
     # If no arguments are provided, just print a help message.
     """Detailed documentation:
-    https://firefox-source-docs.mozilla.org/code-quality/static-analysis.html
+    https://firefox-source-docs.mozilla.org/code-quality/static-analysis/index.html
     """
     mach = Mach(os.getcwd())
 
