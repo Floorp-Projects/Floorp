@@ -13,7 +13,7 @@ import platform
 import re
 import subprocess
 import sys
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
 from datetime import datetime
@@ -68,6 +68,30 @@ PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
     "cmake",
     "vcpkg",
 ]
+
+
+# Historically duplicated crates. Eventually we want this list to be empty.
+# If you do need to make changes increasing the number of duplicates, please
+# add a comment as to why.
+TOLERATED_DUPES = {
+    "arrayvec": 2,
+    "base64": 3,
+    "bytes": 3,
+    "cfg-if": 2,
+    "crossbeam-deque": 2,
+    "crossbeam-epoch": 2,
+    "crossbeam-utils": 3,
+    "futures": 2,
+    "itertools": 2,
+    "libloading": 2,
+    "memmap2": 2,
+    "memoffset": 2,
+    "mio": 2,
+    "pin-project-lite": 2,
+    "sfv": 2,
+    "target-lexicon": 2,
+    "tokio": 2,
+}
 
 
 class VendorRust(MozbuildObject):
@@ -609,6 +633,7 @@ license file's hash.
                 )
                 failed = True
 
+            grouped = defaultdict(list)
             for package in cargo_lock["package"]:
                 if package["name"] in PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF:
                     # When the in-tree version is used, there is `source` for
@@ -626,6 +651,80 @@ license file's hash.
                             "and comes from {source}.",
                         )
                         failed = True
+                grouped[package["name"]].append(package)
+
+            for name, packages in grouped.items():
+                num = len(packages)
+                expected = TOLERATED_DUPES.get(name, 1)
+                if num > expected:
+                    self.log(
+                        logging.ERROR,
+                        "duplicate_crate",
+                        {
+                            "crate": name,
+                            "num": num,
+                            "expected": expected,
+                            "file": __file__,
+                        },
+                        "There are {num} different versions of crate {crate} "
+                        "(expected {expected}). Please void the extra duplication "
+                        "or adjust TOLERATED_DUPES in {file} if not possible.",
+                    )
+                    failed = True
+                elif num < expected and num > 1:
+                    self.log(
+                        logging.ERROR,
+                        "less_duplicate_crate",
+                        {
+                            "crate": name,
+                            "num": num,
+                            "expected": expected,
+                            "file": __file__,
+                        },
+                        "There are {num} different versions of crate {crate} "
+                        "(expected {expected}). Please adjust TOLERATED_DUPES in "
+                        "{file} to reflect this improvement.",
+                    )
+                    failed = True
+                elif num < expected:
+                    self.log(
+                        logging.ERROR,
+                        "less_duplicate_crate",
+                        {
+                            "crate": name,
+                            "file": __file__,
+                        },
+                        "Crate {crate} is not duplicated anymore. "
+                        "Please adjust TOLERATED_DUPES in {file} to reflect this improvement.",
+                    )
+                    failed = True
+                elif name in TOLERATED_DUPES and expected <= 1:
+                    self.log(
+                        logging.ERROR,
+                        "broken_allowed_dupes",
+                        {
+                            "crate": name,
+                            "file": __file__,
+                        },
+                        "Crate {crate} is not duplicated. Remove it from "
+                        "TOLERATED_DUPES in {file}.",
+                    )
+                    failed = True
+
+            for name in TOLERATED_DUPES:
+                if name not in grouped:
+                    self.log(
+                        logging.ERROR,
+                        "outdated_allowed_dupes",
+                        {
+                            "crate": name,
+                            "file": __file__,
+                        },
+                        "Crate {crate} is not in Cargo.lock anymore. Remove it from "
+                        "TOLERATED_DUPES in {file}.",
+                    )
+                    failed = True
+
             if failed:
                 self.repository.clean_directory(vendor_dir)
                 sys.exit(1)
