@@ -925,7 +925,7 @@ JSString* js::ConcatStrings(
   if (MOZ_UNLIKELY(wholeLength > JSString::MAX_LENGTH)) {
     // Don't report an exception if GC is not allowed, just return nullptr.
     if (allowGC) {
-      js::ReportAllocationOverflow(cx);
+      js::ReportOversizedAllocation(cx, JSMSG_ALLOC_OVERFLOW);
     }
     return nullptr;
   }
