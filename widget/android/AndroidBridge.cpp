@@ -16,17 +16,12 @@
 #include <prthread.h>
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
-#include "AndroidRect.h"
 #include "nsAlertsUtils.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
-#include "gfxPlatform.h"
-#include "gfxContext.h"
-#include "mozilla/gfx/2D.h"
-#include "gfxUtils.h"
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -34,9 +29,6 @@
 #include "nsContentUtils.h"
 
 #include "EventDispatcher.h"
-#include "MediaCodec.h"
-#include "SurfaceTexture.h"
-#include "GLContextProvider.h"
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -45,10 +37,8 @@
 #include "mozilla/java/EventDispatcherWrappers.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/GeckoThreadWrappers.h"
-#include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 
 using namespace mozilla;
-using namespace mozilla::gfx;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
 static jobject sGlobalContext = nullptr;
@@ -157,54 +147,6 @@ AndroidBridge::AndroidBridge() {
   // mMessageQueueMessages may be null (e.g. due to proguard optimization)
   mMessageQueueMessages = jEnv->GetFieldID(msgQueueClass.Get(), "mMessages",
                                            "Landroid/os/Message;");
-}
-
-bool AndroidBridge::HasHWVP8Encoder() {
-  ALOG_BRIDGE("AndroidBridge::HasHWVP8Encoder");
-
-  bool value = java::GeckoAppShell::HasHWVP8Encoder();
-
-  return value;
-}
-
-bool AndroidBridge::HasHWVP8Decoder() {
-  ALOG_BRIDGE("AndroidBridge::HasHWVP8Decoder");
-
-  bool value = java::GeckoAppShell::HasHWVP8Decoder();
-
-  return value;
-}
-
-bool AndroidBridge::HasHWH264() {
-  ALOG_BRIDGE("AndroidBridge::HasHWH264");
-
-  return java::HardwareCodecCapabilityUtils::HasHWH264();
-}
-
-gfx::Rect AndroidBridge::getScreenSize() {
-  ALOG_BRIDGE("AndroidBridge::getScreenSize");
-
-  java::sdk::Rect::LocalRef screenrect = java::GeckoAppShell::GetScreenSize();
-  gfx::Rect screensize(screenrect->Left(), screenrect->Top(),
-                       screenrect->Width(), screenrect->Height());
-
-  return screensize;
-}
-
-int AndroidBridge::GetScreenDepth() {
-  ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
-
-  static int sDepth = 0;
-  if (sDepth) return sDepth;
-
-  const int DEFAULT_DEPTH = 16;
-
-  if (jni::IsAvailable()) {
-    sDepth = java::GeckoAppShell::GetScreenDepth();
-  }
-  if (!sDepth) return DEFAULT_DEPTH;
-
-  return sDepth;
 }
 
 void AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern) {
