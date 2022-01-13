@@ -5,9 +5,6 @@
 package org.mozilla.focus.locale.screen
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,61 +12,60 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.ComposeView
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.settings.BaseSettingsComposeFragment
+import org.mozilla.focus.settings.BaseComposeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 
-class LanguageFragment : BaseSettingsComposeFragment() {
-    private val browserStore by lazy { requireContext().components.store }
-    private val localeUseCase by lazy { LocaleUseCases(browserStore) }
-    private val languageScreenStore by lazy {
-        LanguageScreenStore(
+class LanguageFragment : BaseComposeFragment() {
+    private lateinit var browserStore: BrowserStore
+    private lateinit var localeUseCases: LocaleUseCases
+    private lateinit var languageScreenStore: LanguageScreenStore
+    private lateinit var defaultLanguageScreenInteractor: DefaultLanguageScreenInteractor
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        browserStore = requireContext().components.store
+        localeUseCases = LocaleUseCases(browserStore)
+        languageScreenStore = LanguageScreenStore(
             LanguageScreenState(),
             listOf(
                 LanguageMiddleware(
-                    activity = requireActivity(), localeUseCase = localeUseCase
+                    activity = requireActivity(), localeUseCase = localeUseCases
                 )
             )
         )
-    }
-    private val screenInteractorDefault by lazy {
-        DefaultLanguageScreenInteractor(
+        defaultLanguageScreenInteractor = DefaultLanguageScreenInteractor(
             languageScreenStore = languageScreenStore
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                toolbar(
-                    title = getString(R.string.preference_language),
-                    onClickUpButton = {
-                        requireComponents.appStore.dispatch(
-                            AppAction.OpenSettings(Screen.Settings.Page.General)
-                        )
-                    }
-                ) {
-                    val languagesList = languageScreenStore
-                        .observeAsComposableState { state -> state.languageList }.value
-                    val languageSelected = languageScreenStore.observeAsComposableState { state ->
-                        state.selectedLanguage
-                    }.value
-                    if (languageSelected != null && languagesList != null) {
-                        Languages(languageSelected = languageSelected, languages = languagesList)
-                    }
-                }
-            }
+    override val titleRes: Int
+        get() = R.string.preference_language
+
+    override fun onNavigateUp(): () -> Unit {
+        return {
+            requireComponents.appStore.dispatch(
+                AppAction.OpenSettings(Screen.Settings.Page.General)
+            )
+        }
+    }
+
+    @Composable
+    override fun Content() {
+        val languagesList = languageScreenStore
+            .observeAsComposableState { state -> state.languageList }.value
+        val languageSelected = languageScreenStore.observeAsComposableState { state ->
+            state.selectedLanguage
+        }.value
+        if (languageSelected != null && languagesList != null) {
+            Languages(languageSelected = languageSelected, languages = languagesList)
         }
     }
 
@@ -86,7 +82,7 @@ class LanguageFragment : BaseSettingsComposeFragment() {
                 language = language,
                 onClick = {
                     state.value = language.tag
-                    screenInteractorDefault.handleLanguageSelected(language)
+                    defaultLanguageScreenInteractor.handleLanguageSelected(language)
                 }
             )
             languageListItems.add(languageListItem)
