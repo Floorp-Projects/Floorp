@@ -8,13 +8,9 @@
  */
 
 :root {
-  --introduction-magglass-logo-width: 176px;
   --introduction-magglass-logo-height: 128px;
-  --introduction-firefox-logo-width: 72px;
   --introduction-firefox-logo-height: 72px;
-  --main-magglass-logo-width: 88px;
   --main-magglass-logo-height: 64px;
-  --main-firefox-logo-width: 50px;
   --main-firefox-logo-height: 50px;
   --x-large-margin: 40px;
   --large-margin: 24px;
@@ -27,9 +23,7 @@
 }
 
 body.compact {
-  --main-magglass-logo-width: 66px;
   --main-magglass-logo-height: 48px;
-  --main-firefox-logo-width: 32px;
   --main-firefox-logo-height: 32px;
   --x-large-margin: 20px;
   --large-margin: 12px;
@@ -48,7 +42,7 @@ section {
 
 section {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   flex-direction: column;
   text-align: center;
@@ -101,14 +95,12 @@ a {
 
 #introduction-section .logo {
   background-image: url("quicksuggestOnboarding_magglass.svg");
-  width: var(--introduction-magglass-logo-width);
   height: var(--introduction-magglass-logo-height);
   margin-block-end: var(--large-margin);
 }
 
 #introduction-section .logo.firefox {
   background-image: url("chrome://branding/content/about-logo.svg");
-  width: var(--introduction-firefox-logo-width);
   height: var(--introduction-firefox-logo-height);
 }
 
@@ -138,24 +130,18 @@ a {
   fill: currentColor;
 }
 
-#main-section {
-  display: flex;
-}
-
 #main-section:not(.active) {
   display: none;
 }
 
 #main-section .logo {
   background-image: url("quicksuggestOnboarding_magglass.svg");
-  width: var(--main-magglass-logo-width);
   height: var(--main-magglass-logo-height);
   margin-block-end: var(--large-margin);
 }
 
 #main-section .logo.firefox {
   background-image: url("chrome://branding/content/about-logo.svg");
-  width: var(--main-firefox-logo-width);
   height: var(--main-firefox-logo-height);
 }
 
@@ -165,8 +151,8 @@ a {
 
 #main-section .description-section {
   /* The effective visual margin between the description and first option should
-      be --large-margin-const. Each child in the description has a bottom margin
-      of --small-margin, so subtract it from --large-margin-const. */
+     be --large-margin-const. Each child in the description has a bottom margin
+     of --small-margin, so subtract it from --large-margin-const. */
   margin-block: 0 calc(var(--large-margin-const) - var(--small-margin));
 }
 
@@ -197,10 +183,7 @@ a {
      radio button and text are too close to the left and right edges of the
      option's border otherwise. */
   padding: var(--small-margin) var(--small-margin-const);
-  width: 100% - calc(2 * var(--section-horizontal-padding));
-  box-sizing: border-box;
   flex-direction: row;
-  position: relative;
 }
 
 #main-section .option.selected {
@@ -216,12 +199,14 @@ a {
 }
 
 #main-section .option > label {
-  /* Make whole option area selectable for the radio button. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  /* Make the whole option area selectable for the radio button. 22px is the
+     width of the radio button and its inline margin. */
+  padding-block: var(--small-margin);
+  padding-inline-start: calc(22px + var(--small-margin-const));
+  padding-inline-end: var(--small-margin-const);
+  margin-block: calc(-1 * var(--small-margin));
+  margin-inline-start: calc(-1 * (22px + var(--small-margin-const)));
+  margin-inline-end: calc(-1 * var(--small-margin-const));
 }
 
 body:not(.compact) #main-section .option > input {
@@ -229,28 +214,20 @@ body:not(.compact) #main-section .option > input {
   margin-block-start: 0.25em;
 }
 
-#main-section .option > div {
-  /* Make this area be front than label to make the link included clickable.
-     And, make this area not recieve pointer-events so that this area as well
-     will be selectable area for the radio. */
-  z-index: 1;
-  pointer-events: none;
-}
-
-#main-section .option > div a {
-  /* Make a clickable explicitly since the parent element might not receive the
-     event. */
-  pointer-events: auto;
-}
-
-#main-section .option > div > .option-label {
+#main-section .option-label {
   font-size: 1.1em;
   font-weight: 600;
   margin-block-end: 2px;
 }
 
-#main-section .option > div > .option-description {
+#main-section .option-description {
   font-size: 1em;
+}
+
+.buttonBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 button {
