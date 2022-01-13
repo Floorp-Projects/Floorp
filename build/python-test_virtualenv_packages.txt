@@ -1,3 +1,2 @@
-packages.txt:build/common_virtualenv_packages.txt
 vendored:third_party/python/glean_parser
 pypi:pytest==3.6.2

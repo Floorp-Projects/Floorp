@@ -1,2 +1,1 @@
-packages.txt:build/common_virtualenv_packages.txt
 vendored:third_party/python/glean_parser
