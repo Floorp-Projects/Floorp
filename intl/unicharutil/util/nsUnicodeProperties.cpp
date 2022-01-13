@@ -168,12 +168,10 @@ bool IsClusterExtender(uint32_t aCh, uint8_t aCategory) {
 }
 
 uint32_t CountGraphemeClusters(Span<const char16_t> aText) {
-  intl::GraphemeClusterBreakIteratorUtf16 iter(aText.Elements(),
-                                               aText.Length());
+  intl::GraphemeClusterBreakIteratorUtf16 iter(aText);
   uint32_t result = 0;
-  while (!iter.AtEnd()) {
+  while (iter.Next()) {
     ++result;
-    iter.Next();
   }
   return result;
 }

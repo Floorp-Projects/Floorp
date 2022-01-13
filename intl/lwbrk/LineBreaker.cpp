@@ -1090,10 +1090,10 @@ void LineBreaker::ComputeBreakPositions(
       if (aWordBreak == WordBreakRule::BreakAll) {
         // For break-all, we don't need to run a dictionary-based breaking
         // algorithm, we just allow breaks between all grapheme clusters.
-        GraphemeClusterBreakIteratorUtf16 ci(aChars + cur, end - cur);
-        while (!ci.AtEnd()) {
-          ci.Next();
-          aBreakBefore[ci - aChars] = true;
+        GraphemeClusterBreakIteratorUtf16 ci(
+            Span<const char16_t>(aChars + cur, end - cur));
+        while (Maybe<uint32_t> pos = ci.Next()) {
+          aBreakBefore[cur + *pos] = true;
         }
       } else {
         ComplexBreaker::GetBreaks(aChars + cur, end - cur, aBreakBefore + cur);
