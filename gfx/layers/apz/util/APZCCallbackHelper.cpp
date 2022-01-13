@@ -674,14 +674,9 @@ static bool PrepareForSetTargetAPZCNotification(
 }
 
 static void SendLayersDependentApzcTargetConfirmation(
-    nsPresContext* aPresContext, uint64_t aInputBlockId,
+    nsIWidget* aWidget, uint64_t aInputBlockId,
     nsTArray<ScrollableLayerGuid>&& aTargets) {
-  PresShell* ps = aPresContext->GetPresShell();
-  if (!ps) {
-    return;
-  }
-
-  WindowRenderer* renderer = ps->GetWindowRenderer();
+  WindowRenderer* renderer = aWidget->GetWindowRenderer();
   if (!renderer) {
     return;
   }
@@ -720,7 +715,7 @@ void DisplayportSetListener::Register() {
 void DisplayportSetListener::OnPostRefresh() {
   APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n",
              mInputBlockId);
-  SendLayersDependentApzcTargetConfirmation(mPresContext, mInputBlockId,
+  SendLayersDependentApzcTargetConfirmation(mWidget, mInputBlockId,
                                             std::move(mTargets));
 }
 
