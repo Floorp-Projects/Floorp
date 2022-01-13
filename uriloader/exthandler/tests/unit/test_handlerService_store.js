@@ -578,27 +578,10 @@ add_task(async function test_getTypeFromExtension() {
 function assertAllHandlerInfosMatchDefaultHandlers() {
   let handlerInfos = HandlerServiceTestUtils.getAllHandlerInfos();
 
-  for (let type of ["irc", "ircs"]) {
-    HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
-      type,
-      preferredActionOSDependent: true,
-      possibleApplicationHandlers: [
-        {
-          name: "Mibbit",
-          uriTemplate: "https://www.mibbit.com/?url=%s",
-        },
-      ],
-    });
-  }
-
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "mailto",
     preferredActionOSDependent: true,
     possibleApplicationHandlers: [
-      {
-        name: "Yahoo! Mail",
-        uriTemplate: "https://compose.mail.yahoo.com/?To=%s",
-      },
       {
         name: "Gmail",
         uriTemplate: "https://mail.google.com/mail/?extsrc=mailto&url=%s",
@@ -641,33 +624,13 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
   // This will inject the default protocol handlers for the current locale.
   await deleteHandlerStore();
 
-  // Remove the "irc" handler so we can verify that the injection is repeated.
-  let ircHandlerInfo = HandlerServiceTestUtils.getHandlerInfo("irc");
-  gHandlerService.remove(ircHandlerInfo);
-
-  let originalDefaultHandlersVersion = Services.prefs.getComplexValue(
-    "gecko.handlerService.defaultHandlersVersion",
-    Ci.nsIPrefLocalizedString
-  );
-
-  // Set the preference to an arbitrarily high number to force injecting again.
-  Services.prefs.setStringPref(
-    "gecko.handlerService.defaultHandlersVersion",
-    "999"
-  );
+  // Clear the preference to force injecting again.
+  Services.prefs.clearUserPref("gecko.handlerService.defaultHandlersVersion");
 
   await unloadHandlerStore();
 
-  // Check that "irc" exists to make sure that the injection was repeated.
-  Assert.ok(gHandlerService.exists(ircHandlerInfo));
-
   // There should be no duplicate handlers in the protocols.
-  await assertAllHandlerInfosMatchDefaultHandlers();
-
-  Services.prefs.setStringPref(
-    "gecko.handlerService.defaultHandlersVersion",
-    originalDefaultHandlersVersion
-  );
+  assertAllHandlerInfosMatchDefaultHandlers();
 });
 
 /**

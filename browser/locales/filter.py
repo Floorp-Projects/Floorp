@@ -6,8 +6,6 @@ from __future__ import absolute_import
 
 
 def test(mod, path, entity=None):
-    import re
-
     # ignore anything but Firefox
     if mod not in (
         "netwerk",
@@ -39,16 +37,4 @@ def test(mod, path, entity=None):
         return "error"
     if path == "defines.inc":
         return "ignore" if entity == "MOZ_LANGPACK_CONTRIBUTORS" else "error"
-
-    if mod == "browser" and path == "chrome/browser-region/region.properties":
-        # only region.properties exceptions remain, compare all others
-        return (
-            "ignore"
-            if (
-                re.match(r"browser\.contentHandlers\.types\.[0-5]", entity)
-                or re.match(r"gecko\.handlerService\.schemes\.", entity)
-                or re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity)
-            )
-            else "error"
-        )
     return "error"
