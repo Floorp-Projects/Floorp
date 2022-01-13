@@ -176,9 +176,10 @@ add_task(async function close() {
       info("Calling showOnboardingDialog");
       const { win, maybeShowPromise } = await showOnboardingDialog();
 
-      info("Check the visibility of the close button");
+      info("Check the status of the close button");
       const closeButton = win.document.getElementById("onboardingClose");
       Assert.ok(BrowserTestUtils.is_visible(closeButton));
+      Assert.equal(closeButton.getAttribute("title"), "Close");
 
       info("Click on the close button");
       closeButton.click();
