@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Bermasalah saat memuat laman</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Coba Lagi</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Kembali</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Tidak Dapat Menyelesaikan Permintaan</string>
@@ -303,4 +297,7 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Laman web di %1$s telah dilaporkan sebagai situs tipuan dan telah diblokir sesuai dengan pengaturan keamanan Anda.</p>
     ]]></string>
-</resources>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Situs Aman Tidak Tersedia</string>
+    </resources>

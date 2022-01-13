@@ -44,4 +44,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ochib boʻlmadi</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Fayllarni yuklab olish uchun fayllar va mediaga kirish ruxsati kerak. Android sozlamalariga oʻting, ruxsatnomalar va ruxsat berish tugmasini bosing.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Maxfiy yuklanmalar bekor qilinsinmi?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Barcha maxfiy varaqlarni yopsangiz, %1$s ta yuklanma bekor qilinadi. Maxfiy rejimdan chiqishni istaysizmi?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Yuklanmalarni bekor qilish</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Maxfiy rejimda qolaman</string>
 </resources>
