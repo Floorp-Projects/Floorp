@@ -35,8 +35,8 @@ class EncoderHeuristics {
   // `aux_out` collects statistics and can be used to print debug images.
   virtual Status LossyFrameHeuristics(
       PassesEncoderState* enc_state, ModularFrameEncoder* modular_frame_encoder,
-      const ImageBundle* original_pixels, Image3F* opsin, ThreadPool* pool,
-      AuxOut* aux_out) = 0;
+      const ImageBundle* original_pixels, Image3F* opsin,
+      const JxlCmsInterface& cms, ThreadPool* pool, AuxOut* aux_out) = 0;
 
   // Custom fixed tree for lossless mode. Must set `tree` to a valid tree if
   // the function returns true.
@@ -61,8 +61,8 @@ class DefaultEncoderHeuristics : public EncoderHeuristics {
   Status LossyFrameHeuristics(PassesEncoderState* enc_state,
                               ModularFrameEncoder* modular_frame_encoder,
                               const ImageBundle* original_pixels,
-                              Image3F* opsin, ThreadPool* pool,
-                              AuxOut* aux_out) override;
+                              Image3F* opsin, const JxlCmsInterface& cms,
+                              ThreadPool* pool, AuxOut* aux_out) override;
   bool HandlesColorConversion(const CompressParams& cparams,
                               const ImageBundle& ib) override;
 };
@@ -72,7 +72,8 @@ class FastEncoderHeuristics : public EncoderHeuristics {
   Status LossyFrameHeuristics(PassesEncoderState* enc_state,
                               ModularFrameEncoder* modular_frame_encoder,
                               const ImageBundle* linear, Image3F* opsin,
-                              ThreadPool* pool, AuxOut* aux_out) override;
+                              const JxlCmsInterface& cms, ThreadPool* pool,
+                              AuxOut* aux_out) override;
 };
 
 // Exposed here since it may be used by other EncoderHeuristics implementations

@@ -28,6 +28,10 @@ void AddNoise(const NoiseParams& noise_params, const Rect& noise_rect,
 
 void RandomImage3(size_t seed, const Rect& rect, Image3F* JXL_RESTRICT noise);
 
+void Random3Planes(size_t seed, const std::pair<ImageF*, Rect>& plane0,
+                   const std::pair<ImageF*, Rect>& plane1,
+                   const std::pair<ImageF*, Rect>& plane2);
+
 // Must only call if FrameHeader.flags.kNoise.
 Status DecodeNoise(BitReader* br, NoiseParams* noise_params);
 

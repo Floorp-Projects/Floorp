@@ -41,14 +41,18 @@ JXL_EXPORT uint32_t JxlEncoderVersion(void);
 typedef struct JxlEncoderStruct JxlEncoder;
 
 /**
- * Opaque structure that holds frame specific encoding options for a JPEG XL
- * encoder.
+ * Settings and metadata for a single image frame. This includes encoder options
+ * for a frame such as compression quality and speed.
  *
- * Allocated and initialized with JxlEncoderOptionsCreate().
+ * Allocated and initialized with JxlEncoderFrameSettingsCreate().
  * Cleaned up and deallocated when the encoder is destroyed with
  * JxlEncoderDestroy().
  */
-typedef struct JxlEncoderOptionsStruct JxlEncoderOptions;
+typedef struct JxlEncoderFrameSettingsStruct JxlEncoderFrameSettings;
+
+/** DEPRECATED: Use JxlEncoderFrameSettings instead.
+ */
+typedef JxlEncoderFrameSettings JxlEncoderOptions;
 
 /**
  * Return value for multiple encoder functions.
@@ -67,19 +71,17 @@ typedef enum {
    */
   JXL_ENC_NEED_MORE_OUTPUT = 2,
 
-  /** The encoder doesn't (yet) support this.
+  /** DEPRECATED: the encoder does not return this status and there is no need
+   * to handle or expect it.
    */
   JXL_ENC_NOT_SUPPORTED = 3,
 
 } JxlEncoderStatus;
 
 /**
- * Id of per-frame options to set to JxlEncoderOptions with
- * JxlEncoderOptionsSetInteger.
- * NOTE: this enum includes most but not all encoder options. The image quality
- * is a frame option that can be set with JxlEncoderOptionsSetDistance instead.
- * Options that apply globally, rather than per-frame, are set with their own
- * functions and do not use the per-frame JxlEncoderOptions.
+ * Id of encoder options for a frame. This includes options such as the
+ * image quality and compression speed for this frame. This does not include
+ * non-frame related encoder options such as for boxes.
  */
 typedef enum {
   /** Sets encoder effort/speed level without affecting decoding speed. Valid
@@ -87,13 +89,13 @@ typedef enum {
    * 4:cheetah 5:hare 6:wombat 7:squirrel 8:kitten 9:tortoise.
    * Default: squirrel (7).
    */
-  JXL_ENC_OPTION_EFFORT = 0,
+  JXL_ENC_FRAME_SETTING_EFFORT = 0,
 
   /** Sets the decoding speed tier for the provided options. Minimum is 0
    * (slowest to decode, best quality/density), and maximum is 4 (fastest to
    * decode, at the cost of some quality/density). Default is 0.
    */
-  JXL_ENC_OPTION_DECODING_SPEED = 1,
+  JXL_ENC_FRAME_SETTING_DECODING_SPEED = 1,
 
   /** Sets resampling option. If enabled, the image is downsampled before
    * compression, and upsampled to original size in the decoder. Integer option,
@@ -101,161 +103,161 @@ typedef enum {
    * 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for 4x4
    * downsampling, 8 for 8x8 downsampling.
    */
-  JXL_ENC_OPTION_RESAMPLING = 2,
+  JXL_ENC_FRAME_SETTING_RESAMPLING = 2,
 
-  /** Similar to JXL_ENC_OPTION_RESAMPLING, but for extra channels. Integer
-   * option, use -1 for the default behavior (depends on encoder
+  /** Similar to JXL_ENC_FRAME_SETTING_RESAMPLING, but for extra channels.
+   * Integer option, use -1 for the default behavior (depends on encoder
    * implementation), 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for
    * 4x4 downsampling, 8 for 8x8 downsampling.
    */
-  JXL_ENC_OPTION_EXTRA_CHANNEL_RESAMPLING = 3,
+  JXL_ENC_FRAME_SETTING_EXTRA_CHANNEL_RESAMPLING = 3,
 
   /** Indicates the frame added with @ref JxlEncoderAddImageFrame is already
    * downsampled by the downsampling factor set with @ref
-   * JXL_ENC_OPTION_RESAMPLING. The input frame must then be given in the
+   * JXL_ENC_FRAME_SETTING_RESAMPLING. The input frame must then be given in the
    * downsampled resolution, not the full image resolution. The downsampled
    * resolution is given by ceil(xsize / resampling), ceil(ysize / resampling)
    * with xsize and ysize the dimensions given in the basic info, and resampling
-   * the factor set with @ref JXL_ENC_OPTION_RESAMPLING.
+   * the factor set with @ref JXL_ENC_FRAME_SETTING_RESAMPLING.
    * Use 0 to disable, 1 to enable. Default value is 0.
    */
-  JXL_ENC_OPTION_ALREADY_DOWNSAMPLED = 4,
+  JXL_ENC_FRAME_SETTING_ALREADY_DOWNSAMPLED = 4,
 
   /** Adds noise to the image emulating photographic film noise, the higher the
    * given number, the grainier the image will be. As an example, a value of 100
    * gives low noise whereas a value of 3200 gives a lot of noise. The default
    * value is 0.
    */
-  JXL_ENC_OPTION_PHOTON_NOISE = 5,
+  JXL_ENC_FRAME_SETTING_PHOTON_NOISE = 5,
 
   /** Enables adaptive noise generation. This setting is not recommended for
-   * use, please use JXL_ENC_OPTION_PHOTON_NOISE instead. Use -1 for the default
-   * (encoder chooses), 0 to disable, 1 to enable.
+   * use, please use JXL_ENC_FRAME_SETTING_PHOTON_NOISE instead. Use -1 for the
+   * default (encoder chooses), 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_NOISE = 6,
+  JXL_ENC_FRAME_SETTING_NOISE = 6,
 
   /** Enables or disables dots generation. Use -1 for the default (encoder
    * chooses), 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_DOTS = 7,
+  JXL_ENC_FRAME_SETTING_DOTS = 7,
 
   /** Enables or disables patches generation. Use -1 for the default (encoder
    * chooses), 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_PATCHES = 8,
+  JXL_ENC_FRAME_SETTING_PATCHES = 8,
 
   /** Edge preserving filter level, -1 to 3. Use -1 for the default (encoder
    * chooses), 0 to 3 to set a strength.
    */
-  JXL_ENC_OPTION_EPF = 9,
+  JXL_ENC_FRAME_SETTING_EPF = 9,
 
   /** Enables or disables the gaborish filter. Use -1 for the default (encoder
    * chooses), 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_GABORISH = 10,
+  JXL_ENC_FRAME_SETTING_GABORISH = 10,
 
   /** Enables modular encoding. Use -1 for default (encoder
    * chooses), 0 to enforce VarDCT mode (e.g. for photographic images), 1 to
    * enforce modular mode (e.g. for lossless images).
    */
-  JXL_ENC_OPTION_MODULAR = 11,
+  JXL_ENC_FRAME_SETTING_MODULAR = 11,
 
   /** Enables or disables preserving color of invisible pixels. Use -1 for the
    * default (1 if lossless, 0 if lossy), 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_KEEP_INVISIBLE = 12,
+  JXL_ENC_FRAME_SETTING_KEEP_INVISIBLE = 12,
 
   /** Determines the order in which 256x256 regions are stored in the codestream
    * for progressive rendering. Use -1 for the encoder
    * default, 0 for scanline order, 1 for center-first order.
    */
-  JXL_ENC_OPTION_GROUP_ORDER = 13,
+  JXL_ENC_FRAME_SETTING_GROUP_ORDER = 13,
 
   /** Determines the horizontal position of center for the center-first group
    * order. Use -1 to automatically use the middle of the image, 0..xsize to
    * specifically set it.
    */
-  JXL_ENC_OPTION_GROUP_ORDER_CENTER_X = 14,
+  JXL_ENC_FRAME_SETTING_GROUP_ORDER_CENTER_X = 14,
 
   /** Determines the center for the center-first group order. Use -1 to
    * automatically use the middle of the image, 0..ysize to specifically set it.
    */
-  JXL_ENC_OPTION_GROUP_ORDER_CENTER_Y = 15,
+  JXL_ENC_FRAME_SETTING_GROUP_ORDER_CENTER_Y = 15,
 
   /** Enables or disables progressive encoding for modular mode. Use -1 for the
    * encoder default, 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_RESPONSIVE = 16,
+  JXL_ENC_FRAME_SETTING_RESPONSIVE = 16,
 
   /** Set the progressive mode for the AC coefficients of VarDCT, using spectral
    * progression from the DCT coefficients. Use -1 for the encoder default, 0 to
    * disable, 1 to enable.
    */
-  JXL_ENC_OPTION_PROGRESSIVE_AC = 17,
+  JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC = 17,
 
   /** Set the progressive mode for the AC coefficients of VarDCT, using
    * quantization of the least significant bits. Use -1 for the encoder default,
    * 0 to disable, 1 to enable.
    */
-  JXL_ENC_OPTION_QPROGRESSIVE_AC = 18,
+  JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC = 18,
 
   /** Set the progressive mode using lower-resolution DC images for VarDCT. Use
    * -1 for the encoder default, 0 to disable, 1 to have an extra 64x64 lower
    * resolution pass, 2 to have a 512x512 and 64x64 lower resolution pass.
    */
-  JXL_ENC_OPTION_PROGRESSIVE_DC = 19,
+  JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC = 19,
 
   /** Use Global channel palette if the amount of colors is smaller than this
    * percentage of range. Use 0-100 to set an explicit percentage, -1 to use the
    * encoder default. Used for modular encoding.
    */
-  JXL_ENC_OPTION_CHANNEL_COLORS_GLOBAL_PERCENT = 20,
+  JXL_ENC_FRAME_SETTING_CHANNEL_COLORS_GLOBAL_PERCENT = 20,
 
   /** Use Local (per-group) channel palette if the amount of colors is smaller
    * than this percentage of range. Use 0-100 to set an explicit percentage, -1
    * to use the encoder default. Used for modular encoding.
    */
-  JXL_ENC_OPTION_CHANNEL_COLORS_GROUP_PERCENT = 21,
+  JXL_ENC_FRAME_SETTING_CHANNEL_COLORS_GROUP_PERCENT = 21,
 
   /** Use color palette if amount of colors is smaller than or equal to this
    * amount, or -1 to use the encoder default. Used for modular encoding.
    */
-  JXL_ENC_OPTION_PALETTE_COLORS = 22,
+  JXL_ENC_FRAME_SETTING_PALETTE_COLORS = 22,
 
   /** Enables or disables delta palette. Use -1 for the default (encoder
    * chooses), 0 to disable, 1 to enable. Used in modular mode.
    */
-  JXL_ENC_OPTION_LOSSY_PALETTE = 23,
+  JXL_ENC_FRAME_SETTING_LOSSY_PALETTE = 23,
 
   /** Color transform for internal encoding: -1 = default, 0=XYB, 1=none (RGB),
    * 2=YCbCr. The XYB setting performs the forward XYB transform. None and
    * YCbCr both perform no transform, but YCbCr is used to indicate that the
    * encoded data losslessly represents YCbCr values.
    */
-  JXL_ENC_OPTION_COLOR_TRANSFORM = 24,
+  JXL_ENC_FRAME_SETTING_COLOR_TRANSFORM = 24,
 
   /** Color space for modular encoding: -1=default, 0-35=reverse color transform
    * index, e.g. index 0 = none, index 6 = YCoCg.
    * The default behavior is to try several, depending on the speed setting.
    */
-  JXL_ENC_OPTION_MODULAR_COLOR_SPACE = 25,
+  JXL_ENC_FRAME_SETTING_MODULAR_COLOR_SPACE = 25,
 
   /** Group size for modular encoding: -1=default, 0=128, 1=256, 2=512, 3=1024.
    */
-  JXL_ENC_OPTION_MODULAR_GROUP_SIZE = 26,
+  JXL_ENC_FRAME_SETTING_MODULAR_GROUP_SIZE = 26,
 
   /** Predictor for modular encoding. -1 = default, 0=zero, 1=left, 2=top,
    * 3=avg0, 4=select, 5=gradient, 6=weighted, 7=topright, 8=topleft,
    * 9=leftleft, 10=avg1, 11=avg2, 12=avg3, 13=toptop predictive average 14=mix
    * 5 and 6, 15=mix everything.
    */
-  JXL_ENC_OPTION_MODULAR_PREDICTOR = 27,
+  JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR = 27,
 
   /** Fraction of pixels used to learn MA trees as a percentage. -1 = default,
    * 0 = no MA and fast decode, 50 = default value, 100 = all, values above
    * 100 are also permitted. Higher values use more encoder memory.
    */
-  JXL_ENC_OPTION_MODULAR_MA_TREE_LEARNING_PERCENT = 28,
+  JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT = 28,
 
   /** Number of extra (previous-channel) MA tree properties to use. -1 =
    * default, 0-11 = valid values. Recommended values are in the range 0 to 3,
@@ -263,19 +265,19 @@ typedef enum {
    * excluding color channels when using VarDCT mode). Higher value gives slower
    * encoding and slower decoding.
    */
-  JXL_ENC_OPTION_MODULAR_NB_PREV_CHANNELS = 29,
+  JXL_ENC_FRAME_SETTING_MODULAR_NB_PREV_CHANNELS = 29,
 
   /** Enable or disable CFL (chroma-from-luma) for lossless JPEG recompression.
    * -1 = default, 0 = disable CFL, 1 = enable CFL.
    */
-  JXL_ENC_OPTION_JPEG_RECON_CFL = 30,
+  JXL_ENC_FRAME_SETTING_JPEG_RECON_CFL = 30,
 
   /** Enum value not to be used as an option. This value is added to force the
    * C compiler to have the enum to take a known size.
    */
-  JXL_ENC_OPTION_FILL_ENUM = 65535,
+  JXL_ENC_FRAME_SETTING_FILL_ENUM = 65535,
 
-} JxlEncoderOptionId;
+} JxlEncoderFrameSettingId;
 
 /**
  * Creates an instance of JxlEncoder and initializes it.
@@ -308,6 +310,17 @@ JXL_EXPORT void JxlEncoderReset(JxlEncoder* enc);
 JXL_EXPORT void JxlEncoderDestroy(JxlEncoder* enc);
 
 /**
+ * Sets the color management system (CMS) that will be used for color conversion
+ * (if applicable) during encoding. May only be set before starting encoding. If
+ * left unset, the default CMS implementation will be used.
+ *
+ * @param enc encoder object.
+ * @param cms structure representing a CMS implementation. See JxlCmsInterface
+ * for more details.
+ */
+JXL_EXPORT void JxlEncoderSetCms(JxlEncoder* enc, JxlCmsInterface cms);
+
+/**
  * Set the parallel runner for multithreading. May only be set before starting
  * encoding.
  *
@@ -335,6 +348,12 @@ JxlEncoderSetParallelRunner(JxlEncoder* enc, JxlParallelRunner parallel_runner,
  * When the return value is not JXL_ENC_ERROR or JXL_ENC_SUCCESS, the encoding
  * requires more JxlEncoderProcessOutput calls to continue.
  *
+ * This encodes the frames and/or boxes added so far. If the last frame or last
+ * box has been added, @ref JxlEncoderCloseInput, @ref JxlEncoderCloseFrames
+ * and/or @ref JxlEncoderCloseBoxes must be called before the next
+ * @ref JxlEncoderProcessOutput call, or the codestream won't be encoded
+ * correctly.
+ *
  * @param enc encoder object.
  * @param next_out pointer to next bytes to write to.
  * @param avail_out amount of bytes available starting from *next_out.
@@ -345,6 +364,80 @@ JxlEncoderSetParallelRunner(JxlEncoder* enc, JxlParallelRunner parallel_runner,
 JXL_EXPORT JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc,
                                                     uint8_t** next_out,
                                                     size_t* avail_out);
+
+/**
+ * Sets the frame information for this frame to the encoder. This includes
+ * animation information such as frame duration to store in the frame header.
+ * The frame header fields represent the frame as passed to the encoder, but not
+ * necessarily the exact values as they will be encoded file format: the encoder
+ * could change crop and blending options of a frame for more efficient encoding
+ * or introduce additional internal frames. Animation duration and time code
+ * information is not altered since those are immutable metadata of the frame.
+ *
+ * It is not required to use this function, however if have_animation is set
+ * to true in the basic info, then this function should be used to set the
+ * time duration of this individual frame. By default individual frames have a
+ * time duration of 0, making them form a composite still. See @ref
+ * JxlFrameHeader for more information.
+ *
+ * This information is stored in the JxlEncoderFrameSettings and so is used for
+ * any frame encoded with these JxlEncoderFrameSettings. It is ok to change
+ * between @ref JxlEncoderAddImageFrame calls, each added image frame will have
+ * the frame header that was set in the options at the time of calling
+ * JxlEncoderAddImageFrame.
+ *
+ * The is_last and name_length fields of the JxlFrameHeader are ignored, use
+ * @ref JxlEncoderCloseFrames to indicate last frame, and @ref
+ * JxlEncoderSetFrameName to indicate the name and its length instead.
+ * Calling this function will clear any name that was previously set with @ref
+ * JxlEncoderSetFrameName.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param frame_header frame header data to set. Object owned by the caller and
+ * does not need to be kept in memory, its information is copied internally.
+ * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
+ */
+JXL_EXPORT JxlEncoderStatus
+JxlEncoderSetFrameHeader(JxlEncoderFrameSettings* frame_settings,
+                         const JxlFrameHeader* frame_header);
+
+/**
+ * Sets blend info of an extra channel. The blend info of extra channels is set
+ * separately from that of the color channels, the color channels are set with
+ * @ref JxlEncoderSetFrameHeader.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param index index of the extra channel to use.
+ * @param blend_info blend info to set for the extra channel
+ * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBlendInfo(
+    JxlEncoderFrameSettings* frame_settings, size_t index,
+    const JxlBlendInfo* blend_info);
+
+/**
+ * Sets the name of the animation frame. This function is optional, frames are
+ * not required to have a name. This setting is a part of the frame header, and
+ * the same principles as for @ref JxlEncoderSetFrameHeader apply. The
+ * name_length field of JxlFrameHeader is ignored by the encoder, this function
+ * determines the name length instead as the length in bytes of the C string.
+ *
+ * The maximum possible name length is 1071 bytes (excluding terminating null
+ * character).
+ *
+ * Calling @ref JxlEncoderSetFrameHeader clears any name that was
+ * previously set.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param frame_name name of the next frame to be encoded, as a UTF-8 encoded C
+ * string (zero terminated). Owned by the caller, and copied internally.
+ * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameName(
+    JxlEncoderFrameSettings* frame_settings, const char* frame_name);
 
 /**
  * Sets the buffer to read JPEG encoded bytes from for the next frame to encode.
@@ -361,14 +454,20 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc,
  * JxlEncoderStoreJPEGMetadata and a single JPEG frame is added, it will be
  * possible to losslessly reconstruct the JPEG codestream.
  *
- * @param options set of encoder options to use when encoding the frame.
+ * If this is the last frame, @ref JxlEncoderCloseInput or @ref
+ * JxlEncoderCloseFrames must be called before the next
+ * @ref JxlEncoderProcessOutput call.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param buffer bytes to read JPEG from. Owned by the caller and its contents
  * are copied internally.
  * @param size size of buffer in bytes.
  * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
  */
-JXL_EXPORT JxlEncoderStatus JxlEncoderAddJPEGFrame(
-    const JxlEncoderOptions* options, const uint8_t* buffer, size_t size);
+JXL_EXPORT JxlEncoderStatus
+JxlEncoderAddJPEGFrame(const JxlEncoderFrameSettings* frame_settings,
+                       const uint8_t* buffer, size_t size);
 
 /**
  * Sets the buffer to read pixels from for the next image to encode. Must call
@@ -411,7 +510,12 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderAddJPEGFrame(
  * uses_original_profile=false case. They are however not allowed to be NaN or
  * +-infinity.
  *
- * @param options set of encoder options to use when encoding the frame.
+ * If this is the last frame, @ref JxlEncoderCloseInput or @ref
+ * JxlEncoderCloseFrames must be called before the next
+ * @ref JxlEncoderProcessOutput call.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param pixel_format format for pixels. Object owned by the caller and its
  * contents are copied internally.
  * @param buffer buffer type to input the pixel data from. Owned by the caller
@@ -420,8 +524,8 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderAddJPEGFrame(
  * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderAddImageFrame(
-    const JxlEncoderOptions* options, const JxlPixelFormat* pixel_format,
-    const void* buffer, size_t size);
+    const JxlEncoderFrameSettings* frame_settings,
+    const JxlPixelFormat* pixel_format, const void* buffer, size_t size);
 
 /**
  * Sets the buffer to read pixels from for an extra channel at a given index.
@@ -434,7 +538,8 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderAddImageFrame(
  * It is required to call this function for every extra channel, except for the
  * alpha channel if that was already set through @ref JxlEncoderAddImageFrame.
  *
- * @param options set of encoder options to use when encoding the extra channel.
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param pixel_format format for pixels. Object owned by the caller and its
  * contents are copied internally. The num_channels value is ignored, since the
  * number of channels for an extra channel is always assumed to be one.
@@ -445,8 +550,9 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderAddImageFrame(
  * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
-    const JxlEncoderOptions* options, const JxlPixelFormat* pixel_format,
-    const void* buffer, size_t size, uint32_t index);
+    const JxlEncoderFrameSettings* frame_settings,
+    const JxlPixelFormat* pixel_format, const void* buffer, size_t size,
+    uint32_t index);
 
 /** Adds a metadata box to the file format. JxlEncoderProcessOutput must be used
  * to effectively write the box to the output. @ref JxlEncoderUseBoxes must
@@ -582,7 +688,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderUseBoxes(JxlEncoder* enc);
  * @ref JxlEncoderUseBoxes is not used. Further frames may still be added.
  *
  * Must be called between JxlEncoderAddBox of the last box
- * and the next call to JxlEncoderProcessOutput, or JxlEncoderProcessOutput
+ * and the next call to JxlEncoderProcessOutput, or @ref JxlEncoderProcessOutput
  * won't output the last box correctly.
  *
  * NOTE: if you don't need to close frames and boxes at separate times, you can
@@ -595,7 +701,9 @@ JXL_EXPORT void JxlEncoderCloseBoxes(JxlEncoder* enc);
 /**
  * Declares that no frames will be added and @ref JxlEncoderAddImageFrame and
  * @ref JxlEncoderAddJPEGFrame won't be called anymore. Further metadata boxes
- * may still be added.
+ * may still be added. This function or @ref JxlEncoderCloseInput must be called
+ * after adding the last frame and the next call to
+ * @ref JxlEncoderProcessOutput, or the frame won't be properly marked as last.
  *
  * NOTE: if you don't need to close frames and boxes at separate times, you can
  * use @ref JxlEncoderCloseInput instead to close both at once.
@@ -611,7 +719,10 @@ JXL_EXPORT void JxlEncoderCloseFrames(JxlEncoder* enc);
  * calls should be done to create the final output.
  *
  * The requirements of both @ref JxlEncoderCloseFrames and @ref
- * JxlEncoderCloseBoxes apply to this function.
+ * JxlEncoderCloseBoxes apply to this function. Either this function or the
+ * other two must be called after the final frame and/or box, and the next
+ * @ref JxlEncoderProcessOutput call, or the codestream won't be encoded
+ * correctly.
  *
  * @param enc encoder object.
  */
@@ -660,11 +771,34 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
 JXL_EXPORT void JxlEncoderInitBasicInfo(JxlBasicInfo* info);
 
 /**
+ * Initializes a JxlFrameHeader struct to default values.
+ * For forwards-compatibility, this function has to be called before values
+ * are assigned to the struct fields.
+ * The default values correspond to a frame with no animation duration and the
+ * 'replace' blend mode. After using this function, For animation duration must
+ * be set, for composite still blend settings must be set.
+ *
+ * @param frame_header frame metadata. Object owned by the caller.
+ */
+JXL_EXPORT void JxlEncoderInitFrameHeader(JxlFrameHeader* frame_header);
+
+/**
+ * Initializes a JxlBlendInfo struct to default values.
+ * For forwards-compatibility, this function has to be called before values
+ * are assigned to the struct fields.
+ *
+ * @param blend_info blending info. Object owned by the caller.
+ */
+JXL_EXPORT void JxlEncoderInitBlendInfo(JxlBlendInfo* blend_info);
+
+/**
  * Sets the global metadata of the image encoded by this encoder.
  *
  * If the JxlBasicInfo contains information of extra channels beyond an alpha
  * channel, then @ref JxlEncoderSetExtraChannelInfo must be called between
- * JxlEncoderSetBasicInfo and @ref JxlEncoderAddImageFrame.
+ * JxlEncoderSetBasicInfo and @ref JxlEncoderAddImageFrame. In order to indicate
+ * extra channels, the value of `info.num_extra_channels` should be set to the
+ * number of extra channels, also counting the alpha channel if present.
  *
  * @param enc encoder object.
  * @param info global image metadata. Object owned by the caller and its
@@ -706,6 +840,9 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelInfo(
  * Sets the name for the extra channel at the given index in UTF-8. The index
  * must be smaller than the num_extra_channels in the associated JxlBasicInfo.
  *
+ * TODO(lode): remove size parameter for consistency with
+ * JxlEncoderSetFrameName
+ *
  * @param enc encoder object
  * @param index index of the extra channel to set.
  * @param name buffer with the name of the extra channel.
@@ -720,19 +857,21 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelName(JxlEncoder* enc,
 
 /**
  * Sets a frame-specific option of integer type to the encoder options.
- * The JxlEncoderOptionId argument determines which option is set.
+ * The JxlEncoderFrameSettingId argument determines which option is set.
  *
- * @param options set of encoder options to update with the new mode.
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param option ID of the option to set.
  * @param value Integer value to set for this option.
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR in
  * case of an error, such as invalid or unknown option id, or invalid integer
  * value for the given option. If an error is returned, the state of the
- * JxlEncoderOptions object is still valid and is the same as before this
+ * JxlEncoderFrameSettings object is still valid and is the same as before this
  * function was called.
  */
-JXL_EXPORT JxlEncoderStatus JxlEncoderOptionsSetInteger(
-    JxlEncoderOptions* options, JxlEncoderOptionId option, int32_t value);
+JXL_EXPORT JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
+    JxlEncoderFrameSettings* frame_settings, JxlEncoderFrameSettingId option,
+    int32_t value);
 
 /** Forces the encoder to use the box-based container format (BMFF) even
  * when not necessary.
@@ -773,7 +912,8 @@ JXL_EXPORT JxlEncoderStatus
 JxlEncoderStoreJPEGMetadata(JxlEncoder* enc, JXL_BOOL store_jpeg_metadata);
 
 /** Sets the feature level of the JPEG XL codestream. Valid values are 5 and
- * 10.
+ * 10. Keeping the default value of 5 is recommended for compatibility with all
+ * decoders.
  *
  * Level 5: for end-user image delivery, this level is the most widely
  * supported level by image decoders and the recommended level to use unless a
@@ -796,9 +936,35 @@ JxlEncoderStoreJPEGMetadata(JxlEncoder* enc, JXL_BOOL store_jpeg_metadata);
  * the encoder will only use those compatible with the level setting.
  *
  * This setting can only be set at the beginning, before encoding starts.
+ *
+ * @param enc encoder object.
+ * @param level the level value to set, must be 5 or 10.
+ * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
+ * otherwise.
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetCodestreamLevel(JxlEncoder* enc,
                                                          int level);
+
+/** Returns the codestream level required to support the currently configured
+ * settings and basic info. This function can only be used at the beginning,
+ * before encoding starts, but after setting basic info.
+ *
+ * This does not support per-frame settings, only global configuration, such as
+ * the image dimensions, that are known at the time of writing the header of
+ * the JPEG XL file.
+ *
+ * If this returns 5, nothing needs to be done and the codestream can be
+ * compatible with any decoder. If this returns 10, JxlEncoderSetCodestreamLevel
+ * has to be used to set the codestream level to 10, or the encoder can be
+ * configured differently to allow using the more compatible level 5.
+ *
+ * @param enc encoder object.
+ * @return -1 if no level can support the configuration (e.g. image dimensions
+ * larger than even level 10 supports), 5 if level 5 is supported, 10 if setting
+ * the codestream level to 10 is required.
+ *
+ */
+JXL_EXPORT int JxlEncoderGetRequiredCodestreamLevel(const JxlEncoder* enc);
 
 /**
  * Enables lossless encoding.
@@ -812,54 +978,67 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetCodestreamLevel(JxlEncoder* enc,
  * using this function with lossless set to JXL_DEC_FALSE does not guarantee
  * lossy encoding, though the default set of options is lossy.
  *
- * @param options set of encoder options to update with the new mode
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param lossless whether to override options for lossless mode
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
  * otherwise.
  */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameLossless(
+    JxlEncoderFrameSettings* frame_settings, JXL_BOOL lossless);
+
+/** DEPRECATED: use JxlEncoderSetFrameLossless instead.
+ */
 JXL_EXPORT JxlEncoderStatus
-JxlEncoderOptionsSetLossless(JxlEncoderOptions* options, JXL_BOOL lossless);
+JxlEncoderOptionsSetLossless(JxlEncoderFrameSettings*, JXL_BOOL);
 
 /**
- * @param options set of encoder options to update with the new mode.
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param effort the effort value to set.
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
  * otherwise.
  *
- * DEPRECATED: use JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_EFFORT,
- * effort)) instead.
+ * DEPRECATED: use JxlEncoderFrameSettingsSetOption(frame_settings,
+ * JXL_ENC_FRAME_SETTING_EFFORT, effort) instead.
  */
 JXL_EXPORT JXL_DEPRECATED JxlEncoderStatus
-JxlEncoderOptionsSetEffort(JxlEncoderOptions* options, int effort);
+JxlEncoderOptionsSetEffort(JxlEncoderFrameSettings* frame_settings, int effort);
 
 /**
- * @param options set of encoder options to update with the new decoding speed
- * tier.
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param tier the decoding speed tier to set.
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
  * otherwise.
  *
- * DEPRECATED: use JxlEncoderOptionsSetInteger(options,
- * JXL_ENC_OPTION_DECODING_SPEED, tier)) instead.
+ * DEPRECATED: use JxlEncoderFrameSettingsSetOption(frame_settings,
+ * JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier) instead.
  */
-JXL_EXPORT JXL_DEPRECATED JxlEncoderStatus
-JxlEncoderOptionsSetDecodingSpeed(JxlEncoderOptions* options, int tier);
+JXL_EXPORT JXL_DEPRECATED JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(
+    JxlEncoderFrameSettings* frame_settings, int tier);
 
 /**
  * Sets the distance level for lossy compression: target max butteraugli
  * distance, lower = higher quality. Range: 0 .. 15.
- * 0.0 = mathematically lossless (however, use JxlEncoderOptionsSetLossless
+ * 0.0 = mathematically lossless (however, use JxlEncoderSetFrameLossless
  * instead to use true lossless, as setting distance to 0 alone is not the only
  * requirement). 1.0 = visually lossless. Recommended range: 0.5 .. 3.0. Default
  * value: 1.0.
  *
- * @param options set of encoder options to update with the new mode.
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
  * @param distance the distance value to set.
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
  * otherwise.
  */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameDistance(
+    JxlEncoderFrameSettings* frame_settings, float distance);
+
+/** DEPRECATED: use JxlEncoderSetFrameDistance instead.
+ */
 JXL_EXPORT JxlEncoderStatus
-JxlEncoderOptionsSetDistance(JxlEncoderOptions* options, float distance);
+JxlEncoderOptionsSetDistance(JxlEncoderFrameSettings*, float);
 
 /**
  * Create a new set of encoder options, with all values initially copied from
@@ -867,17 +1046,22 @@ JxlEncoderOptionsSetDistance(JxlEncoderOptions* options, float distance);
  *
  * The returned pointer is an opaque struct tied to the encoder and it will be
  * deallocated by the encoder when JxlEncoderDestroy() is called. For functions
- * taking both a @ref JxlEncoder and a @ref JxlEncoderOptions, only
- * JxlEncoderOptions created with this function for the same encoder instance
- * can be used.
+ * taking both a @ref JxlEncoder and a @ref JxlEncoderFrameSettings, only
+ * JxlEncoderFrameSettings created with this function for the same encoder
+ * instance can be used.
  *
  * @param enc encoder object.
  * @param source source options to copy initial values from, or NULL to get
  * defaults initialized to defaults.
  * @return the opaque struct pointer identifying a new set of encoder options.
  */
-JXL_EXPORT JxlEncoderOptions* JxlEncoderOptionsCreate(
-    JxlEncoder* enc, const JxlEncoderOptions* source);
+JXL_EXPORT JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
+    JxlEncoder* enc, const JxlEncoderFrameSettings* source);
+
+/** DEPRECATED: use JxlEncoderFrameSettingsCreate instead.
+ */
+JXL_EXPORT JxlEncoderFrameSettings* JxlEncoderOptionsCreate(
+    JxlEncoder*, const JxlEncoderFrameSettings*);
 
 /**
  * Sets a color encoding to be sRGB.

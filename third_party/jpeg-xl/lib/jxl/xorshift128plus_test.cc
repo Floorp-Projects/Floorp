@@ -287,43 +287,45 @@ void TestFloat() {
   ThreadPoolInternal pool(8);
 
 #ifdef JXL_DISABLE_SLOW_TESTS
-  const uint32_t kMaxSeed = 2048;
+  const uint32_t kMaxSeed = 256;
 #else   // JXL_DISABLE_SLOW_TESTS
-  const uint32_t kMaxSeed = 16384;  // All 14-bit seeds
+  const uint32_t kMaxSeed = 4096;
 #endif  // JXL_DISABLE_SLOW_TESTS
-  pool.Run(0, kMaxSeed, ThreadPool::SkipInit(),
-           [](const int seed, const int /*thread*/) {
-             HWY_ALIGN Xorshift128Plus rng(seed);
+  EXPECT_TRUE(RunOnPool(
+      &pool, 0, kMaxSeed, ThreadPool::NoInit,
+      [](const uint32_t seed, size_t /*thread*/) {
+        HWY_ALIGN Xorshift128Plus rng(seed);
 
-             const HWY_FULL(uint32_t) du;
-             const HWY_FULL(float) df;
-             HWY_ALIGN uint64_t batch[Xorshift128Plus::N];
-             HWY_ALIGN float lanes[MaxLanes(df)];
-             double sum = 0.0;
-             size_t count = 0;
-             const size_t kReps = 2000;
-             for (size_t reps = 0; reps < kReps; ++reps) {
-               rng.Fill(batch);
-               for (size_t i = 0; i < Xorshift128Plus::N * 2; i += Lanes(df)) {
-                 const auto bits =
-                     Load(du, reinterpret_cast<const uint32_t*>(batch) + i);
-                 // 1.0 + 23 random mantissa bits = [1, 2)
-                 const auto rand12 =
-                     BitCast(df, ShiftRight<9>(bits) | Set(du, 0x3F800000));
-                 const auto rand01 = rand12 - Set(df, 1.0f);
-                 Store(rand01, df, lanes);
-                 for (float lane : lanes) {
-                   sum += lane;
-                   count += 1;
-                   EXPECT_LE(lane, 1.0f);
-                   EXPECT_GE(lane, 0.0f);
-                 }
-               }
-             }
+        const HWY_FULL(uint32_t) du;
+        const HWY_FULL(float) df;
+        HWY_ALIGN uint64_t batch[Xorshift128Plus::N];
+        HWY_ALIGN float lanes[MaxLanes(df)];
+        double sum = 0.0;
+        size_t count = 0;
+        const size_t kReps = 2000;
+        for (size_t reps = 0; reps < kReps; ++reps) {
+          rng.Fill(batch);
+          for (size_t i = 0; i < Xorshift128Plus::N * 2; i += Lanes(df)) {
+            const auto bits =
+                Load(du, reinterpret_cast<const uint32_t*>(batch) + i);
+            // 1.0 + 23 random mantissa bits = [1, 2)
+            const auto rand12 =
+                BitCast(df, ShiftRight<9>(bits) | Set(du, 0x3F800000));
+            const auto rand01 = rand12 - Set(df, 1.0f);
+            Store(rand01, df, lanes);
+            for (float lane : lanes) {
+              sum += lane;
+              count += 1;
+              EXPECT_LE(lane, 1.0f);
+              EXPECT_GE(lane, 0.0f);
+            }
+          }
+        }
 
-             // Verify average (uniform distribution)
-             EXPECT_NEAR(0.5, sum / count, 0.00702);
-           });
+        // Verify average (uniform distribution)
+        EXPECT_NEAR(0.5, sum / count, 0.00702);
+      },
+      "TestXorShift"));
 }
 
 // Not more than one 64-bit zero
@@ -335,20 +337,22 @@ void TestNotZero() {
 #else   // JXL_DISABLE_SLOW_TESTS
   const uint32_t kMaxSeed = 2000;
 #endif  // JXL_DISABLE_SLOW_TESTS
-  pool.Run(0, kMaxSeed, ThreadPool::SkipInit(),
-           [](const int task, const int /*thread*/) {
-             HWY_ALIGN uint64_t lanes[Xorshift128Plus::N];
+  EXPECT_TRUE(RunOnPool(
+      &pool, 0, kMaxSeed, ThreadPool::NoInit,
+      [](const uint32_t task, size_t /*thread*/) {
+        HWY_ALIGN uint64_t lanes[Xorshift128Plus::N];
 
-             HWY_ALIGN Xorshift128Plus rng(task);
-             size_t num_zero = 0;
-             for (size_t vectors = 0; vectors < 10000; ++vectors) {
-               rng.Fill(lanes);
-               for (uint64_t lane : lanes) {
-                 num_zero += static_cast<size_t>(lane == 0);
-               }
-             }
-             EXPECT_LE(num_zero, 1u);
-           });
+        HWY_ALIGN Xorshift128Plus rng(task);
+        size_t num_zero = 0;
+        for (size_t vectors = 0; vectors < 10000; ++vectors) {
+          rng.Fill(lanes);
+          for (uint64_t lane : lanes) {
+            num_zero += static_cast<size_t>(lane == 0);
+          }
+        }
+        EXPECT_LE(num_zero, 1u);
+      },
+      "TestNotZero"));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

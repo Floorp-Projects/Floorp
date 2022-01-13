@@ -52,9 +52,6 @@ using hwy::HWY_NAMESPACE::Vec;
 using DF = HWY_CAPPED(float, GroupBorderAssigner::kPaddingXRound);
 using DU = HWY_CAPPED(uint32_t, GroupBorderAssigner::kPaddingXRound);
 
-// kInvSigmaNum / 0.3
-constexpr float kMinSigma = -3.90524291751269967465540850526868f;
-
 DF df;
 
 JXL_INLINE Vec<DF> Weight(Vec<DF> sad, Vec<DF> inv_sigma, Vec<DF> thres) {
