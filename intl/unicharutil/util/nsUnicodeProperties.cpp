@@ -167,8 +167,9 @@ bool IsClusterExtender(uint32_t aCh, uint8_t aCategory) {
       (aCh >= 0xe0020 && aCh <= 0xe007f));   // emoji (flag) tag characters
 }
 
-uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
-  intl::GraphemeClusterBreakIteratorUtf16 iter(aText, aLength);
+uint32_t CountGraphemeClusters(Span<const char16_t> aText) {
+  intl::GraphemeClusterBreakIteratorUtf16 iter(aText.Elements(),
+                                               aText.Length());
   uint32_t result = 0;
   while (!iter.AtEnd()) {
     ++result;
