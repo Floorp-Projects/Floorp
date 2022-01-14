@@ -22,6 +22,7 @@ import org.mozilla.gecko.GeckoThread.ParcelFileDescriptors;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.ICompositorSurfaceManager;
+import org.mozilla.gecko.gfx.ISurfaceAllocator;
 import org.mozilla.gecko.util.ThreadUtils;
 
 public class GeckoServiceChildProcess extends Service {
@@ -163,6 +164,13 @@ public class GeckoServiceChildProcess extends Service {
       throw new AssertionError(
           "Invalid call to IChildProcess.getCompositorSurfaceManager for non-GPU process.");
     }
+
+    @Override
+    public ISurfaceAllocator getSurfaceAllocator() {
+      Log.e(LOGTAG, "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process");
+      throw new AssertionError(
+          "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process.");
+    }
   }
 
   protected Binder createBinder() {
@@ -216,5 +224,13 @@ public class GeckoServiceChildProcess extends Service {
     }
 
     GeckoAppShell.notifyObservers("memory-pressure", observerArg);
+  }
+
+  /**
+   * Returns the surface allocator interface that should be used by this process to allocate
+   * Surfaces, for consumption in either the GPU process or parent process.
+   */
+  public static ISurfaceAllocator getSurfaceAllocator() throws RemoteException {
+    return sProcessManager.getSurfaceAllocator();
   }
 }

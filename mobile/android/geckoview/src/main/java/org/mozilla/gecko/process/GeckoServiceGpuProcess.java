@@ -10,6 +10,8 @@ import android.util.SparseArray;
 import android.view.Surface;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.ICompositorSurfaceManager;
+import org.mozilla.gecko.gfx.ISurfaceAllocator;
+import org.mozilla.gecko.gfx.RemoteSurfaceAllocator;
 
 public class GeckoServiceGpuProcess extends GeckoServiceChildProcess {
   private static final String LOGTAG = "ServiceGpuProcess";
@@ -18,6 +20,11 @@ public class GeckoServiceGpuProcess extends GeckoServiceChildProcess {
     @Override
     public ICompositorSurfaceManager getCompositorSurfaceManager() {
       return RemoteCompositorSurfaceManager.getInstance();
+    }
+
+    @Override
+    public ISurfaceAllocator getSurfaceAllocator() {
+      return RemoteSurfaceAllocator.getInstance();
     }
   }
 
