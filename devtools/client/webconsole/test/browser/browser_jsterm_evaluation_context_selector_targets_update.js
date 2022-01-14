@@ -12,6 +12,7 @@ const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-chi
 // the context is set to the top one if the destroyed target was selected).
 
 add_task(async function() {
+  await pushPref("devtools.popups.debug", true);
   await pushPref("devtools.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [
@@ -165,4 +166,73 @@ add_task(async function() {
 
   await waitForEagerEvaluationResult(hud, `"example.com"`);
   ok(true, "Instant evaluation is done against the top frame context");
+
+  info("Open a popup");
+  const originalTab = gBrowser.selectedTab;
+  await ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function(
+    path
+  ) {
+    content.open(`https://test2.example.org/${path}?id=popup`);
+  });
+
+  // Wait until the popup is rendered in the context selector
+  // and that it is automatically switched to (aria-checked==true).
+  await waitFor(() => {
+    try {
+      const items = getContextSelectorItems(hud);
+      return (
+        items.length === 3 &&
+        items.some(
+          el =>
+            el
+              .querySelector(".label")
+              ?.textContent.includes("popup|test2.example.org") &&
+            el.getAttribute("aria-checked") === "true"
+        )
+      );
+    } catch (e) {
+      // The context list may be wiped while updating and getContextSelectorItems will throw
+    }
+    return false;
+  });
+
+  const expectedPopupItem = {
+    label: `popup|test2.example.org`,
+    tooltip: `https://test2.example.org/${IFRAME_PATH}?id=popup`,
+  };
+
+  await checkContextSelectorMenu(hud, [
+    {
+      ...expectedTopItem,
+      checked: false,
+    },
+    expectedSeparatorItem,
+    {
+      ...expectedPopupItem,
+      checked: true,
+    },
+  ]);
+
+  await waitForEagerEvaluationResult(hud, `"test2.example.org"`);
+  ok(true, "The context was set to the popup document");
+
+  info("Open a second popup and reload the original tab");
+  await ContentTask.spawn(originalTab.linkedBrowser, [IFRAME_PATH], function(
+    path
+  ) {
+    content.open(`https://test2.example.org/${path}?id=popup2`);
+  });
+
+  // Reloading the tab while having two popups opened used to
+  // generate exception in the context selector component
+  const onBrowserLoaded = BrowserTestUtils.browserLoaded(
+    originalTab.linkedBrowser
+  );
+  gBrowser.reloadTab(originalTab);
+  await onBrowserLoaded;
+
+  ok(
+    !hud.ui.document.querySelector(".app-error-panel"),
+    "The web console did not crash"
+  );
 });
