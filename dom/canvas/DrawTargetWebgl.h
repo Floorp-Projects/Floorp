@@ -55,6 +55,8 @@ class DrawTargetWebgl : public DrawTarget {
   RefPtr<DataSourceSurface> mSnapshot;
   // Whether or not the Skia target has valid contents and is being drawn to
   bool mSkiaValid = false;
+  // Whether or not Skia layering over the WebGL context is enabled
+  bool mSkiaLayer = false;
   // Whether or not the WebGL context has valid contents and is being drawn to
   bool mWebglValid = false;
 
@@ -226,14 +228,19 @@ class DrawTargetWebgl : public DrawTarget {
   void MarkChanged();
 
   void ReadIntoSkia();
+  void FlattenSkia();
   bool FlushFromSkia();
 
   void MarkSkiaChanged() {
     if (!mSkiaValid) {
       ReadIntoSkia();
+    } else if (mSkiaLayer) {
+      FlattenSkia();
     }
     mWebglValid = false;
   }
+
+  void MarkSkiaChanged(const DrawOptions& aOptions);
 
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
 
