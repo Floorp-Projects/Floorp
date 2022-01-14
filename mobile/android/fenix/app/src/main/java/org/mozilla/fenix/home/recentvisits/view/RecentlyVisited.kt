@@ -32,12 +32,14 @@ import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -306,6 +308,10 @@ private fun RecentlyVisitedMenu(
     recentVisit: RecentlyVisitedItem,
     onDismissRequest: () -> Unit,
 ) {
+    DisposableEffect(LocalConfiguration.current.orientation) {
+        onDispose { onDismissRequest() }
+    }
+
     DropdownMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
