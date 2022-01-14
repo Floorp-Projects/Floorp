@@ -16,6 +16,9 @@ with Files('dav1d/**'):
 with Files('highway/**'):
     BUG_COMPONENT = ('Core', 'ImageLib')
 
+with Files('intgemm/**'):
+    BUG_COMPONENT = ('Core', 'Javascript: WebAssembly')
+
 with Files('jpeg-xl/**'):
     BUG_COMPONENT = ('Core', 'ImageLib')
 
