@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
   MessageHandlerFrameActor:
     "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm",
-  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
 });
 
 /**
@@ -119,7 +119,7 @@ class FrameTransport {
     }
 
     if (type === CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT) {
-      const { browserId } = windowManager.getBrowserById(id);
+      const { browserId } = TabManager.getBrowserById(id);
       return this._getBrowsingContexts({ browserId });
     }
 
