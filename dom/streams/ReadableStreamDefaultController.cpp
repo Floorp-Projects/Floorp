@@ -426,18 +426,18 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       mController->SetPullAgain(false);
 
       // Step 7.2.2
-      IgnoredErrorResult rv;
+      ErrorResult rv;
       ReadableStreamDefaultControllerCallPullIfNeeded(
           aCx, MOZ_KnownLive(mController), rv);
-      // Not Sure How To Handle Errors Inside Native Callbacks,
-      (void)NS_WARN_IF(rv.Failed());
+
+      (void)rv.MaybeSetPendingException(aCx);
     }
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 8.1
-    IgnoredErrorResult rv;
+    ErrorResult rv;
     ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
     (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Rejected Error");
   }
@@ -526,9 +526,7 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
     ErrorResult rv;
     RefPtr<ReadableStreamDefaultController> stackController = mController;
     ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, rv);
-    if (rv.Failed()) {
-      MOZ_CRASH("Error Handling Not Clear Inside Promise Callback");
-    }
+    (void)rv.MaybeSetPendingException(aCx, "StartPromise Resolved Error");
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
