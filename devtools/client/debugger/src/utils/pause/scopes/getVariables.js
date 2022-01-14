@@ -1,10 +1,6 @@
-/* eslint max-nested-callbacks: ["error", 4] */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-import { toPairs } from "lodash";
 
 // VarAndBindingsPair actually is [name: string, contents: BindingContents]
 
@@ -17,17 +13,20 @@ export function getBindingVariables(bindings, parentName) {
     return [];
   }
 
-  const args = bindings.arguments.map(arg => toPairs(arg)[0]);
+  const nodes = [];
+  const addNode = (name, contents) =>
+    nodes.push({ name, contents, path: `${parentName}/${name}` });
 
-  const variables = toPairs(bindings.variables);
+  for (const arg of bindings.arguments) {
+    // `arg` is an object which only has a single property whose name is the name of the
+    // argument. So here we can directly pick the first (and only) entry of `arg`
+    const [name, contents] = Object.entries(arg)[0];
+    addNode(name, contents);
+  }
 
-  return args.concat(variables).map(binding => {
-    const name = binding[0];
-    const contents = binding[1];
-    return {
-      name,
-      path: `${parentName}/${name}`,
-      contents,
-    };
-  });
+  for (const name in bindings.variables) {
+    addNode(name, bindings.variables[name]);
+  }
+
+  return nodes;
 }
