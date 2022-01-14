@@ -30,7 +30,7 @@ linux64-rust-1.47:
 
 linux64-rust-1.57:
     treeherder:
-        symbol: TL(rust)
+        symbol: TL(rust-1.57)
     run:
         arguments: [
             '--channel', '1.57.0',
