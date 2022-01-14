@@ -5,9 +5,8 @@
 package org.mozilla.focus.biometrics
 
 import android.content.Context
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.focus.GleanMetrics.TabCount
@@ -18,9 +17,10 @@ class LockObserver(
     private val context: Context,
     private val browserStore: BrowserStore,
     private val appStore: AppStore
-) : LifecycleObserver {
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+) : DefaultLifecycleObserver {
+
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
 
         val tabCount = browserStore.state.privateTabs.size.toLong()
         TabCount.appBackgrounded.accumulateSamples(longArrayOf(tabCount))
