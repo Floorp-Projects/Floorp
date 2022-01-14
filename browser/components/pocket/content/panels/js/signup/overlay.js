@@ -37,6 +37,7 @@ var SignupOverlay = function(options) {
 
     // Extract local variables passed into template via URL query params
     let queryParams = new URL(window.location.href).searchParams;
+    let isEmailSignupEnabled = queryParams.get(`emailButton`) === `true`;
     let pockethost = queryParams.get(`pockethost`) || `getpocket.com`;
     let utmCampaign =
       queryParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
@@ -69,6 +70,11 @@ var SignupOverlay = function(options) {
         `text/html`
       ).documentElement
     );
+
+    // Remove email button based on `extensions.pocket.refresh.emailButton.enabled` pref
+    if (!isEmailSignupEnabled) {
+      document.querySelector(`.btn-container-email`).remove();
+    }
 
     // click events
     this.setupClickEvents();
