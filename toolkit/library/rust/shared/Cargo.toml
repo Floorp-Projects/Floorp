@@ -23,8 +23,8 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "dea28d0c7d9952bbf430701ee244f6a4349c98f1", optional = true }
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "978b4082bdc7d8e1aa58dd49e45cdc81beacb333", optional = true } # macos (v2) branch
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "978b4082bdc7d8e1aa58dd49e45cdc81beacb333", optional = true } # macos (v2) branch
+audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "f04cfa6a9463232e0468436b0482a698bb12b1ec", optional = true } # macos (v2) branch
+audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "f04cfa6a9463232e0468436b0482a698bb12b1ec", optional = true } # macos (v2) branch
 audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
 audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }

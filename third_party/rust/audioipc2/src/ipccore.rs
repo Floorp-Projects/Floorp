@@ -72,9 +72,12 @@ impl EventLoopHandle {
     {
         let (handler, mut proxy) = make_client::<C>();
         let driver = Box::new(FramedDriver::new(handler));
-        let token = self.add_connection(connection, driver)?;
-        proxy.connect_event_loop(self.clone(), token);
-        Ok(proxy)
+        let r = self.add_connection(connection, driver);
+        trace!("EventLoop::bind_client {:?}", r);
+        r.map(|token| {
+            proxy.connect_event_loop(self.clone(), token);
+            proxy
+        })
     }
 
     pub fn bind_server<S: Server + Send + 'static>(
@@ -90,7 +93,7 @@ impl EventLoopHandle {
         let driver = Box::new(FramedDriver::new(handler));
         let r = self.add_connection(connection, driver);
         trace!("EventLoop::bind_server {:?}", r);
-        Ok(())
+        r.map(|_| ())
     }
 
     // Register a new connection with associated driver on the EventLoop.
@@ -104,19 +107,24 @@ impl EventLoopHandle {
         let (tx, rx) = mpsc::channel();
         self.requests_tx
             .send(Request::AddConnection(connection, driver, tx))
-            .expect("EventLoop::add_connection");
-        self.waker.wake().expect("wake failed");
-        let token = rx.recv().expect("EventLoop::add_connection")?;
-        Ok(token)
+            .map_err(|_| {
+                debug!("EventLoopHandle::add_connection send failed");
+                io::ErrorKind::ConnectionAborted
+            })?;
+        self.waker.wake()?;
+        rx.recv().map_err(|_| {
+            debug!("EventLoopHandle::add_connection recv failed");
+            io::ErrorKind::ConnectionAborted
+        })?
     }
 
     // Signal EventLoop to shutdown.  Causes EventLoop::poll to return Ok(false).
     fn shutdown(&self) -> Result<()> {
-        self.requests_tx
-            .send(Request::Shutdown)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
-        self.waker.wake()?;
-        Ok(())
+        self.requests_tx.send(Request::Shutdown).map_err(|_| {
+            debug!("EventLoopHandle::shutdown send failed");
+            io::ErrorKind::ConnectionAborted
+        })?;
+        self.waker.wake()
     }
 
     // Signal EventLoop to wake connection specified by `token` for processing.
